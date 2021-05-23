@@ -1,7 +1,7 @@
+import { Sequence } from './module/sequence.js';
+
 Hooks.once('init', async function() {
 
-});
-
-Hooks.once('ready', async function() {
+    window.Sequence = Sequence;
 
 });

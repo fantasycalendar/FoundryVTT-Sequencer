@@ -1,7 +1,7 @@
 {
-  "name": "module",
-  "title": "New Module",
-  "description": "",
+  "name": "sequencer",
+  "title": "Sequencer",
+  "description": "This module implements a basic sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
   "version": "This is auto replaced",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
@@ -15,26 +15,16 @@
     }
   ],
   "dependencies": [
-
-  ],
-  "conflicts": [
-    
+    {
+      "name": "fxmaster",
+      "type": "module"
+    }
   ],
   "esmodules": [
     "/scripts/module.js"
   ],
   "scripts": [
-    "/scripts/lib/lib.js"
-  ],
-  "styles": [
-    "/styles/module.css"
-  ],
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "languages/en.json"
-    }
+    "/scripts/sequencer.js"
   ],
   "url": "This is auto replaced",
   "manifest": "This is auto replaced",
