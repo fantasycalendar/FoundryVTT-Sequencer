@@ -7,13 +7,7 @@
   "manifestPlusVersion": "1.0.0",
   "minimumCoreVersion": "0.7.9",
   "compatibleCoreVersion": "0.7.9",
-  "authors": [
-    {
-      "name": "The League of Extraordinary FVTT Developers",
-      "url": "https://github.com/League-of-Foundry-Developers",
-      "discord": "discordID#0001"
-    }
-  ],
+  "author": "Wasp (Wasp#2005)",
   "dependencies": [
     {
       "name": "fxmaster",
@@ -28,11 +22,6 @@
   ],
   "url": "This is auto replaced",
   "manifest": "This is auto replaced",
-  "download": "This is auto replaced",
-  "media": [
-    {
-      "type": "icon",
-      "url": "https://avatars2.githubusercontent.com/u/71292812?s=400&u=ccdb4eeb7abf551ca8f314e5a9bfd0479a4d3d41&v=4"
-    }
+  "download": "This is auto replaced"
   ]
 }
