@@ -145,7 +145,7 @@ let sequence = new Sequence()
         .done()
 ```
 
-![Animation showing the code above](docs/Animation.gif)
+![Animation showing the code above](docs/images/Animation.gif)
 
 ## Download here:
 `https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
