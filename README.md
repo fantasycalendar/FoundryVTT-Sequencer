@@ -2,6 +2,8 @@
 
 This module implements a basic sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations.
 
+The effects created by this module is completely synchronized across all clients thanks to the hard work of U~man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster).
+
 ## How to use
 
 First you have to define a sequence:
