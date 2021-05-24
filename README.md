@@ -173,7 +173,7 @@ wait(100);
 
 await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
 
-let data = {
+data = {
     file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
     position: token.center,
     anchor: {
