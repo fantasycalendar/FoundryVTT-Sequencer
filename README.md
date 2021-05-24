@@ -142,7 +142,7 @@ let data = {
 game.socket.emit("module.fxmaster", data);
 await canvas.fxmaster.playVideo(data);
 
-wait(1000);
+await wait(1000);
 
 let to_location = {
     x: token.center.x-500,
@@ -169,7 +169,7 @@ data = {
 game.socket.emit("module.fxmaster", data);
 await canvas.fxmaster.playVideo(data);
 
-wait(100);
+await wait(100);
 
 await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
 
