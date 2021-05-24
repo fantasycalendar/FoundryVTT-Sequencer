@@ -1,3 +1,5 @@
+![Animation showing the Sequencer](docs/images/Animation2.gif)
+
 # Sequencer
 
 This module implements a basic sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations.
@@ -113,7 +115,7 @@ This will delay the sprite from being played for a set amount of milliseconds.
 
 To get the following result:
 
-![Animation showing the code above](docs/images/Animation.gif)
+![Animation showing the code below](docs/images/Animation.gif)
 
 You'd have to write something like this:
 
