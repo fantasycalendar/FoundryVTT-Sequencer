@@ -159,8 +159,8 @@ data = {
         y: 0.5
     },
     scale: {
-        x: 0.35,
-        y: 0.35
+        x: 0.2,
+        y: 0.2
     },
     rotation: ray.angle,
     width: ray.distance
