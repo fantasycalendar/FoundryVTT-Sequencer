@@ -140,7 +140,7 @@ let data = {
 };
 
 game.socket.emit("module.fxmaster", data);
-await canvas.fxmaster.playVideo(data);
+canvas.fxmaster.playVideo(data);
 
 await wait(1000);
 
@@ -167,7 +167,7 @@ data = {
 };
 
 game.socket.emit("module.fxmaster", data);
-await canvas.fxmaster.playVideo(data);
+canvas.fxmaster.playVideo(data);
 
 await wait(100);
 
@@ -187,7 +187,7 @@ data = {
 };
 
 game.socket.emit("module.fxmaster", data);
-await canvas.fxmaster.playVideo(data);
+canvas.fxmaster.playVideo(data);
 ```
 
 Here's an example using the sequencer instead:
