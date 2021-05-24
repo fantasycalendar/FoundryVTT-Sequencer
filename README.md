@@ -111,13 +111,94 @@ This will delay the sprite from being played for a set amount of milliseconds.
 
 ## Advanced Example
 
-Here's an example using the `effect()` method.
+To get the following result:
+
+![Animation showing the code above](docs/images/Animation.gif)
+
+You'd have to write something like this:
+
+```js
+async function wait(ms){
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
+
+const token = canvas.tokens.controlled[0];
+
+let data = {
+    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm",
+    position: token.center,
+    anchor: {
+        x: 0.5,
+        y: 0.5
+    },
+    scale: {
+        x: 0.35,
+        y: 0.35
+    }
+};
+
+game.socket.emit("module.fxmaster", data);
+await canvas.fxmaster.playVideo(data);
+
+wait(1000);
+
+let to_location = {
+    x: token.center.x-500,
+    y: token.center.y
+}
+
+let ray = new Ray(token.center, this._to);
+
+data = {
+    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm",
+    position: token.center,
+    anchor: {
+        x: 0.5,
+        y: 0.5
+    },
+    scale: {
+        x: 0.35,
+        y: 0.35
+    },
+    rotation: ray.angle,
+    width: ray.distance
+};
+
+game.socket.emit("module.fxmaster", data);
+await canvas.fxmaster.playVideo(data);
+
+wait(100);
+
+await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
+
+let data = {
+    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
+    position: token.center,
+    anchor: {
+        x: 0.5,
+        y: 0.5
+    },
+    scale: {
+        x: 0.5,
+        y: 0.5
+    }
+};
+
+game.socket.emit("module.fxmaster", data);
+await canvas.fxmaster.playVideo(data);
+```
+
+Here's an example using the sequencer instead:
+
 * It plays an effect on a token's location
 * Waits for 1 second
 * Plays another effect pointing towards 500px to the left of the token
 * Waits for 100 milliseconds
 * Teleports the token 500px to the left
 * Plays another effect on the token's location
+
 ```js
 let sequence = new Sequence()
     .effect()
@@ -147,7 +228,6 @@ let sequence = new Sequence()
         .done()
 ```
 
-![Animation showing the code above](docs/images/Animation.gif)
 
 ## Download here:
 `https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
