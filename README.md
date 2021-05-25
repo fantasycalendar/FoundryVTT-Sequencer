@@ -2,7 +2,7 @@
 
 # Sequencer
 
-This module implements a basic sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations.
+This module implements a basic pipeline that can be used for managing the flow of a set of functions, effects, sounds, and macros.
 
 The effects created by this module is completely synchronized across all clients thanks to the hard work of U~man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster).
 
@@ -53,25 +53,39 @@ To start the sequence off, you simply call `play()` on the sequence.
 
 This creates a function that will be called. Remember that if you want your function to be asynchronous and you want it to properly wait, you'll want to make the above:
 
-`.then(async function(){})`
+`.then(async () => {})`
 
 In addition, if you want your function to be `await`ed, you'll need to pass `true` as the last argument in the method call, like so:
 
-`.then(async function(){}, true)`
+`.then(async () => {}, true)`
+
+### Macro
+
+`.macro("MacroName")` or `.macro(macroReference)`
+
+This will run a macro based on a name or a direct reference to a macro. If the macro is not found, Sequencer will complain. Loudly.
+
+Similar to `.then()`, it's expected that you pass a boolean as a second parameter if you wish the Sequencer to wait for the macro to finish.
+
+`.macro("New Macro", true)`
 
 ### Wait
+
+`.wait(1000)`
 
 Simple function, it makes the sequence wait at this section for as many milliseconds as you pass to this method.
 
 ### Effect
 
-Declares the start of an effect section to be played through FXMaster. From here onwards until `.done()` is called, you'll be working on the Effect section (ie, Then, and Wait does not work here).
+`.effect()` or `.effect(inFile)`
+
+Declares the start of an effect section to be played through FXMaster. From here onwards until `.done()` is called, you'll be working on the Effect object (ie, Then, and Wait does not work here).
 
 #### File
 
 `.file(inPath)`
 
-This declares which .webm to be played
+This declares which .webm to be played, but you can also do that when first initializing the effect.
 
 #### Async
 
@@ -111,6 +125,32 @@ This will center the sprite on the given location, effectively giving it an anch
 
 This will delay the sprite from being played for a set amount of milliseconds.
 
+### Sound
+
+`.sound()` or `.sound(inFile)`
+
+This declares the start of a sound section to be played through the AudioHelper. From here onwards until `.done()` is called, you'll be working on the Sound object.
+
+Sadly, sounds are not asynchronous, so this class cannot be `await`ed.
+
+#### File
+
+`.file(inPath)`
+
+This declares which sound to be played, but you can also do that when first initializing the sound.
+
+#### Volume
+
+`.volume(inFloat)`
+
+A normalized value between `0.0` and `1.0` which determines the volume of the sound. Defaults to `0.8`.
+
+#### Delay
+
+`.delay(1000)`
+
+This will delay the sound from being played for a set amount of milliseconds.
+
 ## Advanced Example
 
 To get the following result:
@@ -144,7 +184,16 @@ let data = {
 game.socket.emit("module.fxmaster", data);
 canvas.fxmaster.playVideo(data);
 
-await wait(1000);
+await wait(400);
+
+AudioHelper.play({
+    src: ["Music/Sound_Effects/teleport.wav"],
+    volume: 0.8,
+    autoplay: true,
+    loop: false
+}, true);
+
+await wait(600);
 
 let to_location = {
     x: token.center.x-500,
@@ -192,7 +241,7 @@ game.socket.emit("module.fxmaster", data);
 canvas.fxmaster.playVideo(data);
 ```
 
-Here's an example using the sequencer instead:
+Here's an example using the Sequencer instead:
 
 * It plays an effect on a token's location
 * Waits for 1 second
@@ -202,32 +251,36 @@ Here's an example using the sequencer instead:
 * Plays another effect on the token's location
 
 ```js
+const token = canvas.tokens.controlled[0];
 let sequence = new Sequence()
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm")
-        .atLocation(canvas.tokens.controlled[0])
+        .atLocation(token)
         .scale(0.35)
         .done()
-    .wait(1000)
+    .wait(400)
+    .sound("Music/Sound_Effects/teleport.wav").done()
+    .wait(600)
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
-        .atLocation(canvas.tokens.controlled[0])
+        .atLocation(token)
         .aimTowards({
-            x: canvas.tokens.controlled[0].center.x-500,
-            y: canvas.tokens.controlled[0].center.y
+            x: token.center.x-500,
+            y: token.center.y
         })
         .scale(0.2)
         .done()
     .wait(100)
     .then(async function(){
-        let token = canvas.tokens.controlled[0];
         await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
     })
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
-        .atLocation(canvas.tokens.controlled[0])
+        .atLocation(token)
         .scale(0.5)
         .done()
+
+sequence.play();
 ```
 
 

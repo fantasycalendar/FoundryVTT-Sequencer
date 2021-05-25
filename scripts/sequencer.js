@@ -1,28 +1,55 @@
 async function wait(ms) { return new Promise(resolve => { setTimeout(resolve, ms); }); }
 
-class Sequence{
+export class Sequence{
 
     constructor() {
         this.sections = [];
     }
 
-    then(func, async = false){
-        let section = new Section(func, async);
+    then(inFunc, inAsync = true){
+        let section = new Section(inFunc, inAsync);
         this.sections.push(section);
         return this;
     }
 
-    effect(){
-        let effect = new Effect(this);
+    effect(inFile=""){
+        let effect = new Effect(this, inFile);
         this.sections.push(effect);
         return effect;
     }
 
+    macro(inMacro, inAsync = true){
+
+        let macro;
+        if(typeof inMacro === "string") {
+            macro = game.macros.getName(inMacro);
+            if (!macro) {
+                throw new Error(`Macro '${inMacro}' was not found`);
+            }
+        } else if(inMacro instanceof Macro) {
+            macro = inMacro;
+        } else {
+            throw new Error(`inMacro must be of instance string or Macro`);
+        }
+
+        let section = new Section(async function(){
+            await macro.execute();
+        }, inAsync);
+        this.sections.push(section);
+        return this;
+    }
+
+    sound(inFile=""){
+        let sound = new Sound(this, inFile);
+        this.sections.push(sound);
+        return sound;
+    }
+
     wait(ms = 0){
 
-        this.sections.push(new Section(() => {
+        this.sections.push(new Section(async function(){
             return new Promise((resolve, reject) => { setTimeout(resolve, ms) });
-        }));
+        }, true));
 
         return this;
 
@@ -41,13 +68,13 @@ class Sequence{
 
 class Section{
 
-    constructor(func, async) {
-        this.func = func;
-        this._async = async ?? true;
+    constructor(inFunc, inAsync) {
+        this.func = inFunc;
+        this.async = inAsync;
     }
 
     async run(){
-        if(this._async) {
+        if(this.async) {
             await this.func();
         }else{
             this.func();
@@ -59,14 +86,15 @@ class Section{
 
 class Effect {
 
-    constructor(sequence) {
-        this.sequence = sequence;
+    constructor(inSequence, inFile="") {
+        this.sequence = inSequence;
         this._async = false;
         this._delay = 0;
-        this._file = "";
+        this._file = inFile;
         this._from = undefined;
         this._to = undefined;
         this._moves = false;
+        this._stretch = false;
         this._scale = undefined;
         this._anchor = undefined;
     }
@@ -97,16 +125,16 @@ class Effect {
                     x: this._from.center.x,
                     y: this._from.center.y
                 }
+                if(!this._anchor){
+                    data.anchor = {
+                        x: 0.5,
+                        y: 0.5
+                    }
+                }
             } else {
                 data.position = {
                     x: this._from?.x ?? 0,
                     y: this._from?.y ?? 0,
-                }
-            }
-            if (!this._anchor) {
-                data.anchor = {
-                    x: 0.5,
-                    y: 0.5
                 }
             }
         }
@@ -131,7 +159,9 @@ class Effect {
 
             if (this._moves) {
                 data.distance = ray.distance;
-            } else {
+            }
+
+            if (this._stretch){
                 data.width = ray.distance;
             }
 
@@ -178,6 +208,16 @@ class Effect {
 
     async(inBool) {
         this._async = inBool;
+        return this;
+    }
+
+    moves(inBool) {
+        this._moves = inBool;
+        return this;
+    }
+
+    stretch(inBool) {
+        this._stretch = inBool;
         return this;
     }
 
@@ -231,6 +271,61 @@ class Effect {
     }
 
     done() {
+        return this.sequence;
+    }
+
+}
+
+class Sound{
+
+    constructor(inSequence, inFile="") {
+        this.sequence = inSequence;
+        this._delay = 0;
+        this._file = inFile;
+        this._volume = 0.8;
+    }
+
+    _sanitizeData(){
+
+        let data = {
+            src: [this._file],
+            volume: this._volume ?? 0.8,
+            autoplay: true,
+            loop: false
+        };
+
+        return data;
+
+    }
+
+    file(inFile){
+        this._file = inFile;
+        return this;
+    }
+
+    volume(inVolume){
+        this._volume = Math.max(0, Math.min(1.0, inVolume));
+        return this;
+    }
+
+    delay(ms){
+        this._delay = ms;
+        return this;
+    }
+
+    async run() {
+        let data = this._sanitizeData();
+        let delay = this._delay;
+        let self = this;
+        return new Promise(resolve => {
+            setTimeout(async function () {
+                AudioHelper.play(data, true);
+                resolve(self);
+            }, delay);
+        });
+    }
+
+    done(){
         return this.sequence;
     }
 
