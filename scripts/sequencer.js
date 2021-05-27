@@ -1,5 +1,7 @@
 async function wait(ms) { return new Promise(resolve => { setTimeout(resolve, ms); }); }
 
+import * as lib from './lib.js';
+
 export class Sequence{
 
     constructor() {
@@ -7,8 +9,8 @@ export class Sequence{
     }
 
     then(inFunc, inAsync = true){
-        let section = new Section(inFunc, inAsync);
-        this.sections.push(section);
+        let func = new Function(inFunc, inAsync);
+        this.sections.push(func);
         return this;
     }
 
@@ -68,7 +70,40 @@ export class Sequence{
 
 class Section{
 
-    constructor(inFunc, inAsync) {
+    constructor(inSequence){
+        this.sequence = inSequence;
+    }
+
+    then(inFunc, inAsync = true){
+        return this.sequence.then(inFunc, inAsync);
+    }
+
+    effect(inFile=""){
+        return this.sequence.effect(inFile);
+    }
+
+    macro(inMacro, inAsync = true){
+        return this.sequence.macro(inMacro, inAsync)
+    }
+
+    sound(inFile=""){
+        return this.sequence.sound(inFile);
+    }
+
+    wait(ms = 0){
+        return this.sequence.wait(ms);
+    }
+
+    async play(){
+        return this.sequence.play();
+    }
+
+}
+
+class Function extends Section{
+
+    constructor(inSequence, inFunc, inAsync) {
+        super(inSequence);
         this.func = inFunc;
         this.async = inAsync;
     }
@@ -84,10 +119,10 @@ class Section{
 
 }
 
-class Effect {
+class Effect extends Section{
 
     constructor(inSequence, inFile="") {
-        this.sequence = inSequence;
+        super(inSequence)
         this._async = false;
         this._delay = 0;
         this._file = inFile;
@@ -97,6 +132,11 @@ class Effect {
         this._stretch = false;
         this._scale = undefined;
         this._anchor = undefined;
+        this._rotation = 0;
+        this._missed = false;
+        this._overrideData = function(data){
+            return data;
+        };
     }
 
     _sanitizeData() {
@@ -108,15 +148,16 @@ class Effect {
                 y: 0,
             },
             anchor: {
-                x: this._anchor?.x ?? 1.0,
-                y: this._anchor?.y ?? 1.0
+                x: this._anchor?.x ?? 0.0,
+                y: this._anchor?.y ?? 0.0
             },
             scale: {
                 x: this._scale?.x ?? 1.0,
                 y: this._scale?.y ?? 1.0
             },
             angle: 0,
-            speed: 0,
+            rotation: 0,
+            speed: 0
         };
 
         if (this._from) {
@@ -142,10 +183,16 @@ class Effect {
         if (this._to) {
 
             if (this._to instanceof Token) {
-                this._to = {
-                    x: this._to.center.x,
-                    y: this._to.center.y
+
+                if(this._missed){
+                    this._to = this._calcMissed(this._to);
+                }else{
+                    this._to = {
+                        x: this._to.center.x,
+                        y: this._to.center.y
+                    }
                 }
+
             } else {
                 this._to = {
                     x: this._to?.x ?? 0,
@@ -157,43 +204,93 @@ class Effect {
 
             data.rotation = ray.angle;
 
+            data._distance = ray.distance;
+            data._width = ray.distance;
+
             if (this._moves) {
                 data.distance = ray.distance;
-            }
 
-            if (this._stretch){
+                if (!this._anchor) {
+                    data.anchor = {
+                        x: 0.8,
+                        y: 0.5,
+                    };
+                }
+            }else if (this._stretch){
                 data.width = ray.distance;
-            }
 
-            if (!this._anchor) {
-                data.anchor = {
-                    x: 0.0,
-                    y: 0.5,
-                };
+                if (!this._anchor) {
+                    data.anchor = {
+                        x: 0.0,
+                        y: 0.5,
+                    };
+                }
+
+            }else{
+
+                if (!this._anchor) {
+                    data.anchor = {
+                        x: 0.0,
+                        y: 0.5,
+                    };
+                }
+
             }
 
         }
+
+        data.rotation += this._rotation;
+
+        data = this._overrideData(data);
 
         return data;
 
     }
 
-    async run() {
-        let data = this._sanitizeData();
-        let delay = this._delay;
-        let async = this._async;
-        let self = this;
-        return new Promise((resolve, reject) => {
-            setTimeout(async function () {
-                game.socket.emit("module.fxmaster", data);
-                if (async) {
-                    await canvas.fxmaster.playVideo(data);
-                } else {
-                    canvas.fxmaster.playVideo(data);
-                }
-                resolve(self);
-            }, delay);
-        });
+    _calcMissed(target){
+
+        let oddEvenX = Math.random() < 0.5 ? -1 : 1;
+        let oddEvenY = Math.random() < 0.5 ? -1 : 1;
+        let missMax;
+        let missMin;
+        let targetSize = target.actor.data.data.traits.size;
+
+        if(targetSize === "grg"){
+            missMax = (canvas.grid.size * 3);
+            missMin = (canvas.grid.size * 2);
+        }else if(targetSize === "huge"){
+            missMax = (canvas.grid.size * 2.5);
+            missMin = (canvas.grid.size * 1.5);
+        }else if(targetSize === "lg"){
+            missMax = canvas.grid.size * 2;
+            missMin = canvas.grid.size;
+        }else{
+            missMax = canvas.grid.size * 1.5;
+            missMin = canvas.grid.size * 0.5;
+        }
+
+        return {
+            x: target.center.x + (lib.random_int_between(missMin, missMax) * oddEvenX),
+            y: target.center.y + (lib.random_int_between(missMin, missMax) * oddEvenY)
+        }
+
+    }
+
+    _validateLocation(inLocation){
+
+        if(inLocation?._id) {
+            inLocation = canvas.tokens.get(inLocation._id) ?? inLocation;
+        }
+
+        if (inLocation instanceof Token) {
+            return inLocation;
+        }
+
+        return {
+            x: inLocation?.x ?? 0,
+            y: inLocation?.y ?? 0
+        }
+
     }
 
     file(inFile) {
@@ -221,39 +318,35 @@ class Effect {
         return this;
     }
 
-    atLocation(inLocation) {
-
-        if (inLocation instanceof Token) {
-            this._from = inLocation;
-        } else {
-            this._from = {
-                x: inLocation.x ?? 0,
-                y: inLocation.y ?? 0
-            }
-        }
-
+    missed(inBool){
+        this._missed = inBool;
         return this;
+    }
 
+    overrideData(inFunc){
+        if(!(inFunc && {}.toString.call(inFunc) === '[object Function]')){
+            throw new Error("inFunc must be a function!")
+        }
+        this._overrideData = inFunc;
+        return this;
+    }
+
+    atLocation(inLocation) {
+        this._from = this._validateLocation(inLocation);
+        return this;
     }
 
     aimTowards(inLocation) {
-
-        if (inLocation instanceof Token) {
-            this._to = inLocation;
-        } else {
-            this._to = {
-                x: inLocation.x ?? 0,
-                y: inLocation.y ?? 0
-            }
-        }
-
+        this._to = this._validateLocation(inLocation);
         return this;
-
     }
 
-    scale(inScale) {
+    scale(inScale, inScaleMax) {
 
         if (typeof inScale === "number") {
+            if(inScaleMax && typeof inScaleMax === "number"){
+                inScale = ((inScaleMax - inScale) * Math.random()) + inScale;
+            }
             inScale = {
                 x: inScale,
                 y: inScale
@@ -265,21 +358,57 @@ class Effect {
 
     }
 
-    center() {
-        this._anchor = {x: 0.5, y: 0.5};
+    anchor(inAnchor){
+        if (typeof inAnchor === "number") {
+            inAnchor = {
+                x: inAnchor,
+                y: inAnchor
+            }
+        }
+
+        inAnchor = {
+            x: inAnchor?.x ?? 0.5,
+            y: inAnchor?.y ?? 0.5
+        }
+
+        this._anchor = inAnchor;
         return this;
     }
 
-    done() {
-        return this.sequence;
+    center() {
+        this.anchor();
+        return this;
+    }
+
+    randomRotation() {
+        this._rotation = Math.random() * Math.PI;
+        return this;
+    }
+
+    async run() {
+        let data = this._sanitizeData();
+        let delay = this._delay;
+        let async = this._async;
+        let self = this;
+        return new Promise((resolve, reject) => {
+            setTimeout(async function () {
+                game.socket.emit("module.fxmaster", data);
+                if (async) {
+                    await canvas.fxmaster.playVideo(data);
+                } else {
+                    canvas.fxmaster.playVideo(data);
+                }
+                resolve(self);
+            }, delay);
+        });
     }
 
 }
 
-class Sound{
+class Sound extends Section{
 
     constructor(inSequence, inFile="") {
-        this.sequence = inSequence;
+        super(inSequence)
         this._delay = 0;
         this._file = inFile;
         this._volume = 0.8;
@@ -323,10 +452,6 @@ class Sound{
                 resolve(self);
             }, delay);
         });
-    }
-
-    done(){
-        return this.sequence;
     }
 
 }

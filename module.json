@@ -16,7 +16,10 @@
   ],
   "esmodules": [
     "/scripts/module.js",
-    "/scripts/sequencer.js"
+    "/scripts/sequencer.js",
+  ],
+  "scripts": [
+    "/scripts/lib.js"
   ],
   "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",
   "manifest": "https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/manifest.json",

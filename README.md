@@ -73,13 +73,13 @@ Similar to `.then()`, it's expected that you pass a boolean as a second paramete
 
 `.wait(1000)`
 
-Simple function, it makes the sequence wait at this section for as many milliseconds as you pass to this method.
+Simple function, it makes the sequence wait after the last section for as many milliseconds as you pass to this method.
 
 ### Effect
 
 `.effect()` or `.effect(inFile)`
 
-Declares the start of an effect section to be played through FXMaster. From here onwards until `.done()` is called, you'll be working on the Effect object (ie, Then, and Wait does not work here).
+Declares an effect to be played through FXMaster. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
 
 #### File
 
@@ -87,11 +87,23 @@ Declares the start of an effect section to be played through FXMaster. From here
 
 This declares which .webm to be played, but you can also do that when first initializing the effect.
 
+#### Override data
+
+`.overrideData(data => {})`
+
+This will manipulate the final data of the Effect, which means that you can directly interface with the calculations made by the Effect.
+
 #### Async
 
 `.async(inBool)`
 
 Passing `true` to this method will cause the Sequencer to wait until the effect has finished playing.
+
+#### Missed
+
+`.missed(inBool)`
+
+Passing `true` to this method will cause the effect to target a location close to the `.aimTowards()` location, but not on it.
 
 #### At Location
 
@@ -107,15 +119,32 @@ Another smart method (similar to above), which will cause the effect to be rotat
 
 #### Scale
 
-`.scale(0.5)` or `.scale({ x: 0.5, y: 1.0 })`
+`.scale(0.5)` or `.scale({ x: 0.5, y: 1.0 })` or `.scale(0.2, 0.6)`
 
-A method that can take a number or an object with x and y for non-uniform scaling of the sprite to be played.
+A method that can take the following:
+- A number to set the scale uniformly
+- An object with x and y for non-uniform scaling
+- Two numbers which the Sequencer will randomly pick a uniform scale between
+
+#### Anchor
+
+`.anchor({ x: 0.5, y: 0.5 })` or `.anchor(0.5)`
+
+This will anchor the sprite according to the given x and y coordinates (or single number), effectively giving it an anchor of `{x: 0.5, y: 0.5}`.
 
 #### Center
 
 `.center()`
 
 This will center the sprite on the given location, effectively giving it an anchor of `{x: 0.5, y: 0.5}`.
+
+**Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
+
+#### Random Rotation
+
+`.randomRotation()`
+
+This will cause the sprite to have a random rotation, which means it should **not** be used with `.aimTowards()`.
 
 **Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
 
@@ -129,7 +158,7 @@ This will delay the sprite from being played for a set amount of milliseconds.
 
 `.sound()` or `.sound(inFile)`
 
-This declares the start of a sound section to be played through the AudioHelper. From here onwards until `.done()` is called, you'll be working on the Sound object.
+Declares an sound to be played through the AudioHelper. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
 
 Sadly, sounds are not asynchronous, so this class cannot be `await`ed.
 
