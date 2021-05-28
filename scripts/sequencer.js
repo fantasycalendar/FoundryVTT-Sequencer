@@ -8,16 +8,40 @@ export class Sequence{
         this.sections = [];
     }
 
+    _proxyWrap(inSection){
+
+        return new Proxy(inSection, {
+            get(target, name, receiver) {
+
+                if (typeof target[name] === 'undefined') {
+                    if (typeof target.sequence[name] === 'undefined') {
+                        throw new Error(`Function ${name} was not found!`);
+                    }
+                    return target.sequence[name];
+                }
+
+                return Reflect.get(target, name, receiver);
+
+            }
+        });
+
+    }
+
+    _addSection(inSection){
+        let section = this._proxyWrap(inSection);
+        this.sections.push(section);
+        return section;
+    }
+
     then(inFunc, inAsync = true){
-        let func = new Function(inFunc, inAsync);
-        this.sections.push(func);
+        let func = new Section(inFunc, inAsync);
+        this._addSection(func)
         return this;
     }
 
     effect(inFile=""){
         let effect = new Effect(this, inFile);
-        this.sections.push(effect);
-        return effect;
+        return this._addSection(effect);
     }
 
     macro(inMacro, inAsync = true){
@@ -34,24 +58,27 @@ export class Sequence{
             throw new Error(`inMacro must be of instance string or Macro`);
         }
 
-        let section = new Section(async function(){
+        let func = new Section(this, async function(){
             await macro.execute();
         }, inAsync);
-        this.sections.push(section);
+
+        this._addSection(func);
+
         return this;
     }
 
     sound(inFile=""){
         let sound = new Sound(this, inFile);
-        this.sections.push(sound);
-        return sound;
+        return this._addSection(sound);
     }
 
     wait(ms = 0){
 
-        this.sections.push(new Section(async function(){
+        let section = new Section(this, async function(){
             return new Promise((resolve, reject) => { setTimeout(resolve, ms) });
-        }, true));
+        }, true);
+
+        this._addSection(section);
 
         return this;
 
@@ -70,40 +97,9 @@ export class Sequence{
 
 class Section{
 
-    constructor(inSequence){
-        this.sequence = inSequence;
-    }
-
-    then(inFunc, inAsync = true){
-        return this.sequence.then(inFunc, inAsync);
-    }
-
-    effect(inFile=""){
-        return this.sequence.effect(inFile);
-    }
-
-    macro(inMacro, inAsync = true){
-        return this.sequence.macro(inMacro, inAsync)
-    }
-
-    sound(inFile=""){
-        return this.sequence.sound(inFile);
-    }
-
-    wait(ms = 0){
-        return this.sequence.wait(ms);
-    }
-
-    async play(){
-        return this.sequence.play();
-    }
-
-}
-
-class Function extends Section{
-
     constructor(inSequence, inFunc, inAsync) {
-        super(inSequence);
+        this.sequence = inSequence;
+        if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
         this.func = inFunc;
         this.async = inAsync;
     }
@@ -119,13 +115,14 @@ class Function extends Section{
 
 }
 
-class Effect extends Section{
+class Effect{
 
     constructor(inSequence, inFile="") {
-        super(inSequence)
+        this.sequence = inSequence;
         this._async = false;
         this._delay = 0;
-        this._file = inFile;
+        this._baseFolder = "";
+        this._file = "";
         this._from = undefined;
         this._to = undefined;
         this._moves = false;
@@ -134,14 +131,12 @@ class Effect extends Section{
         this._anchor = undefined;
         this._rotation = 0;
         this._missed = false;
-        this._overrideData = function(data){
-            return data;
-        };
+        this._overrides = [];
     }
 
-    _sanitizeData() {
+    _sanitizeEffect() {
 
-        let data = {
+        let effect = {
             file: this._file,
             position: {
                 x: 0,
@@ -157,23 +152,24 @@ class Effect extends Section{
             },
             angle: 0,
             rotation: 0,
-            speed: 0
+            speed: 0,
+            _distance: 0
         };
 
         if (this._from) {
             if (this._from instanceof Token) {
-                data.position = {
+                effect.position = {
                     x: this._from.center.x,
                     y: this._from.center.y
                 }
                 if(!this._anchor){
-                    data.anchor = {
+                    effect.anchor = {
                         x: 0.5,
                         y: 0.5
                     }
                 }
             } else {
-                data.position = {
+                effect.position = {
                     x: this._from?.x ?? 0,
                     y: this._from?.y ?? 0,
                 }
@@ -185,7 +181,7 @@ class Effect extends Section{
             if (this._to instanceof Token) {
 
                 if(this._missed){
-                    this._to = this._calcMissed(this._to);
+                    this._to = this._calculateMissedPosition(this._to);
                 }else{
                     this._to = {
                         x: this._to.center.x,
@@ -200,27 +196,26 @@ class Effect extends Section{
                 }
             }
 
-            let ray = new Ray(data.position, this._to);
+            let ray = new Ray(effect.position, this._to);
 
-            data.rotation = ray.angle;
+            effect.rotation = ray.angle;
 
-            data._distance = ray.distance;
-            data._width = ray.distance;
+            effect._distance = ray.distance;
 
             if (this._moves) {
-                data.distance = ray.distance;
+                effect.distance = ray.distance;
 
                 if (!this._anchor) {
-                    data.anchor = {
+                    effect.anchor = {
                         x: 0.8,
                         y: 0.5,
                     };
                 }
             }else if (this._stretch){
-                data.width = ray.distance;
+                effect.width = ray.distance;
 
                 if (!this._anchor) {
-                    data.anchor = {
+                    effect.anchor = {
                         x: 0.0,
                         y: 0.5,
                     };
@@ -229,7 +224,7 @@ class Effect extends Section{
             }else{
 
                 if (!this._anchor) {
-                    data.anchor = {
+                    effect.anchor = {
                         x: 0.0,
                         y: 0.5,
                     };
@@ -239,21 +234,25 @@ class Effect extends Section{
 
         }
 
-        data.rotation += this._rotation;
+        effect.rotation += this._rotation;
 
-        data = this._overrideData(data);
+        for(let override of this._overrides){
+            effect = override(effect);
+        }
 
-        return data;
+        effect.file = this._baseFolder + effect.file;
+
+        return effect;
 
     }
 
-    _calcMissed(target){
+    _calculateMissedPosition(target){
 
         let oddEvenX = Math.random() < 0.5 ? -1 : 1;
         let oddEvenY = Math.random() < 0.5 ? -1 : 1;
         let missMax;
         let missMin;
-        let targetSize = target.actor.data.data.traits.size;
+        let targetSize = target?.actor?.data?.data?.traits?.size ?? "med";
 
         if(targetSize === "grg"){
             missMax = (canvas.grid.size * 3);
@@ -293,6 +292,15 @@ class Effect extends Section{
 
     }
 
+    baseFolder(inBaseFolder){
+        if(!inBaseFolder.endsWith("/") || !inBaseFolder.endsWith("\\")){
+            inBaseFolder = inBaseFolder.replace("\\", "/");
+            inBaseFolder += "/";
+        }
+        this._baseFolder = inBaseFolder;
+        return this;
+    }
+
     file(inFile) {
         this._file = inFile;
         return this;
@@ -323,11 +331,9 @@ class Effect extends Section{
         return this;
     }
 
-    overrideData(inFunc){
-        if(!(inFunc && {}.toString.call(inFunc) === '[object Function]')){
-            throw new Error("inFunc must be a function!")
-        }
-        this._overrideData = inFunc;
+    addOverride(inFunc){
+        if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
+        this._overrides.push(inFunc);
         return this;
     }
 
@@ -386,17 +392,17 @@ class Effect extends Section{
     }
 
     async run() {
-        let data = this._sanitizeData();
+        let effect = this._sanitizeEffect();
         let delay = this._delay;
         let async = this._async;
         let self = this;
         return new Promise((resolve, reject) => {
             setTimeout(async function () {
-                game.socket.emit("module.fxmaster", data);
+                game.socket.emit("module.fxmaster", effect);
                 if (async) {
-                    await canvas.fxmaster.playVideo(data);
+                    await canvas.fxmaster.playVideo(effect);
                 } else {
-                    canvas.fxmaster.playVideo(data);
+                    canvas.fxmaster.playVideo(effect);
                 }
                 resolve(self);
             }, delay);
@@ -405,25 +411,25 @@ class Effect extends Section{
 
 }
 
-class Sound extends Section{
+class Sound{
 
     constructor(inSequence, inFile="") {
-        super(inSequence)
+        this.sequence = inSequence;
         this._delay = 0;
         this._file = inFile;
         this._volume = 0.8;
     }
 
-    _sanitizeData(){
+    _sanitizeSound(){
 
-        let data = {
+        let sound = {
             src: [this._file],
             volume: this._volume ?? 0.8,
             autoplay: true,
             loop: false
         };
 
-        return data;
+        return sound;
 
     }
 
@@ -443,12 +449,12 @@ class Sound extends Section{
     }
 
     async run() {
-        let data = this._sanitizeData();
+        let sound = this._sanitizeSound();
         let delay = this._delay;
         let self = this;
         return new Promise(resolve => {
             setTimeout(async function () {
-                AudioHelper.play(data, true);
+                AudioHelper.play(sound, true);
                 resolve(self);
             }, delay);
         });

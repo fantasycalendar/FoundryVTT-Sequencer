@@ -17,8 +17,6 @@
   "esmodules": [
     "/scripts/module.js",
     "/scripts/sequencer.js",
-  ],
-  "scripts": [
     "/scripts/lib.js"
   ],
   "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",
