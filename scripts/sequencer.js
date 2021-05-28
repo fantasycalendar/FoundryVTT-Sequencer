@@ -1,6 +1,5 @@
-async function wait(ms) { return new Promise(resolve => { setTimeout(resolve, ms); }); }
-
 import * as lib from './lib.js';
+
 
 export class Sequence{
 
@@ -14,6 +13,7 @@ export class Sequence{
             get(target, name, receiver) {
 
                 if (typeof target[name] === 'undefined') {
+
                     if (typeof target.sequence[name] === 'undefined') {
                         throw new Error(`Function ${name} was not found!`);
                     }
@@ -30,11 +30,18 @@ export class Sequence{
     _addSection(inSection){
         let section = this._proxyWrap(inSection);
         this.sections.push(section);
+        this.sections.push(this._createWaitSection());
         return section;
     }
 
+    _createWaitSection(ms= 1){
+        return new FunctionSection(this, async function(){
+            return new Promise((resolve, reject) => { setTimeout(resolve, ms) });
+        }, true);
+    }
+
     then(inFunc, inAsync = true){
-        let func = new Section(inFunc, inAsync);
+        let func = new FunctionSection(inFunc, inAsync);
         this._addSection(func)
         return this;
     }
@@ -58,7 +65,7 @@ export class Sequence{
             throw new Error(`inMacro must be of instance string or Macro`);
         }
 
-        let func = new Section(this, async function(){
+        let func = new FunctionSection(this, async function(){
             await macro.execute();
         }, inAsync);
 
@@ -72,32 +79,58 @@ export class Sequence{
         return this._addSection(sound);
     }
 
-    wait(ms = 0){
-
-        let section = new Section(this, async function(){
-            return new Promise((resolve, reject) => { setTimeout(resolve, ms) });
-        }, true);
-
+    wait(ms = 1){
+        if(ms < 1) throw new Error('Wait ms cannot be less than 1')
+        let section = this._createWaitSection(ms);
         this._addSection(section);
-
         return this;
-
     }
 
     async play(){
-
+        console.log("Sequencer | Starting playback...")
         for(let section of this.sections){
-            await wait(1);
-            await section.run();
+            await section.execute();
         }
-
+        console.log("Sequencer | Playback done!")
     }
 
 }
 
 class Section{
 
+    constructor(){
+        this._repetitions = 1;
+        this._delayMin = 0;
+        this._delayMax = 0;
+    }
+
+    repeats(inRepetitions, delayMin = 1, delayMax = 1){
+        this._repetitions = inRepetitions;
+        this._delayMin = delayMin;
+        this._delayMax = Math.max(delayMin, delayMax);
+        return this;
+    }
+
+    async execute(){
+        for(let i = 0; i < this._repetitions; i++){
+            await this.run();
+            await this.wait();
+        }
+    }
+
+    async wait(){
+        let delay = lib.random_float_between(this._delayMin, this._delayMax);
+        return new Promise((resolve) => {
+            setTimeout(resolve, delay)
+        });
+    }
+
+}
+
+class FunctionSection extends Section{
+
     constructor(inSequence, inFunc, inAsync) {
+        super();
         this.sequence = inSequence;
         if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
         this.func = inFunc;
@@ -115,28 +148,33 @@ class Section{
 
 }
 
-class Effect{
+class Effect extends Section{
 
     constructor(inSequence, inFile="") {
+        super()
         this.sequence = inSequence;
         this._async = false;
         this._delay = 0;
         this._baseFolder = "";
         this._file = "";
-        this._from = undefined;
-        this._to = undefined;
+        this._from = false;
+        this._to = false;
         this._moves = false;
         this._stretch = false;
-        this._scale = undefined;
-        this._anchor = undefined;
+        this._scale = false;
+        this._anchor = false;
         this._rotation = 0;
         this._missed = false;
+        this._startPoint = 0;
+        this._endPoint = 0;
+        this._cachedDimensions = {};
+        this._mustache = false;
         this._overrides = [];
     }
 
-    _sanitizeEffect() {
+    async _sanitizeEffect() {
 
-        let effect = {
+        let data = {
             file: this._file,
             position: {
                 x: 0,
@@ -158,18 +196,18 @@ class Effect{
 
         if (this._from) {
             if (this._from instanceof Token) {
-                effect.position = {
+                data.position = {
                     x: this._from.center.x,
                     y: this._from.center.y
                 }
                 if(!this._anchor){
-                    effect.anchor = {
+                    data.anchor = {
                         x: 0.5,
                         y: 0.5
                     }
                 }
             } else {
-                effect.position = {
+                data.position = {
                     x: this._from?.x ?? 0,
                     y: this._from?.y ?? 0,
                 }
@@ -178,44 +216,46 @@ class Effect{
 
         if (this._to) {
 
+            let target;
+
             if (this._to instanceof Token) {
 
                 if(this._missed){
-                    this._to = this._calculateMissedPosition(this._to);
+                    target = this._calculateMissedPosition(this._to);
                 }else{
-                    this._to = {
+                    target = {
                         x: this._to.center.x,
                         y: this._to.center.y
                     }
                 }
 
             } else {
-                this._to = {
+                target = {
                     x: this._to?.x ?? 0,
                     y: this._to?.y ?? 0,
                 }
             }
 
-            let ray = new Ray(effect.position, this._to);
+            let ray = new Ray(data.position, target);
 
-            effect.rotation = ray.angle;
+            data.rotation = ray.angle;
 
-            effect._distance = ray.distance;
+            data._distance = ray.distance;
 
             if (this._moves) {
-                effect.distance = ray.distance;
+                data.distance = ray.distance;
 
                 if (!this._anchor) {
-                    effect.anchor = {
+                    data.anchor = {
                         x: 0.8,
                         y: 0.5,
                     };
                 }
             }else if (this._stretch){
-                effect.width = ray.distance;
+                data.width = ray.distance;
 
                 if (!this._anchor) {
-                    effect.anchor = {
+                    data.anchor = {
                         x: 0.0,
                         y: 0.5,
                     };
@@ -224,7 +264,7 @@ class Effect{
             }else{
 
                 if (!this._anchor) {
-                    effect.anchor = {
+                    data.anchor = {
                         x: 0.0,
                         y: 0.5,
                     };
@@ -234,16 +274,53 @@ class Effect{
 
         }
 
-        effect.rotation += this._rotation;
+        data.rotation += this._rotation;
 
         for(let override of this._overrides){
-            effect = override(effect);
+            data = await override(this, data);
         }
 
-        effect.file = this._baseFolder + effect.file;
+        if(Array.isArray(data.file)){
+            data.file = lib.random_array_element(data.file)
+        }
 
-        return effect;
+        if(this._mustache){
+            let template = Handlebars.compile(data.file);
+            data.file = template(this._mustache);
+        }
 
+        data = await this._calculateHitVector(data);
+
+        data.file = (this._baseFolder + data.file);
+
+        return data;
+
+    }
+
+    async _getFileDimensions(inFile){
+        let file = this._baseFolder + inFile;
+        if(Object.keys(this._cachedDimensions).indexOf(file) > -1){
+            return this._cachedDimensions[file];
+        }
+        this._cachedDimensions[file] = await lib.getDimensions(file);
+        return this._cachedDimensions[file];
+    }
+
+    _getTrueLength(inDimensions){
+        return inDimensions.x - this._startPoint - this._endPoint;
+    }
+
+    async _calculateHitVector(data){
+        if(data._distance === 0) return data;
+
+        let dimensions = await this._getFileDimensions(data.file);
+        let trueLength = this._getTrueLength(dimensions);
+
+        data.scale.x = data._distance / trueLength;
+        data.scale.y = Math.max(0.4, data.scale.x);
+        data.anchor.x = this._startPoint / dimensions.x;
+
+        return data;
     }
 
     _calculateMissedPosition(target){
@@ -302,31 +379,37 @@ class Effect{
     }
 
     file(inFile) {
+        if(typeof inFile !== "string") throw new Error("ms must be of type string");
         this._file = inFile;
         return this;
     }
 
     delay(ms) {
+        if(typeof ms !== "number") throw new Error("ms must be of type number");
         this._delay = ms;
         return this;
     }
 
     async(inBool) {
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._async = inBool;
         return this;
     }
 
     moves(inBool) {
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._moves = inBool;
         return this;
     }
 
     stretch(inBool) {
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._stretch = inBool;
         return this;
     }
 
     missed(inBool){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._missed = inBool;
         return this;
     }
@@ -337,6 +420,11 @@ class Effect{
         return this;
     }
 
+    setMustache(inMustache){
+        this._mustache = inMustache;
+        return this;
+    }
+
     atLocation(inLocation) {
         this._from = this._validateLocation(inLocation);
         return this;
@@ -344,6 +432,18 @@ class Effect{
 
     aimTowards(inLocation) {
         this._to = this._validateLocation(inLocation);
+        return this;
+    }
+
+    startPoint(inStartPoint){
+        if(typeof inStartPoint !== "number") throw new Error("inStartPoint must be of type number");
+        this._startPoint = inStartPoint;
+        return this;
+    }
+
+    endPoint(inEndPoint){
+        if(typeof inEndPoint !== "number") throw new Error("inEndPoint must be of type number");
+        this._endPoint = inEndPoint;
         return this;
     }
 
@@ -392,11 +492,11 @@ class Effect{
     }
 
     async run() {
-        let effect = this._sanitizeEffect();
+        let effect = await this._sanitizeEffect();
         let delay = this._delay;
         let async = this._async;
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             setTimeout(async function () {
                 game.socket.emit("module.fxmaster", effect);
                 if (async) {
@@ -404,16 +504,17 @@ class Effect{
                 } else {
                     canvas.fxmaster.playVideo(effect);
                 }
-                resolve(self);
+                resolve();
             }, delay);
         });
     }
 
 }
 
-class Sound{
+class Sound extends Section{
 
     constructor(inSequence, inFile="") {
+        super();
         this.sequence = inSequence;
         this._delay = 0;
         this._file = inFile;

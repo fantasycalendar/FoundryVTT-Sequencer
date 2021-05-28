@@ -69,3 +69,41 @@ export function is_function(inFunc){
         {}.toString.call(inFunc) === '[object AsyncFunction]'
     );
 }
+
+/**
+ * This function returns a random element in the given array
+ *
+ * @param  {array}   inArray    An array
+ * @return {object}             A random element from the array
+ */
+export function random_array_element(inArray){
+    return inArray[Math.floor(random_float_between(0, inArray.length))];
+}
+
+/**
+ * This function determines
+ *
+ * @param  {string}     inFile    The function object to be tested
+ * @return {boolean}              A boolean whether the function is actually a function
+ */
+export async function getDimensions(inFile){
+    return new Promise(resolve => {
+        let video = document.createElement("video");
+        video.preload = "auto";
+        video.crossOrigin = "anonymous";
+        video.src = inFile;
+        video.oncanplay = () => {
+            let dimensions = {
+                x: video.videoWidth,
+                y: video.videoHeight
+            };
+            video.pause();
+            video.removeAttribute('src');
+            resolve(dimensions);
+        }
+        video.onerror = () => {
+            console.error('File not found');
+            resolve({ x:0, y:0 });
+        }
+    })
+}

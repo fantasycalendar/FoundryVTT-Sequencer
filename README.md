@@ -75,17 +75,33 @@ Similar to `.then()`, it's expected that you pass a boolean as a second paramete
 
 Simple function, it makes the sequence wait after the last section for as many milliseconds as you pass to this method.
 
+#### Repeats
+
+`.repeats(inRepetitions, inMinDelay, inMaxDelay)`
+
+This will cause the effect or sound to be repeated `inRepetitions` times, with an optional delay.
+
+As an option, you can give it `inMinDelay` for a static delay between repetitions, or `inMinDelay` and `inMaxDelay` for a random delay between each call.
+
 ### Effect
 
 `.effect()` or `.effect(inFile)`
 
 Declares an effect to be played through FXMaster. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
 
+#### Base Folder
+
+`.baseFolder(inPath)`
+
+This defines the base folder that will prepended to the file path. This is mainly just useful to make the file path easier to manage.
+
 #### File
 
-`.file(inPath)`
+`.file(inPath)` or `.file(inArray)`
 
 This declares which .webm to be played, but you can also do that when first initializing the effect.
+
+This may also be an array of paths, which will be randomly picked from.
 
 #### Override data
 
@@ -105,6 +121,19 @@ Passing `true` to this method will cause the Sequencer to wait until the effect 
 
 Passing `true` to this method will cause the effect to target a location close to the `.aimTowards()` location, but not on it.
 
+#### Add override
+
+```js
+.addOverride(async (effect, data) => {
+    // Do things here
+    return data;
+})
+```
+
+This will directly modify the effect's data, which means you can manipulate which file will be used based on the distance to the target, etc.
+
+You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of this readme for more in depth usage.
+
 #### At Location
 
 `.atLocation(token)` or `.atLocation({ x: 0, y: 0 })`
@@ -117,6 +146,28 @@ A smart method that can take a reference to a token or a direct coordinate on th
 
 Another smart method (similar to above), which will cause the effect to be rotated towards the given token or coordinates.
 
+#### Start point
+
+`.startPoint(inNumber)`
+
+This will define the start point within the given sprite, starting from the left of the sprite.
+
+An example would be a given number of `200` - means that the sprite will consider 200 pixels into the sprite as the 'anchor point'.
+
+#### End point
+
+`.endPoint(inNumber)`
+
+The same as the start point, except from the right and how many pixels to offset the target from.
+
+#### Set Mustache
+
+`.setMustache(inObj)`
+
+This will set the [Mustache](https://handlebarsjs.com/guide/) of the filepath. This is applied _after_ the randomization of the filepath, if available. 
+
+See near the bottom of this document for examples.
+
 #### Scale
 
 `.scale(0.5)` or `.scale({ x: 0.5, y: 1.0 })` or `.scale(0.2, 0.6)`
@@ -125,6 +176,7 @@ A method that can take the following:
 - A number to set the scale uniformly
 - An object with x and y for non-uniform scaling
 - Two numbers which the Sequencer will randomly pick a uniform scale between
+
 
 #### Anchor
 
@@ -311,6 +363,9 @@ let sequence = new Sequence()
 
 sequence.play();
 ```
+
+Magic Missile
+
 
 
 ## Download here:
