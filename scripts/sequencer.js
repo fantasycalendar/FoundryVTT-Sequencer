@@ -29,13 +29,14 @@ export class Sequence{
 
     _createWaitSection(ms = 1){
         return new FunctionSection(this, async function(){
-            return new Promise((resolve, reject) => { setTimeout(resolve, ms) });
+            return new Promise(async (resolve) => { setTimeout(resolve, ms) });
         }, true);
     }
 
     then(inFunc, inAsync = true){
-        let func = new FunctionSection(inFunc, inAsync);
-        return this._addSection(func);
+        let func = new FunctionSection(this, inFunc, inAsync);
+        this._addSection(func)
+        return this;
     }
 
     effect(inFile=""){
@@ -61,7 +62,8 @@ export class Sequence{
             await macro.execute();
         }, inAsync);
 
-        return this._addSection(func);
+        this._addSection(func)
+        return this;
     }
 
     sound(inFile=""){
@@ -72,7 +74,7 @@ export class Sequence{
     wait(ms = 1){
         if(ms < 1) throw new Error('Wait ms cannot be less than 1')
         let section = this._createWaitSection(ms);
-        this._addSection(section);
+        this.sections.push(section);
         return this;
     }
 
@@ -131,12 +133,12 @@ class Section{
                 this.run();
             }
             if(this._repetitions > 1){
-                await this.wait();
+                await this._wait();
             }
         }
     }
 
-    async wait(){
+    async _wait(){
         let delay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise((resolve) => {
             setTimeout(resolve, delay)
@@ -198,8 +200,8 @@ class EffectSection extends Section{
                 y: this._anchor?.y ?? 0.0
             },
             scale: {
-                x: this._scale?.x ?? 1.0,
-                y: this._scale?.y ?? 1.0
+                x: 1.0,
+                y: 1.0
             },
             angle: 0,
             rotation: 0,
@@ -303,6 +305,11 @@ class EffectSection extends Section{
         }
 
         data = await this._calculateHitVector(data);
+
+        data.scale = {
+            x: data.scale.x * (this._scale?.x ?? 1.0),
+            y: data.scale.x * (this._scale?.y ?? 1.0),
+        }
 
         data.file = (this._baseFolder + data.file);
 
@@ -465,7 +472,7 @@ class EffectSection extends Section{
     }
 
     scale(inScaleMin, inScaleMax) {
-        let scale;
+        let scale = inScaleMin;
         if (typeof inScaleMin === "number") {
             if(inScaleMax && typeof inScaleMax === "number"){
                 scale = lib.random_float_between(inScaleMin, inScaleMax);
