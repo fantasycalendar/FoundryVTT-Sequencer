@@ -167,9 +167,9 @@ class EffectSection extends Section{
 
     constructor(inSequence, inFile="") {
         super(inSequence)
+        this.file(inFile);
         this._delay = 0;
         this._baseFolder = "";
-        this._file = "";
         this._from = false;
         this._to = false;
         this._moves = false;
@@ -393,6 +393,9 @@ class EffectSection extends Section{
     }
 
     file(inFile) {
+        if(Array.isArray(inFile)){
+            inFile = lib.random_array_element(inFile)
+        }
         if(typeof inFile !== "string") throw new Error("inFile must be of type string");
         this._file = inFile;
         return this;
@@ -537,7 +540,10 @@ class SoundSection extends Section{
         };
     }
 
-    file(inFile){
+    file(inFile) {
+        if(Array.isArray(inFile)){
+            inFile = lib.random_array_element(inFile)
+        }
         if(typeof inFile !== "string") throw new Error("inFile must be of type string");
         this._file = inFile;
         return this;

@@ -245,9 +245,11 @@ As an option, you can give it `inMinDelay` for a static delay between repetition
 
 ### File
 
-`.file(inPath)`
+`.file(inPath)` or `.file(array)`
 
 This declares which sound to be played, but you can also do that when first initializing the sound.
+
+This may also be an array of paths, which will be randomly picked from.
 
 ### Volume
 
