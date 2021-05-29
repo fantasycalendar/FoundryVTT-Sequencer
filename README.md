@@ -191,7 +191,38 @@ The same as the start point, except from the right and how many pixels to offset
 
 This will set the [Mustache](https://handlebarsjs.com/guide/) of the filepath. This is applied _after_ the randomization of the filepath, if available. 
 
-See near the bottom of this document for examples.
+An example would be to provide a path like this to the Effect: `MagicMissile_01_Regular_{{color}}_30ft_0{{number}}_1600x400.webm`
+
+By then calling this method and passing an object, Mustache will attempt to fill in `{{color}}` and `{{number}}` with that object. This means we can dynamically generate the string for the path. If you were to pass this into the method:
+
+```js
+{
+    "color": "Blue",
+    "number": "5"
+}
+```
+
+The final result would become: `MagicMissile_01_Regular_Blue_30ft_05_1600x400.webm`
+
+You can also pass functions that will get evaluated during runtime by Mustache:
+
+```js
+{
+    "color": () => {
+        return ['Blue', 'Green', 'Purple', 'Yellow'][Math.floor(Math.random() * 4)]
+    },
+    "number": () => {
+        return Math.floor(Math.random() * 9) + 1;
+    }
+}
+```
+
+This would result in a random color and a random number between 1 and 9, so any of these:
+* `MagicMissile_01_Regular_Blue_30ft_01_1600x400.webm`
+* `MagicMissile_01_Regular_Green_30ft_08_1600x400.webm`
+* `MagicMissile_01_Regular_Yellow_30ft_02_1600x400.webm`
+* `MagicMissile_01_Regular_Purple_30ft_04_1600x400.webm`
+* ...and so on
 
 ### Scale
 
