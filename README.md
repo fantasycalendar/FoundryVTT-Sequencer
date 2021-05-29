@@ -6,6 +6,9 @@ This module implements a basic pipeline that can be used for managing the flow o
 
 The effects created by this module is completely synchronized across all clients thanks to the hard work of U~man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster).
 
+## Download here:
+`https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
+
 ## How to use
 
 First you have to define a sequence:
@@ -425,9 +428,6 @@ let sequence = new Sequence()
         )
     .play();
 ```
-
-## Download here:
-`https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
 
 ## Changelog
 *Coming soon*
