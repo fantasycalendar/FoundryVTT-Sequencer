@@ -1,6 +1,5 @@
 import * as lib from './lib.js';
 
-
 export class Sequence{
 
     constructor() {
@@ -8,23 +7,17 @@ export class Sequence{
     }
 
     _proxyWrap(inSection){
-
         return new Proxy(inSection, {
             get(target, name, receiver) {
-
                 if (typeof target[name] === 'undefined') {
-
                     if (typeof target.sequence[name] === 'undefined') {
                         throw new Error(`Function ${name} was not found!`);
                     }
-                    return target.sequence[name];
+                    return Reflect.get(target.sequence, name, receiver);
                 }
-
                 return Reflect.get(target, name, receiver);
-
             }
         });
-
     }
 
     _addSection(inSection){
@@ -34,7 +27,7 @@ export class Sequence{
         return section;
     }
 
-    _createWaitSection(ms= 1){
+    _createWaitSection(ms = 1){
         return new FunctionSection(this, async function(){
             return new Promise((resolve, reject) => { setTimeout(resolve, ms) });
         }, true);
@@ -42,12 +35,11 @@ export class Sequence{
 
     then(inFunc, inAsync = true){
         let func = new FunctionSection(inFunc, inAsync);
-        this._addSection(func)
-        return this;
+        return this._addSection(func);
     }
 
     effect(inFile=""){
-        let effect = new Effect(this, inFile);
+        let effect = new EffectSection(this, inFile);
         return this._addSection(effect);
     }
 
@@ -69,13 +61,11 @@ export class Sequence{
             await macro.execute();
         }, inAsync);
 
-        this._addSection(func);
-
-        return this;
+        return this._addSection(func);
     }
 
     sound(inFile=""){
-        let sound = new Sound(this, inFile);
+        let sound = new SoundSection(this, inFile);
         return this._addSection(sound);
     }
 
@@ -89,7 +79,11 @@ export class Sequence{
     async play(){
         console.log("Sequencer | Starting playback...")
         for(let section of this.sections){
-            await section.execute();
+            if(section._async) {
+                await section.execute();
+            }else{
+                section.execute();
+            }
         }
         console.log("Sequencer | Playback done!")
     }
@@ -98,13 +92,31 @@ export class Sequence{
 
 class Section{
 
-    constructor(){
+    constructor(inSequence, inAsync = false){
+        this.sequence = inSequence;
+        this._async = inAsync;
+        this._waitUntilFinished = false;
         this._repetitions = 1;
-        this._delayMin = 0;
-        this._delayMax = 0;
+        this._delayMin = 50;
+        this._delayMax = 50;
     }
 
-    repeats(inRepetitions, delayMin = 1, delayMax = 1){
+    async(inBool = true){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._async = inBool;
+        return this;
+    }
+
+    waitUntilFinished(inBool = true){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._waitUntilFinished = inBool;
+        return this;
+    }
+
+    repeats(inRepetitions, delayMin = 50, delayMax = 50){
+        if(typeof inRepetitions !== "number") throw new Error("inRepetitions must be of type number");
+        if(typeof delayMin !== "number") throw new Error("delayMin must be of type number");
+        if(typeof delayMax !== "number") throw new Error("delayMax must be of type number");
         this._repetitions = inRepetitions;
         this._delayMin = delayMin;
         this._delayMax = Math.max(delayMin, delayMax);
@@ -113,8 +125,14 @@ class Section{
 
     async execute(){
         for(let i = 0; i < this._repetitions; i++){
-            await this.run();
-            await this.wait();
+            if(this._waitUntilFinished){
+                await this.run();
+            }else{
+                this.run();
+            }
+            if(this._repetitions > 1){
+                await this.wait();
+            }
         }
     }
 
@@ -130,30 +148,25 @@ class Section{
 class FunctionSection extends Section{
 
     constructor(inSequence, inFunc, inAsync) {
-        super();
-        this.sequence = inSequence;
+        super(inSequence, inAsync)
         if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
-        this.func = inFunc;
-        this.async = inAsync;
+        this._func = inFunc;
     }
 
     async run(){
-        if(this.async) {
-            await this.func();
-        }else{
-            this.func();
-        }
-        return this;
+        await this._func();
+    }
+
+    async execute(){
+        await this.run();
     }
 
 }
 
-class Effect extends Section{
+class EffectSection extends Section{
 
     constructor(inSequence, inFile="") {
-        super()
-        this.sequence = inSequence;
-        this._async = false;
+        super(inSequence)
         this._delay = 0;
         this._baseFolder = "";
         this._file = "";
@@ -370,6 +383,7 @@ class Effect extends Section{
     }
 
     baseFolder(inBaseFolder){
+        if(typeof inBaseFolder !== "string") throw new Error("inBaseFolder must be of type string");
         if(!inBaseFolder.endsWith("/") || !inBaseFolder.endsWith("\\")){
             inBaseFolder = inBaseFolder.replace("\\", "/");
             inBaseFolder += "/";
@@ -379,36 +393,36 @@ class Effect extends Section{
     }
 
     file(inFile) {
-        if(typeof inFile !== "string") throw new Error("ms must be of type string");
+        if(typeof inFile !== "string") throw new Error("inFile must be of type string");
         this._file = inFile;
         return this;
     }
 
-    delay(ms) {
-        if(typeof ms !== "number") throw new Error("ms must be of type number");
-        this._delay = ms;
+    delay(msMin, msMax) {
+        if(typeof msMin !== "number") throw new Error("msMin must be of type number");
+        let delay = msMin;
+        if(msMax){
+            if(typeof msMax !== "number") throw new Error("msMax must be of type number");
+            msMax = Math.max(msMin, msMax);
+            delay = lib.random_float_between(msMin, msMax);
+        }
+        this._delay = delay;
         return this;
     }
 
-    async(inBool) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
-        this._async = inBool;
-        return this;
-    }
-
-    moves(inBool) {
+    moves(inBool = true) {
         if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._moves = inBool;
         return this;
     }
 
-    stretch(inBool) {
+    stretch(inBool = true) {
         if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._stretch = inBool;
         return this;
     }
 
-    missed(inBool){
+    missed(inBool = true){
         if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
         this._missed = inBool;
         return this;
@@ -447,19 +461,19 @@ class Effect extends Section{
         return this;
     }
 
-    scale(inScale, inScaleMax) {
-
-        if (typeof inScale === "number") {
+    scale(inScaleMin, inScaleMax) {
+        let scale;
+        if (typeof inScaleMin === "number") {
             if(inScaleMax && typeof inScaleMax === "number"){
-                inScale = ((inScaleMax - inScale) * Math.random()) + inScale;
+                scale = lib.random_float_between(inScaleMin, inScaleMax);
             }
-            inScale = {
-                x: inScale,
-                y: inScale
+            scale = {
+                x: scale,
+                y: scale
             }
         }
 
-        this._scale = inScale;
+        this._scale = scale;
         return this;
 
     }
@@ -491,61 +505,58 @@ class Effect extends Section{
         return this;
     }
 
-    async run() {
-        let effect = await this._sanitizeEffect();
-        let delay = this._delay;
-        let async = this._async;
+    run() {
         let self = this;
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             setTimeout(async function () {
+                let effect = await self._sanitizeEffect();
                 game.socket.emit("module.fxmaster", effect);
-                if (async) {
-                    await canvas.fxmaster.playVideo(effect);
-                } else {
-                    canvas.fxmaster.playVideo(effect);
-                }
+                await canvas.fxmaster.playVideo(effect);
                 resolve();
-            }, delay);
+            }, self._delay);
         });
     }
 
 }
 
-class Sound extends Section{
+class SoundSection extends Section{
 
     constructor(inSequence, inFile="") {
-        super();
-        this.sequence = inSequence;
+        super(inSequence)
+        this.file(inFile);
         this._delay = 0;
-        this._file = inFile;
         this._volume = 0.8;
     }
 
     _sanitizeSound(){
-
-        let sound = {
+        return {
             src: [this._file],
             volume: this._volume ?? 0.8,
             autoplay: true,
             loop: false
         };
-
-        return sound;
-
     }
 
     file(inFile){
+        if(typeof inFile !== "string") throw new Error("inFile must be of type string");
         this._file = inFile;
         return this;
     }
 
     volume(inVolume){
+        if(typeof inVolume !== "number") throw new Error("inVolume must be of type number");
         this._volume = Math.max(0, Math.min(1.0, inVolume));
         return this;
     }
 
-    delay(ms){
-        this._delay = ms;
+    delay(msMin, msMax) {
+        if(typeof ms !== "number") throw new Error("ms must be of type number");
+        let delay = msMin;
+        if(msMax && typeof msMax === "number"){
+            msMax = Math.max(msMin, msMax);
+            delay = lib.random_float_between(msMin, msMax);
+        }
+        this._delay = delay;
         return this;
     }
 
