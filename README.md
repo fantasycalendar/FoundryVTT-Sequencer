@@ -471,7 +471,7 @@ This will delay the sound from being played for a set amount of milliseconds. If
 ![Magic Missile](docs/images/magic_missile.gif)
 
 ```js
-let sequence = new Sequence()
+new Sequence()
     .effect()
         .atLocation(canvas.tokens.controlled[0])
         .reachTowards(canvas.tokens.controlled[1])
@@ -500,5 +500,43 @@ let sequence = new Sequence()
     .play();
 ```
 
+## Lightning Strike
+
+![Magic Missile](docs/images/lightning_strike.gif)
+
+```js
+new Sequence()
+    .effect()
+        .atLocation(canvas.tokens.controlled[0])
+        .file('Images/Effects/Lightning/LightningStrike_01{{letter}}_800x800.webm')
+        .setMustache({
+            // random letter between a to f
+            "letter": String.fromCharCode(Math.floor(Math.random()*6)+1+64).toLowerCase()
+        })
+        .scale(2)
+        .center()
+        .randomizeMirrorX()
+        .play()
+```
+
 ## Changelog
-*Coming soon*
+
+### Version 0.3.1
+- *Effects* - Refactored `.randomizeMirror()` into `.randomizeMirrorX()` and `randomizeMirrorY`
+- *Effects* - Fixed some issues with the 
+- *Sequencer* - Added support for random `.wait()` interval 
+
+### Version 0.3.0
+- *Effects* - Refactored `.aimTowards()` into `.rotateTowards()` and `.reachTowards()`
+- *Effects* - Refactored scaling algorithm for 
+- *Effects* - Added `.JB2A()` to automatically set the effect to handle their sprites in the best way possible
+- *Effects* - Added `.randomizeMirror()` to randomly mirror sprites on the Y axis
+- *Effects* - Added Mustache support in file names
+
+### Version 0.2.0
+- *Sequencer* - Added support for executing macros
+- *Sequencer* - Added support for playing sounds
+- *Sequencer* - Wrapped classes in proxies to simplify fluid interface (gets rid of `.done()` on effects and sounds)
+
+### Version 0.1.0
+- First implementation
