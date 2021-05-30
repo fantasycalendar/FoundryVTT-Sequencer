@@ -48,7 +48,7 @@ let sequence = new Sequence()
 
 To start the sequence off, you simply call `play()` on the sequence.
 
-[⬇️ Go to advanced examples ⬇️](https://github.com/Haxxer/FoundryVTT-Sequencer/blob/master/README.md#advanced-examples)
+[⬇️ Go to advanced examples ⬇️](https://github.com/Haxxer/FoundryVTT-Sequencer#advanced-examples)
 
 ## Methods
 
