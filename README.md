@@ -50,6 +50,137 @@ To start the sequence off, you simply call `play()` on the sequence.
 
 [⬇️ Go to advanced examples ⬇️](https://github.com/Haxxer/FoundryVTT-Sequencer#advanced-examples)
 
+## Usage Example
+
+To get the following result:
+
+![Animation showing the code below](docs/images/Animation.gif)
+
+You'd have to write something like this:
+
+```js
+async function wait(ms){
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
+
+const token = canvas.tokens.controlled[0];
+
+let data = {
+    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm",
+    position: token.center,
+    anchor: {
+        x: 0.5,
+        y: 0.5
+    },
+    scale: {
+        x: 0.35,
+        y: 0.35
+    }
+};
+
+game.socket.emit("module.fxmaster", data);
+canvas.fxmaster.playVideo(data);
+
+await wait(400);
+
+AudioHelper.play({
+    src: ["Music/Sound_Effects/teleport.wav"],
+    volume: 0.8,
+    autoplay: true,
+    loop: false
+}, true);
+
+await wait(600);
+
+let to_location = {
+    x: token.center.x-500,
+    y: token.center.y
+}
+
+let ray = new Ray(token.center, this._to);
+
+data = {
+    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm",
+    position: token.center,
+    anchor: {
+        x: 0.5,
+        y: 0.5
+    },
+    scale: {
+        x: 0.2,
+        y: 0.2
+    },
+    rotation: ray.angle,
+    width: ray.distance
+};
+
+game.socket.emit("module.fxmaster", data);
+canvas.fxmaster.playVideo(data);
+
+await wait(100);
+
+await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
+
+data = {
+    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
+    position: token.center,
+    anchor: {
+        x: 0.5,
+        y: 0.5
+    },
+    scale: {
+        x: 0.5,
+        y: 0.5
+    }
+};
+
+game.socket.emit("module.fxmaster", data);
+canvas.fxmaster.playVideo(data);
+```
+
+Here's an example using the Sequencer instead:
+
+* It plays an effect on a token's location
+* Waits for 400 milliseconds
+* Plays a sound
+* Waits for 600 milliseconds
+* Plays another effect pointing towards 500px to the left of the token
+* Waits for 100 milliseconds
+* Teleports the token 500px to the left
+* Plays another effect on the token's location
+
+```js
+let tokenD = canvas.tokens.controlled[0];
+let sequence = new Sequence()
+    .effect()
+        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm")
+        .atLocation(tokenD)
+        .scale(0.35)
+    .wait(400)
+    .sound("Music/Sound_Effects/teleport.wav")
+    .wait(600)
+    .effect()
+        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
+        .atLocation(tokenD)
+        .reachTowards({
+            x: tokenD.center.x-500,
+            y: tokenD.center.y
+        })
+        .scale(0.2)
+    .wait(100)
+    .then(async function(){
+        await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
+    })
+    .effect()
+        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
+        .atLocation(tokenD)
+        .scale(0.5)
+
+sequence.play();
+```
+
 ## Methods
 
 ### Then
@@ -332,137 +463,6 @@ A normalized value between `0.0` and `1.0` which determines the volume of the so
 `.delay(1000)` or `.delay(500, 1000)`
 
 This will delay the sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
-
-## Usage Example
-
-To get the following result:
-
-![Animation showing the code below](docs/images/Animation.gif)
-
-You'd have to write something like this:
-
-```js
-async function wait(ms){
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
-    });
-}
-
-const token = canvas.tokens.controlled[0];
-
-let data = {
-    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm",
-    position: token.center,
-    anchor: {
-        x: 0.5,
-        y: 0.5
-    },
-    scale: {
-        x: 0.35,
-        y: 0.35
-    }
-};
-
-game.socket.emit("module.fxmaster", data);
-canvas.fxmaster.playVideo(data);
-
-await wait(400);
-
-AudioHelper.play({
-    src: ["Music/Sound_Effects/teleport.wav"],
-    volume: 0.8,
-    autoplay: true,
-    loop: false
-}, true);
-
-await wait(600);
-
-let to_location = {
-    x: token.center.x-500,
-    y: token.center.y
-}
-
-let ray = new Ray(token.center, this._to);
-
-data = {
-    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm",
-    position: token.center,
-    anchor: {
-        x: 0.5,
-        y: 0.5
-    },
-    scale: {
-        x: 0.2,
-        y: 0.2
-    },
-    rotation: ray.angle,
-    width: ray.distance
-};
-
-game.socket.emit("module.fxmaster", data);
-canvas.fxmaster.playVideo(data);
-
-await wait(100);
-
-await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
-
-data = {
-    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
-    position: token.center,
-    anchor: {
-        x: 0.5,
-        y: 0.5
-    },
-    scale: {
-        x: 0.5,
-        y: 0.5
-    }
-};
-
-game.socket.emit("module.fxmaster", data);
-canvas.fxmaster.playVideo(data);
-```
-
-Here's an example using the Sequencer instead:
-
-* It plays an effect on a token's location
-* Waits for 400 milliseconds
-* Plays a sound
-* Waits for 600 milliseconds
-* Plays another effect pointing towards 500px to the left of the token
-* Waits for 100 milliseconds
-* Teleports the token 500px to the left
-* Plays another effect on the token's location
-
-```js
-let tokenD = canvas.tokens.controlled[0];
-let sequence = new Sequence()
-    .effect()
-        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm")
-        .atLocation(tokenD)
-        .scale(0.35)
-    .wait(400)
-    .sound("Music/Sound_Effects/teleport.wav")
-    .wait(600)
-    .effect()
-        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
-        .atLocation(tokenD)
-        .reachTowards({
-            x: tokenD.center.x-500,
-            y: tokenD.center.y
-        })
-        .scale(0.2)
-    .wait(100)
-    .then(async function(){
-        await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
-    })
-    .effect()
-        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
-        .atLocation(tokenD)
-        .scale(0.5)
-
-sequence.play();
-```
 
 # Advanced examples
 
