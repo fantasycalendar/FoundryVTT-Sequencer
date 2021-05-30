@@ -85,9 +85,11 @@ export class Sequence{
         return this._addSection(sound);
     }
 
-    wait(ms = 1){
-        if(ms < 1) throw new Error('Wait ms cannot be less than 1')
-        let section = this._createWaitSection(ms);
+    wait(minMs = 1, maxMs = 1){
+        if(minMs < 1) throw new Error('Wait ms cannot be less than 1')
+        if(maxMs < 1) throw new Error('Max wait ms cannot be less than 1')
+        let wait = lib.random_int_between(minMs, Math.max(minMs, maxMs))
+        let section = this._createWaitSection(wait);
         this.sections.push(section);
         return this;
     }
@@ -197,9 +199,11 @@ class EffectSection extends Section{
         this._endPoint = 0;
         this._mustache = false;
         this._JB2A = false;
+        this._randomX = false;
         this._randomY = false;
         this._gridSize = canvas.grid.size;
         this._overrides = [];
+        this._postOverrides = [];
     }
 
     async _sanitizeEffect() {
@@ -277,8 +281,8 @@ class EffectSection extends Section{
         }
 
         data.scale = {
-            x: data.scale.x * (this._scale?.x ?? 1.0) * (canvas.grid.size / this._gridSize),
-            y: data.scale.y * (this._scale?.y ?? 1.0) * (canvas.grid.size / this._gridSize)
+            x: data.scale.x * (canvas.grid.size / this._gridSize),
+            y: data.scale.y * (canvas.grid.size / this._gridSize)
         }
 
         if(this._mustache){
@@ -290,10 +294,22 @@ class EffectSection extends Section{
             data = await this._calculateHitVector(data);
         }
 
+        data.scale = {
+            x: data.scale.x * (this._scale?.x ?? 1.0),
+            y: data.scale.y * (this._scale?.y ?? 1.0)
+        }
+
+        let flipX = this._randomX && Math.random() < 0.5 ? -1 : 1;
+        data.scale.x = data.scale.x * flipX;
+
         let flipY = this._randomY && Math.random() < 0.5 ? -1 : 1;
         data.scale.y = data.scale.y * flipY;
 
         data.file = (this._baseFolder + data.file);
+
+        for(let override of this._postOverrides){
+            data = await override(this, data);
+        }
 
         return data;
 
@@ -458,6 +474,12 @@ class EffectSection extends Section{
         return this;
     }
 
+    addPostOverride(inFunc){
+        if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
+        this._postOverrides.push(inFunc);
+        return this;
+    }
+
     setMustache(inMustache){
         this._mustache = inMustache;
         return this;
@@ -537,9 +559,16 @@ class EffectSection extends Section{
         return this;
     }
 
-    randomizeMirror(inBool = inBool){
+    randomizeMirrorX(inBool = true){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._randomX = true;
+        return this;
+    }
+
+    randomizeMirrorY(inBool = true){
         if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
         this._randomY = true;
+        return this;
     }
 
     gridSize(inSize){

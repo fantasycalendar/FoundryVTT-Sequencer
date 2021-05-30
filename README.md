@@ -74,15 +74,25 @@ Similar to `.then()`, it's expected that you pass a boolean as a second paramete
 
 ### Wait
 
-`.wait(1000)`
+`.wait(1000)` or `.wait(500, 1000)`
 
-Simple function, it makes the sequence wait after the last section for as many milliseconds as you pass to this method.
+A simple method which makes the sequence wait after the last section for as many milliseconds as you pass to this method.
+
+If given a second number, a random wait time between the two given numbers will be generated.
 
 ### Effect
 
 `.effect()` or `.effect(inFile)`
 
-Declares an effect to be played through FXMaster. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
+Declares an effect to be played through FXMaster. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect section.
+
+### Sound
+
+`.sound()` or `.sound(inFile)`
+
+Declares a sound to be played through the AudioHelper. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Sound section.
+
+Sadly, sounds are not asynchronous, so this section cannot be `await`ed or `async`'d.
 
 ## Generic Methods
 
@@ -275,11 +285,15 @@ This will cause the sprite to have a random rotation, which means it should **no
 
 **Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
 
-### Randomize mirror
+### Randomize mirror (X and Y)
 
-`.randomizeMirror()` or `.randomizeMirror(inBool)`
+`.randomizeMirrorX()` or `.randomizeMirrorX(inBool)`
 
-This will cause the sprite to have a randomized flipped Y scale (if the Y scale was 1, it can become 1 or -1, flipping the sprite vertically), which is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
+`.randomizeMirrorY()` or `.randomizeMirrorY(inBool)`
+
+This will cause the sprite to have a randomized flipped X or Y scale (if the scale on that axis was 1, it can become 1 or -1, effectively mirroring the sprite).
+
+This is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
 
 ### Delay
 
@@ -288,12 +302,6 @@ This will cause the sprite to have a randomized flipped Y scale (if the Y scale 
 This will delay the sprite from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
 
 ## Sound methods
-
-`.sound()` or `.sound(inFile)`
-
-Declares a sound to be played through the AudioHelper. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
-
-Sadly, sounds are not asynchronous, so this class cannot be `await`ed.
 
 ### Repeats
 
