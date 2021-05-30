@@ -179,11 +179,13 @@ class EffectSection extends Section{
         this._scale = false;
         this._anchor = false;
         this._rotation = 0;
+        this._rotationOnly = true;
         this._missed = false;
         this._startPoint = 0;
         this._endPoint = 0;
         this._cachedDimensions = {};
         this._mustache = false;
+        this._gridSize = canvas.grid.size;
         this._overrides = [];
     }
 
@@ -266,6 +268,7 @@ class EffectSection extends Section{
                         y: 0.5,
                     };
                 }
+
             }else if (this._stretch){
                 data.width = ray.distance;
 
@@ -280,7 +283,7 @@ class EffectSection extends Section{
 
                 if (!this._anchor) {
                     data.anchor = {
-                        x: 0.0,
+                        x: -0.08,
                         y: 0.5,
                     };
                 }
@@ -304,11 +307,13 @@ class EffectSection extends Section{
             data.file = template(this._mustache);
         }
 
-        data = await this._calculateHitVector(data);
+        if(!this._rotationOnly) {
+            data = await this._calculateHitVector(data);
+        }
 
         data.scale = {
-            x: data.scale.x * (this._scale?.x ?? 1.0),
-            y: data.scale.x * (this._scale?.y ?? 1.0),
+            x: data.scale.x * (this._scale?.x ?? 1.0) * (canvas.grid.size / this._gridSize),
+            y: data.scale.y * (this._scale?.y ?? 1.0) * (canvas.grid.size / this._gridSize)
         }
 
         data.file = (this._baseFolder + data.file);
@@ -454,8 +459,15 @@ class EffectSection extends Section{
         return this;
     }
 
-    aimTowards(inLocation) {
+    rotateTowards(inLocation) {
         this._to = this._validateLocation(inLocation);
+        this._rotationOnly = true;
+        return this;
+    }
+
+    reachTowards(inLocation) {
+        this._to = this._validateLocation(inLocation);
+        this._rotationOnly = false;
         return this;
     }
 
@@ -512,6 +524,12 @@ class EffectSection extends Section{
 
     randomRotation() {
         this._rotation = Math.random() * Math.PI;
+        return this;
+    }
+
+    gridSize(inSize){
+        if(typeof inSize !== "number") throw new Error("inSize must be of type number");
+        this._gridSize = inSize;
         return this;
     }
 

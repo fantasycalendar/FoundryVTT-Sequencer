@@ -136,23 +136,29 @@ This may also be an array of paths, which will be randomly picked from.
 
 A smart method that can take a reference to a token, or a direct coordinate on the canvas to play the effect at.
 
-### Aim towards
+### Rotate Towards
 
-`.aimTowards(token)` or `.aimTowards({ x: 0, y: 0 })`
+`.rotateTowards(token)` or `.rotateTowards({ x: 0, y: 0 })`
 
-Another smart method (similar to above), which will cause the effect to be rotated towards the given token or coordinates.
+Another smart method (similar to above), which will cause the effect to be rotated towards the given token or coordinates. This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
+
+### Reach Towards
+
+`.reachTowards(token)` or `.reachTowards({ x: 0, y: 0 })`
+
+Yet another token supporting method. This causes the effect to be rotated **and stretched** towards the given token or coordinates. This effectively calculates the proper X scale for the effect to reach the target.
 
 ### Moves
 
 `.moves()` or `.moves(inBool)`
 
-Calling this method will cause the effect to move towards `.aimTowards()` location. You can also pass `true` to it for greater readability, but simply calling it will do.
+Calling this method will cause the effect to move towards `.reachTowards()` location. You can also pass `true` to it for greater readability, but simply calling it will do.
 
 ### Missed
 
 `.missed()` or `.missed(inBool)`
 
-Calling this method will cause the effect to target a location close to the `.aimTowards()` location, but not on it. You can also pass `true` to it for greater readability, but simply calling it will do.
+Calling this method will cause the effect to target a location close to the `.reachTowards()` location, but not on it. You can also pass `true` to it for greater readability, but simply calling it will do.
 
 ### Add override
 
@@ -224,6 +230,12 @@ This would result in a random color and a random number between 1 and 9, so any 
 * `MagicMissile_01_Regular_Purple_30ft_04_1600x400.webm`
 * ...and so on
 
+### Grid Scale
+
+`.gridScale(100)`
+
+This method will set the grid scale of the file loaded in the Effect. Some files have an internal grid (like JB2A uses 100px grids), so this will make the effect scale up or down to match the active scene's grid scale.
+
 ### Scale
 
 `.scale(0.5)` or `.scale({ x: 0.5, y: 1.0 })` or `.scale(0.2, 0.6)`
@@ -251,7 +263,7 @@ This will center the sprite on the given location, effectively giving it an anch
 
 `.randomRotation()`
 
-This will cause the sprite to have a random rotation, which means it should **not** be used with `.aimTowards()`.
+This will cause the sprite to have a random rotation, which means it should **not** be used with `.reachTowards()`.
 
 **Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
 
@@ -409,7 +421,7 @@ let sequence = new Sequence()
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
         .atLocation(token)
-        .aimTowards({
+        .reachTowards({
             x: token.center.x-500,
             y: token.center.y
         })
@@ -434,7 +446,7 @@ sequence.play();
 let sequence = new Sequence()
     .effect()
         .atLocation(canvas.tokens.controlled[0])
-        .aimTowards(canvas.tokens.controlled[1])
+        .reachTowards(canvas.tokens.controlled[1])
         .startPoint(200)
         .endPoint(200)
         .repeats(3, 200, 300)
