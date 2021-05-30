@@ -331,7 +331,7 @@ A normalized value between `0.0` and `1.0` which determines the volume of the so
 
 This will delay the sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
 
-## Advanced examples
+## Usage Example
 
 To get the following result:
 
@@ -461,6 +461,8 @@ let sequence = new Sequence()
 
 sequence.play();
 ```
+
+# Advanced examples
 
 ## Magic Missile
 
