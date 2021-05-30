@@ -4,6 +4,16 @@ Hooks.once('init', async function() {
 
     window.Sequence = Sequence;
 
-    console.log("Sequencer | Ready to roll")
+    game.settings.register("sequencer", "fileCache", {
+        name: "fileCache",
+        scope: "world",
+        config: false,
+        default: {},
+        type: Object
+    });
+
+    game.settings.set('sequencer', 'fileCache', {});
+
+    console.log("Sequencer | Ready to go!")
 
 });

@@ -4,6 +4,7 @@ export class Sequence{
 
     constructor() {
         this.sections = [];
+        this._fileCache = game.settings.get("sequencer", "fileCache");
     }
 
     _proxyWrap(inSection){
@@ -29,8 +30,22 @@ export class Sequence{
 
     _createWaitSection(ms = 1){
         return new FunctionSection(this, async function(){
-            return new Promise(async (resolve) => { setTimeout(resolve, ms) });
+            return new Promise(async (resolve) => {
+                setTimeout(resolve, ms)
+            });
         }, true);
+    }
+
+    _getFileFromCache(inFile){
+        if(inFile in this._fileCache){
+            return this._fileCache[inFile];
+        }
+        return false;
+    }
+
+    _addFileToCache(inFile, data){
+        this._fileCache[inFile] = data;
+        game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
     then(inFunc, inAsync = true){
@@ -45,7 +60,6 @@ export class Sequence{
     }
 
     macro(inMacro, inAsync = true){
-
         let macro;
         if(typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
@@ -79,7 +93,6 @@ export class Sequence{
     }
 
     async play(){
-        console.log("Sequencer | Starting playback...")
         for(let section of this.sections){
             if(section._async) {
                 await section.execute();
@@ -87,7 +100,6 @@ export class Sequence{
                 section.execute();
             }
         }
-        console.log("Sequencer | Playback done!")
     }
 
 }
@@ -99,8 +111,8 @@ class Section{
         this._async = inAsync;
         this._waitUntilFinished = false;
         this._repetitions = 1;
-        this._delayMin = 50;
-        this._delayMax = 50;
+        this._delayMin = 0;
+        this._delayMax = 0;
     }
 
     async(inBool = true){
@@ -115,7 +127,7 @@ class Section{
         return this;
     }
 
-    repeats(inRepetitions, delayMin = 50, delayMax = 50){
+    repeats(inRepetitions, delayMin = 0, delayMax = 0){
         if(typeof inRepetitions !== "number") throw new Error("inRepetitions must be of type number");
         if(typeof delayMin !== "number") throw new Error("delayMin must be of type number");
         if(typeof delayMax !== "number") throw new Error("delayMax must be of type number");
@@ -178,13 +190,14 @@ class EffectSection extends Section{
         this._stretch = false;
         this._scale = false;
         this._anchor = false;
-        this._rotation = 0;
+        this._randomRotation = false;
         this._rotationOnly = true;
         this._missed = false;
         this._startPoint = 0;
         this._endPoint = 0;
-        this._cachedDimensions = {};
         this._mustache = false;
+        this._JB2A = false;
+        this._randomY = false;
         this._gridSize = canvas.grid.size;
         this._overrides = [];
     }
@@ -198,8 +211,8 @@ class EffectSection extends Section{
                 y: 0,
             },
             anchor: {
-                x: this._anchor?.x ?? 0.0,
-                y: this._anchor?.y ?? 0.0
+                x: 0.0,
+                y: 0.0
             },
             scale: {
                 x: 1.0,
@@ -211,88 +224,49 @@ class EffectSection extends Section{
             _distance: 0
         };
 
+        if(this._anchor){
+            data.anchor = this._anchor;
+        }
+
         if (this._from) {
-            if (this._from instanceof Token) {
-                data.position = {
-                    x: this._from.center.x,
-                    y: this._from.center.y
+
+            let origin = this._calculateMissedPosition(this._from, !this._to && this._missed);
+
+            if(!this._anchor){
+                data.anchor = {
+                    x: 0.5,
+                    y: 0.5
                 }
+            }
+
+            if(this._to){
+
+                let target = this._calculateMissedPosition(this._to, this._missed);
+
                 if(!this._anchor){
                     data.anchor = {
-                        x: 0.5,
+                        x: 0.0,
                         y: 0.5
                     }
                 }
-            } else {
-                data.position = {
-                    x: this._from?.x ?? 0,
-                    y: this._from?.y ?? 0,
-                }
-            }
-        }
 
-        if (this._to) {
+                let ray = new Ray(origin, target);
 
-            let target;
+                data._distance = ray.distance;
 
-            if (this._to instanceof Token) {
+                data.rotation = ray.angle;
 
-                if(this._missed){
-                    target = this._calculateMissedPosition(this._to);
-                }else{
-                    target = {
-                        x: this._to.center.x,
-                        y: this._to.center.y
-                    }
-                }
-
-            } else {
-                target = {
-                    x: this._to?.x ?? 0,
-                    y: this._to?.y ?? 0,
-                }
-            }
-
-            let ray = new Ray(data.position, target);
-
-            data.rotation = ray.angle;
-
-            data._distance = ray.distance;
-
-            if (this._moves) {
-                data.distance = ray.distance;
-
-                if (!this._anchor) {
-                    data.anchor = {
-                        x: 0.8,
-                        y: 0.5,
-                    };
-                }
-
-            }else if (this._stretch){
-                data.width = ray.distance;
-
-                if (!this._anchor) {
-                    data.anchor = {
-                        x: 0.0,
-                        y: 0.5,
-                    };
-                }
-
-            }else{
-
-                if (!this._anchor) {
-                    data.anchor = {
-                        x: -0.08,
-                        y: 0.5,
-                    };
+                if (this._moves) {
+                    data.distance = ray.distance;
                 }
 
             }
+
+            data.position = origin;
 
         }
 
-        data.rotation += this._rotation;
+        data.rotation += this._randomRotation ? Math.random() * Math.PI : 0;
 
         for(let override of this._overrides){
             data = await override(this, data);
@@ -300,6 +274,11 @@ class EffectSection extends Section{
 
         if(Array.isArray(data.file)){
             data.file = lib.random_array_element(data.file)
+        }
+
+        data.scale = {
+            x: data.scale.x * (this._scale?.x ?? 1.0) * (canvas.grid.size / this._gridSize),
+            y: data.scale.y * (this._scale?.y ?? 1.0) * (canvas.grid.size / this._gridSize)
         }
 
         if(this._mustache){
@@ -311,10 +290,8 @@ class EffectSection extends Section{
             data = await this._calculateHitVector(data);
         }
 
-        data.scale = {
-            x: data.scale.x * (this._scale?.x ?? 1.0) * (canvas.grid.size / this._gridSize),
-            y: data.scale.y * (this._scale?.y ?? 1.0) * (canvas.grid.size / this._gridSize)
-        }
+        let flipY = this._randomY && Math.random() < 0.5 ? -1 : 1;
+        data.scale.y = data.scale.y * flipY;
 
         data.file = (this._baseFolder + data.file);
 
@@ -323,12 +300,23 @@ class EffectSection extends Section{
     }
 
     async _getFileDimensions(inFile){
-        let file = this._baseFolder + inFile;
-        if(Object.keys(this._cachedDimensions).indexOf(file) > -1){
-            return this._cachedDimensions[file];
+        let filePath = this._baseFolder + inFile;
+        if(this._JB2A){
+            let parts = filePath.replace(".webm", "").split("_");
+            let dimensionString = parts[parts.length-1].toLowerCase().split('x');
+            if(!isNaN(dimensionString[0]) && !isNaN(dimensionString[1])){
+                return {
+                    x: Number(dimensionString[0]),
+                    y: Number(dimensionString[1])
+                }
+            }
         }
-        this._cachedDimensions[file] = await lib.getDimensions(file);
-        return this._cachedDimensions[file];
+        let cachedFile = this.sequence._getFileFromCache(filePath);
+        if(!cachedFile){
+            cachedFile = await lib.getDimensions(filePath);
+            this.sequence._addFileToCache(filePath, cachedFile)
+        }
+        return cachedFile;
     }
 
     _getTrueLength(inDimensions){
@@ -336,6 +324,7 @@ class EffectSection extends Section{
     }
 
     async _calculateHitVector(data){
+
         if(data._distance === 0) return data;
 
         let dimensions = await this._getFileDimensions(data.file);
@@ -343,37 +332,42 @@ class EffectSection extends Section{
 
         data.scale.x = data._distance / trueLength;
         data.scale.y = Math.max(0.4, data.scale.x);
+
         data.anchor.x = this._startPoint / dimensions.x;
 
         return data;
     }
 
-    _calculateMissedPosition(target){
+    _calculateMissedPosition(target, missed){
 
-        let oddEvenX = Math.random() < 0.5 ? -1 : 1;
-        let oddEvenY = Math.random() < 0.5 ? -1 : 1;
-        let missMax;
-        let missMin;
-        let targetSize = target?.actor?.data?.data?.traits?.size ?? "med";
+        let position = {
+            x: target?.center?.x ?? target.x,
+            y: target?.center?.y ?? target.y
+        }
 
-        if(targetSize === "grg"){
-            missMax = (canvas.grid.size * 3);
-            missMin = (canvas.grid.size * 2);
-        }else if(targetSize === "huge"){
-            missMax = (canvas.grid.size * 2.5);
-            missMin = (canvas.grid.size * 1.5);
-        }else if(targetSize === "lg"){
-            missMax = canvas.grid.size * 2;
-            missMin = canvas.grid.size;
+        if(!missed){
+            return position;
+        }
+
+        let width = (target?.data?.width ?? 1) * canvas.grid.size;
+        let height = (target?.data?.height ?? 1) * canvas.grid.size;
+
+        let XorY = Math.random() < 0.5 ? true : false;
+        let flipX = Math.random() < 0.5 ? -1 : 1;
+        let flipY = Math.random() < 0.5 ? -1 : 1;
+
+        let tokenOffset = canvas.grid.size / 5;
+
+        // If it's X, random position in Y axis
+        if(XorY){
+            position.x += ((width/2) + lib.random_float_between(tokenOffset, canvas.grid.size/2)) * flipX;
+            position.y += lib.random_float_between(tokenOffset, (height/2) + canvas.grid.size/2) * flipY;
         }else{
-            missMax = canvas.grid.size * 1.5;
-            missMin = canvas.grid.size * 0.5;
+            position.x += lib.random_float_between(tokenOffset, (width/2) + canvas.grid.size/2) * flipX;
+            position.y += ((height/2) + lib.random_float_between(tokenOffset, canvas.grid.size/2)) * flipY;
         }
 
-        return {
-            x: target.center.x + (lib.random_int_between(missMin, missMax) * oddEvenX),
-            y: target.center.y + (lib.random_int_between(missMin, missMax) * oddEvenY)
-        }
+        return position;
 
     }
 
@@ -426,20 +420,35 @@ class EffectSection extends Section{
     }
 
     moves(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
         this._moves = inBool;
         return this;
     }
 
     stretch(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
         this._stretch = inBool;
         return this;
     }
 
     missed(inBool = true){
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type number");
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
         this._missed = inBool;
+        return this;
+    }
+
+    JB2A(inBool = true){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(inBool){
+            this.gridSize(100);
+            this.startPoint(200);
+            this.endPoint(200);
+        }else{
+            this.gridSize(canvas.grid.size);
+            this.startPoint(0);
+            this.endPoint(0);
+        }
+        this._JB2A = true;
         return this;
     }
 
@@ -522,9 +531,15 @@ class EffectSection extends Section{
         return this;
     }
 
-    randomRotation() {
-        this._rotation = Math.random() * Math.PI;
+    randomRotation(inBool = true) {
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._randomRotation = inBool;
         return this;
+    }
+
+    randomizeMirror(inBool = inBool){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._randomY = true;
     }
 
     gridSize(inSize){

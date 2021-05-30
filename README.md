@@ -33,7 +33,7 @@ sequence.then(async function(){
 })
 ```
 
-The Sequencer uses a method-chaining fluent interface, meaning you can continiously call functions on the sequence object, like so:
+The Sequencer uses a method-chaining fluent interface, meaning you can continuously call functions on the sequence object, like so:
 
 ```js
 let sequence = new Sequence()
@@ -54,7 +54,7 @@ To start the sequence off, you simply call `play()` on the sequence.
 
 `.then(() => {})`
 
-This creates a function that will be called. Remember that if you want your function to be asynchronous and you want it to properly wait, you'll want to make the above:
+This creates a function that will be called. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the above:
 
 `.then(async () => {})`
 
@@ -120,7 +120,7 @@ It is highly recommended that you do not load too many Effect files at the same 
 
 `.baseFolder(inPath)`
 
-This defines the base folder that will prepended to the file path. This is mainly just useful to make the file path easier to manage.
+This defines the base folder that will prepend to the file path. This is mainly just useful to make the file path easier to manage.
 
 ### File
 
@@ -177,6 +177,14 @@ This will directly modify the effect's data, which means you can manipulate whic
 
 You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of this readme for more in depth usage.
 
+### JB2A
+
+`.JB2A()` or `.JB2A(bool)`
+
+This will set the start point and end point (see below) to best work JB2A's effect sprites.
+
+Effectively sets start point and end point to 200, and grid scale to 100.
+
 ### Start point
 
 `.startPoint(inNumber)`
@@ -223,7 +231,7 @@ You can also pass functions that will get evaluated during runtime by Mustache:
 }
 ```
 
-This would result in a random color and a random number between 1 and 9, so any of these:
+This would result in a random color, and a random number between 1 and 9, so any of these:
 * `MagicMissile_01_Regular_Blue_30ft_01_1600x400.webm`
 * `MagicMissile_01_Regular_Green_30ft_08_1600x400.webm`
 * `MagicMissile_01_Regular_Yellow_30ft_02_1600x400.webm`
@@ -261,11 +269,17 @@ This will center the sprite on the given location, effectively giving it an anch
 
 ### Random rotation
 
-`.randomRotation()`
+`.randomRotation()` or `.randomRotation(inBool)`
 
 This will cause the sprite to have a random rotation, which means it should **not** be used with `.reachTowards()`.
 
 **Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
+
+### Randomize mirror
+
+`.randomizeMirror()` or `.randomizeMirror(inBool)`
+
+This will cause the sprite to have a randomized flipped Y scale (if the Y scale was 1, it can become 1 or -1, flipping the sprite vertically), which is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
 
 ### Delay
 
@@ -277,7 +291,7 @@ This will delay the sprite from being played for a set amount of milliseconds. I
 
 `.sound()` or `.sound(inFile)`
 
-Declares an sound to be played through the AudioHelper. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
+Declares a sound to be played through the AudioHelper. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect object.
 
 Sadly, sounds are not asynchronous, so this class cannot be `await`ed.
 
