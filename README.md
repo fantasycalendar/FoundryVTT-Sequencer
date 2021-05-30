@@ -423,21 +423,21 @@ Here's an example using the Sequencer instead:
 * Plays another effect on the token's location
 
 ```js
-const token = canvas.tokens.controlled[0];
+let tokenD = canvas.tokens.controlled[0];
 let sequence = new Sequence()
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm")
-        .atLocation(token)
+        .atLocation(tokenD)
         .scale(0.35)
     .wait(400)
     .sound("Music/Sound_Effects/teleport.wav")
     .wait(600)
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
-        .atLocation(token)
+        .atLocation(tokenD)
         .reachTowards({
-            x: token.center.x-500,
-            y: token.center.y
+            x: tokenD.center.x-500,
+            y: tokenD.center.y
         })
         .scale(0.2)
     .wait(100)
@@ -446,7 +446,7 @@ let sequence = new Sequence()
     })
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
-        .atLocation(token)
+        .atLocation(tokenD)
         .scale(0.5)
 
 sequence.play();
