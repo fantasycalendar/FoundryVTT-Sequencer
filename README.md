@@ -468,8 +468,7 @@ This will delay the sound from being played for a set amount of milliseconds. If
 
 ## Magic Missile
 
-![Magic Missile](docs/images/magic_missile.gif)
-
+![One token firing three magic missiles on another token](docs/images/magic_missile.gif)
 ```js
 new Sequence()
     .effect()
@@ -502,7 +501,7 @@ new Sequence()
 
 ## Lightning Strike
 
-![Magic Missile](docs/images/lightning_strike.gif)
+![Random lightning strikes on a token](docs/images/lightning_strike.gif)
 
 ```js
 new Sequence()
@@ -521,7 +520,7 @@ new Sequence()
 
 ## Acid Splash
 
-![Magic Missile](docs/images/acid_splash.gif)
+![Acid splash hitting two tokens with random rotation and scales](docs/images/acid_splash.gif)
 
 ```js
 new Sequence()
@@ -542,12 +541,12 @@ new Sequence()
 
 ### Version 0.3.1
 - *Effects* - Refactored `.randomizeMirror()` into `.randomizeMirrorX()` and `.randomizeMirrorY()`
-- *Effects* - Fixed some issues with the 
+- *Effects* - Refactored scaling algorithm for `.reachTowards()`
 - *Sequencer* - Added support for random `.wait()` interval 
 
 ### Version 0.3.0
 - *Effects* - Refactored `.aimTowards()` into `.rotateTowards()` and `.reachTowards()`
-- *Effects* - Refactored scaling algorithm for 
+- *Effects* - Refactored how `.missed()` chooses the location to hit and now takes token size into account
 - *Effects* - Added `.JB2A()` to automatically set the effect to handle their sprites in the best way possible
 - *Effects* - Added `.randomizeMirror()` to randomly mirror sprites on the Y axis
 - *Effects* - Added Mustache support in file names
