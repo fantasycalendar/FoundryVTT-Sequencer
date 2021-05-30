@@ -516,13 +516,32 @@ new Sequence()
         .scale(2)
         .center()
         .randomizeMirrorX()
-        .play()
+    .play();
+```
+
+## Acid Splash
+
+![Magic Missile](docs/images/acid_splash.gif)
+
+```js
+new Sequence()
+    .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
+        .atLocation(canvas.tokens.controlled[0])
+        .scale(0.3, 0.6)
+        .center()
+        .randomRotation()
+    .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
+        .atLocation(canvas.tokens.controlled[1])
+        .scale(0.3, 0.6)
+        .center()
+        .randomRotation()
+    .play();
 ```
 
 ## Changelog
 
 ### Version 0.3.1
-- *Effects* - Refactored `.randomizeMirror()` into `.randomizeMirrorX()` and `randomizeMirrorY`
+- *Effects* - Refactored `.randomizeMirror()` into `.randomizeMirrorX()` and `.randomizeMirrorY()`
 - *Effects* - Fixed some issues with the 
 - *Sequencer* - Added support for random `.wait()` interval 
 
