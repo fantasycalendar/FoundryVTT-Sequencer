@@ -416,7 +416,9 @@ canvas.fxmaster.playVideo(data);
 Here's an example using the Sequencer instead:
 
 * It plays an effect on a token's location
-* Waits for 1 second
+* Waits for 400 milliseconds
+* Plays a sound
+* Waits for 600 milliseconds
 * Plays another effect pointing towards 500px to the left of the token
 * Waits for 100 milliseconds
 * Teleports the token 500px to the left
