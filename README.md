@@ -539,6 +539,11 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.2 - 0.8.x ready!
+* *Effects* - Added `.playbackRate()` to effects, you can now speed up the play rate of your effects
+* *Sequencer* - Tweaked internal handling of `.async()` together with `.waitUntilFinished()` improved
+* *Sequencer* - Tweaked to use `ready` instead of `init` to load module
+
 ### Version 0.3.1
 - *Effects* - Refactored `.randomizeMirror()` into `.randomizeMirrorX()` and `.randomizeMirrorY()`
 - *Effects* - Refactored scaling algorithm for `.reachTowards()`
