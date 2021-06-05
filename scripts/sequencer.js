@@ -140,16 +140,20 @@ class Section{
     }
 
     async execute(){
-        for(let i = 0; i < this._repetitions; i++){
-            if(this._waitUntilFinished){
-                await this.run();
-            }else{
-                this.run();
+        let self = this;
+        return new Promise(async (resolve) => {
+            for (let i = 0; i < self._repetitions; i++) {
+                if (self._waitUntilFinished) {
+                    await self.run();
+                } else {
+                    self.run();
+                }
+                if (self._repetitions > 1) {
+                    await self._wait();
+                }
             }
-            if(this._repetitions > 1){
-                await this._wait();
-            }
-        }
+            resolve();
+        });
     }
 
     async _wait(){
@@ -201,6 +205,7 @@ class EffectSection extends Section{
         this._JB2A = false;
         this._randomX = false;
         this._randomY = false;
+        this._playbackRate = 1.0;
         this._gridSize = canvas.grid.size;
         this._overrides = [];
         this._postOverrides = [];
@@ -225,6 +230,7 @@ class EffectSection extends Section{
             angle: 0,
             rotation: 0,
             speed: 0,
+            playbackRate: this._playbackRate,
             _distance: 0
         };
 
@@ -432,6 +438,12 @@ class EffectSection extends Section{
             delay = lib.random_float_between(msMin, msMax);
         }
         this._delay = delay;
+        return this;
+    }
+
+    playbackRate(inNumber = 1.0){
+        if(typeof inNumber !== "number") throw new Error("inNumber must be of type number");
+        this._playbackRate = inNumber;
         return this;
     }
 

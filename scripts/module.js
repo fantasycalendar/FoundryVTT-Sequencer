@@ -1,6 +1,6 @@
 import { Sequence } from './sequencer.js';
 
-Hooks.once('init', async function() {
+Hooks.once('ready', async function() {
 
     window.Sequence = Sequence;
 
