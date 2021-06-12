@@ -261,7 +261,7 @@ new Sequence()
 
 ### Version 0.3.3
 - *Effects* - Added `.playIf()` ([docs](DOCS.md#play-if)); this allows you to completely ignore playing an effect or sound, depending on a boolean or a function
-- *Sounds* - Added support for `.waitUntilFinished()` for sounds
+- *Sounds* - Added support for `.async()` and `.waitUntilFinished()` for sounds - requires both to be `true`, due to weirdness, I'll be refactoring this in the future
 - *Effects* - Refactored `.scale()` when it was provided with a minimum and maximum value, it now randomizes the scale of the effect when executed instead of when the method was called
 - *Effects & Sounds* - Refactored `.file()` for both effects and sounds so that providing an array of files no longer immediately picks one from the array, but randomly picks a file each time the section is executed
 - *Effects & Sounds* - Refactored how `.delay()` interacted with `.repeats()`, which should result in more consistent behavior
