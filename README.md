@@ -265,6 +265,7 @@ new Sequence()
 - *Effects* - Refactored `.scale()` when it was provided with a minimum and maximum value, it now randomizes the scale of the effect when executed instead of when the method was called
 - *Effects & Sounds* - Refactored `.file()` for both effects and sounds so that providing an array of files no longer immediately picks one from the array, but randomly picks a file each time the section is executed
 - *Effects & Sounds* - Refactored how `.delay()` interacted with `.repeats()`, which should result in more consistent behavior
+- *Sequencer* - Swapped the functionality of `.async()` and `.waitUntilFinished()`, and clarified in the docs.
 - *Sequencer* - Added support for random range within a `.wait()` block (like, `.wait(500, 1000)` etc)
 
 ### Version 0.3.2 - 0.8.x ready!

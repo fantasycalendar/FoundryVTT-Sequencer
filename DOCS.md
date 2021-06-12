@@ -50,19 +50,21 @@ Declares a sound to be played through the AudioHelper. Until you call `.then()`,
 
 These methods can be called on any `.then` functions, effects, sounds, and macros.
 
-### Wait Until Finished
+# Async
 
 `.async()` or `.async(true)`
 
-Calling this method will cause the section to finish its execution before starting the next section.
+Calling this method will cause the internal logic of the section to finish its execution before starting the next section. If you have repetitions within your effect, each effect will finish playing before the next one starts playing.
 
 You can also pass `true` to it for greater readability, but simply calling it will do.
+
+### Wait Until Finished
 
 `.waitUntilFinished()` or `.waitUntilFinished(true)`
 
 Calling this method will cause the section to finish running before starting the next section.
 
-**Note:** This differs from async in the sense that it will wait for *every* part of the effects or sounds to finish playing (including all of its repetitions, durations, delays, etc).
+**Note:** This differs from `.async()` in the sense that it will not cause the internal logic to be waited upon, but the entire section  (including all of its repetitions, durations, delays, etc).
 
 You can also pass `true` to it for greater readability, but simply calling it will do.
 
@@ -128,7 +130,16 @@ Calling this method will cause the effect to target a location close to the `.re
 
 Calling this function will cause the effect to not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect to play. 
 
+Below is an example of a function used in this method, which would cause this effect to only be played about 50% of the time. 
+```js
+.playIf(() => {
+    return Math.random() < 0.5;
+})
+```
+
 ### Add override
+
+This method will directly modify the effect's data, which means you can manipulate which file will be used based on the distance to the target, etc.
 
 ```js
 .addOverride(async (effect, data) => {
@@ -137,13 +148,11 @@ Calling this function will cause the effect to not play, and skip all delays, re
 })
 ```
 
-This will directly modify the effect's data, which means you can manipulate which file will be used based on the distance to the target, etc.
-
 `effect` is a reference to the effect in itself - interact with this at your own risk.
 
 `data` is the effect's data that is going to be passed to FXMaster.
 
-You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of this readme for more in depth usage.
+You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of the [readme](README.md#magic-missile) for more in depth usage.
 
 ### JB2A
 

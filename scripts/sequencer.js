@@ -12,7 +12,7 @@ export class Sequence{
 
     async play(){
         for(let section of this.sections){
-            if(section._async) {
+            if(section._waitUntilFinished) {
                 await section.execute();
             }else{
                 section.execute();

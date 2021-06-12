@@ -63,7 +63,7 @@ export default class Section{
         return new Promise(async (resolve) => {
             setTimeout(async function () {
                 for (let i = 0; i < self._repetitions; i++) {
-                    if (self._waitUntilFinished) {
+                    if (self._async) {
                         await self.run();
                     } else {
                         self.run();
