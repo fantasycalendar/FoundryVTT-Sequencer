@@ -259,6 +259,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.4 Hotfix
+- *Effects* - Fixed issue that caused the wrong scale to be applied when using `.reachTowards()`
+
 ### Version 0.3.3
 - *Effects* - Added `.playIf()` ([docs](DOCS.md#play-if)); this allows you to completely ignore playing an effect or sound, depending on a boolean or a function
 - *Sounds* - Added support for `.async()` and `.waitUntilFinished()` for sounds - requires both to be `true` due to code weirdness, I'll be refactoring this in the future
