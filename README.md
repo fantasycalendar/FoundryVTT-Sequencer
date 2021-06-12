@@ -173,8 +173,8 @@ let sequence = new Sequence()
         })
         .scale(0.2)
     .wait(100)
-    .then(async function(){
-        await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
+    .then(function(){
+        token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
     })
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
@@ -258,6 +258,9 @@ new Sequence()
 ```
 
 ## Changelog
+
+### Version 0.3.5 Hotfix
+- *Sequencer* - Fixed `.wait()` breaking due to the `.async()` and `.waitUntilFinished()` swap
 
 ### Version 0.3.4 Hotfix
 - *Effects* - Fixed issue that caused the wrong scale to be applied when using `.reachTowards()`

@@ -20,8 +20,8 @@ export class Sequence{
         }
     }
 
-    then(inFunc, inAsync = true){
-        let func = new FunctionSection(this, inFunc, inAsync);
+    then(inFunc, inWaitUntilFinished = true){
+        let func = new FunctionSection(this, inFunc, inWaitUntilFinished);
         this._addSection(func)
         return this;
     }
@@ -31,7 +31,7 @@ export class Sequence{
         return this._addSection(effect);
     }
 
-    macro(inMacro, inAsync = true){
+    macro(inMacro, inWaitUntilFinished = true){
         let macro;
         if(typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
@@ -46,7 +46,7 @@ export class Sequence{
 
         let func = new FunctionSection(this, async function(){
             await macro.execute();
-        }, inAsync);
+        }, inWaitUntilFinished);
 
         this._addSection(func)
         return this;

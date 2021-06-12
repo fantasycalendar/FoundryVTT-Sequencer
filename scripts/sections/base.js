@@ -2,10 +2,10 @@ import * as lib from "../lib.js";
 
 export default class Section{
 
-    constructor(inSequence, inAsync = false){
+    constructor(inSequence, inWaitUntilFinished = false){
         this.sequence = inSequence;
-        this._async = inAsync;
-        this._waitUntilFinished = false;
+        this._waitUntilFinished = inWaitUntilFinished;
+        this._async = false;
         this._repetitions = 1;
         this._repeatDelayMin = 0;
         this._repeatDelayMax = 0;
@@ -15,15 +15,15 @@ export default class Section{
         this._playIfSet = false;
     }
 
-    async(inBool = true){
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
-        this._async = inBool;
-        return this;
-    }
-
     waitUntilFinished(inBool = true){
         if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
         this._waitUntilFinished = inBool;
+        return this;
+    }
+
+    async(inBool = true){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._async = inBool;
         return this;
     }
 

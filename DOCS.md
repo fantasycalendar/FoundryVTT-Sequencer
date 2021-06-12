@@ -12,7 +12,7 @@ This creates a function that will be called. Remember that if you want your func
 
 `.then(async () => {})`
 
-In addition, if you want your function to be `await`ed, you'll need to pass `true` as the last argument in the method call, like so:
+In addition, if you want your function to finish before the next section is executed, you'll need to pass `true` as the last argument in the method call, like so:
 
 `.then(async () => {}, true)`
 
@@ -50,21 +50,21 @@ Declares a sound to be played through the AudioHelper. Until you call `.then()`,
 
 These methods can be called on any `.then` functions, effects, sounds, and macros.
 
-# Async
-
-`.async()` or `.async(true)`
-
-Calling this method will cause the internal logic of the section to finish its execution before starting the next section. If you have repetitions within your effect, each effect will finish playing before the next one starts playing.
-
-You can also pass `true` to it for greater readability, but simply calling it will do.
-
 ### Wait Until Finished
 
 `.waitUntilFinished()` or `.waitUntilFinished(true)`
 
 Calling this method will cause the section to finish running before starting the next section.
 
-**Note:** This differs from `.async()` in the sense that it will not cause the internal logic to be waited upon, but the entire section  (including all of its repetitions, durations, delays, etc).
+You can also pass `true` to it for greater readability, but simply calling it will do.
+
+# Async
+
+`.async()` or `.async(true)`
+
+Calling this will make each effect or sound will finish playing before the next one starts playing.
+
+This differs from `.waitUntilFinished()` in the sense that `.async()` is for each repetition, whilst `.waitUntilFinished()` is for the entire section.
 
 You can also pass `true` to it for greater readability, but simply calling it will do.
 
