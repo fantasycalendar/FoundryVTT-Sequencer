@@ -5,7 +5,7 @@
   "version": "0.0.2",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.7.9",
+  "minimumCoreVersion": "0.7.10",
   "compatibleCoreVersion": "0.8.6",
   "author": "Wasp (Wasp#2005)",
   "dependencies": [
@@ -17,6 +17,10 @@
   "esmodules": [
     "/scripts/module.js",
     "/scripts/sequencer.js",
+    "/scripts/sections/base.js",
+    "/scripts/sections/effect.js",
+    "/scripts/sections/func.js",
+    "/scripts/sections/sound.js",
     "/scripts/lib.js"
   ],
   "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",

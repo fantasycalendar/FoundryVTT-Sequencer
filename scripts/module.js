@@ -6,7 +6,7 @@ Hooks.once('ready', async function() {
 
     game.settings.register("sequencer", "fileCache", {
         name: "fileCache",
-        scope: "world",
+        scope: "client",
         config: false,
         default: {},
         type: Object

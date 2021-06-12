@@ -81,10 +81,10 @@ export function random_array_element(inArray){
 }
 
 /**
- * This function determines
+ * Determines the dimensions of a given image file
  *
- * @param  {string}     inFile    The function object to be tested
- * @return {boolean}              A boolean whether the function is actually a function
+ * @param  {string}     inFile    The file to be loaded
+ * @return {Promise}              A promise that will return the dimensions of the file
  */
 export async function getDimensions(inFile){
     return new Promise(resolve => {
@@ -106,4 +106,26 @@ export async function getDimensions(inFile){
             resolve({ x:0, y:0 });
         }
     })
+}
+
+/**
+ *  Determines the duration of a given sound file
+ *
+ * @param  {string}     inFile    The sound file to be loaded
+ * @return {Promise}              A promise that will return the dimensions of the file
+ */
+export async function getSoundDuration(inFile){
+    return new Promise((resolve, reject) => {
+        let audio = new Audio();
+        audio.onloadedmetadata = () => {
+            resolve(audio.duration*1000); // ms
+        }
+        audio.onerror = () => {
+            console.error('File not found');
+            reject();
+        }
+        audio.preload = "auto";
+        audio.crossOrigin = "anonymous";
+        audio.src = inFile;
+    });
 }
