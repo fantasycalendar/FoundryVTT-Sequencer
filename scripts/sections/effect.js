@@ -109,13 +109,13 @@ export default class EffectSection extends Section {
             data.file = template(this._mustache);
         }
 
-        if(!this._rotationOnly) {
-            data = await this._calculateHitVector(data);
-        }
-
         data.scale = {
             x: data.scale.x * (canvas.grid.size / this._gridSize),
             y: data.scale.y * (canvas.grid.size / this._gridSize)
+        }
+
+        if(!this._rotationOnly) {
+            data = await this._calculateHitVector(data);
         }
 
         let scale = this._scaleMin;
