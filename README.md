@@ -66,6 +66,15 @@ To get the following result:
 
 You'd have to write something like this:
 
+* It plays an effect on a token's location
+* Waits for 400 milliseconds
+* Plays a sound
+* Waits for 600 milliseconds
+* Plays another effect pointing towards 500px to the left of the token
+* Waits for 100 milliseconds
+* Teleports the token 500px to the left
+* Plays another effect on the token's location
+
 ```js
 async function wait(ms){
     return new Promise(resolve => {
@@ -149,15 +158,6 @@ canvas.fxmaster.playVideo(data);
 ```
 
 Here's an example using the Sequencer instead:
-
-* It plays an effect on a token's location
-* Waits for 400 milliseconds
-* Plays a sound
-* Waits for 600 milliseconds
-* Plays another effect pointing towards 500px to the left of the token
-* Waits for 100 milliseconds
-* Teleports the token 500px to the left
-* Plays another effect on the token's location
 
 ```js
 let tokenD = canvas.tokens.controlled[0];
