@@ -189,6 +189,8 @@ let sequence = new Sequence()
 sequence.play();
 ```
 
+*Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
+
 # Advanced examples
 
 ## Magic Missile
@@ -224,6 +226,8 @@ new Sequence()
     .play();
 ```
 
+*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
+
 ## Lightning Strike
 
 ![Random lightning strikes on a token](docs/images/lightning_strike.gif)
@@ -243,6 +247,8 @@ new Sequence()
     .play();
 ```
 
+*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
+
 ## Acid Splash
 
 ![Acid splash hitting two tokens with random rotation and scales](docs/images/acid_splash.gif)
@@ -261,6 +267,8 @@ new Sequence()
         .randomRotation()
     .play();
 ```
+
+*Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
 
