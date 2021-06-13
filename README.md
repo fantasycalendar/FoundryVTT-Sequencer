@@ -7,9 +7,9 @@ This module implements a basic pipeline that can be used for managing the flow o
 The effects created by this module is completely synchronized across all clients thanks to the hard work of U~man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster).
 
 ## Effects shown in the doumentation below
-* (JB2A - Jules&Ben's Animated Assets)[https://foundryvtt.com/packages/JB2A_DnD5e] (Full paid version [here](https://www.jb2a.com/))
-* (Jack Kerouac's Animated Spell Effects)[https://foundryvtt.com/packages/animated-spell-effects]
-* (Jack Kerouac's Animated Cartoon Spell Effets)[https://github.com/jackkerouac/animated-spell-effects-cartoon]
+* [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.jb2a.com/))
+* [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
+* [Jack Kerouac's Animated Cartoon Spell Effets](https://github.com/jackkerouac/animated-spell-effects-cartoon)
 
 ## Download here:
 `https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
