@@ -280,7 +280,7 @@ new Sequence()
 - *Effects* - Fixed `.scale()` bug that caused it to not properly set the scale and then cause an error upon calling `.play()`
 - *Effects* - Removed `.moves()` for future implementation
 - *Sequencer* - Tweaked `.async()` and `.waitUntilFinished()` handling
-    - They now act the same effect and sounds that only play once, but if it `.repeats()`, `.async()` causes the effect or sound to wait between each repetition, `.waitUntilFinished()` causes the sequencer to wait until the effect or sound has finished executing all of its repetitions, which may or may not wait for each effect or sound to play with `.async()`
+    - They now act the same on effect and sounds that only play once, but if it `.repeats()`, `.async()` causes the effect or sound to wait between each repetition, `.waitUntilFinished()` causes the sequencer to wait until the effect or sound has finished executing all of its repetitions, which may or may not wait for each effect or sound to play with `.async()`
 - *Sequencer* - Calling `.play()` now returns the sequence
 - *Sequencer* - Removed `FXMaster` dependency and implemented a custom canvas layer and effects class 
 
