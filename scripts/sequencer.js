@@ -7,7 +7,7 @@ export class Sequence{
 
     constructor() {
         this.sections = [];
-        this._cachedPositions = {}
+        this._cachedPositions = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
     }
 
@@ -17,9 +17,7 @@ export class Sequence{
      * @returns {Sequence} this
      */
     async play(){
-        for(let section of this.sections) {
-            await section.prepareCache();
-        }
+        await this._prepareCache();
         for(let section of this.sections){
             if(section.shouldWaitUntilFinished) {
                 await section.execute();
@@ -109,6 +107,13 @@ export class Sequence{
         let section = this._createWaitSection(wait);
         this.sections.push(section);
         return this;
+    }
+
+    async _prepareCache(){
+        this._cachedPositions = {};
+        for(let section of this.sections) {
+            await section.prepareCache();
+        }
     }
 
     _insertCachedPosition(effect, inName, inIndex, inPosition){

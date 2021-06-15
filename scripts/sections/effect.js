@@ -394,8 +394,11 @@ export default class EffectSection extends Section {
             }
 
             data.position = origin;
+            data._target = origin;
 
             if(this._to) {
+
+                data._target = target;
 
                 if(!this._anchor) {
                     data.anchor = {
@@ -466,7 +469,7 @@ export default class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        this.sequence._insertCachedPosition(this, this._getName(data), this._currentRepetition, data.position);
+        this.sequence._insertCachedPosition(this, this._getName(data), this._currentRepetition, data._target);
 
         return data;
 
