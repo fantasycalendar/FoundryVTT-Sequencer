@@ -15,7 +15,12 @@
     "/scripts/sections/effect.js",
     "/scripts/sections/func.js",
     "/scripts/sections/sound.js",
-    "/scripts/lib.js"
+    "/scripts/lib.js",
+    "/scripts/version.js",
+    "/scripts/canvas-effects/canvas-effect.js",
+    "/scripts/canvas-effects/canvas-animation.js",
+    "/scripts/canvas-effects/ease.js",
+    "/scripts/canvas-effects/effects-layer.js"
   ],
   "socket": true,
   "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",
