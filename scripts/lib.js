@@ -89,10 +89,9 @@ export function random_array_element(inArray){
 export async function getDimensions(inFile){
     return new Promise(resolve => {
         let video = document.createElement("video");
-        video.preload = "auto";
         video.crossOrigin = "anonymous";
         video.src = inFile;
-        video.oncanplay = () => {
+        video.onloadedmetadata = () => {
             let dimensions = {
                 x: video.videoWidth,
                 y: video.videoHeight

@@ -5,15 +5,9 @@
   "version": "0.0.2",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.7.10",
+  "minimumCoreVersion": "0.7.9",
   "compatibleCoreVersion": "0.8.6",
   "author": "Wasp (Wasp#2005)",
-  "dependencies": [
-    {
-      "name": "fxmaster",
-      "type": "module"
-    }
-  ],
   "esmodules": [
     "/scripts/module.js",
     "/scripts/sequencer.js",
@@ -23,6 +17,7 @@
     "/scripts/sections/sound.js",
     "/scripts/lib.js"
   ],
+  "socket": true,
   "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",
   "manifest": "https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/manifest.json",
   "download": "https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.zip",

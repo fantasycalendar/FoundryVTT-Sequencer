@@ -1,14 +1,51 @@
-# Documentation
+## Table of Contents
 
-This page contains the documentation for the Sequencer, and all of its moving parts.
+### - Core Methods -
+- [Then](#then)
+- [Macro](#macro)
+- [Wait](#wait)
+- [Effect](#effect)
+- [Sound](#sound)
 
-## Methods
+### - Generic Functions (effects & sounds) -
+- [Wait Until Finished](#wait-until-finished)
+- [Async](#async)
+- [Repeats](#repeats)
+- [Play if](#play-if)
+- [Delay](#delay)
+
+### - Effect Methods -
+- [Base folder](#base-folder)
+- [File](#file)
+- [At location](#at-location)
+- [Rotate Towards](#rotate-towards)
+- [Reach Towards](#reach-towards)
+- [Missed](#missed)
+- [Add override](#add-override)
+- [JB2A](#jb2a)
+- [Start point](#start-point)
+- [End point](#end-point)
+- [Set mustache](#set-mustache)
+- [Grid Scale](#grid-scale)
+- [Scale](#scale)
+- [Anchor](#anchor)
+- [Center](#center)
+- [Random rotation](#random-rotation)
+- [Randomize mirror](#randomize-mirror)
+- [Fade in](#fade-in)
+- [Fade out](#fade-out)
+
+### - Sound Methods -
+- [File](#file)
+- [Volume](#volume)
+
+## Core Methods
 
 ### Then
 
 `.then(() => {})`
 
-This creates a function that will be called. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the above:
+Creates a section that will run a function. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the above:
 
 `.then(async () => {})`
 
@@ -20,7 +57,7 @@ In addition, if you want your function to finish before the next section is exec
 
 `.macro("MacroName")` or `.macro(macroReference)`
 
-This will run a macro based on a name or a direct reference to a macro. If the macro is not found, Sequencer will complain. Loudly.
+Creates a section that will run a macro based on a name or a direct reference to a macro. If the macro is not found, Sequencer will complain. Loudly.
 
 Similar to `.then()`, it's expected that you pass a boolean as a second parameter if you wish the Sequencer to wait for the macro to finish.
 
@@ -30,21 +67,19 @@ Similar to `.then()`, it's expected that you pass a boolean as a second paramete
 
 `.wait(1000)` or `.wait(500, 1000)`
 
-A simple method which makes the sequence wait after the last section for as many milliseconds as you pass to this method.
-
-If given a second number, a random wait time between the two given numbers will be generated.
+Causes the sequence to wait after the last section for as many milliseconds as you pass to this method. If given a second number, a random wait time between the two given numbers will be generated.
 
 ### Effect
 
 `.effect()` or `.effect(inFile)`
 
-Declares an effect to be played through FXMaster. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect section.
+Creates an effect section. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect section.
 
 ### Sound
 
 `.sound()` or `.sound(inFile)`
 
-Declares a sound to be played through the AudioHelper. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Sound section.
+Creates a sound section. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Sound section.
 
 ## Generic Methods
 
@@ -58,7 +93,7 @@ Calling this method will cause the section to finish running before starting the
 
 You can also pass `true` to it for greater readability, but simply calling it will do.
 
-# Async
+### Async
 
 `.async()` or `.async(true)`
 
@@ -68,78 +103,84 @@ This differs from `.waitUntilFinished()` in the sense that `.async()` is for eac
 
 You can also pass `true` to it for greater readability, but simply calling it will do.
 
-## Effect Methods
-
 ### Repeats
 
 `.repeats(inRepetitions, inRepeatDelayMin, inRepeatDelayMax)`
 
-This will cause the effect to be repeated `inRepetitions` times, with an optional delay. This currently only functions on Effects and Sounds (under review).
+Causes the effect or sound to be repeated `inRepetitions` times, with an optional delay.
 
 As an option, you can give it `inRepeatDelayMin` for a static delay between repetitions, or `inRepeatDelayMin` and `inRepeatDelayMax` for a random delay between each call.
 
-It is highly recommended that you do not load too many Effect files at the same time, as Foundry might not be able to load all of them.
-
-### Base folder
-
-`.baseFolder(inPath)`
-
-This defines the base folder that will prepend to the file path. This is mainly just useful to make the file path easier to manage.
-
-### File
-
-`.file(inPath)` or `.file(inArray)`
-
-This declares which .webm to be played, but you can also do that when first initializing the effect.
-
-This may also be an array of paths, which will be randomly picked from each time the effect is played.
-
-### At location
-
-`.atLocation(token)` or `.atLocation({ x: 0, y: 0 })`
-
-A smart method that can take a reference to a token, or a direct coordinate on the canvas to play the effect at.
-
-### Rotate Towards
-
-`.rotateTowards(token)` or `.rotateTowards({ x: 0, y: 0 })`
-
-Another smart method (similar to above), which will cause the effect to be rotated towards the given token or coordinates. This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
-
-### Reach Towards
-
-`.reachTowards(token)` or `.reachTowards({ x: 0, y: 0 })`
-
-Yet another token supporting method. This causes the effect to be rotated **and stretched** towards the given token or coordinates. This effectively calculates the proper X scale for the effect to reach the target.
-
-### Moves
-
-`.moves()` or `.moves(inBool)`
-
-Calling this method will cause the effect to move towards `.reachTowards()` location. You can also pass `true` to it for greater readability, but simply calling it will do.
-
-### Missed
-
-`.missed()` or `.missed(inBool)`
-
-Calling this method will cause the effect to target a location close to the `.reachTowards()` location, but not on it. You can also pass `true` to it for greater readability, but simply calling it will do.
+It is highly recommended that you do not load too many files at the same time, as Foundry might not be able to load all of them.
 
 ### Play if
 
 `.playIf(inBool)` or `.playIf(inFunction)`
 
-Calling this function will cause the effect to not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect to play. 
+Causes the effect or sound to not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect or sound to play.
 
-Below is an example of a function used in this method, which would cause this effect to only be played about 50% of the time. 
+Below is an example of a function used in this method, which would cause this effect or sound to only be played about 50% of the time.
 ```js
 .playIf(() => {
     return Math.random() < 0.5;
 })
 ```
 
+### Delay
+
+`.delay(1000)` or `.delay(500, 1000)`
+
+This will delay the effect or sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
+
+
+## Effect Methods
+
+### Base folder
+
+`.baseFolder(inPath)`
+
+Defines the base folder that will prepend to the file path. This is mainly just useful to make the file path easier to manage.
+
+### File
+
+`.file(inPath)` or `.file(inArray)`
+
+Declares which .webm to be played, but you can also do that when first initializing the effect.
+
+This may also be an array of paths, which will be randomly picked from each time the effect is played.
+
+### At location
+
+`.atLocation(token)` or `.atLocation({ x: 0, y: 0 })` or `.atLocation("stored_name")`
+
+A smart method that can take:
+- Reference to a token
+- Direct coordinate on the canvas
+- String reference, see `.name()`
+
+### Rotate Towards
+
+`.rotateTowards(token)` or `.rotateTowards({ x: 0, y: 0 })`
+
+Causes the effect to be rotated towards the given token, coordinates, or a string reference, see `.name()`. This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
+
+### Reach Towards
+
+`.reachTowards(token)` or `.reachTowards({ x: 0, y: 0 })`
+
+Causes the effect to be rotated **and stretched** towards the given token, coordinates, or a string reference, see `.name()`. This effectively calculates the proper X scale for the effect to reach the target.
+
+### Missed
+
+`.missed()` or `.missed(inBool)`
+
+Calling this method will cause the effect to target a location close to the given location, but not on it. You can also pass `true` to it for greater readability, but simply calling it will do.
+
+If a location has been picked with `.atLocation()`, a random spot around that will be picked. If both `.atLocation()` and either of `.reachTowards()` or `.rotateTowards` a random location on the latter will be generated.
+
 ### Add override
 
-This method will directly modify the effect's data, which means you can manipulate which file will be used based on the distance to the target, etc.
+Adds a function that will run at the end of the effect serialization step, but before it is played. Allows direct modifications of effect's data. For example, it could be manipulated to change which file will be used based  on the distance to the target.
 
 ```js
 .addOverride(async (effect, data) => {
@@ -158,7 +199,7 @@ You _must_ define the function like above and return the data at the end of the 
 
 `.JB2A()` or `.JB2A(bool)`
 
-This will set the start point and end point (see below) to best work JB2A's effect sprites.
+Sets the start point and end point (see below) to best work JB2A's effect sprites.
 
 Effectively sets start point and end point to 200, and grid scale to 100.
 
@@ -166,7 +207,7 @@ Effectively sets start point and end point to 200, and grid scale to 100.
 
 `.startPoint(inNumber)`
 
-This will define the start point within the given sprite, starting from the left of the sprite.
+Defines the start point within the given sprite, starting from the left of the sprite.
 
 An example would be a given number of `200` - means that the sprite will consider 200 pixels into the sprite as the 'anchor point'.
 
@@ -180,7 +221,7 @@ The same as the start point, except from the right and how many pixels to offset
 
 `.setMustache(inObj)`
 
-This will set the [Mustache](https://handlebarsjs.com/guide/) of the filepath. This is applied _after_ the randomization of the filepath, if available.
+Sets the [Mustache](https://handlebarsjs.com/guide/) of the filepath. This is applied _after_ the randomization of the filepath, if available.
 
 An example would be to provide a path like this to the Effect: `MagicMissile_01_Regular_{{color}}_30ft_0{{number}}_1600x400.webm`
 
@@ -215,11 +256,11 @@ This would result in a random color, and a random number between 1 and 9, so any
 * `MagicMissile_01_Regular_Purple_30ft_04_1600x400.webm`
 * ...and so on
 
-### Grid Scale
+### Grid size
 
-`.gridScale(100)`
+`.gridSize(100)`
 
-This method will set the grid scale of the file loaded in the Effect. Some files have an internal grid (like JB2A uses 100px grids), so this will make the effect scale up or down to match the active scene's grid scale.
+Sets the grid size of the file loaded in the Effect. Some files have an internal grid (like JB2A uses 100px grids), so this will make the effect scale up or down to match the active scene's grid size.
 
 ### Scale
 
@@ -234,49 +275,45 @@ A method that can take the following:
 
 `.anchor({ x: 0.5, y: 0.5 })` or `.anchor(0.5)`
 
-This will anchor the sprite according to the given x and y coordinates (or single number), effectively giving it an anchor of `{x: 0.5, y: 0.5}`.
+Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number.
 
 ### Center
 
 `.center()`
 
-This will center the sprite on the given location, effectively giving it an anchor of `{x: 0.5, y: 0.5}`.
+Centers the sprite on the given location, effectively giving it an anchor of `{x: 0.5, y: 0.5}`.
 
-**Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
+**Note:** If this is used, it will override the anchor set by Aim Towards, which sets the sprite's anchor to the location the sprite is played at.
 
 ### Random rotation
 
 `.randomRotation()` or `.randomRotation(inBool)`
 
-This will cause the sprite to have a random rotation, which means it should **not** be used with `.reachTowards()`.
+Causes the sprite to have a random rotation, which means it should **not** be used with `.reachTowards()`.
 
-**Note:** If this is used, it will override the anchor set by Aim Towards, which is to set the sprite on the outermost edge of the location of the location the sprite is played at.
-
-### Randomize mirror (X and Y)
+### Randomize mirror
 
 `.randomizeMirrorX()` or `.randomizeMirrorX(inBool)`
 
 `.randomizeMirrorY()` or `.randomizeMirrorY(inBool)`
 
-This will cause the sprite to have a randomized flipped X or Y scale (if the scale on that axis was 1, it can become 1 or -1, effectively mirroring the sprite).
+Causes the sprite to have a randomized flipped X or Y scale (if the scale on that axis was 1, it can become 1 or -1, effectively mirroring the sprite).
 
 This is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
 
-### Delay
+### Fade in
 
-`.delay(1000)` or `.delay(500, 1000)`
+`.fadeIn(500)`
 
-This will delay the effect from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
+Causes the effect to fade in when played
+
+### Fade out
+
+`.fadeOut(500)`
+
+Causes the effect to fade out at the end of the effect's duration
 
 ## Sound methods
-
-### Repeats
-
-`.repeats(inRepetitions, inRepeatDelayMin, inRepeatDelayMax)`
-
-This will cause the sound to be repeated `inRepetitions` times, with an optional delay. This currently only functions on Effects and Sounds (under review).
-
-As an option, you can give it `inRepeatDelayMin` for a static delay between repetitions, or `inRepeatDelayMin` and `inRepeatDelayMax` for a random delay between each call.
 
 ### File
 
@@ -291,15 +328,3 @@ This may also be an array of paths, which will be randomly picked from each time
 `.volume(inFloat)`
 
 A normalized value between `0.0` and `1.0` which determines the volume of the sound. Defaults to `0.8`.
-
-### Play if
-
-`.playIf(inBool)` or `.playIf(inFunction)`
-
-Calling this function will cause the sound to not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the sound to play.
-
-### Delay
-
-`.delay(1000)` or `.delay(500, 1000)`
-
-This will delay the sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
