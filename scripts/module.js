@@ -6,15 +6,18 @@ function registerLayer() {
 
     let mergeFunc = new Version().onOrAfter("0.8.6") ? foundry.utils.mergeObject : mergeObject;
 
-    const layers = mergeFunc(Canvas.layers, {
+    CONFIG.Canvas.layers = mergeFunc(Canvas.layers, {
         sequencereffects: EffectsLayer
     });
 
-    Object.defineProperty(Canvas, 'layers', {
-        get: function () {
-            return layers
-        }
-    });
+    if (!Object.is(Canvas.layers, CONFIG.Canvas.layers)) {
+        const layers = Canvas.layers;
+        Object.defineProperty(Canvas, 'layers', {
+            get: function () {
+                return mergeFunc(layers, CONFIG.Canvas.layers)
+            }
+        })
+    }
 }
 
 Hooks.once('init', async function() {

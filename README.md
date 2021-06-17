@@ -272,6 +272,11 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.7
+- *Effects* - Tweaked the way the effects layer is applied to the canvas' layers
+- *Effects* - Fixed major issue with the way effects that were using `.missed()` and `.name()` were cached
+- *Sequencer* - Removed stray debug code
+
 ### Version 0.3.6
 - *Effects* - Added `.fadeIn()` and `.fadeOut()` - you can now make your effects look slightly nicer!
 - *Effects* - Added support for cone and line templates with `.reachTowards()` and `.rotateTowards()` - it now reaches towards the end point of the template
