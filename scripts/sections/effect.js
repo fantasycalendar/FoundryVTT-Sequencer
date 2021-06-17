@@ -14,6 +14,8 @@ export default class EffectSection extends Section {
         this._anchor = false;
         this._randomRotation = false;
         this._rotationOnly = true;
+        this._moves = false;
+        this._moveSpeed = false;
         this._missed = false;
         this._startPoint = 0;
         this._endPoint = 0;
@@ -154,10 +156,10 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  A smart method that can take a reference to a token, or a direct coordinate on the canvas to play the effect at,
+     *  A smart method that can take a reference to a token, template, or a direct coordinate on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {Token|object|string} inLocation
+     * @param {Token|Template|object|string} inLocation
      * @returns {EffectSection} this
      */
     atLocation(inLocation) {
@@ -166,27 +168,42 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  Causes the effect to be rotated towards the given token, coordinates, or a string reference (see .name())
+     *  Causes the effect to be rotated towards the given token, template, coordinates, or a string reference (see .name())
      *
-     * @param {Token|object|string} inLocation
+     * @param {Token|Template|object|string} inLocation
      * @returns {EffectSection} this
      */
     rotateTowards(inLocation) {
         this._to = this._validateLocation(inLocation);
         this._rotationOnly = true;
+        this._moves = false;
         return this;
     }
 
     /**
-     *  Causes the effect to be rotated and stretched towards a token, coordinates, or a string reference (see .name())
+     *  Causes the effect to be rotated and stretched towards a token, template, coordinates, or a string reference (see .name())
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
-     * @param {Token|object|string} inLocation
+     * @param {Token|Template|object|string} inLocation
      * @returns {EffectSection} this
      */
     reachTowards(inLocation) {
         this._to = this._validateLocation(inLocation);
         this._rotationOnly = false;
+        this._moves = false;
+        return this;
+    }
+
+    /**
+     *  Causes the effect to move towards a token, template, coordinates, or a string reference (see .name())
+     *
+     * @param {Token|Template|object|string} inLocation
+     * @returns {EffectSection} this
+     */
+    moveTowards(inLocation) {
+        this._to = this._validateLocation(inLocation);
+        this._moves = true;
+        this._rotationOnly = true;
         return this;
     }
 
@@ -347,6 +364,22 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Sets the speed of the effect if .moveTowards() has been called
+     *
+     * @param {number} moveSpeed
+     * @returns {EffectSection} this
+     */
+    moveSpeed(moveSpeed) {
+        if(typeof moveSpeed !== "number") throw new Error("moveSpeed must be of type number");
+        this._moveSpeed = moveSpeed;
+        return this;
+    }
+
+    get gridSizeDifference(){
+        return canvas.grid.size / this._gridSize;
+    }
+
     async _run() {
         let effect = await this._sanitizeEffectData();
         game.socket.emit("module.sequencereffects", effect);
@@ -418,6 +451,19 @@ export default class EffectSection extends Section {
 
                 data.rotation = ray.angle;
 
+                if(this._moves) {
+                    data.distance = ray.distance;
+                    if(!this._anchor) {
+                        data.anchor = {
+                            x: 0.5,
+                            y: 0.5
+                        }
+                    }
+                    if(this._moveSpeed){
+                        data.speed = this._moveSpeed * this.gridSizeDifference;
+                    }
+                }
+
             }
 
         }
@@ -438,8 +484,8 @@ export default class EffectSection extends Section {
         }
 
         data.scale = {
-            x: data.scale.x * (canvas.grid.size / this._gridSize),
-            y: data.scale.y * (canvas.grid.size / this._gridSize)
+            x: data.scale.x * this.gridSizeDifference,
+            y: data.scale.y * this.gridSizeDifference
         }
 
         if(!this._rotationOnly) {

@@ -41,9 +41,7 @@ export class EffectsCanvasAnimation extends CanvasAnimation {
                 }
                 if (ontick) ontick(dt, attributes);
             }
-            catch (err) {
-                reject(err);
-            }
+            catch (err) {}
 
             // Resolve the original promise once the animation is complete
             if (complete) resolve();

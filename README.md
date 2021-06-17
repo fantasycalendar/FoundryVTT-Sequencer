@@ -273,6 +273,7 @@ new Sequence()
 ## Changelog
 
 ### Version 0.3.7
+- *Effects* - Added `.moveTowards()` 
 - *Effects* - Tweaked the way the effects layer is applied to the canvas' layers
 - *Effects* - Fixed major issue with the way effects that were using `.missed()` and `.name()` were cached
 - *Sequencer* - Removed stray debug code

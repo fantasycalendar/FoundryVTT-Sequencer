@@ -7,11 +7,11 @@ export default class CanvasEffect {
     constructor(inLayer, inData) {
 
         this.layer = inLayer;
-        this._animationDuration = 0;
+        this.ended = false;
+        this.video = false;
 
         let version = new Version().onOrAfter("0.8.6");
         this.mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
-        this.hasProperty = version ? foundry.utils.hasProperty : hasProperty;
 
         // Set default values
         this.data = this.mergeFunc({
@@ -27,18 +27,19 @@ export default class CanvasEffect {
 
     }
 
-    spawnSprite(video){
-        const texture = PIXI.Texture.from(video);
-        this.vidSprite = new PIXI.Sprite(texture);
-        this.layer.addChild(this.vidSprite);
-        this.vidSprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
-        this.vidSprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
-        this.vidSprite.scale.set(this.data.scale.x, this.data.scale.y);
-        this.vidSprite.position.set(this.data.position.x, this.data.position.y);
-        this._animationDuration = video.duration * 1000;
+    spawnSprite(){
+        const texture = PIXI.Texture.from(this.video);
+        this.sprite = new PIXI.Sprite(texture);
+        this.layer.addChild(this.sprite);
+        this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
+        this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
+        this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
+        this.sprite.position.set(this.data.position.x, this.data.position.y);
+        this._videoDuration = this.video.duration;
+        this._animationDuration = this._videoDuration * 1000;
     }
 
-    _playAnimation(attributes, duration, ease="Linear"){
+    playAnimation(attributes, duration, ease="Linear"){
         return function() {
             EffectsCanvasAnimation.animateSmooth(attributes, {
                 name: `effects.video.${randomID()}.move`,
@@ -49,19 +50,19 @@ export default class CanvasEffect {
         };
     }
 
-    fadeIn(vidSprite){
+    fadeIn(){
         if(this.data.fadeIn) {
-            this.vidSprite.alpha = 0.0;
-            this._playAnimation([
-                { parent: this.vidSprite, attribute: "alpha", to: 1.0 }
+            this.sprite.alpha = 0.0;
+            this.playAnimation([
+                { parent: this.sprite, attribute: "alpha", to: 1.0 }
             ], this.data.fadeIn)();
         }
     }
 
-    fadeOut(vidSprite){
+    fadeOut(){
         if(this.data.fadeOut) {
-            let animate = this._playAnimation([
-                { parent: this.vidSprite, attribute: "alpha", to: 0.0 }
+            let animate = this.playAnimation([
+                { parent: this.sprite, attribute: "alpha", to: 0.0 }
             ], this.data.fadeOut)
             setTimeout(animate, this._animationDuration-this.data.fadeOut);
         }
@@ -69,55 +70,83 @@ export default class CanvasEffect {
 
     moveTowards(){
 
-        if ((!this.data.speed || this.data.speed === 0) && !this.data.distance) {
-            return;
+        if (!this.data.distance) return;
+
+        if(!this.data.speed){
+            this.data.speed = this.data.distance / this._videoDuration;
+        }else{
+            this._videoDuration = this.data.distance / this.data.speed;
+            this._animationDuration = this._videoDuration * 1000;
         }
 
         // Compute final position
-        const delta = this._animationDuration * data.speed;
+        const delta = this._videoDuration * this.data.speed;
         const deltaX = delta * Math.cos(this.data.rotation)
         const deltaY = delta * Math.sin(this.data.rotation)
 
         // Move the sprite
         let move_attributes = [{
-            parent: this.vidSprite, attribute: 'x', to: this.data.position.x + deltaX
+            parent: this.sprite, attribute: 'x', to: this.data.position.x + deltaX
         }, {
-            parent: this.vidSprite, attribute: 'y', to: this.data.position.y + deltaY
+            parent: this.sprite, attribute: 'y', to: this.data.position.y + deltaY
         }];
 
-        this._playAnimation(move_attributes, this._animationDuration, this.data.ease)();
+        this.playAnimation(move_attributes, this._animationDuration, this.data.ease)();
 
+        setTimeout(() => {
+            this.endEffect();
+        }, this._animationDuration)
+
+    }
+
+    destroyEffect(){
+        try {
+            this.layer.removeChild(this.sprite);
+            this.sprite.destroy();
+        }catch(err){}
+    }
+
+    endEffect(){
+        if(!this.ended) {
+            this.destroyEffect();
+            this.ended = true;
+            this.resolve();
+        }
     }
 
     async play(){
 
         return new Promise((resolve, reject) => {
 
-            const video = document.createElement("video");
-            video.preload = "auto";
-            video.crossOrigin = "anonymous";
-            video.src = this.data.file;
-            video.playbackRate = this.data.playbackRate;
+            this.resolve = resolve;
 
-            video.oncanplay = () => {
-                this.spawnSprite(video);
+            this.video = document.createElement("video");
+            this.video.preload = "auto";
+            this.video.crossOrigin = "anonymous";
+            this.video.loop = true;
+            this.video.src = this.data.file;
+            this.video.playbackRate = this.data.playbackRate;
+
+            let canplay = true;
+            this.video.oncanplay = () => {
+                if(!canplay) return;
+                canplay = false;
+                this.spawnSprite();
+                this.moveTowards();
                 this.fadeIn();
                 this.fadeOut();
-                this.moveTowards();
             };
 
-            video.onerror = () => {
+            this.video.onerror = () => {
                 try {
-                    this.layer.removeChild(this.vidSprite);
+                    this.layer.removeChild(this.sprite);
                 }catch(err){}
                 console.error(`Could not play ${this.data.file}!`)
                 reject();
             }
 
-            video.onended = () => {
-                this.layer.removeChild(this.vidSprite);
-                resolve();
-                this.vidSprite.destroy();
+            this.video.onended = () => {
+                this.endEffect();
             }
         })
 
