@@ -20,6 +20,7 @@
 - [At location](#at-location)
 - [Rotate Towards](#rotate-towards)
 - [Reach Towards](#reach-towards)
+- [Move Towards](#move-towards)
 - [Missed](#missed)
 - [Add override](#add-override)
 - [JB2A](#jb2a)
@@ -34,6 +35,7 @@
 - [Randomize mirror](#randomize-mirror)
 - [Fade in](#fade-in)
 - [Fade out](#fade-out)
+- [Move speed](#move-speed)
 
 ### - Sound Methods -
 - [File](#file)
@@ -151,24 +153,31 @@ This may also be an array of paths, which will be randomly picked from each time
 
 ### At location
 
-`.atLocation(token)` or `.atLocation({ x: 0, y: 0 })` or `.atLocation("stored_name")`
+`.atLocation(token)` or`.atLocation(template)` or`.atLocation("stored_name")` or `.atLocation({ x: 0, y: 0 })`
 
 A smart method that can take:
 - Reference to a token
+- Reference to a template
 - Direct coordinate on the canvas
 - String reference, see `.name()`
 
 ### Rotate Towards
 
-`.rotateTowards(token)` or `.rotateTowards({ x: 0, y: 0 })`
+`.rotateTowards(token)` or`.rotateTowards(template)` or`.rotateTowards("stored_name")` or `.rotateTowards({ x: 0, y: 0 })`
 
-Causes the effect to be rotated towards the given token, coordinates, or a string reference, see `.name()`. This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
+Causes the effect to be rotated towards the given token, template, coordinates, or a string reference, see `.name()`. This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
 
 ### Reach Towards
 
-`.reachTowards(token)` or `.reachTowards({ x: 0, y: 0 })`
+`.reachTowards(token)` or`.reachTowards(template)` or`.reachTowards("stored_name")` or `.reachTowards({ x: 0, y: 0 })`
 
-Causes the effect to be rotated **and stretched** towards the given token, coordinates, or a string reference, see `.name()`. This effectively calculates the proper X scale for the effect to reach the target.
+Causes the effect to be rotated **and stretched** towards the given token, template, coordinates, or a string reference, see `.name()`. This effectively calculates the proper X scale for the effect to reach the target.
+
+### Move Towards
+
+`.moveTowards(token)` or`.moveTowards(template)` or`.moveTowards("stored_name")` or `.moveTowards({ x: 0, y: 0 })`
+
+Causes the effect to move towards the given token, template, coordinates, or a string reference, see `.name()`.
 
 ### Missed
 
@@ -312,6 +321,12 @@ Causes the effect to fade in when played
 `.fadeOut(500)`
 
 Causes the effect to fade out at the end of the effect's duration
+
+### Move speed
+
+`.moveSpeed(500)`
+
+Sets the speed of the effect if `.moveTowards()` has been called
 
 ## Sound methods
 
