@@ -35,7 +35,7 @@ export default class SoundSection extends Section {
     }
 
     async _run(repetition){
-        let data = this._cache[repetition];
+        let data = this._sanitizeSoundData();
         let duration = await this._getSoundDuration(data.src[0]);
         return new Promise(async (resolve) => {
             AudioHelper.play(data, true);
@@ -52,7 +52,7 @@ export default class SoundSection extends Section {
         return cachedDuration;
     }
 
-    _sanitizeData() {
+    _sanitizeSoundData() {
         let file = this._file;
         if(Array.isArray(this._file)) {
             file = lib.random_array_element(this._file)

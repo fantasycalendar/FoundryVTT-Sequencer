@@ -14,7 +14,7 @@ export default class Section{
         this._delayMax = 0;
         this._playIf = false;
         this._playIfSet = false;
-        this._cache = [];
+        this._offsets = [];
     }
 
     /**
@@ -104,22 +104,17 @@ export default class Section{
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
 
-    async prepareCache(){
-        this._cache = [];
-        this._currentRepetition = 0;
-        for (let i = 0; i < this._repetitions; i++, this._currentRepetition++) {
-            let data = await this._cacheData();
-            if(data){
-                this._cache.push(data);
-            }
+    async prepareOffsetCache(){
+        this._offsets = [];
+        for (let index = 0; index < this._repetitions; index++) {
+            this._cacheOffsets();
         }
     }
 
-    async _cacheData(){
-        return await this._sanitizeData();
-    }
-
-    async _sanitizeData(){}
+    /**
+     * Overridden method in EffectSection
+     */
+    _cacheOffsets(){}
 
     async execute(){
         if(this._playIfSet && !(await this.shouldPlay())) return;
@@ -127,12 +122,12 @@ export default class Section{
         let delay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
             setTimeout(async function () {
-                this._currentRepetition = 0;
-                for (let i = 0; i < self._repetitions; i++, this._currentRepetition++) {
+                for (let i = 0; i < self._repetitions; i++) {
+                    self._currentRepetition = i;
                     if (self.shouldAsync) {
-                        await self._run(i);
+                        await self._run();
                     } else {
-                        self._run(i);
+                        self._run();
                     }
                     if (self._repetitions > 1) {
                         await self._delayBetweenRepetitions();

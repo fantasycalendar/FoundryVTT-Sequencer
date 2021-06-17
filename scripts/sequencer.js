@@ -7,7 +7,7 @@ export class Sequence{
 
     constructor() {
         this.sections = [];
-        this._cachedPositions = {};
+        this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
     }
 
@@ -17,7 +17,7 @@ export class Sequence{
      * @returns {Sequence} this
      */
     async play(){
-        await this._prepareCache();
+        await this._prepareOffsetCache();
         for(let section of this.sections){
             if(section.shouldWaitUntilFinished) {
                 await section.execute();
@@ -109,24 +109,27 @@ export class Sequence{
         return this;
     }
 
-    async _prepareCache(){
-        this._cachedPositions = {};
+    async _prepareOffsetCache(){
+        this._cachedOffsets = {};
         for(let section of this.sections) {
-            await section.prepareCache();
+            await section.prepareOffsetCache();
         }
     }
 
-    _insertCachedPosition(effect, inName, inIndex, inPosition){
-        if(this._cachedPositions[inName] === undefined){
-            this._cachedPositions[inName] = [];
+    _insertCachedOffset(inName, inObject, inOffset){
+        if(this._cachedOffsets[inName] === undefined){
+            this._cachedOffsets[inName] = [];
         }
-        this._cachedPositions[inName][inIndex] = inPosition;
+        this._cachedOffsets[inName].push({
+            "object": inObject,
+            "offset": inOffset
+        });
     }
 
-    _getCachedPosition(inName, inIndex){
-        if(!this._cachedPositions.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
-        let normalizedIndex = inIndex % this._cachedPositions[inName].length;
-        return this._cachedPositions?.[inName]?.[normalizedIndex] ?? {x: 0, y: 0};
+    _getCachedOffset(inName, inIndex){
+        if(!this._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
+        let normalizedIndex = inIndex % this._cachedOffsets[inName].length;
+        return this._cachedOffsets?.[inName]?.[normalizedIndex];
     }
 
     /**
@@ -153,7 +156,6 @@ export class Sequence{
     _addSection(inSection){
         let section = this._proxyWrap(inSection);
         this.sections.push(section);
-        this.sections.push(this._createWaitSection());
         return section;
     }
 

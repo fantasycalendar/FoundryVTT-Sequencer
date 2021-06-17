@@ -60,7 +60,6 @@ export default class CanvasEffect {
 
     fadeOut(vidSprite){
         if(this.data.fadeOut) {
-            console.log(this._animationDuration, this._animationDuration - this.data.fadeOut)
             let animate = this._playAnimation([
                 { parent: this.vidSprite, attribute: "alpha", to: 0.0 }
             ], this.data.fadeOut)

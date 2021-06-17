@@ -347,13 +347,13 @@ export default class EffectSection extends Section {
         return this;
     }
 
-    async _run(repetition) {
-        let effect = this._cache[repetition];
+    async _run() {
+        let effect = await this._sanitizeEffectData();
         game.socket.emit("module.sequencereffects", effect);
         await canvas.sequencereffects.playEffect(effect);
     }
 
-    async _sanitizeData() {
+    async _sanitizeEffectData() {
 
         let data = {
             file: this._file,
@@ -384,7 +384,15 @@ export default class EffectSection extends Section {
 
         if (this._from) {
 
-            let [origin, target] = this._calculatePositions(this._from, this._to, this._missed);
+            let [origin, target] = this._getPositions(this._from, this._to);
+
+            if(this._missed){
+                if(this._to){
+                    target = this._applyMissedOffset(target);
+                }else{
+                    origin = this._applyMissedOffset(origin);
+                }
+            }
 
             if(!this._anchor) {
                 data.anchor = {
@@ -394,11 +402,8 @@ export default class EffectSection extends Section {
             }
 
             data.position = origin;
-            data._target = origin;
 
             if(this._to) {
-
-                data._target = target;
 
                 if(!this._anchor) {
                     data.anchor = {
@@ -469,8 +474,6 @@ export default class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        this.sequence._insertCachedPosition(this, this._getName(data), this._currentRepetition, data._target);
-
         return data;
 
     }
@@ -514,37 +517,93 @@ export default class EffectSection extends Section {
         return data;
     }
 
-    _calculatePositions(from, to, missed) {
+    _getCleanPosition(obj, measure = false){
 
-        if(typeof from === "string"){
-            from = this.sequence._getCachedPosition(from, this._currentRepetition);
+        let pos = {
+            x: obj?.center?.x ?? obj.x ?? 0,
+            y: obj?.center?.y ?? obj.y ?? 0
         }
 
-        if(typeof to === "string"){
-            to = this.sequence._getCachedPosition(to, this._currentRepetition);
-        }
-
-        let from_position = {
-            x: from?.center?.x ?? from.x ?? 0,
-            y: from?.center?.y ?? from.y ?? 0
-        }
-
-        let to_position = {
-            x: to?.center?.x ?? to.x ?? 0,
-            y: to?.center?.y ?? to.y ?? 0
-        }
-
-        if(to instanceof MeasuredTemplate){
-            if(to.data.t === "cone" || to.data.t === "ray"){
-                to_position.x = to.ray.B.x;
-                to_position.y = to.ray.B.y;
+        if(measure){
+            if(obj instanceof MeasuredTemplate){
+                if(obj.data.t === "cone" || obj.data.t === "ray"){
+                    pos.x = obj.ray.B.x;
+                    pos.y = obj.ray.B.y;
+                }
             }
         }
 
-        from_position = this._calculateMissedPosition(from, from_position, !to && missed);
-        to_position = to ? this._calculateMissedPosition(to, to_position, missed) : false;
+        return pos;
+    }
+
+    _getPositions(from, to) {
+
+        let from_offset = { x: 0, y: 0 };
+        if(typeof from === "string"){
+            let cachedFrom = this.sequence._getCachedOffset(from, this._currentRepetition);
+            from = cachedFrom.object;
+            from_offset = cachedFrom.offset;
+        }
+
+        let to_offset = { x: 0, y: 0 };
+        if(typeof to === "string"){
+            let cachedTo = this.sequence._getCachedOffset(to, this._currentRepetition);
+            to = cachedTo.object;
+            to_offset = cachedTo.offset;
+        }
+
+        let from_position = this._getCleanPosition(from);
+        let to_position = this._getCleanPosition(to, true);
+
+        from_position.x -= from_offset.x;
+        from_position.y -= from_offset.y;
+
+        if(to){
+            to_position.x -= to_offset.x;
+            to_position.y -= to_offset.y;
+        }
 
         return [from_position, to_position];
+
+    }
+
+    _applyMissedOffset(inPosition){
+        let offset = this._offsets[this._currentRepetition] ?? { x: 0, y: 0 };
+        inPosition.x -= offset.x;
+        inPosition.y -= offset.y;
+        return inPosition;
+    }
+
+    async _cacheOffsets(){
+
+        if(!this._missed) return;
+
+        let [from_target, to_target] = this._getPositions(this._from, this._to);
+
+        from_target = this._calculateMissedPosition(this._from, from_target, !this._to && this._missed);
+        to_target = this._to ? this._calculateMissedPosition(this._to, to_target, this._missed) : false;
+
+        let from_origin = this._getCleanPosition(this._from);
+        let to_origin = this._getCleanPosition(this._to, true);
+
+        let origin_object = this._to ? this._to : this._from;
+        let origin_position = this._to ? to_origin : from_origin;
+        let target_position = this._to ? to_target : from_target;
+
+        let offset = {
+            x: origin_position.x - target_position.x,
+            y: origin_position.y - target_position.y
+        }
+
+        this._offsets.push(offset);
+
+        if(this._name) {
+            this.sequence._insertCachedOffset(
+                this._name,
+                origin_object,
+                offset
+            );
+        }
 
     }
 
@@ -590,10 +649,6 @@ export default class EffectSection extends Section {
             y: inLocation?.y ?? 0
         }
 
-    }
-
-    _getName(data){
-        return this._name ? this._name : (data.file ? data.file.split('/').pop().split('.').shift() : "-1");
     }
 
 }
