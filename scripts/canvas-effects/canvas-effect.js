@@ -77,6 +77,7 @@ export default class CanvasEffect {
         }else{
             this._videoDuration = this.data.distance / this.data.speed;
             this._animationDuration = this._videoDuration * 1000;
+            this.video.loop = true;
         }
 
         // Compute final position
@@ -101,6 +102,9 @@ export default class CanvasEffect {
 
     destroyEffect(){
         try {
+            this.video.pause();
+            this.video.removeAttribute('src'); // empty source
+            this.video.load();
             this.layer.removeChild(this.sprite);
             this.sprite.destroy();
         }catch(err){}
@@ -108,8 +112,8 @@ export default class CanvasEffect {
 
     endEffect(){
         if(!this.ended) {
-            this.destroyEffect();
             this.ended = true;
+            this.destroyEffect();
             this.resolve();
         }
     }
@@ -123,13 +127,14 @@ export default class CanvasEffect {
             this.video = document.createElement("video");
             this.video.preload = "auto";
             this.video.crossOrigin = "anonymous";
-            this.video.loop = true;
             this.video.src = this.data.file;
             this.video.playbackRate = this.data.playbackRate;
 
             let canplay = true;
             this.video.oncanplay = () => {
-                if(!canplay) return;
+                if(!canplay){
+                    return;
+                }
                 canplay = false;
                 this.spawnSprite();
                 this.moveTowards();

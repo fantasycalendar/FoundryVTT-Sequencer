@@ -272,6 +272,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.8 Hotfix
+- *Effects* - Fixed effects that were supposed to be once-off instead looping  
+
 ### Version 0.3.7
 - *Effects* - Added `.moveTowards()` and `.moveSpeed()` for missile-like behavior
 - *Effects* - Tweaked the way the effects layer is applied to the canvas' layers
