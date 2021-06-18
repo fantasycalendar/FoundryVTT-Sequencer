@@ -202,7 +202,7 @@ Adds a function that will run at the end of the effect serialization step, but b
 
 `effect` is a reference to the effect in itself - interact with this at your own risk.
 
-`data` is the effect's data that is going to be passed to FXMaster.
+`data` is the effect's data that is going to be passed to canvas layer.
 
 You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of the [readme](README.md#magic-missile) for more in depth usage.
 
