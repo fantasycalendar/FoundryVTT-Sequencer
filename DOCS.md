@@ -36,6 +36,7 @@
 - [Fade in](#fade-in)
 - [Fade out](#fade-out)
 - [Move speed](#move-speed)
+- [Playback rate](#playback-rate)
 - [Below tokens](#below-tokens)
 
 ### - Sound Methods -
@@ -328,6 +329,12 @@ Causes the effect to fade out at the end of the effect's duration
 `.moveSpeed(500)`
 
 Sets the speed of the effect if `.moveTowards()` has been called
+
+### Playback Rate
+
+`.playbackRate(2)` or `.playbackRate(0.5)`
+
+Sets the effect's playback rate. A playback rate of 2 would make it play 2x as fast, 0.5 would make it play half as fast.
 
 ### Below tokens
 
