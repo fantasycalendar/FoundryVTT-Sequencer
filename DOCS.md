@@ -36,6 +36,7 @@
 - [Fade in](#fade-in)
 - [Fade out](#fade-out)
 - [Move speed](#move-speed)
+- [Below tokens](#below-tokens)
 
 ### - Sound Methods -
 - [File](#file)
@@ -327,6 +328,12 @@ Causes the effect to fade out at the end of the effect's duration
 `.moveSpeed(500)`
 
 Sets the speed of the effect if `.moveTowards()` has been called
+
+### Below tokens
+
+`.belowTokens()` or `.belowTokens(true)`
+
+Sets whether the effect should be played below tokens
 
 ## Sound methods
 

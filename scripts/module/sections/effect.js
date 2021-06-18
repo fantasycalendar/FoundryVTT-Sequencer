@@ -1,5 +1,6 @@
 import * as lib from "../lib.js";
 import Section from "./base.js";
+import { playEffect } from "../../sockets.js";
 
 export default class EffectSection extends Section {
 
@@ -30,6 +31,7 @@ export default class EffectSection extends Section {
         this._name = false;
         this._fadeIn = 0;
         this._fadeOut = 0;
+        this._layer = 1;
     }
 
     /**
@@ -376,14 +378,26 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Sets whether the effect should be played below tokens
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection} this
+     */
+    belowTokens(inBool = true){
+        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        this._layer = inBool ? 0 : 1;
+        return this;
+    }
+
     get gridSizeDifference(){
         return canvas.grid.size / this._gridSize;
     }
 
     async _run() {
         let effect = await this._sanitizeEffectData();
-        game.socket.emit("module.sequencereffects", effect);
-        await canvas.sequencereffects.playEffect(effect);
+        game.socket.emit("module.sequencer", effect);
+        await playEffect(effect);
     }
 
     async _sanitizeEffectData() {
@@ -409,6 +423,7 @@ export default class EffectSection extends Section {
             _distance: 0,
             fadeIn: this._fadeIn,
             fadeOut: this._fadeOut,
+            layer: this._layer
         };
 
         if(this._anchor) {
@@ -621,8 +636,6 @@ export default class EffectSection extends Section {
     }
 
     async _cacheOffsets(){
-
-        if(!this._missed) return;
 
         let [from_target, to_target] = this._getPositions(this._from, this._to);
 

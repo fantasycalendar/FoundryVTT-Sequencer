@@ -272,6 +272,11 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.9
+- *Effects* - Added `.belowTokens()` so you can now play effects, well, below tokens  
+- *Effects* - Fixed effects not replicating properly (AGAIN)
+- *Effects* - Fixed effects not being able to use `.name()`d effects if they didn't miss - now any effect can be named and be used in future effects
+
 ### Version 0.3.8 Hotfix
 - *Effects* - Fixed effects that were supposed to be once-off instead looping  
 

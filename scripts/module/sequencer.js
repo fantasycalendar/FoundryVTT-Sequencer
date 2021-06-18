@@ -3,7 +3,7 @@ import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
 
-export class Sequence{
+export default class Sequence{
 
     constructor() {
         this.sections = [];

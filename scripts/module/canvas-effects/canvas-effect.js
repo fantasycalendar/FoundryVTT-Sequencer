@@ -1,4 +1,4 @@
-import Version from "../version.js";
+import Version from "../../version.js";
 import { EffectsCanvasAnimation } from "./canvas-animation.js";
 import { easeFunctions } from "./ease.js";
 
