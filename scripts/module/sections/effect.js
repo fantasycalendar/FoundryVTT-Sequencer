@@ -474,9 +474,7 @@ export default class EffectSection extends Section {
                             y: 0.5
                         }
                     }
-                    if(this._moveSpeed){
-                        data.speed = this._moveSpeed * this.gridSizeDifference;
-                    }
+                    data.speed = this._moveSpeed;
                 }
 
             }
