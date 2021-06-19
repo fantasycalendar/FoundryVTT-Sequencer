@@ -24,6 +24,7 @@ export default class Sequence{
             }else{
                 section.execute();
             }
+            await new Promise((resolve) => setTimeout(resolve, 1));
         }
         return this;
     }
@@ -177,6 +178,12 @@ export default class Sequence{
     _addFileToCache(inFile, data){
         this._fileCache[inFile] = data;
         game.settings.set("sequencer", "fileCache", this._fileCache);
+    }
+
+    _wait(ms){
+        return new Promise(async (resolve) => {
+            setTimeout(resolve, ms)
+        });
     }
 
 }
