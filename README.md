@@ -174,7 +174,6 @@ let sequence = new Sequence()
             x: tokenD.center.x-500,
             y: tokenD.center.y
         })
-        .scale(0.2)
     .wait(100)
     .then(function(){
         token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
