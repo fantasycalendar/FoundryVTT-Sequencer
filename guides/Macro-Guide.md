@@ -115,7 +115,7 @@ let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
     .effect()
-        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
 ```
 
 <hr/>
@@ -127,7 +127,7 @@ let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
     .effect()
-        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
         .atLocation(tokenD)
 ```
 
@@ -142,7 +142,7 @@ let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
     .effect()
-        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
         .atLocation(tokenD)
         .reachTowards(args[0].targets[0])
 ```
@@ -156,7 +156,7 @@ let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
     .effect()
-        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
         .atLocation(tokenD)
         .reachTowards(args[0].targets[0])
         .JB2A()
@@ -175,7 +175,7 @@ let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
     .effect()
-        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
         .atLocation(tokenD)
         .reachTowards(args[0].targets[0])
         .JB2A()
@@ -191,7 +191,7 @@ let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
     .effect()
-        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
         .atLocation(tokenD)
         .reachTowards(args[0].targets[0])
         .JB2A()
