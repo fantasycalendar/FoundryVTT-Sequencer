@@ -4,7 +4,7 @@
 
 This module implements a basic pipeline that can be used for managing the flow of a set of functions, effects, sounds, and macros.
 
-## Credit
+## Credits
 Sequencer stands on the shoulder of giants:
 
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
