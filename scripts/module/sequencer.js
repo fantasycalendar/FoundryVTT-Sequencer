@@ -2,6 +2,7 @@ import * as lib from './lib.js';
 import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
+import Version from "../version.js";
 
 export default class Sequence{
 
@@ -9,8 +10,9 @@ export default class Sequence{
         this.sections = [];
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
+        let version = new Version().onOrAfter("0.8.6");
+        this.mergeObject = version ? foundry.utils.mergeObject : mergeObject;
     }
-
     /**
      * Plays all of this sequence's sections
      *
@@ -54,12 +56,12 @@ export default class Sequence{
         if(typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
             if (!macro) {
-                throw new Error(`Macro '${inMacro}' was not found`);
+                this.throwError(this, "macro", `Macro '${inMacro}' was not found`);
             }
         } else if(inMacro instanceof Macro) {
             macro = inMacro;
         } else {
-            throw new Error(`inMacro must be of instance string or Macro`);
+            this.throwError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
         let func = new FunctionSection(this, async function(){
@@ -102,8 +104,8 @@ export default class Sequence{
      * @returns {Sequence} this
      */
     wait(msMin = 1, msMax = 1){
-        if(msMin < 1) throw new Error('Wait ms cannot be less than 1')
-        if(msMax < 1) throw new Error('Max wait ms cannot be less than 1')
+        if(msMin < 1) this.throwError(this, "wait", 'Wait ms cannot be less than 1')
+        if(msMax < 1) this.throwError(this, "wait", 'Max wait ms cannot be less than 1')
         let wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         let section = this._createWaitSection(wait);
         this.sections.push(section);
@@ -145,7 +147,7 @@ export default class Sequence{
             get(target, name, receiver) {
                 if (typeof target[name] === 'undefined') {
                     if (typeof target.sequence[name] === 'undefined') {
-                        throw new Error(`Function ${name} was not found!`);
+                        this.throwError(this, "wait", `Function ${name} was not found!`);
                     }
                     return Reflect.get(target.sequence, name, receiver);
                 }
@@ -180,10 +182,10 @@ export default class Sequence{
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
-    _wait(ms){
-        return new Promise(async (resolve) => {
-            setTimeout(resolve, ms)
-        });
+    throwError(self, func, error){
+        error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
+        ui.notifications.error(error);
+        throw new Error(error);
     }
 
 }

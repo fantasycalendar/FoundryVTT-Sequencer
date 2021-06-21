@@ -29,8 +29,12 @@ export default class EffectSection extends Section {
         this._overrides = [];
         this._postOverrides = [];
         this._name = false;
-        this._fadeIn = 0;
-        this._fadeOut = 0;
+        this._fadeIn = false;
+        this._fadeOut = false;
+        this._scaleIn = false;
+        this._scaleOut = false;
+        this._rotateIn = false;
+        this._rotateOut = false;
         this._layer = 1;
     }
 
@@ -42,7 +46,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     name(inName){
-        if(typeof inName !== "string") throw new Error("inBaseFolder must be of type string");
+        if(typeof inName !== "string") this.throwError("name", "inBaseFolder must be of type string");
         this._name = inName;
         return this;
     }
@@ -55,7 +59,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     baseFolder(inBaseFolder) {
-        if(typeof inBaseFolder !== "string") throw new Error("inBaseFolder must be of type string");
+        if(typeof inBaseFolder !== "string") this.throwError("baseFolder", "inBaseFolder must be of type string");
         inBaseFolder = inBaseFolder.replace("\\", "/");
         if(!inBaseFolder.endsWith("/")) {
             inBaseFolder += "/";
@@ -73,7 +77,7 @@ export default class EffectSection extends Section {
      */
     file(inFile) {
         if(!(typeof inFile === "string" || Array.isArray(inFile))) {
-            throw new Error("inFile must be of type string or array");
+            this.throwError("file", "inFile must be of type string or array");
         }
         this._file = inFile;
         return this;
@@ -87,7 +91,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     playbackRate(inNumber = 1.0) {
-        if(typeof inNumber !== "number") throw new Error("inNumber must be of type number");
+        if(typeof inNumber !== "number") this.throwError("playbackRate", "inNumber must be of type number");
         this._playbackRate = inNumber;
         return this;
     }
@@ -99,7 +103,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     missed(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("missed", "inBool must be of type boolean");
         this._missed = inBool;
         return this;
     }
@@ -112,7 +116,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     JB2A(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("JB2A", "inBool must be of type boolean");
         if(inBool) {
             this.gridSize(100);
             this.startPoint(200);
@@ -135,13 +139,13 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     addOverride(inFunc) {
-        if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
+        if(!lib.is_function(inFunc)) this.throwError("addOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
     }
 
     addPostOverride(inFunc) {
-        if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
+        if(!lib.is_function(inFunc)) this.throwError("addPostOverride", "The given function needs to be an actual function.");
         this._postOverrides.push(inFunc);
         return this;
     }
@@ -153,6 +157,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     setMustache(inMustache) {
+        if(typeof inMustache !== "object") this.throwError("setMustache", "inMustache must be of type object");
         this._mustache = inMustache;
         return this;
     }
@@ -200,12 +205,32 @@ export default class EffectSection extends Section {
      *  Causes the effect to move towards a token, template, coordinates, or a string reference (see .name())
      *
      * @param {Token|Template|object|string} inLocation
+     * @param {object} options
      * @returns {EffectSection} this
      */
-    moveTowards(inLocation) {
+    moveTowards(inLocation, options={}) {
+        if(typeof options !== "object") this.throwError("scaleIn", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof options.ease !== "string") this.throwError("moveEase", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.throwError("moveEase", "options.delay must be of type number");
         this._to = this._validateLocation(inLocation);
         this._moves = true;
         this._rotationOnly = true;
+        return this;
+    }
+
+    /**
+     * Sets the speed of the effect if .moveTowards() has been called
+     *
+     * @param {number} moveSpeed
+     * @returns {EffectSection} this
+     */
+    moveSpeed(moveSpeed) {
+        if(typeof moveSpeed !== "number") this.throwError("moveSpeed", "moveSpeed must be of type number");
+        this._moveSpeed = moveSpeed;
         return this;
     }
 
@@ -218,7 +243,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     startPoint(inStartPoint) {
-        if(typeof inStartPoint !== "number") throw new Error("inStartPoint must be of type number");
+        if(typeof inStartPoint !== "number") this.throwError("startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
         return this;
     }
@@ -230,7 +255,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     endPoint(inEndPoint) {
-        if(typeof inEndPoint !== "number") throw new Error("inEndPoint must be of type number");
+        if(typeof inEndPoint !== "number") this.throwError("endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
         return this;
     }
@@ -246,12 +271,117 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     scale(inScaleMin, inScaleMax) {
-        if(inScaleMin === undefined)  throw new Error("inScaleMin must be of type number or object");
+        if(!(typeof inScaleMin === "number" || typeof inScaleMin === "object")) this.throwError("scale", "inScale must be of type number or object");
         if (typeof inScaleMin !== "number") {
-            if(inScaleMax && typeof inScaleMax === "number") throw new Error("if inScaleMax is a number, inScaleMin must also be of type number");
+            if(inScaleMax && typeof inScaleMax === "number"){
+                this.throwError("scale", "if inScaleMin is a number, inScaleMax must also be of type number");
+            }
         }
         this._scaleMin = inScaleMin;
         this._scaleMax = inScaleMax ?? false;
+        return this;
+    }
+
+    /**
+     *  Causes the effect to scale when it starts playing
+     *
+     * @param {number|object} scale
+     * @param {number} duration
+     * @param {object} [options] options
+     * @returns {EffectSection} this
+     */
+    scaleIn(scale, duration, options={}){
+        if(typeof options !== "object") this.throwError("scaleIn", "options must be of type object");
+        options = this.sequence.mergeObject({
+            scale: 0,
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof duration !== "number") this.throwError("scaleIn", "duration must be of type number");
+        if(!(typeof scale === "number" || typeof scale === "object")) this.throwError("scaleIn", "scale must be of type number or object");
+        if(typeof options.ease !== "string") this.throwError("scaleIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.throwError("scaleIn", "options.delay must be of type number");
+        this._scaleIn = {
+            value: scale,
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
+        return this;
+    }
+
+    /**
+     *  Causes the effect to scale at the end of the effect's duration
+     *
+     * @param {number|object} scale
+     * @param {number} duration
+     * @param {object} [options] options
+     * @returns {EffectSection} this
+     */
+    scaleOut(scale, duration, options={}){
+        if(typeof options !== "object") this.throwError("scaleOut", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear"
+        }, options);
+        if(typeof duration !== "number") this.throwError("scaleOut", "duration must be of type number");
+        if(!(typeof scale === "number" || typeof scale === "object")) this.throwError("scaleOut", "scale must be of type number or object");
+        if(typeof options.ease !== "string") this.throwError("scaleOut", "options.ease must be of type string");
+        this._scaleOut = {
+            value: scale,
+            duration: duration,
+            ease: options.ease
+        };
+        return this;
+    }
+
+    /**
+     *  Causes the effect to rotate when it starts playing
+     *
+     * @param {number} degrees
+     * @param {number} duration
+     * @param {object} [options] options
+     * @returns {EffectSection} this
+     */
+    rotateIn(degrees, duration, options={}){
+        if(typeof options !== "object") this.throwError("rotateIn", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof degrees !== "number") this.throwError("rotateOut", "degrees must be of type number");
+        if(typeof duration !== "number") this.throwError("rotateOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.throwError("rotateIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.throwError("rotateIn", "options.delay must be of type number");
+        this._rotateIn = {
+            value: degrees,
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
+        return this;
+    }
+
+    /**
+     *  Causes the effect to rotate at the end of the effect's duration
+     *
+     * @param {number} degrees
+     * @param {number} duration
+     * @param {object} [options] options
+     * @returns {EffectSection} this
+     */
+    rotateOut(degrees, duration, options={}){
+        if(typeof options !== "object") this.throwError("rotateOut", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear"
+        }, options);
+        if(typeof degrees !== "number") this.throwError("rotateOut", "degrees must be of type number");
+        if(typeof duration !== "number") this.throwError("rotateOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.throwError("rotateOut", "options.ease must be of type string");
+        this._rotateOut = {
+            value: degrees,
+            duration: duration,
+            ease: options.ease
+        };
         return this;
     }
 
@@ -298,7 +428,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     randomRotation(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("randomRotation", "inBool must be of type boolean");
         this._randomRotation = inBool;
         return this;
     }
@@ -311,7 +441,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     randomizeMirrorX(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("randomizeMirrorX", "inBool must be of type boolean");
         this._randomX = true;
         return this;
     }
@@ -324,7 +454,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     randomizeMirrorY(inBool = true) {
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("randomizeMirrorY", "inBool must be of type boolean");
         this._randomY = true;
         return this;
     }
@@ -333,48 +463,58 @@ export default class EffectSection extends Section {
      * Sets the grid size of the file loaded in the Effect. Some files have an established internal
      * grid, so this will make the effect scale up or down to match the active scene's grid size
      *
-     * @param {number} inSize
+     * @param {number} inGridSize
      * @returns {EffectSection} this
      */
-    gridSize(inSize) {
-        if(typeof inSize !== "number") throw new Error("inSize must be of type number");
-        this._gridSize = inSize;
+    gridSize(inGridSize) {
+        if(typeof inGridSize !== "number") this.throwError("gridSize", "inGridSize must be of type number");
+        this._gridSize = inGridSize;
         return this;
     }
 
     /**
      * Causes the effect to fade in when played
      *
-     * @param {number} fadeDuration
+     * @param {number} duration
+     * @param {object} [options] = options
      * @returns {EffectSection} this
      */
-    fadeIn(fadeDuration) {
-        if(typeof fadeDuration !== "number") throw new Error("fadeDuration must be of type number");
-        this._fadeIn = fadeDuration;
+    fadeIn(duration, options={}) {
+        if(typeof options !== "object") this.throwError("fadeIn", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof duration !== "number") this.throwError("fadeIn", "duration must be of type number");
+        if(typeof options.ease !== "string") this.throwError("fadeIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.throwError("fadeIn", "options.delay must be of type number");
+        this._fadeIn = {
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
         return this;
     }
 
     /**
      * Causes the effect to fade out at the end of the effect's duration
      *
-     * @param {number} fadeDuration
+     * @param {number} duration
+     * @param {object} [options] = options
      * @returns {EffectSection} this
      */
-    fadeOut(fadeDuration) {
-        if(typeof fadeDuration !== "number") throw new Error("fadeDuration must be of type number");
-        this._fadeOut = fadeDuration;
-        return this;
-    }
-
-    /**
-     * Sets the speed of the effect if .moveTowards() has been called
-     *
-     * @param {number} moveSpeed
-     * @returns {EffectSection} this
-     */
-    moveSpeed(moveSpeed) {
-        if(typeof moveSpeed !== "number") throw new Error("moveSpeed must be of type number");
-        this._moveSpeed = moveSpeed;
+    fadeOut(duration, options={}) {
+        if(typeof options !== "object") this.throwError("fadeOut", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear"
+        }, options);
+        if(typeof duration !== "number") this.throwError("fadeOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.throwError("fadeOut", "ease must be of type string");
+        this._fadeOut = {
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
         return this;
     }
 
@@ -385,7 +525,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     belowTokens(inBool = true){
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("belowTokens", "inBool must be of type boolean");
         this._layer = inBool ? 0 : 1;
         return this;
     }
@@ -421,9 +561,15 @@ export default class EffectSection extends Section {
             speed: 0,
             playbackRate: this._playbackRate,
             _distance: 0,
-            fadeIn: this._fadeIn,
-            fadeOut: this._fadeOut,
-            layer: this._layer
+            layer: this._layer,
+            animatedProperties: {
+                fadeIn: this._fadeIn,
+                fadeOut: this._fadeOut,
+                scaleIn: this._scaleIn,
+                scaleOut: this._scaleOut,
+                rotateIn: this._rotateIn,
+                rotateOut: this._rotateOut
+            }
         };
 
         if(this._anchor) {
@@ -501,10 +647,6 @@ export default class EffectSection extends Section {
             y: data.scale.y * this.gridSizeDifference
         }
 
-        if(!this._rotationOnly) {
-            data = await this._calculateHitVector(data);
-        }
-
         let scale = this._scaleMin;
         if (typeof this._scaleMin === "number") {
             if(this._scaleMax && typeof this._scaleMax === "number"){
@@ -519,6 +661,10 @@ export default class EffectSection extends Section {
         data.scale = {
             x: data.scale.x * (scale?.x ?? 1.0),
             y: data.scale.y * (scale?.y ?? 1.0)
+        }
+
+        if(!this._rotationOnly) {
+            data = await this._calculateHitVector(data);
         }
 
         let flipX = this._randomX && Math.random() < 0.5 ? -1 : 1;
@@ -583,12 +729,16 @@ export default class EffectSection extends Section {
             y: obj?.center?.y ?? obj.y ?? 0
         }
 
-        if(measure){
-            if(obj instanceof MeasuredTemplate){
+        if(obj instanceof MeasuredTemplate){
+            if(measure){
                 if(obj.data.t === "cone" || obj.data.t === "ray"){
                     pos.x = obj.ray.B.x;
                     pos.y = obj.ray.B.y;
                 }
+            }
+            if(obj.data.t === "rect"){
+                pos.x = obj.x + (obj.shape.width/2)
+                pos.y = obj.y + (obj.shape.height/2)
             }
         }
 

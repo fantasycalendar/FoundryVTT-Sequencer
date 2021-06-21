@@ -3,7 +3,11 @@ export class EffectsCanvasAnimation extends CanvasAnimation {
     static async animateSmooth(attributes, { context, name = null, duration = 1000, ontick, ease } = {}) {
         // Prepare attributes
         attributes = attributes.map(a => {
-            a.delta = a.to - a.parent[a.attribute];
+            if(a.property){
+                 a.delta = a.to - a.parent[a.attribute][a.property];
+            }else{
+                 a.delta = a.to - a.parent[a.attribute];
+            }
             a.done = 0;
             a.remaining = duration;
             return a;
@@ -27,7 +31,11 @@ export class EffectsCanvasAnimation extends CanvasAnimation {
                     let da = a.delta / dt;
                     a.d = da;
                     if (a.remaining < (Math.abs(da) * 1.25)) {
-                        a.parent[a.attribute] = a.to;
+                        if(a.property){
+                            a.parent[a.attribute][a.property] = a.to;
+                        }else{
+                            a.parent[a.attribute] = a.to;
+                        }
                         a.done = a.delta;
                         a.remaining = 0;
                         complete = true;
@@ -36,7 +44,11 @@ export class EffectsCanvasAnimation extends CanvasAnimation {
                         let start = a.to - a.delta;
                         a.done += da;
                         a.remaining = Math.abs(a.delta) - Math.abs(a.done);
-                        a.parent[a.attribute] = ease(progress) * a.delta + start;
+                        if(a.property){
+                            a.parent[a.attribute][a.property] = ease(progress) * a.delta + start;
+                        }else{
+                            a.parent[a.attribute] = ease(progress) * a.delta + start;
+                        }
                     }
                 }
                 if (ontick) ontick(dt, attributes);

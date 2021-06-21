@@ -21,6 +21,7 @@
 - [Rotate Towards](#rotate-towards)
 - [Reach Towards](#reach-towards)
 - [Move Towards](#move-towards)
+- [Move speed](#move-speed)
 - [Missed](#missed)
 - [Add override](#add-override)
 - [JB2A](#jb2a)
@@ -29,13 +30,16 @@
 - [Set mustache](#set-mustache)
 - [Grid Scale](#grid-scale)
 - [Scale](#scale)
+- [Scale In](#scale-in)
+- [Scale Out](#scale-out)
 - [Anchor](#anchor)
 - [Center](#center)
 - [Random rotation](#random-rotation)
 - [Randomize mirror](#randomize-mirror)
+- [Rotate In](#rotate-in)
+- [Rotate Out](#rotate-out)
 - [Fade in](#fade-in)
 - [Fade out](#fade-out)
-- [Move speed](#move-speed)
 - [Playback rate](#playback-rate)
 - [Below tokens](#below-tokens)
 
@@ -181,6 +185,12 @@ Causes the effect to be rotated **and stretched** towards the given token, templ
 
 Causes the effect to move towards the given token, template, coordinates, or a string reference, see `.name()`.
 
+### Move speed
+
+`.moveSpeed(500)`
+
+Sets the speed of the effect if `.moveTowards()` has been called
+
 ### Missed
 
 `.missed()` or `.missed(inBool)`
@@ -282,6 +292,26 @@ A method that can take the following:
 - An object with x and y for non-uniform scaling
 - Two numbers which the Sequencer will randomly pick a uniform scale between
 
+### Scale In
+
+`.scaleIn(scale, duration, options = {ease: "linear", delay: 0})`
+
+`.scaleIn(0.5, 250)` or `.scaleIn({ x: 0.5, y: 0.2 }, 500)` or `.scaleIn(0, 500, {ease: "easeOutCubic"})`
+
+Causes the effect to scale in when it starts playing
+
+Check out what easings are available here: https://easings.net/
+
+### Scale Out
+
+`.scaleIn(scale, duration, options = {ease: "linear"})`
+
+`.scaleIn(0.5, 250)` or `.scaleIn({ x: 0.5, y: 0.2 }, 500)` or `.scaleIn(0, 500, {ease: "easeOutCubic"})`
+
+Causes the effect to scale out when it finishes playing
+
+Check out what easings are available here: https://easings.net/
+
 ### Anchor
 
 `.anchor({ x: 0.5, y: 0.5 })` or `.anchor(0.5)`
@@ -312,23 +342,45 @@ Causes the sprite to have a randomized flipped X or Y scale (if the scale on tha
 
 This is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
 
+### Rotate In
+
+`.rotateIn(degrees, duration, options = {ease: "linear", delay: 0})`
+
+`.rotateIn(0.5, 250)` or `.rotateIn({ x: 0.5, y: 0.2 }, 500)` or `.rotateIn(0, 500, {ease: "easeOutCubic"})`
+
+Causes the effect to rotate when it starts playing
+
+Check out what easings are available here: https://easings.net/
+
+### Rotate Out
+
+`.rotateOut(degrees, duration, options = {ease: "linear", delay: 0})`
+
+`.rotateOut(0.5, 250)` or `.rotateOut({ x: 0.5, y: 0.2 }, 500)` or `.rotateOut(0, 500, {ease: "easeOutCubic"})`
+
+Causes the effect to rotate when it finishes playing
+
+Check out what easings are available here: https://easings.net/
+
 ### Fade in
 
-`.fadeIn(500)`
+`.fadeIn(duration, options = {ease: "linear", delay: 0})`
+
+`.fadeIn(500)` or `.fadeIn(250, {ease: "easeOutQuint"})` or `.fadeIn(400, {ease: "easeOutCirc", delay: 100})`
 
 Causes the effect to fade in when played
 
+Check out what easings are available here: https://easings.net/
+
 ### Fade out
 
-`.fadeOut(500)`
+`.fadeOut(duration, options = {ease: "linear"})`
 
-Causes the effect to fade out at the end of the effect's duration
+`.fadeOut(500)` or `.fadeOut(250, {ease: "easeOutQuint"})`
 
-### Move speed
+Causes the effect to fade out when it has finished playing
 
-`.moveSpeed(500)`
-
-Sets the speed of the effect if `.moveTowards()` has been called
+Check out what easings are available here: https://easings.net/
 
 ### Playback Rate
 

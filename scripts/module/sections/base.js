@@ -24,7 +24,7 @@ export default class Section{
      * @returns {Section} this
      */
     waitUntilFinished(inBool = true){
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("waitUntilFinished", "inBool must be of type boolean");
         this._waitUntilFinished = inBool;
         return this;
     }
@@ -38,7 +38,7 @@ export default class Section{
      * @returns {Section} this
      */
     async(inBool = true){
-        if(typeof inBool !== "boolean") throw new Error("inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.throwError("async", "inBool must be of type boolean");
         this._async = inBool;
         return this;
     }
@@ -53,9 +53,11 @@ export default class Section{
      * @returns {Section} this
      */
     repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax){
-        if(typeof inRepetitions !== "number") throw new Error("inRepetitions must be of type number");
-        if(typeof inRepeatDelayMin !== "number") throw new Error("repeatDelayMin must be of type number");
-        if(inRepeatDelayMax && typeof inRepeatDelayMax !== "number") throw new Error("repeatDelayMax must be of type number");
+        if(typeof inRepetitions !== "number") this.throwError("repeats", "inRepetitions must be of type number");
+        if(typeof inRepeatDelayMin !== "number") this.throwError("repeats", "repeatDelayMin must be of type number");
+        if(inRepeatDelayMax && typeof inRepeatDelayMax !== "number"){
+            this.throwError("repeats", "repeatDelayMax must be of type number");
+        }
         this._repetitions = inRepetitions;
         this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
         this._repeatDelayMax = Math.max(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
@@ -70,7 +72,9 @@ export default class Section{
      * @returns {Section} this
      */
     playIf(inCondition) {
-        if(!(typeof inCondition === "boolean" || lib.is_function(inCondition))) throw new Error("inCondition must be of type boolean or function");
+        if(!(typeof inCondition === "boolean" || lib.is_function(inCondition))){
+            this.throwError("playIf", "inCondition must be of type boolean or function");
+        }
         this._playIf = inCondition;
         this._playIfSet = true;
         return this;
@@ -85,8 +89,8 @@ export default class Section{
      * @returns {Section} this
      */
     delay(msMin, msMax) {
-        if(typeof msMin !== "number") throw new Error("msMin must be of type number");
-        if(msMax && typeof msMax !== "number") throw new Error("msMax must be of type number");
+        if(typeof msMin !== "number") this.throwError("delay", "msMin must be of type number");
+        if(msMax && typeof msMax !== "number") this.throwError("delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
         return this;
@@ -102,6 +106,10 @@ export default class Section{
 
     async shouldPlay(){
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
+    }
+
+    throwError(func, error){
+        this.sequence.throwError(this, func, error);
     }
 
     async prepareOffsetCache(){

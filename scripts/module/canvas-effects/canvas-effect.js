@@ -22,12 +22,12 @@ export default class CanvasEffect {
             playbackRate: 1.0,
             fadeIn: 0,
             fadeOut: 0,
-            ease: "Linear"
+            ease: "linear"
         }, inData);
 
     }
 
-    spawnSprite(){
+    spawnSprite() {
         const texture = PIXI.Texture.from(this.video);
         this.sprite = new PIXI.Sprite(texture);
         this.layer.addChild(this.sprite);
@@ -39,10 +39,10 @@ export default class CanvasEffect {
         this._animationDuration = this._videoDuration * 1000;
     }
 
-    playAnimation(attributes, duration, ease="Linear"){
+    playAnimation(attributes, duration, ease="linear"){
         return function() {
             EffectsCanvasAnimation.animateSmooth(attributes, {
-                name: `effects.video.${randomID()}.move`,
+                name: `effects.video.${randomID()}.animate`,
                 context: this,
                 duration: duration,
                 ease: easeFunctions[ease]
@@ -51,20 +51,90 @@ export default class CanvasEffect {
     }
 
     fadeIn(){
-        if(this.data.fadeIn) {
+        if(this.data.animatedProperties.fadeIn) {
+            let fadeIn = this.data.animatedProperties.fadeIn;
             this.sprite.alpha = 0.0;
-            this.playAnimation([
+            let animate = this.playAnimation([
                 { parent: this.sprite, attribute: "alpha", to: 1.0 }
-            ], this.data.fadeIn)();
+            ], fadeIn.duration, fadeIn.ease);
+            setTimeout(animate, fadeIn.delay);
         }
     }
 
     fadeOut(){
-        if(this.data.fadeOut) {
+        if(this.data.animatedProperties.fadeOut) {
+            let fadeOut = this.data.animatedProperties.fadeOut;
             let animate = this.playAnimation([
                 { parent: this.sprite, attribute: "alpha", to: 0.0 }
-            ], this.data.fadeOut)
-            setTimeout(animate, this._animationDuration-this.data.fadeOut);
+            ], fadeOut.duration, fadeOut.ease)
+            setTimeout(animate, this._animationDuration - fadeOut.duration);
+        }
+    }
+
+    _determineScale(property){
+        let scale = {
+            x: property.value?.x ?? 0,
+            y: property.value?.y ?? 0
+        };
+        if(typeof property.value === "number"){
+            scale.x = property.value
+            scale.y = property.value
+        }
+        return scale;
+    }
+
+    scaleIn(){
+        if(this.data.animatedProperties.scaleIn) {
+            let scaleIn = this.data.animatedProperties.scaleIn;
+            let scale = this._determineScale(scaleIn)
+
+            this.sprite.scale.set(scale.x, scale.y);
+
+            let animate = this.playAnimation([
+                { parent: this.sprite, attribute: "scale", property: "x", to: this.data.scale.x },
+                { parent: this.sprite, attribute: "scale", property: "y", to: this.data.scale.y }
+            ], scaleIn.duration, scaleIn.ease);
+            setTimeout(animate, scaleIn.delay);
+        }
+    }
+
+    scaleOut(){
+        if(this.data.animatedProperties.scaleOut) {
+            let scaleOut = this.data.animatedProperties.scaleOut;
+            let scale = this._determineScale(scaleOut)
+
+            let animate = this.playAnimation([
+                { parent: this.sprite, attribute: "scale", property: "x", to: scale.x },
+                { parent: this.sprite, attribute: "scale", property: "y", to: scale.y }
+            ], scaleOut.duration, scaleOut.ease);
+            setTimeout(animate, this._animationDuration - scaleOut.duration);
+        }
+    }
+
+    rotateIn(){
+        if(this.data.animatedProperties.rotateIn) {
+            let rotateIn = this.data.animatedProperties.rotateIn;
+
+            let original_radians = this.sprite.rotation;
+
+            this.sprite.rotation = Math.toRadians(rotateIn.value)
+
+            let animate = this.playAnimation([
+                { parent: this.sprite, attribute: "rotation", to: original_radians }
+            ], rotateIn.duration, rotateIn.ease);
+            setTimeout(animate, rotateIn.delay);
+        }
+    }
+
+    rotateOut(){
+        if(this.data.animatedProperties.rotateOut) {
+
+            let rotateOut = this.data.animatedProperties.rotateOut;
+
+            let animate = this.playAnimation([
+                { parent: this.sprite, attribute: "rotation", to: Math.toRadians(rotateOut.value) }
+            ], rotateOut.duration, rotateOut.ease);
+            setTimeout(animate, this._animationDuration - rotateOut.duration);
         }
     }
 
@@ -92,7 +162,11 @@ export default class CanvasEffect {
             parent: this.sprite, attribute: 'y', to: this.data.position.y + deltaY
         }];
 
-        this.playAnimation(move_attributes, this._animationDuration, this.data.ease)();
+        this.playAnimation(
+            move_attributes,
+            this._animationDuration,
+            this.data.ease
+        )();
 
         setTimeout(() => {
             this.endEffect();
@@ -118,6 +192,16 @@ export default class CanvasEffect {
         }
     }
 
+    playAnimations(){
+        this.moveTowards();
+        this.fadeIn();
+        this.fadeOut();
+        this.scaleIn();
+        this.scaleOut();
+        this.rotateIn();
+        this.rotateOut();
+    }
+
     async play(){
 
         return new Promise((resolve, reject) => {
@@ -137,9 +221,7 @@ export default class CanvasEffect {
                 }
                 canplay = false;
                 this.spawnSprite();
-                this.moveTowards();
-                this.fadeIn();
-                this.fadeOut();
+                this.playAnimations();
             };
 
             this.video.onerror = () => {

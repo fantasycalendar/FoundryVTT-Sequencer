@@ -1,4 +1,4 @@
-![Animation showing the Sequencer](docs/images/Animation2.gif)
+![Animation showing the Sequencer](guides/images/Animation2.gif)
 
 # Sequencer
 
@@ -76,7 +76,7 @@ To get the following result:
 * Teleport the token 500px to the left
 * Play another effect on the token's location
 
-![Animation showing the code below](docs/images/Animation.gif)
+![Animation showing the code below](guides/images/Animation.gif)
 
 You'd have to write something like this:
 
@@ -199,7 +199,7 @@ sequence.play();
 
 ## Magic Missile
 
-![One token firing three magic missiles on another token](docs/images/magic_missile.gif)
+![One token firing three magic missiles on another token](guides/images/magic_missile.gif)
 ```js
 new Sequence()
     .effect()
@@ -234,7 +234,7 @@ new Sequence()
 
 ## Lightning Strike
 
-![Random lightning strikes on a token](docs/images/lightning_strike.gif)
+![Random lightning strikes on a token](guides/images/lightning_strike.gif)
 
 ```js
 new Sequence()
@@ -246,7 +246,6 @@ new Sequence()
             "letter": String.fromCharCode(Math.floor(Math.random()*6)+1+64).toLowerCase()
         })
         .scale(2)
-        .center()
         .randomizeMirrorX()
     .play();
 ```
@@ -255,19 +254,17 @@ new Sequence()
 
 ## Acid Splash
 
-![Acid splash hitting two tokens with random rotation and scales](docs/images/acid_splash.gif)
+![Acid splash hitting two tokens with random rotation and scales](guides/images/acid_splash.gif)
 
 ```js
 new Sequence()
     .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
         .atLocation(canvas.tokens.controlled[0])
         .scale(0.3, 0.6)
-        .center()
         .randomRotation()
     .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
         .atLocation(canvas.tokens.controlled[1])
         .scale(0.3, 0.6)
-        .center()
         .randomRotation()
     .play();
 ```
@@ -275,6 +272,18 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.3.10
+- *Sequencer* - Added macro pack containing examples of Sequencer usages
+- *Effects* - Added the following animated functions:
+  - `.scaleIn()`
+  - `.scaleOut()`
+  - `.rotateIn()`
+  - `.rotateOut()`
+  - All of these can utilize any of the easings listed here: https://easings.net/
+  - Read the [documentation](DOCS.md#scale-in) how to use these
+- *Effects* - Added better error reporting when something goes wrong in the sequence
+- *Effects* - Fixed bug with scale sometimes overriding `.reachTowards()`
 
 ### Version 0.3.9
 - *Effects* - Added `.belowTokens()` so you can now play effects, well, below tokens  

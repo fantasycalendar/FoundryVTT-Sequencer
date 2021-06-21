@@ -5,7 +5,7 @@ export default class FunctionSection extends Section {
 
     constructor(inSequence, inFunc, inWaitUntilFinished) {
         super(inSequence, inWaitUntilFinished)
-        if(!lib.is_function(inFunc)) throw new Error("The given function needs to be an actual function.");
+        if(!lib.is_function(inFunc)) this.throwError("create", "The given function needs to be an actual function");
         this._func = inFunc;
     }
 

@@ -17,7 +17,9 @@ export default class SoundSection extends Section {
      * @returns {SoundSection} this
      */
     file(inFile) {
-        if(!(typeof inFile === "string" || Array.isArray(inFile))) throw new Error("inFile must be of type string or array");
+        if(!(typeof inFile === "string" || Array.isArray(inFile))){
+            this.throwError("file", "inFile must be of type string or array");
+        }
         this._file = inFile;
         return this;
     }
@@ -29,7 +31,7 @@ export default class SoundSection extends Section {
      * @returns {SoundSection} this
      */
     volume(inVolume) {
-        if(typeof inVolume !== "number") throw new Error("inVolume must be of type number");
+        if(typeof inVolume !== "number") this.throwError("volume", "inVolume must be of type number");
         this._volume = Math.max(0, Math.min(1.0, inVolume));
         return this;
     }
