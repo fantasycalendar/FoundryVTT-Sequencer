@@ -7,8 +7,8 @@ This module implements a basic pipeline that can be used for managing the flow o
 ## Credit
 Sequencer stands on the shoulder of giants:
 
-U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster).
-Copyright © 2020 Emmanuel Ruaud
+* U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
+* Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright (c) 2020 Otigon
 
 
 ## Effects shown in this readme
