@@ -21,7 +21,6 @@ For this guide to work, you'll need the following modules installed:
 
 ![The Furnace Advanced macros](images/img_2.png)
 
-
 # Macro Setup
 
 ## On Use Macro
@@ -150,7 +149,7 @@ new Sequence()
 
 <hr/>
 
-JB2A has specific margins and padding on their effects, but the Sequencer has direct support for that, so just add the following:
+JB2A has specific margins and padding on their effects, but the Sequencer has direct support for that, so just add `.JB2A()` to the macro:
 
 ```js
 let tokenD = canvas.tokens.get(args[0].tokenId);
