@@ -18,7 +18,7 @@ For this guide to work, you'll need the following modules installed:
 
 ![MidiQOL workflow settings 2](images/img_1.png)
 
-### 0.7.x only - If you have The Furnace installed, enable `Advanced Macros ☑️`:
+### 0.7.x only - Enable `Advanced Macros ☑️` under The Furnace's settings:
 
 ![The Furnace Advanced macros](images/img_2.png)
 
