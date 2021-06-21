@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2020 Repository Owner
+Copyright (c) 2020 Adam Oresten
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Code from the module FX Master (https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) by U-Man has been included and refactored in the Sequencer to play effects on the canvas
+Code from the module Automated Animations (https://github.com/otigon/automated-jb2a-animations) written by Otigon was used to calculate the distance between targets using the JB2A effects
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
