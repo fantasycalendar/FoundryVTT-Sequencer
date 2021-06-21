@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # How to use the Sequencer in 5E macros
 
 With this guide, we'll be creating the following effect:
