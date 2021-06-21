@@ -4,6 +4,13 @@
 
 This module implements a basic pipeline that can be used for managing the flow of a set of functions, effects, sounds, and macros.
 
+## Credit
+Sequencer stands on the shoulder of giants:
+
+U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster).
+Copyright © 2020 Emmanuel Ruaud
+
+
 ## Effects shown in this readme
 * [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.jb2a.com/))
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
