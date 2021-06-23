@@ -4,7 +4,7 @@ import Section from "./base.js";
 export default class SoundSection extends Section {
 
     constructor(inSequence, inFile="") {
-        super(inSequence)
+        super(inSequence);
         this.file(inFile);
         this._volume = 0.8;
     }
@@ -18,7 +18,7 @@ export default class SoundSection extends Section {
      */
     file(inFile) {
         if(!(typeof inFile === "string" || Array.isArray(inFile))){
-            this.throwError("file", "inFile must be of type string or array");
+            this.sequence.throwError(this, "file", "inFile must be of type string or array");
         }
         this._file = inFile;
         return this;
@@ -31,17 +31,38 @@ export default class SoundSection extends Section {
      * @returns {SoundSection} this
      */
     volume(inVolume) {
-        if(typeof inVolume !== "number") this.throwError("volume", "inVolume must be of type number");
+        if(typeof inVolume !== "number") this.sequence.throwError(this, "volume", "inVolume must be of type number");
         this._volume = Math.max(0, Math.min(1.0, inVolume));
         return this;
     }
 
     async _run(repetition){
-        let data = this._sanitizeSoundData();
-        let duration = await this._getSoundDuration(data.src[0]);
+        let data = await this._sanitizeSoundData();
+        if(!data.play) {
+            this.sequence.throwError(this, "Play", `File not found: ${data.src}`);
+            return new Promise((reject) => reject());
+        }
+
+        let howler = await AudioHelper.play(data, true);
+
+        if(this._fadeIn) {
+            howler.fade(data.targetVolume, this._fadeIn.duration, 0.0)
+        }
+
+        if(this._fadeOut) {
+            let fadeOut = this._fadeOut;
+            setTimeout(function () {
+                if(howler.playing) {
+                    howler.fade(0, fadeOut.duration, data.targetVolume)
+                }
+            }, Math.max(data.duration - fadeOut.duration, 0));
+        }
+
         return new Promise(async (resolve) => {
-            AudioHelper.play(data, true);
-            setTimeout(resolve, duration);
+            setTimeout(function(){
+                howler.stop()
+                resolve();
+            }, data.duration);
         });
     }
 
@@ -49,21 +70,33 @@ export default class SoundSection extends Section {
         let cachedDuration = this.sequence._getFileFromCache(inFilePath);
         if(!cachedDuration) {
             cachedDuration = await lib.getSoundDuration(inFilePath);
+            if(!cachedDuration) return false;
             this.sequence._addFileToCache(inFilePath, cachedDuration)
         }
         return cachedDuration;
     }
 
-    _sanitizeSoundData() {
+    async _sanitizeSoundData() {
         let file = this._file;
         if(Array.isArray(this._file)) {
             file = lib.random_array_element(this._file)
         }
+        let duration = await this._getSoundDuration(file);
+        if(!duration){
+            return {
+                play: false,
+                src: file
+            };
+        }
+        duration += this._waitUntilFinishedDelay;
         return {
+            play: true,
             src: [file],
-            volume: this._volume ?? 0.8,
+            targetVolume: this._volume,
+            volume: this._fadeIn ? 0 : this._volume,
             autoplay: true,
-            loop: false
+            loop: this._duration > duration,
+            duration: this._duration ? this._duration : duration
         };
     }
 }

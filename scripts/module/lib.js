@@ -120,8 +120,7 @@ export async function getSoundDuration(inFile){
             resolve(audio.duration*1000); // ms
         }
         audio.onerror = () => {
-            console.error('File not found');
-            reject();
+            resolve(false);
         }
         audio.preload = "auto";
         audio.crossOrigin = "anonymous";

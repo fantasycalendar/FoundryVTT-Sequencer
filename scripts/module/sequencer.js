@@ -10,6 +10,7 @@ export default class Sequence{
         this.sections = [];
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
+        this.effectIndex = 0;
         let version = new Version().onOrAfter("0.8.6");
         this.mergeObject = version ? foundry.utils.mergeObject : mergeObject;
     }
@@ -20,7 +21,9 @@ export default class Sequence{
      */
     async play(){
         await this._prepareOffsetCache();
+        this.effectIndex = 0;
         for(let section of this.sections){
+            if(section instanceof EffectSection) this.effectIndex++;
             if(section.shouldWaitUntilFinished) {
                 await section.execute();
             }else{

@@ -11,11 +11,12 @@ export function registerSocket(){
 export async function playEffect(data){
 
     let layers = [
+        canvas.sequencerEffectsBelowTiles,
         canvas.sequencerEffectsBelowTokens,
         canvas.sequencerEffectsAboveTokens
     ];
 
-    let layer = layers[data.layer ?? 1];
+    let layer = layers[data.layer ?? 2];
 
     return await layer.playEffect(data);
 

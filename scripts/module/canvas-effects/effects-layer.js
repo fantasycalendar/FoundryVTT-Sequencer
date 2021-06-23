@@ -3,6 +3,11 @@ import CanvasEffect from "./canvas-effect.js";
 
 export class BaseEffectsLayer extends CanvasLayer {
 
+    constructor() {
+        super();
+        this.effectsContainer = undefined;
+    }
+
     static get layerOptions() {
 
         let version = new Version().onOrAfter("0.8.6");
@@ -24,8 +29,17 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     }
 
+    _setUpEffectsContainer(){
+        if(!this.effectsContainer) {
+            this.effectsContainer = new PIXI.Container();
+            this.effectsContainer.sortableChildren = true;
+            this.addChild(this.effectsContainer);
+        }
+    }
+
     playEffect(data) {
-        return new CanvasEffect(this, data).play();
+        this._setUpEffectsContainer();
+        return new CanvasEffect(this.effectsContainer, data).play();
     }
 
 }
@@ -39,6 +53,21 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
 
         return mergeFunc(super.layerOptions, {
             zIndex: 95
+        });
+
+    }
+
+}
+
+export class BelowTilesEffectsLayer extends BaseEffectsLayer {
+
+    static get layerOptions() {
+
+        let version = new Version().onOrAfter("0.8.6");
+        let mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
+
+        return mergeFunc(super.layerOptions, {
+            zIndex: 25
         });
 
     }

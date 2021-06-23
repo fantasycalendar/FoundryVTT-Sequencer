@@ -5,6 +5,7 @@ export default class Section{
     constructor(inSequence, inWaitUntilFinished = false){
         this.sequence = inSequence;
         this._waitUntilFinished = inWaitUntilFinished;
+        this._waitUntilFinishedDelay = 0;
         this._async = false;
         this._currentRepetition = 0;
         this._repetitions = 1;
@@ -15,17 +16,22 @@ export default class Section{
         this._playIf = false;
         this._playIfSet = false;
         this._offsets = [];
+        this._index = this.sequence.effectIndex;
+        this._duration = false;
+        this._fadeIn = false;
+        this._fadeOut = false;
     }
 
     /**
      * Causes the section to finish running before starting the next section.
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {number} [inDelay=0] inDelay
      * @returns {Section} this
      */
-    waitUntilFinished(inBool = true){
-        if(typeof inBool !== "boolean") this.throwError("waitUntilFinished", "inBool must be of type boolean");
-        this._waitUntilFinished = inBool;
+    waitUntilFinished(inDelay=0){
+        if(typeof inDelay !== "number") this.sequence.throwError(this, "waitUntilFinished", "inDelay must be of type number");
+        this._waitUntilFinished = true;
+        this._waitUntilFinishedDelay = inDelay;
         return this;
     }
 
@@ -34,12 +40,10 @@ export default class Section{
      * .waitUntilFinished() in the sense that this is for each repetition, whilst .waitUntilFinished() is
      * for the entire section.
      *
-     * @param {boolean} [inBool=true] inBool
      * @returns {Section} this
      */
-    async(inBool = true){
-        if(typeof inBool !== "boolean") this.throwError("async", "inBool must be of type boolean");
-        this._async = inBool;
+    async(){
+        this._async = true;
         return this;
     }
 
@@ -53,10 +57,10 @@ export default class Section{
      * @returns {Section} this
      */
     repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax){
-        if(typeof inRepetitions !== "number") this.throwError("repeats", "inRepetitions must be of type number");
-        if(typeof inRepeatDelayMin !== "number") this.throwError("repeats", "repeatDelayMin must be of type number");
+        if(typeof inRepetitions !== "number") this.sequence.throwError(this, "repeats", "inRepetitions must be of type number");
+        if(typeof inRepeatDelayMin !== "number") this.sequence.throwError(this, "repeats", "repeatDelayMin must be of type number");
         if(inRepeatDelayMax && typeof inRepeatDelayMax !== "number"){
-            this.throwError("repeats", "repeatDelayMax must be of type number");
+            this.sequence.throwError(this, "repeats", "repeatDelayMax must be of type number");
         }
         this._repetitions = inRepetitions;
         this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
@@ -73,7 +77,7 @@ export default class Section{
      */
     playIf(inCondition) {
         if(!(typeof inCondition === "boolean" || lib.is_function(inCondition))){
-            this.throwError("playIf", "inCondition must be of type boolean or function");
+            this.sequence.throwError(this, "playIf", "inCondition must be of type boolean or function");
         }
         this._playIf = inCondition;
         this._playIfSet = true;
@@ -89,10 +93,68 @@ export default class Section{
      * @returns {Section} this
      */
     delay(msMin, msMax) {
-        if(typeof msMin !== "number") this.throwError("delay", "msMin must be of type number");
-        if(msMax && typeof msMax !== "number") this.throwError("delay", "msMax must be of type number");
+        if(typeof msMin !== "number") this.sequence.throwError(this, "delay", "msMin must be of type number");
+        if(msMax && typeof msMax !== "number") this.sequence.throwError(this, "delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
+        return this;
+    }
+
+    /**
+     * Overrides the duration of an effect or sound
+     *
+     * @param {number} inDuration
+     * @returns {Section} this
+     */
+    duration(inDuration){
+        if(typeof inDuration !== "number") this.sequence.throwError(this, "duration", "inDuration must be of type number");
+        this._duration = inDuration;
+        return this;
+    }
+
+    /**
+     * Causes the effect to fade in when played
+     *
+     * @param {number} duration
+     * @param {object} [options] = options
+     * @returns {Section} this
+     */
+    fadeIn(duration, options={}) {
+        if(typeof options !== "object") this.sequence.throwError(this, "fadeIn", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof duration !== "number") this.sequence.throwError(this, "fadeIn", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeIn", "options.delay must be of type number");
+        this._fadeIn = {
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
+        return this;
+    }
+
+    /**
+     * Causes the effect to fade out at the end of the effect's duration
+     *
+     * @param {number} duration
+     * @param {object} [options] = options
+     * @returns {Section} this
+     */
+    fadeOut(duration, options={}) {
+        if(typeof options !== "object") this.sequence.throwError(this, "fadeOut", "options must be of type object");
+        options = this.sequence.mergeObject({
+            ease: "linear"
+        }, options);
+        if(typeof duration !== "number") this.sequence.throwError(this, "fadeOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOut", "ease must be of type string");
+        this._fadeOut = {
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
         return this;
     }
 
@@ -106,10 +168,6 @@ export default class Section{
 
     async shouldPlay(){
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
-    }
-
-    throwError(func, error){
-        this.sequence.throwError(this, func, error);
     }
 
     async prepareOffsetCache(){

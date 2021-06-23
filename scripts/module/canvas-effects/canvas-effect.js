@@ -4,9 +4,9 @@ import { easeFunctions } from "./ease.js";
 
 export default class CanvasEffect {
 
-    constructor(inLayer, inData) {
+    constructor(container, inData) {
 
-        this.layer = inLayer;
+        this.container = container;
         this.ended = false;
         this.video = false;
 
@@ -30,12 +30,15 @@ export default class CanvasEffect {
     spawnSprite() {
         const texture = PIXI.Texture.from(this.video);
         this.sprite = new PIXI.Sprite(texture);
-        this.layer.addChild(this.sprite);
+        this.container.addChild(this.sprite);
+        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.container.sortChildren();
+
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
         this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
         this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
         this.sprite.position.set(this.data.position.x, this.data.position.y);
-        this._videoDuration = this.video.duration;
+        this._videoDuration = this.data.duration ? this.data.duration / 1000 : this.video.duration;
         this._animationDuration = this._videoDuration * 1000;
     }
 
@@ -67,7 +70,7 @@ export default class CanvasEffect {
             let animate = this.playAnimation([
                 { parent: this.sprite, attribute: "alpha", to: 0.0 }
             ], fadeOut.duration, fadeOut.ease)
-            setTimeout(animate, this._animationDuration - fadeOut.duration);
+            setTimeout(animate, Math.max(this._animationDuration - fadeOut.duration, 0));
         }
     }
 
@@ -107,7 +110,7 @@ export default class CanvasEffect {
                 { parent: this.sprite, attribute: "scale", property: "x", to: scale.x },
                 { parent: this.sprite, attribute: "scale", property: "y", to: scale.y }
             ], scaleOut.duration, scaleOut.ease);
-            setTimeout(animate, this._animationDuration - scaleOut.duration);
+            setTimeout(animate,  Math.max(this._animationDuration - scaleOut.duration, 0));
         }
     }
 
@@ -134,7 +137,7 @@ export default class CanvasEffect {
             let animate = this.playAnimation([
                 { parent: this.sprite, attribute: "rotation", to: Math.toRadians(rotateOut.value) }
             ], rotateOut.duration, rotateOut.ease);
-            setTimeout(animate, this._animationDuration - rotateOut.duration);
+            setTimeout(animate,  Math.max(this._animationDuration - rotateOut.duration, 0));
         }
     }
 
@@ -147,7 +150,6 @@ export default class CanvasEffect {
         }else{
             this._videoDuration = this.data.distance / this.data.speed;
             this._animationDuration = this._videoDuration * 1000;
-            this.video.loop = true;
         }
 
         // Compute final position
@@ -168,10 +170,6 @@ export default class CanvasEffect {
             this.data.ease
         )();
 
-        setTimeout(() => {
-            this.endEffect();
-        }, this._animationDuration)
-
     }
 
     destroyEffect(){
@@ -179,7 +177,7 @@ export default class CanvasEffect {
             this.video.pause();
             this.video.removeAttribute('src'); // empty source
             this.video.load();
-            this.layer.removeChild(this.sprite);
+            this.container.removeChild(this.sprite);
             this.sprite.destroy();
         }catch(err){}
     }
@@ -200,43 +198,68 @@ export default class CanvasEffect {
         this.scaleOut();
         this.rotateIn();
         this.rotateOut();
+        this.endEarly();
     }
 
-    async play(){
+    endEarly(){
+        this.video.loop = (this.data.duration / 1000) > this.video.duration;
+        setTimeout(() => {
+            this.endEffect();
+        }, this._animationDuration)
+    }
+
+    async loadVideo(){
 
         return new Promise((resolve, reject) => {
 
-            this.resolve = resolve;
-
-            this.video = document.createElement("video");
-            this.video.preload = "auto";
-            this.video.crossOrigin = "anonymous";
-            this.video.src = this.data.file;
-            this.video.playbackRate = this.data.playbackRate;
+            let video = document.createElement("video");
+            video.preload = "auto";
+            video.crossOrigin = "anonymous";
+            video.src = this.data.file;
+            video.playbackRate = this.data.playbackRate;
 
             let canplay = true;
-            this.video.oncanplay = () => {
-                if(!canplay){
-                    return;
-                }
+            video.oncanplay = () => {
+                if(!canplay) return;
                 canplay = false;
-                this.spawnSprite();
-                this.playAnimations();
+                resolve(video);
             };
 
-            this.video.onerror = () => {
+            video.onerror = () => {
                 try {
-                    this.layer.removeChild(this.sprite);
-                }catch(err){}
-                console.error(`Could not play ${this.data.file}!`)
+                    this.container.removeChild(this.sprite);
+                } catch (err) {
+                }
+                let error = `Sequencer | CanvasEffect | Play Effect - Could not play: ${this.data.file}`;
+                ui.notifications.error(error);
+                console.error(error)
                 reject();
             }
 
-            this.video.onended = () => {
+            video.onended = () => {
                 this.endEffect();
             }
-        })
+
+        });
 
     }
+
+    async play() {
+
+        this.video = await this.loadVideo();
+
+        let promise = new Promise((resolve, reject) => {
+            if(!this.video) reject();
+            this.resolve = resolve;
+            this.spawnSprite();
+            this.playAnimations();
+        });
+
+        return {
+            duration: this._animationDuration,
+            promise: promise
+        }
+
+    };
 
 }

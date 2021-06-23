@@ -13,6 +13,9 @@
 - [Repeats](#repeats)
 - [Play if](#play-if)
 - [Delay](#delay)
+- [Fade in](#fade-in)
+- [Fade out](#fade-out)
+- [Duration](#duration)
 
 ### - Effect Methods -
 - [Base folder](#base-folder)
@@ -38,10 +41,10 @@
 - [Randomize mirror](#randomize-mirror)
 - [Rotate In](#rotate-in)
 - [Rotate Out](#rotate-out)
-- [Fade in](#fade-in)
-- [Fade out](#fade-out)
 - [Playback rate](#playback-rate)
 - [Below tokens](#below-tokens)
+- [Below tiles](#below-tiles)
+- [Z-Index](#z-index)
 
 ### - Sound Methods -
 - [File](#file)
@@ -95,21 +98,21 @@ These methods can be called on any `.then` functions, effects, sounds, and macro
 
 ### Wait Until Finished
 
-`.waitUntilFinished()` or `.waitUntilFinished(true)`
+`.waitUntilFinished()` or `.waitUntilFinished(-500)` 
 
 Calling this method will cause the section to finish running before starting the next section.
 
-You can also pass `true` to it for greater readability, but simply calling it will do.
+Passing a number as a parameter will cause the effect or sound to wait for the given number (in ms) after finishing playing before continuing to the next section.
+
+If given a negative number, the Sequencer will continue to the next section early but continue playing the effect or sound.
 
 ### Async
 
-`.async()` or `.async(true)`
+`.async()`
 
 Calling this will make each effect or sound will finish playing before the next one starts playing.
 
 This differs from `.waitUntilFinished()` in the sense that `.async()` is for each repetition, whilst `.waitUntilFinished()` is for the entire section.
-
-You can also pass `true` to it for greater readability, but simply calling it will do.
 
 ### Repeats
 
@@ -140,6 +143,31 @@ Below is an example of a function used in this method, which would cause this ef
 
 This will delay the effect or sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
 
+### Fade in
+
+`.fadeIn(duration, options = {ease: "linear", delay: 0})`
+
+`.fadeIn(500)` or `.fadeIn(250, {ease: "easeOutQuint"})` or `.fadeIn(400, {ease: "easeOutCirc", delay: 100})`
+
+Causes the effect to fade in when played
+
+Check out what easings are available here: https://easings.net/
+
+### Fade out
+
+`.fadeOut(duration, options = {ease: "linear"})`
+
+`.fadeOut(500)` or `.fadeOut(250, {ease: "easeOutQuint"})`
+
+Causes the effect to fade out when it has finished playing
+
+Check out what easings are available here: https://easings.net/
+
+### Duration
+
+`.duration(500)`
+
+Sets the duration of the effect, overriding its original duration, potentially causing it to loop
 
 ## Effect Methods
 
@@ -218,7 +246,7 @@ You _must_ define the function like above and return the data at the end of the 
 
 ### JB2A
 
-`.JB2A()` or `.JB2A(bool)`
+`.JB2A()`
 
 Sets the start point and end point (see below) to best work JB2A's effect sprites.
 
@@ -328,15 +356,15 @@ Centers the sprite on the given location, effectively giving it an anchor of `{x
 
 ### Random rotation
 
-`.randomRotation()` or `.randomRotation(inBool)`
+`.randomRotation()`
 
 Causes the sprite to have a random rotation, which means it should **not** be used with `.reachTowards()`.
 
 ### Randomize mirror
 
-`.randomizeMirrorX()` or `.randomizeMirrorX(inBool)`
+`.randomizeMirrorX()`
 
-`.randomizeMirrorY()` or `.randomizeMirrorY(inBool)`
+`.randomizeMirrorY()`
 
 Causes the sprite to have a randomized flipped X or Y scale (if the scale on that axis was 1, it can become 1 or -1, effectively mirroring the sprite).
 
@@ -362,26 +390,6 @@ Causes the effect to rotate when it finishes playing
 
 Check out what easings are available here: https://easings.net/
 
-### Fade in
-
-`.fadeIn(duration, options = {ease: "linear", delay: 0})`
-
-`.fadeIn(500)` or `.fadeIn(250, {ease: "easeOutQuint"})` or `.fadeIn(400, {ease: "easeOutCirc", delay: 100})`
-
-Causes the effect to fade in when played
-
-Check out what easings are available here: https://easings.net/
-
-### Fade out
-
-`.fadeOut(duration, options = {ease: "linear"})`
-
-`.fadeOut(500)` or `.fadeOut(250, {ease: "easeOutQuint"})`
-
-Causes the effect to fade out when it has finished playing
-
-Check out what easings are available here: https://easings.net/
-
 ### Playback Rate
 
 `.playbackRate(2)` or `.playbackRate(0.5)`
@@ -390,9 +398,23 @@ Sets the effect's playback rate. A playback rate of 2 would make it play 2x as f
 
 ### Below tokens
 
-`.belowTokens()` or `.belowTokens(true)`
+`.belowTokens()`
 
-Sets whether the effect should be played below tokens
+Causes the effect to be played below tokens
+
+### Below tiles
+
+`.belowTiles()`
+
+Causes the effect to be played below tiles
+
+### Z-Index
+
+`.zIndex(1)`
+
+Sets the z-index of the effect, potentially displaying it on top of or below other effects
+
+**Note:** If you have called `.belowTokens()` or `.belowTiles()`, the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer. 
 
 ## Sound methods
 

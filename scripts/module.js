@@ -3,7 +3,6 @@ import { registerSocket } from "./sockets.js";
 import registerLayer from "./layers.js";
 
 Hooks.once('init', async function() {
-    console.log('hwat')
     registerLayer();
 });
 

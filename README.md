@@ -11,7 +11,6 @@ Sequencer stands on the shoulder of giants:
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
 * [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev
 
-
 ## Effects shown in this readme
 * [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.jb2a.com/))
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
@@ -274,6 +273,14 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.11
+- *Effects* - Added `.belowTiles()` to play effects below tiles
+- *Effects* - Implemented better order handling - the effects created first will always be on top, each subsequent effect will be played below the previous
+- *Effects* - Added `.zIndex()` for you to have direct control over the order of effects
+- *Effects & Sounds* - Added `.duration()` which can override the duration of an effect or sound
+- *Effects & Sounds* - Tweaked `.waitUntilFinished()` to accept a single number parameter as a delay or to end the effect or sound earlier - read more in the [documentation](DOCS.md#wait-until-finished)
+- *Sounds* - Added support for `.fadeIn()` and `.fadeOut()` - easing sadly doesn't work for sounds yet
+
 ### Version 0.3.10
 - *Sequencer* - Added macro pack containing examples of Sequencer usages
 - *Effects* - Added the following animated functions:
@@ -351,3 +358,4 @@ new Sequence()
 
 ### Version 0.1.0
 - First implementation
+>>>>>>> d7d91b2 (Major overhauls and duration changes)
