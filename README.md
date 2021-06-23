@@ -358,4 +358,3 @@ new Sequence()
 
 ### Version 0.1.0
 - First implementation
->>>>>>> d7d91b2 (Major overhauls and duration changes)
