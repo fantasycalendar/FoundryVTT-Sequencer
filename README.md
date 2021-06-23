@@ -9,6 +9,7 @@ Sequencer stands on the shoulder of giants:
 
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
+* [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) Copyright © 2020 Andrey Sitnik and Ivan Solovev
 
 
 ## Effects shown in this readme
