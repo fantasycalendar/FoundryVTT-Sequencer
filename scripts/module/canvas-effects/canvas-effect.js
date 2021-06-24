@@ -30,6 +30,7 @@ export default class CanvasEffect {
     spawnSprite() {
         const texture = PIXI.Texture.from(this.video);
         this.sprite = new PIXI.Sprite(texture);
+        this.sprite.alpha = this.data.opacity;
         this.container.addChild(this.sprite);
         this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
         this.container.sortChildren();
@@ -58,7 +59,7 @@ export default class CanvasEffect {
             let fadeIn = this.data.animatedProperties.fadeIn;
             this.sprite.alpha = 0.0;
             let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "alpha", to: 1.0 }
+                { parent: this.sprite, attribute: "alpha", to: this.data.opacity }
             ], fadeIn.duration, fadeIn.ease);
             setTimeout(animate, fadeIn.delay);
         }

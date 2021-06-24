@@ -35,6 +35,7 @@ export default class EffectSection extends Section {
         this._rotateOut = false;
         this._layer = 2;
         this._zIndex = 0;
+        this._opacity = 1.0;
     }
 
     /**
@@ -490,6 +491,18 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Sets the opacity of the effect. If used with .fadeIn() and/or .fadeOut(), this defines what the effect will fade to/from
+     *
+     * @param {number} inOpacity
+     * @returns {EffectSection} this
+     */
+    opacity(inOpacity){
+        if(typeof inOpacity !== "number") this.sequence.throwError(this, "opacity", "inOpacity must be of type number");
+        this._opacity = inOpacity;
+        return this;
+    }
+
     get gridSizeDifference(){
         return canvas.grid.size / this._gridSize;
     }
@@ -527,6 +540,7 @@ export default class EffectSection extends Section {
             layer: this._layer,
             index: this._index,
             zIndex: this._zIndex,
+            opacity: this._opacity,
             animatedProperties: {
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,

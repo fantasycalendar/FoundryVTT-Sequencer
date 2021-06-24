@@ -152,8 +152,7 @@ export default class Section{
         if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOut", "ease must be of type string");
         this._fadeOut = {
             duration: duration,
-            ease: options.ease,
-            delay: options.delay
+            ease: options.ease
         };
         return this;
     }

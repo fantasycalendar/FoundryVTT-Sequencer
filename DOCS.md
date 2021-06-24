@@ -45,6 +45,7 @@
 - [Below tokens](#below-tokens)
 - [Below tiles](#below-tiles)
 - [Z-Index](#z-index)
+- [Opacity](#opacity)
 
 ### - Sound Methods -
 - [File](#file)
@@ -179,7 +180,7 @@ Defines the base folder that will prepend to the file path. This is mainly just 
 
 ### File
 
-`.file(inPath)` or `.file(inArray)`
+`.file(string)` or `.file(array)`
 
 Declares which .webm to be played, but you can also do that when first initializing the effect.
 
@@ -382,7 +383,7 @@ Check out what easings are available here: https://easings.net/
 
 ### Rotate Out
 
-`.rotateOut(degrees, duration, options = {ease: "linear", delay: 0})`
+`.rotateOut(degrees, duration, options = {ease: "linear"})`
 
 `.rotateOut(0.5, 250)` or `.rotateOut({ x: 0.5, y: 0.2 }, 500)` or `.rotateOut(0, 500, {ease: "easeOutCubic"})`
 
@@ -416,11 +417,17 @@ Sets the z-index of the effect, potentially displaying it on top of or below oth
 
 **Note:** If you have called `.belowTokens()` or `.belowTiles()`, the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer. 
 
+### Opacity
+
+`.opacity(0.5)`
+
+Sets the opacity of the effect. If used with `.fadeIn()` and/or `.fadeOut()`, this defines what the effect will fade to/from
+
 ## Sound methods
 
 ### File
 
-`.file(inPath)` or `.file(inArray)`
+`.file(string)` or `.file(array)`
 
 This declares which sound to be played, but you can also do that when first initializing the sound.
 
@@ -428,6 +435,6 @@ This may also be an array of paths, which will be randomly picked from each time
 
 ### Volume
 
-`.volume(inFloat)`
+`.volume(0.5)`
 
 A normalized value between `0.0` and `1.0` which determines the volume of the sound. Defaults to `0.8`.

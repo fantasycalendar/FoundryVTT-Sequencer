@@ -232,6 +232,29 @@ new Sequence()
 
 *Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
 
+## Magic Circle
+
+![A magic circle fading, rotating, and scaling in, then fading, rotating, and scaling out](guides/images/scalerotationfade.gif)
+
+```js
+new Sequence()
+    .effect()
+        .file("modules/jb2a_patreon/Library/Generic/Magic_Signs/Abjuration_01_Blue_Circle_800x800.webm")
+        .atLocation(canvas.tokens.controlled[0])
+        .JB2A()
+        .scale(0.25)
+        .belowTokens()
+        .fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+        .fadeOut(1500)
+        .rotateIn(90, 2500, {ease: "easeInOutCubic"})
+        .rotateOut(350, 1500, {ease: "easeInCubic"})
+        .scaleIn(0.5, 2500, {ease: "easeInOutCubic"})
+        .scaleOut(0, 1500, {ease: "easeInCubic"})
+    .play()
+```
+
+*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
+
 ## Lightning Strike
 
 ![Random lightning strikes on a token](guides/images/lightning_strike.gif)
@@ -272,6 +295,10 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.3.12
+- *Effects* - Added `.opacity()` which controls the alpha of the effect being played
+- *Effects* - Fixed bug with `.belowTiles()` sometimes not playing below tiles
 
 ### Version 0.3.11
 - *Effects* - Added `.belowTiles()` to play effects below tiles

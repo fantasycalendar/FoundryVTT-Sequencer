@@ -1,3 +1,5 @@
+import CanvasEffect from "./module/canvas-effects/canvas-effect.js";
+
 export function registerSocket(){
 
     game.socket.on("module.sequencer", (data) => {
@@ -11,13 +13,27 @@ export function registerSocket(){
 export async function playEffect(data){
 
     let layers = [
-        canvas.sequencerEffectsBelowTiles,
+        canvas.background,
         canvas.sequencerEffectsBelowTokens,
         canvas.sequencerEffectsAboveTokens
     ];
 
     let layer = layers[data.layer ?? 2];
 
-    return await layer.playEffect(data);
+    let container = layer.children.find(child => child?.parentName === "sequencer");
+
+    if(!container) {
+        if(layer === canvas.background){
+            layer.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
+            layer.sortChildren();
+        }
+        container = new PIXI.Container();
+        container.sortableChildren = true;
+        container.parentName = "sequencer";
+        container.zIndex = 0.5;
+        layer.addChild(container);
+    }
+
+    return new CanvasEffect(container, data).play();
 
 }
