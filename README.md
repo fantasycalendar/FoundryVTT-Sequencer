@@ -296,6 +296,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.3.13 Hotfix
+- *Effects* - Fixed ANOTHER bug with `.belowTiles()` sometimes not playing below tiles
+
 ### Version 0.3.12
 - *Effects* - Added `.opacity()` which controls the alpha of the effect being played
 - *Effects* - Fixed bug with `.belowTiles()` sometimes not playing below tiles
