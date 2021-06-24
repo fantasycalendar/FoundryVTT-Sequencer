@@ -25,13 +25,13 @@ export async function playEffect(data){
     if(!container) {
         if(layer === canvas.background){
             layer.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
-            layer.sortChildren();
         }
         container = new PIXI.Container();
         container.sortableChildren = true;
         container.parentName = "sequencer";
         container.zIndex = 0.5;
         layer.addChild(container);
+        layer.sortChildren();
     }
 
     return new CanvasEffect(container, data).play();
