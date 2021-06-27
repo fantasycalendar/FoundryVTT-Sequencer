@@ -188,11 +188,11 @@ export default class Sequence{
     then(inFunc, inWaitUntilFinished = false){
         if(lib.is_function(inWaitUntilFinished)) return;
         let error = `Sequencer | .then() has been deprecated in favor of .thenDo() and will be removed in 0.4.1`;
-        //ui.notifications.warn(error);
+        ui.notifications.warn(error);
         console.warn(error)
         if(typeof inWaitUntilFinished === "boolean" && inWaitUntilFinished){
             let error = `Sequencer | then - Passing a boolean to .then() is deprecated and will be removed in 0.4.1`;
-            //ui.notifications.warn(error);
+            ui.notifications.warn(error);
             console.warn(error)
         }
         return this.thenDo(inFunc)
