@@ -25,6 +25,7 @@
 - [Reach Towards](#reach-towards)
 - [Move Towards](#move-towards)
 - [Move speed](#move-speed)
+- [Name](#name)
 - [Missed](#missed)
 - [Add override](#add-override)
 - [JB2A](#jb2a)
@@ -38,6 +39,7 @@
 - [Anchor](#anchor)
 - [Center](#center)
 - [Random rotation](#random-rotation)
+- [Mirror](#mirror)
 - [Randomize mirror](#randomize-mirror)
 - [Rotate In](#rotate-in)
 - [Rotate Out](#rotate-out)
@@ -55,15 +57,19 @@
 
 ### Then
 
-`.then(() => {})`
+```js
+.thenDo(function(){
+    //do Stuff
+})
+```
 
-Creates a section that will run a function. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the above:
+Creates a section that will run a function. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the function into an `async` function:
 
-`.then(async () => {})`
-
-In addition, if you want your function to finish before the next section is executed, you'll need to pass `true` as the last argument in the method call, like so:
-
-`.then(async () => {}, true)`
+```js
+.thenDo(async function(){
+    //do Stuff
+})
+```
 
 ### Macro
 
@@ -194,31 +200,42 @@ A smart method that can take:
 - Reference to a token
 - Reference to a template
 - Direct coordinate on the canvas
-- String reference, see `.name()`
+- String reference (see [Name](#name))
 
 ### Rotate Towards
 
 `.rotateTowards(token)` or`.rotateTowards(template)` or`.rotateTowards("stored_name")` or `.rotateTowards({ x: 0, y: 0 })`
 
-Causes the effect to be rotated towards the given token, template, coordinates, or a string reference, see `.name()`. This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
+Causes the effect to be rotated towards the given token, template, coordinates, or a string reference (see [Name](#name)). This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
 
 ### Reach Towards
 
 `.reachTowards(token)` or`.reachTowards(template)` or`.reachTowards("stored_name")` or `.reachTowards({ x: 0, y: 0 })`
 
-Causes the effect to be rotated **and stretched** towards the given token, template, coordinates, or a string reference, see `.name()`. This effectively calculates the proper X scale for the effect to reach the target.
+Causes the effect to be rotated **and stretched** towards the given token, template, coordinates, or a string reference (see [Name](#name)). This effectively calculates the proper X scale for the effect to reach the target.
 
 ### Move Towards
 
+`.moveTowards(target, options = {ease: "linear"})`
+
 `.moveTowards(token)` or`.moveTowards(template)` or`.moveTowards("stored_name")` or `.moveTowards({ x: 0, y: 0 })`
 
-Causes the effect to move towards the given token, template, coordinates, or a string reference, see `.name()`.
+Causes the effect to move towards the given token, template, coordinates, or a string reference (see [Name](#name)).
+
+Check out what easings are available here: https://easings.net/
 
 ### Move speed
 
 `.moveSpeed(500)`
 
 Sets the speed of the effect if `.moveTowards()` has been called
+
+
+### Name
+
+`.name(inString)`
+
+Causes the effect's position to be stored and can then be used  with `.atLocation()`, `.reachTowards()`, `.rotateTowards()`, and `.moveTowards()` to refer to previous effects' locations
 
 ### Missed
 
@@ -249,9 +266,7 @@ You _must_ define the function like above and return the data at the end of the 
 
 `.JB2A()`
 
-Sets the start point and end point (see below) to best work JB2A's effect sprites.
-
-Effectively sets start point and end point to 200, and grid scale to 100.
+Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which the Sequencer figures out from the path.
 
 ### Start point
 
@@ -361,6 +376,16 @@ Centers the sprite on the given location, effectively giving it an anchor of `{x
 
 Causes the sprite to have a random rotation, which means it should **not** be used with `.reachTowards()`.
 
+### Mirror
+
+`.mirrorX()` or `.mirrorX(bool)`
+
+`.mirrorY()` or `.mirrorY(bool)`
+
+Causes the sprite to have a flipped X or Y scale. You can also pass a boolean to set whether it should be mirrored.
+
+This is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
+
 ### Randomize mirror
 
 `.randomizeMirrorX()`
@@ -399,15 +424,15 @@ Sets the effect's playback rate. A playback rate of 2 would make it play 2x as f
 
 ### Below tokens
 
-`.belowTokens()`
+`.belowTokens()` or `.belowTokens(bool)`
 
-Causes the effect to be played below tokens
+Causes the effect to be played below tokens - you can pass a boolean whether it should be applied or not.
 
 ### Below tiles
 
-`.belowTiles()`
+`.belowTiles()` or `.belowTiles(bool)`
 
-Causes the effect to be played below tiles
+Causes the effect to be played below tiles - you can pass a boolean whether it should be applied or not.
 
 ### Z-Index
 

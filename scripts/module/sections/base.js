@@ -2,9 +2,9 @@ import * as lib from "../lib.js";
 
 export default class Section{
 
-    constructor(inSequence, inWaitUntilFinished = false){
+    constructor(inSequence){
         this.sequence = inSequence;
-        this._waitUntilFinished = inWaitUntilFinished;
+        this._waitUntilFinished = false;
         this._waitUntilFinishedDelay = 0;
         this._async = false;
         this._currentRepetition = 0;
@@ -13,8 +13,7 @@ export default class Section{
         this._repeatDelayMax = 0;
         this._delayMin = 0;
         this._delayMax = 0;
-        this._playIf = false;
-        this._playIfSet = false;
+        this._playIf = true;
         this._offsets = [];
         this._index = this.sequence.effectIndex;
         this._duration = false;
@@ -80,7 +79,6 @@ export default class Section{
             this.sequence.throwError(this, "playIf", "inCondition must be of type boolean or function");
         }
         this._playIf = inCondition;
-        this._playIfSet = true;
         return this;
     }
 
@@ -121,7 +119,8 @@ export default class Section{
      */
     fadeIn(duration, options={}) {
         if(typeof options !== "object") this.sequence.throwError(this, "fadeIn", "options must be of type object");
-        options = this.sequence.mergeObject({
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
@@ -145,7 +144,8 @@ export default class Section{
      */
     fadeOut(duration, options={}) {
         if(typeof options !== "object") this.sequence.throwError(this, "fadeOut", "options must be of type object");
-        options = this.sequence.mergeObject({
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
             ease: "linear"
         }, options);
         if(typeof duration !== "number") this.sequence.throwError(this, "fadeOut", "duration must be of type number");
@@ -182,7 +182,7 @@ export default class Section{
     _cacheOffsets(){}
 
     async execute(){
-        if(this._playIfSet && !(await this.shouldPlay())) return;
+        if(!(await this.shouldPlay())) return;
         let self = this;
         let delay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {

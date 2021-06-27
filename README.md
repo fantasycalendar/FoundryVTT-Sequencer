@@ -19,7 +19,7 @@ Sequencer stands on the shoulder of giants:
 ## Download here:
 `https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
 
-## [Documentation](DOCS.md)
+## <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren"> [Documentation](DOCS.md) <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
 ## How to use
@@ -35,13 +35,13 @@ Then, you can add functions and effects to it.
 ```js
 let sequence = new Sequence()
 
-sequence.then(async function(){
+sequence.thenDo(function(){
     do_something();
 })
 
 sequence.wait(200)
 
-sequence.then(async function(){
+sequence.thenDo(async function(){
     do_something_else();
 })
 ```
@@ -50,11 +50,11 @@ The Sequencer uses a method-chaining fluent interface, meaning you can continuou
 
 ```js
 let sequence = new Sequence()
-    .then(async function(){
+    .thenDo(function(){
         do_something();
     })
     .wait(200)
-    .then(async function(){
+    .thenDo(async function(){
         do_something_else();
     })
 ```
@@ -182,7 +182,7 @@ let sequence = new Sequence()
             y: tokenD.center.y
         })
     .wait(100)
-    .then(function(){
+    .thenDo(function(){
         token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
     })
     .effect()
@@ -295,6 +295,14 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.4.0
+- *Sequencer* - Renamed `.then()` to `.thenDo()` due to JavaScript reasons — <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren"> `.then()` will be removed in 0.4.1 <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren">
+- *Sequencer* - Removed the requirement to pass `true` as a second argument to `.then()` (now `.thenDo()`) if the function was async, it will now wait for it to finish if it is an `async function`
+- *Effects* - Added `.mirrorX()` and `.mirrorY()` to mirror the effect on that axis
+- *Effects* - Improved `.JB2A()` to better handle melee weapon attacks
+- *Effects* - Tweaked `.belowTiles()` and `.belowTokens()` to accept an optional boolean parameter whether the effect should play behind the respective element
+- *Effects* - Tweaked effects to assume that .webms have a base 100px internal grid for size consistency
 
 ### Version 0.3.13 Hotfix
 - *Effects* - Fixed ANOTHER bug with `.belowTiles()` sometimes not playing below tiles

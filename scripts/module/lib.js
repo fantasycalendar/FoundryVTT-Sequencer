@@ -127,3 +127,23 @@ export async function getSoundDuration(inFile){
         audio.src = inFile;
     });
 }
+
+/**
+ *  Determines the duration of a given sound file
+ *
+ * @param  {Section}    inSection   A Sequencer Section Class
+ * @return {Section}                A proxy-wrapped Section
+ */
+export function proxyWrap(inSection){
+    return new Proxy(inSection, {
+        get(target, name, receiver) {
+            if (typeof target[name] === 'undefined') {
+                if (typeof target.sequence[name] === 'undefined') {
+                    this.throwError(this, target.constructor.name, `Function ${name} was not found!`);
+                }
+                return Reflect.get(target.sequence, name, receiver);
+            }
+            return Reflect.get(target, name, receiver);
+        }
+    });
+}

@@ -11,8 +11,7 @@ export default class Sequence{
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
-        let version = new Version().onOrAfter("0.8.6");
-        this.mergeObject = version ? foundry.utils.mergeObject : mergeObject;
+        this.version = new Version().onOrAfter("0.8.6");
     }
     /**
      * Plays all of this sequence's sections
@@ -38,11 +37,10 @@ export default class Sequence{
      * Creates a section that will run a function.
      *
      * @param {function} inFunc
-     * @param {boolean} [inWaitUntilFinished=true] inWaitUntilFinished
      * @returns {Sequence} this
      */
-    then(inFunc, inWaitUntilFinished = true){
-        let func = new FunctionSection(this, inFunc, inWaitUntilFinished);
+    thenDo(inFunc){
+        let func = new FunctionSection(this, inFunc);
         this._addSection(func)
         return this;
     }
@@ -81,7 +79,6 @@ export default class Sequence{
      * @param {string} [inFile] inFile
      * @returns {Section}
      */
-
     effect(inFile=""){
         let effect = new EffectSection(this, inFile);
         return this._addSection(effect);
@@ -145,22 +142,8 @@ export default class Sequence{
      *
      * @param {Section} inSection
      */
-    _proxyWrap(inSection){
-        return new Proxy(inSection, {
-            get(target, name, receiver) {
-                if (typeof target[name] === 'undefined') {
-                    if (typeof target.sequence[name] === 'undefined') {
-                        this.throwError(this, "wait", `Function ${name} was not found!`);
-                    }
-                    return Reflect.get(target.sequence, name, receiver);
-                }
-                return Reflect.get(target, name, receiver);
-            }
-        });
-    }
-
     _addSection(inSection){
-        let section = this._proxyWrap(inSection);
+        let section = lib.proxyWrap(inSection);
         this.sections.push(section);
         return section;
     }
@@ -170,7 +153,7 @@ export default class Sequence{
             return new Promise(async (resolve) => {
                 setTimeout(resolve, ms)
             });
-        }, true);
+        });
     }
 
     _getFileFromCache(inFile){
@@ -189,6 +172,30 @@ export default class Sequence{
         error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
         ui.notifications.error(error);
         throw new Error(error);
+    }
+
+    /**
+     * ------------------------------------------ *
+     * --------------- DEPRECATED --------------- *
+     * ------------------------------------------ *
+     *
+     * Creates a section that will run a function.
+     *
+     * @param {function} inFunc
+     * @param {boolean} [inWaitUntilFinished] inWaitUntilFinished
+     * @returns {Sequence} this
+     */
+    then(inFunc, inWaitUntilFinished = false){
+        if(lib.is_function(inWaitUntilFinished)) return;
+        let error = `Sequencer | .then() has been deprecated in favor of .thenDo() and will be removed in 0.4.1`;
+        //ui.notifications.warn(error);
+        console.warn(error)
+        if(typeof inWaitUntilFinished === "boolean" && inWaitUntilFinished){
+            let error = `Sequencer | then - Passing a boolean to .then() is deprecated and will be removed in 0.4.1`;
+            //ui.notifications.warn(error);
+            console.warn(error)
+        }
+        return this.thenDo(inFunc)
     }
 
 }

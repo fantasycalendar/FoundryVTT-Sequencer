@@ -22,10 +22,12 @@ export default class EffectSection extends Section {
         this._endPoint = 0;
         this._mustache = false;
         this._JB2A = false;
-        this._randomX = false;
-        this._randomY = false;
+        this._randomMirrorX = false;
+        this._randomMirrorY = false;
+        this._mirrorX = false;
+        this._mirrorY = false;
         this._playbackRate = 1.0;
-        this._gridSize = canvas.grid.size;
+        this._gridSize = 100;
         this._overrides = [];
         this._postOverrides = [];
         this._name = false;
@@ -109,15 +111,12 @@ export default class EffectSection extends Section {
     }
 
     /**
-     * Sets the start point and end point to best work JB2A's effect sprites. This effectively sets start
-     * point and end point to 200, and grid scale to 100.
+     * Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which
+     * the Sequencer figures out from the path.
      *
      * @returns {EffectSection} this
      */
     JB2A() {
-        this.gridSize(100);
-        this.startPoint(200);
-        this.endPoint(200);
         this._JB2A = true;
         return this;
     }
@@ -202,12 +201,11 @@ export default class EffectSection extends Section {
      */
     moveTowards(inLocation, options={}) {
         if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
-        options = this.sequence.mergeObject({
-            ease: "linear",
-            delay: 0
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
+            ease: "linear"
         }, options);
         if(typeof options.ease !== "string") this.sequence.throwError(this, "moveEase", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "moveEase", "options.delay must be of type number");
         this._to = this._validateLocation(inLocation);
         this._moves = true;
         this._rotationOnly = true;
@@ -284,7 +282,8 @@ export default class EffectSection extends Section {
      */
     scaleIn(scale, duration, options={}){
         if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
-        options = this.sequence.mergeObject({
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
             scale: 0,
             ease: "linear",
             delay: 0
@@ -312,7 +311,8 @@ export default class EffectSection extends Section {
      */
     scaleOut(scale, duration, options={}){
         if(typeof options !== "object") this.sequence.throwError(this, "scaleOut", "options must be of type object");
-        options = this.sequence.mergeObject({
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
             ease: "linear"
         }, options);
         if(typeof duration !== "number") this.sequence.throwError(this, "scaleOut", "duration must be of type number");
@@ -336,7 +336,8 @@ export default class EffectSection extends Section {
      */
     rotateIn(degrees, duration, options={}){
         if(typeof options !== "object") this.sequence.throwError(this, "rotateIn", "options must be of type object");
-        options = this.sequence.mergeObject({
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
@@ -363,7 +364,8 @@ export default class EffectSection extends Section {
      */
     rotateOut(degrees, duration, options={}){
         if(typeof options !== "object") this.sequence.throwError(this, "rotateOut", "options must be of type object");
-        options = this.sequence.mergeObject({
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
             ease: "linear"
         }, options);
         if(typeof degrees !== "number") this.sequence.throwError(this, "rotateOut", "degrees must be of type number");
@@ -426,12 +428,12 @@ export default class EffectSection extends Section {
 
     /**
      * The sprite gets a randomized flipped X scale. If the scale on that axis was 1, it can
-     * become 1 or -1, effectively mirroring the sprite on its horizontal
+     * become 1 or -1, effectively mirroring the sprite on its horizontal axis
      *
      * @returns {EffectSection} this
      */
     randomizeMirrorX() {
-        this._randomX = true;
+        this._randomMirrorX = true;
         return this;
     }
 
@@ -442,7 +444,33 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     randomizeMirrorY() {
-        this._randomY = true;
+        this._randomMirrorY = true;
+        return this;
+    }
+
+    /**
+     * The sprite gets a flipped X scale. If the scale on that axis was 1, it will become become 1 or -1, effectively
+     * mirroring the sprite on its horizontal axis
+     *
+     * @param {boolean} inBool
+     * @returns {EffectSection} this
+     */
+    mirrorX(inBool = true) {
+        if(typeof inBool !== "boolean") this.sequence.throwError(this, "mirrorX", "inBool must be of type boolean");
+        this._mirrorX = inBool;
+        return this;
+    }
+
+    /**
+     * The sprite gets a flipped Y scale. If the scale on that axis was 1, it will become become 1 or -1, effectively
+     * mirroring the sprite on its vertical axis
+     *
+     * @param {boolean} inBool
+     * @returns {EffectSection} this
+     */
+    mirrorY(inBool = true) {
+        if(typeof inBool !== "boolean") this.sequence.throwError(this, "mirrorY", "inBool must be of type boolean");
+        this._mirrorY = inBool;
         return this;
     }
 
@@ -462,20 +490,24 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played below tokens
      *
+     * @param {boolean} inBool
      * @returns {EffectSection} this
      */
-    belowTokens(){
-        this._layer = 1;
+    belowTokens(inBool){
+        if(typeof inBool !== "boolean") this.sequence.throwError(this, "belowTokens", "inBool must be of type boolean");
+        this._layer = inBool ? 1 : 2;
         return this;
     }
 
     /**
      * Causes the effect to be played below tiles
      *
+     * @param {boolean} inBool
      * @returns {EffectSection} this
      */
-    belowTiles(){
-        this._layer = 0;
+    belowTiles(inBool){
+        if(typeof inBool !== "boolean") this.sequence.throwError(this, "belowTiles", "inBool must be of type boolean");
+        this._layer = inBool ? 0 : 2;
         return this;
     }
 
@@ -616,6 +648,18 @@ export default class EffectSection extends Section {
             data.file = lib.random_array_element(data.file)
         }
 
+        if(this._JB2A){
+            let [gridSize, startPoint, endPoint] = {
+                "ranged": [100, 200, 200],
+                "melee": [100, 300, 300],
+                "cone": [100, 0, 0]
+            }[this._getJB2ATemplate(data.file)];
+
+            this._gridSize = gridSize;
+            this._startPoint = startPoint;
+            this._endPoint = endPoint;
+        }
+
         if(this._mustache) {
             let template = Handlebars.compile(data.file);
             data.file = template(this._mustache);
@@ -646,10 +690,10 @@ export default class EffectSection extends Section {
             data = await this._calculateHitVector(data);
         }
 
-        let flipX = this._randomX && Math.random() < 0.5 ? -1 : 1;
+        let flipX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5) ? -1 : 1;
         data.scale.x = data.scale.x * flipX;
 
-        let flipY = this._randomY && Math.random() < 0.5 ? -1 : 1;
+        let flipY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5) ? -1 : 1;
         data.scale.y = data.scale.y * flipY;
 
         data.file = (this._baseFolder + data.file);
@@ -660,6 +704,15 @@ export default class EffectSection extends Section {
 
         return data;
 
+    }
+
+    _getJB2ATemplate(inFile){
+        if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){
+            return "melee";
+        }else if(inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")){
+            return "cone";
+        }
+        return "ranged";
     }
 
     async _getFileDimensions(inFile) {
@@ -691,10 +744,10 @@ export default class EffectSection extends Section {
         if(data._distance === 0) return data;
 
         let dimensions = await this._getFileDimensions(data.file);
-        let trueLength = this._getTrueLength(dimensions);
+        let trueDistanceAfterMargin = this._getTrueLength(dimensions);
 
-        data.scale.x = data._distance / trueLength;
-        data.scale.y = Math.max(0.4, data.scale.x);
+        data.scale.x = data._distance / trueDistanceAfterMargin;
+        data.scale.y = data._distance / trueDistanceAfterMargin;
 
         data.anchor.x = this._startPoint / dimensions.x;
 
@@ -821,8 +874,8 @@ export default class EffectSection extends Section {
 
     _validateLocation(inLocation) {
 
-        if(inLocation?._id) {
-            inLocation = canvas.tokens.get(inLocation._id) ?? inLocation;
+        if(inLocation?.id) {
+            inLocation = canvas.tokens.get(inLocation.id) ?? inLocation;
         }
 
         if (   inLocation instanceof Token
