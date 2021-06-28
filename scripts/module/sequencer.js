@@ -12,25 +12,32 @@ export default class Sequence{
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
         this.version = new Version().onOrAfter("0.8.6");
+        this._debug = game.settings.get("sequencer", "debug");
     }
+
     /**
      * Plays all of this sequence's sections
      *
      * @returns {Sequence} this
      */
-    async play(){
-        await this._prepareOffsetCache();
-        this.effectIndex = 0;
-        for(let section of this.sections){
-            if(section instanceof EffectSection) this.effectIndex++;
-            if(section.shouldWaitUntilFinished) {
-                await section.execute();
-            }else{
-                section.execute();
+    play(){
+        return new Promise(async (resolve) => {
+            this.log("Preparing cache")
+            await this._prepareOffsetCache();
+            this.effectIndex = 0;
+            this.log("Playing sections")
+            for(let section of this.sections){
+                if(section instanceof EffectSection) this.effectIndex++;
+                if(section.shouldWaitUntilFinished) {
+                    await section.execute();
+                }else{
+                    section.execute();
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1));
             }
-            await new Promise((resolve) => setTimeout(resolve, 1));
-        }
-        return this;
+            this.log("Finished playing sections")
+            resolve(this);
+        })
     }
 
     /**
@@ -41,7 +48,7 @@ export default class Sequence{
      */
     thenDo(inFunc){
         let func = new FunctionSection(this, inFunc);
-        this._addSection(func)
+        this.sections.push(func)
         return this;
     }
 
@@ -69,7 +76,7 @@ export default class Sequence{
             await macro.execute();
         }, inWaitUntilFinished);
 
-        this._addSection(func)
+        this.sections.push(func)
         return this;
     }
 
@@ -81,7 +88,8 @@ export default class Sequence{
      */
     effect(inFile=""){
         let effect = new EffectSection(this, inFile);
-        return this._addSection(effect);
+        this.sections.push(effect);
+        return effect;
     }
 
     /**
@@ -92,7 +100,8 @@ export default class Sequence{
      */
     sound(inFile=""){
         let sound = new SoundSection(this, inFile);
-        return this._addSection(sound);
+        this.sections.push(sound);
+        return sound;
     }
 
     /**
@@ -135,19 +144,6 @@ export default class Sequence{
         return this._cachedOffsets?.[inName]?.[normalizedIndex];
     }
 
-    /**
-     * This function wraps the section in a proxy object so that effect and sound
-     * sections can call functions like .wait() and .then(), even though they
-     * don't possess those functions, and instead gets called on the Sequence.
-     *
-     * @param {Section} inSection
-     */
-    _addSection(inSection){
-        let section = lib.proxyWrap(inSection);
-        this.sections.push(section);
-        return section;
-    }
-
     _createWaitSection(ms = 1){
         return new FunctionSection(this, async function(){
             return new Promise(async (resolve) => {
@@ -172,6 +168,10 @@ export default class Sequence{
         error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
         ui.notifications.error(error);
         throw new Error(error);
+    }
+
+    log(...args){
+        if(this._debug) console.log(`DEBUG | Sequencer |`, ...args);
     }
 
 }

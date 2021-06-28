@@ -161,6 +161,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     atLocation(inLocation) {
+        if(inLocation === undefined) this.sequence.throwError(this, "atLocation", "inLocation must not be undefined");
         this._from = this._validateLocation(inLocation);
         return this;
     }
@@ -172,6 +173,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     rotateTowards(inLocation) {
+        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "inLocation must not be undefined");
         this._to = this._validateLocation(inLocation);
         this._rotationOnly = true;
         this._moves = false;
@@ -186,6 +188,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     reachTowards(inLocation) {
+        if(inLocation === undefined) this.sequence.throwError(this, "reachTowards", "inLocation must not be undefined");
         this._to = this._validateLocation(inLocation);
         this._rotationOnly = false;
         this._moves = false;
@@ -200,6 +203,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     moveTowards(inLocation, options={}) {
+        if(inLocation === undefined) this.sequence.throwError(this, "moveTowards", "inLocation must not be undefined");
         if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
@@ -541,6 +545,7 @@ export default class EffectSection extends Section {
 
     async _run() {
         let effect = await this._sanitizeEffectData();
+        this.sequence.log(`Playing effect:`, effect);
         game.socket.emit("module.sequencer", effect);
         let canvasEffectData = await playEffect(effect);
         this.animationDuration = canvasEffectData.duration;

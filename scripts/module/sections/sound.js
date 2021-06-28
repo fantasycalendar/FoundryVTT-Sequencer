@@ -43,6 +43,8 @@ export default class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
+        this.sequence.log(`Playing sound:`, data);
+
         let howler = await AudioHelper.play(data, true);
 
         if(this._fadeIn) {

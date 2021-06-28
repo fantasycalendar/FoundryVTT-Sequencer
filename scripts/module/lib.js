@@ -1,40 +1,4 @@
 /**
- * This function returns a value that has been linearly interpolated between p0 and p1
- *
- * @param  {float}  p0      The first float
- * @param  {float}  p1      The second float
- * @param  {float}  t       A normalized value between 0.0 and 1.0, 0.0 returning p0 and 1.0 returning p1
- * @return {float}          The interpolated value
- */
-export function lerp(p0, p1, t){
-    return p0 + t*(p1 - p0);
-}
-
-/**
- * This function gets the middle value of the two given value
- *
- * @param  {number}    p0    The first value
- * @param  {number}    p1    The second value
- * @return {number}          The middle value
- */
-export function mid(p0, p1){
-    return (p0+p1)/2;
-}
-
-/**
- * This function normalizes a value (v) between min and max
- *
- * @param  {number}  v       The value to be normalized
- * @param  {number}  min     The minimum value
- * @param  {number}  max     The maximum value
- * @return {number}          The normalized value
- */
-export function norm(v, min, max)
-{
-    return (v - min) / (max - min);
-}
-
-/**
  * This function returns an float between a minimum and maximum value
  *
  * @param  {number}     min    The minimum value
@@ -114,7 +78,7 @@ export async function getDimensions(inFile){
  * @return {Promise}              A promise that will return the dimensions of the file
  */
 export async function getSoundDuration(inFile){
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let audio = new Audio();
         audio.onloadedmetadata = () => {
             resolve(audio.duration*1000); // ms
@@ -125,25 +89,5 @@ export async function getSoundDuration(inFile){
         audio.preload = "auto";
         audio.crossOrigin = "anonymous";
         audio.src = inFile;
-    });
-}
-
-/**
- *  Determines the duration of a given sound file
- *
- * @param  {Section}    inSection   A Sequencer Section Class
- * @return {Section}                A proxy-wrapped Section
- */
-export function proxyWrap(inSection){
-    return new Proxy(inSection, {
-        get(target, name, receiver) {
-            if (typeof target[name] === 'undefined') {
-                if (typeof target.sequence[name] === 'undefined') {
-                    this.throwError(this, target.constructor.name, `Function ${name} was not found!`);
-                }
-                return Reflect.get(target.sequence, name, receiver);
-            }
-            return Reflect.get(target, name, receiver);
-        }
     });
 }

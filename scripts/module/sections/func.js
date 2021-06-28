@@ -11,6 +11,7 @@ export default class FunctionSection extends Section {
     }
 
     async run() {
+        this.sequence.log("Running function");
         await this._func();
     }
 
