@@ -1,7 +1,7 @@
 ## Table of Contents
 
 ### - Core Methods -
-- [Then](#then)
+- [Then do](#then-do)
 - [Macro](#macro)
 - [Wait](#wait)
 - [Effect](#effect)
@@ -55,7 +55,7 @@
 
 ## Core Methods
 
-### Then
+### Then do
 
 ```js
 .thenDo(function(){
