@@ -296,6 +296,13 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.4.1
+- *Sequencer* - <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren"> **Breaking Changes**: Removed deprecated `.then()` method <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren">
+- *Sequencer* - Tweaked `.play()` to now return a promise
+- *Sequencer* - Reworked module class structure
+- *Sequencer* - Added debug setting
+
+
 ### Version 0.4.0
 - *Sequencer* - Renamed `.then()` to `.thenDo()` due to JavaScript reasons — <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren"> `.then()` will be removed in 0.4.1 <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren">
 - *Sequencer* - Removed the requirement to pass `true` as a second argument to `.then()` (now `.thenDo()`) if the function was async, it will now wait for it to finish if it is an `async function`
