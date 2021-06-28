@@ -38,6 +38,7 @@
 - [Scale Out](#scale-out)
 - [Anchor](#anchor)
 - [Center](#center)
+- [Rotation](#rotation)
 - [Random rotation](#random-rotation)
 - [Mirror](#mirror)
 - [Randomize mirror](#randomize-mirror)
@@ -369,6 +370,12 @@ Anchors the sprite according to the given x and y coordinates, or uniformly base
 Centers the sprite on the given location, effectively giving it an anchor of `{x: 0.5, y: 0.5}`.
 
 **Note:** If this is used, it will override the anchor set by Aim Towards, which sets the sprite's anchor to the location the sprite is played at.
+
+### Rotation
+
+`.rotation(-90)`
+
+Sets the rotation of the effect, which is added on top of the calculated rotation after `.rotateTowards()` or `.randomRotation()`.
 
 ### Random rotation
 

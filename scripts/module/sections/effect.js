@@ -38,6 +38,7 @@ export default class EffectSection extends Section {
         this._layer = 2;
         this._zIndex = 0;
         this._opacity = 1.0;
+        this._angle = 0;
     }
 
     /**
@@ -211,7 +212,7 @@ export default class EffectSection extends Section {
         }, options);
         if(typeof options.ease !== "string") this.sequence.throwError(this, "moveEase", "options.ease must be of type string");
         this._to = this._validateLocation(inLocation);
-        this._moves = true;
+        this._moves = options;
         this._rotationOnly = true;
         return this;
     }
@@ -420,6 +421,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Sets the rotation of the effect, which is added on top of the calculated rotation after .rotateTowards() or .randomRotation()
+     *
+     * @param {number} inRotation
+     * @returns {EffectSection} this
+     */
+    rotate(inRotation){
+        if(typeof inRotation !== "number") this.sequence.throwError(this, "opacity", "inRotation must be of type number");
+        this._angle = inRotation;
+        return this;
+    }
+
+    /**
      * The sprite gets a random rotation, which means it should not be used with .reachTowards()
      *
      * @param {boolean} [inBool=true] inBool
@@ -568,7 +581,7 @@ export default class EffectSection extends Section {
                 x: 1.0,
                 y: 1.0
             },
-            angle: 0,
+            angle: this._angle,
             rotation: 0,
             speed: 0,
             playbackRate: this._playbackRate,
@@ -584,7 +597,8 @@ export default class EffectSection extends Section {
                 scaleIn: this._scaleIn,
                 scaleOut: this._scaleOut,
                 rotateIn: this._rotateIn,
-                rotateOut: this._rotateOut
+                rotateOut: this._rotateOut,
+                moves: this._moves
             }
         };
 

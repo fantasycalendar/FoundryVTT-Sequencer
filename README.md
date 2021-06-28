@@ -296,6 +296,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.4.2 Hotfix
+- *Effects* - Added `.rotate()` which adds an offset to the effect's rotation
+- *Effects* - Fixed `.moveTowards()` not respecting given easing
+
 ### Version 0.4.1
 - *Sequencer* - <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren"> **Breaking Changes**: Removed deprecated `.then()` method <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren">
 - *Sequencer* - Tweaked `.play()` to now return a promise

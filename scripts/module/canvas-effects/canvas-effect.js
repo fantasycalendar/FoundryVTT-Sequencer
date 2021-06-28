@@ -21,8 +21,7 @@ export default class CanvasEffect {
             position: { x: 0, y: 0 },
             playbackRate: 1.0,
             fadeIn: 0,
-            fadeOut: 0,
-            ease: "linear"
+            fadeOut: 0
         }, inData);
 
     }
@@ -144,7 +143,7 @@ export default class CanvasEffect {
 
     moveTowards(){
 
-        if (!this.data.distance) return;
+        if (!this.data.animatedProperties.moves) return;
 
         if(!this.data.speed){
             this.data.speed = this.data.distance / this._videoDuration;
@@ -168,7 +167,7 @@ export default class CanvasEffect {
         this.playAnimation(
             move_attributes,
             this._animationDuration,
-            this.data.ease
+            this.data.animatedProperties.moves.ease
         )();
 
     }
