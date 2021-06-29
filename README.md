@@ -296,6 +296,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.4.3 Minor Fixes
+- *Effects* - Removed error catch in `.file()` when providing it with something else than string or array
+- *Effects* - Fixed `.belowTokens()` and `.belowTiles()` throwing errors if no boolean was provided
+
 ### Version 0.4.2 Hotfix
 - *Effects* - Added `.rotate()` which adds an offset to the effect's rotation
 - *Effects* - Fixed `.moveTowards()` not respecting given easing

@@ -79,9 +79,6 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     file(inFile) {
-        if(!(typeof inFile === "string" || Array.isArray(inFile))) {
-            this.sequence.throwError(this, "file", "inFile must be of type string or array");
-        }
         this._file = inFile;
         return this;
     }
@@ -507,10 +504,10 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played below tokens
      *
-     * @param {boolean} inBool
+     * @param {boolean} [inBool=true] inBool
      * @returns {EffectSection} this
      */
-    belowTokens(inBool){
+    belowTokens(inBool = true){
         if(typeof inBool !== "boolean") this.sequence.throwError(this, "belowTokens", "inBool must be of type boolean");
         this._layer = inBool ? 1 : 2;
         return this;
@@ -519,10 +516,10 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played below tiles
      *
-     * @param {boolean} inBool
+     * @param {boolean} [inBool=true] inBool
      * @returns {EffectSection} this
      */
-    belowTiles(inBool){
+    belowTiles(inBool = true){
         if(typeof inBool !== "boolean") this.sequence.throwError(this, "belowTiles", "inBool must be of type boolean");
         this._layer = inBool ? 0 : 2;
         return this;
@@ -719,6 +716,10 @@ export default class EffectSection extends Section {
 
         for(let override of this._postOverrides) {
             data = await override(this, data);
+        }
+
+        if(typeof data.file !== "string") {
+            this.sequence.throwError(this, "file", "inFile must be of type string or array");
         }
 
         return data;
