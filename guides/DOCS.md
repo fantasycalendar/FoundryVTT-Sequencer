@@ -105,19 +105,19 @@ Causes the sequence to wait after the last section for as many milliseconds as y
 
 `.animation()` or `.animation(inToken)` or `.animation(inTile)`
 
-Creates an animation section. Until you call `.then()`, `.effect()`, `.sound()`, `.macro()` or `.wait()`, you'll be working on the Animation section.
+Creates an animation section. Until you call `.thenDo()`, `.effect()`, `.sound()`, `.macro()` or `.wait()`, you'll be working on the Animation section.
 
 ### Effect
 
 `.effect()` or `.effect(inFile)`
 
-Creates an effect section. Until you call `.then()`, `.effect()`, `.sound()`, `.macro()` or `.wait()`, you'll be working on the Effect section.
+Creates an effect section. Until you call `.thenDo()`, `.effect()`, `.sound()`, `.macro()` or `.wait()`, you'll be working on the Effect section.
 
 ### Sound
 
 `.sound()` or `.sound(inFile)`
 
-Creates a sound section. Until you call `.then()`, `.effect()`, `.sound()`, `.macro()` or `.wait()`, you'll be working on the Sound section.
+Creates a sound section. Until you call `.thenDo()`, `.effect()`, `.sound()`, `.macro()` or `.wait()`, you'll be working on the Sound section.
 
 ### Sequence
 
