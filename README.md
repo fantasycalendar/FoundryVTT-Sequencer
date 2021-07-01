@@ -303,7 +303,7 @@ new Sequence()
 - *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](guides/animations.md) how to use it!
 - *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc
 - *Effects* - Tweaked how effects get locations when dealing with raw template data
-- *Sequencer* - Added `.addSequence()` so you can combine multiple sequences into one
+- *Sequencer* - Added `.sequence()` so you can combine multiple sequences into one
 - *Sequencer* - Updated all sample macros to 0.8.x conventions
 
 ### Version 0.4.3 Minor Fixes
