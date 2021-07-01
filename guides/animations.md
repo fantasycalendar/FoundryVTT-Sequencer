@@ -50,7 +50,7 @@ Sets the speed of the animation if `.moveTowards()` has been called
 
 ### Rotate Towards
 
-`.moveTowards(target, options = { duration: 0, ease: "linear", delay: 0, offset: 0 })`
+`.rotateTowards(target, options = { duration: 0, ease: "linear", delay: 0, offset: 0 })`
 
 `.rotateTowards(inToken)` or `.rotateTowards(inTile)` or `.rotateTowards({ x: 0, y: 0 })`
 
@@ -62,7 +62,7 @@ Check out what easings are available here: https://easings.net/
 
 ### Teleport To
 
-`.moveTowards(target, options = { delay: 0 })`
+`.teleportTo(target, options = { delay: 0 })`
 
 `.teleportTo(inToken)` or `.teleportTo(inTile)` or `.teleportTo({ x: 0, y: 0 })`
 
@@ -84,7 +84,7 @@ Causes the movement or teleportation to pick the closest non-intersecting square
 
 `.rotate(90)`
 
-Sets the rotation of the animation, which is added on top of the calculated rotation after `.rotateTowards()` or `.randomRotation()`
+Sets the rotation of the animation, which is added on top of the calculated rotation after `.rotateTowards()`
 
 ### Rotate In
 
