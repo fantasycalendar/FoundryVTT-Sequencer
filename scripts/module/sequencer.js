@@ -2,6 +2,7 @@ import * as lib from './lib.js';
 import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
+import AnimationSection from './sections/animation.js';
 import Version from "../version.js";
 
 export default class Sequence{
@@ -105,6 +106,18 @@ export default class Sequence{
     }
 
     /**
+     * Creates an animation. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Animation section.
+     *
+     * @param {Token|Tile|boolean} [inTarget=false] inTarget
+     * @returns {AnimationSection}
+     */
+    animation(inTarget = false){
+        let animation = new AnimationSection(this, inTarget);
+        this.sections.push(animation);
+        return animation;
+    }
+
+    /**
      * Causes the sequence to wait after the last section for as many milliseconds as you pass to this method. If given
      * a second number, a random wait time between the two given numbers will be generated.
      *
@@ -118,6 +131,19 @@ export default class Sequence{
         let wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         let section = this._createWaitSection(wait);
         this.sections.push(section);
+        return this;
+    }
+
+    /**
+     * Adds the sections from a given Sequence to this Sequence
+     *
+     * @param {Sequence|FunctionSection|EffectSection|AnimationSection|SoundSection} inSequence
+     * @returns {Sequence} this
+     */
+    sequence(inSequence){
+        if(!(inSequence instanceof Sequence)) inSequence = inSequence.sequence;
+        if(!(inSequence instanceof Sequence)) this.throwError(this, "sequence", `could not find the sequence from the given parameter`);
+        this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
 

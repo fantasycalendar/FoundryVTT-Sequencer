@@ -1,4 +1,16 @@
 /**
+ * This function linearly interpolates between p1 and p2 based on a normalized value of t
+ *
+ * @param  {number}     p1     The start value
+ * @param  {number}     p2     The end value
+ * @param  {number}     t      The normalized percentage
+ * @return {number}            Interpolated value
+ */
+export function lerp(p1, p2, t) {
+    return p1 + (p2 - p1) * t;
+}
+
+/**
  * This function returns an float between a minimum and maximum value
  *
  * @param  {number}     min    The minimum value

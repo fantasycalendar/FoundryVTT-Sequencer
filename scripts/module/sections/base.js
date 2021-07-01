@@ -219,5 +219,6 @@ export default class Section{
     effect(...args){ return this.sequence.effect(...args) }
     sound(...args){ return this.sequence.sound(...args) }
     wait(...args){ return this.sequence.wait(...args) }
+    animation(...args){ return this.sequence.animation(...args) }
 
 }

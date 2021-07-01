@@ -1,30 +1,23 @@
-## Table of Contents
+# Table of Contents 
+## - Core Methods -
+- [Wait Until Finished](DOCS.md#wait-until-finished)
+- [Async](DOCS.md#async)
+- [Repeats](DOCS.md#repeats)
+- [Play if](DOCS.md#play-if)
+- [Delay](DOCS.md#delay)
+- [Fade in](DOCS.md#fade-in)
+- [Fade out](DOCS.md#fade-out)
+- [Duration](DOCS.md#duration)
+- [Opacity](DOCS.md#opacity)
 
-### - Core Methods -
-- [Then do](#then-do)
-- [Macro](#macro)
-- [Wait](#wait)
-- [Effect](#effect)
-- [Sound](#sound)
-
-### - Generic Functions (effects & sounds) -
-- [Wait Until Finished](#wait-until-finished)
-- [Async](#async)
-- [Repeats](#repeats)
-- [Play if](#play-if)
-- [Delay](#delay)
-- [Fade in](#fade-in)
-- [Fade out](#fade-out)
-- [Duration](#duration)
-
-### - Effect Methods -
+## - Effect Methods -
 - [Base folder](#base-folder)
 - [File](#file)
 - [At location](#at-location)
 - [Rotate Towards](#rotate-towards)
 - [Reach Towards](#reach-towards)
 - [Move Towards](#move-towards)
-- [Move speed](#move-speed)
+- [Move Speed](#move-speed)
 - [Name](#name)
 - [Missed](#missed)
 - [Add override](#add-override)
@@ -32,7 +25,7 @@
 - [Start point](#start-point)
 - [End point](#end-point)
 - [Set mustache](#set-mustache)
-- [Grid Scale](#grid-scale)
+- [Grid Size](#grid-size)
 - [Scale](#scale)
 - [Scale In](#scale-in)
 - [Scale Out](#scale-out)
@@ -42,140 +35,13 @@
 - [Random rotation](#random-rotation)
 - [Mirror](#mirror)
 - [Randomize mirror](#randomize-mirror)
+- [Rotate](#rotate)
 - [Rotate In](#rotate-in)
 - [Rotate Out](#rotate-out)
 - [Playback rate](#playback-rate)
 - [Below tokens](#below-tokens)
 - [Below tiles](#below-tiles)
 - [Z-Index](#z-index)
-- [Opacity](#opacity)
-
-### - Sound Methods -
-- [File](#file)
-- [Volume](#volume)
-
-## Core Methods
-
-### Then do
-
-```js
-.thenDo(function(){
-    //do Stuff
-})
-```
-
-Creates a section that will run a function. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the function into an `async` function:
-
-```js
-.thenDo(async function(){
-    //do Stuff
-})
-```
-
-### Macro
-
-`.macro("MacroName")` or `.macro(macroReference)`
-
-Creates a section that will run a macro based on a name or a direct reference to a macro. If the macro is not found, Sequencer will complain. Loudly.
-
-Similar to `.then()`, it's expected that you pass a boolean as a second parameter if you wish the Sequencer to wait for the macro to finish.
-
-`.macro("New Macro", true)`
-
-### Wait
-
-`.wait(1000)` or `.wait(500, 1000)`
-
-Causes the sequence to wait after the last section for as many milliseconds as you pass to this method. If given a second number, a random wait time between the two given numbers will be generated.
-
-### Effect
-
-`.effect()` or `.effect(inFile)`
-
-Creates an effect section. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Effect section.
-
-### Sound
-
-`.sound()` or `.sound(inFile)`
-
-Creates a sound section. Until you call `.then()`, `.effect()`, `.sound()`, or `.wait()`, you'll be working on the Sound section.
-
-## Generic Methods
-
-These methods can be called on any `.then` functions, effects, sounds, and macros.
-
-### Wait Until Finished
-
-`.waitUntilFinished()` or `.waitUntilFinished(-500)` 
-
-Calling this method will cause the section to finish running before starting the next section.
-
-Passing a number as a parameter will cause the effect or sound to wait for the given number (in ms) after finishing playing before continuing to the next section.
-
-If given a negative number, the Sequencer will continue to the next section early but continue playing the effect or sound.
-
-### Async
-
-`.async()`
-
-Calling this will make each effect or sound will finish playing before the next one starts playing.
-
-This differs from `.waitUntilFinished()` in the sense that `.async()` is for each repetition, whilst `.waitUntilFinished()` is for the entire section.
-
-### Repeats
-
-`.repeats(inRepetitions, inRepeatDelayMin, inRepeatDelayMax)`
-
-Causes the effect or sound to be repeated `inRepetitions` times, with an optional delay.
-
-As an option, you can give it `inRepeatDelayMin` for a static delay between repetitions, or `inRepeatDelayMin` and `inRepeatDelayMax` for a random delay between each call.
-
-It is highly recommended that you do not load too many files at the same time, as Foundry might not be able to load all of them.
-
-### Play if
-
-`.playIf(inBool)` or `.playIf(inFunction)`
-
-Causes the effect or sound to not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect or sound to play.
-
-Below is an example of a function used in this method, which would cause this effect or sound to only be played about 50% of the time.
-```js
-.playIf(() => {
-    return Math.random() < 0.5;
-})
-```
-
-### Delay
-
-`.delay(1000)` or `.delay(500, 1000)`
-
-This will delay the effect or sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
-
-### Fade in
-
-`.fadeIn(duration, options = {ease: "linear", delay: 0})`
-
-`.fadeIn(500)` or `.fadeIn(250, {ease: "easeOutQuint"})` or `.fadeIn(400, {ease: "easeOutCirc", delay: 100})`
-
-Causes the effect to fade in when played
-
-Check out what easings are available here: https://easings.net/
-
-### Fade out
-
-`.fadeOut(duration, options = {ease: "linear"})`
-
-`.fadeOut(500)` or `.fadeOut(250, {ease: "easeOutQuint"})`
-
-Causes the effect to fade out when it has finished playing
-
-Check out what easings are available here: https://easings.net/
-
-### Duration
-
-`.duration(500)`
-
-Sets the duration of the effect, overriding its original duration, potentially causing it to loop
 
 ## Effect Methods
 
@@ -261,7 +127,7 @@ Adds a function that will run at the end of the effect serialization step, but b
 
 `data` is the effect's data that is going to be passed to canvas layer.
 
-You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of the [readme](README.md#magic-missile) for more in depth usage.
+You _must_ define the function like above and return the data at the end of the function. See examples at the bottom of the [readme](../README.md#magic-missile) for more in depth usage.
 
 ### JB2A
 
@@ -403,6 +269,12 @@ Causes the sprite to have a randomized flipped X or Y scale (if the scale on tha
 
 This is applied at the end of all the other scaling effects, including `.reachTowards()` and `.scale()`.
 
+### Rotate
+
+`.rotate(90)`
+
+Sets the rotation of the effect, which is added on top of the calculated rotation after `.rotateTowards()` or `.randomRotation()`
+
 ### Rotate In
 
 `.rotateIn(degrees, duration, options = {ease: "linear", delay: 0})`
@@ -447,26 +319,4 @@ Causes the effect to be played below tiles - you can pass a boolean whether it s
 
 Sets the z-index of the effect, potentially displaying it on top of or below other effects
 
-**Note:** If you have called `.belowTokens()` or `.belowTiles()`, the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer. 
-
-### Opacity
-
-`.opacity(0.5)`
-
-Sets the opacity of the effect. If used with `.fadeIn()` and/or `.fadeOut()`, this defines what the effect will fade to/from
-
-## Sound methods
-
-### File
-
-`.file(string)` or `.file(array)`
-
-This declares which sound to be played, but you can also do that when first initializing the sound.
-
-This may also be an array of paths, which will be randomly picked from each time the effect is played.
-
-### Volume
-
-`.volume(0.5)`
-
-A normalized value between `0.0` and `1.0` which determines the volume of the sound. Defaults to `0.8`.
+**Note:** If you have called `.belowTokens()` or `.belowTiles()`, the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer.

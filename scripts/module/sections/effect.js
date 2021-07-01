@@ -1,8 +1,8 @@
 import * as lib from "../lib.js";
-import Section from "./base.js";
 import { playEffect } from "../../sockets.js";
+import AnimatedSection from "./animated.js";
 
-export default class EffectSection extends Section {
+export default class EffectSection extends AnimatedSection {
 
     constructor(inSequence, inFile="") {
         super(inSequence)
@@ -16,7 +16,6 @@ export default class EffectSection extends Section {
         this._randomRotation = false;
         this._rotationOnly = true;
         this._moves = false;
-        this._moveSpeed = false;
         this._missed = false;
         this._startPoint = 0;
         this._endPoint = 0;
@@ -33,12 +32,8 @@ export default class EffectSection extends Section {
         this._name = false;
         this._scaleIn = false;
         this._scaleOut = false;
-        this._rotateIn = false;
-        this._rotateOut = false;
         this._layer = 2;
         this._zIndex = 0;
-        this._opacity = 1.0;
-        this._angle = 0;
     }
 
     /**
@@ -215,18 +210,6 @@ export default class EffectSection extends Section {
     }
 
     /**
-     * Sets the speed of the effect if .moveTowards() has been called
-     *
-     * @param {number} moveSpeed
-     * @returns {EffectSection} this
-     */
-    moveSpeed(moveSpeed) {
-        if(typeof moveSpeed !== "number") this.sequence.throwError(this, "moveSpeed", "moveSpeed must be of type number");
-        this._moveSpeed = moveSpeed;
-        return this;
-    }
-
-    /**
      *  Defines the start point within the given sprite, starting from the left of the sprite. An example
      *  would be a given number of `200` - means that the sprite will consider 200 pixels into the sprite as the
      *  'anchor point'
@@ -280,7 +263,7 @@ export default class EffectSection extends Section {
      * @param {number|object} scale
      * @param {number} duration
      * @param {object} [options] options
-     * @returns {EffectSection} this
+     * @returns {AnimatedSection} this
      */
     scaleIn(scale, duration, options={}){
         if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
@@ -309,7 +292,7 @@ export default class EffectSection extends Section {
      * @param {number|object} scale
      * @param {number} duration
      * @param {object} [options] options
-     * @returns {EffectSection} this
+     * @returns {AnimatedSection} this
      */
     scaleOut(scale, duration, options={}){
         if(typeof options !== "object") this.sequence.throwError(this, "scaleOut", "options must be of type object");
@@ -322,59 +305,6 @@ export default class EffectSection extends Section {
         if(typeof options.ease !== "string") this.sequence.throwError(this, "scaleOut", "options.ease must be of type string");
         this._scaleOut = {
             value: scale,
-            duration: duration,
-            ease: options.ease
-        };
-        return this;
-    }
-
-    /**
-     *  Causes the effect to rotate when it starts playing
-     *
-     * @param {number} degrees
-     * @param {number} duration
-     * @param {object} [options] options
-     * @returns {EffectSection} this
-     */
-    rotateIn(degrees, duration, options={}){
-        if(typeof options !== "object") this.sequence.throwError(this, "rotateIn", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof degrees !== "number") this.sequence.throwError(this, "rotateOut", "degrees must be of type number");
-        if(typeof duration !== "number") this.sequence.throwError(this, "rotateOut", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateIn", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateIn", "options.delay must be of type number");
-        this._rotateIn = {
-            value: degrees,
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     *  Causes the effect to rotate at the end of the effect's duration
-     *
-     * @param {number} degrees
-     * @param {number} duration
-     * @param {object} [options] options
-     * @returns {EffectSection} this
-     */
-    rotateOut(degrees, duration, options={}){
-        if(typeof options !== "object") this.sequence.throwError(this, "rotateOut", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
-            ease: "linear"
-        }, options);
-        if(typeof degrees !== "number") this.sequence.throwError(this, "rotateOut", "degrees must be of type number");
-        if(typeof duration !== "number") this.sequence.throwError(this, "rotateOut", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateOut", "options.ease must be of type string");
-        this._rotateOut = {
-            value: degrees,
             duration: duration,
             ease: options.ease
         };
@@ -414,18 +344,6 @@ export default class EffectSection extends Section {
      */
     center() {
         this.anchor();
-        return this;
-    }
-
-    /**
-     * Sets the rotation of the effect, which is added on top of the calculated rotation after .rotateTowards() or .randomRotation()
-     *
-     * @param {number} inRotation
-     * @returns {EffectSection} this
-     */
-    rotate(inRotation){
-        if(typeof inRotation !== "number") this.sequence.throwError(this, "opacity", "inRotation must be of type number");
-        this._angle = inRotation;
         return this;
     }
 
@@ -537,18 +455,6 @@ export default class EffectSection extends Section {
         return this;
     }
 
-    /**
-     * Sets the opacity of the effect. If used with .fadeIn() and/or .fadeOut(), this defines what the effect will fade to/from
-     *
-     * @param {number} inOpacity
-     * @returns {EffectSection} this
-     */
-    opacity(inOpacity){
-        if(typeof inOpacity !== "number") this.sequence.throwError(this, "opacity", "inOpacity must be of type number");
-        this._opacity = inOpacity;
-        return this;
-    }
-
     get gridSizeDifference(){
         return canvas.grid.size / this._gridSize;
     }
@@ -587,7 +493,7 @@ export default class EffectSection extends Section {
             layer: this._layer,
             index: this._index,
             zIndex: this._zIndex,
-            opacity: this._opacity,
+            opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             animatedProperties: {
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,
@@ -607,12 +513,10 @@ export default class EffectSection extends Section {
 
             let [origin, target] = this._getPositions(this._from, this._to);
 
-            if(this._missed){
-                if(this._to){
-                    target = this._applyMissedOffset(target);
-                }else{
-                    origin = this._applyMissedOffset(origin);
-                }
+            if(this._to){
+                target = this._applyMissedOffset(target);
+            }else{
+                origin = this._applyMissedOffset(origin);
             }
 
             if(!this._anchor) {
@@ -777,8 +681,8 @@ export default class EffectSection extends Section {
     _getCleanPosition(obj, measure = false){
 
         let pos = {
-            x: obj?.center?.x ?? obj.x ?? 0,
-            y: obj?.center?.y ?? obj.y ?? 0
+            x: obj?.x ?? 0,
+            y: obj?.y ?? 0
         }
 
         if(obj instanceof MeasuredTemplate){
@@ -792,6 +696,9 @@ export default class EffectSection extends Section {
                 pos.x = obj.x + (obj.shape.width/2)
                 pos.y = obj.y + (obj.shape.height/2)
             }
+        }else if(obj instanceof Token){
+            pos.x = obj.x + (obj.hitArea.width)/2;
+            pos.y = obj.y + (obj.hitArea.height)/2;
         }
 
         return pos;
@@ -889,24 +796,6 @@ export default class EffectSection extends Section {
         }
 
         return position;
-
-    }
-
-    _validateLocation(inLocation) {
-
-        if(inLocation?.id) {
-            inLocation = canvas.tokens.get(inLocation.id) ?? inLocation;
-        }
-
-        if (   inLocation instanceof Token
-            || inLocation instanceof MeasuredTemplate
-            || typeof inLocation === "string"
-        ) return inLocation;
-
-        return {
-            x: inLocation?.x ?? 0,
-            y: inLocation?.y ?? 0
-        }
 
     }
 

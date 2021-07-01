@@ -19,7 +19,7 @@ Sequencer stands on the shoulder of giants:
 ## Download here:
 `https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
 
-## <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](DOCS.md) <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren">
+## <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](guides/DOCS.md) <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
 ## How to use
@@ -76,9 +76,11 @@ To get the following result:
 * Teleport the token 500px to the left
 * Play another effect on the token's location
 
-![Animation showing the code below](guides/images/Animation.gif)
+![Animation showing the Sequencer](guides/images/Animation2.gif)
 
-You'd have to write something like this:
+*Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
+
+You'd have to write something like this (with FXMaster installed):
 
 ```js
 async function wait(ms){
@@ -117,7 +119,7 @@ AudioHelper.play({
 await wait(600);
 
 let to_location = {
-    x: token.center.x-500,
+    x: token.center.x+500,
     y: token.center.y
 }
 
@@ -143,7 +145,7 @@ canvas.fxmaster.playVideo(data);
 
 await wait(100);
 
-await token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
+await token.update({ x: token.position.x+500, y: token.position.y }, { animate: false });
 
 data = {
     file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
@@ -178,13 +180,16 @@ let sequence = new Sequence()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
         .atLocation(tokenD)
         .reachTowards({
-            x: tokenD.center.x-500,
+            x: tokenD.center.x+500,
             y: tokenD.center.y
         })
     .wait(100)
-    .thenDo(function(){
-        token.update({ x: token.position.x-500, y: token.position.y }, { animate: false });
-    })
+    .animation()
+        .on(tokenD)
+        .teleportTo({
+            x: tokenD.x+500,
+            y: tokenD.y
+        })
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
         .atLocation(tokenD)
@@ -192,8 +197,6 @@ let sequence = new Sequence()
 
 sequence.play();
 ```
-
-*Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 # Advanced examples
 
@@ -296,6 +299,13 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.4.4
+- *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](guides/animations.md) how to use it!
+- *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc
+- *Effects* - Tweaked how effects get locations when dealing with raw template data
+- *Sequencer* - Added `.addSequence()`
+- *Sequencer* - Updated all sample macros to 0.8.x conventions
+
 ### Version 0.4.3 Minor Fixes
 - *Effects* - Removed error catch in `.file()` when providing it with something else than string or array
 - *Effects* - Fixed `.belowTokens()` and `.belowTiles()` throwing errors if no boolean was provided
@@ -309,7 +319,6 @@ new Sequence()
 - *Sequencer* - Tweaked `.play()` to now return a promise
 - *Sequencer* - Reworked module class structure
 - *Sequencer* - Added debug setting
-
 
 ### Version 0.4.0
 - *Sequencer* - Renamed `.then()` to `.thenDo()` due to JavaScript reasons — <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren"> `.then()` will be removed in 0.4.1 <img src="guides/images/siren.gif" width="12px" height="12px" alt="Siren">
@@ -331,7 +340,7 @@ new Sequence()
 - *Effects* - Implemented better order handling - the effects created first will always be on top, each subsequent effect will be played below the previous
 - *Effects* - Added `.zIndex()` for you to have direct control over the order of effects
 - *Effects & Sounds* - Added `.duration()` which can override the duration of an effect or sound
-- *Effects & Sounds* - Tweaked `.waitUntilFinished()` to accept a single number parameter as a delay or to end the effect or sound earlier - read more in the [documentation](DOCS.md#wait-until-finished)
+- *Effects & Sounds* - Tweaked `.waitUntilFinished()` to accept a single number parameter as a delay or to end the effect or sound earlier - read more in the [documentation](guides/DOCS.md#wait-until-finished)
 - *Sounds* - Added support for `.fadeIn()` and `.fadeOut()` - easing sadly doesn't work for sounds yet
 
 ### Version 0.3.10
@@ -342,7 +351,7 @@ new Sequence()
   - `.rotateIn()`
   - `.rotateOut()`
   - All of these can utilize any of the easings listed here: https://easings.net/
-  - Read the [documentation](DOCS.md#scale-in) how to use these
+  - Read the [documentation](guides/effects.md#scale-in) how to use these
 - *Effects* - Added better error reporting when something goes wrong in the sequence
 - *Effects* - Fixed bug with scale sometimes overriding `.reachTowards()`
 
@@ -379,7 +388,7 @@ new Sequence()
 - *Effects* - Fixed issue that caused the wrong scale to be applied when using `.reachTowards()`
 
 ### Version 0.3.3
-- *Effects* - Added `.playIf()` ([docs](DOCS.md#play-if)); this allows you to completely ignore playing an effect or sound, depending on a boolean or a function
+- *Effects* - Added `.playIf()` ([docs](guides/DOCS.md#play-if)); this allows you to completely ignore playing an effect or sound, depending on a boolean or a function
 - *Sounds* - Added support for `.async()` and `.waitUntilFinished()` for sounds - requires both to be `true` due to code weirdness, I'll be refactoring this in the future
 - *Effects* - Refactored `.scale()` when it was provided with a minimum and maximum value, it now randomizes the scale of the effect when executed instead of when the method was called
 - *Effects & Sounds* - Refactored `.file()` for both effects and sounds so that providing an array of files no longer immediately picks one from the array, but randomly picks a file each time the section is executed
