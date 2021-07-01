@@ -1,4 +1,4 @@
-![Animation showing the Sequencer](guides/images/Animation2.gif)
+![Animation showing the Sequencer](images/Animation2.gif)
 
 # Sequencer
 
@@ -76,7 +76,7 @@ To get the following result:
 * Teleport the token 500px to the left
 * Play another effect on the token's location
 
-![Animation showing the Sequencer](guides/images/Animation2.gif)
+![Animation showing the Sequencer](images/Animation2.gif)
 
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
@@ -202,7 +202,7 @@ sequence.play();
 
 ## Magic Missile
 
-![One token firing three magic missiles on another token](guides/images/magic_missile.gif)
+![One token firing three magic missiles on another token](images/magic_missile.gif)
 ```js
 new Sequence()
     .effect()
@@ -237,7 +237,7 @@ new Sequence()
 
 ## Magic Circle
 
-![A magic circle fading, rotating, and scaling in, then fading, rotating, and scaling out](guides/images/scalerotationfade.gif)
+![A magic circle fading, rotating, and scaling in, then fading, rotating, and scaling out](images/scalerotationfade.gif)
 
 ```js
 new Sequence()
@@ -260,7 +260,7 @@ new Sequence()
 
 ## Lightning Strike
 
-![Random lightning strikes on a token](guides/images/lightning_strike.gif)
+![Random lightning strikes on a token](images/lightning_strike.gif)
 
 ```js
 new Sequence()
@@ -280,7 +280,7 @@ new Sequence()
 
 ## Acid Splash
 
-![Acid splash hitting two tokens with random rotation and scales](guides/images/acid_splash.gif)
+![Acid splash hitting two tokens with random rotation and scales](images/acid_splash.gif)
 
 ```js
 new Sequence()
@@ -300,7 +300,7 @@ new Sequence()
 ## Changelog
 
 ### Version 0.4.4
-- *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](guides/animations.md) how to use it!
+- *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Animations) how to use it!
 - *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc
 - *Effects* - Tweaked how effects get locations when dealing with raw template data
 - *Sequencer* - Added `.sequence()` so you can combine multiple sequences into one
@@ -351,7 +351,7 @@ new Sequence()
   - `.rotateIn()`
   - `.rotateOut()`
   - All of these can utilize any of the easings listed here: https://easings.net/
-  - Read the [documentation](guides/effects.md#scale-in) how to use these
+  - Read the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#scale-in) how to use these
 - *Effects* - Added better error reporting when something goes wrong in the sequence
 - *Effects* - Fixed bug with scale sometimes overriding `.reachTowards()`
 
