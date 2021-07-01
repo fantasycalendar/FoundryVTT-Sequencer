@@ -78,7 +78,7 @@ Causes the movement or teleportation to be offset in the X and/or Y axis
 
 `.closestSquare()` or `.closestSquare(boolean)`
 
-Causes the movement or teleportation to pick the closest non-intersecting square as the **target location
+Causes the movement or teleportation to pick the closest non-intersecting square as the target location
 
 ### Rotate
 
