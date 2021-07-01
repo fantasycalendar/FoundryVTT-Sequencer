@@ -215,9 +215,9 @@ Check out what easings are available here: https://easings.net/
 
 ### Scale Out
 
-`.scaleIn(scale, duration, options = {ease: "linear"})`
+`.scaleOut(scale, duration, options = {ease: "linear"})`
 
-`.scaleIn(0.5, 250)` or `.scaleIn({ x: 0.5, y: 0.2 }, 500)` or `.scaleIn(0, 500, {ease: "easeOutCubic"})`
+`.scaleOut(0.5, 250)` or `.scaleOut({ x: 0.5, y: 0.2 }, 500)` or `.scaleOut(0, 500, {ease: "easeOutCubic"})`
 
 Causes the effect to scale out when it finishes playing
 
