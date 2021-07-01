@@ -19,7 +19,7 @@ Sequencer stands on the shoulder of giants:
 ## Download here:
 `https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
 
-## <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](guides/DOCS.md) <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren">
+## <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="guides/images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
 ## How to use
