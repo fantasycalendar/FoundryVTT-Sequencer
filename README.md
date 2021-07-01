@@ -340,7 +340,7 @@ new Sequence()
 - *Effects* - Implemented better order handling - the effects created first will always be on top, each subsequent effect will be played below the previous
 - *Effects* - Added `.zIndex()` for you to have direct control over the order of effects
 - *Effects & Sounds* - Added `.duration()` which can override the duration of an effect or sound
-- *Effects & Sounds* - Tweaked `.waitUntilFinished()` to accept a single number parameter as a delay or to end the effect or sound earlier - read more in the [documentation](guides/DOCS.md#wait-until-finished)
+- *Effects & Sounds* - Tweaked `.waitUntilFinished()` to accept a single number parameter as a delay or to end the effect or sound earlier - read more in the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki#wait-until-finished)
 - *Sounds* - Added support for `.fadeIn()` and `.fadeOut()` - easing sadly doesn't work for sounds yet
 
 ### Version 0.3.10
@@ -388,7 +388,7 @@ new Sequence()
 - *Effects* - Fixed issue that caused the wrong scale to be applied when using `.reachTowards()`
 
 ### Version 0.3.3
-- *Effects* - Added `.playIf()` ([docs](guides/DOCS.md#play-if)); this allows you to completely ignore playing an effect or sound, depending on a boolean or a function
+- *Effects* - Added `.playIf()` ([docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki#play-if)); this allows you to completely ignore playing an effect or sound, depending on a boolean or a function
 - *Sounds* - Added support for `.async()` and `.waitUntilFinished()` for sounds - requires both to be `true` due to code weirdness, I'll be refactoring this in the future
 - *Effects* - Refactored `.scale()` when it was provided with a minimum and maximum value, it now randomizes the scale of the effect when executed instead of when the method was called
 - *Effects & Sounds* - Refactored `.file()` for both effects and sounds so that providing an array of files no longer immediately picks one from the array, but randomly picks a file each time the section is executed
