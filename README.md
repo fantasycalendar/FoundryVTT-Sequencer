@@ -22,6 +22,13 @@ Sequencer stands on the shoulder of giants:
 ## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
+
+## Modules that utilize Sequencer
+
+### [Oujia board with animations](https://github.com/brunocalado/ouija-board-for-sequencer)
+
+![Test](https://github.com/brunocalado/ouija-board-for-sequencer/raw/main/assets/guide/demo01.gif)
+
 ## How to use
 
 First you have to define a sequence:
@@ -298,6 +305,9 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.4.6 Hotfix
+- *Effects* - Fixed effects not playing on tokens on 0.7.10 and below
 
 ### Version 0.4.5
 - *Effects* - Added `.offset()` so that you can offset the effect - an optional parameter allows you to offset in local or canvas space 
