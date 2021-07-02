@@ -101,9 +101,9 @@ export default class AnimatedSection extends Section{
     }
 
     _findObjectById(id){
-        return canvas.foreground.get(id)
-            ?? canvas.tokens.get(id)
-            ?? canvas.templates.get(id)
+        return canvas?.foreground?.get(id)
+            ?? canvas?.tokens?.get(id)
+            ?? canvas?.templates?.get(id)
             ?? undefined;
     }
 
