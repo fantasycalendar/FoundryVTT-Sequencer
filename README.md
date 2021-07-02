@@ -299,6 +299,12 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.4.5
+- *Effects* - Added `.offset()` so that you can offset the effect - an optional parameter allows you to offset in local or canvas space 
+- *Animations* - Added `.snapToSquare()`, which causes the given object to be snapped to the square it is moving or teleported towards
+- *Animations* - Fixed `.rotateIn()` and `.rotateOut()` not properly calculating rotation
+- *Animations* - Adjusted `.rotateTowards()` to instead consider the target position as the rotation origin, rather than the object's current position
+
 ### Version 0.4.4
 - *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Animations) how to use it!
 - *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc

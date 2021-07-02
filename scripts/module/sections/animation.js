@@ -12,6 +12,7 @@ export default class AnimationSection extends AnimatedSection{
         this._moveSpeed = 23;
         this._offset = { x: 0, y: 0 };
         this._closestSquare = false;
+        this._snapToSquare = false;
         if(inTarget) this.on(inTarget);
     }
 
@@ -116,6 +117,19 @@ export default class AnimationSection extends AnimatedSection{
         return this;
     }
 
+
+    /**
+     * Causes the final location to be snapped to its square
+     *
+     * @param {boolean} inBool
+     * @returns {AnimationSection} this
+     */
+    snapToSquare(inBool = true){
+        if(typeof inBool !== "boolean") this.sequence.throwError(this, "snapToSquare", "inBool must be of type boolean");
+        this._snapToSquare = inBool;
+        return this;
+    }
+
     async _run() {
         return this._runAnimate();
     }
@@ -196,15 +210,12 @@ export default class AnimationSection extends AnimatedSection{
         return pos;
     }
 
-    _clampRotations(to, from){
-        if(Math.abs(from - to) > 180){
-            if(to < 0){
-                to += 360;
-            }else if(from > to){
-                from -= 360;
-            }
+    _snapLocationToGrid(inLocation){
+        let coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
+        return {
+            x: coords[1] * canvas.grid.size,
+            y: coords[0] * canvas.grid.size
         }
-        return [from, to];
     }
 
     /**
@@ -225,10 +236,22 @@ export default class AnimationSection extends AnimatedSection{
 
             let offset = (this._angle ? this._angle : 0) + this._rotateTowards.offset;
 
+            let targetLoc = this._moveTowards?.target || this._teleportTo?.target || this._originObject;
+
+            targetLoc = this._closestSquare
+                ? this._getClosestSquare(this._originObject, targetLoc)
+                : this._getCleanPosition(targetLoc);
+
+            targetLoc.x += this._offset.x;
+            targetLoc.y += this._offset.y;
+
+            if(this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
+
             animData.attributes.push({
                 name: "rotationTowards",
                 offset: offset,
                 origin: this._originObject,
+                originLocation: targetLoc,
                 target: this._rotateTowards.target,
                 from: false,
                 to: false,
@@ -273,7 +296,13 @@ export default class AnimationSection extends AnimatedSection{
             let from = this._angle ? this._angle : this._originObject.data.rotation;
             let to = this._rotateIn.value;
 
-            [from, to] = this._clampRotations(from, to);
+            if(Math.abs(from - to) > 180){
+                if(to < 0){
+                    to += 360;
+                }else if(from > to){
+                    from -= 360;
+                }
+            }
 
             animData.attributes.push({
                 name: "rotation",
@@ -300,9 +329,10 @@ export default class AnimationSection extends AnimatedSection{
                 ? this._getClosestSquare(this._originObject, this._moveTowards.target)
                 : this._getCleanPosition(this._moveTowards.target);
 
-
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
+
+            if(this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
 
             let originalDx = targetLoc.x - originLoc.x;
             let originalDy = targetLoc.y - originLoc.y;
@@ -342,6 +372,7 @@ export default class AnimationSection extends AnimatedSection{
                     : this._getCleanPosition(this._teleportTo.target);
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
+                if(this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
                 await this.updateObject(this._originObject, targetLocation);
             }, this._teleportTo.delay);
             overallDuration = overallDuration > this._teleportTo.delay ? overallDuration : this._teleportTo.delay;
@@ -366,12 +397,18 @@ export default class AnimationSection extends AnimatedSection{
 
         if(this._rotateOut){
 
-            let from = this._angle ? this._angle : this._originObject.data.rotation;
-            let to = this._rotateOut.value;
+            let from = this._rotateOut.value;
+            let to = this._angle ? this._angle : this._originObject.data.rotation;
 
             if(this._rotateIn) from += this._rotateIn.value;
 
-            [from, to] = this._clampRotations(from, to);
+            if(Math.abs(from - to) > 180){
+                if(to < 0){
+                    to += 360;
+                }else if(from > to){
+                    from -= 360;
+                }
+            }
 
             animData.attributes.push({
                 name: "rotation",
@@ -440,7 +477,7 @@ export default class AnimationSection extends AnimatedSection{
                     }else {
 
                         if(attribute.name === "rotationTowards" && !attribute.from && !attribute.to){
-                            let ray = new Ray(attribute.origin, attribute.target)
+                            let ray = new Ray(attribute.originLocation, attribute.target)
                             let angle = ray.angle * 180/Math.PI;
                             angle += attribute.offset;
                             attribute.from = attribute.origin.data.rotation;

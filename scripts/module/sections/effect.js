@@ -34,6 +34,7 @@ export default class EffectSection extends AnimatedSection {
         this._scaleOut = false;
         this._layer = 2;
         this._zIndex = 0;
+        this._offset = false;
     }
 
     /**
@@ -197,15 +198,37 @@ export default class EffectSection extends AnimatedSection {
      */
     moveTowards(inLocation, options={}) {
         if(inLocation === undefined) this.sequence.throwError(this, "moveTowards", "inLocation must not be undefined");
-        if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
+        if(typeof options !== "object") this.sequence.throwError(this, "moveTowards", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear"
         }, options);
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "moveEase", "options.ease must be of type string");
+        if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
         this._to = this._validateLocation(inLocation);
         this._moves = options;
         this._rotationOnly = true;
+        return this;
+    }
+
+    /**
+     *  Causes the effect to be offset relative to its location based on a given vector
+     *
+     * @param {object} inOffset
+     * @param {object} options
+     * @returns {EffectSection} this
+     */
+    offset(inOffset, options = {}){
+        if(inOffset === undefined) this.sequence.throwError(this, "offset", "inOffset must not be undefined");
+        if(typeof options !== "object") this.sequence.throwError(this, "offset", "options must be of type object");
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        inOffset = mergeFunc({
+            x: 0,
+            y: 0,
+            local: false
+        }, inOffset);
+        inOffset = mergeFunc(inOffset, options);
+        if(typeof inOffset.local !== "boolean") this.sequence.throwError(this, "offset", "options.local must be of type boolean");
+        this._offset = inOffset;
         return this;
     }
 
@@ -511,12 +534,27 @@ export default class EffectSection extends AnimatedSection {
 
         if (this._from) {
 
-            let [origin, target] = this._getPositions(this._from, this._to);
+            let [from, to, origin, target] = this._getPositions(this._from, this._to);
+
+            if(this._offset) {
+                let offset = this._offset;
+                if(this._offset.local){
+                    let target = to || from;
+                    if(target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
+                }
+                if(to){
+                    target.x -= offset.x;
+                    target.y -= offset.y;
+                }else{
+                    origin.x -= offset.x;
+                    origin.y -= offset.y;
+                }
+            }
 
             if(this._to){
-                target = this._applyMissedOffset(target);
+                target = this._applyMissedOffsets(target);
             }else{
-                origin = this._applyMissedOffset(origin);
+                origin = this._applyMissedOffsets(origin);
             }
 
             if(!this._anchor) {
@@ -704,13 +742,17 @@ export default class EffectSection extends AnimatedSection {
         return pos;
     }
 
-    _getPositions(from, to) {
+    _getPositions(from, to, applyOffsets = true) {
 
         let from_offset = { x: 0, y: 0 };
         if(typeof from === "string"){
             let cachedFrom = this.sequence._getCachedOffset(from, this._currentRepetition);
             from = cachedFrom.object;
             from_offset = cachedFrom.offset;
+            if(cachedFrom.extraOffset && applyOffsets){
+                from_offset.x += cachedFrom.extraOffset.x;
+                from_offset.y += cachedFrom.extraOffset.y;
+            }
         }
 
         let to_offset = { x: 0, y: 0 };
@@ -718,6 +760,10 @@ export default class EffectSection extends AnimatedSection {
             let cachedTo = this.sequence._getCachedOffset(to, this._currentRepetition);
             to = cachedTo.object;
             to_offset = cachedTo.offset;
+            if(cachedTo.extraOffset && applyOffsets){
+                to_offset.x += cachedTo.extraOffset.x;
+                to_offset.y += cachedTo.extraOffset.y;
+            }
         }
 
         let from_position = this._getCleanPosition(from);
@@ -731,11 +777,11 @@ export default class EffectSection extends AnimatedSection {
             to_position.y -= to_offset.y;
         }
 
-        return [from_position, to_position];
+        return [from, to, from_position, to_position];
 
     }
 
-    _applyMissedOffset(inPosition){
+    _applyMissedOffsets(inPosition){
         let offset = this._offsets[this._currentRepetition] ?? { x: 0, y: 0 };
         inPosition.x -= offset.x;
         inPosition.y -= offset.y;
@@ -744,30 +790,34 @@ export default class EffectSection extends AnimatedSection {
 
     async _cacheOffsets(){
 
-        let [from_target, to_target] = this._getPositions(this._from, this._to);
+        let [from, to, from_target, to_target] = this._getPositions(this._from, this._to, false);
 
-        from_target = this._calculateMissedPosition(this._from, from_target, !this._to && this._missed);
-        to_target = this._to ? this._calculateMissedPosition(this._to, to_target, this._missed) : false;
+        from_target = this._calculateMissedPosition(from, from_target, !this._to && this._missed);
+        to_target = to ? this._calculateMissedPosition(to, to_target, this._missed) : false;
 
-        let from_origin = this._getCleanPosition(this._from);
-        let to_origin = this._getCleanPosition(this._to, true);
+        let from_origin = this._getCleanPosition(from);
+        let to_origin = this._getCleanPosition(to, true);
 
-        let origin_object = this._to ? this._to : this._from;
-        let origin_position = this._to ? to_origin : from_origin;
-        let target_position = this._to ? to_target : from_target;
+        let origin_object = to || from;
+        let origin_position = to ? to_origin : from_origin;
+        let target_position = to ? to_target : from_target;
 
         let offset = {
             x: origin_position.x - target_position.x,
             y: origin_position.y - target_position.y
         }
 
-        this._offsets.push(offset);
+        if(this._missed) {
+            this._offsets.push(offset);
+        }
 
         if(this._name) {
+
             this.sequence._insertCachedOffset(
                 this._name,
                 origin_object,
-                offset
+                offset,
+                this._offset
             );
         }
 

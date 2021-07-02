@@ -103,3 +103,29 @@ export async function getSoundDuration(inFile){
         audio.src = inFile;
     });
 }
+
+/**
+ *  Rotates a vector by a given number of degrees
+ *
+ * @param  {object}     vector    The vector to be rotated
+ * @param  {number}     degrees   Number of degrees of which to rotate the vector
+ * @return {object}               The rotated vector
+ */
+export function rotateVector(vector, degrees){
+    if((vector.x === 0 && vector.y === 0) || degrees === 0) return vector;
+
+    let distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+    let radians = degrees * (Math.PI / 180);
+
+    let cos1 = vector.x / distance;
+    let sin1 = vector.y / distance;
+    let cos2 = Math.cos(radians);
+    let sin2 = Math.sin(radians);
+    let cos3 = cos1*cos2 - sin1*sin2;
+    let sin3 = sin1*cos2 + cos1*sin2;
+
+    vector.x = (distance * cos3);
+    vector.y = (distance * sin3);
+
+    return vector;
+}

@@ -154,13 +154,14 @@ export default class Sequence{
         }
     }
 
-    _insertCachedOffset(inName, inObject, inOffset){
+    _insertCachedOffset(inName, inObject, inOffset, inExtraOffset){
         if(this._cachedOffsets[inName] === undefined){
             this._cachedOffsets[inName] = [];
         }
         this._cachedOffsets[inName].push({
             "object": inObject,
-            "offset": inOffset
+            "offset": inOffset,
+            "extraOffset": inExtraOffset
         });
     }
 
