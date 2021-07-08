@@ -1,6 +1,6 @@
-import Version from "../../version.js";
 import { EffectsCanvasAnimation } from "./canvas-animation.js";
 import { easeFunctions } from "./ease.js";
+import * as lib from "../lib.js";
 
 export default class CanvasEffect {
 
@@ -10,7 +10,7 @@ export default class CanvasEffect {
         this.ended = false;
         this.video = false;
 
-        let version = new Version().onOrAfter("0.8.6");
+        let version = new lib.Version().onOrAfter("0.8.6");
         this.mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
 
         // Set default values
@@ -38,8 +38,8 @@ export default class CanvasEffect {
         this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
         this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
         this.sprite.position.set(this.data.position.x, this.data.position.y);
-        this._videoDuration = this.data.duration ? this.data.duration / 1000 : this.video.duration;
-        this._animationDuration = this._videoDuration * 1000;
+        this.data.videoDuration = this.data.duration ? this.data.duration / 1000 : this.video.duration;
+        this.data.animationDuration = this.data.videoDuration * 1000;
     }
 
     playAnimation(attributes, duration, ease="linear"){
@@ -70,7 +70,7 @@ export default class CanvasEffect {
             let animate = this.playAnimation([
                 { parent: this.sprite, attribute: "alpha", to: 0.0 }
             ], fadeOut.duration, fadeOut.ease)
-            setTimeout(animate, Math.max(this._animationDuration - fadeOut.duration, 0));
+            setTimeout(animate, Math.max(this.data.animationDuration - fadeOut.duration, 0));
         }
     }
 
@@ -110,7 +110,7 @@ export default class CanvasEffect {
                 { parent: this.sprite, attribute: "scale", property: "x", to: scale.x },
                 { parent: this.sprite, attribute: "scale", property: "y", to: scale.y }
             ], scaleOut.duration, scaleOut.ease);
-            setTimeout(animate,  Math.max(this._animationDuration - scaleOut.duration, 0));
+            setTimeout(animate,  Math.max(this.data.animationDuration - scaleOut.duration, 0));
         }
     }
 
@@ -137,7 +137,7 @@ export default class CanvasEffect {
             let animate = this.playAnimation([
                 { parent: this.sprite, attribute: "rotation", to: Math.toRadians(rotateOut.value) }
             ], rotateOut.duration, rotateOut.ease);
-            setTimeout(animate,  Math.max(this._animationDuration - rotateOut.duration, 0));
+            setTimeout(animate,  Math.max(this.data.animationDuration - rotateOut.duration, 0));
         }
     }
 
@@ -146,14 +146,14 @@ export default class CanvasEffect {
         if (!this.data.animatedProperties.moves) return;
 
         if(!this.data.speed){
-            this.data.speed = this.data.distance / this._videoDuration;
+            this.data.speed = this.data.distance / this.data.videoDuration;
         }else{
-            this._videoDuration = this.data.distance / this.data.speed;
-            this._animationDuration = this._videoDuration * 1000;
+            this.data.videoDuration = this.data.distance / this.data.speed;
+            this.data.animationDuration = this.data.videoDuration * 1000;
         }
 
         // Compute final position
-        const delta = this._videoDuration * this.data.speed;
+        const delta = this.data.videoDuration * this.data.speed;
         const deltaX = delta * Math.cos(this.data.rotation)
         const deltaY = delta * Math.sin(this.data.rotation)
 
@@ -166,7 +166,7 @@ export default class CanvasEffect {
 
         this.playAnimation(
             move_attributes,
-            this._animationDuration,
+            this.data.animationDuration,
             this.data.animatedProperties.moves.ease
         )();
 
@@ -199,13 +199,18 @@ export default class CanvasEffect {
         this.rotateIn();
         this.rotateOut();
         this.endEarly();
+        this.debug();
+    }
+
+    debug(){
+        if(this.data.debug) console.log(`DEBUG | Sequencer | Playing effect:`, this.data);
     }
 
     endEarly(){
         this.video.loop = (this.data.duration / 1000) > this.video.duration;
         setTimeout(() => {
             this.endEffect();
-        }, this._animationDuration)
+        }, this.data.animationDuration)
     }
 
     async loadVideo(){
@@ -256,7 +261,7 @@ export default class CanvasEffect {
         });
 
         return {
-            duration: this._animationDuration,
+            duration: this.data.animationDuration,
             promise: promise
         }
 

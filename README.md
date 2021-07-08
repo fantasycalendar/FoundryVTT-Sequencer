@@ -17,7 +17,7 @@ Sequencer stands on the shoulder of giants:
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
 ## Download here:
-`https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.json`
+`https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json`
 
 ## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
@@ -215,10 +215,9 @@ new Sequence()
     .effect()
         .atLocation(canvas.tokens.controlled[0])
         .reachTowards(canvas.tokens.controlled[1])
+        .baseFolder("Images/Effects/Magic_Missile")
         .startPoint(200)
         .endPoint(200)
-        .repeats(3, 200, 300)
-        .baseFolder("Images/Effects/Magic_Missile")
         .setMustache({
             "color": () => {
                 return ['Blue', 'Green', 'Purple', 'Yellow'][Math.floor(Math.random() * 4)]
@@ -237,6 +236,7 @@ new Sequence()
                 return data
             }
         )
+        .repeats(3, 200, 300)
     .play();
 ```
 
@@ -305,6 +305,15 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.5.0
+- *Sequencer* - Added SequencerDatabase! Read more on the [database documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Database) how to use it!
+- *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase) for `.animation()`  
+- *Animations* - Fixed `.rotateTowards()` to properly rotate towards the target without having to use offsets 
+- *Effects & Sounds* - Added support for database entries to the `.file()` method - more info can be found on the [function documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file)
+- *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` entries
+- *Sounds* - Fixed `.fadeOut()` and `.fadeIn()` being broken on both 0.8.x and 0.7.x 
+
 
 ### Version 0.4.6 Hotfix
 - *Effects* - Fixed effects not playing on tokens on 0.7.10 and below

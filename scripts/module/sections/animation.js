@@ -19,10 +19,12 @@ export default class AnimationSection extends AnimatedSection{
     /**
      * Sets the target object to be animated
      *
-     * @param {Token|Tile|object} inTarget
+     * @param {object|string} inTarget
      * @returns {AnimationSection} this
      */
     on(inTarget){
+        inTarget = this._validateLocation(inTarget);
+        if(inTarget === undefined) this.sequence.throwError(this, "on", "could not find position of given object");
         this._originObject = this._validateLocation(inTarget);
         return this;
     }
@@ -30,7 +32,7 @@ export default class AnimationSection extends AnimatedSection{
     /**
      * Sets the location to move the target object to
      *
-     * @param {Token|Tile|object} inTarget
+     * @param {object|string} inTarget
      * @param {object} options
      * @returns {AnimationSection} this
      */
@@ -43,6 +45,8 @@ export default class AnimationSection extends AnimatedSection{
         }, options);
         if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
         if(typeof options.delay !== "number") this.sequence.throwError(this, "moveTowards", "options.delay must be of type number");
+        inTarget = this._validateLocation(inTarget);
+        if(inTarget === undefined) this.sequence.throwError(this, "moveTowards", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._moveTowards = options;
         this._teleportTo = false;
@@ -52,7 +56,7 @@ export default class AnimationSection extends AnimatedSection{
     /**
      * Sets the location to move the target object to
      *
-     * @param {Token|Tile|object} inTarget
+     * @param {object|string} inTarget
      * @param {object} options
      * @returns {AnimationSection} this
      */
@@ -62,11 +66,16 @@ export default class AnimationSection extends AnimatedSection{
             duration: 0,
             ease: "linear",
             delay: 0,
-            offset: 0
+            offset: 0,
+            towardsCenter: true
         }, options);
         if(typeof options.duration !== "number") this.sequence.throwError(this, "rotateTowards", "options.duration must be of type number");
         if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateTowards", "options.ease must be of type string");
         if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateTowards", "options.delay must be of type number");
+        if(typeof options.offset !== "number") this.sequence.throwError(this, "rotateTowards", "options.offset must be of type number");
+        if(typeof options.towardsCenter !== "boolean") this.sequence.throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
+        inTarget = this._validateLocation(inTarget);
+        if(inTarget === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._rotateTowards = options;
         return this;
@@ -75,7 +84,7 @@ export default class AnimationSection extends AnimatedSection{
     /**
      * Sets the location to teleport the target object to
      *
-     * @param {Token|Tile|object} inTarget
+     * @param {object|string} inTarget
      * @param {object} options
      * @returns {AnimationSection} this
      */
@@ -86,6 +95,8 @@ export default class AnimationSection extends AnimatedSection{
             target: { x: 0, y: 0 }
         }, options);
         if(typeof options.delay !== "number") this.sequence.throwError(this, "teleportTo", "options.delay must be of type number");
+        inTarget = this._validateLocation(inTarget);
+        if(inTarget === undefined) this.sequence.throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
         this._moveTowards = false;
@@ -117,7 +128,6 @@ export default class AnimationSection extends AnimatedSection{
         return this;
     }
 
-
     /**
      * Causes the final location to be snapped to its square
      *
@@ -134,8 +144,8 @@ export default class AnimationSection extends AnimatedSection{
         return this._runAnimate();
     }
 
-    async updateObject(obj, attributes, animate = false){
-        await obj.document.update(attributes, {animate: animate});
+    async updateObject(obj, attributes, animate = false, animation={}){
+        await obj.document.update(attributes, {animate: animate, animation: animation});
     }
 
     async execute(){
@@ -253,6 +263,7 @@ export default class AnimationSection extends AnimatedSection{
                 origin: this._originObject,
                 originLocation: targetLoc,
                 target: this._rotateTowards.target,
+                towardsCenter: this._rotateTowards.towardsCenter,
                 from: false,
                 to: false,
                 progress: 0,
@@ -349,19 +360,28 @@ export default class AnimationSection extends AnimatedSection{
             if (!this._duration && this._moveTowards.ease === "linear") {
                 await this.updateObject(this._originObject, targetLoc, true);
             }else{
-                animData.attributes.push({
-                    name: "position",
-                    origin: originLoc,
-                    target: targetLoc,
-                    originalDistance: originalDistance,
-                    currentDistance: 0,
-                    progress: 0,
-                    speed: 0,
-                    duration: duration,
-                    done: false,
-                    ease: easeFunctions[this._moveTowards.ease],
-                    delay: this._moveTowards.delay
-                })
+                if(this._originObject instanceof Token) {
+                    setTimeout(() => {
+                        this.updateObject(this._originObject, targetLoc, true, {
+                            duration: duration,
+                            ease: this._moveTowards.ease
+                        });
+                    }, this._moveTowards.delay);
+                }else{
+                    animData.attributes.push({
+                        name: "position",
+                        origin: originLoc,
+                        target: targetLoc,
+                        originalDistance: originalDistance,
+                        currentDistance: 0,
+                        progress: 0,
+                        speed: 0,
+                        duration: duration,
+                        done: false,
+                        ease: easeFunctions[this._moveTowards.ease],
+                        delay: this._moveTowards.delay
+                    })
+                }
             }
         }
 
@@ -477,8 +497,12 @@ export default class AnimationSection extends AnimatedSection{
                     }else {
 
                         if(attribute.name === "rotationTowards" && !attribute.from && !attribute.to){
-                            let ray = new Ray(attribute.originLocation, attribute.target)
-                            let angle = ray.angle * 180/Math.PI;
+
+                            let target = attribute.target;
+                            if(this._rotateTowards.towardsCenter) target = target?.center ?? target;
+
+                            let ray = new Ray(attribute.originLocation, target)
+                            let angle = (ray.angle * 180/Math.PI) - 90;
                             angle += attribute.offset;
                             attribute.from = attribute.origin.data.rotation;
                             attribute.to = angle;

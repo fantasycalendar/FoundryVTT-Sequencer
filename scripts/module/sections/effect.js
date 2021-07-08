@@ -1,6 +1,7 @@
 import * as lib from "../lib.js";
 import { playEffect } from "../../sockets.js";
 import AnimatedSection from "./animated.js";
+import {random_object_element} from "../lib.js";
 
 export default class EffectSection extends AnimatedSection {
 
@@ -19,7 +20,6 @@ export default class EffectSection extends AnimatedSection {
         this._missed = false;
         this._startPoint = 0;
         this._endPoint = 0;
-        this._mustache = false;
         this._JB2A = false;
         this._randomMirrorX = false;
         this._randomMirrorY = false;
@@ -28,13 +28,13 @@ export default class EffectSection extends AnimatedSection {
         this._playbackRate = 1.0;
         this._gridSize = 100;
         this._overrides = [];
-        this._postOverrides = [];
         this._name = false;
         this._scaleIn = false;
         this._scaleOut = false;
         this._layer = 2;
         this._zIndex = 0;
         this._offset = false;
+        this._databaseEntry = false;
     }
 
     /**
@@ -76,6 +76,9 @@ export default class EffectSection extends AnimatedSection {
      */
     file(inFile) {
         this._file = inFile;
+        if(inFile) {
+            this._databaseEntry = window.SequencerDatabase.entryExists(inFile.split('.')?.[0] ?? "");
+        }
         return this;
     }
 
@@ -108,6 +111,8 @@ export default class EffectSection extends AnimatedSection {
      * Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which
      * the Sequencer figures out from the path.
      *
+     * An optional boolean parameter can be provided in order to make the
+     *
      * @returns {EffectSection} this
      */
     JB2A() {
@@ -129,70 +134,58 @@ export default class EffectSection extends AnimatedSection {
         return this;
     }
 
-    addPostOverride(inFunc) {
-        if(!lib.is_function(inFunc)) this.sequence.throwError(this, "addPostOverride", "The given function needs to be an actual function.");
-        this._postOverrides.push(inFunc);
-        return this;
-    }
-
     /**
-     * Sets the Mustache of the filepath. This is applied after the randomization of the filepath, if available.
-     *
-     * @param {object} inMustache
-     * @returns {EffectSection} this
-     */
-    setMustache(inMustache) {
-        if(typeof inMustache !== "object") this.sequence.throwError(this, "setMustache", "inMustache must be of type object");
-        this._mustache = inMustache;
-        return this;
-    }
-
-    /**
-     *  A smart method that can take a reference to a token, template, or a direct coordinate on the canvas to play the effect at,
+     *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {Token|Template|object|string} inLocation
+     * @param {object|string} inLocation
      * @returns {EffectSection} this
      */
     atLocation(inLocation) {
         if(inLocation === undefined) this.sequence.throwError(this, "atLocation", "inLocation must not be undefined");
-        this._from = this._validateLocation(inLocation);
+        inLocation = this._validateLocation(inLocation);
+        if(inLocation === undefined) this.sequence.throwError(this, "atLocation", "could not find position of given object");
+        this._from = inLocation;
         return this;
     }
 
     /**
-     *  Causes the effect to be rotated towards the given token, template, coordinates, or a string reference (see .name())
+     *  Causes the effect to be rotated towards the given token, template, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *
-     * @param {Token|Template|object|string} inLocation
+     * @param {object|string} inLocation
      * @returns {EffectSection} this
      */
     rotateTowards(inLocation) {
         if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "inLocation must not be undefined");
-        this._to = this._validateLocation(inLocation);
+        inLocation = this._validateLocation(inLocation);
+        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        this._to = inLocation;
         this._rotationOnly = true;
         this._moves = false;
         return this;
     }
 
     /**
-     *  Causes the effect to be rotated and stretched towards a token, template, coordinates, or a string reference (see .name())
+     *  Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
-     * @param {Token|Template|object|string} inLocation
+     * @param {object|string} inLocation
      * @returns {EffectSection} this
      */
     reachTowards(inLocation) {
         if(inLocation === undefined) this.sequence.throwError(this, "reachTowards", "inLocation must not be undefined");
-        this._to = this._validateLocation(inLocation);
+        inLocation = this._validateLocation(inLocation);
+        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        this._to = inLocation;
         this._rotationOnly = false;
         this._moves = false;
         return this;
     }
 
     /**
-     *  Causes the effect to move towards a token, template, coordinates, or a string reference (see .name())
+     *  Causes the effect to move towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *
-     * @param {Token|Template|object|string} inLocation
+     * @param {object|string} inLocation
      * @param {object} options
      * @returns {EffectSection} this
      */
@@ -204,7 +197,9 @@ export default class EffectSection extends AnimatedSection {
             ease: "linear"
         }, options);
         if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
-        this._to = this._validateLocation(inLocation);
+        inLocation = this._validateLocation(inLocation);
+        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        this._to = inLocation;
         this._moves = options;
         this._rotationOnly = true;
         return this;
@@ -484,7 +479,6 @@ export default class EffectSection extends AnimatedSection {
 
     async _run() {
         let effect = await this._sanitizeEffectData();
-        this.sequence.log(`Playing effect:`, effect);
         game.socket.emit("module.sequencer", effect);
         let canvasEffectData = await playEffect(effect);
         this.animationDuration = canvasEffectData.duration;
@@ -525,7 +519,8 @@ export default class EffectSection extends AnimatedSection {
                 rotateIn: this._rotateIn,
                 rotateOut: this._rotateOut,
                 moves: this._moves
-            }
+            },
+            debug: this.sequence.debug
         };
 
         if(this._anchor) {
@@ -602,8 +597,25 @@ export default class EffectSection extends AnimatedSection {
             data = await override(this, data);
         }
 
+        if(this._databaseEntry){
+            if (this._mustache) {
+                let template = Handlebars.compile(data.file);
+                data.file = template(this._mustache);
+            }
+            data.file = window.SequencerDatabase.get(data.file) || data.file;
+            data = await this.evaluateDatabaseEntry(data);
+        }
+
         if(Array.isArray(data.file)) {
             data.file = lib.random_array_element(data.file)
+        }
+
+        if(typeof data.file === "string") {
+            data.file = data.file.startsWith(this._baseFolder) ? data.file : this._baseFolder + data.file;
+            if (this._mustache) {
+                let template = Handlebars.compile(data.file);
+                data.file = template(this._mustache);
+            }
         }
 
         if(this._JB2A){
@@ -616,11 +628,6 @@ export default class EffectSection extends AnimatedSection {
             this._gridSize = gridSize;
             this._startPoint = startPoint;
             this._endPoint = endPoint;
-        }
-
-        if(this._mustache) {
-            let template = Handlebars.compile(data.file);
-            data.file = template(this._mustache);
         }
 
         data.scale = {
@@ -654,18 +661,99 @@ export default class EffectSection extends AnimatedSection {
         let flipY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5) ? -1 : 1;
         data.scale.y = data.scale.y * flipY;
 
-        data.file = (this._baseFolder + data.file);
-
-        for(let override of this._postOverrides) {
-            data = await override(this, data);
-        }
-
         if(typeof data.file !== "string") {
             this.sequence.throwError(this, "file", "inFile must be of type string or array");
         }
 
         return data;
 
+    }
+
+    get distanceMatching(){
+        return {
+            "90ft": 1500,
+            "60ft": 900,
+            "30ft": 500,
+            "15ft": 200,
+            "05ft": 0
+        }
+    }
+
+    async evaluateDatabaseEntry(data){
+
+        if(typeof data.file !== "object") return data;
+
+        return this._recurseDatabaseFiles(data);
+
+    }
+
+    _recurseDatabaseFiles(data){
+
+        data.file = random_object_element(data.file);
+
+        if(typeof data.file !== "object") return data;
+
+        if(this._to && !this._rotationOnly) {
+            let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1).length !== 0;
+            if(foundDistances) return this._rangeFind(data);
+        }
+
+        return this._recurseDatabaseFiles(data);
+
+    }
+
+    _rangeFind(data){
+
+        let files = data.file;
+
+        let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1);
+
+        let relativeDistance = data._distance / this.gridSizeDifference;
+
+        let actualFiles = [];
+        for(let distance of foundDistances){
+            let file = files[distance]
+            actualFiles.push({
+                file: file,
+                minDistance: this.distanceMatching[distance]
+            })
+        }
+
+        let uniqueDistances = [...new Set(actualFiles.map(item => item.minDistance))];
+
+        uniqueDistances.sort((a, b) => a - b);
+
+        let max = Math.max(...uniqueDistances);
+        let min = Math.min(...uniqueDistances);
+
+        actualFiles = actualFiles.map(entry => {
+            if(entry.minDistance === max){
+                entry.minDistance = [
+                    entry.minDistance,
+                    Infinity
+                ];
+            }else if(entry.minDistance === min){
+                entry.minDistance = [
+                    0,
+                    entry.minDistance
+                ];
+            }else{
+                let index = uniqueDistances.indexOf(entry.minDistance)+1;
+                entry.minDistance = [
+                    entry.minDistance,
+                    uniqueDistances[index]
+                ];
+            }
+            return entry;
+        });
+
+        let matchedDistance = actualFiles.find(e => {
+            return relativeDistance >= e.minDistance[0] && relativeDistance < e.minDistance[1]
+        });
+
+        data.file = matchedDistance.file;
+
+        return data;
     }
 
     _getJB2ATemplate(inFile){
@@ -678,7 +766,7 @@ export default class EffectSection extends AnimatedSection {
     }
 
     async _getFileDimensions(inFile) {
-        let filePath = this._baseFolder + inFile;
+        let filePath = inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
         if(this._JB2A) {
             let parts = filePath.replace(".webm", "").split("_");
             let dimensionString = parts[parts.length-1].toLowerCase().split('x');

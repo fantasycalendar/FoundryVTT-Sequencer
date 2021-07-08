@@ -7,6 +7,7 @@ export default class SoundSection extends Section {
         super(inSequence);
         this.file(inFile);
         this._volume = 0.8;
+        this._databaseEntry = false;
     }
 
     /**
@@ -17,10 +18,10 @@ export default class SoundSection extends Section {
      * @returns {SoundSection} this
      */
     file(inFile) {
-        if(!(typeof inFile === "string" || Array.isArray(inFile))){
-            this.sequence.throwError(this, "file", "inFile must be of type string or array");
-        }
         this._file = inFile;
+        if(inFile) {
+            this._databaseEntry = window.SequencerDatabase.entryExists(inFile.split('.')?.[0] ?? "");
+        }
         return this;
     }
 
@@ -48,14 +49,22 @@ export default class SoundSection extends Section {
         let howler = await AudioHelper.play(data, true);
 
         if(this._fadeIn) {
-            howler.fade(data.targetVolume, this._fadeIn.duration, 0.0)
+            if(this.version) {
+                howler.fade(data.targetVolume, { duration: this._fadeIn.duration, from: 0.0 })
+            }else{
+                howler.fade(0.0, data.targetVolume, this._fadeIn.duration)
+            }
         }
 
         if(this._fadeOut) {
             let fadeOut = this._fadeOut;
             setTimeout(function () {
                 if(howler.playing) {
-                    howler.fade(0, fadeOut.duration, data.targetVolume)
+                    if(this.version) {
+                        howler.fade(0.0, { duration: fadeOut.duration, from: data.targetVolume })
+                    }else{
+                        howler.fade(data.targetVolume, 0.0, fadeOut.duration)
+                    }
                 }
             }, Math.max(data.duration - fadeOut.duration, 0));
         }
@@ -80,8 +89,15 @@ export default class SoundSection extends Section {
 
     async _sanitizeSoundData() {
         let file = this._file;
-        if(Array.isArray(this._file)) {
-            file = lib.random_array_element(this._file)
+        if(this._databaseEntry) {
+            file = window.SequencerDatabase.get(file) || file;
+        }
+        if(Array.isArray(file)) {
+            file = lib.random_array_element(file)
+        }
+        if(this._mustache) {
+            let template = Handlebars.compile(file);
+            file = template(this._mustache);
         }
         let duration = await this._getSoundDuration(file);
         if(!duration){

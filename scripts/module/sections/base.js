@@ -19,6 +19,7 @@ export default class Section{
         this._duration = false;
         this._fadeIn = false;
         this._fadeOut = false;
+        this._mustache = false;
     }
 
     /**
@@ -95,6 +96,18 @@ export default class Section{
         if(msMax && typeof msMax !== "number") this.sequence.throwError(this, "delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
+        return this;
+    }
+
+    /**
+     * Sets the Mustache of the filepath. This is applied after the randomization of the filepath, if available.
+     *
+     * @param {object} inMustache
+     * @returns {Section} this
+     */
+    setMustache(inMustache) {
+        if(typeof inMustache !== "object") this.sequence.throwError(this, "setMustache", "inMustache must be of type object");
+        this._mustache = inMustache;
         return this;
     }
 
