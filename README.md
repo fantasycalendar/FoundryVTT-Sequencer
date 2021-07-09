@@ -322,7 +322,6 @@ new Sequence()
 - *Animations* - Fixed `.rotateTowards()` to properly rotate towards the target without having to add an offset to properly line them up
 - *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` entries
 - *Effects* - Fixed issues surrounding delays and fades
-- *Sounds* - Fixed `.fadeIn()` and `.fadeOut()` being broken on both 0.8.x and 0.7.x
 - *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.fadeIn()` and `.fadeOut()` will become deprecated in a future version, please switch to `.fadeInAudio()` and `.fadeOutAudio()` <img src="images/siren.gif" width="12px" height="12px" alt="Siren">   
 
 ### Version 0.4.6 Hotfix
