@@ -190,6 +190,12 @@ export default class Sequence{
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
+    throwWarning(self, func, warning){
+        warning = `Sequencer | ${self.constructor.name} | ${func} - ${warning}`;
+        ui.notifications.warn(warning);
+        console.warn(warning)
+    }
+
     throwError(self, func, error){
         error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
         ui.notifications.error(error);

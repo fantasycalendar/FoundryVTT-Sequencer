@@ -9,9 +9,6 @@ export default class AnimatedSection extends Section{
         this._rotateIn = false;
         this._rotateOut = false;
         this._opacity = false;
-        this._audioVolume = false;
-        this._fadeInAudio = false;
-        this._fadeOutAudio = false;
     }
 
     /**
@@ -99,67 +96,6 @@ export default class AnimatedSection extends Section{
         if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateOut", "options.delay must be of type number");
         this._rotateOut = {
             value: degrees,
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     * Sets the audio volume of the animated section
-     *
-     * @param {number} [inVolume=1.0] inVolume
-     * @returns {Section} this
-     */
-    audioVolume(inVolume = 1.0){
-        this._audioVolume = inVolume;
-        return this;
-    }
-
-    /**
-     * Causes the animated section to fade in its audio (if any) when played
-     *
-     * @param {number} duration
-     * @param {object} [options] = options
-     * @returns {Section} this
-     */
-    fadeInAudio(duration, options={}) {
-        if(typeof options !== "object") this.sequence.throwError(this, "fadeInAudio", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "fadeInAudio", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeInAudio", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeInAudio", "options.delay must be of type number");
-        this._fadeInAudio = {
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     * Causes the audio to fade out at the end of the animated section's duration
-     *
-     * @param {number} duration
-     * @param {object} [options] = options
-     * @returns {Section} this
-     */
-    fadeOutAudio(duration, options={}) {
-        if(typeof options !== "object") this.sequence.throwError(this, "fadeOutAudio", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "fadeOutAudio", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOutAudio", "ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeOutAudio", "delay must be of type number");
-        this._fadeOutAudio = {
             duration: duration,
             ease: options.ease,
             delay: options.delay

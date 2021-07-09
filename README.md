@@ -310,7 +310,7 @@ new Sequence()
 - *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase)
 - *Sequencer* - Added the Sequencer Database to help content creators! Read more on the [database documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Database) how to use it!
 - *Effects & Sounds* - Added support for database entries to the `.file()` method - more info can be found in the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file)
-- *Animations & Effects* - Added the following functions:
+- *Animations, Effects & Sounds* - Added the following functions:
   - `.audioVolume()`
   - `.fadeInAudio()`
   - `.fadeOutAudio()`
@@ -323,6 +323,7 @@ new Sequence()
 - *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` entries
 - *Effects* - Fixed issues surrounding delays and fades
 - *Sounds* - Fixed `.fadeIn()` and `.fadeOut()` being broken on both 0.8.x and 0.7.x
+- *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.fadeIn()` and `.fadeOut()` will become deprecated in a future version, please switch to `.fadeInAudio()` and `.fadeOutAudio()` <img src="images/siren.gif" width="12px" height="12px" alt="Siren">   
 
 ### Version 0.4.6 Hotfix
 - *Effects* - Fixed effects not playing on tokens on 0.7.10 and below

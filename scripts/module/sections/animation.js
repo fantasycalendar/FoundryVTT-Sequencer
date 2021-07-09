@@ -304,7 +304,7 @@ export default class AnimationSection extends AnimatedSection{
 
         if(this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined){
 
-            let to = typeof this._audioVolume === "number" ? this._audioVolume : 1.0;
+            let to = typeof this._volume === "number" ? this._volume : 1.0;
 
             animData.attributes.push({
                 name: "video.volume",
@@ -439,7 +439,7 @@ export default class AnimationSection extends AnimatedSection{
 
         if(this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined){
 
-            let from = typeof this._audioVolume === "number" ? this._audioVolume : this._originObject.data.video.volume;
+            let from = typeof this._volume === "number" ? this._volume : this._originObject.data.video.volume;
 
             animData.attributes.push({
                 name: "video.volume",

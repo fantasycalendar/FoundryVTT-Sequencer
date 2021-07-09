@@ -25,18 +25,6 @@ export default class SoundSection extends Section {
         return this;
     }
 
-    /**
-     * Sets the volume of the sound.
-     *
-     * @param {number} inVolume
-     * @returns {SoundSection} this
-     */
-    volume(inVolume) {
-        if(typeof inVolume !== "number") this.sequence.throwError(this, "volume", "inVolume must be of type number");
-        this._volume = Math.max(0, Math.min(1.0, inVolume));
-        return this;
-    }
-
     async _run(repetition){
         let data = await this._sanitizeSoundData();
         if(!data.play) {
@@ -44,20 +32,23 @@ export default class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
+        // To remove in 0.5.3
+        let fadeIn = this._fadeIn || this._fadeInAudio;
+        let fadeOut = this._fadeOut || this._fadeOutAudio;
+
         this.sequence.log(`Playing sound:`, data);
 
         let howler = await AudioHelper.play(data, true);
 
-        if(this._fadeIn) {
+        if(fadeIn) {
             if(this.version) {
-                howler.fade(data.targetVolume, { duration: this._fadeIn.duration, from: 0.0 })
+                howler.fade(data.targetVolume, { duration: fadeIn.duration, from: 0.0 })
             }else{
-                howler.fade(0.0, data.targetVolume, this._fadeIn.duration)
+                howler.fade(0.0, data.targetVolume, fadeIn.duration)
             }
         }
 
-        if(this._fadeOut) {
-            let fadeOut = this._fadeOut;
+        if(fadeOut) {
             setTimeout(function () {
                 if(howler.playing) {
                     if(this.version) {
@@ -75,6 +66,18 @@ export default class SoundSection extends Section {
                 resolve();
             }, data.duration);
         });
+    }
+
+    fadeIn(inVolume, options){
+        super.fadeIn(inVolume, options);
+        this.sequence.throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in 0.5.3, please use fadeInAudio!")
+        return this;
+    }
+
+    fadeOut(inVolume, options){
+        super.fadeIn(inVolume, options);
+        this.sequence.throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in 0.5.3, please use fadeOutAudio!")
+        return this;
     }
 
     async _getSoundDuration(inFilePath){
@@ -111,7 +114,7 @@ export default class SoundSection extends Section {
             play: true,
             src: [file],
             targetVolume: this._volume,
-            volume: this._fadeIn ? 0 : this._volume,
+            volume: (this._fadeIn || this._fadeInAudio) ? 0 : this._volume,
             autoplay: true,
             loop: this._duration > duration,
             duration: this._duration ? this._duration : duration

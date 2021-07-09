@@ -514,7 +514,7 @@ export default class EffectSection extends AnimatedSection {
             index: this._index,
             zIndex: this._zIndex,
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
-            audioVolume: this._audioVolume,
+            audioVolume: this._volume,
             animatedProperties: {
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,
