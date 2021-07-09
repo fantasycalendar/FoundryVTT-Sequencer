@@ -1,16 +1,10 @@
-import Version from "../../version.js";
-import CanvasEffect from "./canvas-effect.js";
+import * as lib from "../lib.js";
 
 export class BaseEffectsLayer extends CanvasLayer {
 
-    constructor() {
-        super();
-        this.effectsContainer = undefined;
-    }
-
     static get layerOptions() {
 
-        let version = new Version().onOrAfter("0.8.6");
+        let version = new lib.Version().onOrAfter("0.8.6");
         let mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
 
         let obj = {
@@ -35,7 +29,7 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
 
     static get layerOptions() {
 
-        let version = new Version().onOrAfter("0.8.6");
+        let version = new lib.Version().onOrAfter("0.8.6");
         let mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
 
         return mergeFunc(super.layerOptions, {

@@ -4,6 +4,7 @@ export default class Section{
 
     constructor(inSequence){
         this.sequence = inSequence;
+        this.version = this.sequence.version;
         this._waitUntilFinished = false;
         this._waitUntilFinishedDelay = 0;
         this._async = false;
@@ -19,6 +20,10 @@ export default class Section{
         this._duration = false;
         this._fadeIn = false;
         this._fadeOut = false;
+        this._mustache = false;
+        this._volume = false;
+        this._fadeInAudio = false;
+        this._fadeOutAudio = false;
     }
 
     /**
@@ -99,6 +104,18 @@ export default class Section{
     }
 
     /**
+     * Sets the Mustache of the filepath. This is applied after the randomization of the filepath, if available.
+     *
+     * @param {object} inMustache
+     * @returns {Section} this
+     */
+    setMustache(inMustache) {
+        if(typeof inMustache !== "object") this.sequence.throwError(this, "setMustache", "inMustache must be of type object");
+        this._mustache = inMustache;
+        return this;
+    }
+
+    /**
      * Overrides the duration of an effect or sound
      *
      * @param {number} inDuration
@@ -107,6 +124,68 @@ export default class Section{
     duration(inDuration){
         if(typeof inDuration !== "number") this.sequence.throwError(this, "duration", "inDuration must be of type number");
         this._duration = inDuration;
+        return this;
+    }
+
+    /**
+     * Sets the volume of the sound.
+     *
+     * @param {number} inVolume
+     * @returns {Section} this
+     */
+    volume(inVolume) {
+        if(typeof inVolume !== "number") this.sequence.throwError(this, "volume", "inVolume must be of type number");
+        this._volume = Math.max(0, Math.min(1.0, inVolume));
+        return this;
+    }
+
+    /**
+     * Causes the animated section to fade in its audio (if any) when played
+     *
+     * @param {number} duration
+     * @param {object} [options] = options
+     * @returns {Section} this
+     */
+    fadeInAudio(duration, options={}) {
+        if(typeof options !== "object") this.sequence.throwError(this, "fadeInAudio", "options must be of type object");
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof duration !== "number") this.sequence.throwError(this, "fadeInAudio", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeInAudio", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeInAudio", "options.delay must be of type number");
+        this._fadeInAudio = {
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
+        return this;
+    }
+
+    /**
+     * Causes the audio to fade out at the end of the animated section's duration
+     *
+     * @param {number} duration
+     * @param {object} [options] = options
+     * @returns {Section} this
+     */
+    fadeOutAudio(duration, options={}) {
+        if(typeof options !== "object") this.sequence.throwError(this, "fadeOutAudio", "options must be of type object");
+        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
+        options = mergeFunc({
+            ease: "linear",
+            delay: 0
+        }, options);
+        if(typeof duration !== "number") this.sequence.throwError(this, "fadeOutAudio", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOutAudio", "ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeOutAudio", "delay must be of type number");
+        this._fadeOutAudio = {
+            duration: duration,
+            ease: options.ease,
+            delay: options.delay
+        };
         return this;
     }
 
@@ -146,13 +225,16 @@ export default class Section{
         if(typeof options !== "object") this.sequence.throwError(this, "fadeOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
-            ease: "linear"
+            ease: "linear",
+            delay: 0
         }, options);
         if(typeof duration !== "number") this.sequence.throwError(this, "fadeOut", "duration must be of type number");
         if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOut", "ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeOut", "delay must be of type number");
         this._fadeOut = {
             duration: duration,
-            ease: options.ease
+            ease: options.ease,
+            delay: options.delay
         };
         return this;
     }

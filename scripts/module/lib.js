@@ -50,10 +50,31 @@ export function is_function(inFunc){
  * This function returns a random element in the given array
  *
  * @param  {array}   inArray    An array
+ * @param  {boolean} recurse    Whether to recurse if the randomly chosen element is also an array
  * @return {object}             A random element from the array
  */
-export function random_array_element(inArray){
-    return inArray[Math.floor(random_float_between(0, inArray.length))];
+export function random_array_element(inArray, recurse=false){
+    let choice = inArray[Math.floor(random_float_between(0, inArray.length))];
+    if(recurse && Array.isArray(choice)){
+        return random_array_element(choice, true);
+    }
+    return choice;
+}
+
+/**
+ * This function returns a random element in the given array
+ *
+ * @param  {object}   inObject   An object
+ * @param  {boolean}  recurse    Whether to recurse if the randomly chosen element is also an object
+ * @return {object}              A random element from the object
+ */
+export function random_object_element(inObject, recurse=false){
+    let keys = Object.keys(inObject);
+    let choice = inObject[random_array_element(keys)];
+    if(typeof choice === "object" && recurse){
+        return random_object_element(choice, true)
+    }
+    return choice;
 }
 
 /**
@@ -128,4 +149,42 @@ export function rotateVector(vector, degrees){
     vector.y = (distance * sin3);
 
     return vector;
+}
+
+
+export function flattenObject(ob) {
+    let toReturn = [];
+    for (let i in ob) {
+        if (!ob.hasOwnProperty(i)) continue;
+        if ((typeof ob[i]) == 'object') {
+            let flatObject = flattenObject(ob[i]);
+            for (let x in flatObject) {
+                if (!flatObject.hasOwnProperty(x)) continue;
+                toReturn[i + '.' + x] = flatObject[x];
+            }
+        } else {
+            toReturn[i] = ob[i];
+        }
+    }
+    return toReturn;
+
+}
+
+export class Version {
+
+    constructor(inString) {
+        this.major = 0;
+        this.minor = 0;
+        this.patch = 0;
+        if (!inString) inString = game.data.version;
+        [this.major, this.minor, this.patch] = inString.split('.').map(x => Number(x));
+    }
+
+    onOrAfter(inVersion) {
+        if (typeof inVersion === "string") inVersion = new Version(inVersion);
+        return (this.major > inVersion.major)
+            || (this.major === inVersion.major && this.minor > inVersion.minor)
+            || (this.major === inVersion.major && this.minor === inVersion.minor && this.patch >= inVersion.patch);
+    }
+
 }

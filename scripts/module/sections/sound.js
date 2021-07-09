@@ -7,6 +7,7 @@ export default class SoundSection extends Section {
         super(inSequence);
         this.file(inFile);
         this._volume = 0.8;
+        this._databaseEntry = false;
     }
 
     /**
@@ -17,22 +18,10 @@ export default class SoundSection extends Section {
      * @returns {SoundSection} this
      */
     file(inFile) {
-        if(!(typeof inFile === "string" || Array.isArray(inFile))){
-            this.sequence.throwError(this, "file", "inFile must be of type string or array");
-        }
         this._file = inFile;
-        return this;
-    }
-
-    /**
-     * Sets the volume of the sound.
-     *
-     * @param {number} inVolume
-     * @returns {SoundSection} this
-     */
-    volume(inVolume) {
-        if(typeof inVolume !== "number") this.sequence.throwError(this, "volume", "inVolume must be of type number");
-        this._volume = Math.max(0, Math.min(1.0, inVolume));
+        if(inFile) {
+            this._databaseEntry = window.SequencerDatabase.entryExists(inFile.split('.')?.[0] ?? "");
+        }
         return this;
     }
 
@@ -43,19 +32,30 @@ export default class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
+        // To remove in 0.5.3
+        let fadeIn = this._fadeIn || this._fadeInAudio;
+        let fadeOut = this._fadeOut || this._fadeOutAudio;
+
         this.sequence.log(`Playing sound:`, data);
 
         let howler = await AudioHelper.play(data, true);
 
-        if(this._fadeIn) {
-            howler.fade(data.targetVolume, this._fadeIn.duration, 0.0)
+        if(fadeIn) {
+            if(this.version) {
+                howler.fade(data.targetVolume, { duration: fadeIn.duration, from: 0.0 })
+            }else{
+                howler.fade(0.0, data.targetVolume, fadeIn.duration)
+            }
         }
 
-        if(this._fadeOut) {
-            let fadeOut = this._fadeOut;
+        if(fadeOut) {
             setTimeout(function () {
                 if(howler.playing) {
-                    howler.fade(0, fadeOut.duration, data.targetVolume)
+                    if(this.version) {
+                        howler.fade(0.0, { duration: fadeOut.duration, from: data.targetVolume })
+                    }else{
+                        howler.fade(data.targetVolume, 0.0, fadeOut.duration)
+                    }
                 }
             }, Math.max(data.duration - fadeOut.duration, 0));
         }
@@ -66,6 +66,18 @@ export default class SoundSection extends Section {
                 resolve();
             }, data.duration);
         });
+    }
+
+    fadeIn(inVolume, options){
+        super.fadeIn(inVolume, options);
+        this.sequence.throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in a future version, please use fadeInAudio!")
+        return this;
+    }
+
+    fadeOut(inVolume, options){
+        super.fadeIn(inVolume, options);
+        this.sequence.throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in a future version, please use fadeOutAudio!")
+        return this;
     }
 
     async _getSoundDuration(inFilePath){
@@ -80,8 +92,15 @@ export default class SoundSection extends Section {
 
     async _sanitizeSoundData() {
         let file = this._file;
-        if(Array.isArray(this._file)) {
-            file = lib.random_array_element(this._file)
+        if(this._databaseEntry) {
+            file = window.SequencerDatabase.get(file) || file;
+        }
+        if(Array.isArray(file)) {
+            file = lib.random_array_element(file)
+        }
+        if(this._mustache) {
+            let template = Handlebars.compile(file);
+            file = template(this._mustache);
         }
         let duration = await this._getSoundDuration(file);
         if(!duration){
@@ -95,7 +114,7 @@ export default class SoundSection extends Section {
             play: true,
             src: [file],
             targetVolume: this._volume,
-            volume: this._fadeIn ? 0 : this._volume,
+            volume: (this._fadeIn || this._fadeInAudio) ? 0 : this._volume,
             autoplay: true,
             loop: this._duration > duration,
             duration: this._duration ? this._duration : duration

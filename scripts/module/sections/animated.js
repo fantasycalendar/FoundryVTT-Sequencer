@@ -87,42 +87,38 @@ export default class AnimatedSection extends Section{
         if(typeof options !== "object") this.sequence.throwError(this, "rotateOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
-            ease: "linear"
+            ease: "linear",
+            delay: 0
         }, options);
         if(typeof degrees !== "number") this.sequence.throwError(this, "rotateOut", "degrees must be of type number");
         if(typeof duration !== "number") this.sequence.throwError(this, "rotateOut", "duration must be of type number");
         if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateOut", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateOut", "options.delay must be of type number");
         this._rotateOut = {
             value: degrees,
             duration: duration,
-            ease: options.ease
+            ease: options.ease,
+            delay: options.delay
         };
         return this;
     }
 
-    _findObjectById(id){
-        return canvas?.foreground?.get(id)
-            ?? canvas?.tokens?.get(id)
-            ?? canvas?.templates?.get(id)
-            ?? undefined;
+    _findObjectById(inId){
+        for(let layer of canvas.layers){
+            let obj = layer?.objects?.children?.find(obj => obj.id === inId)
+            if(obj) return obj;
+        }
     }
 
     _validateLocation(inLocation) {
-
-        if(inLocation?.id) {
-            inLocation = this._findObjectById(inLocation.id) ?? inLocation;
+        let id = inLocation?._id ?? inLocation;
+        if(typeof id === "string"){
+            inLocation = this._findObjectById(id) ?? id;
         }
 
-        if (   inLocation instanceof Token
-            || inLocation instanceof MeasuredTemplate
-            || inLocation instanceof Tile
-            || typeof inLocation === "string"
-        ) return inLocation;
+        if(inLocation?.x === undefined && inLocation?.y === undefined) return false;
 
-        return {
-            x: inLocation?.data?.x ?? inLocation?.x ?? 0,
-            y: inLocation?.data?.y ?? inLocation?.y ?? 0
-        }
+        return inLocation;
 
     }
 

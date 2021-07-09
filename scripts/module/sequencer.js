@@ -3,7 +3,6 @@ import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
 import AnimationSection from './sections/animation.js';
-import Version from "../version.js";
 
 export default class Sequence{
 
@@ -12,8 +11,8 @@ export default class Sequence{
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
-        this.version = new Version().onOrAfter("0.8.6");
-        this._debug = game.settings.get("sequencer", "debug");
+        this.version = new lib.Version().onOrAfter("0.8.6");
+        this.debug = game.settings.get("sequencer", "debug");
     }
 
     /**
@@ -191,6 +190,12 @@ export default class Sequence{
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
+    throwWarning(self, func, warning){
+        warning = `Sequencer | ${self.constructor.name} | ${func} - ${warning}`;
+        ui.notifications.warn(warning);
+        console.warn(warning)
+    }
+
     throwError(self, func, error){
         error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
         ui.notifications.error(error);
@@ -198,7 +203,7 @@ export default class Sequence{
     }
 
     log(...args){
-        if(this._debug) console.log(`DEBUG | Sequencer |`, ...args);
+        if(this.debug) console.log(`DEBUG | Sequencer |`, ...args);
     }
 
 }
