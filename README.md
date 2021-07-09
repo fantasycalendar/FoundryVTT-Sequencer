@@ -314,7 +314,7 @@ new Sequence()
   - `.audioVolume()`
   - `.fadeInAudio()`
   - `.fadeOutAudio()`
-- *Effects* - Added support for delays on (e.g. a delay of -500 means it will finish 500ms before the end of the duration):
+- *Effects* - Added support for delays on these methods (e.g. a delay of -500 means it will finish 500ms before the end of the duration):
   - `.rotateOut()`
   - `.fadeOut()`
   - `.scaleOut()`
