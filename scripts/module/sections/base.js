@@ -159,13 +159,16 @@ export default class Section{
         if(typeof options !== "object") this.sequence.throwError(this, "fadeOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
-            ease: "linear"
+            ease: "linear",
+            delay: 0
         }, options);
         if(typeof duration !== "number") this.sequence.throwError(this, "fadeOut", "duration must be of type number");
         if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOut", "ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeOut", "delay must be of type number");
         this._fadeOut = {
             duration: duration,
-            ease: options.ease
+            ease: options.ease,
+            delay: options.delay
         };
         return this;
     }

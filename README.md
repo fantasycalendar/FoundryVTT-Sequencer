@@ -307,13 +307,22 @@ new Sequence()
 ## Changelog
 
 ### Version 0.5.0
-- *Sequencer* - Added SequencerDatabase! Read more on the [database documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Database) how to use it!
-- *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase) for `.animation()`  
-- *Animations* - Fixed `.rotateTowards()` to properly rotate towards the target without having to use offsets 
-- *Effects & Sounds* - Added support for database entries to the `.file()` method - more info can be found on the [function documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file)
+- *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase)
+- *Sequencer* - Added the Sequencer Database to help content creators! Read more on the [database documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Database) how to use it!
+- *Effects & Sounds* - Added support for database entries to the `.file()` method - more info can be found in the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file)
+- *Animations & Effects* - Added the following functions:
+  - `.audioVolume()`
+  - `.fadeInAudio()`
+  - `.fadeOutAudio()`
+- *Effects* - Added support for delays on (e.g. a delay of -500 means it will finish 500ms before the end of the duration):
+  - `.rotateOut()`
+  - `.fadeOut()`
+  - `.scaleOut()`
+  - `.fadeOutAudio()`
+- *Animations* - Fixed `.rotateTowards()` to properly rotate towards the target without having to add an offset to properly line them up
 - *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` entries
-- *Sounds* - Fixed `.fadeOut()` and `.fadeIn()` being broken on both 0.8.x and 0.7.x 
-
+- *Effects* - Fixed issues surrounding delays and fades
+- *Sounds* - Fixed `.fadeIn()` and `.fadeOut()` being broken on both 0.8.x and 0.7.x
 
 ### Version 0.4.6 Hotfix
 - *Effects* - Fixed effects not playing on tokens on 0.7.10 and below

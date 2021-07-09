@@ -24,7 +24,7 @@ export default class AnimationSection extends AnimatedSection{
      */
     on(inTarget){
         inTarget = this._validateLocation(inTarget);
-        if(inTarget === undefined) this.sequence.throwError(this, "on", "could not find position of given object");
+        if(!inTarget) this.sequence.throwError(this, "on", "could not find position of given object");
         this._originObject = this._validateLocation(inTarget);
         return this;
     }
@@ -46,7 +46,7 @@ export default class AnimationSection extends AnimatedSection{
         if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
         if(typeof options.delay !== "number") this.sequence.throwError(this, "moveTowards", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if(inTarget === undefined) this.sequence.throwError(this, "moveTowards", "could not find position of given object");
+        if(!inTarget) this.sequence.throwError(this, "moveTowards", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._moveTowards = options;
         this._teleportTo = false;
@@ -75,7 +75,7 @@ export default class AnimationSection extends AnimatedSection{
         if(typeof options.offset !== "number") this.sequence.throwError(this, "rotateTowards", "options.offset must be of type number");
         if(typeof options.towardsCenter !== "boolean") this.sequence.throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
         inTarget = this._validateLocation(inTarget);
-        if(inTarget === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        if(!inTarget) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._rotateTowards = options;
         return this;
@@ -96,7 +96,7 @@ export default class AnimationSection extends AnimatedSection{
         }, options);
         if(typeof options.delay !== "number") this.sequence.throwError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if(inTarget === undefined) this.sequence.throwError(this, "teleportTo", "could not find position of given object");
+        if(!inTarget) this.sequence.throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
         this._moveTowards = false;
@@ -282,12 +282,12 @@ export default class AnimationSection extends AnimatedSection{
 
         if(this._fadeIn){
 
-            let from = typeof this._opacity === "number" ? this._opacity : this._originObject.alpha;
+            let to = typeof this._opacity === "number" ? this._opacity : 1.0;
 
             animData.attributes.push({
                 name: "alpha",
-                from: from,
-                to: 1.0,
+                from: 0.0,
+                to: to,
                 progress: 0,
                 done: false,
                 duration: this._fadeIn.duration,
@@ -297,6 +297,28 @@ export default class AnimationSection extends AnimatedSection{
             })
 
             let fadeDuration = this._fadeIn.duration + this._fadeIn.delay;
+
+            overallDuration = overallDuration > fadeDuration ? overallDuration : fadeDuration;
+
+        }
+
+        if(this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined){
+
+            let to = typeof this._audioVolume === "number" ? this._audioVolume : 1.0;
+
+            animData.attributes.push({
+                name: "video.volume",
+                from: 0.0,
+                to: to,
+                progress: 0,
+                done: false,
+                duration: this._fadeInAudio.duration,
+                durationDone: 0,
+                delay: this._fadeInAudio.delay,
+                ease: easeFunctions[this._fadeInAudio.ease]
+            })
+
+            let fadeDuration = this._fadeInAudio.duration + this._fadeInAudio.delay;
 
             overallDuration = overallDuration > fadeDuration ? overallDuration : fadeDuration;
 
@@ -400,18 +422,35 @@ export default class AnimationSection extends AnimatedSection{
 
         if(this._fadeOut){
 
-            let to = typeof this._opacity === "number" ? this._opacity : this._originObject.alpha;
+            let from = typeof this._opacity === "number" ? this._opacity : this._originObject.alpha;
 
             animData.attributes.push({
                 name: "alpha",
-                from: 1.0,
-                to: to,
+                from: from,
+                to: 0.0,
                 progress: 0,
                 done: false,
                 duration: this._fadeOut.duration,
                 durationDone: 0,
                 delay: overallDuration - this._fadeOut.duration,
                 ease: easeFunctions[this._fadeOut.ease]
+            })
+        }
+
+        if(this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined){
+
+            let from = typeof this._audioVolume === "number" ? this._audioVolume : this._originObject.data.video.volume;
+
+            animData.attributes.push({
+                name: "video.volume",
+                from: from,
+                to: 0.0,
+                progress: 0,
+                done: false,
+                duration: this._fadeOutAudio.duration,
+                durationDone: 0,
+                delay: overallDuration - this._fadeOutAudio.duration,
+                ease: easeFunctions[this._fadeOutAudio.ease]
             })
         }
 
@@ -494,7 +533,7 @@ export default class AnimationSection extends AnimatedSection{
                         animatedAttributes['x'] = x;
                         animatedAttributes['y'] = y;
 
-                    }else {
+                    }else{
 
                         if(attribute.name === "rotationTowards" && !attribute.from && !attribute.to){
 

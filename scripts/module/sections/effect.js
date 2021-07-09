@@ -194,7 +194,8 @@ export default class EffectSection extends AnimatedSection {
         if(typeof options !== "object") this.sequence.throwError(this, "moveTowards", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
-            ease: "linear"
+            ease: "linear",
+            delay: 0
         }, options);
         if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
         inLocation = this._validateLocation(inLocation);
@@ -287,7 +288,6 @@ export default class EffectSection extends AnimatedSection {
         if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
-            scale: 0,
             ease: "linear",
             delay: 0
         }, options);
@@ -316,15 +316,18 @@ export default class EffectSection extends AnimatedSection {
         if(typeof options !== "object") this.sequence.throwError(this, "scaleOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
-            ease: "linear"
+            ease: "linear",
+            delay: 0
         }, options);
         if(typeof duration !== "number") this.sequence.throwError(this, "scaleOut", "duration must be of type number");
         if(!(typeof scale === "number" || typeof scale === "object")) this.sequence.throwError(this, "scaleOut", "scale must be of type number or object");
         if(typeof options.ease !== "string") this.sequence.throwError(this, "scaleOut", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence.throwError(this, "scaleOut", "options.delay must be of type number");
         this._scaleOut = {
             value: scale,
             duration: duration,
-            ease: options.ease
+            ease: options.ease,
+            delay: options.delay
         };
         return this;
     }
@@ -511,6 +514,7 @@ export default class EffectSection extends AnimatedSection {
             index: this._index,
             zIndex: this._zIndex,
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
+            audioVolume: this._audioVolume,
             animatedProperties: {
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,
@@ -518,78 +522,16 @@ export default class EffectSection extends AnimatedSection {
                 scaleOut: this._scaleOut,
                 rotateIn: this._rotateIn,
                 rotateOut: this._rotateOut,
-                moves: this._moves
+                moves: this._moves,
+                fadeInAudio: this._fadeInAudio,
+                fadeOutAudio: this._fadeOutAudio
             },
             debug: this.sequence.debug
         };
 
-        if(this._anchor) {
-            data.anchor = this._anchor;
-        }
+        if(this._anchor) data.anchor = this._anchor;
 
-        if (this._from) {
-
-            let [from, to, origin, target] = this._getPositions(this._from, this._to);
-
-            if(this._offset) {
-                let offset = this._offset;
-                if(this._offset.local){
-                    let target = to || from;
-                    if(target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
-                }
-                if(to){
-                    target.x -= offset.x;
-                    target.y -= offset.y;
-                }else{
-                    origin.x -= offset.x;
-                    origin.y -= offset.y;
-                }
-            }
-
-            if(this._to){
-                target = this._applyMissedOffsets(target);
-            }else{
-                origin = this._applyMissedOffsets(origin);
-            }
-
-            if(!this._anchor) {
-                data.anchor = {
-                    x: 0.5,
-                    y: 0.5
-                }
-            }
-
-            data.position = origin;
-
-            if(this._to) {
-
-                if(!this._anchor) {
-                    data.anchor = {
-                        x: 0.0,
-                        y: 0.5
-                    }
-                }
-
-                let ray = new Ray(origin, target);
-
-                data._distance = ray.distance;
-
-                data.rotation = ray.angle;
-
-                if(this._moves) {
-                    data.distance = ray.distance;
-                    if(!this._anchor) {
-                        data.anchor = {
-                            x: 0.5,
-                            y: 0.5
-                        }
-                    }
-                    data.speed = this._moveSpeed;
-                }
-
-            }
-
-        }
+        data = this._determineTargets(data);
 
         data.rotation += this._randomRotation ? Math.random() * Math.PI : 0;
 
@@ -597,26 +539,7 @@ export default class EffectSection extends AnimatedSection {
             data = await override(this, data);
         }
 
-        if(this._databaseEntry){
-            if (this._mustache) {
-                let template = Handlebars.compile(data.file);
-                data.file = template(this._mustache);
-            }
-            data.file = window.SequencerDatabase.get(data.file) || data.file;
-            data = await this.evaluateDatabaseEntry(data);
-        }
-
-        if(Array.isArray(data.file)) {
-            data.file = lib.random_array_element(data.file)
-        }
-
-        if(typeof data.file === "string") {
-            data.file = data.file.startsWith(this._baseFolder) ? data.file : this._baseFolder + data.file;
-            if (this._mustache) {
-                let template = Handlebars.compile(data.file);
-                data.file = template(this._mustache);
-            }
-        }
+        data = this._determineFile(data);
 
         if(this._JB2A){
             let [gridSize, startPoint, endPoint] = {
@@ -669,6 +592,111 @@ export default class EffectSection extends AnimatedSection {
 
     }
 
+    _determineTargets(data){
+
+        if (this._from) {
+
+            let [from, to, origin, target] = this._getPositions(this._from, this._to);
+
+            if(this._offset) {
+                let offset = this._offset;
+                if(this._offset.local){
+                    let target = to || from;
+                    if(target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
+                }
+                if(to){
+                    target.x -= offset.x;
+                    target.y -= offset.y;
+                }else{
+                    origin.x -= offset.x;
+                    origin.y -= offset.y;
+                }
+            }
+
+            if(this._to){
+                target = this._applyMissedOffsets(target);
+            }else{
+                origin = this._applyMissedOffsets(origin);
+            }
+
+            if(!this._anchor && (this.from instanceof Token || this.from instanceof Tile)) {
+                data.anchor = {
+                    x: 0.5,
+                    y: 0.5
+                }
+            }
+
+            data.position = origin;
+
+            if(this._to) {
+
+                if(!this._anchor) {
+                    data.anchor = {
+                        x: 0.0,
+                        y: 0.5
+                    }
+                }
+
+                let ray = new Ray(origin, target);
+
+                data._distance = ray.distance;
+
+                data.rotation = ray.angle;
+
+                if(this._moves) {
+                    data.distance = ray.distance;
+                    if(!this._anchor) {
+                        data.anchor = {
+                            x: 0.5,
+                            y: 0.5
+                        }
+                    }
+                    data.speed = this._moveSpeed;
+                }
+
+            }
+
+        }
+
+        return data;
+    }
+
+    _determineFile(data){
+
+        if(typeof data.file === "string") {
+            if (this._mustache) {
+                let template = Handlebars.compile(data.file);
+                data.file = template(this._mustache);
+            }
+        }
+
+        let forcedIndex = false;
+        if(this._databaseEntry){
+            let match = data.file.match(/\[([0-9]+)]$/)
+            if(match) {
+                forcedIndex = Number(match[1]);
+                data.file = data.file.replace(/\[[0-9]+]$/, "");
+            }
+            data.file = window.SequencerDatabase.get(data.file) || data.file;
+            data = this.evaluateDatabaseEntry(data);
+        }
+
+        if(Array.isArray(data.file)) {
+            data.file = typeof forcedIndex !== "number" ? lib.random_array_element(data.file) : data.file[forcedIndex % data.file.length];
+        }
+
+        if(typeof data.file === "string") {
+            data.file = data.file.startsWith(this._baseFolder) ? data.file : this._baseFolder + data.file;
+            if (this._mustache) {
+                let template = Handlebars.compile(data.file);
+                data.file = template(this._mustache);
+            }
+        }
+
+        return data;
+
+    }
+
     get distanceMatching(){
         return {
             "90ft": 1500,
@@ -679,79 +707,51 @@ export default class EffectSection extends AnimatedSection {
         }
     }
 
-    async evaluateDatabaseEntry(data){
-
+    evaluateDatabaseEntry(data){
         if(typeof data.file !== "object") return data;
-
         return this._recurseDatabaseFiles(data);
-
     }
 
     _recurseDatabaseFiles(data){
-
-        data.file = random_object_element(data.file);
-
-        if(typeof data.file !== "object") return data;
+        if(typeof data.file === "string" || Array.isArray(data.file)) return data;
 
         if(this._to && !this._rotationOnly) {
             let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1).length !== 0;
             if(foundDistances) return this._rangeFind(data);
         }
 
-        return this._recurseDatabaseFiles(data);
+        data.file = random_object_element(data.file);
 
+        return this._recurseDatabaseFiles(data);
     }
 
     _rangeFind(data){
 
-        let files = data.file;
+        let distances = Object.keys(data.file)
+            .filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1)
+            .map(entry => { return {
+                file: data.file[entry],
+                minDistance: this.distanceMatching[entry]
+            }});
 
-        let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1);
-
-        let relativeDistance = data._distance / this.gridSizeDifference;
-
-        let actualFiles = [];
-        for(let distance of foundDistances){
-            let file = files[distance]
-            actualFiles.push({
-                file: file,
-                minDistance: this.distanceMatching[distance]
-            })
-        }
-
-        let uniqueDistances = [...new Set(actualFiles.map(item => item.minDistance))];
-
+        let uniqueDistances = [...new Set(distances.map(item => item.minDistance))];
         uniqueDistances.sort((a, b) => a - b);
 
         let max = Math.max(...uniqueDistances);
         let min = Math.min(...uniqueDistances);
 
-        actualFiles = actualFiles.map(entry => {
-            if(entry.minDistance === max){
-                entry.minDistance = [
-                    entry.minDistance,
-                    Infinity
-                ];
-            }else if(entry.minDistance === min){
-                entry.minDistance = [
-                    0,
-                    entry.minDistance
-                ];
-            }else{
-                let index = uniqueDistances.indexOf(entry.minDistance)+1;
-                entry.minDistance = [
-                    entry.minDistance,
-                    uniqueDistances[index]
-                ];
-            }
-            return entry;
-        });
+        let relativeDistance = data._distance / this.gridSizeDifference;
 
-        let matchedDistance = actualFiles.find(e => {
-            return relativeDistance >= e.minDistance[0] && relativeDistance < e.minDistance[1]
-        });
-
-        data.file = matchedDistance.file;
+        data.file = distances
+            .map(entry => {
+                entry.distances = [
+                    entry.minDistance === min ? 0 : entry.minDistance,
+                    entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance)+1]
+                ];
+                return entry;
+            })
+            .find(e => relativeDistance >= e.distances[0] && relativeDistance < e.distances[1])
+            .file;
 
         return data;
     }

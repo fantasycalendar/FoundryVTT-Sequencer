@@ -24,6 +24,7 @@ export async function playEffect(data){
 
     if(!container) {
         if(layer === canvas.background){
+            layer.sortableChildren = true;
             layer.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
         }
         container = new PIXI.Container();

@@ -41,6 +41,7 @@ export default class SequencerDatabase{
      * @return {object|boolean}                 The found entry in the database, or false if not found (with warning)
      */
     get(inString){
+        inString = inString.replace(/\[[0-9]+]$/, "");
         if(!this.entryExists(inString)) return this._throwNotFound(inString);
         let parts = inString.split('.');
         let length = parts.length-1;
