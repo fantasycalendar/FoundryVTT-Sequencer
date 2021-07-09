@@ -70,13 +70,13 @@ export default class SoundSection extends Section {
 
     fadeIn(inVolume, options){
         super.fadeIn(inVolume, options);
-        this.sequence.throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in 0.5.3, please use fadeInAudio!")
+        this.sequence.throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in a future version, please use fadeInAudio!")
         return this;
     }
 
     fadeOut(inVolume, options){
         super.fadeIn(inVolume, options);
-        this.sequence.throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in 0.5.3, please use fadeOutAudio!")
+        this.sequence.throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in a future version, please use fadeOutAudio!")
         return this;
     }
 
