@@ -4,14 +4,6 @@
 
 This module implements a basic pipeline that can be used for managing the flow of a set of functions, effects, sounds, and macros.
 
-## Credits
-Sequencer stands on the shoulder of giants:
-
-* Oujia Board Sample scenes & macros - Copyright @ 2020 Matheus Moreno Mota
-* U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
-* Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
-* [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev
-
 ## Effects shown in this readme
 * [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.jb2a.com/))
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
@@ -20,12 +12,10 @@ Sequencer stands on the shoulder of giants:
 ## Download here:
 `https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json`
 
-## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation & Guides](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
-
 ## How to use
-
 First you have to define a sequence:
 
 ```js
@@ -459,8 +449,18 @@ new Sequence()
 - First implementation
 
 
-## License
+## Credits
+### Feedback and amazing help
+
+* U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
+* Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
+
 ### Oujia Board
 - Designer: Matheus Moreno Mota
 - Sound: https://99sounds.org/license/
 - Image: https://pixabay.com/service/license/
+
+### Other Attributions
+- Hyperdrive Animations - Copyright © 2020 Adam Oresten
+- Sci-fi Cockpits - Copyright © 2020 Vattalus Assets
+- [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev
