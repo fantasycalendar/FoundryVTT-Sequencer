@@ -7,6 +7,7 @@ This module implements a basic pipeline that can be used for managing the flow o
 ## Credits
 Sequencer stands on the shoulder of giants:
 
+* Oujia Board Sample scenes & macros - Copyright @ 2020 Matheus Moreno Mota
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
 * [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev
@@ -22,12 +23,6 @@ Sequencer stands on the shoulder of giants:
 ## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
-
-## Modules that utilize Sequencer
-
-### [Oujia board with animations](https://github.com/brunocalado/ouija-board-for-sequencer)
-
-![Test](https://github.com/brunocalado/ouija-board-for-sequencer/raw/main/assets/guide/demo01.gif)
 
 ## How to use
 
@@ -180,23 +175,22 @@ let sequence = new Sequence()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm")
         .atLocation(tokenD)
         .scale(0.35)
-    .wait(400)
-    .sound("Music/Sound_Effects/teleport.wav")
-    .wait(600)
-    .effect()
+    .wait(1000)
+        .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
-        .atLocation(tokenD)
+    .atLocation(tokenD)
         .reachTowards({
-            x: tokenD.center.x+500,
+            x: tokenD.center.x + canvas.grid.size*4,
             y: tokenD.center.y
         })
     .wait(100)
     .animation()
         .on(tokenD)
         .teleportTo({
-            x: tokenD.x+500,
+            x: tokenD.x + canvas.grid.size*4,
             y: tokenD.y
         })
+        .waitUntilFinished()
     .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
         .atLocation(tokenD)
@@ -305,6 +299,13 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.5.1
+- *Sequencer* - Added two sample scenes with macros and accompanying art:
+    - An animated Oujia board made by Matheus aka. md-mention2reply
+    - A star wars inspired hyperspeed scene-switching scene, effects, and macro
+- *Effects* - Fixed effects not auto-centering on the token
+- *Effects* - Fixed effects not finding the proper location when a previous effect's `.name()` was given
 
 ### Version 0.5.0
 - *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase)
@@ -454,3 +455,10 @@ new Sequence()
 
 ### Version 0.1.0
 - First implementation
+
+
+## License
+### Oujia Board
+- Designer: Matheus Moreno Mota
+- Sound: https://99sounds.org/license/
+- Image: https://pixabay.com/service/license/
