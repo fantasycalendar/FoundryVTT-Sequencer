@@ -35,12 +35,6 @@
       "lang": ["en"]
     }
   ],
-  "dependencies": [
-    {
-      "name": "token-ease",
-      "manifest": "https://github.com/FantasyCalendar/FoundryVTT-TokenEase/releases/latest/download/module.json"
-    }
-  ],
   "socket": true,
   "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",
   "manifest": "https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/manifest.json",

@@ -302,10 +302,12 @@ new Sequence()
 
 ### Version 0.5.1
 - *Sequencer* - Added two sample scenes with macros and accompanying art:
-    - An animated Oujia board made by Matheus aka. md-mention2reply
-    - A star wars inspired hyperspeed scene-switching scene, effects, and macro
+    - An animated Oujia board made by Matheus, AKA md-mention2reply
+    - A Star Wars inspired hyperspeed scene-switching scene, effects, and macro
+- *Sequencer* - Removed Token Ease as dependency until we can solve its conflicts with other modules
 - *Effects* - Fixed effects not auto-centering on the token
 - *Effects* - Fixed effects not finding the proper location when a previous effect's `.name()` was given
+- *Animations* - Fixed `.rotate()`, `.opacity()`, and `.volume()`, now they work even without having to use their respective in/out functions
 
 ### Version 0.5.0
 - *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase)
