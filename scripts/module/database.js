@@ -31,7 +31,8 @@ export default class SequencerDatabase{
      * @return {boolean}                 If the entry exists in the database
      */
     entryExists(inString){
-        return this.flattenedContents.filter(entry => entry.startsWith(inString)).length > 0;
+        inString = inString.replace(/\[[0-9]+]$/, "")
+        return this.flattenedContents.find(entry => entry.startsWith(inString));
     }
 
     /**

@@ -12,17 +12,27 @@
   "packs": [
     {
       "name": "sequencer-sample-macros",
-      "label": "Sequencer Sample macros",
+      "label": "Sequencer Sample Macros",
       "path": "./packs/sequencer-sample-macros.db",
       "module": "world",
       "entity": "Macro",
       "lang": ["en"]
-    }
-  ],
-  "dependencies": [
+    },
     {
-      "name": "token-ease",
-      "manifest": "https://github.com/FantasyCalendar/FoundryVTT-TokenEase/releases/latest/download/module.json"
+      "name": "sequencer-sample-scenes",
+      "label": "Sequencer Sample Scenes",
+      "path": "./packs/sequencer-sample-scenes.db",
+      "module": "world",
+      "entity": "Scene",
+      "lang": ["en"]
+    },
+    {
+      "name": "sequencer-oujia-board",
+      "label": "Sequencer Oujia Board",
+      "path": "./packs/sequencer-oujia-board.db",
+      "module": "world",
+      "entity": "JournalEntry",
+      "lang": ["en"]
     }
   ],
   "socket": true,

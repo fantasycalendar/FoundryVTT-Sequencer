@@ -7,7 +7,6 @@ export default class SoundSection extends Section {
         super(inSequence);
         this.file(inFile);
         this._volume = 0.8;
-        this._databaseEntry = false;
     }
 
     /**
@@ -19,9 +18,6 @@ export default class SoundSection extends Section {
      */
     file(inFile) {
         this._file = inFile;
-        if(inFile) {
-            this._databaseEntry = window.SequencerDatabase.entryExists(inFile.split('.')?.[0] ?? "");
-        }
         return this;
     }
 
@@ -92,11 +88,12 @@ export default class SoundSection extends Section {
 
     async _sanitizeSoundData() {
         let file = this._file;
-        if(this._databaseEntry) {
+        if(Array.isArray(file)) file = lib.random_array_element(file)
+
+        let databaseEntry = window.SequencerDatabase.entryExists(file.split('.')?.[0] ?? "");
+        if(databaseEntry) {
             file = window.SequencerDatabase.get(file) || file;
-        }
-        if(Array.isArray(file)) {
-            file = lib.random_array_element(file)
+            if(Array.isArray(file)) file = lib.random_array_element(file);
         }
         if(this._mustache) {
             let template = Handlebars.compile(file);

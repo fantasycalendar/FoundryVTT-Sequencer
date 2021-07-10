@@ -382,42 +382,30 @@ export default class AnimationSection extends AnimatedSection{
             if (!this._duration && this._moveTowards.ease === "linear") {
                 await this.updateObject(this._originObject, targetLoc, true);
             }else{
-                if(this._originObject instanceof Token) {
+                // Re-enable maybe in the future?
+                /*if(this._originObject instanceof Token) {
                     setTimeout(() => {
                         this.updateObject(this._originObject, targetLoc, true, {
                             duration: duration,
                             ease: this._moveTowards.ease
                         });
                     }, this._moveTowards.delay);
-                }else{
-                    animData.attributes.push({
-                        name: "position",
-                        origin: originLoc,
-                        target: targetLoc,
-                        originalDistance: originalDistance,
-                        currentDistance: 0,
-                        progress: 0,
-                        speed: 0,
-                        duration: duration,
-                        done: false,
-                        ease: easeFunctions[this._moveTowards.ease],
-                        delay: this._moveTowards.delay
-                    })
-                }
+                }else{*/
+                animData.attributes.push({
+                    name: "position",
+                    origin: originLoc,
+                    target: targetLoc,
+                    originalDistance: originalDistance,
+                    currentDistance: 0,
+                    progress: 0,
+                    speed: 0,
+                    duration: duration,
+                    done: false,
+                    ease: easeFunctions[this._moveTowards.ease],
+                    delay: this._moveTowards.delay
+                })
+                //}
             }
-        }
-
-        if(this._teleportTo){
-            setTimeout(async () => {
-                let targetLocation = this._closestSquare
-                    ? this._getClosestSquare(this._originObject, this._teleportTo.target)
-                    : this._getCleanPosition(this._teleportTo.target);
-                targetLocation.x += this._offset.x;
-                targetLocation.y += this._offset.y;
-                if(this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
-                await this.updateObject(this._originObject, targetLocation);
-            }, this._teleportTo.delay);
-            overallDuration = overallDuration > this._teleportTo.delay ? overallDuration : this._teleportTo.delay;
         }
 
         if(this._fadeOut){
@@ -483,12 +471,42 @@ export default class AnimationSection extends AnimatedSection{
 
         }
 
+        if(this._teleportTo){
+            setTimeout(async () => {
+                let targetLocation = this._closestSquare
+                    ? this._getClosestSquare(this._originObject, this._teleportTo.target)
+                    : this._getCleanPosition(this._teleportTo.target);
+                targetLocation.x += this._offset.x;
+                targetLocation.y += this._offset.y;
+                if(this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
+                await this.updateObject(this._originObject, targetLocation);
+            }, this._teleportTo.delay);
+            if(overallDuration <= this._teleportTo.delay){
+                this._waitUntilFinished = true;
+            }
+            overallDuration = overallDuration > this._teleportTo.delay ? overallDuration : this._teleportTo.delay;
+        }
+
+        let updateAttributes = {};
+        if(typeof this._angle === "number" && !this._rotateIn && !this._rotateOut){
+            updateAttributes["rotation"] = this._angle;
+        }
+
+        if(typeof this._opacity === "number" && !this._fadeIn && !this._fadeOut){
+            updateAttributes["alpha"] = this._opacity;
+        }
+
+        if(typeof this._volume === "number" && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined){
+            updateAttributes["video.volume"] = this._volume;
+        }
+
+        if(Object.keys(updateAttributes).length){
+            await this.updateObject(this._originObject, updateAttributes);
+        }
+
         return new Promise(async (resolve) => {
-
             this.animate(animData, resolve);
-
             setTimeout(resolve, Math.max(0, overallDuration + this._waitUntilFinishedDelay + animData.maxFPS));
-
         })
 
     }

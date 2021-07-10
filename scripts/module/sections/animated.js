@@ -115,11 +115,7 @@ export default class AnimatedSection extends Section{
         if(typeof id === "string"){
             inLocation = this._findObjectById(id) ?? id;
         }
-
-        if(inLocation?.x === undefined && inLocation?.y === undefined) return false;
-
         return inLocation;
-
     }
 
 }

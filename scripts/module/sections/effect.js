@@ -34,7 +34,6 @@ export default class EffectSection extends AnimatedSection {
         this._layer = 2;
         this._zIndex = 0;
         this._offset = false;
-        this._databaseEntry = false;
     }
 
     /**
@@ -76,9 +75,6 @@ export default class EffectSection extends AnimatedSection {
      */
     file(inFile) {
         this._file = inFile;
-        if(inFile) {
-            this._databaseEntry = window.SequencerDatabase.entryExists(inFile.split('.')?.[0] ?? "");
-        }
         return this;
     }
 
@@ -619,7 +615,7 @@ export default class EffectSection extends AnimatedSection {
                 origin = this._applyMissedOffsets(origin);
             }
 
-            if(!this._anchor && (this.from instanceof Token || this.from instanceof Tile)) {
+            if(!this._anchor && (from instanceof Token || from instanceof Tile)) {
                 data.anchor = {
                     x: 0.5,
                     y: 0.5
@@ -670,8 +666,11 @@ export default class EffectSection extends AnimatedSection {
             }
         }
 
+        if(Array.isArray(data.file)) data.file = lib.random_array_element(data.file);
+
         let forcedIndex = false;
-        if(this._databaseEntry){
+        let databaseEntry = window.SequencerDatabase.entryExists(data.file);
+        if(databaseEntry){
             let match = data.file.match(/\[([0-9]+)]$/)
             if(match) {
                 forcedIndex = Number(match[1]);
