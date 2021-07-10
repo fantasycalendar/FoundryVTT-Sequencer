@@ -292,7 +292,7 @@ new Sequence()
 
 ### Version 0.5.1
 - *Sequencer* - Added two sample scenes with macros and accompanying art:
-    - An animated Oujia board made by Matheus, AKA md-mention2reply
+    - An animated Oujia board made by md-mention2reply
     - A Star Wars inspired hyperspeed scene-switching scene, effects, and macro
 - *Sequencer* - Removed Token Ease as dependency until we can solve its conflicts with other modules
 - *Effects* - Fixed effects not auto-centering on tokens
@@ -456,7 +456,8 @@ new Sequence()
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
 
 ### Oujia Board
-- Designer: Matheus Moreno Mota
+- Code: md-mention2reply
+- Art Creator: Matheus Moreno Mota
 - Sound: https://99sounds.org/license/
 - Image: https://pixabay.com/service/license/
 
