@@ -295,7 +295,7 @@ new Sequence()
     - An animated Oujia board made by Matheus, AKA md-mention2reply
     - A Star Wars inspired hyperspeed scene-switching scene, effects, and macro
 - *Sequencer* - Removed Token Ease as dependency until we can solve its conflicts with other modules
-- *Effects* - Fixed effects not auto-centering on the token
+- *Effects* - Fixed effects not auto-centering on tokens
 - *Effects* - Fixed effects not finding the proper location when a previous effect's `.name()` was given
 - *Animations* - Fixed `.rotate()`, `.opacity()`, and `.volume()`, now they work even without having to use their respective in/out functions
 
