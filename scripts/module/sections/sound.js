@@ -24,7 +24,7 @@ export default class SoundSection extends Section {
     async _run(repetition){
         let data = await this._sanitizeSoundData();
         if(!data.play) {
-            this.sequence.throwError(this, "Play", `File not found: ${data.src}`);
+            this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
             return new Promise((reject) => reject());
         }
 
@@ -32,7 +32,7 @@ export default class SoundSection extends Section {
         let fadeIn = this._fadeIn || this._fadeInAudio;
         let fadeOut = this._fadeOut || this._fadeOutAudio;
 
-        this.sequence.log(`Playing sound:`, data);
+        this.sequence._log(`Playing sound:`, data);
 
         let howler = await AudioHelper.play(data, true);
 
@@ -66,13 +66,13 @@ export default class SoundSection extends Section {
 
     fadeIn(inVolume, options){
         super.fadeIn(inVolume, options);
-        this.sequence.throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in a future version, please use fadeInAudio!")
+        this.sequence._throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in a future version, please use fadeInAudio!")
         return this;
     }
 
     fadeOut(inVolume, options){
         super.fadeIn(inVolume, options);
-        this.sequence.throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in a future version, please use fadeOutAudio!")
+        this.sequence._throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in a future version, please use fadeOutAudio!")
         return this;
     }
 

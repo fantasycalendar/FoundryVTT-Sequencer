@@ -9,6 +9,9 @@
   "compatibleCoreVersion": "0.8.6",
   "author": "Wasp (Wasp#2005)",
   "esmodules": ["scripts/module.js"],
+  "scripts": [
+    "./scripts/libs/filters/pixi-filters.js"
+  ],
   "packs": [
     {
       "name": "sequencer-sample-macros",

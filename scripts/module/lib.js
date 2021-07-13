@@ -152,39 +152,29 @@ export function rotateVector(vector, degrees){
 }
 
 
-export function flattenObject(ob) {
+/**
+ *  Flattens an object in a dot-notated format, like:
+ *  { data: { entry: { thing: "stuff" } } }
+ *  Becomes:
+ *  [{ "data.entry.thing": "stuff" }]
+ *
+ * @param  {object}     obj       The object to be flattened
+ * @return {object}               The flattened object
+ */
+export function flattenObject(obj) {
     let toReturn = [];
-    for (let i in ob) {
-        if (!ob.hasOwnProperty(i)) continue;
-        if ((typeof ob[i]) == 'object') {
-            let flatObject = flattenObject(ob[i]);
+    for (let i in obj) {
+        if (!obj.hasOwnProperty(i)) continue;
+        if ((typeof obj[i]) == 'object') {
+            let flatObject = flattenObject(obj[i]);
             for (let x in flatObject) {
                 if (!flatObject.hasOwnProperty(x)) continue;
                 toReturn[i + '.' + x] = flatObject[x];
             }
         } else {
-            toReturn[i] = ob[i];
+            toReturn[i] = obj[i];
         }
     }
     return toReturn;
-
-}
-
-export class Version {
-
-    constructor(inString) {
-        this.major = 0;
-        this.minor = 0;
-        this.patch = 0;
-        if (!inString) inString = game.data.version;
-        [this.major, this.minor, this.patch] = inString.split('.').map(x => Number(x));
-    }
-
-    onOrAfter(inVersion) {
-        if (typeof inVersion === "string") inVersion = new Version(inVersion);
-        return (this.major > inVersion.major)
-            || (this.major === inVersion.major && this.minor > inVersion.minor)
-            || (this.major === inVersion.major && this.minor === inVersion.minor && this.patch >= inVersion.patch);
-    }
 
 }

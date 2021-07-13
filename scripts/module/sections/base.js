@@ -33,7 +33,7 @@ export default class Section{
      * @returns {Section} this
      */
     waitUntilFinished(inDelay=0){
-        if(typeof inDelay !== "number") this.sequence.throwError(this, "waitUntilFinished", "inDelay must be of type number");
+        if(typeof inDelay !== "number") this.sequence._throwError(this, "waitUntilFinished", "inDelay must be of type number");
         this._waitUntilFinished = true;
         this._waitUntilFinishedDelay = inDelay;
         return this;
@@ -61,10 +61,10 @@ export default class Section{
      * @returns {Section} this
      */
     repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax){
-        if(typeof inRepetitions !== "number") this.sequence.throwError(this, "repeats", "inRepetitions must be of type number");
-        if(typeof inRepeatDelayMin !== "number") this.sequence.throwError(this, "repeats", "repeatDelayMin must be of type number");
+        if(typeof inRepetitions !== "number") this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
+        if(typeof inRepeatDelayMin !== "number") this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
         if(inRepeatDelayMax && typeof inRepeatDelayMax !== "number"){
-            this.sequence.throwError(this, "repeats", "repeatDelayMax must be of type number");
+            this.sequence._throwError(this, "repeats", "repeatDelayMax must be of type number");
         }
         this._repetitions = inRepetitions;
         this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
@@ -81,7 +81,7 @@ export default class Section{
      */
     playIf(inCondition) {
         if(!(typeof inCondition === "boolean" || lib.is_function(inCondition))){
-            this.sequence.throwError(this, "playIf", "inCondition must be of type boolean or function");
+            this.sequence._throwError(this, "playIf", "inCondition must be of type boolean or function");
         }
         this._playIf = inCondition;
         return this;
@@ -96,8 +96,8 @@ export default class Section{
      * @returns {Section} this
      */
     delay(msMin, msMax) {
-        if(typeof msMin !== "number") this.sequence.throwError(this, "delay", "msMin must be of type number");
-        if(msMax && typeof msMax !== "number") this.sequence.throwError(this, "delay", "msMax must be of type number");
+        if(typeof msMin !== "number") this.sequence._throwError(this, "delay", "msMin must be of type number");
+        if(msMax && typeof msMax !== "number") this.sequence._throwError(this, "delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
         return this;
@@ -110,7 +110,7 @@ export default class Section{
      * @returns {Section} this
      */
     setMustache(inMustache) {
-        if(typeof inMustache !== "object") this.sequence.throwError(this, "setMustache", "inMustache must be of type object");
+        if(typeof inMustache !== "object") this.sequence._throwError(this, "setMustache", "inMustache must be of type object");
         this._mustache = inMustache;
         return this;
     }
@@ -122,7 +122,7 @@ export default class Section{
      * @returns {Section} this
      */
     duration(inDuration){
-        if(typeof inDuration !== "number") this.sequence.throwError(this, "duration", "inDuration must be of type number");
+        if(typeof inDuration !== "number") this.sequence._throwError(this, "duration", "inDuration must be of type number");
         this._duration = inDuration;
         return this;
     }
@@ -134,7 +134,7 @@ export default class Section{
      * @returns {Section} this
      */
     volume(inVolume) {
-        if(typeof inVolume !== "number") this.sequence.throwError(this, "volume", "inVolume must be of type number");
+        if(typeof inVolume !== "number") this.sequence._throwError(this, "volume", "inVolume must be of type number");
         this._volume = Math.max(0, Math.min(1.0, inVolume));
         return this;
     }
@@ -147,15 +147,15 @@ export default class Section{
      * @returns {Section} this
      */
     fadeInAudio(duration, options={}) {
-        if(typeof options !== "object") this.sequence.throwError(this, "fadeInAudio", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "fadeInAudio", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "fadeInAudio", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeInAudio", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeInAudio", "options.delay must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "fadeInAudio", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeInAudio", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeInAudio", "options.delay must be of type number");
         this._fadeInAudio = {
             duration: duration,
             ease: options.ease,
@@ -172,15 +172,15 @@ export default class Section{
      * @returns {Section} this
      */
     fadeOutAudio(duration, options={}) {
-        if(typeof options !== "object") this.sequence.throwError(this, "fadeOutAudio", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "fadeOutAudio", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "fadeOutAudio", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOutAudio", "ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeOutAudio", "delay must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "fadeOutAudio", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeOutAudio", "ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeOutAudio", "delay must be of type number");
         this._fadeOutAudio = {
             duration: duration,
             ease: options.ease,
@@ -197,15 +197,15 @@ export default class Section{
      * @returns {Section} this
      */
     fadeIn(duration, options={}) {
-        if(typeof options !== "object") this.sequence.throwError(this, "fadeIn", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "fadeIn", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "fadeIn", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeIn", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeIn", "options.delay must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "fadeIn", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeIn", "options.delay must be of type number");
         this._fadeIn = {
             duration: duration,
             ease: options.ease,
@@ -222,15 +222,15 @@ export default class Section{
      * @returns {Section} this
      */
     fadeOut(duration, options={}) {
-        if(typeof options !== "object") this.sequence.throwError(this, "fadeOut", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "fadeOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "fadeOut", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "fadeOut", "ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "fadeOut", "delay must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "fadeOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeOut", "ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeOut", "delay must be of type number");
         this._fadeOut = {
             duration: duration,
             ease: options.ease,
@@ -243,15 +243,15 @@ export default class Section{
         return this._waitUntilFinished || ((this._async || this._waitUntilFinished) && this._repetitions === 1)
     }
 
-    get shouldAsync(){
+    get _shouldAsync(){
         return this._async || ((this._async || this._waitUntilFinished) && this._repetitions === 1)
     }
 
-    async shouldPlay(){
+    async _shouldPlay(){
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
 
-    async prepareOffsetCache(){
+    async _prepareOffsetCache(){
         this._offsets = [];
         for (let index = 0; index < this._repetitions; index++) {
             this._cacheOffsets();
@@ -263,15 +263,15 @@ export default class Section{
      */
     _cacheOffsets(){}
 
-    async execute(){
-        if(!(await this.shouldPlay())) return;
+    async _execute(){
+        if(!(await this._shouldPlay())) return;
         let self = this;
         let delay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
             setTimeout(async function () {
                 for (let i = 0; i < self._repetitions; i++) {
                     self._currentRepetition = i;
-                    if (self.shouldAsync) {
+                    if (self._shouldAsync) {
                         await self._run();
                     } else {
                         self._run();

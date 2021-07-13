@@ -11,7 +11,7 @@ export default class Sequence{
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
-        this.version = new lib.Version().onOrAfter("0.8.6");
+        this.version = isNewerVersion(game.data.version, "0.7.10");
         this.debug = game.settings.get("sequencer", "debug");
     }
 
@@ -22,20 +22,20 @@ export default class Sequence{
      */
     play(){
         return new Promise(async (resolve) => {
-            this.log("Preparing cache")
+            this._log("Preparing cache")
             await this._prepareOffsetCache();
             this.effectIndex = 0;
-            this.log("Playing sections")
+            this._log("Playing sections")
             for(let section of this.sections){
                 if(section instanceof EffectSection) this.effectIndex++;
                 if(section.shouldWaitUntilFinished) {
-                    await section.execute();
+                    await section._execute();
                 }else{
-                    section.execute();
+                    section._execute();
                 }
                 await new Promise((resolve) => setTimeout(resolve, 1));
             }
-            this.log("Finished playing sections")
+            this._log("Finished playing sections")
             resolve(this);
         })
     }
@@ -64,16 +64,16 @@ export default class Sequence{
         if(typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
             if (!macro) {
-                this.throwError(this, "macro", `Macro '${inMacro}' was not found`);
+                this._throwError(this, "macro", `Macro '${inMacro}' was not found`);
             }
         } else if(inMacro instanceof Macro) {
             macro = inMacro;
         } else {
-            this.throwError(this, "macro", `inMacro must be of instance string or Macro`);
+            this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
         let func = new FunctionSection(this, async function(){
-            await macro.execute();
+            await macro._execute();
         }, inWaitUntilFinished);
 
         this.sections.push(func)
@@ -125,8 +125,8 @@ export default class Sequence{
      * @returns {Sequence} this
      */
     wait(msMin = 1, msMax = 1){
-        if(msMin < 1) this.throwError(this, "wait", 'Wait ms cannot be less than 1')
-        if(msMax < 1) this.throwError(this, "wait", 'Max wait ms cannot be less than 1')
+        if(msMin < 1) this._throwError(this, "wait", 'Wait ms cannot be less than 1')
+        if(msMax < 1) this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
         let wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         let section = this._createWaitSection(wait);
         this.sections.push(section);
@@ -141,7 +141,7 @@ export default class Sequence{
      */
     sequence(inSequence){
         if(!(inSequence instanceof Sequence)) inSequence = inSequence.sequence;
-        if(!(inSequence instanceof Sequence)) this.throwError(this, "sequence", `could not find the sequence from the given parameter`);
+        if(!(inSequence instanceof Sequence)) this._throwError(this, "sequence", `could not find the sequence from the given parameter`);
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
@@ -149,7 +149,7 @@ export default class Sequence{
     async _prepareOffsetCache(){
         this._cachedOffsets = {};
         for(let section of this.sections) {
-            await section.prepareOffsetCache();
+            await section._prepareOffsetCache();
         }
     }
 
@@ -190,19 +190,19 @@ export default class Sequence{
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
-    throwWarning(self, func, warning){
+    _throwWarning(self, func, warning){
         warning = `Sequencer | ${self.constructor.name} | ${func} - ${warning}`;
         ui.notifications.warn(warning);
         console.warn(warning)
     }
 
-    throwError(self, func, error){
+    _throwError(self, func, error){
         error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
         ui.notifications.error(error);
         throw new Error(error);
     }
 
-    log(...args){
+    _log(...args){
         if(this.debug) console.log(`DEBUG | Sequencer |`, ...args);
     }
 

@@ -1,10 +1,8 @@
-import * as lib from "../lib.js";
-
 export class BaseEffectsLayer extends CanvasLayer {
 
     static get layerOptions() {
 
-        let version = new lib.Version().onOrAfter("0.8.6");
+        let version = isNewerVersion(game.data.version, "0.7.10");
         let mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
 
         let obj = {
@@ -29,7 +27,7 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
 
     static get layerOptions() {
 
-        let version = new lib.Version().onOrAfter("0.8.6");
+        let version = isNewerVersion(game.data.version, "0.7.10");
         let mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
 
         return mergeFunc(super.layerOptions, {

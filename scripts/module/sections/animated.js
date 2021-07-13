@@ -11,6 +11,15 @@ export default class AnimatedSection extends Section{
         this._opacity = false;
     }
 
+    centerInView(){
+        this._from = {
+            x: canvas.background.width/2,
+            y: canvas.background.height/2,
+        }
+        this.center();
+        return this;
+    }
+
     /**
      * Sets the opacity of the effect. If used with .fadeIn() and/or .fadeOut(), this defines what the effect will fade to/from
      *
@@ -18,7 +27,7 @@ export default class AnimatedSection extends Section{
      * @returns {AnimatedSection} this
      */
     opacity(inOpacity){
-        if(typeof inOpacity !== "number") this.sequence.throwError(this, "opacity", "inOpacity must be of type number");
+        if(typeof inOpacity !== "number") this.sequence._throwError(this, "opacity", "inOpacity must be of type number");
         this._opacity = inOpacity;
         return this;
     }
@@ -30,7 +39,7 @@ export default class AnimatedSection extends Section{
      * @returns {AnimatedSection} this
      */
     moveSpeed(inSpeed){
-        if(typeof inSpeed !== "number") this.sequence.throwError(this, "moveSpeed", "inSpeed must be of type number");
+        if(typeof inSpeed !== "number") this.sequence._throwError(this, "moveSpeed", "inSpeed must be of type number");
         this._moveSpeed = inSpeed;
         return this;
     }
@@ -42,7 +51,7 @@ export default class AnimatedSection extends Section{
      * @returns {AnimatedSection} this
      */
     rotate(inRotation){
-        if(typeof inRotation !== "number") this.sequence.throwError(this, "opacity", "inRotation must be of type number");
+        if(typeof inRotation !== "number") this.sequence._throwError(this, "opacity", "inRotation must be of type number");
         this._angle = inRotation;
         return this;
     }
@@ -56,16 +65,16 @@ export default class AnimatedSection extends Section{
      * @returns {AnimatedSection} this
      */
     rotateIn(degrees, duration, options={}){
-        if(typeof options !== "object") this.sequence.throwError(this, "rotateIn", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "rotateIn", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof degrees !== "number") this.sequence.throwError(this, "rotateOut", "degrees must be of type number");
-        if(typeof duration !== "number") this.sequence.throwError(this, "rotateOut", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateIn", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateIn", "options.delay must be of type number");
+        if(typeof degrees !== "number") this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "rotateOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateIn", "options.delay must be of type number");
         this._rotateIn = {
             value: degrees,
             duration: duration,
@@ -84,16 +93,16 @@ export default class AnimatedSection extends Section{
      * @returns {AnimatedSection} this
      */
     rotateOut(degrees, duration, options={}){
-        if(typeof options !== "object") this.sequence.throwError(this, "rotateOut", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "rotateOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof degrees !== "number") this.sequence.throwError(this, "rotateOut", "degrees must be of type number");
-        if(typeof duration !== "number") this.sequence.throwError(this, "rotateOut", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateOut", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateOut", "options.delay must be of type number");
+        if(typeof degrees !== "number") this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "rotateOut", "duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateOut", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateOut", "options.delay must be of type number");
         this._rotateOut = {
             value: degrees,
             duration: duration,

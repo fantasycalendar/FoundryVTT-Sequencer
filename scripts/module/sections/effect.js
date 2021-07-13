@@ -44,7 +44,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     name(inName){
-        if(typeof inName !== "string") this.sequence.throwError(this, "name", "inBaseFolder must be of type string");
+        if(typeof inName !== "string") this.sequence._throwError(this, "name", "inBaseFolder must be of type string");
         this._name = inName;
         return this;
     }
@@ -57,7 +57,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     baseFolder(inBaseFolder) {
-        if(typeof inBaseFolder !== "string") this.sequence.throwError(this, "baseFolder", "inBaseFolder must be of type string");
+        if(typeof inBaseFolder !== "string") this.sequence._throwError(this, "baseFolder", "inBaseFolder must be of type string");
         inBaseFolder = inBaseFolder.replace("\\", "/");
         if(!inBaseFolder.endsWith("/")) {
             inBaseFolder += "/";
@@ -86,7 +86,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     playbackRate(inNumber = 1.0) {
-        if(typeof inNumber !== "number") this.sequence.throwError(this, "playbackRate", "inNumber must be of type number");
+        if(typeof inNumber !== "number") this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
         this._playbackRate = inNumber;
         return this;
     }
@@ -98,7 +98,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     missed(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "missed", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "missed", "inBool must be of type boolean");
         this._missed = inBool;
         return this;
     }
@@ -106,8 +106,6 @@ export default class EffectSection extends AnimatedSection {
     /**
      * Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which
      * the Sequencer figures out from the path.
-     *
-     * An optional boolean parameter can be provided in order to make the
      *
      * @returns {EffectSection} this
      */
@@ -125,7 +123,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     addOverride(inFunc) {
-        if(!lib.is_function(inFunc)) this.sequence.throwError(this, "addOverride", "The given function needs to be an actual function.");
+        if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
     }
@@ -138,9 +136,9 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     atLocation(inLocation) {
-        if(inLocation === undefined) this.sequence.throwError(this, "atLocation", "inLocation must not be undefined");
+        if(inLocation === undefined) this.sequence._throwError(this, "atLocation", "inLocation must not be undefined");
         inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence.throwError(this, "atLocation", "could not find position of given object");
+        if(inLocation === undefined) this.sequence._throwError(this, "atLocation", "could not find position of given object");
         this._from = inLocation;
         return this;
     }
@@ -152,9 +150,9 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     rotateTowards(inLocation) {
-        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "inLocation must not be undefined");
+        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "inLocation must not be undefined");
         inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
         this._to = inLocation;
         this._rotationOnly = true;
         this._moves = false;
@@ -169,9 +167,9 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     reachTowards(inLocation) {
-        if(inLocation === undefined) this.sequence.throwError(this, "reachTowards", "inLocation must not be undefined");
+        if(inLocation === undefined) this.sequence._throwError(this, "reachTowards", "inLocation must not be undefined");
         inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
         this._to = inLocation;
         this._rotationOnly = false;
         this._moves = false;
@@ -186,16 +184,16 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     moveTowards(inLocation, options={}) {
-        if(inLocation === undefined) this.sequence.throwError(this, "moveTowards", "inLocation must not be undefined");
-        if(typeof options !== "object") this.sequence.throwError(this, "moveTowards", "options must be of type object");
+        if(inLocation === undefined) this.sequence._throwError(this, "moveTowards", "inLocation must not be undefined");
+        if(typeof options !== "object") this.sequence._throwError(this, "moveTowards", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "moveTowards", "options.ease must be of type string");
         inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
         this._to = inLocation;
         this._moves = options;
         this._rotationOnly = true;
@@ -210,8 +208,8 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     offset(inOffset, options = {}){
-        if(inOffset === undefined) this.sequence.throwError(this, "offset", "inOffset must not be undefined");
-        if(typeof options !== "object") this.sequence.throwError(this, "offset", "options must be of type object");
+        if(inOffset === undefined) this.sequence._throwError(this, "offset", "inOffset must not be undefined");
+        if(typeof options !== "object") this.sequence._throwError(this, "offset", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         inOffset = mergeFunc({
             x: 0,
@@ -219,7 +217,7 @@ export default class EffectSection extends AnimatedSection {
             local: false
         }, inOffset);
         inOffset = mergeFunc(inOffset, options);
-        if(typeof inOffset.local !== "boolean") this.sequence.throwError(this, "offset", "options.local must be of type boolean");
+        if(typeof inOffset.local !== "boolean") this.sequence._throwError(this, "offset", "options.local must be of type boolean");
         this._offset = inOffset;
         return this;
     }
@@ -233,7 +231,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     startPoint(inStartPoint) {
-        if(typeof inStartPoint !== "number") this.sequence.throwError(this, "startPoint", "inStartPoint must be of type number");
+        if(typeof inStartPoint !== "number") this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
         return this;
     }
@@ -245,7 +243,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     endPoint(inEndPoint) {
-        if(typeof inEndPoint !== "number") this.sequence.throwError(this, "endPoint", "inEndPoint must be of type number");
+        if(typeof inEndPoint !== "number") this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
         return this;
     }
@@ -261,10 +259,10 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     scale(inScaleMin, inScaleMax) {
-        if(!(typeof inScaleMin === "number" || typeof inScaleMin === "object")) this.sequence.throwError(this, "scale", "inScale must be of type number or object");
+        if(!(typeof inScaleMin === "number" || typeof inScaleMin === "object")) this.sequence._throwError(this, "scale", "inScale must be of type number or object");
         if (typeof inScaleMin !== "number") {
             if(inScaleMax && typeof inScaleMax === "number"){
-                this.sequence.throwError(this, "scale", "if inScaleMin is a number, inScaleMax must also be of type number");
+                this.sequence._throwError(this, "scale", "if inScaleMin is a number, inScaleMax must also be of type number");
             }
         }
         this._scaleMin = inScaleMin;
@@ -281,16 +279,16 @@ export default class EffectSection extends AnimatedSection {
      * @returns {AnimatedSection} this
      */
     scaleIn(scale, duration, options={}){
-        if(typeof options !== "object") this.sequence.throwError(this, "scaleIn", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "scaleIn", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "scaleIn", "duration must be of type number");
-        if(!(typeof scale === "number" || typeof scale === "object")) this.sequence.throwError(this, "scaleIn", "scale must be of type number or object");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "scaleIn", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "scaleIn", "options.delay must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "scaleIn", "duration must be of type number");
+        if(!(typeof scale === "number" || typeof scale === "object")) this.sequence._throwError(this, "scaleIn", "scale must be of type number or object");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "scaleIn", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "scaleIn", "options.delay must be of type number");
         this._scaleIn = {
             value: scale,
             duration: duration,
@@ -309,16 +307,16 @@ export default class EffectSection extends AnimatedSection {
      * @returns {AnimatedSection} this
      */
     scaleOut(scale, duration, options={}){
-        if(typeof options !== "object") this.sequence.throwError(this, "scaleOut", "options must be of type object");
+        if(typeof options !== "object") this.sequence._throwError(this, "scaleOut", "options must be of type object");
         let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
         options = mergeFunc({
             ease: "linear",
             delay: 0
         }, options);
-        if(typeof duration !== "number") this.sequence.throwError(this, "scaleOut", "duration must be of type number");
-        if(!(typeof scale === "number" || typeof scale === "object")) this.sequence.throwError(this, "scaleOut", "scale must be of type number or object");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "scaleOut", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "scaleOut", "options.delay must be of type number");
+        if(typeof duration !== "number") this.sequence._throwError(this, "scaleOut", "duration must be of type number");
+        if(!(typeof scale === "number" || typeof scale === "object")) this.sequence._throwError(this, "scaleOut", "scale must be of type number or object");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "scaleOut", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "scaleOut", "options.delay must be of type number");
         this._scaleOut = {
             value: scale,
             duration: duration,
@@ -370,8 +368,8 @@ export default class EffectSection extends AnimatedSection {
      * @param {boolean} [inBool=true] inBool
      * @returns {EffectSection} this
      */
-    randomRotation() {
-        this._randomRotation = true;
+    randomRotation(inBool = true) {
+        this._randomRotation = inBool;
         return this;
     }
 
@@ -405,7 +403,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     mirrorX(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "mirrorX", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "mirrorX", "inBool must be of type boolean");
         this._mirrorX = inBool;
         return this;
     }
@@ -418,7 +416,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     mirrorY(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "mirrorY", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "mirrorY", "inBool must be of type boolean");
         this._mirrorY = inBool;
         return this;
     }
@@ -431,7 +429,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     gridSize(inGridSize) {
-        if(typeof inGridSize !== "number") this.sequence.throwError(this, "gridSize", "inGridSize must be of type number");
+        if(typeof inGridSize !== "number") this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
         this._gridSize = inGridSize;
         return this;
     }
@@ -443,7 +441,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     belowTokens(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "belowTokens", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "belowTokens", "inBool must be of type boolean");
         this._layer = inBool ? 1 : 2;
         return this;
     }
@@ -455,7 +453,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     belowTiles(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "belowTiles", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "belowTiles", "inBool must be of type boolean");
         this._layer = inBool ? 0 : 2;
         return this;
     }
@@ -467,12 +465,12 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     zIndex(inZIndex){
-        if(typeof inZIndex !== "number") this.sequence.throwError(this, "zIndex", "inZIndex must be of type number");
+        if(typeof inZIndex !== "number") this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
         this._zIndex = inZIndex;
         return this;
     }
 
-    get gridSizeDifference(){
+    get _gridSizeDifference(){
         return canvas.grid.size / this._gridSize;
     }
 
@@ -550,8 +548,8 @@ export default class EffectSection extends AnimatedSection {
         }
 
         data.scale = {
-            x: data.scale.x * this.gridSizeDifference,
-            y: data.scale.y * this.gridSizeDifference
+            x: data.scale.x * this._gridSizeDifference,
+            y: data.scale.y * this._gridSizeDifference
         }
 
         let scale = this._scaleMin;
@@ -581,7 +579,7 @@ export default class EffectSection extends AnimatedSection {
         data.scale.y = data.scale.y * flipY;
 
         if(typeof data.file !== "string") {
-            this.sequence.throwError(this, "file", "inFile must be of type string or array");
+            this.sequence._throwError(this, "file", "inFile must be of type string or array");
         }
 
         return data;
@@ -677,7 +675,7 @@ export default class EffectSection extends AnimatedSection {
                 data.file = data.file.replace(/\[[0-9]+]$/, "");
             }
             data.file = window.SequencerDatabase.get(data.file) || data.file;
-            data = this.evaluateDatabaseEntry(data);
+            data = this._evaluateDatabaseEntry(data);
         }
 
         if(Array.isArray(data.file)) {
@@ -696,7 +694,7 @@ export default class EffectSection extends AnimatedSection {
 
     }
 
-    get distanceMatching(){
+    get _distanceMatching(){
         return {
             "90ft": 1500,
             "60ft": 900,
@@ -706,7 +704,7 @@ export default class EffectSection extends AnimatedSection {
         }
     }
 
-    evaluateDatabaseEntry(data){
+    _evaluateDatabaseEntry(data){
         if(typeof data.file !== "object") return data;
         return this._recurseDatabaseFiles(data);
     }
@@ -715,7 +713,7 @@ export default class EffectSection extends AnimatedSection {
         if(typeof data.file === "string" || Array.isArray(data.file)) return data;
 
         if(this._to && !this._rotationOnly) {
-            let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1).length !== 0;
+            let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1).length !== 0;
             if(foundDistances) return this._rangeFind(data);
         }
 
@@ -727,10 +725,10 @@ export default class EffectSection extends AnimatedSection {
     _rangeFind(data){
 
         let distances = Object.keys(data.file)
-            .filter(entry => Object.keys(this.distanceMatching).indexOf(entry) > -1)
+            .filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1)
             .map(entry => { return {
                 file: data.file[entry],
-                minDistance: this.distanceMatching[entry]
+                minDistance: this._distanceMatching[entry]
             }});
 
         let uniqueDistances = [...new Set(distances.map(item => item.minDistance))];
@@ -739,7 +737,7 @@ export default class EffectSection extends AnimatedSection {
         let max = Math.max(...uniqueDistances);
         let min = Math.min(...uniqueDistances);
 
-        let relativeDistance = data._distance / this.gridSizeDifference;
+        let relativeDistance = data._distance / this._gridSizeDifference;
 
         data.file = distances
             .map(entry => {

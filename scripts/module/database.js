@@ -5,7 +5,7 @@ export default class SequencerDatabase{
     constructor() {
         this.contents = {};
         this.flattenedContents = [];
-        let version = new lib.Version().onOrAfter("0.8.6");
+        let version = isNewerVersion(game.data.version, "0.7.10");
         this.mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
         this.duplicate = version ? foundry.utils.duplicate : duplicate;
     }
