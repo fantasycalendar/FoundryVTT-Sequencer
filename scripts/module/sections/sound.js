@@ -28,32 +28,32 @@ export default class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
-        // To remove in 0.5.3
-        let fadeIn = this._fadeIn || this._fadeInAudio;
-        let fadeOut = this._fadeOut || this._fadeOutAudio;
-
         this.sequence._log(`Playing sound:`, data);
 
         let howler = await AudioHelper.play(data, true);
 
-        if(fadeIn) {
-            if(this.version) {
-                howler.fade(data.targetVolume, { duration: fadeIn.duration, from: 0.0 })
-            }else{
-                howler.fade(0.0, data.targetVolume, fadeIn.duration)
-            }
+        let version = this.version;
+
+        if(data.fadeIn) {
+            setTimeout(function () {
+                if(!this.version) {
+                    howler.fade(data.targetVolume, { duration: data.fadeIn.duration, from: 0.0 })
+                }else{
+                    howler.fade(0.0, data.targetVolume, data.fadeIn.duration)
+                }
+            }, Math.max(data.duration - data.fadeIn.delay, 0));
         }
 
-        if(fadeOut) {
+        if(data.fadeOut) {
             setTimeout(function () {
                 if(howler.playing) {
-                    if(this.version) {
-                        howler.fade(0.0, { duration: fadeOut.duration, from: data.targetVolume })
+                    if(!this.version) {
+                        howler.fade(0.0, { duration: data.fadeOut.duration, from: data.targetVolume })
                     }else{
-                        howler.fade(data.targetVolume, 0.0, fadeOut.duration)
+                        howler.fade(data.targetVolume, 0.0, data.fadeOut.duration)
                     }
                 }
-            }, Math.max(data.duration - fadeOut.duration, 0));
+            }, Math.max(data.duration - data.fadeOut.duration + data.fadeOut.delay, 0));
         }
 
         return new Promise(async (resolve) => {
@@ -110,11 +110,14 @@ export default class SoundSection extends Section {
         return {
             play: true,
             src: [file],
-            targetVolume: this._volume,
+            targetVolume: this._volume * game.settings.get("core", "globalInterfaceVolume"),
             volume: (this._fadeIn || this._fadeInAudio) ? 0 : this._volume,
             autoplay: true,
             loop: this._duration > duration,
-            duration: this._duration ? this._duration : duration
+            duration: this._duration ? this._duration : duration,
+            // To remove in 0.5.3
+            fadeIn: this._fadeIn || this._fadeInAudio,
+            fadeOut: this._fadeOut || this._fadeOutAudio
         };
     }
 }
