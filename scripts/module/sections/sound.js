@@ -1,4 +1,5 @@
 import * as lib from "../lib.js";
+import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./base.js";
 
 export default class SoundSection extends Section {
@@ -22,46 +23,17 @@ export default class SoundSection extends Section {
     }
 
     async _run(repetition){
-        let data = await this._sanitizeSoundData();
-        if(!data.play) {
-            this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
+
+        let {play, ...data} = await this._sanitizeSoundData();
+        if(!play) {
+            this.sequence.throwError(this, "Play", `File not found: ${data.src}`);
             return new Promise((reject) => reject());
         }
 
-        this.sequence._log(`Playing sound:`, data);
+        this.sequence.log(`Playing sound:`, data);
 
-        let howler = await AudioHelper.play(data, true);
+        return SequencerAudioHelper.play(data, true);
 
-        let version = this.version;
-
-        if(data.fadeIn) {
-            setTimeout(function () {
-                if(!this.version) {
-                    howler.fade(data.targetVolume, { duration: data.fadeIn.duration, from: 0.0 })
-                }else{
-                    howler.fade(0.0, data.targetVolume, data.fadeIn.duration)
-                }
-            }, Math.max(data.duration - data.fadeIn.delay, 0));
-        }
-
-        if(data.fadeOut) {
-            setTimeout(function () {
-                if(howler.playing) {
-                    if(!this.version) {
-                        howler.fade(0.0, { duration: data.fadeOut.duration, from: data.targetVolume })
-                    }else{
-                        howler.fade(data.targetVolume, 0.0, data.fadeOut.duration)
-                    }
-                }
-            }, Math.max(data.duration - data.fadeOut.duration + data.fadeOut.delay, 0));
-        }
-
-        return new Promise(async (resolve) => {
-            setTimeout(function(){
-                howler.stop()
-                resolve();
-            }, data.duration);
-        });
     }
 
     fadeIn(inVolume, options){
@@ -109,15 +81,12 @@ export default class SoundSection extends Section {
         duration += this._waitUntilFinishedDelay;
         return {
             play: true,
-            src: [file],
-            targetVolume: this._volume * game.settings.get("core", "globalInterfaceVolume"),
-            volume: (this._fadeIn || this._fadeInAudio) ? 0 : this._volume,
-            autoplay: true,
+            src: file,
             loop: this._duration > duration,
-            duration: this._duration ? this._duration : duration,
-            // To remove in 0.5.3
-            fadeIn: this._fadeIn || this._fadeInAudio,
-            fadeOut: this._fadeOut || this._fadeOutAudio
+            volume: this._volume,
+            fadeIn: this._fadeIn /* To remove in 0.5.3 */ || this._fadeInAudio || undefined,
+            fadeOut: this._fadeOut /* To remove in 0.5.3 */ || this._fadeOutAudio || undefined,
+            duration: this._duration ?? duration
         };
     }
 }
