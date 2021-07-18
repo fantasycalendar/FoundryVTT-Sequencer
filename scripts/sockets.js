@@ -1,5 +1,5 @@
-import CanvasEffect from "./module/canvas-effects/canvas-effect.js";
 import SequencerAudioHelper from "./module/sequencer-audio-helper.js";
+import SequencerEffectHelper from "./module/sequencer-effect-helper.js";
 
 const sequencerSocketEvent = "module.sequencer";
 
@@ -16,7 +16,7 @@ function onSocketEvent(socketData) {
     const { handler, args } = socketData;
     switch (handler) {
         case SOCKET_HANDLERS.PLAY_EFFECT:
-            return playEffect(...args);
+            return SequencerEffectHelper.play(...args);
         case SOCKET_HANDLERS.PLAY_SOUND:
             return SequencerAudioHelper.play(...args, false);
         default:
@@ -27,27 +27,4 @@ function onSocketEvent(socketData) {
 export function registerSocket() {
     game.socket.on(sequencerSocketEvent, onSocketEvent);
     console.log("Sequencer | Registered socket");
-}
-
-export async function playEffect(data) {
-    let layers = [canvas.background, canvas.sequencerEffectsBelowTokens, canvas.sequencerEffectsAboveTokens];
-
-    let layer = layers[data.layer ?? 2];
-
-    let container = layer.children.find((child) => child?.parentName === "sequencer");
-
-    if (!container) {
-        if (layer === canvas.background) {
-            layer.sortableChildren = true;
-            layer.children.filter((child) => child.sortableChildren).map((child) => (child.zIndex = 1));
-        }
-        container = new PIXI.Container();
-        container.sortableChildren = true;
-        container.parentName = "sequencer";
-        container.zIndex = 0.5;
-        layer.addChild(container);
-        layer.sortChildren();
-    }
-
-    return new CanvasEffect(container, data).play();
 }

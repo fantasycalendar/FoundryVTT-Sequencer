@@ -1,6 +1,5 @@
-import { EffectsCanvasAnimation } from "./canvas-animation.js";
 import { easeFunctions } from "./ease.js";
-import * as lib from "../lib.js";
+import { SequencerAnimationEngine } from "../sequencer-animation-engine.js";
 
 export default class CanvasEffect {
 
@@ -8,211 +7,17 @@ export default class CanvasEffect {
 
         this.container = container;
         this.ended = false;
-        this.video = false;
-
-        let version = new lib.Version().onOrAfter("0.8.6");
-        this.mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
+        this.source = false;
 
         // Set default values
-        this.data = this.mergeFunc({
-            anchor: { x: 0.5, y: 0.5 },
+        this.data = foundry.utils.mergeObject({
+            position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1.0, y: 1.0 },
-            position: { x: 0, y: 0 },
-            playbackRate: 1.0,
-            fadeIn: 0,
-            fadeOut: 0
+            anchor: { x: 0.5, y: 0.5 },
+            playbackRate: 1.0
         }, inData);
 
-    }
-
-    spawnSprite() {
-        const texture = PIXI.Texture.from(this.video);
-        this.sprite = new PIXI.Sprite(texture);
-        this.sprite.alpha = this.data.opacity;
-        this.container.addChild(this.sprite);
-        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
-        this.container.sortChildren();
-
-        this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
-        this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
-        this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
-        this.sprite.position.set(this.data.position.x, this.data.position.y);
-        this.data.videoDuration = this.data.duration ? this.data.duration / 1000 : this.video.duration;
-        this.data.animationDuration = this.data.videoDuration * 1000;
-    }
-
-    playAnimation(attributes, duration, ease="linear"){
-        return function() {
-            EffectsCanvasAnimation.animateSmooth(attributes, {
-                name: `effects.video.${randomID()}.animate`,
-                context: this,
-                duration: duration,
-                ease: easeFunctions[ease]
-            });
-        };
-    }
-
-    fadeIn(){
-        if(this.data.animatedProperties.fadeIn) {
-            let fadeIn = this.data.animatedProperties.fadeIn;
-            this.sprite.alpha = 0.0;
-            let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "alpha", to: this.data.opacity }
-            ], fadeIn.duration, fadeIn.ease);
-            setTimeout(animate, Math.min(fadeIn.delay, this.data.animationDuration));
-        }
-    }
-
-    fadeOut(){
-        if(this.data.animatedProperties.fadeOut) {
-            let fadeOut = this.data.animatedProperties.fadeOut;
-            let fadeOutDuration = Math.min(fadeOut.duration, this.data.animationDuration);
-            let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "alpha", to: 0.0 }
-            ], fadeOutDuration, fadeOut.ease)
-            setTimeout(animate, Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0));
-        }
-    }
-
-    _determineScale(property){
-        let scale = {
-            x: property.value?.x ?? 0,
-            y: property.value?.y ?? 0
-        };
-        if(typeof property.value === "number"){
-            scale.x = property.value
-            scale.y = property.value
-        }
-        return scale;
-    }
-
-    scaleIn(){
-        if(this.data.animatedProperties.scaleIn) {
-            let scaleIn = this.data.animatedProperties.scaleIn;
-            let scale = this._determineScale(scaleIn)
-            this.sprite.scale.set(scale.x, scale.y);
-            let scaleInDuration = Math.min(scaleIn.duration, this.data.animationDuration);
-            let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "scale", property: "x", to: this.data.scale.x },
-                { parent: this.sprite, attribute: "scale", property: "y", to: this.data.scale.y }
-            ], scaleInDuration, scaleIn.ease);
-            setTimeout(animate, Math.min(scaleIn.delay, this.data.animationDuration));
-        }
-    }
-
-    scaleOut(){
-        if(this.data.animatedProperties.scaleOut) {
-            let scaleOut = this.data.animatedProperties.scaleOut;
-            let scale = this._determineScale(scaleOut)
-            let scaleOutDuration = Math.min(scaleOut.duration, this.data.animationDuration);
-            let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "scale", property: "x", to: scale.x },
-                { parent: this.sprite, attribute: "scale", property: "y", to: scale.y }
-            ], scaleOutDuration, scaleOut.ease);
-            setTimeout(animate,  Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0));
-        }
-    }
-
-    rotateIn(){
-        if(this.data.animatedProperties.rotateIn) {
-            let rotateIn = this.data.animatedProperties.rotateIn;
-            let original_radians = this.sprite.rotation;
-            this.sprite.rotation = Math.toRadians(rotateIn.value)
-            let rotateInDuration = Math.min(rotateIn.duration, this.data.animationDuration);
-            let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "rotation", to: original_radians }
-            ], rotateInDuration, rotateIn.ease);
-            setTimeout(animate, Math.min(rotateIn.delay, this.data.animationDuration));
-        }
-    }
-
-    rotateOut(){
-        if(this.data.animatedProperties.rotateOut) {
-            let rotateOut = this.data.animatedProperties.rotateOut;
-            let rotateOutDuration = Math.min(rotateOut.duration, this.data.animationDuration);
-            let animate = this.playAnimation([
-                { parent: this.sprite, attribute: "rotation", to: Math.toRadians(rotateOut.value) }
-            ], rotateOutDuration, rotateOut.ease);
-            setTimeout(animate,  Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0));
-        }
-    }
-
-    fadeInAudio(){
-        if(this.data.animatedProperties.fadeInAudio) {
-            let fadeInAudio = this.data.animatedProperties.fadeInAudio;
-            this.video.volume = 0.0;
-            let animate = this.playAnimation([
-                { parent: this.video, attribute: "volume", to: this.data.audioVolume }
-            ], fadeInAudio.duration, fadeInAudio.ease);
-            setTimeout(animate, Math.min(fadeInAudio.delay, this.data.animationDuration));
-        }
-    }
-
-    fadeOutAudio(){
-        if(this.data.animatedProperties.fadeOutAudio) {
-            let fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
-            let fadeOutDurationAudio = Math.min(fadeOutAudio.duration, this.data.animationDuration);
-            let animate = this.playAnimation([
-                { parent: this.video, attribute: "volume", to: 0.0 }
-            ], fadeOutDurationAudio, fadeOutAudio.ease)
-            setTimeout(animate, Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0));
-        }
-    }
-
-    moveTowards(){
-
-        if (!this.data.animatedProperties.moves) return;
-
-        let moves = this.data.animatedProperties.moves;
-
-        this.data.videoDuration += moves.delay/1000;
-
-        if(!this.data.speed){
-            this.data.speed = this.data.distance / this.data.videoDuration;
-        }else{
-            this.data.videoDuration = this.data.distance / this.data.speed;
-            this.data.animationDuration = this.data.videoDuration * 1000;
-        }
-
-        // Compute final position
-        const delta = this.data.videoDuration * this.data.speed;
-        const deltaX = delta * Math.cos(this.data.rotation)
-        const deltaY = delta * Math.sin(this.data.rotation)
-
-        // Move the sprite
-        let move_attributes = [{
-            parent: this.sprite, attribute: 'x', to: this.data.position.x + deltaX
-        }, {
-            parent: this.sprite, attribute: 'y', to: this.data.position.y + deltaY
-        }];
-
-        setTimeout(() => {
-            this.playAnimation(
-                move_attributes,
-                this.data.animationDuration - moves.delay,
-                moves.ease
-            )();
-        }, moves.delay);
-
-    }
-
-    destroyEffect(){
-        try {
-            this.video.pause();
-            this.video.removeAttribute('src'); // empty source
-            this.video.load();
-            this.container.removeChild(this.sprite);
-            this.sprite.destroy();
-        }catch(err){}
-    }
-
-    endEffect(){
-        if(!this.ended) {
-            this.ended = true;
-            this.destroyEffect();
-            this.resolve();
-        }
     }
 
     playAnimations(){
@@ -229,19 +34,252 @@ export default class CanvasEffect {
         this.debug();
     }
 
-    debug(){
-        if(this.data.debug) console.log(`DEBUG | Sequencer | Playing effect:`, this.data);
+    spawnSprite() {
+        const texture = PIXI.Texture.from(this.source);
+        this.sprite = new PIXI.Sprite(texture);
+        this.sprite.alpha = this.data.opacity;
+        this.container.addChild(this.sprite);
+        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.container.sortChildren();
+
+        if(!this.source?.duration && !this.data.duration){
+            let animProp = this.data.animatedProperties;
+            let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0);
+            let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
+            let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0);
+            this.data.duration = Math.max(fadeDuration, scaleDuration, rotateDuration) || 1000;
+        }
+
+        this.data.sourceDuration = this.data.duration ? this.data.duration / 1000 : this.source?.duration;
+        this.data.animationDuration = this.data.sourceDuration * 1000;
+
+        this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
+        this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
+        this.data.scale.x *= this.data.gridScaleDifference;
+        this.data.scale.y *= this.data.gridScaleDifference;
+        this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
+        this.sprite.position.set(this.data.position.x, this.data.position.y);
+
+    }
+
+    fadeIn(){
+        if(this.data.animatedProperties.fadeIn) {
+            let fadeIn = this.data.animatedProperties.fadeIn;
+            this.sprite.alpha = 0.0;
+
+            SequencerAnimationEngine.animate({
+                name: "alpha",
+                parent: this.sprite,
+                to: this.data.opacity,
+                duration: Math.min(fadeIn.duration, this.data.animationDuration),
+                ease: easeFunctions[fadeIn.ease],
+                delay: Math.min(fadeIn.delay, this.data.animationDuration)
+            })
+        }
+    }
+
+    fadeOut(){
+        if(this.data.animatedProperties.fadeOut) {
+            let fadeOut = this.data.animatedProperties.fadeOut;
+
+            SequencerAnimationEngine.animate({
+                name: "alpha",
+                parent: this.sprite,
+                to: 0.0,
+                duration: Math.min(fadeOut.duration, this.data.animationDuration),
+                ease: easeFunctions[fadeOut.ease],
+                delay: Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0)
+            })
+        }
+    }
+
+    _determineScale(property){
+        let scale = {
+            x: property.value?.x * this.data.gridScaleDifference ?? 0,
+            y: property.value?.y * this.data.gridScaleDifference ?? 0
+        };
+        if(typeof property.value === "number"){
+            scale.x = property.value * this.data.gridScaleDifference
+            scale.y = property.value * this.data.gridScaleDifference
+        }
+        return scale;
+    }
+
+    scaleIn(){
+        if(this.data.animatedProperties.scaleIn) {
+            let scaleIn = this.data.animatedProperties.scaleIn;
+            let scale = this._determineScale(scaleIn)
+
+            this.sprite.scale.set(scale.x, scale.y);
+
+            SequencerAnimationEngine.animate({
+                name: "scale.x",
+                parent: this.sprite,
+                to: this.data.scale.x,
+                duration: Math.min(scaleIn.duration, this.data.animationDuration),
+                ease: easeFunctions[scaleIn.ease],
+                delay: Math.min(scaleIn.delay, this.data.animationDuration)
+            }, {
+                name: "scale.y",
+                parent: this.sprite,
+                to: this.data.scale.y,
+                duration: Math.min(scaleIn.duration, this.data.animationDuration),
+                ease: easeFunctions[scaleIn.ease],
+                delay: Math.min(scaleIn.delay, this.data.animationDuration)
+            })
+
+        }
+
+    }
+
+    scaleOut(){
+        if(this.data.animatedProperties.scaleOut) {
+            let scaleOut = this.data.animatedProperties.scaleOut;
+            let scale = this._determineScale(scaleOut)
+
+            SequencerAnimationEngine.animate({
+                name: "scale.x",
+                parent: this.sprite,
+                to: scale.x,
+                duration: Math.min(scaleOut.duration, this.data.animationDuration),
+                ease: easeFunctions[scaleOut.ease],
+                delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
+            }, {
+                name: "scale.y",
+                parent: this.sprite,
+                to: scale.y,
+                duration: Math.min(scaleOut.duration, this.data.animationDuration),
+                ease: easeFunctions[scaleOut.ease],
+                delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
+            })
+        }
+    }
+
+    rotateIn(){
+        if(this.data.animatedProperties.rotateIn) {
+            let rotateIn = this.data.animatedProperties.rotateIn;
+            let original_radians = this.sprite.rotation;
+            this.sprite.rotation = Math.toRadians(rotateIn.value)
+
+            SequencerAnimationEngine.animate({
+                name: "rotation",
+                parent: this.sprite,
+                to: original_radians,
+                duration: Math.min(rotateIn.duration, this.data.animationDuration),
+                ease: easeFunctions[rotateIn.ease],
+                delay: Math.min(rotateIn.delay, this.data.animationDuration)
+            })
+        }
+    }
+
+    rotateOut(){
+        if(this.data.animatedProperties.rotateOut) {
+            let rotateOut = this.data.animatedProperties.rotateOut;
+
+            SequencerAnimationEngine.animate({
+                name: "rotation",
+                parent: this.sprite,
+                to: Math.toRadians(rotateOut.value),
+                duration: Math.min(rotateOut.duration, this.data.animationDuration),
+                ease: easeFunctions[rotateOut.ease],
+                delay: Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0)
+            })
+        }
+    }
+
+    fadeInAudio(){
+        if(this.data.animatedProperties.fadeInAudio && this.source?.volume) {
+            let fadeInAudio = this.data.animatedProperties.fadeInAudio;
+            this.source.volume = 0.0;
+
+            SequencerAnimationEngine.animate({
+                name: "rotation",
+                parent: this.sprite,
+                to: this.data.audioVolume,
+                duration: Math.min(fadeInAudio.duration, this.data.animationDuration),
+                ease: easeFunctions[fadeInAudio.ease],
+                delay: Math.min(fadeInAudio.delay, this.data.animationDuration)
+            })
+        }
+    }
+
+    fadeOutAudio(){
+        if(this.data.animatedProperties.fadeOutAudio && this.source?.volume) {
+            let fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
+
+            SequencerAnimationEngine.animate({
+                name: "rotation",
+                parent: this.sprite,
+                to: 0.0,
+                duration: Math.min(fadeOutAudio.duration, this.data.animationDuration),
+                ease: easeFunctions[fadeOutAudio.ease],
+                delay: Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
+            })
+
+        }
+    }
+
+    moveTowards(){
+        if (!this.data.animatedProperties.moves) return;
+
+        let moves = this.data.animatedProperties.moves;
+
+        this.data.sourceDuration += moves.delay/1000;
+        if(this.data.speed){
+            let sourceDuration = this.data.distance / this.data.speed;
+            this.data.sourceDuration = sourceDuration < this.data.sourceDuration ? sourceDuration : this.data.sourceDuration;
+        }
+        this.data.animationDuration = this.data.sourceDuration * 1000;
+
+        SequencerAnimationEngine.animate({
+            name: "position.x",
+            parent: this.sprite,
+            to: moves.target.x,
+            duration: this.data.animationDuration - moves.delay,
+            ease: easeFunctions[moves.ease],
+            delay: Math.max(moves.delay, 0)
+        },{
+            name: "position.y",
+            parent: this.sprite,
+            to: moves.target.y,
+            duration: this.data.animationDuration - moves.delay,
+            ease: easeFunctions[moves.ease],
+            delay: Math.max(moves.delay, 0)
+        });
     }
 
     endEarly(){
-        this.video.loop = (this.data.duration / 1000) > this.video.duration;
+        if(this.source?.loop) this.source.loop = (this.data.duration / 1000) > this.source.duration;
         setTimeout(() => {
             this.endEffect();
         }, this.data.animationDuration)
     }
 
-    async loadVideo(){
+    endEffect(){
+        if(!this.ended) {
+            this.ended = true;
+            this.destroyEffect();
+            this.resolve();
+        }
+    }
 
+    destroyEffect(){
+        try {
+            this.source.removeAttribute('src');
+            this.container.removeChild(this.sprite);
+            this.sprite.destroy();
+        }catch(err){}
+        try {
+            this.source.pause();
+            this.source.load();
+        }catch(err){}
+    }
+
+    debug(){
+        if(this.data.debug) console.log(`DEBUG | Sequencer | Playing effect:`, this.data);
+    }
+
+    async loadVideo(){
         return new Promise((resolve, reject) => {
 
             let video = document.createElement("video");
@@ -253,6 +291,7 @@ export default class CanvasEffect {
                 this.data.audioVolume = 1.0;
             }
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
+            video.volume *= game.settings.get("core", "globalInterfaceVolume");
 
             let canplay = true;
             video.oncanplay = () => {
@@ -264,8 +303,7 @@ export default class CanvasEffect {
             video.onerror = () => {
                 try {
                     this.container.removeChild(this.sprite);
-                } catch (err) {
-                }
+                } catch (err) {}
                 let error = `Sequencer | CanvasEffect | Play Effect - Could not play: ${this.data.file}`;
                 ui.notifications.error(error);
                 console.error(error)
@@ -277,15 +315,46 @@ export default class CanvasEffect {
             }
 
         });
+    }
 
+    async loadImage(){
+        return new Promise((resolve, reject) => {
+
+            let image = document.createElement('img');
+            image.src = this.data.file;
+
+            image.onload = () => {
+                resolve(image);
+            };
+
+            image.onerror = () => {
+                try {
+                    this.container.removeChild(this.sprite);
+                } catch (err) {}
+                let error = `Sequencer | CanvasEffect | Play Effect - Could not load image: ${this.data.file}`;
+                ui.notifications.error(error);
+                console.error(error)
+                reject();
+            }
+
+        })
+    }
+
+    async loadFile(){
+        let fileExt = this.data.file.match(/(?:\.([^.]+))?$/)[1].toLowerCase();
+
+        if(fileExt === "webm"){
+            return this.loadVideo();
+        }
+
+        return this.loadImage();
     }
 
     async play() {
+        this.source = await this.loadFile();
 
-        this.video = await this.loadVideo();
-
-        let promise = new Promise((resolve, reject) => {
-            if(!this.video) reject();
+        let promise = new Promise(async (resolve, reject) => {
+            if(!this.source) reject();
             this.resolve = resolve;
             this.spawnSprite();
             this.playAnimations();
@@ -295,7 +364,6 @@ export default class CanvasEffect {
             duration: this.data.animationDuration,
             promise: promise
         }
-
     };
 
 }

@@ -1,6 +1,6 @@
 import * as lib from "../lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
-import Section from "./base.js";
+import Section from "./section.js";
 
 export default class SoundSection extends Section {
 
@@ -24,26 +24,15 @@ export default class SoundSection extends Section {
 
     async _run(repetition){
         let {play, ...data} = await this._sanitizeSoundData();
+
         if(!play) {
-            this.sequence.throwError(this, "Play", `File not found: ${data.src}`);
+            this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
             return new Promise((reject) => reject());
         }
 
-        this.sequence.log(`Playing sound:`, data);
+        this.sequence._log(`Playing sound:`, data);
 
         return SequencerAudioHelper.play(data, true);
-    }
-
-    fadeIn(inVolume, options){
-        super.fadeIn(inVolume, options);
-        this.sequence.throwWarning(this, "fadeIn", "fadeIn has been marked as deprecated in a future version, please use fadeInAudio!")
-        return this;
-    }
-
-    fadeOut(inVolume, options){
-        super.fadeIn(inVolume, options);
-        this.sequence.throwWarning(this, "fadeOut", "fadeOut has been marked as deprecated in a future version, please use fadeOutAudio!")
-        return this;
     }
 
     async _getSoundDuration(inFilePath){
@@ -65,10 +54,12 @@ export default class SoundSection extends Section {
             file = window.SequencerDatabase.get(file) || file;
             if(Array.isArray(file)) file = lib.random_array_element(file);
         }
+
         if(this._mustache) {
             let template = Handlebars.compile(file);
             file = template(this._mustache);
         }
+
         let duration = await this._getSoundDuration(file);
         if(!duration){
             return {
@@ -77,14 +68,15 @@ export default class SoundSection extends Section {
             };
         }
         duration += this._waitUntilFinishedDelay;
+
         return {
             play: true,
             src: file,
             loop: this._duration > duration,
             volume: this._volume,
-            fadeIn: this._fadeIn /* To remove in 0.5.3 */ || this._fadeInAudio || undefined,
-            fadeOut: this._fadeOut /* To remove in 0.5.3 */ || this._fadeOutAudio || undefined,
-            duration: this._duration ?? duration
+            fadeIn: this._fadeInAudio,
+            fadeOut: this._fadeOutAudio,
+            duration: this._duration || duration
         };
     }
 }

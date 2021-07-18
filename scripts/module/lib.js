@@ -126,6 +126,75 @@ export async function getSoundDuration(inFile){
 }
 
 /**
+ *  Gets a property in an object based on a path in dot-notated string
+ *
+ * @param   {object}         obj       The object to be queried
+ * @param   {array|string}   path      The path in the object to the property in a dot-notated string
+ * @returns {any}                      Property value, if found
+ */
+export function deepGet(obj, path){
+    if(!Array.isArray(path)) path = path.split('.');
+    try {
+        let i;
+        for (i = 0; i < path.length - 1; i++) {
+            obj = obj[path[i]];
+        }
+        return obj[path[i]];
+    }catch(err){
+        throw new Error(`Could not find property "${path}"`)
+    }
+}
+
+/**
+ *  Sets a property in an object based on a path in dot-notated string, example:
+ *  let obj = { first: { second: { third: "value" } } }
+ *  deepSet(obj, "newValue", "first.second.third")
+ *  let obj = { first: { second: { third: "newValue" } } }
+ *
+ * @param  {object}         obj       The object to be modified
+ * @param  {any}            value     The value to set
+ * @param  {array|string}   path      The path in the object to the property in a dot-notated string
+ */
+export function deepSet(obj, value, path) {
+    if(!Array.isArray(path)) path = path.split('.');
+    try{
+        let i;
+        for (i = 0; i < path.length - 1; i++) {
+            obj = obj[path[i]];
+        }
+        obj[path[i]] = value;
+    }catch(err){
+        throw new Error(`Could not set property "${path}"`)
+    }
+}
+
+/**
+ *  Flattens an object in a dot-notated format, like:
+ *  { data: { entry: { thing: "stuff" } } }
+ *  Becomes:
+ *  [{ "data.entry.thing": "stuff" }]
+ *
+ * @param  {object}     obj       The object to be flattened
+ * @return {object}               The flattened object
+ */
+export function flattenObject(obj) {
+    let toReturn = [];
+    for (let i in obj) {
+        if (!obj.hasOwnProperty(i)) continue;
+        if ((typeof obj[i]) == 'object') {
+            let flatObject = flattenObject(obj[i]);
+            for (let x in flatObject) {
+                if (!flatObject.hasOwnProperty(x)) continue;
+                toReturn[i + '.' + x] = flatObject[x];
+            }
+        } else {
+            toReturn[i] = obj[i];
+        }
+    }
+    return toReturn;
+}
+
+/**
  *  Rotates a vector by a given number of degrees
  *
  * @param  {object}     vector    The vector to be rotated
@@ -151,40 +220,26 @@ export function rotateVector(vector, degrees){
     return vector;
 }
 
+export function transformVector(inVector, context=false){
 
-export function flattenObject(ob) {
-    let toReturn = [];
-    for (let i in ob) {
-        if (!ob.hasOwnProperty(i)) continue;
-        if ((typeof ob[i]) == 'object') {
-            let flatObject = flattenObject(ob[i]);
-            for (let x in flatObject) {
-                if (!flatObject.hasOwnProperty(x)) continue;
-                toReturn[i + '.' + x] = flatObject[x];
-            }
-        } else {
-            toReturn[i] = ob[i];
-        }
-    }
-    return toReturn;
-
-}
-
-export class Version {
-
-    constructor(inString) {
-        this.major = 0;
-        this.minor = 0;
-        this.patch = 0;
-        if (!inString) inString = game.data.version;
-        [this.major, this.minor, this.patch] = inString.split('.').map(x => Number(x));
+    let zoomLevel = canvas.background.worldTransform.a;
+    let worldTransform = canvas.background.worldTransform;
+    let localX = 0;
+    let localY = 0;
+    if(context) {
+        localX = context.localTransform.tx;
+        localY = context.localTransform.ty;
     }
 
-    onOrAfter(inVersion) {
-        if (typeof inVersion === "string") inVersion = new Version(inVersion);
-        return (this.major > inVersion.major)
-            || (this.major === inVersion.major && this.minor > inVersion.minor)
-            || (this.major === inVersion.major && this.minor === inVersion.minor && this.patch >= inVersion.patch);
+    if(Array.isArray(inVector)) {
+        return [
+             (inVector[0] + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
+             (inVector[1] + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
+        ]
     }
 
+    return {
+        x: (inVector.x + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
+        y: (inVector.y + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
+    }
 }

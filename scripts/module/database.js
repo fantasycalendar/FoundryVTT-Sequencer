@@ -5,9 +5,6 @@ export default class SequencerDatabase{
     constructor() {
         this.contents = {};
         this.flattenedContents = [];
-        let version = new lib.Version().onOrAfter("0.8.6");
-        this.mergeFunc = version ? foundry.utils.mergeObject : mergeObject;
-        this.duplicate = version ? foundry.utils.duplicate : duplicate;
     }
 
     /**
@@ -20,7 +17,7 @@ export default class SequencerDatabase{
     registerEntries(moduleName, entries){
         console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
         let newEntry = {[moduleName]: entries};
-        this.contents = this.mergeFunc(this.contents, newEntry);
+        this.contents = foundry.utils.mergeObject(this.contents, newEntry);
         this._flatten();
     }
 
@@ -60,7 +57,9 @@ export default class SequencerDatabase{
     }
 
     _flatten(){
-        this.flattenedContents = Object.keys(lib.flattenObject(this.duplicate(this.contents)));
+        this.flattenedContents = Object.keys(
+            lib.flattenObject(foundry.utils.duplicate(this.contents))
+        );
     }
 
     _throwNotFound(inString, entry = false){

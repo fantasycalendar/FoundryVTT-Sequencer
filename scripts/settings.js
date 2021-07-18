@@ -1,8 +1,4 @@
-import Sequence from "./module/sequencer.js";
-
 export default function setupSettings(){
-
-    window.Sequence = Sequence;
 
     game.settings.register("sequencer", "debug", {
         name: "Enable debugging",

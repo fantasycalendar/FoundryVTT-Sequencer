@@ -24,7 +24,7 @@ export default class AnimationSection extends AnimatedSection{
      */
     on(inTarget){
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence.throwError(this, "on", "could not find position of given object");
+        if(!inTarget) this.sequence._throwError(this, "on", "could not find position of given object");
         this._originObject = this._validateLocation(inTarget);
         return this;
     }
@@ -37,16 +37,15 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     moveTowards(inTarget, options = {}){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0,
             target: { x: 0, y: 0 }
         }, options);
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "moveTowards", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "moveTowards", "options.delay must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "moveTowards", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "moveTowards", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence.throwError(this, "moveTowards", "could not find position of given object");
+        if(!inTarget) this.sequence._throwError(this, "moveTowards", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._moveTowards = options;
         this._teleportTo = false;
@@ -61,21 +60,20 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     rotateTowards(inTarget, options = {}){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             duration: 0,
             ease: "linear",
             delay: 0,
             offset: 0,
             towardsCenter: true
         }, options);
-        if(typeof options.duration !== "number") this.sequence.throwError(this, "rotateTowards", "options.duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence.throwError(this, "rotateTowards", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "rotateTowards", "options.delay must be of type number");
-        if(typeof options.offset !== "number") this.sequence.throwError(this, "rotateTowards", "options.offset must be of type number");
-        if(typeof options.towardsCenter !== "boolean") this.sequence.throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
+        if(typeof options.duration !== "number") this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
+        if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateTowards", "options.ease must be of type string");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
+        if(typeof options.offset !== "number") this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
+        if(typeof options.towardsCenter !== "boolean") this.sequence._throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence.throwError(this, "rotateTowards", "could not find position of given object");
+        if(!inTarget) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._rotateTowards = options;
         return this;
@@ -89,14 +87,13 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     teleportTo(inTarget, options = {}){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             delay: 0,
             target: { x: 0, y: 0 }
         }, options);
-        if(typeof options.delay !== "number") this.sequence.throwError(this, "teleportTo", "options.delay must be of type number");
+        if(typeof options.delay !== "number") this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence.throwError(this, "teleportTo", "could not find position of given object");
+        if(!inTarget) this.sequence._throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
         this._moveTowards = false;
@@ -110,8 +107,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     offset(inOffset){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        inOffset = mergeFunc({ x: 0, y: 0 }, inOffset);
+        inOffset = foundry.utils.mergeObject({ x: 0, y: 0 }, inOffset);
         this._offset = this._validateLocation(inOffset);
         return this;
     }
@@ -123,7 +119,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     closestSquare(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "closestSquare", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
         this._closestSquare = inBool;
         return this;
     }
@@ -135,7 +131,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     snapToSquare(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence.throwError(this, "snapToSquare", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "snapToSquare", "inBool must be of type boolean");
         this._snapToSquare = inBool;
         return this;
     }
@@ -144,14 +140,14 @@ export default class AnimationSection extends AnimatedSection{
         return this._runAnimate();
     }
 
-    async updateObject(obj, attributes, animate = false, animation={}){
+    async _updateObject(obj, attributes, animate = false, animation={}){
         await obj.document.update(attributes, {animate: animate, animation: animation});
     }
 
-    async execute(){
-        if(!(await this.shouldPlay())) return;
+    async _execute(){
+        if(!(await this._shouldPlay())) return;
         return new Promise(async (resolve) => {
-            if (this.shouldAsync) {
+            if (this._shouldAsync) {
                 await this._run();
             } else {
                 this._run();
@@ -380,17 +376,8 @@ export default class AnimationSection extends AnimatedSection{
             overallDuration = overallDuration > moveDuration ? overallDuration : moveDuration;
 
             if (!this._duration && this._moveTowards.ease === "linear") {
-                await this.updateObject(this._originObject, targetLoc, true);
+                await this._updateObject(this._originObject, targetLoc, true);
             }else{
-                // Re-enable maybe in the future?
-                /*if(this._originObject instanceof Token) {
-                    setTimeout(() => {
-                        this.updateObject(this._originObject, targetLoc, true, {
-                            duration: duration,
-                            ease: this._moveTowards.ease
-                        });
-                    }, this._moveTowards.delay);
-                }else{*/
                 animData.attributes.push({
                     name: "position",
                     origin: originLoc,
@@ -404,7 +391,6 @@ export default class AnimationSection extends AnimatedSection{
                     ease: easeFunctions[this._moveTowards.ease],
                     delay: this._moveTowards.delay
                 })
-                //}
             }
         }
 
@@ -479,7 +465,7 @@ export default class AnimationSection extends AnimatedSection{
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
                 if(this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
-                await this.updateObject(this._originObject, targetLocation);
+                await this._updateObject(this._originObject, targetLocation);
             }, this._teleportTo.delay);
             if(overallDuration <= this._teleportTo.delay){
                 this._waitUntilFinished = true;
@@ -501,17 +487,17 @@ export default class AnimationSection extends AnimatedSection{
         }
 
         if(Object.keys(updateAttributes).length){
-            await this.updateObject(this._originObject, updateAttributes);
+            await this._updateObject(this._originObject, updateAttributes);
         }
 
         return new Promise(async (resolve) => {
-            this.animate(animData, resolve);
+            this._animate(animData, resolve);
             setTimeout(resolve, Math.max(0, overallDuration + this._waitUntilFinishedDelay + animData.maxFPS));
         })
 
     }
 
-    async animate(animData, resolve, timespan){
+    async _animate(animData, resolve, timespan){
 
         // If it's not the first tick
         if (timespan) {
@@ -591,7 +577,7 @@ export default class AnimationSection extends AnimatedSection{
                 }
 
                 if(Object.keys(animatedAttributes).length > 0) {
-                    await this.updateObject(this._originObject, animatedAttributes);
+                    await this._updateObject(this._originObject, animatedAttributes);
                 }
 
                 animData.attributes = animData.attributes.filter(a => !a.done);
@@ -606,7 +592,7 @@ export default class AnimationSection extends AnimatedSection{
 
         let self = this;
         requestAnimationFrame(function (timespan) {
-            self.animate(animData, resolve, timespan);
+            self._animate(animData, resolve, timespan);
         });
     }
 
