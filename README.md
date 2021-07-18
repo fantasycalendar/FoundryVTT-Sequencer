@@ -294,6 +294,7 @@ new Sequence()
 - *Sequencer* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for Foundry Version 0.7.x <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
 - *Sequencer* - Refactored how animations work into a dedicated animation engine
 - *Effects* - Added support for static image effects (.jpeg, .png, etc)
+- *Effects* - Fixed grid size sometimes not being taken into account when playing effects with `.reachTowards()` 
 - *Sounds* - Vastly improved and fixed sound implementation, big thanks to ghost#2000!
 - *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for `.fadeIn()` and `.fadeOut()` in Sounds <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
 

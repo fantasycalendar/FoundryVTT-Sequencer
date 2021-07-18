@@ -25,7 +25,7 @@ export default class EffectSection extends AnimatedSection {
         this._mirrorX = false;
         this._mirrorY = false;
         this._playbackRate = 1.0;
-        this._gridSize = 100;
+        this._gridSize = canvas.grid.size;
         this._overrides = [];
         this._name = false;
         this._scaleIn = false;
@@ -637,7 +637,9 @@ export default class EffectSection extends AnimatedSection {
                             y: 0.5
                         }
                     }
+
                     data.speed = this._moveSpeed;
+
                 }
 
             }
