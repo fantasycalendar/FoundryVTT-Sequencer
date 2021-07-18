@@ -1,5 +1,6 @@
-import * as lib from "./lib.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
+import { SequencerAnimationEngine } from "./sequencer-animation-engine.js";
+import { easeFunctions } from "./canvas-effects/ease.js";
 
 export default class SequencerAudioHelper {
     /**
@@ -11,14 +12,8 @@ export default class SequencerAudioHelper {
      */
     static async play(data, push = false) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_SOUND, data);
-
-        data.volume = (data.volume ?? 1) * game.settings.get("core", "globalInterfaceVolume");
-
-        if (new lib.Version().onOrAfter("0.8.2")) {
-            return this._playOnNewSoundAPI(data);
-        } else {
-            return this._playOnOldSoundAPI(data);
-        }
+        data.volume = (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume");
+        return this._play(data);
     }
 
     /**
@@ -26,25 +21,38 @@ export default class SequencerAudioHelper {
      * @returns {Promise<Sound>}
      * @private
      */
-    static async _playOnNewSoundAPI(data) {
+    static async _play(data) {
+
         const sound = await game.audio.play(data.src, {
             volume: data.fadeIn ? 0 : data.volume,
-            loop: data.loop,
+            loop: data.loop
         });
 
         if (data.fadeIn) {
-            sound.fade(data.volume, { duration: data.fadeIn.duration });
+            SequencerAnimationEngine.animate({
+                name: "volume",
+                parent: sound,
+                from: 0.0,
+                to: data.volume,
+                duration: Math.min(data.fadeIn.duration, data.duration),
+                ease: easeFunctions[data.fadeIn.ease],
+                delay: Math.min(data.fadeIn.delay, data.duration)
+            });
         }
 
         if (data.fadeOut) {
-            setTimeout(() => {
-                if (sound.playing) {
-                    sound.fade(0, { duration: data.fadeOut.duration });
-                }
-            }, Math.max((data.duration ?? sound.duration) - data.fadeOut.duration, 0));
+            SequencerAnimationEngine.animate({
+                name: "volume",
+                parent: sound,
+                from: data.volume,
+                to: 0.0,
+                duration: Math.min(data.fadeOut.duration, data.duration),
+                ease: easeFunctions[data.fadeOut.ease],
+                delay: Math.max(data.duration - data.fadeOut.duration + data.fadeOut.delay, 0)
+            });
         }
 
-        if (data.duration !== undefined) {
+        if (data.duration) {
             setTimeout(() => {
                 sound.stop();
             }, data.duration);
@@ -53,43 +61,6 @@ export default class SequencerAudioHelper {
         return new Promise((resolve) => {
             sound.on("stop", resolve);
             sound.on("end", resolve);
-        });
-    }
-
-    /**
-     * @param {{src: string, loop?: boolean, volume: number, fadeIn?: {duration: number}, fadeOut?: {duration: number}, duration?: number}} data
-     * @returns {Promise<Howl>}
-     * @private
-     */
-    static async _playOnOldSoundAPI(data) {
-        const howl = new Howl({
-            src: [data.src],
-            loop: data.loop,
-            volume: data.fadeIn ? 0 : data.volume,
-            autoplay: true,
-        });
-
-        if (data.fadeIn) {
-            howl.fade(0, data.volume, data.fadeIn.duration);
-        }
-
-        if (data.fadeOut) {
-            setTimeout(() => {
-                if (howl.playing()) {
-                    howl.fade(howl.volume() ?? data.volume, 0, data.fadeOut.duration);
-                }
-            }, Math.max((data.duration ?? howl.duration()) - data.fadeOut.duration, 0));
-        }
-
-        if (data.duration !== undefined) {
-            setTimeout(() => {
-                howl.stop();
-            }, data.duration);
-        }
-
-        return new Promise((resolve) => {
-            howl.on("stop", resolve);
-            howl.on("end", resolve);
         });
     }
 }

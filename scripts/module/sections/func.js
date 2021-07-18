@@ -1,7 +1,7 @@
 import * as lib from "../lib.js";
-import Section from "./base.js";
+import BaseSection from "./base.js";
 
-export default class FunctionSection extends Section {
+export default class FunctionSection extends BaseSection {
 
     constructor(inSequence, inFunc) {
         super(inSequence)

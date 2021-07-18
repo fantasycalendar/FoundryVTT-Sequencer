@@ -2,13 +2,10 @@ import {
     BaseEffectsLayer,
     BelowTokensEffectsLayer
 } from "./module/canvas-effects/effects-layer.js";
-import * as lib from './module/lib.js';
 
 export default function registerLayer() {
 
-    let mergeFunc = new lib.Version().onOrAfter("0.8.6") ? foundry.utils.mergeObject : mergeObject;
-
-    CONFIG.Canvas.layers = mergeFunc(Canvas.layers, {
+    CONFIG.Canvas.layers = foundry.utils.mergeObject(Canvas.layers, {
         sequencerEffectsBelowTokens: BelowTokensEffectsLayer,
         sequencerEffectsAboveTokens: BaseEffectsLayer
     });
@@ -17,7 +14,7 @@ export default function registerLayer() {
         const layers = Canvas.layers;
         Object.defineProperty(Canvas, 'layers', {
             get: function () {
-                return mergeFunc(layers, CONFIG.Canvas.layers)
+                return foundry.utils.mergeObject(layers, CONFIG.Canvas.layers)
             }
         })
     }

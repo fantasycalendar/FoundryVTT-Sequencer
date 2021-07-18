@@ -290,6 +290,13 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.2
+- *Sequencer* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for Foundry Version 0.7.x <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
+- *Sequencer* - Refactored how animations work into a dedicated animation engine
+- *Effects* - Added support for static image effects (.jpeg, .png, etc)
+- *Sounds* - Vastly improved and fixed sound implementation, big thanks to ghost#2000!
+- *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for `.fadeIn()` and `.fadeOut()` in Sounds <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
+
 ### Version 0.5.1
 - *Sequencer* - Added two sample scenes with macros and accompanying art:
     - An animated Oujia board made by md-mention2reply
@@ -452,8 +459,10 @@ new Sequence()
 ## Credits
 ### Feedback and amazing help
 
-* U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) - Copyright © 2020 Emmanuel Ruaud
-* Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) - Copyright © 2020 Otigon
+* U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
+* Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
+* ghost (ghost#2000 on discord) for his fixes to the audio sections
+* League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
 
 ### Oujia Board
 - Code: md-mention2reply

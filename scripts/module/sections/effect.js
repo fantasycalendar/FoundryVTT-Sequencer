@@ -1,7 +1,6 @@
 import * as lib from "../lib.js";
-import { emitSocketEvent, playEffect, SOCKET_HANDLERS } from "../../sockets.js";
 import AnimatedSection from "./animated.js";
-import {random_object_element} from "../lib.js";
+import SequencerEffectHelper from "../sequencer-effect-helper.js";
 
 export default class EffectSection extends AnimatedSection {
 
@@ -40,7 +39,7 @@ export default class EffectSection extends AnimatedSection {
      * Causes the effect's position to be stored and can then be used  with .atLocation(), .reachTowards(),
      * and .rotateTowards() to refer to previous effects' locations
      *
-     * @param {boolean} inName
+     * @param {string} inName
      * @returns {EffectSection} this
      */
     name(inName){
@@ -186,8 +185,7 @@ export default class EffectSection extends AnimatedSection {
     moveTowards(inLocation, options={}) {
         if(inLocation === undefined) this.sequence._throwError(this, "moveTowards", "inLocation must not be undefined");
         if(typeof options !== "object") this.sequence._throwError(this, "moveTowards", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0
         }, options);
@@ -210,8 +208,7 @@ export default class EffectSection extends AnimatedSection {
     offset(inOffset, options = {}){
         if(inOffset === undefined) this.sequence._throwError(this, "offset", "inOffset must not be undefined");
         if(typeof options !== "object") this.sequence._throwError(this, "offset", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        inOffset = mergeFunc({
+        inOffset = foundry.utils.mergeObject({
             x: 0,
             y: 0,
             local: false
@@ -280,8 +277,7 @@ export default class EffectSection extends AnimatedSection {
      */
     scaleIn(scale, duration, options={}){
         if(typeof options !== "object") this.sequence._throwError(this, "scaleIn", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0
         }, options);
@@ -308,8 +304,7 @@ export default class EffectSection extends AnimatedSection {
      */
     scaleOut(scale, duration, options={}){
         if(typeof options !== "object") this.sequence._throwError(this, "scaleOut", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0
         }, options);
@@ -475,9 +470,8 @@ export default class EffectSection extends AnimatedSection {
     }
 
     async _run() {
-        let effect = await this._sanitizeEffectData();
-        emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, effect);
-        let canvasEffectData = await playEffect(effect);
+        let data = await this._sanitizeEffectData();
+        let canvasEffectData = SequencerEffectHelper.play(data, true);
         this.animationDuration = canvasEffectData.duration;
         await new Promise(resolve => setTimeout(resolve, this.animationDuration + this._waitUntilFinishedDelay))
     }
@@ -502,21 +496,22 @@ export default class EffectSection extends AnimatedSection {
             rotation: 0,
             speed: 0,
             playbackRate: this._playbackRate,
-            _distance: 0,
+            distance: 0,
             duration: this._duration,
             layer: this._layer,
             index: this._index,
             zIndex: this._zIndex,
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             audioVolume: this._volume,
+            gridScaleDifference: this._gridSizeDifference,
             animatedProperties: {
+                moves: this._moves,
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,
                 scaleIn: this._scaleIn,
                 scaleOut: this._scaleOut,
                 rotateIn: this._rotateIn,
                 rotateOut: this._rotateOut,
-                moves: this._moves,
                 fadeInAudio: this._fadeInAudio,
                 fadeOutAudio: this._fadeOutAudio
             },
@@ -545,11 +540,6 @@ export default class EffectSection extends AnimatedSection {
             this._gridSize = gridSize;
             this._startPoint = startPoint;
             this._endPoint = endPoint;
-        }
-
-        data.scale = {
-            x: data.scale.x * this._gridSizeDifference,
-            y: data.scale.y * this._gridSizeDifference
         }
 
         let scale = this._scaleMin;
@@ -633,12 +623,14 @@ export default class EffectSection extends AnimatedSection {
 
                 let ray = new Ray(origin, target);
 
-                data._distance = ray.distance;
+                data.distance = ray.distance;
 
                 data.rotation = ray.angle;
 
                 if(this._moves) {
-                    data.distance = ray.distance;
+
+                    data.animatedProperties.moves.target = target;
+
                     if(!this._anchor) {
                         data.anchor = {
                             x: 0.5,
@@ -675,8 +667,9 @@ export default class EffectSection extends AnimatedSection {
                 data.file = data.file.replace(/\[[0-9]+]$/, "");
             }
             data.file = window.SequencerDatabase.get(data.file) || data.file;
-            data = this._evaluateDatabaseEntry(data);
         }
+
+        data = this._evaluateFileObject(data);
 
         if(Array.isArray(data.file)) {
             data.file = typeof forcedIndex !== "number" ? lib.random_array_element(data.file) : data.file[forcedIndex % data.file.length];
@@ -704,12 +697,12 @@ export default class EffectSection extends AnimatedSection {
         }
     }
 
-    _evaluateDatabaseEntry(data){
+    _evaluateFileObject(data){
         if(typeof data.file !== "object") return data;
-        return this._recurseDatabaseFiles(data);
+        return this._recurseFileObject(data);
     }
 
-    _recurseDatabaseFiles(data){
+    _recurseFileObject(data){
         if(typeof data.file === "string" || Array.isArray(data.file)) return data;
 
         if(this._to && !this._rotationOnly) {
@@ -717,9 +710,9 @@ export default class EffectSection extends AnimatedSection {
             if(foundDistances) return this._rangeFind(data);
         }
 
-        data.file = random_object_element(data.file);
+        data.file = lib.random_object_element(data.file);
 
-        return this._recurseDatabaseFiles(data);
+        return this._recurseFileObject(data);
     }
 
     _rangeFind(data){
@@ -737,7 +730,7 @@ export default class EffectSection extends AnimatedSection {
         let max = Math.max(...uniqueDistances);
         let min = Math.min(...uniqueDistances);
 
-        let relativeDistance = data._distance / this._gridSizeDifference;
+        let relativeDistance = data.distance / this._gridSizeDifference;
 
         data.file = distances
             .map(entry => {
@@ -788,13 +781,13 @@ export default class EffectSection extends AnimatedSection {
 
     async _calculateHitVector(data) {
 
-        if(data._distance === 0) return data;
+        if(data.distance === 0) return data;
 
         let dimensions = await this._getFileDimensions(data.file);
         let trueDistanceAfterMargin = this._getTrueLength(dimensions);
 
-        data.scale.x = data._distance / trueDistanceAfterMargin;
-        data.scale.y = data._distance / trueDistanceAfterMargin;
+        data.scale.x = data.distance / trueDistanceAfterMargin;
+        data.scale.y = data.distance / trueDistanceAfterMargin;
 
         data.anchor.x = this._startPoint / dimensions.x;
 

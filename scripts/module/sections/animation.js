@@ -37,8 +37,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     moveTowards(inTarget, options = {}){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0,
             target: { x: 0, y: 0 }
@@ -61,8 +60,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     rotateTowards(inTarget, options = {}){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             duration: 0,
             ease: "linear",
             delay: 0,
@@ -89,8 +87,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     teleportTo(inTarget, options = {}){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             delay: 0,
             target: { x: 0, y: 0 }
         }, options);
@@ -110,8 +107,7 @@ export default class AnimationSection extends AnimatedSection{
      * @returns {AnimationSection} this
      */
     offset(inOffset){
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        inOffset = mergeFunc({ x: 0, y: 0 }, inOffset);
+        inOffset = foundry.utils.mergeObject({ x: 0, y: 0 }, inOffset);
         this._offset = this._validateLocation(inOffset);
         return this;
     }
@@ -382,15 +378,6 @@ export default class AnimationSection extends AnimatedSection{
             if (!this._duration && this._moveTowards.ease === "linear") {
                 await this._updateObject(this._originObject, targetLoc, true);
             }else{
-                // Re-enable maybe in the future?
-                /*if(this._originObject instanceof Token) {
-                    setTimeout(() => {
-                        this._updateObject(this._originObject, targetLoc, true, {
-                            duration: duration,
-                            ease: this._moveTowards.ease
-                        });
-                    }, this._moveTowards.delay);
-                }else{*/
                 animData.attributes.push({
                     name: "position",
                     origin: originLoc,
@@ -404,7 +391,6 @@ export default class AnimationSection extends AnimatedSection{
                     ease: easeFunctions[this._moveTowards.ease],
                     delay: this._moveTowards.delay
                 })
-                //}
             }
         }
 

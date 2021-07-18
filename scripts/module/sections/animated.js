@@ -1,4 +1,4 @@
-import Section from "./base.js";
+import Section from "./section.js";
 
 export default class AnimatedSection extends Section{
 
@@ -66,8 +66,7 @@ export default class AnimatedSection extends Section{
      */
     rotateIn(degrees, duration, options={}){
         if(typeof options !== "object") this.sequence._throwError(this, "rotateIn", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0
         }, options);
@@ -94,8 +93,7 @@ export default class AnimatedSection extends Section{
      */
     rotateOut(degrees, duration, options={}){
         if(typeof options !== "object") this.sequence._throwError(this, "rotateOut", "options must be of type object");
-        let mergeFunc = this.version ? foundry.utils.mergeObject : mergeObject;
-        options = mergeFunc({
+        options = foundry.utils.mergeObject({
             ease: "linear",
             delay: 0
         }, options);

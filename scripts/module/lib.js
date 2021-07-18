@@ -126,31 +126,47 @@ export async function getSoundDuration(inFile){
 }
 
 /**
- *  Rotates a vector by a given number of degrees
+ *  Gets a property in an object based on a path in dot-notated string
  *
- * @param  {object}     vector    The vector to be rotated
- * @param  {number}     degrees   Number of degrees of which to rotate the vector
- * @return {object}               The rotated vector
+ * @param   {object}         obj       The object to be queried
+ * @param   {array|string}   path      The path in the object to the property in a dot-notated string
+ * @returns {any}                      Property value, if found
  */
-export function rotateVector(vector, degrees){
-    if((vector.x === 0 && vector.y === 0) || degrees === 0) return vector;
-
-    let distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
-    let radians = degrees * (Math.PI / 180);
-
-    let cos1 = vector.x / distance;
-    let sin1 = vector.y / distance;
-    let cos2 = Math.cos(radians);
-    let sin2 = Math.sin(radians);
-    let cos3 = cos1*cos2 - sin1*sin2;
-    let sin3 = sin1*cos2 + cos1*sin2;
-
-    vector.x = (distance * cos3);
-    vector.y = (distance * sin3);
-
-    return vector;
+export function deepGet(obj, path){
+    if(!Array.isArray(path)) path = path.split('.');
+    try {
+        let i;
+        for (i = 0; i < path.length - 1; i++) {
+            obj = obj[path[i]];
+        }
+        return obj[path[i]];
+    }catch(err){
+        throw new Error(`Could not find property "${path}"`)
+    }
 }
 
+/**
+ *  Sets a property in an object based on a path in dot-notated string, example:
+ *  let obj = { first: { second: { third: "value" } } }
+ *  deepSet(obj, "newValue", "first.second.third")
+ *  let obj = { first: { second: { third: "newValue" } } }
+ *
+ * @param  {object}         obj       The object to be modified
+ * @param  {any}            value     The value to set
+ * @param  {array|string}   path      The path in the object to the property in a dot-notated string
+ */
+export function deepSet(obj, value, path) {
+    if(!Array.isArray(path)) path = path.split('.');
+    try{
+        let i;
+        for (i = 0; i < path.length - 1; i++) {
+            obj = obj[path[i]];
+        }
+        obj[path[i]] = value;
+    }catch(err){
+        throw new Error(`Could not set property "${path}"`)
+    }
+}
 
 /**
  *  Flattens an object in a dot-notated format, like:
@@ -176,5 +192,54 @@ export function flattenObject(obj) {
         }
     }
     return toReturn;
+}
 
+/**
+ *  Rotates a vector by a given number of degrees
+ *
+ * @param  {object}     vector    The vector to be rotated
+ * @param  {number}     degrees   Number of degrees of which to rotate the vector
+ * @return {object}               The rotated vector
+ */
+export function rotateVector(vector, degrees){
+    if((vector.x === 0 && vector.y === 0) || degrees === 0) return vector;
+
+    let distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+    let radians = degrees * (Math.PI / 180);
+
+    let cos1 = vector.x / distance;
+    let sin1 = vector.y / distance;
+    let cos2 = Math.cos(radians);
+    let sin2 = Math.sin(radians);
+    let cos3 = cos1*cos2 - sin1*sin2;
+    let sin3 = sin1*cos2 + cos1*sin2;
+
+    vector.x = (distance * cos3);
+    vector.y = (distance * sin3);
+
+    return vector;
+}
+
+export function transformVector(inVector, context=false){
+
+    let zoomLevel = canvas.background.worldTransform.a;
+    let worldTransform = canvas.background.worldTransform;
+    let localX = 0;
+    let localY = 0;
+    if(context) {
+        localX = context.localTransform.tx;
+        localY = context.localTransform.ty;
+    }
+
+    if(Array.isArray(inVector)) {
+        return [
+             (inVector[0] + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
+             (inVector[1] + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
+        ]
+    }
+
+    return {
+        x: (inVector.x + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
+        y: (inVector.y + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
+    }
 }

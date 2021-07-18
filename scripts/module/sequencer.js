@@ -11,7 +11,6 @@ export default class Sequence{
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
-        this.version = isNewerVersion(game.data.version, "0.7.10");
         this.debug = game.settings.get("sequencer", "debug");
     }
 

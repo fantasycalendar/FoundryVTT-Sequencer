@@ -5,12 +5,11 @@
   "version": "0.0.2",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.7.9",
-  "compatibleCoreVersion": "0.8.6",
+  "minimumCoreVersion": "0.8.2",
+  "compatibleCoreVersion": "0.8.8",
   "author": "Wasp (Wasp#2005)",
-  "esmodules": ["scripts/module.js"],
-  "scripts": [
-    "./scripts/libs/filters/pixi-filters.js"
+  "esmodules": [
+    "scripts/module.js"
   ],
   "packs": [
     {
