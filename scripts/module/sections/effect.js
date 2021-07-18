@@ -1,5 +1,5 @@
 import * as lib from "../lib.js";
-import { playEffect } from "../../sockets.js";
+import { emitSocketEvent, playEffect, SOCKET_HANDLERS } from "../../sockets.js";
 import AnimatedSection from "./animated.js";
 import {random_object_element} from "../lib.js";
 
@@ -478,7 +478,7 @@ export default class EffectSection extends AnimatedSection {
 
     async _run() {
         let effect = await this._sanitizeEffectData();
-        game.socket.emit("module.sequencer", effect);
+        emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, effect);
         let canvasEffectData = await playEffect(effect);
         this.animationDuration = canvasEffectData.duration;
         await new Promise(resolve => setTimeout(resolve, this.animationDuration + this._waitUntilFinishedDelay))
