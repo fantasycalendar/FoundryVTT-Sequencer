@@ -25,7 +25,7 @@ export default class EffectSection extends AnimatedSection {
         this._mirrorX = false;
         this._mirrorY = false;
         this._playbackRate = 1.0;
-        this._gridSize = canvas.grid.size;
+        this._gridSize = 100;
         this._overrides = [];
         this._name = false;
         this._scaleIn = false;
@@ -465,10 +465,6 @@ export default class EffectSection extends AnimatedSection {
         return this;
     }
 
-    get _gridSizeDifference(){
-        return canvas.grid.size / this._gridSize;
-    }
-
     async _run() {
         let data = await this._sanitizeEffectData();
         let canvasEffectData = SequencerEffectHelper.play(data, true);
@@ -492,6 +488,7 @@ export default class EffectSection extends AnimatedSection {
                 x: 1.0,
                 y: 1.0
             },
+            gridSizeDifference: 1.0,
             angle: this._angle,
             rotation: 0,
             speed: 0,
@@ -503,7 +500,6 @@ export default class EffectSection extends AnimatedSection {
             zIndex: this._zIndex,
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             audioVolume: this._volume,
-            gridScaleDifference: this._gridSizeDifference,
             animatedProperties: {
                 moves: this._moves,
                 fadeIn: this._fadeIn,
@@ -530,18 +526,6 @@ export default class EffectSection extends AnimatedSection {
 
         data = this._determineFile(data);
 
-        if(this._JB2A){
-            let [gridSize, startPoint, endPoint] = {
-                "ranged": [100, 200, 200],
-                "melee": [100, 300, 300],
-                "cone": [100, 0, 0]
-            }[this._getJB2ATemplate(data.file)];
-
-            this._gridSize = gridSize;
-            this._startPoint = startPoint;
-            this._endPoint = endPoint;
-        }
-
         let scale = this._scaleMin;
         if (typeof this._scaleMin === "number") {
             if(this._scaleMax && typeof this._scaleMax === "number"){
@@ -560,6 +544,9 @@ export default class EffectSection extends AnimatedSection {
 
         if(!this._rotationOnly) {
             data = await this._calculateHitVector(data);
+        }else{
+            if(this._JB2A) this._gridSize = 100;
+            data.gridSizeDifference = this._gridSizeDifference(this._gridSize);
         }
 
         let flipX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5) ? -1 : 1;
@@ -661,17 +648,19 @@ export default class EffectSection extends AnimatedSection {
         if(Array.isArray(data.file)) data.file = lib.random_array_element(data.file);
 
         let forcedIndex = false;
-        let databaseEntry = window.SequencerDatabase.entryExists(data.file);
-        if(databaseEntry){
-            let match = data.file.match(/\[([0-9]+)]$/)
-            if(match) {
-                forcedIndex = Number(match[1]);
-                data.file = data.file.replace(/\[[0-9]+]$/, "");
+        if(typeof data.file === "string") {
+            let databaseEntry = window.SequencerDatabase.entryExists(data.file);
+            if(databaseEntry){
+                let match = data.file.match(/\[([0-9]+)]$/)
+                if(match) {
+                    forcedIndex = Number(match[1]);
+                    data.file = data.file.replace(/\[[0-9]+]$/, "");
+                }
+                data.file = window.SequencerDatabase.get(data.file) || data.file;
             }
-            data.file = window.SequencerDatabase.get(data.file) || data.file;
         }
 
-        data = this._evaluateFileObject(data);
+        data = this._recurseFileObject(data);
 
         if(Array.isArray(data.file)) {
             data.file = typeof forcedIndex !== "number" ? lib.random_array_element(data.file) : data.file[forcedIndex % data.file.length];
@@ -699,12 +688,8 @@ export default class EffectSection extends AnimatedSection {
         }
     }
 
-    _evaluateFileObject(data){
-        if(typeof data.file !== "object") return data;
-        return this._recurseFileObject(data);
-    }
-
     _recurseFileObject(data){
+
         if(typeof data.file === "string" || Array.isArray(data.file)) return data;
 
         if(this._to && !this._rotationOnly) {
@@ -732,29 +717,46 @@ export default class EffectSection extends AnimatedSection {
         let max = Math.max(...uniqueDistances);
         let min = Math.min(...uniqueDistances);
 
-        let relativeDistance = data.distance / this._gridSizeDifference;
-
-        data.file = distances
+        let fileData = lib.random_array_element(distances
             .map(entry => {
-                entry.distances = [
-                    entry.minDistance === min ? 0 : entry.minDistance,
-                    entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance)+1]
-                ];
+                entry.distances = {
+                    min: entry.minDistance === min ? 0 : entry.minDistance,
+                    max: entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1]
+                };
+                let file = Array.isArray(entry.file) ? entry.file[0] : entry.file;
+                entry.template = this._determineJB2A(file);
+                entry.relativeDistance = data.distance / this._gridSizeDifference(entry.template[0]);
                 return entry;
             })
-            .find(e => relativeDistance >= e.distances[0] && relativeDistance < e.distances[1])
-            .file;
+            .filter(e => e.relativeDistance >= e.distances.min && e.relativeDistance < e.distances.max));
+
+        data.file = fileData.file;
+        this._gridSize = fileData.template[0];
+        this._startPoint = fileData.template[1];
+        this._endPoint = fileData.template[2];
 
         return data;
     }
 
-    _getJB2ATemplate(inFile){
+    _gridSizeDifference(inGridSize){
+        return canvas.grid.size / inGridSize;
+    }
+
+    _determineJB2A(inFile){
+
+        if(!this._JB2A) return [0,0,0];
+
+        let type = "ranged";
         if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){
-            return "melee";
+            type = "melee";
         }else if(inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")){
-            return "cone";
+            type = "cone";
         }
-        return "ranged";
+        return {
+            "ranged": [100, 200, 200],
+            "melee": [100, 300, 300],
+            "cone": [100, 0, 0]
+        }[type];
     }
 
     async _getFileDimensions(inFile) {

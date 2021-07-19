@@ -1,4 +1,4 @@
-import SequencerDatabase from "./module/database.js";
+import SequencerDatabase from "./module/sequencer-database.js";
 
 export default function registerHooks(){
     window.SequencerDatabase = new SequencerDatabase();

@@ -290,6 +290,11 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.3
+- *Sequencer* - Added sound to the Hyperspeed Sample thanks to the wonderful AurelTristen over at [HellScape Tabletop Assets](https://www.patreon.com/HellScapeAssets) (even though they're not specifically focused on sound effects)
+- *Effects* - Fixed major issue with JB2A templates, causing effects to pick the wrong ranged attacks & other shenanigans
+- *Effects* - Fixed effect scale inconsistencies across scenes with different grid sizes
+
 ### Version 0.5.2
 - *Sequencer* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for Foundry Version 0.7.x <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
 - *Sequencer* - Refactored animations into a dedicated animation engine
@@ -456,22 +461,23 @@ new Sequence()
 ### Version 0.1.0
 - First implementation
 
-
 ## Credits
 ### Feedback and amazing help
-
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
 * ghost (ghost#2000 on discord) for his fixes to the audio sections
 * League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
 
-### Oujia Board
-- Code: md-mention2reply
-- Art Creator: Matheus Moreno Mota
-- Sound: https://99sounds.org/license/
-- Image: https://pixabay.com/service/license/
+### Oujia Board Scene
+- Code - Copyright © 2020 md-mention2reply
+- Art - Copyright © 2020 Matheus Moreno Mota
+- Sound - https://99sounds.org/license/
+- Image - https://pixabay.com/service/license/
+
+### Hyperspeed Scene
+- Hyperdrive Animations - Copyright © 2020 Adam Oresten
+- Sounds [HellScape Tabletop Assets](https://www.patreon.com/HellScapeAssets) - Copyright © 2020 AurelTristen
+- Sci-fi Cockpits - Copyright © 2020 Vattalus Assets
 
 ### Other Attributions
-- Hyperdrive Animations - Copyright © 2020 Adam Oresten
-- Sci-fi Cockpits - Copyright © 2020 Vattalus Assets
 - [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev

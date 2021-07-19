@@ -55,8 +55,8 @@ export default class CanvasEffect {
 
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
         this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
-        this.data.scale.x *= this.data.gridScaleDifference;
-        this.data.scale.y *= this.data.gridScaleDifference;
+        this.data.scale.x *= this.data.gridSizeDifference;
+        this.data.scale.y *= this.data.gridSizeDifference;
         this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
         this.sprite.position.set(this.data.position.x, this.data.position.y);
 
@@ -95,12 +95,12 @@ export default class CanvasEffect {
 
     _determineScale(property){
         let scale = {
-            x: property.value?.x * this.data.gridScaleDifference ?? 0,
-            y: property.value?.y * this.data.gridScaleDifference ?? 0
+            x: property.value?.x * this.data.gridSizeDifference ?? 1.0,
+            y: property.value?.y * this.data.gridSizeDifference ?? 1.0
         };
         if(typeof property.value === "number"){
-            scale.x = property.value * this.data.gridScaleDifference
-            scale.y = property.value * this.data.gridScaleDifference
+            scale.x = property.value * this.data.gridSizeDifference
+            scale.y = property.value * this.data.gridSizeDifference
         }
         return scale;
     }
@@ -112,7 +112,7 @@ export default class CanvasEffect {
 
             this.sprite.scale.set(scale.x, scale.y);
 
-            SequencerAnimationEngine.animate({
+            SequencerAnimationEngine.animate([{
                 name: "scale.x",
                 parent: this.sprite,
                 to: this.data.scale.x,
@@ -126,7 +126,7 @@ export default class CanvasEffect {
                 duration: Math.min(scaleIn.duration, this.data.animationDuration),
                 ease: easeFunctions[scaleIn.ease],
                 delay: Math.min(scaleIn.delay, this.data.animationDuration)
-            })
+            }])
 
         }
 
@@ -137,7 +137,7 @@ export default class CanvasEffect {
             let scaleOut = this.data.animatedProperties.scaleOut;
             let scale = this._determineScale(scaleOut)
 
-            SequencerAnimationEngine.animate({
+            SequencerAnimationEngine.animate([{
                 name: "scale.x",
                 parent: this.sprite,
                 to: scale.x,
@@ -151,7 +151,7 @@ export default class CanvasEffect {
                 duration: Math.min(scaleOut.duration, this.data.animationDuration),
                 ease: easeFunctions[scaleOut.ease],
                 delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
-            })
+            }])
         }
     }
 
@@ -231,21 +231,21 @@ export default class CanvasEffect {
         }
         this.data.animationDuration = this.data.sourceDuration * 1000;
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.animate([{
             name: "position.x",
             parent: this.sprite,
             to: moves.target.x,
             duration: this.data.animationDuration - moves.delay,
             ease: easeFunctions[moves.ease],
             delay: Math.max(moves.delay, 0)
-        },{
+        }, {
             name: "position.y",
             parent: this.sprite,
             to: moves.target.y,
             duration: this.data.animationDuration - moves.delay,
             ease: easeFunctions[moves.ease],
             delay: Math.max(moves.delay, 0)
-        });
+        }]);
     }
 
     endEarly(){
