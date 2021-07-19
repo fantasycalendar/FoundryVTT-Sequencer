@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.3 Hotfix
+- *Effects* - Fixed melee attacks not picking the right JB2A template
+
 ### Version 0.5.3
 - *Sequencer* - Added sound to the Hyperspeed Sample thanks to the wonderful AurelTristen over at [HellScape Tabletop Assets](https://www.patreon.com/HellScapeAssets) (even though they're not specifically focused on sound effects)
 - *Effects* - Fixed major issue with JB2A templates, causing effects to pick the wrong ranged attacks & other shenanigans

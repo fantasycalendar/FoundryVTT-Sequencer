@@ -674,6 +674,11 @@ export default class EffectSection extends AnimatedSection {
             }
         }
 
+        let template = this._determineJB2A(data.file);
+        this._gridSize = template[0];
+        this._startPoint = template[1];
+        this._endPoint = template[2];
+
         return data;
 
     }
@@ -717,7 +722,7 @@ export default class EffectSection extends AnimatedSection {
         let max = Math.max(...uniqueDistances);
         let min = Math.min(...uniqueDistances);
 
-        let fileData = lib.random_array_element(distances
+        let possibleFiles = distances
             .map(entry => {
                 entry.distances = {
                     min: entry.minDistance === min ? 0 : entry.minDistance,
@@ -728,12 +733,9 @@ export default class EffectSection extends AnimatedSection {
                 entry.relativeDistance = data.distance / this._gridSizeDifference(entry.template[0]);
                 return entry;
             })
-            .filter(e => e.relativeDistance >= e.distances.min && e.relativeDistance < e.distances.max));
+            .filter(e => e.relativeDistance >= e.distances.min && e.relativeDistance < e.distances.max);
 
-        data.file = fileData.file;
-        this._gridSize = fileData.template[0];
-        this._startPoint = fileData.template[1];
-        this._endPoint = fileData.template[2];
+        data.file = lib.random_array_element(possibleFiles).file;
 
         return data;
     }
