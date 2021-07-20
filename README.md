@@ -10,7 +10,7 @@ This module implements a basic pipeline that can be used for managing the flow o
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
 ## Download here:
-`https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json`
+[https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json](https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json)
 
 ## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation & Guides](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
