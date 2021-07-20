@@ -24,6 +24,27 @@ export default class Section extends BaseSection{
     }
 
     /**
+     * Causes the effect or sound to be repeated n amount of times, with an optional delay. If given inRepeatDelayMin
+     * and inRepeatDelayMax, a random repetition delay will be picked for every repetition
+     *
+     * @param {number} inRepetitions
+     * @param {number} inRepeatDelayMin
+     * @param {number} inRepeatDelayMax
+     * @returns {Section} this
+     */
+    repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax){
+        if(typeof inRepetitions !== "number") this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
+        if(typeof inRepeatDelayMin !== "number") this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
+        if(inRepeatDelayMax && typeof inRepeatDelayMax !== "number"){
+            this.sequence._throwError(this, "repeats", "repeatDelayMax must be of type number");
+        }
+        this._repetitions = inRepetitions;
+        this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
+        this._repeatDelayMax = Math.max(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
+        return this;
+    }
+
+    /**
      * Causes the effect or sound to not play, and skip all delays, repetitions, waits, etc. If you pass a function,
      * the function should return something false-y if you do not want the effect or sound to play.
      *

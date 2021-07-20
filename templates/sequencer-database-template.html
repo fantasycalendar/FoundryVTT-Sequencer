@@ -1,0 +1,51 @@
+<form id="sequencer-database-form" class="dialog-content potato" onsubmit="event.preventDefault();">
+
+    <style>
+
+        .database-entries-container{
+            max-height: calc(420px - 5rem);
+            overflow-y: scroll;
+        }
+
+        .database-entries {
+            flex: 1;
+            flex-direction: row;
+        }
+
+        .database-entries > div{
+            flex: 1 0 auto;
+        }
+
+        .toRemove {
+            color: darkred;
+        }
+
+    </style>
+
+    <div class="flex mb-2">
+        <select name="pack-select" class="w-15" onsubmit="event.preventDefault();">
+            <option value="all">All</option>
+            {{#each packs as |pack index|}}
+                <option>{{ pack }}</option>
+            {{/each}}
+        </select>
+        <input placeholder="Search..." name="search-field" type="text" class="ml-2" onsubmit="event.preventDefault();">
+    </div>
+
+    <div class="database-entries-container">
+
+        <div class="database-entries">
+
+            {{#each entries as |part key|}}
+
+                <div>
+                    <a class="click-copy">{{ part.entry }}</a>
+                </div>
+
+            {{/each}}
+
+        </div>
+
+    </div>
+
+</form>

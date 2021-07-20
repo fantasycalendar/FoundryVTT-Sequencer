@@ -290,6 +290,13 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.6
+- *Sequencer* - Added alpha version of the Sequencer Database Viewer
+- *Effects* - Added `.randomOffset()` which can add a random offset similar to `.missed()`, but *within* the bounds of the target token / tile / other. Check out the docs!
+- *Effects* - Fixed `.waitUntilFinished()` not being respected 
+- *Effects* - Fixed `.offset()` throwing an error about a missing function
+- *Effects* - Fixed `.repeats()` throwing an error, because the entire function went missing in the last update >.>
+
 ### Version 0.5.5 Hotfix
 - *Effects* - Fixed effects sometimes not playing
 

@@ -13,6 +13,7 @@ export default class EffectSection extends AnimatedSection {
         this._scaleMin = false;
         this._scaleMax = false;
         this._anchor = false;
+        this._randomOffset = false;
         this._randomRotation = false;
         this._rotationOnly = true;
         this._moves = false;
@@ -213,7 +214,7 @@ export default class EffectSection extends AnimatedSection {
             y: 0,
             local: false
         }, inOffset);
-        inOffset = mergeFunc(inOffset, options);
+        inOffset = foundry.utils.mergeObject(inOffset, options);
         if(typeof inOffset.local !== "boolean") this.sequence._throwError(this, "offset", "options.local must be of type boolean");
         this._offset = inOffset;
         return this;
@@ -358,12 +359,26 @@ export default class EffectSection extends AnimatedSection {
     }
 
     /**
+     * The sprite gets a random offset on its target location, usually within the object's bounds. The optional parameter
+     * scales how much offset should be added. Defaults to 1.0, which covers the entire target position, 0.5 would cover half.
+     *
+     * @param {number} [inOffsetScale=1.0] inOffsetScale
+     * @returns {EffectSection} this
+     */
+    randomOffset(inOffsetScale = 1.0){
+        if(typeof inOffsetScale !== "number") this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
+        this._randomOffset = inOffsetScale;
+        return this;
+    }
+
+    /**
      * The sprite gets a random rotation, which means it should not be used with .reachTowards()
      *
      * @param {boolean} [inBool=true] inBool
      * @returns {EffectSection} this
      */
     randomRotation(inBool = true) {
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "randomRotation", "inBool must be of type boolean");
         this._randomRotation = inBool;
         return this;
     }
@@ -467,8 +482,9 @@ export default class EffectSection extends AnimatedSection {
 
     async _run() {
         let data = await this._sanitizeEffectData();
-        let canvasEffectData = SequencerEffectHelper.play(data, true);
+        let canvasEffectData = await SequencerEffectHelper.play(data, true);
         this.animationDuration = canvasEffectData.duration;
+        console.log(this.animationDuration, this._waitUntilFinishedDelay);
         await new Promise(resolve => setTimeout(resolve, this.animationDuration + this._waitUntilFinishedDelay))
     }
 
@@ -584,9 +600,9 @@ export default class EffectSection extends AnimatedSection {
             }
 
             if(this._to){
-                target = this._applyMissedOffsets(target);
+                target = this._applyOffsets(target);
             }else{
-                origin = this._applyMissedOffsets(origin);
+                origin = this._applyOffsets(origin);
             }
 
             if(!this._anchor && (from instanceof Token || from instanceof Tile)) {
@@ -864,7 +880,7 @@ export default class EffectSection extends AnimatedSection {
 
     }
 
-    _applyMissedOffsets(inPosition){
+    _applyOffsets(inPosition){
         let offset = this._offsets[this._currentRepetition] ?? { x: 0, y: 0 };
         inPosition.x -= offset.x;
         inPosition.y -= offset.y;
@@ -890,12 +906,13 @@ export default class EffectSection extends AnimatedSection {
             y: origin_position.y - target_position.y
         }
 
-        if(this._missed) {
-            this._offsets.push(offset);
+        if(this._randomOffset){
+            offset = this._getRandomOffset(to || from, offset)
         }
 
-        if(this._name) {
+        this._offsets.push(offset);
 
+        if(this._name) {
             this.sequence._insertCachedOffset(
                 this._name,
                 origin_object,
@@ -927,6 +944,18 @@ export default class EffectSection extends AnimatedSection {
             position.x += lib.random_float_between(tokenOffset, (width/2) + canvas.grid.size/2) * flipX;
             position.y += ((height/2) + lib.random_float_between(tokenOffset, canvas.grid.size/2)) * flipY;
         }
+
+        return position;
+
+    }
+
+    _getRandomOffset(target, position){
+
+        let width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
+        let height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
+
+        position.x += lib.random_float_between((width/2) * -1, width/2);
+        position.y += lib.random_float_between((height/2) * -1, height/2);
 
         return position;
 
