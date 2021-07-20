@@ -545,7 +545,6 @@ export default class EffectSection extends AnimatedSection {
         if(!this._rotationOnly) {
             data = await this._calculateHitVector(data);
         }else{
-            if(this._JB2A) this._gridSize = 100;
             data.gridSizeDifference = this._gridSizeDifference(this._gridSize);
         }
 
@@ -746,7 +745,7 @@ export default class EffectSection extends AnimatedSection {
 
     _determineJB2A(inFile){
 
-        if(!this._JB2A) return [0,0,0];
+        if(!this._JB2A) return [100,0,0];
 
         let type = "ranged";
         if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){

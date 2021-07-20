@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.5 Hotfix
+- *Effects* - Fixed effects sometimes not playing
+
 ### Version 0.5.4 Hotfix
 - *Effects* - Fixed melee attacks not picking the right JB2A template
 
