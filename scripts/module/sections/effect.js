@@ -484,8 +484,8 @@ export default class EffectSection extends AnimatedSection {
         let data = await this._sanitizeEffectData();
         let canvasEffectData = await SequencerEffectHelper.play(data, true);
         this.animationDuration = canvasEffectData.duration;
-        console.log(this.animationDuration, this._waitUntilFinishedDelay);
-        await new Promise(resolve => setTimeout(resolve, this.animationDuration + this._waitUntilFinishedDelay))
+        let totalDuration = this.animationDuration + this._currentWaitTime;
+        await new Promise(resolve => setTimeout(resolve, totalDuration))
     }
 
     async _sanitizeEffectData() {

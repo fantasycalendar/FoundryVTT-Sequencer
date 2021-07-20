@@ -6,13 +6,17 @@ export default class Section extends BaseSection{
     constructor(inSequence){
         super(inSequence);
         this._playIf = true;
+        this._async = false;
         this._offsets = [];
         this._waitUntilFinishedDelay = 0;
+        this._repetitions = 1;
         this._currentRepetition = 0;
         this._repeatDelayMin = 0;
         this._repeatDelayMax = 0;
+        this._repeatDelay = 0;
         this._delayMin = 0;
         this._delayMax = 0;
+        this._basicDelay = 0;
         this._index = this.sequence.effectIndex;
         this._duration = false;
         this._fadeIn = false;
@@ -236,12 +240,18 @@ export default class Section extends BaseSection{
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
 
-    get shouldWaitUntilFinished(){
-        return this._waitUntilFinished || ((this._async || this._waitUntilFinished) && this._repetitions === 1)
+    get _shouldAsync(){
+        return this._async || this._waitAnyway
     }
 
-    get _shouldAsync(){
-        return this._async || ((this._async || this._waitUntilFinished) && this._repetitions === 1)
+    get _waitAnyway(){
+        return (this._async || this._waitUntilFinished)
+            && (this._repetitions === 1 || this._repetitions === this._currentRepetition+1)
+    }
+
+    get _currentWaitTime(){
+        let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
+        return waitUntilFinishedDelay + this._basicDelay + this._repeatDelay;
     }
 
     async _prepareOffsetCache(){
@@ -259,29 +269,30 @@ export default class Section extends BaseSection{
     async _execute(){
         if(!(await this._shouldPlay())) return;
         let self = this;
-        let delay = lib.random_float_between(this._delayMin, this._delayMax);
+        this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
             setTimeout(async function () {
                 for (let i = 0; i < self._repetitions; i++) {
                     self._currentRepetition = i;
+                    self._repeatDelay = i !== self._repetitions-1 ? lib.random_float_between(self._repeatDelayMin, self._repeatDelayMax) : 0;
                     if (self._shouldAsync) {
                         await self._run();
                     } else {
                         self._run();
                     }
-                    if (self._repetitions > 1) {
+                    if (self._repetitions > 1 && i !== self._repetitions-1) {
                         await self._delayBetweenRepetitions();
                     }
                 }
                 resolve();
-            }, delay);
+            }, this._basicDelay);
         });
     }
 
     async _delayBetweenRepetitions(){
-        let waitTime = lib.random_float_between(this._repeatDelayMin, this._repeatDelayMax);
+        let self = this;
         return new Promise((resolve) => {
-            setTimeout(resolve, waitTime)
+            setTimeout(resolve, self._repeatDelay)
         });
     }
 

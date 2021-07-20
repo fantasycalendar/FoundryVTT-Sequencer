@@ -3,17 +3,13 @@ export default class BaseSection {
     constructor(inSequence) {
         this.sequence = inSequence;
         this._waitUntilFinished = false;
-        this._async = false;
-        this._repetitions = 1;
     }
 
     get shouldWaitUntilFinished(){
-        return this._waitUntilFinished || ((this._async || this._waitUntilFinished) && this._repetitions === 1)
+        return this._waitUntilFinished || this._waitAnyway
     }
 
-    get _shouldAsync(){
-        return this._async || ((this._async || this._waitUntilFinished) && this._repetitions === 1)
-    }
+    get _waitAnyway(){}
 
     async _prepareOffsetCache(){}
 
