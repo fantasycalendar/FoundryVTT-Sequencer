@@ -212,7 +212,7 @@ new Sequence()
         })
         .addOverride(
             async (effect, data) => {
-                if(data._distance <= 1800){
+                if(data.distance <= 1800){
                     data.file = "MagicMissile_01_Regular_{{color}}_30ft_0{{number}}_1600x400.webm";
                 }else{
                     data.file = "MagicMissile_01_Regular_{{color}}_60ft_0{{number}}_2800x400.webm";
@@ -289,6 +289,10 @@ new Sequence()
 *Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
+
+### Version 0.5.7
+- *Effects* - Fixed templates sometimes not being found
+- *Effects* - Re-added backwards compatibility with old macros that still use `data._distance` in overrides 
 
 ### Version 0.5.6
 - *Sequencer* - Added alpha version of the Sequencer Database Viewer

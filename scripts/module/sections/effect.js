@@ -626,6 +626,7 @@ export default class EffectSection extends AnimatedSection {
                 let ray = new Ray(origin, target);
 
                 data.distance = ray.distance;
+                data._distance = ray.distance;
 
                 data.rotation = ray.angle;
 
@@ -690,9 +691,9 @@ export default class EffectSection extends AnimatedSection {
         }
 
         let template = this._determineJB2A(data.file);
-        this._gridSize = template[0];
-        this._startPoint = template[1];
-        this._endPoint = template[2];
+        this._gridSize = template?.[0] ?? 100;
+        this._startPoint = template?.[1] ?? 0;
+        this._endPoint = template?.[2] ?? 0;
 
         return data;
 
@@ -760,8 +761,6 @@ export default class EffectSection extends AnimatedSection {
     }
 
     _determineJB2A(inFile){
-
-        if(!this._JB2A) return [100,0,0];
 
         let type = "ranged";
         if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){
