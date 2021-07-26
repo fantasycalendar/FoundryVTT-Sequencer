@@ -71,8 +71,8 @@ export default class Sequence{
             this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
-        let func = new FunctionSection(this, async function(){
-            await macro._execute();
+        let func = new FunctionSection(this, async () => {
+            await macro.execute();
         }, inWaitUntilFinished);
 
         this.sections.push(func)

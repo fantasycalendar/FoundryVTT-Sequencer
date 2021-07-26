@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.8 Hotfix
+- *Macros* - Fixed macros throwing error when playing sequence
+
 ### Version 0.5.7
 - *Effects* - Fixed templates sometimes not being found
 - *Effects* - Re-added backwards compatibility with old macros that still use `data._distance` in overrides 
