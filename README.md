@@ -290,6 +290,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.9
+- *Effects* - Added `.addPostOverride()` as an alternative to `.addOverride()`, which executes at the end of the effect data sanitation
+- *Effects* - Fixed `.gridSize()`, `.startPoint()`, and `.endPoint()` not being respected and being overridden by internal logic 
+
 ### Version 0.5.8 Hotfix
 - *Macros* - Fixed macros throwing error when playing sequence
 
