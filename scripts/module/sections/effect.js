@@ -18,8 +18,6 @@ export default class EffectSection extends AnimatedSection {
         this._rotationOnly = true;
         this._moves = false;
         this._missed = false;
-        this._startPoint = 0;
-        this._endPoint = 0;
         this._JB2A = false;
         this._randomMirrorX = false;
         this._randomMirrorY = false;
@@ -27,7 +25,10 @@ export default class EffectSection extends AnimatedSection {
         this._mirrorY = false;
         this._playbackRate = 1.0;
         this._gridSize = 100;
+		this._startPoint = 0;
+		this._endPoint = 0;
         this._overrides = [];
+        this._postOverrides = [];
         this._name = false;
         this._scaleIn = false;
         this._scaleOut = false;
@@ -125,6 +126,20 @@ export default class EffectSection extends AnimatedSection {
     addOverride(inFunc) {
         if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
+        return this;
+    }
+
+    /**
+     * Adds a function that will run at the end of the effect serialization step, but before it is played. Allows direct
+     * modifications of effect's data. For example, it could be manipulated to change which file will be used based
+     * on the distance to the target.
+     *
+     * @param {function} inFunc
+     * @returns {EffectSection} this
+     */
+    addPostOverride(inFunc) {
+        if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addPostOverride", "The given function needs to be an actual function.");
+        this._postOverrides.push(inFunc);
         return this;
     }
 
@@ -274,7 +289,7 @@ export default class EffectSection extends AnimatedSection {
      * @param {number|object} scale
      * @param {number} duration
      * @param {object} [options] options
-     * @returns {AnimatedSection} this
+     * @returns {EffectSection} this
      */
     scaleIn(scale, duration, options={}){
         if(typeof options !== "object") this.sequence._throwError(this, "scaleIn", "options must be of type object");
@@ -301,7 +316,7 @@ export default class EffectSection extends AnimatedSection {
      * @param {number|object} scale
      * @param {number} duration
      * @param {object} [options] options
-     * @returns {AnimatedSection} this
+     * @returns {EffectSection} this
      */
     scaleOut(scale, duration, options={}){
         if(typeof options !== "object") this.sequence._throwError(this, "scaleOut", "options must be of type object");
@@ -354,7 +369,7 @@ export default class EffectSection extends AnimatedSection {
      * @returns {EffectSection} this
      */
     center() {
-        this.anchor();
+        this.anchor(0.5);
         return this;
     }
 
@@ -570,6 +585,10 @@ export default class EffectSection extends AnimatedSection {
         let flipY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5) ? -1 : 1;
         data.scale.y = data.scale.y * flipY;
 
+		for(let override of this._postOverrides) {
+			data = await override(this, data);
+		}
+
         if(typeof data.file !== "string") {
             this.sequence._throwError(this, "file", "inFile must be of type string or array");
         }
@@ -690,10 +709,11 @@ export default class EffectSection extends AnimatedSection {
             }
         }
 
-        let template = this._determineJB2A(data.file);
-        this._gridSize = template?.[0] ?? 100;
-        this._startPoint = template?.[1] ?? 0;
-        this._endPoint = template?.[2] ?? 0;
+        let template = this._determineTemplate(data.file);
+
+        this._gridSize = template?.[0] ?? this._gridSize;
+        this._startPoint = template?.[1] ?? this._startPoint;
+        this._endPoint = template?.[2] ?? this._endPoint;
 
         return data;
 
@@ -745,7 +765,7 @@ export default class EffectSection extends AnimatedSection {
                     max: entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1]
                 };
                 let file = Array.isArray(entry.file) ? entry.file[0] : entry.file;
-                entry.template = this._determineJB2A(file);
+                entry.template = this._determineTemplate(file);
                 entry.relativeDistance = data.distance / this._gridSizeDifference(entry.template[0]);
                 return entry;
             })
@@ -760,7 +780,7 @@ export default class EffectSection extends AnimatedSection {
         return canvas.grid.size / inGridSize;
     }
 
-    _determineJB2A(inFile){
+    _determineTemplate(inFile){
 
         let type = "ranged";
         if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){
