@@ -711,9 +711,9 @@ export default class EffectSection extends AnimatedSection {
 
         let template = this._determineTemplate(data.file);
 
-        this._gridSize = template?.[0] ?? this._gridSize;
-        this._startPoint = template?.[1] ?? this._startPoint;
-        this._endPoint = template?.[2] ?? this._endPoint;
+        this._gridSize = template[0];
+        this._startPoint = template[1];
+        this._endPoint = template[2];
 
         return data;
 
@@ -781,6 +781,8 @@ export default class EffectSection extends AnimatedSection {
     }
 
     _determineTemplate(inFile){
+
+    	if(!this._JB2A) return [this._gridSize, this._startPoint, this._endPoint];
 
         let type = "ranged";
         if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){
