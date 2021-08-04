@@ -2,25 +2,32 @@ import * as lib from "../lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./section.js";
 
-export default class SoundSection extends Section {
+// Traits
+import files from "./traits/files.js";
+import audio from "./traits/audio.js";
+
+class SoundSection extends Section {
 
     constructor(inSequence, inFile="") {
         super(inSequence);
         this.file(inFile);
         this._volume = 0.8;
+		this._overrides = [];
     }
 
-    /**
-     * Declares which sound to be played This may also be an array of paths, which will be randomly picked from each
-     * time the sound is played.
-     *
-     * @param {string|array} inFile
-     * @returns {SoundSection} this
-     */
-    file(inFile) {
-        this._file = inFile;
-        return this;
-    }
+	/**
+	 * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
+	 * modifications of sound's data. For example, it could be manipulated to change which file will be used based
+	 * on the distance to the target.
+	 *
+	 * @param {function} inFunc
+	 * @returns {SoundSection} this
+	 */
+	addOverride(inFunc) {
+		if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
+		this._overrides.push(inFunc);
+		return this;
+	}
 
     async _run(repetition){
         let {play, ...data} = await this._sanitizeSoundData();
@@ -46,19 +53,8 @@ export default class SoundSection extends Section {
     }
 
     async _sanitizeSoundData() {
-        let file = this._file;
-        if(Array.isArray(file)) file = lib.random_array_element(file)
 
-        let databaseEntry = window.SequencerDatabase.entryExists(file.split('.')?.[0] ?? "");
-        if(databaseEntry) {
-            file = window.SequencerDatabase.get(file) || file;
-            if(Array.isArray(file)) file = lib.random_array_element(file);
-        }
-
-        if(this._mustache) {
-            let template = Handlebars.compile(file);
-            file = template(this._mustache);
-        }
+        let file = this._determineFile(this._file)
 
         let duration = await this._getSoundDuration(file);
         if(!duration){
@@ -80,3 +76,9 @@ export default class SoundSection extends Section {
         };
     }
 }
+
+// Apply traits
+Object.assign(SoundSection, files);
+Object.assign(SoundSection, audio);
+
+export default SoundSection;

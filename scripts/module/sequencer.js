@@ -163,6 +163,10 @@ export default class Sequence{
         });
     }
 
+    _cachedOffsetExists(inName){
+		return this._cachedOffsets[inName] !== undefined;
+	}
+
     _getCachedOffset(inName, inIndex){
         if(!this._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
         let normalizedIndex = inIndex % this._cachedOffsets[inName].length;

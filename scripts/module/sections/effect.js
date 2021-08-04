@@ -1,22 +1,24 @@
 import * as lib from "../lib.js";
-import AnimatedSection from "./animated.js";
 import SequencerEffectHelper from "../sequencer-effect-helper.js";
+import Section from "./section.js";
 
-export default class EffectSection extends AnimatedSection {
+// Traits
+import files from "./traits/files.js";
+import audio from "./traits/audio.js";
+import moves from "./traits/moves.js";
+import opacity from "./traits/opacity.js";
+import rotation from "./traits/rotation.js";
+import scale from "./traits/scale.js";
+
+class EffectSection extends Section {
 
     constructor(inSequence, inFile="") {
         super(inSequence)
         this.file(inFile);
-        this._baseFolder = "";
         this._from = false;
-        this._to = false;
-        this._scaleMin = false;
-        this._scaleMax = false;
+		this._reachTowards = false;
         this._anchor = false;
         this._randomOffset = false;
-        this._randomRotation = false;
-        this._rotationOnly = true;
-        this._moves = false;
         this._missed = false;
         this._JB2A = false;
         this._randomMirrorX = false;
@@ -30,11 +32,10 @@ export default class EffectSection extends AnimatedSection {
         this._overrides = [];
         this._postOverrides = [];
         this._name = false;
-        this._scaleIn = false;
-        this._scaleOut = false;
         this._layer = 2;
         this._zIndex = 0;
         this._offset = false;
+		this._distance = 0;
     }
 
     /**
@@ -47,35 +48,6 @@ export default class EffectSection extends AnimatedSection {
     name(inName){
         if(typeof inName !== "string") this.sequence._throwError(this, "name", "inBaseFolder must be of type string");
         this._name = inName;
-        return this;
-    }
-
-    /**
-     * Defines the base folder that will prepend to the file path. This is mainly just useful to make the file
-     * path easier to manage.
-     *
-     * @param {string} inBaseFolder
-     * @returns {EffectSection} this
-     */
-    baseFolder(inBaseFolder) {
-        if(typeof inBaseFolder !== "string") this.sequence._throwError(this, "baseFolder", "inBaseFolder must be of type string");
-        inBaseFolder = inBaseFolder.replace("\\", "/");
-        if(!inBaseFolder.endsWith("/")) {
-            inBaseFolder += "/";
-        }
-        this._baseFolder = inBaseFolder;
-        return this;
-    }
-
-    /**
-     * Declares which .webm to be played This may also be an array of paths, which will be randomly picked from each
-     * time the effect is played.
-     *
-     * @param {string|array} inFile
-     * @returns {EffectSection} this
-     */
-    file(inFile) {
-        this._file = inFile;
         return this;
     }
 
@@ -159,22 +131,6 @@ export default class EffectSection extends AnimatedSection {
     }
 
     /**
-     *  Causes the effect to be rotated towards the given token, template, or a direct on the canvas to play the effect at, or a string reference (see .name())
-     *
-     * @param {object|string} inLocation
-     * @returns {EffectSection} this
-     */
-    rotateTowards(inLocation) {
-        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "inLocation must not be undefined");
-        inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
-        this._to = inLocation;
-        this._rotationOnly = true;
-        this._moves = false;
-        return this;
-    }
-
-    /**
      *  Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
@@ -185,32 +141,7 @@ export default class EffectSection extends AnimatedSection {
         if(inLocation === undefined) this.sequence._throwError(this, "reachTowards", "inLocation must not be undefined");
         inLocation = this._validateLocation(inLocation);
         if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
-        this._to = inLocation;
-        this._rotationOnly = false;
-        this._moves = false;
-        return this;
-    }
-
-    /**
-     *  Causes the effect to move towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
-     *
-     * @param {object|string} inLocation
-     * @param {object} options
-     * @returns {EffectSection} this
-     */
-    moveTowards(inLocation, options={}) {
-        if(inLocation === undefined) this.sequence._throwError(this, "moveTowards", "inLocation must not be undefined");
-        if(typeof options !== "object") this.sequence._throwError(this, "moveTowards", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "moveTowards", "options.ease must be of type string");
-        inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
-        this._to = inLocation;
-        this._moves = options;
-        this._rotationOnly = true;
+        this._reachTowards = inLocation;
         return this;
     }
 
@@ -262,82 +193,6 @@ export default class EffectSection extends AnimatedSection {
     }
 
     /**
-     *  A method that can take the following:
-     *  - A number to set the scale uniformly
-     *  - An object with x and y for non-uniform scaling
-     *  - Two numbers which the Sequencer will randomly pick a uniform scale between
-     *
-     * @param {number|object} inScaleMin
-     * @param {number} [inScaleMax] inScaleMax
-     * @returns {EffectSection} this
-     */
-    scale(inScaleMin, inScaleMax) {
-        if(!(typeof inScaleMin === "number" || typeof inScaleMin === "object")) this.sequence._throwError(this, "scale", "inScale must be of type number or object");
-        if (typeof inScaleMin !== "number") {
-            if(inScaleMax && typeof inScaleMax === "number"){
-                this.sequence._throwError(this, "scale", "if inScaleMin is a number, inScaleMax must also be of type number");
-            }
-        }
-        this._scaleMin = inScaleMin;
-        this._scaleMax = inScaleMax ?? false;
-        return this;
-    }
-
-    /**
-     *  Causes the effect to scale when it starts playing
-     *
-     * @param {number|object} scale
-     * @param {number} duration
-     * @param {object} [options] options
-     * @returns {EffectSection} this
-     */
-    scaleIn(scale, duration, options={}){
-        if(typeof options !== "object") this.sequence._throwError(this, "scaleIn", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence._throwError(this, "scaleIn", "duration must be of type number");
-        if(!(typeof scale === "number" || typeof scale === "object")) this.sequence._throwError(this, "scaleIn", "scale must be of type number or object");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "scaleIn", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "scaleIn", "options.delay must be of type number");
-        this._scaleIn = {
-            value: scale,
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     *  Causes the effect to scale at the end of the effect's duration
-     *
-     * @param {number|object} scale
-     * @param {number} duration
-     * @param {object} [options] options
-     * @returns {EffectSection} this
-     */
-    scaleOut(scale, duration, options={}){
-        if(typeof options !== "object") this.sequence._throwError(this, "scaleOut", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence._throwError(this, "scaleOut", "duration must be of type number");
-        if(!(typeof scale === "number" || typeof scale === "object")) this.sequence._throwError(this, "scaleOut", "scale must be of type number or object");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "scaleOut", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "scaleOut", "options.delay must be of type number");
-        this._scaleOut = {
-            value: scale,
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
@@ -383,18 +238,6 @@ export default class EffectSection extends AnimatedSection {
     randomOffset(inOffsetScale = 1.0){
         if(typeof inOffsetScale !== "number") this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
         this._randomOffset = inOffsetScale;
-        return this;
-    }
-
-    /**
-     * The sprite gets a random rotation, which means it should not be used with .reachTowards()
-     *
-     * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
-     */
-    randomRotation(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "randomRotation", "inBool must be of type boolean");
-        this._randomRotation = inBool;
         return this;
     }
 
@@ -532,7 +375,7 @@ export default class EffectSection extends AnimatedSection {
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             audioVolume: this._volume,
             animatedProperties: {
-                moves: this._moves,
+                moves: this._moveTowards,
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,
                 scaleIn: this._scaleIn,
@@ -555,7 +398,21 @@ export default class EffectSection extends AnimatedSection {
             data = await override(this, data);
         }
 
-        data = this._determineFile(data);
+        this._recurseFunction = (inFile) => {
+			if(this._reachTowards) {
+				let foundDistances = Object.keys(inFile).filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1).length !== 0;
+				if(foundDistances) return [this._rangeFind(inFile), true];
+			}
+			return [inFile, false];
+		}
+
+		data.file = this._determineFile(data.file);
+
+		let template = this._determineTemplate(data.file);
+
+		this._gridSize = template[0];
+		this._startPoint = template[1];
+		this._endPoint = template[2];
 
         let scale = this._scaleMin;
         if (typeof this._scaleMin === "number") {
@@ -573,7 +430,7 @@ export default class EffectSection extends AnimatedSection {
             y: data.scale.y * (scale?.y ?? 1.0)
         }
 
-        if(!this._rotationOnly) {
+        if(!this._rotateTowards) {
             data = await this._calculateHitVector(data);
         }else{
             data.gridSizeDifference = this._gridSizeDifference(this._gridSize);
@@ -601,7 +458,9 @@ export default class EffectSection extends AnimatedSection {
 
         if (this._from) {
 
-            let [from, to, origin, target] = this._getPositions(this._from, this._to);
+        	let toTarget = this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target;
+
+            let [from, to, origin, target] = this._getPositions(this._from, toTarget);
 
             if(this._offset) {
                 let offset = this._offset;
@@ -618,7 +477,7 @@ export default class EffectSection extends AnimatedSection {
                 }
             }
 
-            if(this._to){
+            if(toTarget){
                 target = this._applyOffsets(target);
             }else{
                 origin = this._applyOffsets(origin);
@@ -633,7 +492,7 @@ export default class EffectSection extends AnimatedSection {
 
             data.position = origin;
 
-            if(this._to) {
+            if(toTarget) {
 
                 if(!this._anchor) {
                     data.anchor = {
@@ -644,12 +503,13 @@ export default class EffectSection extends AnimatedSection {
 
                 let ray = new Ray(origin, target);
 
-                data.distance = ray.distance;
-                data._distance = ray.distance;
+                this._distance = ray.distance;
+                data.distance = this._distance;
+                data._distance = this._distance;
 
                 data.rotation = ray.angle;
 
-                if(this._moves) {
+                if(this._moveTowards) {
 
                     data.animatedProperties.moves.target = target;
 
@@ -671,54 +531,6 @@ export default class EffectSection extends AnimatedSection {
         return data;
     }
 
-    _determineFile(data){
-
-        if(typeof data.file === "string") {
-            if (this._mustache) {
-                let template = Handlebars.compile(data.file);
-                data.file = template(this._mustache);
-            }
-        }
-
-        if(Array.isArray(data.file)) data.file = lib.random_array_element(data.file);
-
-        let forcedIndex = false;
-        if(typeof data.file === "string") {
-            let databaseEntry = window.SequencerDatabase.entryExists(data.file);
-            if(databaseEntry){
-                let match = data.file.match(/\[([0-9]+)]$/)
-                if(match) {
-                    forcedIndex = Number(match[1]);
-                    data.file = data.file.replace(/\[[0-9]+]$/, "");
-                }
-                data.file = window.SequencerDatabase.get(data.file) || data.file;
-            }
-        }
-
-        data = this._recurseFileObject(data);
-
-        if(Array.isArray(data.file)) {
-            data.file = typeof forcedIndex !== "number" ? lib.random_array_element(data.file) : data.file[forcedIndex % data.file.length];
-        }
-
-        if(typeof data.file === "string") {
-            data.file = data.file.startsWith(this._baseFolder) ? data.file : this._baseFolder + data.file;
-            if (this._mustache) {
-                let template = Handlebars.compile(data.file);
-                data.file = template(this._mustache);
-            }
-        }
-
-        let template = this._determineTemplate(data.file);
-
-        this._gridSize = template[0];
-        this._startPoint = template[1];
-        this._endPoint = template[2];
-
-        return data;
-
-    }
-
     get _distanceMatching(){
         return {
             "90ft": 1500,
@@ -729,26 +541,12 @@ export default class EffectSection extends AnimatedSection {
         }
     }
 
-    _recurseFileObject(data){
+    _rangeFind(inFile){
 
-        if(typeof data.file === "string" || Array.isArray(data.file)) return data;
-
-        if(this._to && !this._rotationOnly) {
-            let foundDistances = Object.keys(data.file).filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1).length !== 0;
-            if(foundDistances) return this._rangeFind(data);
-        }
-
-        data.file = lib.random_object_element(data.file);
-
-        return this._recurseFileObject(data);
-    }
-
-    _rangeFind(data){
-
-        let distances = Object.keys(data.file)
+        let distances = Object.keys(inFile)
             .filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1)
             .map(entry => { return {
-                file: data.file[entry],
+                file: inFile[entry],
                 minDistance: this._distanceMatching[entry]
             }});
 
@@ -766,14 +564,13 @@ export default class EffectSection extends AnimatedSection {
                 };
                 let file = Array.isArray(entry.file) ? entry.file[0] : entry.file;
                 entry.template = this._determineTemplate(file);
-                entry.relativeDistance = data.distance / this._gridSizeDifference(entry.template[0]);
+                entry.relativeDistance = this._distance / this._gridSizeDifference(entry.template[0]);
                 return entry;
             })
             .filter(e => e.relativeDistance >= e.distances.min && e.relativeDistance < e.distances.max);
 
-        data.file = lib.random_array_element(possibleFiles).file;
+        return lib.random_array_element(possibleFiles).file;
 
-        return data;
     }
 
     _gridSizeDifference(inGridSize){
@@ -838,11 +635,7 @@ export default class EffectSection extends AnimatedSection {
 
     _getCleanPosition(obj, measure = false){
 
-        let pos = {
-            x: obj?.x ?? 0,
-            y: obj?.y ?? 0
-        }
-
+        let pos = {};
         if(obj instanceof MeasuredTemplate){
             if(measure){
                 if(obj.data.t === "cone" || obj.data.t === "ray"){
@@ -854,10 +647,17 @@ export default class EffectSection extends AnimatedSection {
                 pos.x = obj.x + (obj.shape.width/2)
                 pos.y = obj.y + (obj.shape.height/2)
             }
-        }else if(obj instanceof Token){
-            pos.x = obj.x + (obj.hitArea.width)/2;
-            pos.y = obj.y + (obj.hitArea.height)/2;
-        }
+        }else{
+			pos = {
+				x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.data?.x ?? obj?.data?.position?.x ?? 0,
+				y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0
+			}
+
+			if(obj instanceof TokenDocument || obj instanceof Token){
+				pos.x += obj instanceof Token ? (obj.hitArea.width)/2 : (obj._object.hitArea.width)/2;
+				pos.y += obj instanceof Token ? (obj.hitArea.height)/2 : (obj._object.hitArea.height)/2;
+			}
+		}
 
         return pos;
     }
@@ -983,3 +783,13 @@ export default class EffectSection extends AnimatedSection {
     }
 
 }
+
+// Apply traits
+Object.assign(EffectSection.prototype, files);
+Object.assign(EffectSection.prototype, audio);
+Object.assign(EffectSection.prototype, moves);
+Object.assign(EffectSection.prototype, opacity);
+Object.assign(EffectSection.prototype, rotation);
+Object.assign(EffectSection.prototype, scale);
+
+export default EffectSection;

@@ -1,14 +1,19 @@
-import AnimatedSection from "./animated.js";
 import {easeFunctions} from "../canvas-effects/ease.js";
 import * as lib from "../lib.js";
+import Section from "./section.js";
 
-export default class AnimationSection extends AnimatedSection{
+// Traits
+import files from "./traits/files.js";
+import moves from "./traits/moves.js";
+import opacity from "./traits/opacity.js";
+import rotation from "./traits/rotation.js";
+
+class AnimationSection extends Section{
 
     constructor(inSequence, inTarget) {
         super(inSequence);
         this._teleportTo = false;
         this._originObject = false;
-        this._moveTowards = false;
         this._moveSpeed = 23;
         this._offset = { x: 0, y: 0 };
         this._closestSquare = false;
@@ -30,56 +35,6 @@ export default class AnimationSection extends AnimatedSection{
     }
 
     /**
-     * Sets the location to move the target object to
-     *
-     * @param {object|string} inTarget
-     * @param {object} options
-     * @returns {AnimationSection} this
-     */
-    moveTowards(inTarget, options = {}){
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0,
-            target: { x: 0, y: 0 }
-        }, options);
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "moveTowards", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "moveTowards", "options.delay must be of type number");
-        inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence._throwError(this, "moveTowards", "could not find position of given object");
-        options.target = this._validateLocation(inTarget);
-        this._moveTowards = options;
-        this._teleportTo = false;
-        return this;
-    }
-
-    /**
-     * Sets the location to move the target object to
-     *
-     * @param {object|string} inTarget
-     * @param {object} options
-     * @returns {AnimationSection} this
-     */
-    rotateTowards(inTarget, options = {}){
-        options = foundry.utils.mergeObject({
-            duration: 0,
-            ease: "linear",
-            delay: 0,
-            offset: 0,
-            towardsCenter: true
-        }, options);
-        if(typeof options.duration !== "number") this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateTowards", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
-        if(typeof options.offset !== "number") this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
-        if(typeof options.towardsCenter !== "boolean") this.sequence._throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
-        inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
-        options.target = this._validateLocation(inTarget);
-        this._rotateTowards = options;
-        return this;
-    }
-
-    /**
      * Sets the location to teleport the target object to
      *
      * @param {object|string} inTarget
@@ -96,7 +51,6 @@ export default class AnimationSection extends AnimatedSection{
         if(!inTarget) this.sequence._throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
-        this._moveTowards = false;
         return this;
     }
 
@@ -597,3 +551,11 @@ export default class AnimationSection extends AnimatedSection{
     }
 
 }
+
+// Apply traits
+Object.assign(AnimationSection.prototype, files);
+Object.assign(AnimationSection.prototype, moves);
+Object.assign(AnimationSection.prototype, opacity);
+Object.assign(AnimationSection.prototype, rotation);
+
+export default AnimationSection;

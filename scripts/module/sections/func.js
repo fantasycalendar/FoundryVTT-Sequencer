@@ -1,7 +1,7 @@
 import * as lib from "../lib.js";
-import BaseSection from "./base.js";
+import Section from "./section.js";
 
-export default class FunctionSection extends BaseSection {
+export default class FunctionSection extends Section {
 
     constructor(inSequence, inFunc) {
         super(inSequence)
@@ -18,5 +18,13 @@ export default class FunctionSection extends BaseSection {
     async _execute() {
         await this._run();
     }
+
+	get shouldWaitUntilFinished(){
+		return this._waitUntilFinished || this._waitAnyway
+	}
+
+	get _waitAnyway(){}
+
+	async _prepareOffsetCache(){}
 
 }

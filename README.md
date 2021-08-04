@@ -290,6 +290,11 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.5.10
+- *Sounds* - Added `.addOverride()`, `.baseFolder()`, and `.setMustache()` support to sounds
+- *Effects* - Improved object position handling slightly when providing non-foundry class objects to `.atLocation()` and alike
+- *Effects* - Generally improved compatibility with `TokenDocument` and Foundry D&D 5E documents when getting their positions
+
 ### Version 0.5.9
 - *Effects* - Added `.addPostOverride()` as an alternative to `.addOverride()`, which executes at the end of the effect data sanitation
 - *Effects* - Fixed `.gridSize()`, `.startPoint()`, and `.endPoint()` not being respected and being overridden by internal logic 
