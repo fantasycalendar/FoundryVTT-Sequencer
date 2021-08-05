@@ -186,7 +186,7 @@ export default class Section{
 
     async _run(){}
 
-	// I know this is nasty - but it is needed due to Proxies not changing scope when calling Reflect.get
+	// I know this is nasty - but it is needed due to Proxies not changing scope when calling Reflect.getEntry
 	play(...args){ return this.sequence.play(...args) }
 	thenDo(...args){ return this.sequence.thenDo(...args) }
 	macro(...args){ return this.sequence.macro(...args) }

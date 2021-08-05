@@ -1,6 +1,6 @@
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
-import { SequencerAnimationEngine } from "./sequencer-animation-engine.js";
 import { easeFunctions } from "./canvas-effects/ease.js";
+import SequencerAnimationEngine from "./sequencer-animation-engine.js";
 
 export default class SequencerAudioHelper {
     /**

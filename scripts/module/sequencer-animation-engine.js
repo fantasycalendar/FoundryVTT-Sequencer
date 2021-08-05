@@ -1,6 +1,6 @@
 import * as lib from "./lib.js";
 
-export class SequencerAnimationEngine {
+export default class SequencerAnimationEngine {
 
     static async animate(attributes) {
 

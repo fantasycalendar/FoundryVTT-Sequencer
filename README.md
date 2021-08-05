@@ -57,7 +57,7 @@ To start the sequence off, you simply call `play()` on the sequence.
 
 ## Usage Example
 
-To get the following result:
+To getEntry the following result:
 
 * Plays an effect on a token's location
 * Wait for 400 milliseconds
@@ -291,9 +291,11 @@ new Sequence()
 ## Changelog
 
 ### Version 0.5.10
-- *Sounds* - Added `.addOverride()`, `.baseFolder()`, and `.setMustache()` support to sounds
+- *Sequencer* - Added `SequencerPreloader` - you can now preload images, animations, and sounds for your players, read more on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Preloader)
+- *Effects* - Vastly improved effect caching and speed of effects and sounds 
 - *Effects* - Improved object position handling slightly when providing non-foundry class objects to `.atLocation()` and alike
 - *Effects* - Generally improved compatibility with `TokenDocument` and Foundry D&D 5E documents when getting their positions
+- *Sounds* - Added `.addOverride()`, `.baseFolder()`, and `.setMustache()` support to sounds
 
 ### Version 0.5.9
 - *Effects* - Added `.addPostOverride()` as an alternative to `.addOverride()`, which executes at the end of the effect data sanitation
@@ -371,7 +373,7 @@ new Sequence()
 ### Version 0.4.4
 - *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Animations) how to use it!
 - *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc
-- *Effects* - Tweaked how effects get locations when dealing with raw template data
+- *Effects* - Tweaked how effects getEntry locations when dealing with raw template data
 - *Sequencer* - Added `.sequence()` so you can combine multiple sequences into one
 - *Sequencer* - Updated all sample macros to 0.8.x conventions
 

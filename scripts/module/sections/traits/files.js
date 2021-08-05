@@ -7,8 +7,9 @@ export default {
 	 */
 	_file: "",
 	_baseFolder: "",
-	_recurseFunction: false,
 	_mustache: false,
+	_globalTemplate: false,
+	_currentTemplate: false,
 
 	/**
 	 * Declares which .webm to be played This may also be an array of paths, which will be randomly picked from each
@@ -51,22 +52,27 @@ export default {
 		return this;
 	},
 
-	_recurseFileObject(inFile){
+	_recurseFileObject(inFile, recurseFunction=false){
 
 		if(typeof inFile === "string" || Array.isArray(inFile)) return inFile;
 
-		if(this._recurseFunction){
-			let [inFile, result] = this._recurseFunction(inFile);
-			if(result) return inFile;
+		if(inFile._template){
+			this._currentTemplate = this._globalTemplate?.[inFile._template] || this._currentTemplate;
+		}
+
+		if(recurseFunction){
+			let result = recurseFunction(inFile)
+			inFile = result[0];
+			if(result[1]) return inFile;
 		}
 
 		inFile = lib.random_object_element(inFile);
 
-		return this._recurseFileObject(inFile);
+		return this._recurseFileObject(inFile, recurseFunction);
 
 	},
 
-	_determineFile(inFile){
+	_determineFile(inFile, recurseFunction=false){
 
 		if(Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
 
@@ -79,13 +85,17 @@ export default {
 				let match = inFile.match(/\[([0-9]+)]$/)
 				if(match) {
 					forcedIndex = Number(match[1]);
-					inFile = inFile.replace(/\[[0-9]+]$/, "");
 				}
-				inFile = window.SequencerDatabase.get(inFile) || inFile;
+				let dbEntry = window.SequencerDatabase.getEntry(inFile);
+				if(dbEntry){
+					inFile = dbEntry.entry;
+					this._globalTemplate = dbEntry.globalTemplates;
+					this._currentTemplate = dbEntry.currentTemplate ?? this._globalTemplate?.["default"] ?? false;
+				}
 			}
 		}
 
-		inFile = this._recurseFileObject(inFile);
+		inFile = this._recurseFileObject(inFile, recurseFunction);
 
 		if(Array.isArray(inFile)) {
 			inFile = typeof forcedIndex !== "number" ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];

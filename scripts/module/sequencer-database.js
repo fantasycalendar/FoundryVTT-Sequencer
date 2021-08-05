@@ -5,6 +5,7 @@ export default class SequencerDatabase{
     constructor() {
         this.contents = {};
         this.flattenedContents = [];
+        this._currentTemplate = false;
     }
 
     /**
@@ -38,7 +39,7 @@ export default class SequencerDatabase{
      * @param  {string}             inString    The entry to find in the database
      * @return {object|boolean}                 The found entry in the database, or false if not found (with warning)
      */
-    get(inString){
+    getEntry(inString){
         inString = inString.replace(/\[[0-9]+]$/, "");
         if(!this.entryExists(inString)) return this._throwNotFound(inString);
         let parts = inString.split('.');
@@ -47,13 +48,22 @@ export default class SequencerDatabase{
         let index = 0;
         let entry = parts?.[index];
         let currentInspect = this.contents?.[entry];
+
+        let globalTemplates = currentInspect?._templates;
+        let currentTemplate = false;
+
         while(index < length && currentInspect && entry){
             index++;
             entry = parts?.[index];
             currentInspect = currentInspect?.[entry];
+            if(globalTemplates) {
+				currentTemplate = globalTemplates?.[currentInspect?._template] || currentTemplate;
+			}
         }
+
         if(!currentInspect) return this._throwNotFound(inString, entry);
-        return currentInspect;
+
+		return {entry: currentInspect, globalTemplates, currentTemplate};
     }
 
     _flatten(){

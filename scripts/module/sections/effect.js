@@ -398,15 +398,13 @@ class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        this._recurseFunction = (inFile) => {
+		data.file = this._determineFile(data.file, (inFile) => {
 			if(this._reachTowards) {
 				let foundDistances = Object.keys(inFile).filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1).length !== 0;
 				if(foundDistances) return [this._rangeFind(inFile), true];
 			}
 			return [inFile, false];
-		}
-
-		data.file = this._determineFile(data.file);
+		});
 
 		let template = this._determineTemplate(data.file);
 
@@ -545,10 +543,12 @@ class EffectSection extends Section {
 
         let distances = Object.keys(inFile)
             .filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1)
-            .map(entry => { return {
-                file: inFile[entry],
-                minDistance: this._distanceMatching[entry]
-            }});
+            .map(entry => {
+            	return {
+					file: inFile[entry],
+					minDistance: this._distanceMatching[entry]
+				}
+            });
 
         let uniqueDistances = [...new Set(distances.map(item => item.minDistance))];
         uniqueDistances.sort((a, b) => a - b);
@@ -578,6 +578,8 @@ class EffectSection extends Section {
     }
 
     _determineTemplate(inFile){
+
+    	if(this._currentTemplate) return this._currentTemplate;
 
     	if(!this._JB2A) return [this._gridSize, this._startPoint, this._endPoint];
 

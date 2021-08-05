@@ -69,7 +69,7 @@ export function random_array_element(inArray, recurse=false){
  * @return {object}              A random element from the object
  */
 export function random_object_element(inObject, recurse=false){
-    let keys = Object.keys(inObject);
+    let keys = Object.keys(inObject).filter(k => !k.startsWith("_template"));
     let choice = inObject[random_array_element(keys)];
     if(typeof choice === "object" && recurse){
         return random_object_element(choice, true)
@@ -180,6 +180,7 @@ export function deepSet(obj, value, path) {
 export function flattenObject(obj) {
     let toReturn = [];
     for (let i in obj) {
+    	if (i.startsWith("_template")) continue;
         if (!obj.hasOwnProperty(i)) continue;
         if ((typeof obj[i]) == 'object') {
             let flatObject = flattenObject(obj[i]);
