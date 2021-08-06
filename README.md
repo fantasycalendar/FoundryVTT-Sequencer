@@ -290,8 +290,10 @@ new Sequence()
 
 ## Changelog
 
-### Version 0.5.10
+### Version 0.6.0
+- *Sequencer* - Refactored entire module structure
 - *Sequencer* - Added `SequencerPreloader` - you can now preload images, animations, and sounds for your players, read more on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Preloader)
+- *Sequencer* - Added support for templates in database structure, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Database)
 - *Effects* - Vastly improved effect caching and speed of effects and sounds 
 - *Effects* - Improved object position handling slightly when providing non-foundry class objects to `.atLocation()` and alike
 - *Effects* - Generally improved compatibility with `TokenDocument` and Foundry D&D 5E documents when getting their positions

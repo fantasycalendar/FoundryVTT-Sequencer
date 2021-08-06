@@ -52,7 +52,7 @@ const SequencerFileCache = {
 			if(file){
 				resolve(inSrc, file);
 			}else{
-				reject();
+				reject(inSrc);
 			}
 		})
 	}

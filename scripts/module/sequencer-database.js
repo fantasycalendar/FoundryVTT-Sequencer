@@ -5,6 +5,7 @@ export default class SequencerDatabase{
     constructor() {
         this.contents = {};
         this.flattenedContents = [];
+		this.flattenedFiles = {};
         this._currentTemplate = false;
     }
 
@@ -19,7 +20,7 @@ export default class SequencerDatabase{
         console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
         let newEntry = {[moduleName]: entries};
         this.contents = foundry.utils.mergeObject(this.contents, newEntry);
-        this._flatten();
+        this._flatten(moduleName);
     }
 
     /**
@@ -66,10 +67,15 @@ export default class SequencerDatabase{
 		return {entry: currentInspect, globalTemplates, currentTemplate};
     }
 
-    _flatten(){
-        this.flattenedContents = Object.keys(
-            lib.flattenObject(foundry.utils.duplicate(this.contents))
-        );
+    getAllFileEntries(inModule){
+		if(!this.entryExists(inModule)) return this._throwNotFound(inModule);
+    	return this.flattenedFiles[inModule];
+	}
+
+    _flatten(inModule){
+    	let flattened = lib.flattenObject(foundry.utils.duplicate(this.contents));
+        this.flattenedContents = Object.keys(flattened);
+        this.flattenedFiles[inModule] = Array.from(new Set(Object.values(flattened)));
     }
 
     _throwNotFound(inString, entry = false){
