@@ -19,12 +19,4 @@ export default class FunctionSection extends Section {
         await this._run();
     }
 
-	get shouldWaitUntilFinished(){
-		return this._waitUntilFinished || this._waitAnyway
-	}
-
-	get _waitAnyway(){}
-
-	async _prepareOffsetCache(){}
-
 }

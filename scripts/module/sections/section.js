@@ -17,7 +17,6 @@ export default class Section{
         this._delayMin = 0;
         this._delayMax = 0;
         this._basicDelay = 0;
-        this._index = this.sequence.effectIndex;
         this._duration = false;
     }
 
@@ -118,6 +117,10 @@ export default class Section{
         return this._async || this._waitAnyway
     }
 
+	get shouldWaitUntilFinished(){
+		return this._waitUntilFinished || this._waitAnyway
+	}
+
     get _waitAnyway(){
         return (this._async || this._waitUntilFinished)
             && (this._repetitions === 1 || this._repetitions === this._currentRepetition+1)
@@ -135,6 +138,11 @@ export default class Section{
         }
     }
 
+	/**
+	 * Overridden method in EffectSection
+	 */
+	_cacheOffsets(){}
+
 	_findObjectById(inId){
 		for(let layer of canvas.layers){
 			let obj = layer?.objects?.children?.find(obj => obj.id === inId)
@@ -148,11 +156,6 @@ export default class Section{
 		}
 		return inLocation;
 	}
-
-    /**
-     * Overridden method in EffectSection
-     */
-    _cacheOffsets(){}
 
     async _execute(){
         if(!(await this._shouldPlay())) return;

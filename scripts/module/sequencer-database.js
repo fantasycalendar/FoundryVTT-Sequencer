@@ -1,13 +1,11 @@
 import * as lib from './lib.js';
 
-export default class SequencerDatabase{
+const SequencerDatabase = {
 
-    constructor() {
-        this.contents = {};
-        this.flattenedContents = [];
-		this.flattenedFiles = {};
-        this._currentTemplate = false;
-    }
+        contents: {},
+        flattenedContents: [],
+		flattenedFiles: {},
+        _currentTemplate: false,
 
     /**
      *  Registers a set of entries to the database on the given module name
@@ -21,7 +19,7 @@ export default class SequencerDatabase{
         let newEntry = {[moduleName]: entries};
         this.contents = foundry.utils.mergeObject(this.contents, newEntry);
         this._flatten(moduleName);
-    }
+    },
 
     /**
      *  Quickly checks if the entry exists in the database
@@ -32,7 +30,7 @@ export default class SequencerDatabase{
     entryExists(inString){
         inString = inString.replace(/\[[0-9]+]$/, "")
         return this.flattenedContents.find(entry => entry.startsWith(inString));
-    }
+    },
 
     /**
      *  Gets the entry in the database by a dot-notated string
@@ -65,18 +63,18 @@ export default class SequencerDatabase{
         if(!currentInspect) return this._throwNotFound(inString, entry);
 
 		return {entry: currentInspect, globalTemplates, currentTemplate};
-    }
+    },
 
     getAllFileEntries(inModule){
 		if(!this.entryExists(inModule)) return this._throwNotFound(inModule);
     	return this.flattenedFiles[inModule];
-	}
+	},
 
     _flatten(inModule){
     	let flattened = lib.flattenObject(foundry.utils.duplicate(this.contents));
         this.flattenedContents = Object.keys(flattened);
         this.flattenedFiles[inModule] = Array.from(new Set(Object.values(flattened)));
-    }
+    },
 
     _throwNotFound(inString, entry = false){
         let error = `Sequencer | Database | Could not find "${inString}" in database`;
@@ -86,3 +84,5 @@ export default class SequencerDatabase{
         return false;
     }
 }
+
+export default SequencerDatabase;

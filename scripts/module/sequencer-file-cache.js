@@ -5,9 +5,13 @@ const SequencerFileCache = {
 	async loadVideo(inSrc){
 		let src = this._videos[inSrc];
 		if(!src){
-			src = await fetch(inSrc)
-				.then(r => r.blob());
-			if(!src || src?.type !== "video/webm") return false;
+			try {
+				src = await fetch(inSrc)
+					.then(r => r.blob());
+			}catch(err){
+				return false;
+			}
+			if(src?.type !== "video/webm") return false;
 			this._videos[inSrc] = src;
 		}
 		return src;
@@ -26,7 +30,11 @@ const SequencerFileCache = {
 		let src = await this.loader.getCache(inSrc);
 
 		if(!src) {
-			src = await this._loader.loadTexture(inSrc);
+			try {
+				src = await this._loader.loadTexture(inSrc);
+			}catch(err){
+				return false;
+			}
 		}
 
 		return src;

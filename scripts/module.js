@@ -4,6 +4,7 @@ import registerLayer from "./layers.js";
 import registerHooks from "./hooks.js";
 import Sequence from "./module/sequencer.js";
 import SequencerPreloader from "./module/sequencer-preloader.js";
+import SequencerDatabase from "./module/sequencer-database.js";
 
 Hooks.once('init', async function() {
     registerLayer();
@@ -15,5 +16,6 @@ Hooks.once('ready', async function() {
     registerHooks();
     window.Sequence = Sequence;
 	window.SequencerPreloader = SequencerPreloader;
+	window.SequencerDatabase = SequencerDatabase;
     console.log("Sequencer | Ready to go!")
 });

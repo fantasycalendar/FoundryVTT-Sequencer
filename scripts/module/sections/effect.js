@@ -338,6 +338,10 @@ class EffectSection extends Section {
         return this;
     }
 
+    get _to(){
+		return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
+	}
+
     async _run() {
         let data = await this._sanitizeEffectData();
         let canvasEffectData = await SequencerEffectHelper.play(data, true);
@@ -370,7 +374,7 @@ class EffectSection extends Section {
             distance: 0,
             duration: this._duration,
             layer: this._layer,
-            index: this._index,
+            index: this.sequence.effectIndex,
             zIndex: this._zIndex,
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             audioVolume: this._volume,
@@ -456,9 +460,7 @@ class EffectSection extends Section {
 
         if (this._from) {
 
-        	let toTarget = this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target;
-
-            let [from, to, origin, target] = this._getPositions(this._from, toTarget);
+            let [from, to, origin, target] = this._getPositions(this._from, this._to);
 
             if(this._offset) {
                 let offset = this._offset;
@@ -475,7 +477,7 @@ class EffectSection extends Section {
                 }
             }
 
-            if(toTarget){
+            if(this._to){
                 target = this._applyOffsets(target);
             }else{
                 origin = this._applyOffsets(origin);
@@ -490,7 +492,7 @@ class EffectSection extends Section {
 
             data.position = origin;
 
-            if(toTarget) {
+            if(this._to) {
 
                 if(!this._anchor) {
                     data.anchor = {
@@ -581,19 +583,23 @@ class EffectSection extends Section {
 
     	if(this._currentTemplate) return this._currentTemplate;
 
-    	if(!this._JB2A) return [this._gridSize, this._startPoint, this._endPoint];
+    	if(this._JB2A) {
 
-        let type = "ranged";
-        if(inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")){
-            type = "melee";
-        }else if(inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")){
-            type = "cone";
-        }
-        return {
-            "ranged": [100, 200, 200],
-            "melee": [100, 300, 300],
-            "cone": [100, 0, 0]
-        }[type];
+			let type = "ranged";
+			if (inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")) {
+				type = "melee";
+			} else if (inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")) {
+				type = "cone";
+			}
+			return {
+				"ranged": [100, 200, 200],
+				"melee": [100, 300, 300],
+				"cone": [100, 0, 0]
+			}[type];
+
+		}
+
+    	return [this._gridSize, this._startPoint, this._endPoint];
     }
 
     async _getFileDimensions(inFile) {

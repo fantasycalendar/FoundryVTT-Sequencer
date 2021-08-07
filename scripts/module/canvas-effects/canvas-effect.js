@@ -327,7 +327,7 @@ export default class CanvasEffect {
 			let texture = await this.loader.loadImage(this.data.file);
 
 			if(!texture){
-				let error = `Sequencer | CanvasEffect | Play Effect - Could not load image: ${this.data.file}`;
+				let error = `Sequencer | CanvasEffect | Play Effect - Could not load: ${this.data.file}`;
 				ui.notifications.error(error);
 				console.error(error)
 				reject();

@@ -7,6 +7,7 @@ export default {
 	_rotateIn: 0,
 	_rotateOut: 0,
 	_randomRotation: false,
+	_rotateTowards: false,
 
 	/**
 	 * The object gets a random rotation, which means it should not be used with .reachTowards()

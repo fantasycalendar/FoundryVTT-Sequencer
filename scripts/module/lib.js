@@ -77,6 +77,8 @@ export function random_object_element(inObject, recurse=false){
     return choice;
 }
 
+export async function fileExists(inFile){}
+
 /**
  * Determines the dimensions of a given image file
  *
@@ -98,7 +100,7 @@ export async function getDimensions(inFile){
             resolve(dimensions);
         }
         video.onerror = () => {
-            console.error('File not found');
+            console.error(`File not found: ${inFile}`);
             resolve({ x:0, y:0 });
         }
     })
