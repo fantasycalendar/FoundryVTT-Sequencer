@@ -1,6 +1,7 @@
-import { easeFunctions } from "./ease.js";
+import {easeFunctions} from "./ease.js";
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
+import * as lib from "../lib.js";
 
 export default class CanvasEffect {
 
@@ -37,12 +38,9 @@ export default class CanvasEffect {
         this.debug();
     }
 
-    spawnSprite() {
+    async spawnSprite() {
+
         this.sprite = new PIXI.Sprite(this.texture);
-        this.sprite.alpha = this.data.opacity;
-        this.container.addChild(this.sprite);
-        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
-        this.container.sortChildren();
 
         if(!this.source?.duration && !this.data.duration){
             let animProp = this.data.animatedProperties;
@@ -56,17 +54,29 @@ export default class CanvasEffect {
 
 		if(this.data.time?.start && this.source?.currentTime !== undefined) {
 			this.source.currentTime = !this.data.time.start.isPerc
-				? this.data.time.start.value / 1000
+				? this.data.time.start.value / 1000 ?? 0
 				: this.data.time.start.value * this.data.sourceDuration;
 		}
 
 		if(this.data.time?.end){
 			this.data.sourceDuration = !this.data.time.end.isPerc
-				? this.data.sourceDuration - (this.data.time.end.value / 1000)
+				? this.data.time.isRange ? (this.data.time.end.value-this.data.time.start.value) / 1000 : this.data.sourceDuration - (this.data.time.end.value / 1000)
 				: this.data.time.end.value * this.data.sourceDuration;
 		}
 
 		this.data.animationDuration = this.data.sourceDuration * 1000;
+
+		if(this.data.time?.start > 0 && this.source?.currentTime !== undefined) {
+			await lib.wait(15)
+		}
+
+		this.texture.update();
+
+		this.sprite = new PIXI.Sprite(this.texture);
+		this.sprite.alpha = this.data.opacity;
+		this.container.addChild(this.sprite);
+		this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+		this.container.sortChildren();
 
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
         this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
@@ -74,6 +84,8 @@ export default class CanvasEffect {
         this.data.scale.y *= this.data.gridSizeDifference;
         this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
         this.sprite.position.set(this.data.position.x, this.data.position.y);
+
+		this.source?.play();
 
     }
 
@@ -313,18 +325,22 @@ export default class CanvasEffect {
             video.crossOrigin = "anonymous";
             video.src = URL.createObjectURL(blob);
             video.playbackRate = this.data.playbackRate;
+            video.autoplay = false;
             if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
             }
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
             video.volume *= game.settings.get("core", "globalInterfaceVolume");
 
+			let texture = await PIXI.Texture.from(video);
+
             let canplay = true;
-            video.oncanplay = () => {
+            video.oncanplay = async () => {
                 if(!canplay) return;
                 canplay = false;
 				this.source = video;
-                resolve(PIXI.Texture.from(video));
+				this.source.pause();
+                resolve(texture);
             };
 
             video.onended = () => {
@@ -369,7 +385,7 @@ export default class CanvasEffect {
             	reject();
 			}else {
 				this.resolve = resolve;
-				this.spawnSprite();
+				await this.spawnSprite();
 				this.playAnimations();
 			}
         });

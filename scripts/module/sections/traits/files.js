@@ -1,4 +1,5 @@
 import * as lib from "../../lib.js";
+import {SequencerFile} from "../../lib.js";
 
 export default {
 
@@ -8,8 +9,6 @@ export default {
 	_file: "",
 	_baseFolder: "",
 	_mustache: false,
-	_globalTemplate: false,
-	_currentTemplate: false,
 
 	/**
 	 * Declares which .webm to be played This may also be an array of paths, which will be randomly picked from each
@@ -52,27 +51,23 @@ export default {
 		return this;
 	},
 
-	_recurseFileObject(inFile, recurseFunction=false){
+	_recurseFileObject(inFile){
 
-		if(typeof inFile === "string" || Array.isArray(inFile)) return inFile;
-
-		if(inFile._template){
-			this._currentTemplate = this._globalTemplate?.[inFile._template] || this._currentTemplate;
+		if(inFile instanceof lib.SequencerFile || typeof inFile === "string" || typeof inFile.file === "string"){
+			return inFile;
 		}
 
-		if(recurseFunction){
-			let result = recurseFunction(inFile)
-			inFile = result[0];
-			if(result[1]) return inFile;
+		if(Array.isArray(inFile)){
+			inFile = lib.random_array_element(inFile);
+		}else{
+			inFile = lib.random_object_element(inFile);
 		}
 
-		inFile = lib.random_object_element(inFile);
-
-		return this._recurseFileObject(inFile, recurseFunction);
+		return this._recurseFileObject(inFile);
 
 	},
 
-	_determineFile(inFile, recurseFunction=false){
+	_determineFile(inFile){
 
 		if(Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
 
@@ -88,20 +83,22 @@ export default {
 				}
 				let dbEntry = window.SequencerDatabase.getEntry(inFile);
 				if(dbEntry){
-					inFile = dbEntry.entry;
-					this._globalTemplate = dbEntry.globalTemplates;
-					this._currentTemplate = dbEntry.currentTemplate ?? this._globalTemplate?.["default"] ?? false;
+					inFile = dbEntry;
 				}
 			}
 		}
 
-		inFile = this._recurseFileObject(inFile, recurseFunction);
+		inFile = this._recurseFileObject(inFile);
 
 		if(Array.isArray(inFile)) {
 			inFile = typeof forcedIndex !== "number" ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];
 		}
 
-		inFile = inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
+		if(typeof forcedIndex === "number" && inFile instanceof SequencerFile){
+			inFile.fileIndex = forcedIndex;
+		}
+
+		inFile = this._applyBaseFolder(inFile);
 
 		inFile = this._applyMustache(inFile);
 
@@ -109,8 +106,22 @@ export default {
 
 	},
 
+	_applyBaseFolder(inFile){
+
+		if(inFile instanceof lib.SequencerFile){
+			return inFile.applyBaseFolder(this._baseFolder);
+		}
+
+		return inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
+
+	},
+
 	_applyMustache(inFile){
-		if (typeof inFile === "string" && this._mustache) {
+		if(!this._mustache) return inFile;
+
+		if(inFile instanceof lib.SequencerFile){
+			inFile = inFile.applyMustache(this._mustache);
+		}else if (typeof inFile === "string") {
 			let template = Handlebars.compile(inFile);
 			inFile = template(this._mustache);
 		}

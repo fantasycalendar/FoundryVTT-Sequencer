@@ -390,16 +390,7 @@ class EffectSection extends Section {
                 fadeInAudio: this._fadeInAudio,
                 fadeOutAudio: this._fadeOutAudio
             },
-			time: {
-            	start: this._startTime ? {
-            		value: this._startTime,
-					isPerc: this._startPerc
-				} : false,
-            	end: this._endTime ? {
-            		value: this._endTime,
-					isPerc: this._endPerc
-				} : false
-			},
+			time: false,
             debug: this.sequence.debug
         };
 
@@ -413,19 +404,34 @@ class EffectSection extends Section {
             data = await override(this, data);
         }
 
-		data.file = this._determineFile(data.file, (inFile) => {
-			if(this._reachTowards) {
-				let foundDistances = Object.keys(inFile).filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1).length !== 0;
-				if(foundDistances) return [this._rangeFind(inFile), true];
+		let file = this._determineFile(data.file);
+		let template;
+        if(file instanceof lib.SequencerFile){
+        	data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();
+        	template = file.template;
+        	if(file.timeRange){
+        		[this._startTime, this._endTime] = file.timeRange;
+        		this._isRange = true;
 			}
-			return [inFile, false];
-		});
+		}
 
-		let template = this._determineTemplate(data.file);
+        template = template ?? this._determineTemplate(data.file);
 
 		this._gridSize = template[0];
 		this._startPoint = template[1];
 		this._endPoint = template[2];
+
+		data.time = {
+			start: typeof this._startTime === "number" ? {
+				value: this._startTime,
+				isPerc: this._startPerc
+			} : false,
+				end: typeof this._endTime === "number" ? {
+				value: this._endTime,
+				isPerc: this._endPerc
+			} : false,
+			isRange: this._isRange
+		};
 
         let scale = this._scaleMin;
         if (typeof this._scaleMin === "number") {
@@ -554,11 +560,14 @@ class EffectSection extends Section {
 
     _rangeFind(inFile){
 
-        let distances = Object.keys(inFile)
+        let distances = Object.keys(inFile.file)
             .filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1)
             .map(entry => {
+            	let file = inFile.getFile(entry);
+            	if(!file) this.sequence._throwError(this, "play", `Could not find index ${inFile.fileIndex} in database entry ${this._file}!`)
             	return {
-					file: inFile[entry],
+					file: file,
+					template: inFile.template ?? this._determineTemplate(file),
 					minDistance: this._distanceMatching[entry]
 				}
             });
@@ -575,8 +584,6 @@ class EffectSection extends Section {
                     min: entry.minDistance === min ? 0 : entry.minDistance,
                     max: entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1]
                 };
-                let file = Array.isArray(entry.file) ? entry.file[0] : entry.file;
-                entry.template = this._determineTemplate(file);
                 entry.relativeDistance = this._distance / this._gridSizeDifference(entry.template[0]);
                 return entry;
             })
@@ -591,8 +598,6 @@ class EffectSection extends Section {
     }
 
     _determineTemplate(inFile){
-
-    	if(this._currentTemplate) return this._currentTemplate;
 
     	if(this._JB2A) {
 

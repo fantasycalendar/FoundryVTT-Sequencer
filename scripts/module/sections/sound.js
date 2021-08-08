@@ -5,6 +5,7 @@ import Section from "./section.js";
 // Traits
 import files from "./traits/files.js";
 import audio from "./traits/audio.js";
+import time from "./traits/time.js";
 
 class SoundSection extends Section {
 
@@ -56,6 +57,14 @@ class SoundSection extends Section {
 
         let file = this._determineFile(this._file)
 
+		if(file instanceof lib.SequencerFile){
+			if(file.timeRange){
+				[this._startTime, this._endTime] = file.timeRange;
+				this._isRange = true;
+			}
+			file = file.getFile();
+		}
+
         let duration = await this._getSoundDuration(file);
         if(!duration){
             return {
@@ -63,7 +72,16 @@ class SoundSection extends Section {
                 src: file
             };
         }
-        duration += this._waitUntilFinishedDelay;
+
+        let startTime =  (this._startTime ? (!this._startPerc ? this._startTime : this._startTime * duration) : 0) / 1000;
+
+        if(this._endTime){
+			duration = !this._endPerc
+				? this._isRange ? this._endTime - this._startTime : duration - this._endTime
+				: this._endTime * duration;
+		}
+
+		duration += this._waitUntilFinishedDelay;
 
         return {
             play: true,
@@ -72,13 +90,15 @@ class SoundSection extends Section {
             volume: this._volume,
             fadeIn: this._fadeInAudio,
             fadeOut: this._fadeOutAudio,
+			startTime: startTime,
             duration: this._duration || duration
         };
     }
 }
 
 // Apply traits
-Object.assign(SoundSection, files);
-Object.assign(SoundSection, audio);
+Object.assign(SoundSection.prototype, files);
+Object.assign(SoundSection.prototype, audio);
+Object.assign(SoundSection.prototype, time);
 
 export default SoundSection;

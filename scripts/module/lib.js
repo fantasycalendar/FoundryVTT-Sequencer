@@ -69,7 +69,7 @@ export function random_array_element(inArray, recurse=false){
  * @return {object}              A random element from the object
  */
 export function random_object_element(inObject, recurse=false){
-    let keys = Object.keys(inObject).filter(k => !k.startsWith("_template"));
+    let keys = Object.keys(inObject).filter(k => !k.startsWith("_"));
     let choice = inObject[random_array_element(keys)];
     if(typeof choice === "object" && recurse){
         return random_object_element(choice, true)
@@ -182,7 +182,7 @@ export function deepSet(obj, value, path) {
 export function flattenObject(obj) {
     let toReturn = [];
     for (let i in obj) {
-    	if (i.startsWith("_template")) continue;
+    	if (i.startsWith("_")) continue;
         if (!obj.hasOwnProperty(i)) continue;
         if ((typeof obj[i]) == 'object') {
             let flatObject = flattenObject(obj[i]);
@@ -195,6 +195,11 @@ export function flattenObject(obj) {
         }
     }
     return toReturn;
+}
+
+
+export function wait(ms){
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -245,4 +250,76 @@ export function transformVector(inVector, context=false){
         x: (inVector.x + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
         y: (inVector.y + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
     }
+}
+
+
+
+export class SequencerFile{
+
+	constructor(inData, inTemplate){
+		this.template = inTemplate;
+		this.timeRange = inData._timeRange;
+		this.file = inData.file ?? inData;
+		this.fileIndex = false;
+		this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.file)) ? Object.keys(this.file).filter(key => key.endsWith('ft')).length > 0 : false;
+		delete this.file['_template'];
+		delete this.file['_timeRange'];
+	}
+
+	getFile(inFt){
+		if(inFt && this.file[inFt]) {
+			if(Array.isArray(this.file[inFt])) {
+				return typeof this.fileIndex === "number" ? this.file[inFt][this.fileIndex] : random_array_element(this.file[inFt]);
+			}
+			return this.file[inFt];
+		}else if(Array.isArray(this.file)){
+			return typeof this.fileIndex === "number" ? this.file[this.fileIndex] : random_array_element(this.file);
+		}
+		return this.file;
+	}
+
+	applyBaseFolder(baseFolder){
+
+		if(this.rangeFind){
+			for(let key of Object.keys(this.file)){
+				if(Array.isArray(this.file[key])){
+					this.file[key] = this.file[key].map(file => this._applyBaseFolder(baseFolder, file))
+					continue;
+				}
+				this.file[key] = this._applyBaseFolder(baseFolder, this.file[key])
+			}
+		}else{
+			this.file = this._applyBaseFolder(baseFolder, this.file)
+		}
+
+		return this;
+
+	}
+
+	_applyBaseFolder(baseFolder, file){
+		return file.startsWith(baseFolder) ? file : baseFolder + file;
+	}
+
+	applyMustache(inMustache){
+
+		if(this.rangeFind){
+			for(let key of Object.keys(this.file)){
+				if(Array.isArray(this.file[key])){
+					this.file[key] = this.file[key].map(file => this._applyMustache(inMustache, file))
+					continue;
+				}
+				this.file[key] = this._applyMustache(inMustache, this.file[key])
+			}
+		}else{
+			this.file = this._applyMustache(inMustache, this.file)
+		}
+
+		return this;
+	}
+
+	_applyMustache(inMustache, file){
+		let template = Handlebars.compile(file);
+		return template(inMustache);
+	}
+
 }

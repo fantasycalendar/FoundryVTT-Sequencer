@@ -2,10 +2,9 @@ import * as lib from './lib.js';
 
 const SequencerDatabase = {
 
-        contents: {},
-        flattenedContents: [],
+        entries: {},
+        flattenedEntries: [],
 		flattenedFiles: {},
-        _currentTemplate: false,
 
     /**
      *  Registers a set of entries to the database on the given module name
@@ -16,9 +15,10 @@ const SequencerDatabase = {
      */
     registerEntries(moduleName, entries){
         console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
-        let newEntry = {[moduleName]: entries};
-        this.contents = foundry.utils.mergeObject(this.contents, newEntry);
-        this._flatten(moduleName);
+		this._flatten(entries, moduleName);
+		this.entries = foundry.utils.mergeObject(this.entries,
+			{ [moduleName]: this._processFiles(entries) }
+		);
     },
 
     /**
@@ -29,7 +29,7 @@ const SequencerDatabase = {
      */
     entryExists(inString){
         inString = inString.replace(/\[[0-9]+]$/, "")
-        return this.flattenedContents.find(entry => entry.startsWith(inString));
+        return this.flattenedEntries.find(entry => entry.startsWith(inString));
     },
 
     /**
@@ -46,23 +46,17 @@ const SequencerDatabase = {
 
         let index = 0;
         let entry = parts?.[index];
-        let currentInspect = this.contents?.[entry];
-
-        let globalTemplates = currentInspect?._templates;
-        let currentTemplate = false;
+        let currentInspect = this.entries?.[entry];
 
         while(index < length && currentInspect && entry){
             index++;
             entry = parts?.[index];
             currentInspect = currentInspect?.[entry];
-            if(globalTemplates) {
-				currentTemplate = globalTemplates?.[currentInspect?._template] || currentTemplate;
-			}
         }
 
         if(!currentInspect) return this._throwNotFound(inString, entry);
 
-		return {entry: currentInspect, globalTemplates, currentTemplate};
+		return currentInspect;
     },
 
     getAllFileEntries(inModule){
@@ -70,10 +64,13 @@ const SequencerDatabase = {
     	return this.flattenedFiles[inModule];
 	},
 
-    _flatten(inModule){
-    	let flattened = lib.flattenObject(foundry.utils.duplicate(this.contents));
-        this.flattenedContents = Object.keys(flattened);
-        this.flattenedFiles[inModule] = Array.from(new Set(Object.values(flattened)));
+    _flatten(entries, inModule){
+
+    	let flattened = lib.flattenObject(foundry.utils.duplicate({[inModule]: entries}));
+
+        this.flattenedEntries = foundry.utils.mergeObject(this.flattenedEntries, Object.keys(flattened));
+
+        this.flattenedFiles[inModule] = Array.from(new Set(lib.flattenObject(Object.values(flattened))));
     },
 
     _throwNotFound(inString, entry = false){
@@ -82,7 +79,48 @@ const SequencerDatabase = {
         ui.notifications.error(error);
         console.error(error);
         return false;
-    }
+    },
+
+	_processFiles(entries){
+
+    	let globalTemplate = entries._templates ?? false;
+
+    	return this._recurseFiles(entries, globalTemplate);
+
+	},
+
+    _recurseFiles(entries, globalTemplate, template){
+
+		if(entries._template){
+			template = globalTemplate?.[entries._template] || template;
+		}
+
+		if(typeof entries === "string" || typeof entries?.file === "string"){
+
+			entries = new lib.SequencerFile(entries, template);
+
+		}else if(Array.isArray(entries)){
+
+			for(let entry of entries){
+				entry = this._recurseFiles(entry, globalTemplate, template);
+			}
+
+		}else{
+
+			let foundDistances = Object.keys(entries).filter(entry => entry.endsWith('ft')).length !== 0;
+
+			if(foundDistances){
+				entries = new lib.SequencerFile(entries, template);
+			}else {
+				for (let entry of Object.keys(entries)) {
+					if (entry.startsWith('_')) continue;
+					entries[entry] = this._recurseFiles(entries[entry], globalTemplate, template);
+				}
+			}
+		}
+
+		return entries;
+	}
 }
 
 export default SequencerDatabase;
