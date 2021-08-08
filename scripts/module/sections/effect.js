@@ -409,6 +409,7 @@ class EffectSection extends Section {
         if(file instanceof lib.SequencerFile){
         	data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();
         	template = file.template;
+        	console.log(template);
         	if(file.timeRange){
         		[this._startTime, this._endTime] = file.timeRange;
         		this._isRange = true;
@@ -422,6 +423,8 @@ class EffectSection extends Section {
 		this._gridSize = template[0];
 		this._startPoint = template[1];
 		this._endPoint = template[2];
+
+		data.template = [this._gridSize, this._startPoint, this._endPoint];
 
 		data.time = {
 			start: typeof this._startTime === "number" ? {
@@ -451,7 +454,7 @@ class EffectSection extends Section {
             y: data.scale.y * (scale?.y ?? 1.0)
         }
 
-        if(!this._rotateTowards) {
+        if(this._reachTowards) {
             data = await this._calculateHitVector(data);
         }else{
             data.gridSizeDifference = this._gridSizeDifference(this._gridSize);

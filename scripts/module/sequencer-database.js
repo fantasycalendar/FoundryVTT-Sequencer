@@ -83,6 +83,8 @@ const SequencerDatabase = {
 
 	_processFiles(entries){
 
+		entries = foundry.utils.duplicate(entries);
+
     	let globalTemplate = entries._templates ?? false;
 
     	return this._recurseFiles(entries, globalTemplate);
