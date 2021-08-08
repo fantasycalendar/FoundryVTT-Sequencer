@@ -9,12 +9,13 @@ import moves from "./traits/moves.js";
 import opacity from "./traits/opacity.js";
 import rotation from "./traits/rotation.js";
 import scale from "./traits/scale.js";
+import time from "./traits/time.js";
 
 class EffectSection extends Section {
 
     constructor(inSequence, inFile="") {
         super(inSequence)
-        this.file(inFile);
+        this._file = inFile;
         this._from = false;
 		this._reachTowards = false;
         this._anchor = false;
@@ -389,6 +390,16 @@ class EffectSection extends Section {
                 fadeInAudio: this._fadeInAudio,
                 fadeOutAudio: this._fadeOutAudio
             },
+			time: {
+            	start: this._startTime ? {
+            		value: this._startTime,
+					isPerc: this._startPerc
+				} : false,
+            	end: this._endTime ? {
+            		value: this._endTime,
+					isPerc: this._endPerc
+				} : false
+			},
             debug: this.sequence.debug
         };
 
@@ -799,5 +810,6 @@ Object.assign(EffectSection.prototype, moves);
 Object.assign(EffectSection.prototype, opacity);
 Object.assign(EffectSection.prototype, rotation);
 Object.assign(EffectSection.prototype, scale);
+Object.assign(EffectSection.prototype, time);
 
 export default EffectSection;

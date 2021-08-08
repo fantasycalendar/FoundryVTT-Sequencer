@@ -53,7 +53,20 @@ export default class CanvasEffect {
         }
 
         this.data.sourceDuration = this.data.duration ? this.data.duration / 1000 : this.source?.duration;
-        this.data.animationDuration = this.data.sourceDuration * 1000;
+
+		if(this.data.time?.start && this.source?.currentTime !== undefined) {
+			this.source.currentTime = !this.data.time.start.isPerc
+				? this.data.time.start.value / 1000
+				: this.data.time.start.value * this.data.sourceDuration;
+		}
+
+		if(this.data.time?.end){
+			this.data.sourceDuration = !this.data.time.end.isPerc
+				? this.data.sourceDuration - (this.data.time.end.value / 1000)
+				: this.data.time.end.value * this.data.sourceDuration;
+		}
+
+		this.data.animationDuration = this.data.sourceDuration * 1000;
 
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
         this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
