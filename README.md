@@ -293,7 +293,7 @@ new Sequence()
 ### Version 0.6.0
 - *Sequencer* - Refactored entire module structure
 - *Sequencer* - Added `SequencerPreloader` - you can now preload images, animations, and sounds for your players, read more on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Preloader)
-- *Sequencer* - Added support for templates in database structure, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Database)
+- *Sequencer* - Added support for templates and time ranges in database structure, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Database)
 - *Effects & Sounds* - Added `.startTime()`, `.startTimePerc()`, `.endTime()`, `.endTimePerc()`, and `.timeRange()`, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki#start-time)
 - *Sounds* - Added `.addOverride()`, `.baseFolder()`, and `.setMustache()` support to sounds
 - *Effects* - Vastly improved effect caching and speed of effects and sounds 
