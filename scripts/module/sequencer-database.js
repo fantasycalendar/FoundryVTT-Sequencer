@@ -94,7 +94,7 @@ const SequencerDatabase = {
     _recurseFiles(entries, globalTemplate, template){
 
 		if(entries._template){
-			template = globalTemplate?.[entries._template] || template;
+			template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
 		}
 
 		if(typeof entries === "string" || typeof entries?.file === "string"){
