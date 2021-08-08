@@ -24,17 +24,8 @@ export default class Sequence{
 		await this._prepareOffsetCache();
 		this.effectIndex = 0;
 		this._log("Playing sections")
-		return Promise.allSettled(this.sections.map(async (section) => {
-			let promise;
-			if(section instanceof EffectSection) this.effectIndex++;
-			if(section.shouldWaitUntilFinished) {
-				promise = await section._execute();
-			}else{
-				promise = section._execute();
-			}
-			await new Promise((resolve) => setTimeout(resolve, 1));
-			return promise;
-		})).then(() => this._log("Finished playing sections"));
+		return Promise.allSettled(this.sections.map(async (section) => await this._createSectionPromise(section)))
+			.then(() => this._log("Finished playing sections"));
 	}
 
     /**
@@ -142,6 +133,18 @@ export default class Sequence{
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
+
+    async _createSectionPromise(section){
+		let promise;
+		if(section instanceof EffectSection) this.effectIndex++;
+		if(section.shouldWaitUntilFinished) {
+			promise = await section._execute();
+		}else{
+			promise = section._execute();
+		}
+		await new Promise((resolve) => setTimeout(resolve, 1));
+		return promise;
+	}
 
     async _prepareOffsetCache(){
         this._cachedOffsets = {};
