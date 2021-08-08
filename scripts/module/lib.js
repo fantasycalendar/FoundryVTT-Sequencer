@@ -252,24 +252,23 @@ export function transformVector(inVector, context=false){
     }
 }
 
-
-
 export class SequencerFile{
 
 	constructor(inData, inTemplate){
 		this.template = inTemplate;
 		this.timeRange = inData._timeRange;
-		this.file = inData.file ?? inData;
+		this.originalFile = inData.file ?? inData;
+		delete this.originalFile['_template'];
+		delete this.originalFile['_timeRange'];
+		this.file = foundry.utils.duplicate(this.originalFile);
 		this.fileIndex = false;
-		this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.file)) ? Object.keys(this.file).filter(key => key.endsWith('ft')).length > 0 : false;
-		delete this.file['_template'];
-		delete this.file['_timeRange'];
+		this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.originalFile)) ? Object.keys(this.originalFile).filter(key => key.endsWith('ft')).length > 0 : false;
 	}
 
 	getFile(inFt){
-		if(inFt && this.file[inFt]) {
-			if(Array.isArray(this.file[inFt])) {
-				return typeof this.fileIndex === "number" ? this.file[inFt][this.fileIndex] : random_array_element(this.file[inFt]);
+		if(inFt && this.rangeFind && this.originalFile[inFt]) {
+			if(Array.isArray(this.originalFile[inFt])) {
+				return typeof this.fileIndex === "number" ? this.originalFile[inFt][this.fileIndex] : random_array_element(this.originalFile[inFt]);
 			}
 			return this.file[inFt];
 		}else if(Array.isArray(this.file)){
@@ -280,41 +279,37 @@ export class SequencerFile{
 
 	applyBaseFolder(baseFolder){
 
-		if(this.rangeFind){
-			for(let key of Object.keys(this.file)){
-				if(Array.isArray(this.file[key])){
-					this.file[key] = this.file[key].map(file => this._applyBaseFolder(baseFolder, file))
-					continue;
-				}
-				this.file[key] = this._applyBaseFolder(baseFolder, this.file[key])
-			}
-		}else{
-			this.file = this._applyBaseFolder(baseFolder, this.file)
-		}
+		this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
 
 		return this;
+
+	}
+
+	applyMustache(inMustache){
+
+		this._applyFunctionToFiles(this._applyMustache, inMustache);
+
+		return this;
+	}
+
+	_applyFunctionToFiles(inFunction, inData){
+
+		if(this.rangeFind){
+			for(let key of Object.keys(this.originalFile)){
+				if(Array.isArray(this.originalFile[key])){
+					this.file[key] = this.originalFile[key].map(file => inFunction(inData, file))
+					continue;
+				}
+				this.file[key] = inFunction(inData, this.originalFile[key])
+			}
+		}else{
+			this.file = inFunction(inData, this.originalFile)
+		}
 
 	}
 
 	_applyBaseFolder(baseFolder, file){
 		return file.startsWith(baseFolder) ? file : baseFolder + file;
-	}
-
-	applyMustache(inMustache){
-
-		if(this.rangeFind){
-			for(let key of Object.keys(this.file)){
-				if(Array.isArray(this.file[key])){
-					this.file[key] = this.file[key].map(file => this._applyMustache(inMustache, file))
-					continue;
-				}
-				this.file[key] = this._applyMustache(inMustache, this.file[key])
-			}
-		}else{
-			this.file = this._applyMustache(inMustache, this.file)
-		}
-
-		return this;
 	}
 
 	_applyMustache(inMustache, file){
