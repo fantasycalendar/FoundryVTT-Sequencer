@@ -409,7 +409,6 @@ class EffectSection extends Section {
         if(file instanceof lib.SequencerFile){
         	data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();
         	template = file.template;
-        	console.log(template);
         	if(file.timeRange){
         		[this._startTime, this._endTime] = file.timeRange;
         		this._isRange = true;
