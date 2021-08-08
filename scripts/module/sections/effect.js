@@ -344,6 +344,7 @@ class EffectSection extends Section {
 	}
 
     async _run() {
+    	if(this._file === "" || !this._file) return;
         let data = await this._sanitizeEffectData();
         let canvasEffectData = await SequencerEffectHelper.play(data, true);
         this.animationDuration = canvasEffectData.duration;
