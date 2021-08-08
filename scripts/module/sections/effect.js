@@ -413,6 +413,8 @@ class EffectSection extends Section {
         		[this._startTime, this._endTime] = file.timeRange;
         		this._isRange = true;
 			}
+		}else{
+        	data.file = file;
 		}
 
         template = template ?? this._determineTemplate(data.file);
