@@ -266,9 +266,9 @@ export class SequencerFile{
 	}
 
 	getFile(inFt){
-		if(inFt && this.rangeFind && this.originalFile[inFt]) {
-			if(Array.isArray(this.originalFile[inFt])) {
-				return typeof this.fileIndex === "number" ? this.originalFile[inFt][this.fileIndex] : random_array_element(this.originalFile[inFt]);
+		if(inFt && this.rangeFind && this.file[inFt]) {
+			if(Array.isArray(this.file[inFt])) {
+				return typeof this.fileIndex === "number" ? this.file[inFt][this.fileIndex] : random_array_element(this.file[inFt]);
 			}
 			return this.file[inFt];
 		}else if(Array.isArray(this.file)){
@@ -278,18 +278,11 @@ export class SequencerFile{
 	}
 
 	applyBaseFolder(baseFolder){
-
-		this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
-
-		return this;
-
+		return this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
 	}
 
 	applyMustache(inMustache){
-
-		this._applyFunctionToFiles(this._applyMustache, inMustache);
-
-		return this;
+		return this._applyFunctionToFiles(this._applyMustache, inMustache);
 	}
 
 	_applyFunctionToFiles(inFunction, inData){
@@ -305,6 +298,8 @@ export class SequencerFile{
 		}else{
 			this.file = inFunction(inData, this.originalFile)
 		}
+
+		return this;
 
 	}
 
