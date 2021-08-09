@@ -123,8 +123,12 @@ export default class Section{
 
     get _waitAnyway(){
         return ((this._async || this._waitUntilFinished) && this.isLastRepetition)
-			|| (this.isLastRepetition && (this.sequence.sections.length-1) === this.sequence.sections.indexOf(this));
+			|| (this.isLastRepetition && this.isLastSection);
     }
+
+    get isLastSection(){
+		return (this.sequence.sections.length-1) === this.sequence.sections.indexOf(this);
+	}
 
     get isLastRepetition(){
     	return (this._repetitions === 1 || this._repetitions === this._currentRepetition+1);
