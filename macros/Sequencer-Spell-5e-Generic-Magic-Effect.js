@@ -19,13 +19,14 @@ let targets = [];
 if(typeof args !== "undefined" && args.length !== 0){
     targets = args[0].targets;
 }else{
-    if(token) targets.push(token);
     let userTargets = Array.from(game.user.targets);
     if(userTargets.length){
         for(let target of userTargets){
             if(!targets.includes(target)) targets.push(target);
         }
-    }
+    }else{
+		if(token) targets.push(token);
+	}
 }
 
 let sequence = new Sequence()

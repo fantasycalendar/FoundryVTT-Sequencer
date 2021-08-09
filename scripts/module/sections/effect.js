@@ -28,6 +28,7 @@ class EffectSection extends Section {
         this._mirrorY = false;
         this._playbackRate = 1.0;
         this._gridSize = 100;
+        this._customTemplate = false;
 		this._startPoint = 0;
 		this._endPoint = 0;
         this._overrides = [];
@@ -167,6 +168,20 @@ class EffectSection extends Section {
         return this;
     }
 
+	/**
+	 * Sets the grid size of the file loaded in the Effect. Some files have an established internal
+	 * grid, so this will make the effect scale up or down to match the active scene's grid size
+	 *
+	 * @param {number} inGridSize
+	 * @returns {EffectSection} this
+	 */
+	gridSize(inGridSize) {
+		if(typeof inGridSize !== "number") this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
+		this._gridSize = inGridSize;
+		this._customTemplate = true;
+		return this;
+	}
+
     /**
      *  Defines the start point within the given sprite, starting from the left of the sprite. An example
      *  would be a given number of `200` - means that the sprite will consider 200 pixels into the sprite as the
@@ -178,6 +193,7 @@ class EffectSection extends Section {
     startPoint(inStartPoint) {
         if(typeof inStartPoint !== "number") this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
+		this._customTemplate = true;
         return this;
     }
 
@@ -190,6 +206,7 @@ class EffectSection extends Section {
     endPoint(inEndPoint) {
         if(typeof inEndPoint !== "number") this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
+		this._customTemplate = true;
         return this;
     }
 
@@ -287,19 +304,6 @@ class EffectSection extends Section {
     mirrorY(inBool = true) {
         if(typeof inBool !== "boolean") this.sequence._throwError(this, "mirrorY", "inBool must be of type boolean");
         this._mirrorY = inBool;
-        return this;
-    }
-
-    /**
-     * Sets the grid size of the file loaded in the Effect. Some files have an established internal
-     * grid, so this will make the effect scale up or down to match the active scene's grid size
-     *
-     * @param {number} inGridSize
-     * @returns {EffectSection} this
-     */
-    gridSize(inGridSize) {
-        if(typeof inGridSize !== "number") this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
-        this._gridSize = inGridSize;
         return this;
     }
 
@@ -418,13 +422,12 @@ class EffectSection extends Section {
         	data.file = file;
 		}
 
-        template = template ?? this._determineTemplate(data.file);
+        template = this._customTemplate ? this._determineTemplate(data.file) : (template ?? this._determineTemplate(data.file));
 
 		this._gridSize = template[0];
 		this._startPoint = template[1];
 		this._endPoint = template[2];
-
-		data.template = [this._gridSize, this._startPoint, this._endPoint];
+		data.template = template;
 
 		data.time = {
 			start: typeof this._startTime === "number" ? {
@@ -484,8 +487,8 @@ class EffectSection extends Section {
 
             let [from, to, origin, target] = this._getPositions(this._from, this._to);
 
-            if(this._offset) {
-                let offset = this._offset;
+			if(this._offset) {
+				let offset = this._offset;
                 if(this._offset.local){
                     let target = to || from;
                     if(target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
@@ -505,7 +508,7 @@ class EffectSection extends Section {
                 origin = this._applyOffsets(origin);
             }
 
-            if(!this._anchor && (from instanceof Token || from instanceof Tile)) {
+            if(!this._anchor) {
                 data.anchor = {
                     x: 0.5,
                     y: 0.5
@@ -604,23 +607,19 @@ class EffectSection extends Section {
 
     _determineTemplate(inFile){
 
-    	if(this._JB2A) {
+    	if(!this._JB2A) return [this._gridSize, this._startPoint, this._endPoint];
 
-			let type = "ranged";
-			if (inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")) {
-				type = "melee";
-			} else if (inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")) {
-				type = "cone";
-			}
-			return {
-				"ranged": [100, 200, 200],
-				"melee": [100, 300, 300],
-				"cone": [100, 0, 0]
-			}[type];
-
+		let type = "ranged";
+		if (inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")) {
+			type = "melee";
+		} else if (inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")) {
+			type = "cone";
 		}
-
-    	return [this._gridSize, this._startPoint, this._endPoint];
+		return {
+			"ranged": [200, 200, 200],
+			"melee": [200, 300, 300],
+			"cone": [200, 0, 0]
+		}[type];
     }
 
     async _getFileDimensions(inFile) {
@@ -682,9 +681,9 @@ class EffectSection extends Section {
 				y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0
 			}
 
-			if(obj instanceof TokenDocument || obj instanceof Token){
-				pos.x += obj instanceof Token ? (obj.hitArea.width)/2 : (obj._object.hitArea.width)/2;
-				pos.y += obj instanceof Token ? (obj.hitArea.height)/2 : (obj._object.hitArea.height)/2;
+			if(obj instanceof Token){
+				pos.x += (obj.hitArea.width)/2;
+				pos.y += (obj.hitArea.height)/2;
 			}
 		}
 

@@ -88,7 +88,6 @@ range.then(result => {
                 .file("MistyStep_01_Regular_Blue_400x400.webm")
                 .atLocation(target)
                 .JB2A()
-                .scale(0.6)
                 .randomRotation()
             .wait(750)
             .thenDo(async () => {
@@ -103,7 +102,6 @@ range.then(result => {
                 .file("MistyStep_02_Regular_Blue_400x400.webm")
                 .atLocation(template)
                 .JB2A()
-                .scale(0.6)
                 .randomRotation()
             .wait(1500)
             .thenDo(async () => {

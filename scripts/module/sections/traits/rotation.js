@@ -3,9 +3,9 @@ export default {
 	/**
 	 * Base properties
 	 */
-	_angle: 0,
-	_rotateIn: 0,
-	_rotateOut: 0,
+	_angle: false,
+	_rotateIn: false,
+	_rotateOut: false,
 	_randomRotation: false,
 	_rotateTowards: false,
 

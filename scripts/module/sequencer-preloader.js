@@ -49,9 +49,9 @@ const SequencerPreloader = {
 
 		emitSocketEvent(SOCKET_HANDLERS.PRELOAD, {
 			inSrcs,
+			showProgressBar,
 			senderId: this.userId,
-			push: true,
-			showProgressBar
+			push: true
 		});
 
 		let responses = new Promise(resolve => {
@@ -60,8 +60,8 @@ const SequencerPreloader = {
 
 		this.preload({
 			inSrcs,
-			senderId: this.userId,
 			showProgressBar,
+			senderId: this.userId,
 			local: true,
 			push: false
 		});
@@ -102,7 +102,7 @@ const SequencerPreloader = {
 		this._reset();
 	},
 
-	preload({inSrcs, senderId, showProgressBar, local=false, push=false}={}){
+	preload({inSrcs, showProgressBar=false, senderId, local=false, push=false}={}){
 
 		if(push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_RESPONSE, this.userId, senderId);
 		if(local) this.handleResponse(this.userId);

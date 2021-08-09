@@ -151,7 +151,11 @@ export default class Section{
 	 */
 	_cacheOffsets(){}
 
-	_findObjectById(inId){
+	_findObjectById(inId, isToken=false){
+		if(isToken){
+			let token = canvas.tokens.get(inId);
+			if(token) return token;
+		}
 		for(let layer of canvas.layers){
 			let obj = layer?.objects?.children?.find(obj => obj.id === inId)
 			if(obj) return obj;
@@ -162,11 +166,16 @@ export default class Section{
 		if(typeof inLocation === "string" && !this.sequence._cachedOffsetExists(inLocation)){
 			inLocation = this._findObjectById(inLocation) ?? inLocation;
 		}
+		if(inLocation instanceof TokenDocument){
+			let token = this._findObjectById(inLocation.id, true);
+			if(!token) this.sequence._throwError(this, "_validateLocation", `Could not find "${inLocation.name}" token! (ID ${inLocation.id})`);
+			inLocation = token;
+		}
 		return inLocation;
 	}
 
     async _execute(){
-        if(!(await this._shouldPlay())) return;
+        if(!await this._shouldPlay) return;
         let self = this;
         this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {

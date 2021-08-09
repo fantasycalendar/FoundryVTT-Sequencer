@@ -24,18 +24,19 @@ export default class Sequence{
 		await this._prepareOffsetCache();
 		this.effectIndex = 0;
 		this._log("Playing sections")
-		return new Promise(async (resolve) => {
-			for(let section of this.sections){
-				if(section instanceof EffectSection) this.effectIndex++;
-				if(section.shouldWaitUntilFinished) {
-					await section._execute();
-				}else{
-					section._execute();
-				}
-				if(!section.isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
+
+		let promises = [];
+		for(let section of this.sections){
+			if(section instanceof EffectSection) this.effectIndex++;
+			if(section.shouldWaitUntilFinished) {
+				promises.push(await section._execute());
+			}else{
+				promises.push(section._execute());
 			}
-			resolve(this);
-		}).then(() => this._log("Finished playing sections"));
+			if(!section.isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
+		}
+
+		return Promise.allSettled(promises).then(() => this._log("Finished playing sections"));
 	}
 
     /**

@@ -291,12 +291,19 @@ new Sequence()
 ## Changelog
 
 ### Version 0.6.0
-- *Sequencer* - Refactored entire module structure
+#### Breaking:
+- *Effects* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.JB2A()` has been altered to have gridsize 200, as it was previously set to 100 - this will halve all on-the-spot effects!  <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
+
+#### Additions:
 - *Sequencer* - Added `SequencerPreloader` - you can now preload images, animations, and sounds for your players, read more on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Preloader)
 - *Sequencer* - Added support for templates and time ranges in database structure, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Database)
+- *Effects* - Added support for static images such as webp, pngs, jpgs, etc
 - *Effects & Sounds* - Added `.startTime()`, `.startTimePerc()`, `.endTime()`, `.endTimePerc()`, and `.timeRange()`, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki#start-time)
 - *Sounds* - Added `.addOverride()`, `.baseFolder()`, and `.setMustache()` support to sounds
-- *Effects* - Vastly improved effect caching and speed of effects and sounds 
+
+#### Updates & Fixes:
+- *Sequencer* - `.play()` now reliably resolves its promise at the end of the entire sequence
+- *Effects* - *Vastly* improved effect caching and loading speed of effects and sounds 
 - *Effects* - Improved object position handling slightly when providing non-foundry class objects to `.atLocation()` and alike
 - *Effects* - Generally improved compatibility with `TokenDocument` and Foundry D&D 5E documents when getting their positions
 

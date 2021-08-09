@@ -16,13 +16,14 @@ let targets = [];
 if(typeof args !== "undefined" && args.length !== 0){
     targets = Array.from(args[0]?.failedSaves);
 }else{
-    if(token) targets.push(token);
     let userTargets = Array.from(game.user.targets);
     if(userTargets.length){
         for(let target of userTargets){
             if(!targets.includes(target)) targets.push(target);
         }
-    }
+    }else {
+		if(token) targets.push(token);
+	}
 }
 
 if(targets.length){

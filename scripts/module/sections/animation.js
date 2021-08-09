@@ -7,6 +7,7 @@ import files from "./traits/files.js";
 import moves from "./traits/moves.js";
 import opacity from "./traits/opacity.js";
 import rotation from "./traits/rotation.js";
+import audio from "./traits/audio.js";
 
 class AnimationSection extends Section{
 
@@ -497,7 +498,6 @@ class AnimationSection extends Section{
 
                             let target = attribute.target;
                             if(this._rotateTowards.towardsCenter) target = target?.center ?? target;
-
                             let ray = new Ray(attribute.originLocation, target)
                             let angle = (ray.angle * 180/Math.PI) - 90;
                             angle += attribute.offset;
@@ -557,5 +557,6 @@ Object.assign(AnimationSection.prototype, files);
 Object.assign(AnimationSection.prototype, moves);
 Object.assign(AnimationSection.prototype, opacity);
 Object.assign(AnimationSection.prototype, rotation);
+Object.assign(AnimationSection.prototype, audio);
 
 export default AnimationSection;

@@ -1,11 +1,27 @@
 export default {
 
 	_hasTime: true,
+	_isRange: false,
 	_startTime: false,
 	_startPerc: false,
 	_endTime: false,
 	_endPerc: false,
-	_isRange: false,
+
+	/**
+	 * Sets the start and end time of the section, playing only that range
+	 *
+	 * @param {number} inMsStart
+	 * @param {number} inMsEnd
+	 * @returns this
+	 */
+	timeRange(inMsStart, inMsEnd) {
+		if (typeof inMsStart !== "number") this.sequence._throwError(this, "timeRange", "inMsStart must be of type number");
+		if (typeof inMsEnd !== "number") this.sequence._throwError(this, "timeRange", "inMsEnd must be of type number");
+		this._startTime = inMsStart;
+		this._endTime = inMsEnd;
+		this._isRange = true;
+		return this;
+	},
 
 	/**
 	 * Sets the start time of the section.
@@ -22,7 +38,7 @@ export default {
 	},
 
 	/**
-	 * Sets the start time of the section based on a percentage from the total duration.
+	 * Sets the start time of the section based on a percentage from its total duration.
 	 *
 	 * @param {number} inPercentage
 	 * @returns this
@@ -36,7 +52,7 @@ export default {
 	},
 
 	/**
-	 * Sets the end time of the section (from the end).
+	 * Sets the ending time of the section (from the end).
 	 *
 	 * @param {number} inMs
 	 * @returns this
@@ -50,7 +66,7 @@ export default {
 	},
 
 	/**
-	 * Sets the end time of the section based on a percentage from the total duration.
+	 * Sets the ending time of the section based on a percentage from the total duration.
 	 *
 	 * @param {number} inPercentage
 	 * @returns this
@@ -60,22 +76,6 @@ export default {
 		this._endTime = inPercentage;
 		this._endPerc = true;
 		this._isRange = false;
-		return this;
-	},
-
-	/**
-	 * Sets the start and end time of the section, playing only that range
-	 *
-	 * @param {number} inMsStart
-	 * @param {number} inMsEnd
-	 * @returns this
-	 */
-	timeRange(inMsStart, inMsEnd) {
-		if (typeof inMsStart !== "number") this.sequence._throwError(this, "timeRange", "inMsStart must be of type number");
-		if (typeof inMsEnd !== "number") this.sequence._throwError(this, "timeRange", "inMsEnd must be of type number");
-		this._startTime = inMsStart;
-		this._endTime = inMsEnd;
-		this._isRange = true;
 		return this;
 	}
 
