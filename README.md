@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.3 Hotfix
+- *Effects* - Fixed effects failing to play static images
+
 ### Version 0.6.2
 - *Sequencer* - Further small fixes to how the database registers files
 
