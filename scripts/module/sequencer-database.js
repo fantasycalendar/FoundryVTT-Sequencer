@@ -14,11 +14,11 @@ const SequencerDatabase = {
      * @return {void}
      */
     registerEntries(moduleName, entries){
-        console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
 		this._flatten(entries, moduleName);
 		this.entries = foundry.utils.mergeObject(this.entries,
 			{ [moduleName]: this._processFiles(entries) }
 		);
+		console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
     },
 
     /**
@@ -28,7 +28,7 @@ const SequencerDatabase = {
      * @return {boolean}                 If the entry exists in the database
      */
     entryExists(inString){
-        inString = inString.replace(/\[[0-9]+]$/, "")
+        inString = inString.replace(/\[[0-9]+]$/, "");
         return this.flattenedEntries.find(entry => entry.startsWith(inString));
     },
 
@@ -65,10 +65,9 @@ const SequencerDatabase = {
 	},
 
     _flatten(entries, inModule){
-
     	let flattened = lib.flattenObject(foundry.utils.duplicate({[inModule]: entries}));
 
-        this.flattenedEntries = foundry.utils.mergeObject(this.flattenedEntries, Object.keys(flattened));
+        this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
 
         this.flattenedFiles[inModule] = Array.from(new Set(lib.flattenObject(Object.values(flattened))));
     },
@@ -82,13 +81,11 @@ const SequencerDatabase = {
     },
 
 	_processFiles(entries){
-
 		entries = foundry.utils.duplicate(entries);
 
     	let globalTemplate = entries._templates ?? false;
 
     	return this._recurseFiles(entries, globalTemplate);
-
 	},
 
     _recurseFiles(entries, globalTemplate, template){
@@ -103,11 +100,9 @@ const SequencerDatabase = {
 
 		}else if(Array.isArray(entries)){
 
-			let newEntries = [];
-			for(let entry of entries){
-				newEntries.push(this._recurseFiles(entry, globalTemplate, template));
+			for(let i = 0; i < entries.length; i++){
+				entries[i] = this._recurseFiles(entries[i], globalTemplate, template);
 			}
-			entries = newEntries;
 
 		}else{
 

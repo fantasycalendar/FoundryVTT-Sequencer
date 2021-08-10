@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.2
+- *Sequencer* - Further small fixes to how the database registers files
+
 ### Version 0.6.1
 - *Sequencer* - Removed the need for `.playIf()` to have to be given a function or a boolean
 - *Sequencer* - Fixed issues with the database when files were listed in arrays
