@@ -4,8 +4,8 @@ export class SequencerDatabaseApplication extends FormApplication {
         super(dialogData, options);
         this.filter = "all"
         this.search = "";
-        this.packs = Object.keys(window.SequencerDatabase.contents);
-        this.entries = window.SequencerDatabase.flattenedContents.map(entry => {
+        this.packs = Object.keys(window.SequencerDatabase.entries);
+        this.entries = window.SequencerDatabase.flattenedEntries.map(entry => {
             return {
                 pack: entry.split('.')[0],
                 entry: entry

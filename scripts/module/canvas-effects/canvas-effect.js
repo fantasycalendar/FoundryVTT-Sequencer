@@ -1,5 +1,7 @@
-import { easeFunctions } from "./ease.js";
-import { SequencerAnimationEngine } from "../sequencer-animation-engine.js";
+import {easeFunctions} from "./ease.js";
+import SequencerAnimationEngine from "../sequencer-animation-engine.js";
+import SequencerFileCache from "../sequencer-file-cache.js";
+import * as lib from "../lib.js";
 
 export default class CanvasEffect {
 
@@ -7,7 +9,9 @@ export default class CanvasEffect {
 
         this.container = container;
         this.ended = false;
-        this.source = false;
+        this.texture = false;
+		this.source = false;
+		this.loader = SequencerFileCache;
 
         // Set default values
         this.data = foundry.utils.mergeObject({
@@ -34,13 +38,9 @@ export default class CanvasEffect {
         this.debug();
     }
 
-    spawnSprite() {
-        const texture = PIXI.Texture.from(this.source);
-        this.sprite = new PIXI.Sprite(texture);
-        this.sprite.alpha = this.data.opacity;
-        this.container.addChild(this.sprite);
-        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
-        this.container.sortChildren();
+    async spawnSprite() {
+
+        this.sprite = new PIXI.Sprite(this.texture);
 
         if(!this.source?.duration && !this.data.duration){
             let animProp = this.data.animatedProperties;
@@ -51,7 +51,32 @@ export default class CanvasEffect {
         }
 
         this.data.sourceDuration = this.data.duration ? this.data.duration / 1000 : this.source?.duration;
-        this.data.animationDuration = this.data.sourceDuration * 1000;
+
+		if(this.data.time?.start && this.source?.currentTime !== undefined) {
+			this.source.currentTime = !this.data.time.start.isPerc
+				? this.data.time.start.value / 1000 ?? 0
+				: this.data.time.start.value * this.data.sourceDuration;
+		}
+
+		if(this.data.time?.end){
+			this.data.sourceDuration = !this.data.time.end.isPerc
+				? this.data.time.isRange ? (this.data.time.end.value-this.data.time.start.value) / 1000 : this.data.sourceDuration - (this.data.time.end.value / 1000)
+				: this.data.time.end.value * this.data.sourceDuration;
+		}
+
+		this.data.animationDuration = this.data.sourceDuration * 1000;
+
+		if(this.data.time?.start > 0 && this.source?.currentTime !== undefined) {
+			await lib.wait(15)
+		}
+
+		this.texture.update();
+
+		this.sprite = new PIXI.Sprite(this.texture);
+		this.sprite.alpha = this.data.opacity;
+		this.container.addChild(this.sprite);
+		this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+		this.container.sortChildren();
 
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
         this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
@@ -59,6 +84,8 @@ export default class CanvasEffect {
         this.data.scale.y *= this.data.gridSizeDifference;
         this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
         this.sprite.position.set(this.data.position.x, this.data.position.y);
+
+		this.source?.play();
 
     }
 
@@ -264,14 +291,14 @@ export default class CanvasEffect {
     }
 
     destroyEffect(){
+		try {
+			this.source.removeAttribute('src');
+			this.source.pause();
+			this.source.load();
+		}catch(err){}
         try {
-            this.source.removeAttribute('src');
             this.container.removeChild(this.sprite);
             this.sprite.destroy();
-        }catch(err){}
-        try {
-            this.source.pause();
-            this.source.load();
         }catch(err){}
     }
 
@@ -280,35 +307,41 @@ export default class CanvasEffect {
     }
 
     async loadVideo(){
-        return new Promise((resolve, reject) => {
+
+        return new Promise(async (resolve, reject) => {
+
+        	let blob = await this.loader.loadVideo(this.data.file);
+
+        	if(!blob){
+				let error = `Sequencer | CanvasEffect | Play Effect - Could not play: ${this.data.file}`;
+				ui.notifications.error(error);
+				console.error(error)
+        		reject();
+        		return;
+			}
 
             let video = document.createElement("video");
             video.preload = "auto";
             video.crossOrigin = "anonymous";
-            video.src = this.data.file;
+            video.src = URL.createObjectURL(blob);
             video.playbackRate = this.data.playbackRate;
+            video.autoplay = false;
             if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
             }
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
             video.volume *= game.settings.get("core", "globalInterfaceVolume");
 
+			let texture = await PIXI.Texture.from(video);
+
             let canplay = true;
-            video.oncanplay = () => {
+            video.oncanplay = async () => {
                 if(!canplay) return;
                 canplay = false;
-                resolve(video);
+				this.source = video;
+				this.source.pause();
+                resolve(texture);
             };
-
-            video.onerror = () => {
-                try {
-                    this.container.removeChild(this.sprite);
-                } catch (err) {}
-                let error = `Sequencer | CanvasEffect | Play Effect - Could not play: ${this.data.file}`;
-                ui.notifications.error(error);
-                console.error(error)
-                reject();
-            }
 
             video.onended = () => {
                 this.endEffect();
@@ -318,25 +351,19 @@ export default class CanvasEffect {
     }
 
     async loadImage(){
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
-            let image = document.createElement('img');
-            image.src = this.data.file;
+			let texture = await this.loader.loadImage(this.data.file);
 
-            image.onload = () => {
-                resolve(image);
-            };
+			if(!texture){
+				let error = `Sequencer | CanvasEffect | Play Effect - Could not load: ${this.data.file}`;
+				ui.notifications.error(error);
+				console.error(error)
+				reject();
+				return;
+			}
 
-            image.onerror = () => {
-                try {
-                    this.container.removeChild(this.sprite);
-                } catch (err) {}
-                let error = `Sequencer | CanvasEffect | Play Effect - Could not load image: ${this.data.file}`;
-                ui.notifications.error(error);
-                console.error(error)
-                reject();
-            }
-
+			resolve(texture);
         })
     }
 
@@ -351,13 +378,16 @@ export default class CanvasEffect {
     }
 
     async play() {
-        this.source = await this.loadFile();
+        this.texture = await this.loadFile();
 
         let promise = new Promise(async (resolve, reject) => {
-            if(!this.source) reject();
-            this.resolve = resolve;
-            this.spawnSprite();
-            this.playAnimations();
+            if(!this.texture){
+            	reject();
+			}else {
+				this.resolve = resolve;
+				await this.spawnSprite();
+				this.playAnimations();
+			}
         });
 
         return {

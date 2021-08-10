@@ -1,6 +1,6 @@
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
-import { SequencerAnimationEngine } from "./sequencer-animation-engine.js";
 import { easeFunctions } from "./canvas-effects/ease.js";
+import SequencerAnimationEngine from "./sequencer-animation-engine.js";
 
 export default class SequencerAudioHelper {
     /**
@@ -25,7 +25,8 @@ export default class SequencerAudioHelper {
 
         const sound = await game.audio.play(data.src, {
             volume: data.fadeIn ? 0 : data.volume,
-            loop: data.loop
+            loop: data.loop,
+			offset: data.startTime
         });
 
         if (data.fadeIn) {

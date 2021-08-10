@@ -69,13 +69,15 @@ export function random_array_element(inArray, recurse=false){
  * @return {object}              A random element from the object
  */
 export function random_object_element(inObject, recurse=false){
-    let keys = Object.keys(inObject);
+    let keys = Object.keys(inObject).filter(k => !k.startsWith("_"));
     let choice = inObject[random_array_element(keys)];
     if(typeof choice === "object" && recurse){
         return random_object_element(choice, true)
     }
     return choice;
 }
+
+export async function fileExists(inFile){}
 
 /**
  * Determines the dimensions of a given image file
@@ -98,7 +100,7 @@ export async function getDimensions(inFile){
             resolve(dimensions);
         }
         video.onerror = () => {
-            console.error('File not found');
+            console.error(`File not found: ${inFile}`);
             resolve({ x:0, y:0 });
         }
     })
@@ -180,6 +182,7 @@ export function deepSet(obj, value, path) {
 export function flattenObject(obj) {
     let toReturn = [];
     for (let i in obj) {
+    	if (i.startsWith("_")) continue;
         if (!obj.hasOwnProperty(i)) continue;
         if ((typeof obj[i]) == 'object') {
             let flatObject = flattenObject(obj[i]);
@@ -192,6 +195,11 @@ export function flattenObject(obj) {
         }
     }
     return toReturn;
+}
+
+
+export function wait(ms){
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -242,4 +250,66 @@ export function transformVector(inVector, context=false){
         x: (inVector.x + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
         y: (inVector.y + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
     }
+}
+
+export class SequencerFile{
+
+	constructor(inData, inTemplate){
+		this.template = inTemplate;
+		this.timeRange = inData._timeRange;
+		this.originalFile = inData.file ?? inData;
+		delete this.originalFile['_template'];
+		delete this.originalFile['_timeRange'];
+		this.file = foundry.utils.duplicate(this.originalFile);
+		this.fileIndex = false;
+		this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.originalFile)) ? Object.keys(this.originalFile).filter(key => key.endsWith('ft')).length > 0 : false;
+	}
+
+	getFile(inFt){
+		if(inFt && this.rangeFind && this.file[inFt]) {
+			if(Array.isArray(this.file[inFt])) {
+				return typeof this.fileIndex === "number" ? this.file[inFt][this.fileIndex] : random_array_element(this.file[inFt]);
+			}
+			return this.file[inFt];
+		}else if(Array.isArray(this.file)){
+			return typeof this.fileIndex === "number" ? this.file[this.fileIndex] : random_array_element(this.file);
+		}
+		return this.file;
+	}
+
+	applyBaseFolder(baseFolder){
+		return this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
+	}
+
+	applyMustache(inMustache){
+		return this._applyFunctionToFiles(this._applyMustache, inMustache);
+	}
+
+	_applyFunctionToFiles(inFunction, inData){
+
+		if(this.rangeFind){
+			for(let key of Object.keys(this.originalFile)){
+				if(Array.isArray(this.originalFile[key])){
+					this.file[key] = this.originalFile[key].map(file => inFunction(inData, file))
+					continue;
+				}
+				this.file[key] = inFunction(inData, this.originalFile[key])
+			}
+		}else{
+			this.file = inFunction(inData, this.originalFile)
+		}
+
+		return this;
+
+	}
+
+	_applyBaseFolder(baseFolder, file){
+		return file.startsWith(baseFolder) ? file : baseFolder + file;
+	}
+
+	_applyMustache(inMustache, file){
+		let template = Handlebars.compile(file);
+		return template(inMustache);
+	}
+
 }

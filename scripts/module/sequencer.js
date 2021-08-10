@@ -19,25 +19,25 @@ export default class Sequence{
      *
      * @returns {Sequence} this
      */
-    play(){
-        return new Promise(async (resolve) => {
-            this._log("Preparing cache")
-            await this._prepareOffsetCache();
-            this.effectIndex = 0;
-            this._log("Playing sections")
-            for(let section of this.sections){
-                if(section instanceof EffectSection) this.effectIndex++;
-                if(section.shouldWaitUntilFinished) {
-                    await section._execute();
-                }else{
-                    section._execute();
-                }
-                await new Promise((resolve) => setTimeout(resolve, 1));
-            }
-            this._log("Finished playing sections")
-            resolve(this);
-        })
-    }
+    async play(){
+		this._log("Preparing cache")
+		await this._prepareOffsetCache();
+		this.effectIndex = 0;
+		this._log("Playing sections")
+
+		let promises = [];
+		for(let section of this.sections){
+			if(section instanceof EffectSection) this.effectIndex++;
+			if(section.shouldWaitUntilFinished) {
+				promises.push(await section._execute());
+			}else{
+				promises.push(section._execute());
+			}
+			if(!section.isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
+		}
+
+		return Promise.allSettled(promises).then(() => this._log("Finished playing sections"));
+	}
 
     /**
      * Creates a section that will run a function.
@@ -162,6 +162,10 @@ export default class Sequence{
             "extraOffset": inExtraOffset
         });
     }
+
+    _cachedOffsetExists(inName){
+		return this._cachedOffsets[inName] !== undefined;
+	}
 
     _getCachedOffset(inName, inIndex){
         if(!this._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);

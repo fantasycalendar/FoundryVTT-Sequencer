@@ -1,7 +1,7 @@
 {
   "name": "sequencer",
   "title": "Sequencer",
-  "description": "This module implements a basic sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
+  "description": "This module implements an advanced sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
   "version": "0.0.2",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
@@ -38,9 +38,9 @@
     }
   ],
   "socket": true,
-  "url": "https://github.com/Haxxer/FoundryVTT-Sequencer",
-  "manifest": "https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/manifest.json",
-  "download": "https://github.com/Haxxer/FoundryVTT-Sequencer/releases/latest/download/module.zip",
-  "readme": "https://github.com/Haxxer/FoundryVTT-Sequencer/blob/master/README.md",
-  "bugs": "https://github.com/Haxxer/FoundryVTT-Sequencer/issues"
+  "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
+  "manifest": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/manifest.json",
+  "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.zip",
+  "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
+  "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
 }

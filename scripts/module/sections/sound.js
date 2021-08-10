@@ -2,25 +2,33 @@ import * as lib from "../lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./section.js";
 
-export default class SoundSection extends Section {
+// Traits
+import files from "./traits/files.js";
+import audio from "./traits/audio.js";
+import time from "./traits/time.js";
+
+class SoundSection extends Section {
 
     constructor(inSequence, inFile="") {
         super(inSequence);
-        this.file(inFile);
+        this._file = inFile;
         this._volume = 0.8;
+		this._overrides = [];
     }
 
-    /**
-     * Declares which sound to be played This may also be an array of paths, which will be randomly picked from each
-     * time the sound is played.
-     *
-     * @param {string|array} inFile
-     * @returns {SoundSection} this
-     */
-    file(inFile) {
-        this._file = inFile;
-        return this;
-    }
+	/**
+	 * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
+	 * modifications of sound's data. For example, it could be manipulated to change which file will be used based
+	 * on the distance to the target.
+	 *
+	 * @param {function} inFunc
+	 * @returns {SoundSection} this
+	 */
+	addOverride(inFunc) {
+		if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
+		this._overrides.push(inFunc);
+		return this;
+	}
 
     async _run(repetition){
         let {play, ...data} = await this._sanitizeSoundData();
@@ -46,19 +54,16 @@ export default class SoundSection extends Section {
     }
 
     async _sanitizeSoundData() {
-        let file = this._file;
-        if(Array.isArray(file)) file = lib.random_array_element(file)
 
-        let databaseEntry = window.SequencerDatabase.entryExists(file.split('.')?.[0] ?? "");
-        if(databaseEntry) {
-            file = window.SequencerDatabase.get(file) || file;
-            if(Array.isArray(file)) file = lib.random_array_element(file);
-        }
+        let file = this._determineFile(this._file)
 
-        if(this._mustache) {
-            let template = Handlebars.compile(file);
-            file = template(this._mustache);
-        }
+		if(file instanceof lib.SequencerFile){
+			if(file.timeRange){
+				[this._startTime, this._endTime] = file.timeRange;
+				this._isRange = true;
+			}
+			file = file.getFile();
+		}
 
         let duration = await this._getSoundDuration(file);
         if(!duration){
@@ -67,7 +72,16 @@ export default class SoundSection extends Section {
                 src: file
             };
         }
-        duration += this._waitUntilFinishedDelay;
+
+        let startTime =  (this._startTime ? (!this._startPerc ? this._startTime : this._startTime * duration) : 0) / 1000;
+
+        if(this._endTime){
+			duration = !this._endPerc
+				? this._isRange ? this._endTime - this._startTime : duration - this._endTime
+				: this._endTime * duration;
+		}
+
+		duration += this._waitUntilFinishedDelay;
 
         return {
             play: true,
@@ -76,7 +90,15 @@ export default class SoundSection extends Section {
             volume: this._volume,
             fadeIn: this._fadeInAudio,
             fadeOut: this._fadeOutAudio,
+			startTime: startTime,
             duration: this._duration || duration
         };
     }
 }
+
+// Apply traits
+Object.assign(SoundSection.prototype, files);
+Object.assign(SoundSection.prototype, audio);
+Object.assign(SoundSection.prototype, time);
+
+export default SoundSection;

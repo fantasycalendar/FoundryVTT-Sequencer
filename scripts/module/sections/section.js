@@ -1,11 +1,11 @@
 import * as lib from "../lib.js";
-import BaseSection from "./base.js";
 
-export default class Section extends BaseSection{
+export default class Section{
 
     constructor(inSequence){
-        super(inSequence);
+        this.sequence = inSequence;
         this._playIf = true;
+		this._waitUntilFinished = false;
         this._async = false;
         this._offsets = [];
         this._waitUntilFinishedDelay = 0;
@@ -17,14 +17,7 @@ export default class Section extends BaseSection{
         this._delayMin = 0;
         this._delayMax = 0;
         this._basicDelay = 0;
-        this._index = this.sequence.effectIndex;
         this._duration = false;
-        this._fadeIn = false;
-        this._fadeOut = false;
-        this._mustache = false;
-        this._volume = false;
-        this._fadeInAudio = false;
-        this._fadeOutAudio = false;
     }
 
     /**
@@ -105,18 +98,6 @@ export default class Section extends BaseSection{
     }
 
     /**
-     * Sets the Mustache of the filepath. This is applied after the randomization of the filepath, if available.
-     *
-     * @param {object} inMustache
-     * @returns {Section} this
-     */
-    setMustache(inMustache) {
-        if(typeof inMustache !== "object") this.sequence._throwError(this, "setMustache", "inMustache must be of type object");
-        this._mustache = inMustache;
-        return this;
-    }
-
-    /**
      * Overrides the duration of an effect or sound
      *
      * @param {number} inDuration
@@ -128,114 +109,6 @@ export default class Section extends BaseSection{
         return this;
     }
 
-    /**
-     * Sets the volume of the sound.
-     *
-     * @param {number} inVolume
-     * @returns {Section} this
-     */
-    volume(inVolume) {
-        if(typeof inVolume !== "number") this.sequence._throwError(this, "volume", "inVolume must be of type number");
-        this._volume = Math.max(0, Math.min(1.0, inVolume));
-        return this;
-    }
-
-    /**
-     * Causes the animated section to fade in its audio (if any) when played
-     *
-     * @param {number} duration     How long the fade should be
-     * @param {object} [options]    Additional options, such as easing and delay
-     * @returns {Section} this
-     */
-    fadeInAudio(duration, options={}) {
-        if(typeof options !== "object") this.sequence._throwError(this, "fadeInAudio", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence._throwError(this, "fadeInAudio", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeInAudio", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeInAudio", "options.delay must be of type number");
-        this._fadeInAudio = {
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     * Causes the audio to fade out at the end of the animated section's duration
-     *
-     * @param {number} duration     How long the fade should be
-     * @param {object} [options]    Additional options, such as easing and delay
-     * @returns {Section} this
-     */
-    fadeOutAudio(duration, options={}) {
-        if(typeof options !== "object") this.sequence._throwError(this, "fadeOutAudio", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence._throwError(this, "fadeOutAudio", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeOutAudio", "ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeOutAudio", "delay must be of type number");
-        this._fadeOutAudio = {
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     * Causes the effect to fade in when played
-     *
-     * @param {number} duration     How long the fade should be
-     * @param {object} [options]    Additional options, such as easing and delay
-     * @returns {Section} this
-     */
-    fadeIn(duration, options={}) {
-        if(typeof options !== "object") this.sequence._throwError(this, "fadeIn", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence._throwError(this, "fadeIn", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeIn", "options.ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeIn", "options.delay must be of type number");
-        this._fadeIn = {
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
-    /**
-     * Causes the effect to fade out at the end of the effect's duration
-     *
-     * @param {number} duration     How long the fade should be
-     * @param {object} [options]    Additional options, such as easing and delay
-     * @returns {Section} this
-     */
-    fadeOut(duration, options={}) {
-        if(typeof options !== "object") this.sequence._throwError(this, "fadeOut", "options must be of type object");
-        options = foundry.utils.mergeObject({
-            ease: "linear",
-            delay: 0
-        }, options);
-        if(typeof duration !== "number") this.sequence._throwError(this, "fadeOut", "duration must be of type number");
-        if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeOut", "ease must be of type string");
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeOut", "delay must be of type number");
-        this._fadeOut = {
-            duration: duration,
-            ease: options.ease,
-            delay: options.delay
-        };
-        return this;
-    }
-
     async _shouldPlay(){
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
@@ -244,10 +117,22 @@ export default class Section extends BaseSection{
         return this._async || this._waitAnyway
     }
 
+	get shouldWaitUntilFinished(){
+		return this._waitUntilFinished || this._waitAnyway
+	}
+
     get _waitAnyway(){
-        return (this._async || this._waitUntilFinished)
-            && (this._repetitions === 1 || this._repetitions === this._currentRepetition+1)
+        return ((this._async || this._waitUntilFinished) && this.isLastRepetition)
+			|| (this.isLastRepetition && this.isLastSection);
     }
+
+    get isLastSection(){
+		return (this.sequence.sections.length-1) === this.sequence.sections.indexOf(this);
+	}
+
+    get isLastRepetition(){
+    	return (this._repetitions === 1 || this._repetitions === this._currentRepetition+1);
+	}
 
     get _currentWaitTime(){
         let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
@@ -261,13 +146,36 @@ export default class Section extends BaseSection{
         }
     }
 
-    /**
-     * Overridden method in EffectSection
-     */
-    _cacheOffsets(){}
+	/**
+	 * Overridden method in EffectSection
+	 */
+	_cacheOffsets(){}
+
+	_findObjectById(inId, isToken=false){
+		if(isToken){
+			let token = canvas.tokens.get(inId);
+			if(token) return token;
+		}
+		for(let layer of canvas.layers){
+			let obj = layer?.objects?.children?.find(obj => obj.id === inId)
+			if(obj) return obj;
+		}
+	}
+
+	_validateLocation(inLocation) {
+		if(typeof inLocation === "string" && !this.sequence._cachedOffsetExists(inLocation)){
+			inLocation = this._findObjectById(inLocation) ?? inLocation;
+		}
+		if(inLocation instanceof TokenDocument){
+			let token = this._findObjectById(inLocation.id, true);
+			if(!token) this.sequence._throwError(this, "_validateLocation", `Could not find "${inLocation.name}" token! (ID ${inLocation.id})`);
+			inLocation = token;
+		}
+		return inLocation;
+	}
 
     async _execute(){
-        if(!(await this._shouldPlay())) return;
+        if(!await this._shouldPlay) return;
         let self = this;
         this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
@@ -297,5 +205,14 @@ export default class Section extends BaseSection{
     }
 
     async _run(){}
+
+	// I know this is nasty - but it is needed due to Proxies not changing scope when calling Reflect.getEntry
+	play(...args){ return this.sequence.play(...args) }
+	thenDo(...args){ return this.sequence.thenDo(...args) }
+	macro(...args){ return this.sequence.macro(...args) }
+	effect(...args){ return this.sequence.effect(...args) }
+	sound(...args){ return this.sequence.sound(...args) }
+	wait(...args){ return this.sequence.wait(...args) }
+	animation(...args){ return this.sequence.animation(...args) }
 
 }
