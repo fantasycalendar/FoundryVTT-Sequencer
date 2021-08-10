@@ -558,10 +558,10 @@ class EffectSection extends Section {
 
     get _distanceMatching(){
         return {
-            "90ft": 1500,
-            "60ft": 900,
-            "30ft": 500,
-            "15ft": 200,
+            "90ft": 3000,
+            "60ft": 1800,
+            "30ft": 1000,
+            "15ft": 400,
             "05ft": 0
         }
     }
