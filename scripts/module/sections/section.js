@@ -175,7 +175,7 @@ export default class Section{
 	}
 
     async _execute(){
-        if(!await this._shouldPlay) return;
+        if(!await this._shouldPlay()) return;
         let self = this;
         this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
