@@ -42,7 +42,7 @@ export default class CanvasEffect {
 
         this.sprite = new PIXI.Sprite(this.texture);
 
-        if(!this.source?.duration && !this.data.duration){
+        if(this.source?.duration === undefined && !this.data.duration){
             let animProp = this.data.animatedProperties;
             let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0);
             let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
@@ -50,7 +50,7 @@ export default class CanvasEffect {
             this.data.duration = Math.max(fadeDuration, scaleDuration, rotateDuration) || 1000;
         }
 
-        this.data.sourceDuration = this.data.duration ? this.data.duration / 1000 : this.source?.duration;
+        this.data.sourceDuration = this.data.duration ? this.data.duration / 1000 : (this.source?.duration ?? 1000);
 
 		if(this.data.time?.start && this.source?.currentTime !== undefined) {
 			this.source.currentTime = !this.data.time.start.isPerc
@@ -85,7 +85,7 @@ export default class CanvasEffect {
         this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
         this.sprite.position.set(this.data.position.x, this.data.position.y);
 
-		this.source?.play();
+		if(this.source?.currentTime !== undefined) this.source?.play();
 
     }
 
@@ -215,7 +215,7 @@ export default class CanvasEffect {
     }
 
     fadeInAudio(){
-        if(this.data.animatedProperties.fadeInAudio && this.source?.volume) {
+        if(this.data.animatedProperties.fadeInAudio && this.source?.volume !== undefined) {
             let fadeInAudio = this.data.animatedProperties.fadeInAudio;
             this.source.volume = 0.0;
 
@@ -231,7 +231,7 @@ export default class CanvasEffect {
     }
 
     fadeOutAudio(){
-        if(this.data.animatedProperties.fadeOutAudio && this.source?.volume) {
+        if(this.data.animatedProperties.fadeOutAudio && this.source?.volume !== undefined) {
             let fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
 
             SequencerAnimationEngine.animate({
@@ -276,7 +276,7 @@ export default class CanvasEffect {
     }
 
     endEarly(){
-        if(this.source?.loop) this.source.loop = (this.data.duration / 1000) > this.source.duration;
+        if(this.source?.loop !== undefined) this.source.loop = (this.data.duration / 1000) > this.source.duration;
         setTimeout(() => {
             this.endEffect();
         }, this.data.animationDuration)
