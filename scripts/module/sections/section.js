@@ -49,9 +49,6 @@ export default class Section{
      * @returns {Section} this
      */
     playIf(inCondition) {
-        if(!(typeof inCondition === "boolean" || lib.is_function(inCondition))){
-            this.sequence._throwError(this, "playIf", "inCondition must be of type boolean or function");
-        }
         this._playIf = inCondition;
         return this;
     }
