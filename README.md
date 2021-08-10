@@ -290,6 +290,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.1
+- *Sequencer* - Removed the need for `.playIf()` to have to be given a function or a boolean
+- *Sequencer* - Fixed issues with the database when files were listed in arrays
+
 ### Version 0.6.0
 **Breaking:**
 - *Effects* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.JB2A()` has been altered to set the gridsize to 200, as it was previously set to 100 - this will halve the size all JB2A on-the-spot effects, sorry! <img src="images/siren.gif" width="12px" height="12px" alt="Siren">

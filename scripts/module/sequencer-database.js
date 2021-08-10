@@ -103,9 +103,11 @@ const SequencerDatabase = {
 
 		}else if(Array.isArray(entries)){
 
+			let newEntries = [];
 			for(let entry of entries){
-				entry = this._recurseFiles(entry, globalTemplate, template);
+				newEntries.push(this._recurseFiles(entry, globalTemplate, template));
 			}
+			entries = newEntries;
 
 		}else{
 
