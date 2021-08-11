@@ -34,7 +34,7 @@ export default class CanvasEffect {
         this.scaleOut();
         this.rotateIn();
         this.rotateOut();
-        this.endEarly();
+        this.setEndTimeout();
         this.debug();
     }
 
@@ -42,31 +42,51 @@ export default class CanvasEffect {
 
         this.sprite = new PIXI.Sprite(this.texture);
 
-        if(this.source?.duration === undefined && !this.data.duration){
-            let animProp = this.data.animatedProperties;
-            let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0);
-            let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
-            let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0);
-            this.data.duration = Math.max(fadeDuration, scaleDuration, rotateDuration) || 1000;
-        }
+		this.data.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
 
-        this.data.sourceDuration = this.data.duration ? this.data.duration / 1000 : (this.source?.duration ?? 1000);
+		if(this.source) this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
+
+		let moves = this.data.animatedProperties.moves;
+
+		if(this.data.speed && moves){
+
+			let durationFromSpeed = (this.data.distance / this.data.speed) * 1000;
+
+			this.data.animationDuration = Math.max(durationFromSpeed, this.data.duration);
+
+		}else{
+
+			if(!this.data.duration && !this.source){
+
+				let animProp = this.data.animatedProperties;
+				let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0);
+				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
+				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0);
+				let moveDuration = 0;
+				if(moves && this.data.speed) {
+					moveDuration = ((this.data.distance / this.data.speed) * 1000) + moves.delay;
+				}
+
+				this.data.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
+
+			}
+
+		}
 
 		if(this.data.time?.start && this.source?.currentTime !== undefined) {
-			this.source.currentTime = !this.data.time.start.isPerc
-				? this.data.time.start.value / 1000 ?? 0
-				: this.data.time.start.value * this.data.sourceDuration;
+			let currentTime = !this.data.time.start.isPerc
+				? this.data.time.start.value ?? 0
+				: (this.data.animationDuration * this.data.time.start.value);
+			this.source.currentTime = currentTime / 1000;
 		}
 
 		if(this.data.time?.end){
-			this.data.sourceDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange ? (this.data.time.end.value-this.data.time.start.value) / 1000 : this.data.sourceDuration - (this.data.time.end.value / 1000)
-				: this.data.time.end.value * this.data.sourceDuration;
+			this.data.animationDuration = !this.data.time.end.isPerc
+				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.data.animationDuration - this.data.time.end.value
+				: this.data.animationDuration * this.data.time.end.value;
 		}
 
-		this.data.animationDuration = this.data.sourceDuration * 1000;
-
-		if(this.data.time?.start > 0 && this.source?.currentTime !== undefined) {
+		if(this.source && this.data.time?.start > 0 && this.source?.currentTime !== undefined) {
 			await lib.wait(15)
 		}
 
@@ -251,32 +271,29 @@ export default class CanvasEffect {
 
         let moves = this.data.animatedProperties.moves;
 
-        this.data.sourceDuration += moves.delay/1000;
-        if(this.data.speed){
-            let sourceDuration = this.data.distance / this.data.speed;
-            this.data.sourceDuration = sourceDuration < this.data.sourceDuration ? sourceDuration : this.data.sourceDuration;
-        }
-        this.data.animationDuration = this.data.sourceDuration * 1000;
+        let movementDuration = this.data.animationDuration;
+		if(this.data.speed){
+			movementDuration = (this.data.distance / this.data.speed) * 1000;
+		}
 
         SequencerAnimationEngine.animate([{
             name: "position.x",
             parent: this.sprite,
             to: moves.target.x,
-            duration: this.data.animationDuration - moves.delay,
+            duration: movementDuration - moves.delay,
             ease: easeFunctions[moves.ease],
             delay: Math.max(moves.delay, 0)
         }, {
             name: "position.y",
             parent: this.sprite,
             to: moves.target.y,
-            duration: this.data.animationDuration - moves.delay,
+            duration: movementDuration - moves.delay,
             ease: easeFunctions[moves.ease],
             delay: Math.max(moves.delay, 0)
         }]);
     }
 
-    endEarly(){
-        if(this.source?.loop !== undefined) this.source.loop = (this.data.duration / 1000) > this.source.duration;
+    setEndTimeout(){
         setTimeout(() => {
             this.endEffect();
         }, this.data.animationDuration)

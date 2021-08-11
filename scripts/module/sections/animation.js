@@ -442,7 +442,9 @@ class AnimationSection extends Section{
         }
 
         if(Object.keys(updateAttributes).length){
-            await this._updateObject(this._originObject, updateAttributes);
+			setTimeout(async () => {
+				await this._updateObject(this._originObject, updateAttributes);
+			},1);
         }
 
         return new Promise(async (resolve) => {
