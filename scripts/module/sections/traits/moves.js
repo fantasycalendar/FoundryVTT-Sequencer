@@ -17,10 +17,12 @@ export default {
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0,
+			rotate: true,
 			target: { x: 0, y: 0 }
 		}, options);
 		if(typeof options.ease !== "string") this.sequence._throwError(this, "moveTowards", "options.ease must be of type string");
 		if(typeof options.delay !== "number") this.sequence._throwError(this, "moveTowards", "options.delay must be of type number");
+		if(typeof options.rotate !== "boolean") this.sequence._throwError(this, "moveTowards", "options.rotate must be of type boolean");
 		inTarget = this._validateLocation(inTarget);
 		if(!inTarget) this.sequence._throwError(this, "moveTowards", "could not find position of given object");
 		options.target = this._validateLocation(inTarget);

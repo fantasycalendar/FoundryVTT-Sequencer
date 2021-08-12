@@ -40,7 +40,9 @@ export default class SequencerEffectHelper {
             layer.sortChildren();
         }
 
-        return new CanvasEffect(container, data).play();
+        let playEffect = game.settings.get('sequencer', 'effectsEnabled');
+
+        return new CanvasEffect(container, data).play(playEffect);
 
     }
 }

@@ -2,12 +2,19 @@
 
     <style>
 
+        .top-row{
+            display: flex;
+        }
+
         .database-entries-container{
-            max-height: calc(420px - 5rem);
-            overflow-y: scroll;
+            max-height: calc(425px - 5rem);
+            display:flex;
         }
 
         .database-entries {
+            padding: 5px 0;
+            max-height: calc(425px - 5rem);
+            overflow-y: scroll;
             flex: 1;
             flex-direction: row;
         }
@@ -16,13 +23,19 @@
             flex: 1 0 auto;
         }
 
+        .database-player-container {
+            width: 320px;
+            height: 320px;
+            background: #363636;
+        }
+
         .toRemove {
             color: darkred;
         }
 
     </style>
 
-    <div class="flex mb-2">
+    <div class="top-row flex mb-2">
         <select name="pack-select" class="w-15" onsubmit="event.preventDefault();">
             <option value="all">All</option>
             {{#each packs as |pack index|}}
@@ -44,6 +57,13 @@
 
             {{/each}}
 
+        </div>
+        <div class="database-player-container">
+            <video class="database-player" controls autoplay preload width="320" height="320"></video>
+            <div>
+                <input type="checkbox" checked id="auto-play">
+                <label for="auto-play">Autoplay</label>
+            </div>
         </div>
 
     </div>

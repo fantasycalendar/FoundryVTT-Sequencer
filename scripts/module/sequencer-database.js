@@ -1,4 +1,5 @@
 import * as lib from './lib.js';
+import { SequencerFile } from "./lib.js";
 
 const SequencerDatabase = {
 
@@ -52,6 +53,9 @@ const SequencerDatabase = {
             index++;
             entry = parts?.[index];
             currentInspect = currentInspect?.[entry];
+            if(currentInspect instanceof SequencerFile && index < length){
+				currentInspect = currentInspect.file;
+			}
         }
 
         if(!currentInspect) return this._throwNotFound(inString, entry);
@@ -66,9 +70,7 @@ const SequencerDatabase = {
 
     _flatten(entries, inModule){
     	let flattened = lib.flattenObject(foundry.utils.duplicate({[inModule]: entries}));
-
         this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
-
         this.flattenedFiles[inModule] = Array.from(new Set(lib.flattenObject(Object.values(flattened))));
     },
 
@@ -82,9 +84,7 @@ const SequencerDatabase = {
 
 	_processFiles(entries){
 		entries = foundry.utils.duplicate(entries);
-
     	let globalTemplate = entries._templates ?? false;
-
     	return this._recurseFiles(entries, globalTemplate);
 	},
 

@@ -38,13 +38,9 @@ export default class CanvasEffect {
         this.debug();
     }
 
-    async spawnSprite() {
-
-        this.sprite = new PIXI.Sprite(this.texture);
+    calculateDuration() {
 
 		this.data.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
-
-		if(this.source) this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
 
 		let moves = this.data.animatedProperties.moves;
 
@@ -86,9 +82,21 @@ export default class CanvasEffect {
 				: this.data.animationDuration * this.data.time.end.value;
 		}
 
-		if(this.source && this.data.time?.start > 0 && this.source?.currentTime !== undefined) {
+		this.data.animationDuration /= this.data.playbackRate;
+
+		if(this.source) this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
+
+	}
+
+    async spawnSprite() {
+
+		this.sprite = new PIXI.Sprite(this.texture);
+
+		if(this.source && this.data.time?.start && this.source?.currentTime !== undefined) {
 			await lib.wait(15)
 		}
+
+		this.texture.update();
 
 		this.sprite = new PIXI.Sprite(this.texture);
 		this.sprite.alpha = this.data.opacity;
@@ -97,13 +105,22 @@ export default class CanvasEffect {
 		this.container.sortChildren();
 
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
-        this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
-        this.data.scale.x *= this.data.gridSizeDifference;
-        this.data.scale.y *= this.data.gridSizeDifference;
-        this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
-        this.sprite.position.set(this.data.position.x, this.data.position.y);
+		this.sprite.position.set(this.data.position.x, this.data.position.y);
+		this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
 
-		if(this.source?.currentTime !== undefined) this.source?.play();
+        if(this.data.size){
+        	this.sprite.width = this.data.size.width * this.data.scale.x;
+        	this.sprite.height = this.data.size.height * this.data.scale.y;
+		} else {
+			this.data.scale.x *= this.data.gridSizeDifference;
+			this.data.scale.y *= this.data.gridSizeDifference;
+			this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
+		}
+
+		if(this.source?.currentTime !== undefined){
+			this.source.play();
+			this.source.playbackRate = this.data.playbackRate;
+		}
 
     }
 
@@ -297,24 +314,19 @@ export default class CanvasEffect {
         }, this.data.animationDuration)
     }
 
-    endEffect(){
-        if(!this.ended) {
-            this.ended = true;
-            this.destroyEffect();
-            this.resolve();
-        }
-    }
-
-    destroyEffect(){
-		try {
-			this.source.removeAttribute('src');
-			this.source.pause();
-			this.source.load();
-		}catch(err){}
-        try {
-            this.container.removeChild(this.sprite);
-            this.sprite.destroy();
-        }catch(err){}
+	endEffect(){
+		if(!this.ended) {
+			this.ended = true;
+			try {
+				this.source.removeAttribute('src');
+				this.source.pause();
+				this.source.load();
+			} catch (err) {}
+			try {
+				this.container.removeChild(this.sprite);
+				this.sprite.destroy();
+			} catch (err) {}
+		}
     }
 
     debug(){
@@ -392,16 +404,20 @@ export default class CanvasEffect {
         return this.loadImage();
     }
 
-    async play() {
+    async play(playEffect = true) {
+
         this.texture = await this.loadFile();
 
         let promise = new Promise(async (resolve, reject) => {
             if(!this.texture){
             	reject();
 			}else {
-				this.resolve = resolve;
-				await this.spawnSprite();
-				this.playAnimations();
+				this.calculateDuration();
+				if(playEffect) {
+					await this.spawnSprite();
+					this.playAnimations();
+				}
+				setTimeout(resolve, this.data.animationDuration);
 			}
         });
 

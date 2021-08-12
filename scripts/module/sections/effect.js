@@ -37,6 +37,7 @@ class EffectSection extends Section {
         this._layer = 2;
         this._zIndex = 0;
         this._offset = false;
+		this._size = false;
 		this._distance = 0;
     }
 
@@ -167,6 +168,30 @@ class EffectSection extends Section {
         this._offset = inOffset;
         return this;
     }
+
+	/**
+	 * Sets the width and the height of the effect in pixels, this overrides any `.scale()` and `.gridSize()` calls
+	 *
+	 * @param {number} inSize
+	 * @returns {EffectSection} this
+	 */
+	size(inSize) {
+		if(!(typeof inSize === "number" || typeof inSize === "object")) this.sequence._throwError(this, "size", "inSize be of type number or object");
+		if (typeof inSize === "number") {
+			inSize = {
+				width: inSize,
+				height: inSize
+			}
+		}
+		if(typeof inSize?.width !== "number") this.sequence._throwError(this, "size", "inSize.width be of type number");
+		if(typeof inSize?.height !== "number") this.sequence._throwError(this, "size", "inSize.height be of type number");
+		inSize = {
+			width: inSize?.width ?? canvas.grid.size,
+			height: inSize?.height ?? canvas.grid.size
+		}
+		this._size = inSize;
+		return this;
+	}
 
 	/**
 	 * Sets the grid size of the file loaded in the Effect. Some files have an established internal
@@ -440,21 +465,23 @@ class EffectSection extends Section {
 			isRange: this._isRange
 		};
 
-        let scale = this._scaleMin;
-        if (typeof this._scaleMin === "number") {
-            if(this._scaleMax && typeof this._scaleMax === "number"){
-                scale = lib.random_float_between(this._scaleMin, this._scaleMax);
-            }
-            scale = {
-                x: scale,
-                y: scale
-            }
-        }
+		let scale = this._scaleMin;
+		if (typeof this._scaleMin === "number") {
+			if (this._scaleMax && typeof this._scaleMax === "number") {
+				scale = lib.random_float_between(this._scaleMin, this._scaleMax);
+			}
+			scale = {
+				x: scale,
+				y: scale
+			}
+		}
 
-        data.scale = {
-            x: data.scale.x * (scale?.x ?? 1.0),
-            y: data.scale.y * (scale?.y ?? 1.0)
-        }
+		data.scale = {
+			x: data.scale.x * (scale?.x ?? 1.0),
+			y: data.scale.y * (scale?.y ?? 1.0)
+		}
+
+		data.size = this._size;
 
         if(this._reachTowards) {
             data = await this._calculateHitVector(data);
@@ -531,9 +558,11 @@ class EffectSection extends Section {
                 data.distance = this._distance;
                 data._distance = this._distance;
 
-                data.rotation = ray.angle;
+				data.rotation = ray.angle;
 
                 if(this._moveTowards) {
+
+					data.rotation = this._moveTowards.rotate ? data.rotation : 0;
 
                     data.animatedProperties.moves.target = target;
 
