@@ -63,8 +63,8 @@ export default class CanvasEffect {
 				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
 				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0);
 				let moveDuration = 0;
-				if(moves && this.data.speed) {
-					moveDuration = ((this.data.distance / this.data.speed) * 1000) + moves.delay;
+				if(moves) {
+					moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + moves.delay;
 				}
 
 				this.data.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
@@ -89,8 +89,6 @@ export default class CanvasEffect {
 		if(this.source && this.data.time?.start > 0 && this.source?.currentTime !== undefined) {
 			await lib.wait(15)
 		}
-
-		this.texture.update();
 
 		this.sprite = new PIXI.Sprite(this.texture);
 		this.sprite.alpha = this.data.opacity;
