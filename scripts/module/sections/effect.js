@@ -170,7 +170,7 @@ class EffectSection extends Section {
     }
 
 	/**
-	 * Sets the width and the height of the effect in pixels, this overrides any `.scale()` and `.gridSize()` calls
+	 * Sets the width and the height of the effect in pixels, this size is set before any scaling
 	 *
 	 * @param {number} inSize
 	 * @returns {EffectSection} this
@@ -408,7 +408,8 @@ class EffectSection extends Section {
             zIndex: this._zIndex,
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             audioVolume: this._volume,
-            animatedProperties: {
+			time: false,
+			animatedProperties: {
                 moves: this._moveTowards,
                 fadeIn: this._fadeIn,
                 fadeOut: this._fadeOut,
@@ -419,7 +420,7 @@ class EffectSection extends Section {
                 fadeInAudio: this._fadeInAudio,
                 fadeOutAudio: this._fadeOutAudio
             },
-			time: false,
+			sceneId: game.user.viewedScene,
             debug: this.sequence.debug
         };
 

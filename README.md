@@ -290,6 +290,15 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.4
+- *Sequencer* - Added Sequencer Database Viewer to the module settings, it allows you to preview effects and copy any files registered with Sequencer by other modules
+- *Sequencer* - Added client-side settings for users to be able to turn off effects and sounds being played locally
+- *Effects & Sounds* - Fixed effects and sounds playing on scenes they did not originate from
+- *Effects* - Added `.size()`, which sets the width and height of the effect in pixels
+- *Effects* - Added `rotate` option to `.moveTowards()`, which defaults to true. If set to false, the effect will not rotate towards the end location. 
+- *Effects* - Fixed duration of effects using `.moveTowards()` not being calculated correctly
+- *Effects* - Fixed static image effects' durations also not being calculated correctly 
+
 ### Version 0.6.3 Hotfix
 - *Effects* - Fixed effects failing to play static images
 

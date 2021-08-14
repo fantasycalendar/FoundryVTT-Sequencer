@@ -91,7 +91,8 @@ class SoundSection extends Section {
             fadeIn: this._fadeInAudio,
             fadeOut: this._fadeOutAudio,
 			startTime: startTime,
-            duration: this._duration || duration
+            duration: this._duration || duration,
+			sceneId: game.user.viewedScene
         };
     }
 }
