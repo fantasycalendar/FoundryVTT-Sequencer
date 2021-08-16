@@ -19,18 +19,40 @@
             flex-direction: row;
         }
 
-        .database-entries > div{
+        .database-entry{
+            display:flex;
             flex: 1 0 auto;
         }
 
-        .database-player-container {
-            width: 320px;
-            height: 320px;
-            background: #363636;
+        .database-entry > button{
+            flex: 0;
+            font-size: 0.7rem;
+            height: 1.25rem;
+            line-height: normal;
+            margin-right: 5px;
         }
 
-        .toRemove {
-            color: darkred;
+        .btn_play{
+            min-width: 1.5rem;
+        }
+
+        .btn_copy_filepath, .btn_copy_databasepath{
+            min-width: 4.5rem;
+            padding: 0;
+        }
+
+        .database-entry > div{
+            flex: 1;
+            line-height:1.25rem;
+        }
+        .database-player-container {
+            padding: 5px;
+            width: 355px;
+            height: 355px;
+        }
+
+        .database-player-container > video{
+            background: #363636;
         }
 
     </style>
@@ -51,19 +73,18 @@
 
             {{#each entries as |part key|}}
 
-                <div>
-                    <a class="click-copy">{{ part.entry }}</a>
+                <div class="database-entry">
+                    <button type="button" class="btn_play"><i class="fas fa-play"></i></button>
+                    <button type="button" class="btn_copy_filepath"><i class="fas fa-copy"></i> Filepath</button>
+                    <button type="button" class="btn_copy_databasepath"><i class="fas fa-copy"></i> Database</button>
+                    <div class="database-entry-text">{{ part.entry }}</div>
                 </div>
 
             {{/each}}
 
         </div>
         <div class="database-player-container">
-            <video class="database-player" controls autoplay preload width="320" height="320"></video>
-            <div>
-                <input type="checkbox" checked id="auto-play">
-                <label for="auto-play">Autoplay</label>
-            </div>
+            <video class="database-player" controls autoplay preload width="345" height="345"></video>
         </div>
 
     </div>

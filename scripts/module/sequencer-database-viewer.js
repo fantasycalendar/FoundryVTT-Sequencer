@@ -41,22 +41,22 @@ export default class SequencerDatabaseViewer extends FormApplication {
 			let entry = search !== "" ? part.entry.replace(regex, (str) => {
 				return `<mark>${str}</mark>`
 			}) : part.entry;
-			this.list.append(`<div><a class="click-copy">${entry}</a></div>`)
+			this.list.append($(`<div class="database-entry">
+				<button type="button" class="btn_play"><i class="fas fa-play"></i></button>
+				<button type="button" class="btn_copy_filepath"><i class="fas fa-copy"></i> Filepath</button>
+				<button type="button" class="btn_copy_databasepath"><i class="fas fa-copy"></i> Database</button>
+				<div class="database-entry-text">${entry}</div>
+			</div>`));
 		});
 
-		let self = this;
-		$("#sequencer-database-form").find('.click-copy').click(function(){
-			self.copyText(this);
-			self.playVideo.bind(self)($(this).text());
-		});
-
+		this.setupNewListeners();
 	}
 
 	/* -------------------------------------------- */
 
 	/** @override */
 	static get defaultOptions() {
-		return mergeObject(super.defaultOptions, {
+		return foundry.utils.mergeObject(super.defaultOptions, {
 			title: "Sequencer Database Viewer",
 			template: `modules/sequencer/templates/sequencer-database-template.html`,
 			classes: ["dialog"],
@@ -78,15 +78,10 @@ export default class SequencerDatabaseViewer extends FormApplication {
 	/** @override */
 	activateListeners(html) {
 		super.activateListeners(html);
-		let self = this;
 
 		let filter = html.find('select[name="pack-select"]');
 		let input = html.find('input[name="search-field"]');
 		this.player = html.find('.database-player')[0];
-
-		html.find('#auto-play').change(function(){
-			self.autoplay = $(this).is(":checked");
-		});
 
 		let filterDebounce = debounce(() => {
 			this.search = input.val();
@@ -95,11 +90,27 @@ export default class SequencerDatabaseViewer extends FormApplication {
 		}, 500)
 
 		filter.change(filterDebounce);
-		input.keyup(filterDebounce);
+		input.keyup(function(e){
+			filterDebounce()
+		});
 
-		$("#sequencer-database-form").find('.click-copy').click(function(){
-			self.copyText(this);
-			self.playVideo.bind(self)($(this).text());
+		this.setupNewListeners();
+	}
+
+	setupNewListeners(){
+		let self = this;
+		let form = $("#sequencer-database-form");
+		form.find('.btn_play').click(function(){
+			let entry = $(this).siblings(".database-entry-text").text();
+			self.playVideo.bind(self)(entry);
+		});
+		form.find('.btn_copy_databasepath').click(function(){
+			let entry = $(this).siblings(".database-entry-text").text();
+			self.copyText($(this), entry, false);
+		});
+		form.find('.btn_copy_filepath').click(function(){
+			let entry = $(this).siblings(".database-entry-text").text();
+			self.copyText($(this), entry, true);
 		});
 	}
 
@@ -123,28 +134,28 @@ export default class SequencerDatabaseViewer extends FormApplication {
 		this.player.src = entry;
 	}
 
-	copyText(elem){
+	copyText(button, entry, getFilepath){
+
+		if(getFilepath) {
+			entry = SequencerDatabase.getEntry(entry);
+			entry = entry?.file ?? entry;
+		}
+
 		let tempInput = document.createElement("input");
-		tempInput.value = `"${$(elem).text()}"`;
+		tempInput.value = `${entry}`;
 		document.body.appendChild(tempInput);
 		tempInput.select();
 		document.execCommand("copy");
 		document.body.removeChild(tempInput);
 		document.execCommand('copy');
 
-		$(elem).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-
-		let tempElem = $("<i class='toRemove'> - Copied!</i>");
-
-		$(elem).parent().parent().find(".toRemove").remove();
-
-		$(elem).parent().append(tempElem);
-
-		setTimeout(() => {
-			$(elem).parent().find(".toRemove").remove();
-		}, 1000);
+		button.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 	}
 
-	async _updateObject(event, formData) {}
+	async _onSubmit(event){
+		super._onSubmit(event, {preventClose: true})
+	}
+
+	async _updateObject(){}
 
 }

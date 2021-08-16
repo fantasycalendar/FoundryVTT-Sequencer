@@ -290,6 +290,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.5
+- *Sequencer* - Updated Sequencer Database Viewer layout to be more userfriendly
+- *Effects* - Fixed bug with templates and raw positions not being respected
+
 ### Version 0.6.4
 - *Sequencer* - Added Sequencer Database Viewer to the module settings, it allows you to preview effects and copy any files registered with Sequencer by other modules
 - *Sequencer* - Added client-side settings for users to be able to turn off effects and sounds being played locally

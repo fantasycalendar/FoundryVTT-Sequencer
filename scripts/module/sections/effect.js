@@ -716,6 +716,13 @@ class EffectSection extends Section {
 			}
 		}
 
+        pos = {
+			x: pos?.x ?? obj?.x ?? obj?.data?.x,
+			y: pos?.y ?? obj?.y ?? obj?.data?.y,
+		};
+
+        if(typeof pos.x !== "number" || typeof pos.y !== "number") this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
+
         return pos;
     }
 
