@@ -98,7 +98,6 @@ export default class CanvasEffect {
 
 		this.texture.update();
 
-		this.sprite = new PIXI.Sprite(this.texture);
 		this.sprite.alpha = this.data.opacity;
 		this.container.addChild(this.sprite);
 		this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
@@ -330,7 +329,7 @@ export default class CanvasEffect {
     }
 
     debug(){
-        if(this.data.debug) console.log(`DEBUG | Sequencer | Playing effect:`, this.data);
+        if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing effect:`, this.data);
     }
 
     async loadVideo(){

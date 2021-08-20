@@ -11,8 +11,8 @@ export default {
 	_mustache: false,
 
 	/**
-	 * Declares which .webm to be played This may also be an array of paths, which will be randomly picked from each
-	 * time the effect is played.
+	 * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
+	 * time the section is played.
 	 *
 	 * @param {string|array} inFile
 	 * @returns this

@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.6
+- *Effects & Sounds* - Added `.locally()` and `.forUsers()`, which allow you to control which users will have the effect and sounds played for them 
+
 ### Version 0.6.5
 - *Sequencer* - Updated Sequencer Database Viewer layout to be more userfriendly
 - *Effects* - Fixed bug with templates and raw positions not being respected

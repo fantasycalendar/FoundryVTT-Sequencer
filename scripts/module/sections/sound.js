@@ -6,6 +6,7 @@ import Section from "./section.js";
 import files from "./traits/files.js";
 import audio from "./traits/audio.js";
 import time from "./traits/time.js";
+import users from "./traits/users.js";
 
 class SoundSection extends Section {
 
@@ -38,9 +39,8 @@ class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
-        this.sequence._log(`Playing sound:`, data);
-
-        return SequencerAudioHelper.play(data, true);
+		let push = !(data.users.length === 1 && data.users.includes(game.userId));
+        return SequencerAudioHelper.play(data, push);
     }
 
     async _getSoundDuration(inFilePath){
@@ -92,7 +92,8 @@ class SoundSection extends Section {
             fadeOut: this._fadeOutAudio,
 			startTime: startTime,
             duration: this._duration || duration,
-			sceneId: game.user.viewedScene
+			sceneId: game.user.viewedScene,
+			users: Array.from(this._users)
         };
     }
 }
@@ -101,5 +102,6 @@ class SoundSection extends Section {
 Object.assign(SoundSection.prototype, files);
 Object.assign(SoundSection.prototype, audio);
 Object.assign(SoundSection.prototype, time);
+Object.assign(SoundSection.prototype, users);
 
 export default SoundSection;

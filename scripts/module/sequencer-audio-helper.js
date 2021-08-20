@@ -23,9 +23,14 @@ export default class SequencerAudioHelper {
      */
     static async _play(data) {
 
-		if(!game.settings.get('sequencer', 'soundsEnabled') || game.user.viewedScene !== data.sceneId){
+		if(!game.settings.get('sequencer', 'soundsEnabled')
+			|| game.user.viewedScene !== data.sceneId
+			|| (data.users.length && !data.users.includes(game.userId)))
+		{
 			return new Promise(resolve => setTimeout(resolve, data.duration));
 		}
+
+		if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing sound:`, data);
 
         const sound = await game.audio.play(data.src, {
             volume: data.fadeIn ? 0 : data.volume,

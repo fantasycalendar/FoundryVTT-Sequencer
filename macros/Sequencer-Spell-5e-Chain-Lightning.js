@@ -60,8 +60,9 @@ function addTokenToText(token, roll, dc){
 async function main(){
 
     let chatMessageContent;
+    let chatMessage;
     if(configSettings.mergeCard) {
-        const chatMessage = await game.messages.get(args[0].itemCardId);
+        chatMessage = await game.messages.get(args[0].itemCardId);
         chatMessageContent = await duplicate(chatMessage?.data?.content ?? "");
     }
 
