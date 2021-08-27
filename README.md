@@ -293,6 +293,7 @@ new Sequence()
 ### Version 0.6.6
 - *Sequencer* - Added support for preloading files based from database paths
 - *Effects & Sounds* - Added `.locally()` and `.forUsers()`, which allow you to control which users will have the effect and sounds played for them 
+- *Effects* - Improved positional handling of Tiles and TileDocuments 
 
 ### Version 0.6.5
 - *Sequencer* - Updated Sequencer Database Viewer layout to be more userfriendly

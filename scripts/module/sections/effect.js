@@ -706,7 +706,12 @@ class EffectSection extends Section {
                 pos.x = obj.x + (obj.shape.width/2)
                 pos.y = obj.y + (obj.shape.height/2)
             }
-        }else{
+        }else if(obj instanceof Tile || obj instanceof TileDocument){
+        	pos = {
+        		x: obj.data.x + (obj.data.width/2),
+				y: obj.data.y + (obj.data.height/2)
+			}
+		}else{
 			pos = {
 				x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.data?.x ?? obj?.data?.position?.x ?? 0,
 				y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0

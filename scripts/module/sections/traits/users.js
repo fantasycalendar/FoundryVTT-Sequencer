@@ -3,6 +3,8 @@ export default {
 	_users: [],
 
 	_addUser(inUser){
+		if(typeof inUser !== "string") this.sequence._throwError(this, "_addUser", "inUser must be of type string");
+		if(!game.users.has(inUser)) this.sequence._throwError(this, "_addUser", `user with id "${inUser}" does not exist!`);
 		if(!this._users.includes(inUser)) this._users.push(inUser);
 	},
 
