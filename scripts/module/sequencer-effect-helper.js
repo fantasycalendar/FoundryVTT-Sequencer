@@ -2,6 +2,7 @@ import CanvasEffect from "./canvas-effects/canvas-effect.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 
 export default class SequencerEffectHelper {
+
     /**
      * Play an effect on the canvas.
      *
@@ -11,12 +12,10 @@ export default class SequencerEffectHelper {
      */
     static async play(data, push = false) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, data);
-
         return this._playEffect(data);
     }
 
     static _playEffect(data) {
-
         let layers = [
             canvas.background,
             canvas.sequencerEffectsBelowTokens,
@@ -40,9 +39,8 @@ export default class SequencerEffectHelper {
             layer.sortChildren();
         }
 
-        let playEffect = game.settings.get('sequencer', 'effectsEnabled') && game.user.viewedScene === data.sceneId;
+        let playEffect = !(game.user.viewedScene !== data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (data.users.length && !data.users.includes(game.userId)));
 
         return new CanvasEffect(container, data).play(playEffect);
-
     }
 }

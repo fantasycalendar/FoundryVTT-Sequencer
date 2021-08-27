@@ -10,6 +10,7 @@ import opacity from "./traits/opacity.js";
 import rotation from "./traits/rotation.js";
 import scale from "./traits/scale.js";
 import time from "./traits/time.js";
+import users from "./traits/users.js";
 
 class EffectSection extends Section {
 
@@ -374,7 +375,8 @@ class EffectSection extends Section {
 
     async _run() {
         let data = await this._sanitizeEffectData();
-        let canvasEffectData = await SequencerEffectHelper.play(data, true);
+		let push = !(data.users.length === 1 && data.users.includes(game.userId));
+        let canvasEffectData = await SequencerEffectHelper.play(data, push);
         this.animationDuration = canvasEffectData.duration;
         let totalDuration = this.animationDuration + this._currentWaitTime;
         await new Promise(resolve => setTimeout(resolve, totalDuration))
@@ -421,7 +423,7 @@ class EffectSection extends Section {
                 fadeOutAudio: this._fadeOutAudio
             },
 			sceneId: game.user.viewedScene,
-            debug: this.sequence.debug
+			users: Array.from(this._users)
         };
 
         if(this._anchor) data.anchor = this._anchor;
@@ -704,7 +706,12 @@ class EffectSection extends Section {
                 pos.x = obj.x + (obj.shape.width/2)
                 pos.y = obj.y + (obj.shape.height/2)
             }
-        }else{
+        }else if(obj instanceof Tile || obj instanceof TileDocument){
+        	pos = {
+        		x: obj.data.x + (obj.data.width/2),
+				y: obj.data.y + (obj.data.height/2)
+			}
+		}else{
 			pos = {
 				x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.data?.x ?? obj?.data?.position?.x ?? 0,
 				y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0
@@ -856,5 +863,6 @@ Object.assign(EffectSection.prototype, opacity);
 Object.assign(EffectSection.prototype, rotation);
 Object.assign(EffectSection.prototype, scale);
 Object.assign(EffectSection.prototype, time);
+Object.assign(EffectSection.prototype, users);
 
 export default EffectSection;
