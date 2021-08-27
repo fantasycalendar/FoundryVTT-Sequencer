@@ -5,7 +5,6 @@ const SequencerDatabase = {
 
         entries: {},
         flattenedEntries: [],
-		flattenedFiles: {},
 
     /**
      *  Registers a set of entries to the database on the given module name
@@ -53,9 +52,6 @@ const SequencerDatabase = {
             index++;
             entry = parts?.[index];
             currentInspect = currentInspect?.[entry];
-            if(currentInspect instanceof SequencerFile && index < length){
-				currentInspect = currentInspect.file;
-			}
         }
 
         if(!currentInspect) return this._throwNotFound(inString, entry);
@@ -63,15 +59,46 @@ const SequencerDatabase = {
 		return currentInspect;
     },
 
-    getAllFileEntries(inModule){
-		if(!this.entryExists(inModule)) return this._throwNotFound(inModule);
-    	return this.flattenedFiles[inModule];
+	getAllFileEntries(inString){
+		if(!this.entryExists(inString)) return this._throwNotFound(inString);
+		return this.getAllFilesUnder(inString);
+	},
+
+	getAllFilesUnder(inString){
+		if(!this.entryExists(inString)) return this._throwNotFound(inString);
+    	let entries = this.getEntry(inString);
+    	return Array.from(new Set(this._recurseEntriesUnder(entries)));
+	},
+
+	_recurseEntriesUnder(entries, listEntries = []) {
+
+		if(entries instanceof SequencerFile){
+
+			if(entries.rangeFind){
+				listEntries = listEntries.concat(Object.values(entries.file));
+			}else{
+				listEntries.push(entries.file);
+			}
+		}else{
+			if(Array.isArray(entries)){
+				for(let i = 0; i < entries.length; i++){
+					listEntries = this._recurseEntriesUnder(entries[i], listEntries);
+				}
+			}else{
+				for (let [key, entry] of Object.entries(entries)) {
+					if (key.startsWith('_')) continue;
+					listEntries = this._recurseEntriesUnder(entry, listEntries);
+				}
+			}
+		}
+
+		return listEntries;
+
 	},
 
     _flatten(entries, inModule){
     	let flattened = lib.flattenObject(foundry.utils.duplicate({[inModule]: entries}));
         this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
-        this.flattenedFiles[inModule] = Array.from(new Set(lib.flattenObject(Object.values(flattened))));
     },
 
     _throwNotFound(inString, entry = false){
@@ -106,7 +133,9 @@ const SequencerDatabase = {
 
 		}else{
 
-			let foundDistances = Object.keys(entries).filter(entry => entry.endsWith('ft')).length !== 0;
+			let feetTest = new RegExp(/^[0-9]+ft$/g);
+
+			let foundDistances = Object.keys(entries).filter(entry => feetTest.test(entry)).length !== 0;
 
 			if(foundDistances){
 				entries = new lib.SequencerFile(entries, template);

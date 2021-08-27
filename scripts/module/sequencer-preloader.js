@@ -33,6 +33,15 @@ const SequencerPreloader = {
 		this.clientsResponded = new Set();
 	},
 
+	cleanSrcs(inSrcs){
+		return Array.from(new Set(inSrcs.map(src => {
+			if(SequencerDatabase.entryExists(src)){
+				return SequencerDatabase.getAllFilesUnder(src);
+			}
+			return src;
+		}))).deepFlatten();
+	},
+
 	async preloadForClients(inSrcs, showProgressBar=false){
 
 		if(!Array.isArray(inSrcs)){
@@ -40,6 +49,8 @@ const SequencerPreloader = {
 		}
 
 		if(inSrcs.length === 0) return;
+
+		inSrcs = this.cleanSrcs(inSrcs);
 
 		if(!game.user.isGM) return;
 
@@ -79,7 +90,7 @@ const SequencerPreloader = {
 		if(this.userId !== senderId) return;
 		this.clientsResponded.add(userId);
 		if(this.expectedClients.size !== this.clientsResponded.size) return;
-		this.responseResolve();
+		if(this.responseResolve) this.responseResolve();
 	},
 
 	handleDone(userId, senderId){
@@ -97,12 +108,14 @@ const SequencerPreloader = {
 			console.log(`All clients preloaded files successfully`);
 		}
 
-		this.doneResolve();
+		if(this.doneResolve) this.doneResolve();
 
 		this._reset();
 	},
 
 	preload({inSrcs, showProgressBar=false, senderId, local=false, push=false}={}){
+
+		inSrcs = this.cleanSrcs(inSrcs);
 
 		if(push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_RESPONSE, this.userId, senderId);
 		if(local) this.handleResponse(this.userId);
