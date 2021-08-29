@@ -1,9 +1,10 @@
-import * as lib from "../lib.js";
+import * as lib from "../lib/lib.js";
 
 export default class Section{
 
     constructor(inSequence){
         this.sequence = inSequence;
+        this._applyTraits();
         this._playIf = true;
 		this._waitUntilFinished = false;
         this._async = false;
@@ -19,6 +20,8 @@ export default class Section{
         this._basicDelay = 0;
         this._duration = false;
     }
+
+    _applyTraits(){}
 
     /**
      * Causes the effect or sound to be repeated n amount of times, with an optional delay. If given inRepeatDelayMin

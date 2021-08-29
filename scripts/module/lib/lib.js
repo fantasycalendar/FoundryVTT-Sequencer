@@ -154,10 +154,10 @@ export function deepGet(obj, path){
  *  let obj = { first: { second: { third: "newValue" } } }
  *
  * @param  {object}         obj       The object to be modified
- * @param  {any}            value     The value to set
  * @param  {array|string}   path      The path in the object to the property in a dot-notated string
+ * @param  {any}            value     The value to set
  */
-export function deepSet(obj, value, path) {
+export function deepSet(obj, path, value) {
     if(!Array.isArray(path)) path = path.split('.');
     try{
         let i;

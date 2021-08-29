@@ -1,5 +1,4 @@
-import * as lib from "../../lib.js";
-import {SequencerFile} from "../../lib.js";
+import * as lib from "../../lib/lib.js";
 
 export default {
 
@@ -94,7 +93,7 @@ export default {
 			inFile = typeof forcedIndex !== "number" ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];
 		}
 
-		if(typeof forcedIndex === "number" && inFile instanceof SequencerFile){
+		if(typeof forcedIndex === "number" && inFile instanceof lib.SequencerFile){
 			inFile.fileIndex = forcedIndex;
 		}
 

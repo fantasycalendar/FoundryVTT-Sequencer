@@ -1,5 +1,4 @@
-import * as lib from './lib.js';
-import { SequencerFile } from "./lib.js";
+import * as lib from './lib/lib.js';
 
 const SequencerDatabase = {
 
@@ -72,7 +71,7 @@ const SequencerDatabase = {
 
 	_recurseEntriesUnder(entries, listEntries = []) {
 
-		if(entries instanceof SequencerFile){
+		if(entries instanceof lib.SequencerFile){
 
 			if(entries.rangeFind){
 				listEntries = listEntries.concat(Object.values(entries.file));

@@ -1,4 +1,4 @@
-import * as lib from "../lib.js";
+import * as lib from "../lib/lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./section.js";
 
@@ -31,7 +31,14 @@ class SoundSection extends Section {
 		return this;
 	}
 
-    async _run(repetition){
+	_applyTraits() {
+		Object.assign(this.constructor.prototype, files);
+		Object.assign(this.constructor.prototype, audio);
+		Object.assign(this.constructor.prototype, time);
+		Object.assign(this.constructor.prototype, users);
+	}
+
+	async _run(repetition){
         let {play, ...data} = await this._sanitizeSoundData();
 
         if(!play) {
@@ -97,11 +104,5 @@ class SoundSection extends Section {
         };
     }
 }
-
-// Apply traits
-Object.assign(SoundSection.prototype, files);
-Object.assign(SoundSection.prototype, audio);
-Object.assign(SoundSection.prototype, time);
-Object.assign(SoundSection.prototype, users);
 
 export default SoundSection;

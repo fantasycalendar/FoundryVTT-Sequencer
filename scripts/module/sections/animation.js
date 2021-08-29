@@ -1,5 +1,5 @@
 import {easeFunctions} from "../canvas-effects/ease.js";
-import * as lib from "../lib.js";
+import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 
 // Traits
@@ -95,7 +95,14 @@ class AnimationSection extends Section{
         return this._runAnimate();
     }
 
-    async _updateObject(obj, attributes, animate = false, animation={}){
+    _applyTraits() {
+		Object.assign(this.constructor.prototype, moves);
+		Object.assign(this.constructor.prototype, opacity);
+		Object.assign(this.constructor.prototype, rotation);
+		Object.assign(this.constructor.prototype, audio);
+	}
+
+	async _updateObject(obj, attributes, animate = false, animation={}){
         await obj.document.update(attributes, {animate: animate, animation: animation});
     }
 
@@ -553,12 +560,5 @@ class AnimationSection extends Section{
     }
 
 }
-
-// Apply traits
-Object.assign(AnimationSection.prototype, files);
-Object.assign(AnimationSection.prototype, moves);
-Object.assign(AnimationSection.prototype, opacity);
-Object.assign(AnimationSection.prototype, rotation);
-Object.assign(AnimationSection.prototype, audio);
 
 export default AnimationSection;

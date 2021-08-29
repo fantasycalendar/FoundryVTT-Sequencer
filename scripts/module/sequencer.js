@@ -1,4 +1,4 @@
-import * as lib from './lib.js';
+import * as lib from './lib/lib.js';
 import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';

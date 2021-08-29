@@ -1,7 +1,6 @@
-import {easeFunctions} from "./ease.js";
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
-import * as lib from "../lib.js";
+import * as lib from "../lib/lib.js";
 
 export default class CanvasEffect {
 
@@ -65,6 +64,8 @@ export default class CanvasEffect {
 
 				this.data.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
 
+				this.data.animationDuration = this.data.animationDuration || 1000;
+
 			}
 
 		}
@@ -82,7 +83,7 @@ export default class CanvasEffect {
 				: this.data.animationDuration * this.data.time.end.value;
 		}
 
-		this.data.animationDuration /= this.data.playbackRate;
+		this.data.animationDuration /= (this.data.playbackRate ?? 1.0);
 
 		if(this.source) this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
 
@@ -133,7 +134,7 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: this.data.opacity,
                 duration: Math.min(fadeIn.duration, this.data.animationDuration),
-                ease: easeFunctions[fadeIn.ease],
+                ease: fadeIn.ease,
                 delay: Math.min(fadeIn.delay, this.data.animationDuration)
             })
         }
@@ -148,7 +149,7 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: 0.0,
                 duration: Math.min(fadeOut.duration, this.data.animationDuration),
-                ease: easeFunctions[fadeOut.ease],
+                ease: fadeOut.ease,
                 delay: Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0)
             })
         }
@@ -169,23 +170,30 @@ export default class CanvasEffect {
     scaleIn(){
         if(this.data.animatedProperties.scaleIn) {
             let scaleIn = this.data.animatedProperties.scaleIn;
-            let scale = this._determineScale(scaleIn)
+            let fromScale = this._determineScale(scaleIn)
 
-            this.sprite.scale.set(scale.x, scale.y);
+			let toScale = {
+            	x: this.sprite.scale.x,
+            	y: this.sprite.scale.y
+			}
+
+			this.sprite.scale.set(fromScale.x, fromScale.y);
 
             SequencerAnimationEngine.animate([{
                 name: "scale.x",
                 parent: this.sprite,
-                to: this.data.scale.x,
+                from: fromScale.x,
+                to: toScale.x,
                 duration: Math.min(scaleIn.duration, this.data.animationDuration),
-                ease: easeFunctions[scaleIn.ease],
+                ease: scaleIn.ease,
                 delay: Math.min(scaleIn.delay, this.data.animationDuration)
             }, {
                 name: "scale.y",
                 parent: this.sprite,
-                to: this.data.scale.y,
+                from: fromScale.y,
+                to: toScale.y,
                 duration: Math.min(scaleIn.duration, this.data.animationDuration),
-                ease: easeFunctions[scaleIn.ease],
+                ease: scaleIn.ease,
                 delay: Math.min(scaleIn.delay, this.data.animationDuration)
             }])
 
@@ -203,14 +211,14 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: scale.x,
                 duration: Math.min(scaleOut.duration, this.data.animationDuration),
-                ease: easeFunctions[scaleOut.ease],
+                ease: scaleOut.ease,
                 delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
             }, {
                 name: "scale.y",
                 parent: this.sprite,
                 to: scale.y,
                 duration: Math.min(scaleOut.duration, this.data.animationDuration),
-                ease: easeFunctions[scaleOut.ease],
+                ease: scaleOut.ease,
                 delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
             }])
         }
@@ -227,7 +235,7 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: original_radians,
                 duration: Math.min(rotateIn.duration, this.data.animationDuration),
-                ease: easeFunctions[rotateIn.ease],
+                ease: rotateIn.ease,
                 delay: Math.min(rotateIn.delay, this.data.animationDuration)
             })
         }
@@ -242,7 +250,7 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: Math.toRadians(rotateOut.value),
                 duration: Math.min(rotateOut.duration, this.data.animationDuration),
-                ease: easeFunctions[rotateOut.ease],
+                ease: rotateOut.ease,
                 delay: Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0)
             })
         }
@@ -258,7 +266,7 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: this.data.audioVolume,
                 duration: Math.min(fadeInAudio.duration, this.data.animationDuration),
-                ease: easeFunctions[fadeInAudio.ease],
+                ease: fadeInAudio.ease,
                 delay: Math.min(fadeInAudio.delay, this.data.animationDuration)
             })
         }
@@ -273,7 +281,7 @@ export default class CanvasEffect {
                 parent: this.sprite,
                 to: 0.0,
                 duration: Math.min(fadeOutAudio.duration, this.data.animationDuration),
-                ease: easeFunctions[fadeOutAudio.ease],
+                ease: fadeOutAudio.ease,
                 delay: Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
             })
 
@@ -295,14 +303,14 @@ export default class CanvasEffect {
             parent: this.sprite,
             to: moves.target.x,
             duration: movementDuration - moves.delay,
-            ease: easeFunctions[moves.ease],
+            ease: moves.ease,
             delay: Math.max(moves.delay, 0)
         }, {
             name: "position.y",
             parent: this.sprite,
             to: moves.target.y,
             duration: movementDuration - moves.delay,
-            ease: easeFunctions[moves.ease],
+            ease: moves.ease,
             delay: Math.max(moves.delay, 0)
         }]);
     }

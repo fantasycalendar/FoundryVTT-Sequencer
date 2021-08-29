@@ -1,4 +1,4 @@
-import * as lib from "../lib.js";
+import * as lib from "../lib/lib.js";
 import SequencerEffectHelper from "../sequencer-effect-helper.js";
 import Section from "./section.js";
 
@@ -42,7 +42,7 @@ class EffectSection extends Section {
 		this._distance = 0;
     }
 
-    /**
+	/**
      * Causes the effect's position to be stored and can then be used  with .atLocation(), .reachTowards(),
      * and .rotateTowards() to refer to previous effects' locations
      *
@@ -369,10 +369,6 @@ class EffectSection extends Section {
         return this;
     }
 
-    get _to(){
-		return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
-	}
-
     async _run() {
         let data = await this._sanitizeEffectData();
 		let push = !(data.users.length === 1 && data.users.includes(game.userId));
@@ -381,6 +377,21 @@ class EffectSection extends Section {
         let totalDuration = this.animationDuration + this._currentWaitTime;
         await new Promise(resolve => setTimeout(resolve, totalDuration))
     }
+
+	_applyTraits() {
+		Object.assign(this.constructor.prototype, files);
+		Object.assign(this.constructor.prototype, audio);
+		Object.assign(this.constructor.prototype, moves);
+		Object.assign(this.constructor.prototype, opacity);
+		Object.assign(this.constructor.prototype, rotation);
+		Object.assign(this.constructor.prototype, scale);
+		Object.assign(this.constructor.prototype, time);
+		Object.assign(this.constructor.prototype, users);
+	}
+
+	get _to(){
+		return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
+	}
 
     async _sanitizeEffectData() {
 
@@ -856,13 +867,5 @@ class EffectSection extends Section {
 }
 
 // Apply traits
-Object.assign(EffectSection.prototype, files);
-Object.assign(EffectSection.prototype, audio);
-Object.assign(EffectSection.prototype, moves);
-Object.assign(EffectSection.prototype, opacity);
-Object.assign(EffectSection.prototype, rotation);
-Object.assign(EffectSection.prototype, scale);
-Object.assign(EffectSection.prototype, time);
-Object.assign(EffectSection.prototype, users);
 
 export default EffectSection;

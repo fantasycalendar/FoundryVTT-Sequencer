@@ -1,4 +1,4 @@
-import * as lib from "../lib.js";
+import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 
 export default class FunctionSection extends Section {

@@ -290,13 +290,18 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.7 
+- *Effects & Sounds* - Fixed `.locally()` and `.forUsers()` sometimes erroneously remembering users between different effects & sounds
+- *Effects* - Fixed `.scaleIn()` would not take a custom `.size()` into account
+- *Effects* - Fixed static images sometimes not playing due to duration being set to 0ms
+
 ### Version 0.6.6
 - *Sequencer* - Added support for preloading files based on database paths
 - *Effects & Sounds* - Added `.locally()` and `.forUsers()`, which allow you to control which users will have the effect and sounds played for them 
 - *Effects* - Improved positional handling of Tiles and TileDocuments 
 
 ### Version 0.6.5
-- *Sequencer* - Updated Sequencer Database Viewer layout to be more userfriendly
+- *Sequencer* - Updated Sequencer Database Viewer layout to be more user friendly
 - *Effects* - Fixed bug with templates and raw positions not being respected
 
 ### Version 0.6.4
