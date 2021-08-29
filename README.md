@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.8 Hotfix
+- *Sequencer* - Fixed database not correctly finding range-based effects
+
 ### Version 0.6.7 
 - *Effects & Sounds* - Fixed `.locally()` and `.forUsers()` sometimes erroneously remembering users between different effects & sounds
 - *Effects* - Fixed `.scaleIn()` would not take a custom `.size()` into account

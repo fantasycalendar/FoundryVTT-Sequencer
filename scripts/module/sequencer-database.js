@@ -51,9 +51,12 @@ const SequencerDatabase = {
             index++;
             entry = parts?.[index];
             currentInspect = currentInspect?.[entry];
+            if(currentInspect instanceof lib.SequencerFile){
+				currentInspect = currentInspect.file;
+			}
         }
 
-        if(!currentInspect) return this._throwNotFound(inString, entry);
+        if(!currentInspect) return this._throwNotFound(inString);
 
 		return currentInspect;
     },
@@ -100,9 +103,8 @@ const SequencerDatabase = {
         this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
     },
 
-    _throwNotFound(inString, entry = false){
+    _throwNotFound(inString){
         let error = `Sequencer | Database | Could not find "${inString}" in database`;
-        if(entry) error += ` - found entries up to: "${entry}"`;
         ui.notifications.error(error);
         console.error(error);
         return false;
