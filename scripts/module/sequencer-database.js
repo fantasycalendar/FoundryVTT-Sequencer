@@ -51,10 +51,12 @@ const SequencerDatabase = {
             index++;
             entry = parts?.[index];
             currentInspect = currentInspect?.[entry];
-            if(currentInspect instanceof lib.SequencerFile){
+            if(currentInspect instanceof lib.SequencerFile && index < length){
 				currentInspect = currentInspect.file;
 			}
         }
+
+        console.log(currentInspect)
 
         if(!currentInspect) return this._throwNotFound(inString);
 

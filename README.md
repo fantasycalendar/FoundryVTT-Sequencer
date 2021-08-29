@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.9 Hotfix
+- *Sequencer* - Fixed the database sometimes failing to get the correct file
+
 ### Version 0.6.8 Hotfix
 - *Sequencer* - Fixed database not correctly finding range-based effects
 
