@@ -2,8 +2,8 @@ import * as lib from './lib/lib.js';
 
 const SequencerDatabase = {
 
-        entries: {},
-        flattenedEntries: [],
+	entries: {},
+	flattenedEntries: [],
 
     /**
      *  Registers a set of entries to the database on the given module name
@@ -38,8 +38,9 @@ const SequencerDatabase = {
      * @return {object|boolean}                 The found entry in the database, or false if not found (with warning)
      */
     getEntry(inString){
-        inString = inString.replace(/\[[0-9]+]$/, "");
-        if(!this.entryExists(inString)) return this._throwNotFound(inString);
+		if(typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
+		inString = inString.replace(/\[[0-9]+]$/, "");
+		if(!this.entryExists(inString)) return this._throwError("getEntry", `Could not find ${inString} in database`);
         let parts = inString.split('.');
         let length = parts.length-1;
 
@@ -56,28 +57,34 @@ const SequencerDatabase = {
 			}
         }
 
-        console.log(currentInspect)
-
-        if(!currentInspect) return this._throwNotFound(inString);
+        if(!currentInspect) return this._throwError("getEntry", `Could not find ${inString} in database`);
 
 		return currentInspect;
     },
 
 	getAllFileEntries(inString){
-		if(!this.entryExists(inString)) return this._throwNotFound(inString);
+		if(typeof inString !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
+		if(!this.entryExists(inString)) return this._throwError("getAllFileEntries", `Could not find ${inString} in database`);
 		return this.getAllFilesUnder(inString);
 	},
 
 	getAllFilesUnder(inString){
-		if(!this.entryExists(inString)) return this._throwNotFound(inString);
+		if(typeof inString !== "string") return this._throwError("getAllFilesUnder", "inString must be of type string");
+		if(!this.entryExists(inString)) return this._throwError("getAllFilesUnder", `Could not find ${inString} in database`);
     	let entries = this.getEntry(inString);
     	return Array.from(new Set(this._recurseEntriesUnder(entries)));
+	},
+
+	_throwError(inFunctionName, inError){
+		let error = `Sequencer | Database | ${inFunctionName} - ${inError}`;
+		ui.notifications.error(error);
+		console.error(error);
+		return false;
 	},
 
 	_recurseEntriesUnder(entries, listEntries = []) {
 
 		if(entries instanceof lib.SequencerFile){
-
 			if(entries.rangeFind){
 				listEntries = listEntries.concat(Object.values(entries.file));
 			}else{
@@ -105,22 +112,15 @@ const SequencerDatabase = {
         this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
     },
 
-    _throwNotFound(inString){
-        let error = `Sequencer | Database | Could not find "${inString}" in database`;
-        ui.notifications.error(error);
-        console.error(error);
-        return false;
-    },
-
 	_processFiles(entries){
 		entries = foundry.utils.duplicate(entries);
-    	let globalTemplate = entries._templates ?? false;
+    	let globalTemplate = entries?._templates ?? false;
     	return this._recurseFiles(entries, globalTemplate);
 	},
 
     _recurseFiles(entries, globalTemplate, template){
 
-		if(entries._template){
+		if(entries?._template){
 			template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
 		}
 

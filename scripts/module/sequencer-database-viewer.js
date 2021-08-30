@@ -27,29 +27,24 @@ export default class SequencerDatabaseViewer extends FormApplication {
 	refreshView(html){
 
 		if(!this.list) this.list = html.find(".database-entries");
-		this.list.empty();
 
 		let search = this.search.replace(/[^A-Za-z0-9 .*_-]/g, "")
 			.replace(".", "\.")
 			.replace("*", "(.*?)");
 
-		let filteredEntries = this.getFilteredEntries(search);
+		let filteredEntries = this.getFilteredEntries(search).map(part => part.entry);
 
 		let regex = new RegExp(search.split(" ").join("|"), "g");
 
-		filteredEntries.forEach(part => {
-			let entry = search !== "" ? part.entry.replace(regex, (str) => {
+		this.list.children().each(function() {
+			let index = filteredEntries.indexOf($(this).attr("data-id"));
+			$(this).toggleClass('hidden', index === -1);
+			let innerHtmlElement = $(this).find('.database-entry-text');
+			let entry = innerHtmlElement.text()
+			innerHtmlElement.html(search !== "" ? entry.replace(regex, (str) => {
 				return `<mark>${str}</mark>`
-			}) : part.entry;
-			this.list.append($(`<div class="database-entry">
-				<button type="button" class="btn_play"><i class="fas fa-play"></i></button>
-				<button type="button" class="btn_copy_filepath"><i class="fas fa-copy"></i> Filepath</button>
-				<button type="button" class="btn_copy_databasepath"><i class="fas fa-copy"></i> Database</button>
-				<div class="database-entry-text">${entry}</div>
-			</div>`));
+			}) : entry);
 		});
-
-		this.setupNewListeners();
 	}
 
 	/* -------------------------------------------- */
@@ -81,7 +76,8 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
 		let filter = html.find('select[name="pack-select"]');
 		let input = html.find('input[name="search-field"]');
-		this.player = html.find('.database-player')[0];
+		this.player = html.find('.database-player');
+		this.image = html.find('.database-image');
 
 		let filterDebounce = debounce(() => {
 			this.search = input.val();
@@ -94,44 +90,49 @@ export default class SequencerDatabaseViewer extends FormApplication {
 			filterDebounce()
 		});
 
-		this.setupNewListeners();
-	}
-
-	setupNewListeners(){
 		let self = this;
-		let form = $("#sequencer-database-form");
-		form.find('.btn_play').click(function(){
+		html.find('.btn_play').click(function(){
 			let entry = $(this).siblings(".database-entry-text").text();
-			self.playVideo.bind(self)(entry);
+			self.playAsset.bind(self)(entry);
 		});
-		form.find('.btn_copy_databasepath').click(function(){
+		html.find('.btn_copy_databasepath').click(function(){
 			let entry = $(this).siblings(".database-entry-text").text();
 			self.copyText($(this), entry, false);
 		});
-		form.find('.btn_copy_filepath').click(function(){
+		html.find('.btn_copy_filepath').click(function(){
 			let entry = $(this).siblings(".database-entry-text").text();
 			self.copyText($(this), entry, true);
 		});
 	}
 
-	playVideo(entryText){
+	playAsset(entryText){
 		if(!this.autoplay) return;
 
 		let entry = SequencerDatabase.getEntry(entryText);
 
 		entry = entry?.file ?? entry;
 
-		this.player.onerror = () => {
+		let isImage = !entry.toLowerCase().endsWith("webm");
+
+		this.player.toggleClass('hidden', isImage)
+		this.image.toggleClass('hidden', !isImage)
+
+		if(isImage){
+			this.image[0].src = entry;
+			return;
+		}
+
+		this.player[0].onerror = () => {
 			let error = `Sequencer Database Viewer | Could not play file: ${entry}`;
 			ui.notifications.error(error);
 			console.error(error);
 		}
 
-		this.player.oncanplay = () => {
-			this.player.play();
+		this.player[0].oncanplay = () => {
+			this.player[0].play();
 		}
 
-		this.player.src = entry;
+		this.player[0].src = entry;
 	}
 
 	copyText(button, entry, getFilepath){

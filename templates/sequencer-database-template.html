@@ -7,7 +7,7 @@
         }
 
         .database-entries-container{
-            max-height: calc(425px - 5rem);
+            max-height: calc(424px - 5rem);
             display:flex;
         }
 
@@ -47,12 +47,20 @@
         }
         .database-player-container {
             padding: 5px;
-            width: 355px;
-            height: 355px;
+            width: 345px;
+            height: 345px;
         }
 
-        .database-player-container > video{
+        .database-player{
             background: #363636;
+        }
+
+        .database-image{
+            width: 345px;
+        }
+
+        .hidden{
+            display:none;
         }
 
     </style>
@@ -73,7 +81,7 @@
 
             {{#each entries as |part key|}}
 
-                <div class="database-entry">
+                <div class="database-entry" data-id="{{ part.entry }}">
                     <button type="button" class="btn_play"><i class="fas fa-play"></i></button>
                     <button type="button" class="btn_copy_filepath"><i class="fas fa-copy"></i> Filepath</button>
                     <button type="button" class="btn_copy_databasepath"><i class="fas fa-copy"></i> Database</button>
@@ -84,7 +92,8 @@
 
         </div>
         <div class="database-player-container">
-            <video class="database-player" controls autoplay preload width="345" height="345"></video>
+            <video class="database-player" controls autoplay preload width="335" height="335"></video>
+            <img class="database-image hidden">
         </div>
 
     </div>

@@ -255,9 +255,10 @@ export function transformVector(inVector, context=false){
 export class SequencerFile{
 
 	constructor(inData, inTemplate){
+		inData = foundry.utils.duplicate(inData);
 		this.template = inTemplate;
-		this.timeRange = inData._timeRange;
-		this.originalFile = inData.file ?? inData;
+		this.timeRange = inData?._timeRange;
+		this.originalFile = inData?.file ?? inData;
 		delete this.originalFile['_template'];
 		delete this.originalFile['_timeRange'];
 		this.file = foundry.utils.duplicate(this.originalFile);

@@ -290,6 +290,12 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.10
+- *Sequencer* - Improved the search speed of the Database Viewer
+- *Sequencer* - Fixed previewing static images through the Database Viewer
+- *Sequencer* - Fixed bugs that caused the Database to sometimes fail registering new files
+- *Effects* - Fixed issue where `.delay()` would incorrectly contribute towards the effect's `.waitUntilFinished()` duration
+
 ### Version 0.6.9 Hotfix
 - *Sequencer* - Fixed the database sometimes failing to get the correct file
 

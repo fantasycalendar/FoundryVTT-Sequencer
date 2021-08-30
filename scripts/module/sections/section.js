@@ -136,7 +136,7 @@ export default class Section{
 
     get _currentWaitTime(){
         let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
-        return waitUntilFinishedDelay + this._basicDelay + this._repeatDelay;
+        return waitUntilFinishedDelay + this._repeatDelay;
     }
 
     async _prepareOffsetCache(){
