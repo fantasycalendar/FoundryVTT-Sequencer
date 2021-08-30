@@ -34,7 +34,7 @@ let magicalObjects = [];
 
 if(game.modules.get("tagger")?.active){
 
-	let magicalSchools = Object.values(CONFIG.DND5E.spellSchools).map(school => school.toLowerCase());
+	let magicalSchools = ["abjuration", "conjuration", "divination", "enchantment", "evocation", "illusion", "necromancy", "transmutation"];
 	let magicalColors = ["blue", "green", "pink", "purple", "red", "yellow"];
 
 	let objects = await Tagger.getByTag("magical", { ignore: [tokenD] });
