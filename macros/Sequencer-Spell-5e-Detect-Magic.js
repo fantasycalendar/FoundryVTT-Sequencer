@@ -54,7 +54,7 @@ if(game.modules.get("tagger")?.active){
 }
 
 let sequence = new Sequence()
-	.effect("Images/Effects/Detect_Magic/DetectMagicCircle__01_Regular_Blue_1200x1200.webm")
+	.effect("jb2a.detect_magic.circle.blue")
 		.atLocation(tokenD)
 		.belowTiles()
 		.size(13.75 * canvas.grid.size)
