@@ -600,10 +600,10 @@ class EffectSection extends Section {
 
     get _distanceMatching(){
         return {
-            "90ft": 3000,
-            "60ft": 1800,
-            "30ft": 1000,
-            "15ft": 400,
+            "90ft": canvas.grid.size * 15,
+            "60ft": canvas.grid.size * 9,
+            "30ft": canvas.grid.size * 5,
+            "15ft": canvas.grid.size * 2,
             "05ft": 0
         }
     }
@@ -615,10 +615,12 @@ class EffectSection extends Section {
             .map(entry => {
             	let file = inFile.getFile(entry);
             	if(!file) this.sequence._throwError(this, "play", `Could not find index ${inFile.fileIndex} in database entry ${this._file}!`)
+				let template = inFile.template ?? this._determineTemplate(file);
+            	let gridSizeDiff = this._gridSizeDifference(template[0]);
             	return {
 					file: file,
-					template: inFile.template ?? this._determineTemplate(file),
-					minDistance: this._distanceMatching[entry]
+					gridSizeDiff: gridSizeDiff,
+					minDistance: this._distanceMatching[entry] / gridSizeDiff
 				}
             });
 
@@ -634,7 +636,7 @@ class EffectSection extends Section {
                     min: entry.minDistance === min ? 0 : entry.minDistance,
                     max: entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1]
                 };
-                entry.relativeDistance = this._distance / this._gridSizeDifference(entry.template[0]);
+                entry.relativeDistance = this._distance / entry.gridSizeDiff;
                 return entry;
             })
             .filter(e => e.relativeDistance >= e.distances.min && e.relativeDistance < e.distances.max);
