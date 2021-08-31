@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.11 Hotfix
+- *Effects* - Fixed rangefinding effects sometimes not picking the right distance
+
 ### Version 0.6.10
 - *Sequencer* - Improved the search speed of the Database Viewer
 - *Sequencer* - Fixed previewing static images through the Database Viewer
