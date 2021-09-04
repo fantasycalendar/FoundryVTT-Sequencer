@@ -731,8 +731,8 @@ class EffectSection extends Section {
 			}
 
 			if(obj instanceof Token){
-				pos.x += (obj.hitArea.width)/2;
-				pos.y += (obj.hitArea.height)/2;
+				pos.x += (obj?.hitArea?.width ?? obj?.w ?? canvas.grid.size)/2;
+				pos.y += (obj?.hitArea?.height ?? obj?.h ?? canvas.grid.size)/2;
 			}
 		}
 
