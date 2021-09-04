@@ -85,6 +85,13 @@ for(let magical of magicalObjects){
 			.zIndex(0)
 		.play()
 
+	new Sequence()
+		.effect("jb2a.detect_magic.cone.blue")
+			.atLocation(magical.obj)
+			.reachTowards(tokenD)
+			.delay(magical.delay)
+		.play()
+
 }
 
 sequence.play();
