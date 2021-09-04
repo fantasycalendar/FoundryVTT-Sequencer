@@ -53,14 +53,18 @@ const SequencerFileCache = {
 			if (inSrc.toLowerCase().endsWith(".webm")) {
 				file = await this.loadVideo(inSrc);
 			}else if(this.isAudioFile(inSrc)){
-				file = await AudioHelper.preloadSound(inSrc);
+			    try {
+                    file = await AudioHelper.preloadSound(inSrc);
+                }catch(err){
+			        console.error(`Failed to load audio: ${inSrc}`)
+                }
 			}else{
 				file = await this.loadImage(inSrc);
 			}
 			if(file){
 				resolve(inSrc, file);
 			}else{
-				reject(inSrc);
+                reject(inSrc);
 			}
 		})
 	}

@@ -27,6 +27,7 @@ const SequencerDatabase = {
      * @return {boolean}                 If the entry exists in the database
      */
     entryExists(inString){
+		if(typeof inString !== "string") return this._throwError("entryExists", "inString must be of type string");
         inString = inString.replace(/\[[0-9]+]$/, "");
         return this.flattenedEntries.find(entry => entry.startsWith(inString));
     },
@@ -85,11 +86,7 @@ const SequencerDatabase = {
 	_recurseEntriesUnder(entries, listEntries = []) {
 
 		if(entries instanceof lib.SequencerFile){
-			if(entries.rangeFind){
-				listEntries = listEntries.concat(Object.values(entries.file));
-			}else{
-				listEntries.push(entries.file);
-			}
+            listEntries = listEntries.concat(entries.getAllFiles());
 		}else{
 			if(Array.isArray(entries)){
 				for(let i = 0; i < entries.length; i++){

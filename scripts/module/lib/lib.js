@@ -266,6 +266,13 @@ export class SequencerFile{
 		this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.originalFile)) ? Object.keys(this.originalFile).filter(key => key.endsWith('ft')).length > 0 : false;
 	}
 
+	getAllFiles(){
+	    if(this.rangeFind){
+            return Object.values(this.file).deepFlatten();
+        }
+	    return [this.file].deepFlatten();
+    }
+
 	getFile(inFt){
 		if(inFt && this.rangeFind && this.file[inFt]) {
 			if(Array.isArray(this.file[inFt])) {

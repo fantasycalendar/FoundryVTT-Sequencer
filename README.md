@@ -290,6 +290,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 0.6.12
+- *Sequencer* - Fixed an issue where the preloader would sometimes fail to preload
+- *Effects* - Fixed effects not playing on hex grids
+
 ### Version 0.6.11 Hotfix
 - *Effects* - Fixed rangefinding effects sometimes not picking the right distance
 
