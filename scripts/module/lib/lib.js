@@ -252,6 +252,19 @@ export function transformVector(inVector, context=false){
     }
 }
 
+export function getAllObjects(){
+    return [
+        ...canvas.tokens.placeables,
+        ...canvas.templates.placeables,
+        ...canvas.background.placeables,
+        ...canvas.foreground.placeables
+    ].deepFlatten().filter(Boolean);
+}
+
+export function getObjectFromScene(inId){
+    return getAllObjects().find(obj => obj.id === inId);
+}
+
 export class SequencerFile{
 
 	constructor(inData, inTemplate){

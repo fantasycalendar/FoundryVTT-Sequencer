@@ -1,4 +1,4 @@
-export default function setupSettings(){
+export default function registerSettings(){
 
     game.settings.register("sequencer", "debug", {
         name: "Enable debugging",
@@ -47,6 +47,6 @@ export default function setupSettings(){
 
     game.settings.set('sequencer', 'fileCache', {});
 
-    console.log("Sequencer | Set up settings");
+    console.log("Sequencer | Registered settings");
 
 }

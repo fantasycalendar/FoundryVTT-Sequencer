@@ -290,6 +290,15 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.0.0
+- *Sequencer* - Added `SequencerEffectManager`
+  - Added `SequencerEffectManager.endEffect()` which given a name will end any effects that share that name
+  - Added `SequencerEffectManager.endAllEffects()` which will terminate all effects on the canvas
+- *Effects* - Added `.attachTo()` which causes the effect to be attached to a given object
+- *Effects* - Added `.persist()` which causes the effect to become permanent on the canvas until removed
+- *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately
+- *Effects* - Fixed `.offset()` being inverted relative to the given location  
+
 ### Version 0.6.12
 - *Sequencer* - Fixed an issue where the preloader would sometimes fail to preload
 - *Effects* - Fixed effects not playing on hex grids

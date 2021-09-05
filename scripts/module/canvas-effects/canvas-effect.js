@@ -1,12 +1,12 @@
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
+import { getObjectFromScene } from "../lib/lib.js";
 
 export class CanvasEffect {
 
     constructor(inData) {
 
-        this.container = this._getContainer(inData);
         this.ended = false;
         this.texture = false;
 		this.source = false;
@@ -27,30 +27,86 @@ export class CanvasEffect {
 
     }
 
-    _getContainer(data){
+    get layer(){
+        return this.data.layer ?? 2;
+    }
 
-        let context = [
+    get contextDocument(){
+        return this.context?.document ?? this.context;
+    }
+
+    getContext(){
+        if(this.data.attachTo) return lib.getObjectFromScene(this.data.attachTo);
+        return [
             canvas.background,
             canvas.sequencerEffectsBelowTokens,
             canvas.sequencerEffectsAboveTokens
-        ][data.layer ?? 2];
+        ][this.layer];
+    }
 
-        let container = context.children.find(child => child?.parentName === "sequencer");
+    _getTokenContainer(){
+
+        this.context = this.getContext();
+
+        let containers = this.context.children.filter(child => child?.parentName === "sequencer");
+
+        if(!containers.length) {
+            let aboveContainer = new PIXI.Container();
+            aboveContainer.sortableChildren = true;
+            aboveContainer.parentName = "sequencer";
+            aboveContainer.below = false;
+            aboveContainer.zIndex = 1000;
+            this.context.addChild(aboveContainer);
+            containers.push(aboveContainer);
+
+            let belowContainer = new PIXI.Container();
+            belowContainer.sortableChildren = true;
+            belowContainer.parentName = "sequencer";
+            belowContainer.below = true;
+            belowContainer.zIndex = -1000;
+            this.context.addChild(belowContainer);
+            containers.push(belowContainer);
+
+            this.context.sortChildren();
+        }
+
+        return containers.find(child => child?.below === (this.layer ?? 2) < 2);
+    }
+
+    _getCanvasContainer(){
+
+        this.context = game.scenes.get(this.data.sceneId);
+
+        let layer = this.getContext();
+
+        let container = layer.children.find(child => child?.parentName === "sequencer");
 
         if(!container) {
-            if(context === canvas.background){
-                context.sortableChildren = true;
-                context.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
+            if(layer === canvas.background){
+                layer.sortableChildren = true;
+                layer.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
             }
             container = new PIXI.Container();
             container.sortableChildren = true;
             container.parentName = "sequencer";
             container.zIndex = 0.5;
-            context.addChild(container);
-            context.sortChildren();
+            layer.addChild(container);
+            layer.sortChildren();
         }
 
         return container;
+
+    }
+
+    _getContainer(){
+        return this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+    }
+
+    get position(){
+        return {
+            x: this.data.attachTo ? this.data.position.x - this.context.x : this.data.position.x,
+            y: this.data.attachTo ? this.data.position.y - this.context.y : this.data.position.y
+        }
     }
 
     playAnimations(){
@@ -132,12 +188,14 @@ export class CanvasEffect {
 		this.texture.update();
 
 		this.sprite.alpha = this.data.opacity;
+        this.container = this._getContainer();
 		this.container.addChild(this.sprite);
 		this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
 		this.container.sortChildren();
 
         this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
-		this.sprite.position.set(this.data.position.x, this.data.position.y);
+        let position = this.position;
+		this.sprite.position.set(position.x, position.y);
 		this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
 
         if(this.data.size){
@@ -183,7 +241,9 @@ export class CanvasEffect {
             let fadeOut = this.data.animatedProperties.fadeOut;
 
             const duration = Math.min(fadeOut.duration, this.data.animationDuration);
-            const delay = !immediate ? Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0) : 0;
+            const delay = !immediate
+                ? Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0)
+                : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
             SequencerAnimationEngine.animate({
                 name: "alpha",
@@ -255,7 +315,9 @@ export class CanvasEffect {
             let scale = this._determineScale(scaleOut)
 
             const duration = Math.min(scaleOut.duration, this.data.animationDuration);
-            const delay = !immediate ? Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0) : 0;
+            const delay = !immediate
+                ? Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
+                : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
 
             SequencerAnimationEngine.animate([{
                 name: "scale.x",
@@ -302,7 +364,9 @@ export class CanvasEffect {
             let rotateOut = this.data.animatedProperties.rotateOut;
 
             const duration = Math.min(rotateOut.duration, this.data.animationDuration);
-            const delay = !immediate ? Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0) : 0;
+            const delay = !immediate
+                ? Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0)
+                : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
 
             SequencerAnimationEngine.animate({
                 name: "rotation",
@@ -343,7 +407,9 @@ export class CanvasEffect {
             const fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
 
             const duration = Math.min(fadeOutAudio.duration, this.data.animationDuration);
-            const delay = !immediate ? Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0) : 0;
+            const delay = !immediate
+                ? Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
+                : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
 
             SequencerAnimationEngine.animate({
                 name: "rotation",
@@ -511,25 +577,20 @@ export class CanvasEffect {
 
 export class PersistentCanvasEffect extends CanvasEffect{
 
-    constructor(container, inData) {
-        super(container, inData);
-        this.setUpPersist();
-    }
-
-    setUpPersist(){
+    async setUpPersistence(){
         if(!game.user.isGM) return;
-        let scene = game.scenes.get(this.data.sceneId);
-        let effects = new Map(scene.getFlag('sequencer', 'effects') ?? []);
+        let flags = (await this.contextDocument.getFlag('sequencer', 'effects')) ?? []
+        let effects = new Map(flags);
         effects.set(this.data.id, this.data);
-        scene.setFlag('sequencer', 'effects', Array.from(effects));
+        this.contextDocument.setFlag('sequencer', 'effects', Array.from(effects));
     }
 
-    tearDownPersist(){
+    async tearDownPersistence(){
         if(!game.user.isGM) return;
-        let scene = game.scenes.get(this.data.sceneId);
-        let effects = new Map(scene.getFlag('sequencer', 'effects') ?? []);
+        let flags = (await this.contextDocument.getFlag('sequencer', 'effects')) ?? [];
+        let effects = new Map(flags);
         effects.delete(this.data.id);
-        scene.setFlag('sequencer', 'effects', Array.from(effects));
+        await this.contextDocument.setFlag('sequencer', 'effects', Array.from(effects));
     }
 
     playAnimations(){
@@ -548,26 +609,34 @@ export class PersistentCanvasEffect extends CanvasEffect{
         this._resetVideo();
     }
 
-    _resetVideo(){
+    async _resetVideo(){
+        console.log("here");
         if(this.ended) return;
         this.source.currentTime = this.data.startTime;
+        await this.source.pause();
         setTimeout(() => {
             this._resetVideo();
         }, this.data.animationDuration);
-        try {
-            this.source.play();
-        }catch(err){}
+        await this.source.play();
     }
 
     async endEffect(){
-        const waitDuration = [
-            this.fadeOut(true),
-            this.fadeOutAudio(true),
-            this.scaleOut(true),
-            this.rotateOut(true)
+        await this.tearDownPersistence();
+        const durations = [
+            this.fadeOut(this.data.extraEndDuration),
+            this.fadeOutAudio(this.data.extraEndDuration),
+            this.scaleOut(this.data.extraEndDuration),
+            this.rotateOut(this.data.extraEndDuration)
         ].filter(Boolean);
-        this.tearDownPersist();
-        this.resolve(Math.max(waitDuration));
+        const waitDuration = Math.max(...durations);
+        setTimeout(() => { super.endEffect() }, waitDuration);
+        this.resolve(waitDuration);
+    }
+
+    async play(){
+        let result = await super.play();
+        await this.setUpPersistence();
+        return result;
     }
 
 }

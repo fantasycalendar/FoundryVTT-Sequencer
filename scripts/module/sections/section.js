@@ -151,25 +151,14 @@ export default class Section{
 	 */
 	_cacheOffsets(){}
 
-	_findObjectById(inId, isToken=false){
-		if(isToken){
-			let token = canvas.tokens.get(inId);
-			if(token) return token;
-		}
-		for(let layer of canvas.layers){
-			let obj = layer?.objects?.children?.find(obj => obj.id === inId)
-			if(obj) return obj;
-		}
-	}
-
 	_validateLocation(inLocation) {
 		if(typeof inLocation === "string" && !this.sequence._cachedOffsetExists(inLocation)){
-			inLocation = this._findObjectById(inLocation) ?? inLocation;
+			inLocation = lib.getObjectFromScene(inLocation) ?? inLocation;
 		}
-		if(inLocation instanceof TokenDocument){
-			let token = this._findObjectById(inLocation.id, true);
-			if(!token) this.sequence._throwError(this, "_validateLocation", `Could not find "${inLocation.name}" token! (ID ${inLocation.id})`);
-			inLocation = token;
+		if(inLocation instanceof Document){
+			let object = lib.getObjectFromScene(inLocation.id);
+			if(!object) this.sequence._throwError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
+			return object;
 		}
 		return inLocation;
 	}

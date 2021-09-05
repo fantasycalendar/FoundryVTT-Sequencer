@@ -40,6 +40,7 @@ class EffectSection extends Section {
 		this._size = false;
 		this._persist = false;
 		this._distance = 0;
+		this._extraEndDuration = 0;
     }
 
 	/**
@@ -136,6 +137,22 @@ class EffectSection extends Section {
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
+     * @param {object|string} inObject
+     * @returns {EffectSection} this
+     */
+    attachTo(inObject) {
+        if(inObject === undefined) this.sequence._throwError(this, "attachTo", "inObject must not be undefined");
+        inObject = this._validateLocation(inObject);
+        if(inObject === undefined) this.sequence._throwError(this, "attachTo", "could not find given object");
+        this._from = inObject;
+        this._attachTo = true;
+        return this;
+    }
+
+    /**
+     *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
+     *  or a string reference (see .name())
+     *
      * @param {object|string} inLocation
      * @returns {EffectSection} this
      */
@@ -144,6 +161,7 @@ class EffectSection extends Section {
         inLocation = this._validateLocation(inLocation);
         if(inLocation === undefined) this.sequence._throwError(this, "atLocation", "could not find position of given object");
         this._from = inLocation;
+        this._attachTo = false;
         return this;
     }
 
@@ -382,6 +400,18 @@ class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Sets the zIndex of the effect, potentially displaying it on top of other effects
+     *
+     * @param {number} inExtraDuration
+     * @returns {EffectSection} this
+     */
+    extraEndDuration(inExtraDuration){
+        if(typeof inExtraDuration !== "number") this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
+        this._extraEndDuration = inExtraDuration;
+        return this;
+    }
+
     async _run() {
         let data = await this._sanitizeEffectData();
 		let push = !(data.users.length === 1 && data.users.includes(game.userId));
@@ -428,6 +458,7 @@ class EffectSection extends Section {
             },
             name: this._name,
             persist: this._persist,
+            attachTo: this._attachTo ? this._from.id : false,
             gridSizeDifference: 1.0,
             angle: this._angle,
             rotation: 0,
@@ -435,6 +466,7 @@ class EffectSection extends Section {
             playbackRate: this._playbackRate,
             distance: 0,
             duration: this._duration,
+            extraEndDuration: this._extraEndDuration,
             layer: this._layer,
             index: this.sequence.effectIndex,
             zIndex: this._zIndex,
@@ -553,11 +585,11 @@ class EffectSection extends Section {
                     if(target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
                 }
                 if(to){
-                    target.x -= offset.x;
-                    target.y -= offset.y;
+                    target.x += offset.x;
+                    target.y += offset.y;
                 }else{
-                    origin.x -= offset.x;
-                    origin.y -= offset.y;
+                    origin.x += offset.x;
+                    origin.y += offset.y;
                 }
             }
 
