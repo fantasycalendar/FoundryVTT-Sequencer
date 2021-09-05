@@ -6,6 +6,7 @@ import Sequence from "./module/sequencer.js";
 import SequencerPreloader from "./module/sequencer-preloader.js";
 import SequencerDatabase from "./module/sequencer-database.js";
 import SequencerDatabaseViewer from "./module/sequencer-database-viewer.js";
+import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 
 Hooks.once('init', async function() {
     registerLayer();
@@ -16,7 +17,9 @@ Hooks.once('ready', async function() {
 	window.SequencerPreloader = SequencerPreloader;
 	window.SequencerDatabase = SequencerDatabase;
 	window.SequencerDatabaseViewer = SequencerDatabaseViewer;
+    window.SequencerEffectManager = SequencerEffectManager;
     setupSettings();
+    SequencerEffectManager._setUpPersists();
     registerSocket();
     registerHooks();
     console.log("Sequencer | Ready to go!")

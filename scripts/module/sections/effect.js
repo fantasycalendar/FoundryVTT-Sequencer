@@ -1,5 +1,4 @@
 import * as lib from "../lib/lib.js";
-import SequencerEffectHelper from "../sequencer-effect-helper.js";
 import Section from "./section.js";
 
 // Traits
@@ -39,6 +38,7 @@ class EffectSection extends Section {
         this._zIndex = 0;
         this._offset = false;
 		this._size = false;
+		this._persist = false;
 		this._distance = 0;
     }
 
@@ -52,6 +52,19 @@ class EffectSection extends Section {
     name(inName){
         if(typeof inName !== "string") this.sequence._throwError(this, "name", "inBaseFolder must be of type string");
         this._name = inName;
+        return this;
+    }
+
+    /**
+     * Causes the effect to persist indefinitely on the canvas until ended via SequencerEffectManager.endAllEffects() or
+     * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection} this
+     */
+    persist(inBool = true) {
+        if(typeof inBool !== "boolean") this.sequence._throwError(this, "persist", "inBool must be of type boolean");
+        this._persist = inBool;
         return this;
     }
 
@@ -372,9 +385,13 @@ class EffectSection extends Section {
     async _run() {
         let data = await this._sanitizeEffectData();
 		let push = !(data.users.length === 1 && data.users.includes(game.userId));
-        let canvasEffectData = await SequencerEffectHelper.play(data, push);
-        this.animationDuration = canvasEffectData.duration;
-        let totalDuration = this.animationDuration + this._currentWaitTime;
+        let canvasEffectData = await SequencerEffectManager.play(data, push);
+        let totalDuration = this._currentWaitTime;
+        if(this._persist){
+            totalDuration += await canvasEffectData.promise;
+        }else{
+            totalDuration += canvasEffectData.duration;
+        }
         await new Promise(resolve => setTimeout(resolve, totalDuration))
     }
 
@@ -409,6 +426,8 @@ class EffectSection extends Section {
                 x: 1.0,
                 y: 1.0
             },
+            name: this._name,
+            persist: this._persist,
             gridSizeDifference: 1.0,
             angle: this._angle,
             rotation: 0,

@@ -21,56 +21,46 @@ export default class SequencerAnimationEngine {
 			totalDt: 0
 		}
 
-		return this._animate(animData);
+        return new Promise((resolve) => this._animate(resolve, animData));
     }
 
-    static async _animate(animData, timespan, lastTimespan ){
+    static _animate(resolve, animData, timespan = performance.now(), lastTimespan = performance.now()){
 
-		return new Promise(async (resolve) => {
+        let dt = timespan - lastTimespan;
 
-			// If it's not the first tick
-			if(!timespan){
-				timespan = performance.now();
-				lastTimespan = performance.now();
-			}
+        // Limit to set FPS
+        if (dt >= animData.maxFPS) {
 
-			let dt = timespan - lastTimespan;
+            animData.totalDt += dt;
 
-			// Limit to set FPS
-			if (dt >= animData.maxFPS) {
+            for(let attribute of animData.attributes) {
 
-				animData.totalDt += dt;
+                if (attribute.complete) continue;
 
-				for(let attribute of animData.attributes) {
+                if (animData.totalDt < attribute.delay) continue;
 
-					if (attribute.complete) continue;
+                if(attribute?.loops){
+                    attribute = this.handleLoops(dt, attribute);
+                }else{
+                    attribute = this.handleDefault(dt, attribute);
+                }
 
-					if (animData.totalDt < attribute.delay) continue;
+            }
 
-					if(attribute?.loops){
-						attribute = this.handleLoops(dt, attribute);
-					}else{
-						attribute = this.handleDefault(dt, attribute);
-					}
+            animData.attributes = animData.attributes.filter(a => !a.complete);
 
-				}
+            lastTimespan = timespan;
 
-				animData.attributes = animData.attributes.filter(a => !a.complete);
+        }
 
-				lastTimespan = timespan;
-
-			}
-
-			if(animData.attributes.length === 0){
-				resolve();
-			}else {
-				let self = this;
-				requestAnimationFrame(function (timespan) {
-					self._animate(animData, timespan, lastTimespan);
-				});
-			}
-
-		});
+        if(animData.attributes.length === 0){
+            resolve();
+        }else {
+            let self = this;
+            requestAnimationFrame(function (timespan) {
+                self._animate(resolve, animData, timespan, lastTimespan);
+            });
+        }
 
     }
 
