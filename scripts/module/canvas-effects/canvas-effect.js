@@ -1,9 +1,14 @@
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
-import { getObjectFromScene } from "../lib/lib.js";
 
-export class CanvasEffect {
+export default class CanvasEffect {
+
+    static make(inData){
+        return inData.persist
+            ? new PersistentCanvasEffect(inData)
+            : new CanvasEffect(inData);
+    }
 
     constructor(inData) {
 
@@ -575,7 +580,7 @@ export class CanvasEffect {
 
 }
 
-export class PersistentCanvasEffect extends CanvasEffect{
+class PersistentCanvasEffect extends CanvasEffect{
 
     async setUpPersistence(){
         if(!game.user.isGM) return;

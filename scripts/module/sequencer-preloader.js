@@ -132,7 +132,7 @@ const SequencerPreloader = {
 
 		let filesSucceeded = 0;
 		Promise.allSettled(
-			inSrcs.map(src => SequencerFileCache.loadFile(src, true).then(() => {
+			inSrcs.map(src => SequencerFileCache.loadFile(src).then(() => {
 				if(showProgressBar) loadingBar.incrementProgress();
                 filesSucceeded++;
 			}).catch(() => {

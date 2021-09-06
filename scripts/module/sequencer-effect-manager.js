@@ -1,4 +1,4 @@
-import { CanvasEffect, PersistentCanvasEffect } from "./canvas-effects/canvas-effect.js";
+import CanvasEffect from "./canvas-effects/canvas-effect.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 
@@ -41,44 +41,9 @@ export default class SequencerEffectManager {
         return this._endAllEffects();
     }
 
-    static _tearDownPersists(inId){
-        Array.from(this._effects)
-            .filter(effect => effect.data?.attachTo === inId)
-            .forEach(effect => {
-                this._effects.delete(effect);
-            })
-    }
-
-    static _setUpPersists(){
-        const allObjects = lib.getAllObjects()
-        allObjects.push(canvas.scene);
-        allObjects.forEach(obj => {
-            const doc = obj?.document ?? obj;
-            const effects = new Map(doc.getFlag('sequencer', 'effects') ?? []);
-            effects.forEach(effect => {
-                this._playEffect(effect);
-            })
-        });
-    }
-
-    static get _effects(){
-        return sequencerCanvasEffects;
-    }
-
-    static _removeEffect(effect, immediate){
-        effect.endEffect();
-        this._effects.delete(effect);
-    }
-
-    static _shouldPlay(data){
-        return !(game.user.viewedScene !== data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (data.users.length && !data.users.includes(game.userId)))
-    }
-
     static async _playEffect(data) {
 
-        const effectClass = data.persist ? PersistentCanvasEffect : CanvasEffect;
-
-        const effect = new effectClass(data);
+        const effect = CanvasEffect.make(data);
 
         if(!effect.getContext(data)){
             if(data.persist) effect.tearDownPersistence();
@@ -94,6 +59,39 @@ export default class SequencerEffectManager {
         }
 
         return playData;
+    }
+
+    static _shouldPlay(data){
+        return !(game.user.viewedScene !== data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (data.users.length && !data.users.includes(game.userId)))
+    }
+
+    static _setUpPersists(){
+        const allObjects = lib.getAllObjects()
+        allObjects.push(canvas.scene);
+        allObjects.forEach(obj => {
+            const doc = obj?.document ?? obj;
+            const effects = new Map(doc.getFlag('sequencer', 'effects') ?? []);
+            effects.forEach(effect => {
+                this._playEffect(effect);
+            })
+        });
+    }
+
+    static _tearDownPersists(inId){
+        Array.from(this._effects)
+            .filter(effect => effect.data?.attachTo === inId)
+            .forEach(effect => {
+                this._effects.delete(effect);
+            })
+    }
+
+    static get _effects(){
+        return sequencerCanvasEffects;
+    }
+
+    static _removeEffect(effect, immediate){
+        effect.endEffect();
+        this._effects.delete(effect);
     }
 
     static _endEffect(inName){
