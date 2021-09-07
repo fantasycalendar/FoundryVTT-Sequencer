@@ -70,7 +70,7 @@ export default class SequencerEffectManager {
         if(!inData.name && !inData.attachTo && !inData.sceneId) return;
 
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
-        return this._endEffect(inData);
+        return this._endEffects(inData);
     }
 
     /**
@@ -81,7 +81,7 @@ export default class SequencerEffectManager {
      */
     static async endAllEffects(push = false) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS);
-        return this._endAllEffects();
+        return this._endManyEffects();
     }
 
     static async _playEffect(data) {
@@ -128,7 +128,7 @@ export default class SequencerEffectManager {
         EffectsContainer.delete(effect);
     }
 
-    static _endEffect(inData){
+    static _endEffects(inData){
 
         let effects = EffectsContainer.effects
             .filter(effect => !inData.name || inData.name === effect.data.name)
@@ -137,16 +137,15 @@ export default class SequencerEffectManager {
 
         if(!effects.length) return;
 
-        return Promise.allSettled([
-            effects.map(effect => effect.endEffect()),
-            this._removeFlagsFromObject(effects[0].contextDocument, effects)
-        ]);
+        return this._endManyEffects(effects);
 
     }
 
-    static _endAllEffects(){
+    static _endManyEffects(inEffects = false){
 
-        const effectsByObjectId = lib.groupBy(EffectsContainer.effects, "context.id");
+        const effectsToEnd = inEffects || EffectsContainer.effects;
+
+        const effectsByObjectId = lib.groupBy(effectsToEnd, "context.id");
 
         return Promise.allSettled(Object.values(effectsByObjectId)
             .map(effectGroup => [
