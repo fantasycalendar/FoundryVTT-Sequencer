@@ -18,7 +18,7 @@ class EffectSection extends Section {
         this._file = inFile;
         this._from = false;
 		this._reachTowards = false;
-        this._anchor = false;
+        this._anchor = { x: 0.5, y: 0.5 };
         this._randomOffset = false;
         this._missed = false;
         this._JB2A = false;
@@ -51,7 +51,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     name(inName){
-        if(typeof inName !== "string") this.sequence._throwError(this, "name", "inBaseFolder must be of type string");
+        if(typeof inName !== "string") throw this.sequence._throwError(this, "name", "inBaseFolder must be of type string");
         this._name = inName;
         return this;
     }
@@ -64,7 +64,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     persist(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "persist", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "persist", "inBool must be of type boolean");
         this._persist = inBool;
         return this;
     }
@@ -77,7 +77,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     playbackRate(inNumber = 1.0) {
-        if(typeof inNumber !== "number") this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
+        if(typeof inNumber !== "number") throw this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
         this._playbackRate = inNumber;
         return this;
     }
@@ -89,7 +89,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     missed(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "missed", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "missed", "inBool must be of type boolean");
         this._missed = inBool;
         return this;
     }
@@ -114,7 +114,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     addOverride(inFunc) {
-        if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
+        if(!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
     }
@@ -128,7 +128,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     addPostOverride(inFunc) {
-        if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addPostOverride", "The given function needs to be an actual function.");
+        if(!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addPostOverride", "The given function needs to be an actual function.");
         this._postOverrides.push(inFunc);
         return this;
     }
@@ -141,9 +141,9 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     attachTo(inObject) {
-        if(inObject === undefined) this.sequence._throwError(this, "attachTo", "inObject must not be undefined");
+        if(inObject === undefined) throw this.sequence._throwError(this, "attachTo", "inObject must not be undefined");
         inObject = this._validateLocation(inObject);
-        if(inObject === undefined) this.sequence._throwError(this, "attachTo", "could not find given object");
+        if(inObject === undefined) throw this.sequence._throwError(this, "attachTo", "could not find given object");
         this._from = inObject;
         this._attachTo = true;
         return this;
@@ -157,9 +157,9 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     atLocation(inLocation) {
-        if(inLocation === undefined) this.sequence._throwError(this, "atLocation", "inLocation must not be undefined");
+        if(inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "inLocation must not be undefined");
         inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence._throwError(this, "atLocation", "could not find position of given object");
+        if(inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
         this._from = inLocation;
         this._attachTo = false;
         return this;
@@ -173,9 +173,9 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     reachTowards(inLocation) {
-        if(inLocation === undefined) this.sequence._throwError(this, "reachTowards", "inLocation must not be undefined");
+        if(inLocation === undefined) throw this.sequence._throwError(this, "reachTowards", "inLocation must not be undefined");
         inLocation = this._validateLocation(inLocation);
-        if(inLocation === undefined) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
+        if(inLocation === undefined) throw this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
         this._reachTowards = inLocation;
         return this;
     }
@@ -188,15 +188,15 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     offset(inOffset, options = {}){
-        if(inOffset === undefined) this.sequence._throwError(this, "offset", "inOffset must not be undefined");
-        if(typeof options !== "object") this.sequence._throwError(this, "offset", "options must be of type object");
+        if(inOffset === undefined) throw this.sequence._throwError(this, "offset", "inOffset must not be undefined");
+        if(typeof options !== "object") throw this.sequence._throwError(this, "offset", "options must be of type object");
         inOffset = foundry.utils.mergeObject({
             x: 0,
             y: 0,
             local: false
         }, inOffset);
         inOffset = foundry.utils.mergeObject(inOffset, options);
-        if(typeof inOffset.local !== "boolean") this.sequence._throwError(this, "offset", "options.local must be of type boolean");
+        if(typeof inOffset.local !== "boolean") throw this.sequence._throwError(this, "offset", "options.local must be of type boolean");
         this._offset = inOffset;
         return this;
     }
@@ -208,15 +208,15 @@ class EffectSection extends Section {
 	 * @returns {EffectSection} this
 	 */
 	size(inSize) {
-		if(!(typeof inSize === "number" || typeof inSize === "object")) this.sequence._throwError(this, "size", "inSize be of type number or object");
+		if(!(typeof inSize === "number" || typeof inSize === "object")) throw this.sequence._throwError(this, "size", "inSize be of type number or object");
 		if (typeof inSize === "number") {
 			inSize = {
 				width: inSize,
 				height: inSize
 			}
 		}
-		if(typeof inSize?.width !== "number") this.sequence._throwError(this, "size", "inSize.width be of type number");
-		if(typeof inSize?.height !== "number") this.sequence._throwError(this, "size", "inSize.height be of type number");
+		if(typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
+		if(typeof inSize?.height !== "number") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
 		inSize = {
 			width: inSize?.width ?? canvas.grid.size,
 			height: inSize?.height ?? canvas.grid.size
@@ -233,7 +233,7 @@ class EffectSection extends Section {
 	 * @returns {EffectSection} this
 	 */
 	gridSize(inGridSize) {
-		if(typeof inGridSize !== "number") this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
+		if(typeof inGridSize !== "number") throw this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
 		this._gridSize = inGridSize;
 		this._customTemplate = true;
 		return this;
@@ -248,7 +248,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     startPoint(inStartPoint) {
-        if(typeof inStartPoint !== "number") this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
+        if(typeof inStartPoint !== "number") throw this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
 		this._customTemplate = true;
         return this;
@@ -261,7 +261,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     endPoint(inEndPoint) {
-        if(typeof inEndPoint !== "number") this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
+        if(typeof inEndPoint !== "number") throw this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
 		this._customTemplate = true;
         return this;
@@ -311,7 +311,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     randomOffset(inOffsetScale = 1.0){
-        if(typeof inOffsetScale !== "number") this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
+        if(typeof inOffsetScale !== "number") throw this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
         this._randomOffset = inOffsetScale;
         return this;
     }
@@ -346,7 +346,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     mirrorX(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "mirrorX", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "mirrorX", "inBool must be of type boolean");
         this._mirrorX = inBool;
         return this;
     }
@@ -359,7 +359,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     mirrorY(inBool = true) {
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "mirrorY", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "mirrorY", "inBool must be of type boolean");
         this._mirrorY = inBool;
         return this;
     }
@@ -371,7 +371,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     belowTokens(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "belowTokens", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "belowTokens", "inBool must be of type boolean");
         this._layer = inBool ? 1 : 2;
         return this;
     }
@@ -383,7 +383,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     belowTiles(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "belowTiles", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "belowTiles", "inBool must be of type boolean");
         this._layer = inBool ? 0 : 2;
         return this;
     }
@@ -395,7 +395,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     zIndex(inZIndex){
-        if(typeof inZIndex !== "number") this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
+        if(typeof inZIndex !== "number") throw this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
         this._zIndex = inZIndex;
         return this;
     }
@@ -407,7 +407,7 @@ class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     extraEndDuration(inExtraDuration){
-        if(typeof inExtraDuration !== "number") this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
+        if(typeof inExtraDuration !== "number") throw this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
         this._extraEndDuration = inExtraDuration;
         return this;
     }
@@ -448,10 +448,7 @@ class EffectSection extends Section {
                 x: 0,
                 y: 0,
             },
-            anchor: {
-                x: 0.0,
-                y: 0.0
-            },
+            anchor: this._anchor,
             scale: {
                 x: 1.0,
                 y: 1.0
@@ -487,8 +484,6 @@ class EffectSection extends Section {
 			sceneId: game.user.viewedScene,
 			users: Array.from(this._users)
         };
-
-        if(this._anchor) data.anchor = this._anchor;
 
         data = this._determineTargets(data);
 
@@ -565,7 +560,7 @@ class EffectSection extends Section {
 		}
 
         if(typeof data.file !== "string") {
-            this.sequence._throwError(this, "file", "inFile must be of type string or array");
+            throw this.sequence._throwError(this, "file", "inFile must be of type string or array");
         }
 
         return data;
@@ -577,6 +572,8 @@ class EffectSection extends Section {
         if (this._from) {
 
             let [from, to, origin, target] = this._getPositions(this._from, this._to);
+
+            if(this._attachTo) origin = this._getHalfSize(this._from);
 
 			if(this._offset) {
 				let offset = this._offset;
@@ -599,23 +596,9 @@ class EffectSection extends Section {
                 origin = this._applyOffsets(origin);
             }
 
-            if(!this._anchor) {
-                data.anchor = {
-                    x: 0.5,
-                    y: 0.5
-                }
-            }
-
             data.position = origin;
 
             if(this._to) {
-
-                if(!this._anchor) {
-                    data.anchor = {
-                        x: 0.0,
-                        y: 0.5
-                    }
-                }
 
                 let ray = new Ray(origin, target);
 
@@ -630,13 +613,6 @@ class EffectSection extends Section {
 					data.rotation = this._moveTowards.rotate ? data.rotation : 0;
 
                     data.animatedProperties.moves.target = target;
-
-                    if(!this._anchor) {
-                        data.anchor = {
-                            x: 0.5,
-                            y: 0.5
-                        }
-                    }
 
                     data.speed = this._moveSpeed;
 
@@ -665,7 +641,7 @@ class EffectSection extends Section {
             .filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1)
             .map(entry => {
             	let file = inFile.getFile(entry);
-            	if(!file) this.sequence._throwError(this, "play", `Could not find index ${inFile.fileIndex} in database entry ${this._file}!`)
+            	if(!file) throw this.sequence._throwError(this, "play", `Could not find index ${inFile.fileIndex} in database entry ${this._file}!`)
 				let template = inFile.template ?? this._determineTemplate(file);
             	let gridSizeDiff = this._gridSizeDifference(template[0]);
             	return {
@@ -782,8 +758,9 @@ class EffectSection extends Section {
 			}
 
 			if(obj instanceof Token){
-				pos.x += (obj?.hitArea?.width ?? obj?.w ?? canvas.grid.size)/2;
-				pos.y += (obj?.hitArea?.height ?? obj?.h ?? canvas.grid.size)/2;
+			    const halfSize = this._getHalfSize(obj);
+				pos.x += halfSize.x;
+				pos.y += halfSize.y;
 			}
 		}
 
@@ -792,9 +769,16 @@ class EffectSection extends Section {
 			y: pos?.y ?? obj?.y ?? obj?.data?.y,
 		};
 
-        if(typeof pos.x !== "number" || typeof pos.y !== "number") this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
+        if(typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
 
         return pos;
+    }
+
+    _getHalfSize(inObj) {
+        return {
+            x: (inObj?.hitArea?.width ?? inObj?.w ?? canvas.grid.size) / 2,
+            y: (inObj?.hitArea?.height ?? inObj?.h ?? canvas.grid.size) / 2
+        }
     }
 
     _getPositions(from, to, applyOffsets = true) {

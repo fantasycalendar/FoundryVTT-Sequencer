@@ -292,7 +292,7 @@ new Sequence()
 
 ### Version 1.0.0
 - *Sequencer* - Added `SequencerEffectManager`
-  - Added `SequencerEffectManager.endEffect()` which given a name will end any effects that share that name
+  - Added `SequencerEffectManager.endEffect()` which given a name will end any effects that fits the given parameters
   - Added `SequencerEffectManager.endAllEffects()` which will terminate all effects on the canvas
 - *Effects* - Added `.attachTo()` which causes the effect to be attached to a given object
 - *Effects* - Added `.persist()` which causes the effect to become permanent on the canvas until removed
@@ -568,6 +568,7 @@ new Sequence()
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
 * ghost (ghost#2000 on discord) for his fixes to the audio sections
+* Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects  
 * League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
 
 ### Oujia Board Scene

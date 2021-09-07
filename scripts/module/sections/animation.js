@@ -30,7 +30,7 @@ class AnimationSection extends Section{
      */
     on(inTarget){
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence._throwError(this, "on", "could not find position of given object");
+        if(!inTarget) throw this.sequence._throwError(this, "on", "could not find position of given object");
         this._originObject = this._validateLocation(inTarget);
         return this;
     }
@@ -47,9 +47,9 @@ class AnimationSection extends Section{
             delay: 0,
             target: { x: 0, y: 0 }
         }, options);
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
+        if(typeof options.delay !== "number") throw this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence._throwError(this, "teleportTo", "could not find position of given object");
+        if(!inTarget) throw this.sequence._throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
         return this;
@@ -74,7 +74,7 @@ class AnimationSection extends Section{
      * @returns {AnimationSection} this
      */
     closestSquare(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
         this._closestSquare = inBool;
         return this;
     }
@@ -86,7 +86,7 @@ class AnimationSection extends Section{
      * @returns {AnimationSection} this
      */
     snapToSquare(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "snapToSquare", "inBool must be of type boolean");
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToSquare", "inBool must be of type boolean");
         this._snapToSquare = inBool;
         return this;
     }

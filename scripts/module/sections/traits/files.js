@@ -29,7 +29,7 @@ export default {
 	 * @returns this
 	 */
 	baseFolder(inBaseFolder) {
-		if(typeof inBaseFolder !== "string") this.sequence._throwError(this, "baseFolder", "inBaseFolder must be of type string");
+		if(typeof inBaseFolder !== "string") throw this.sequence._throwError(this, "baseFolder", "inBaseFolder must be of type string");
 		inBaseFolder = inBaseFolder.replace("\\", "/");
 		if(!inBaseFolder.endsWith("/")) {
 			inBaseFolder += "/";
@@ -45,7 +45,7 @@ export default {
 	 * @returns this
 	 */
 	setMustache(inMustache) {
-		if(typeof inMustache !== "object") this.sequence._throwError(this, "setMustache", "inMustache must be of type object");
+		if(typeof inMustache !== "object") throw this.sequence._throwError(this, "setMustache", "inMustache must be of type object");
 		this._mustache = inMustache;
 		return this;
 	},

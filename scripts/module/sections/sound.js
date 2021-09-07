@@ -26,7 +26,7 @@ class SoundSection extends Section {
 	 * @returns {SoundSection} this
 	 */
 	addOverride(inFunc) {
-		if(!lib.is_function(inFunc)) this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
+		if(!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
 		this._overrides.push(inFunc);
 		return this;
 	}
@@ -42,7 +42,7 @@ class SoundSection extends Section {
         let {play, ...data} = await this._sanitizeSoundData();
 
         if(!play) {
-            this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
+            throw this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
             return new Promise((reject) => reject());
         }
 

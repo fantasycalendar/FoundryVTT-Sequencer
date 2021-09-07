@@ -16,10 +16,10 @@ export default {
 	 * @returns this
 	 */
 	scale(inScaleMin, inScaleMax) {
-		if(!(typeof inScaleMin === "number" || typeof inScaleMin === "object")) this.sequence._throwError(this, "scale", "inScale must be of type number or object");
+		if(!(typeof inScaleMin === "number" || typeof inScaleMin === "object")) throw this.sequence._throwError(this, "scale", "inScale must be of type number or object");
 		if (typeof inScaleMin !== "number") {
 			if(inScaleMax && typeof inScaleMax === "number"){
-				this.sequence._throwError(this, "scale", "if inScaleMin is a number, inScaleMax must also be of type number");
+				throw this.sequence._throwError(this, "scale", "if inScaleMin is a number, inScaleMax must also be of type number");
 			}
 		}
 		this._scaleMin = inScaleMin;
@@ -36,15 +36,15 @@ export default {
 	 * @returns this
 	 */
 	scaleIn(scale, duration, options={}) {
-		if (typeof options !== "object") this.sequence._throwError(this, "scaleIn", "options must be of type object");
+		if (typeof options !== "object") throw this.sequence._throwError(this, "scaleIn", "options must be of type object");
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0
 		}, options);
-		if (typeof duration !== "number") this.sequence._throwError(this, "scaleIn", "duration must be of type number");
-		if (!(typeof scale === "number" || typeof scale === "object")) this.sequence._throwError(this, "scaleIn", "scale must be of type number or object");
-		if (typeof options.ease !== "string") this.sequence._throwError(this, "scaleIn", "options.ease must be of type string");
-		if (typeof options.delay !== "number") this.sequence._throwError(this, "scaleIn", "options.delay must be of type number");
+		if (typeof duration !== "number") throw this.sequence._throwError(this, "scaleIn", "duration must be of type number");
+		if (!(typeof scale === "number" || typeof scale === "object")) throw this.sequence._throwError(this, "scaleIn", "scale must be of type number or object");
+		if (typeof options.ease !== "string") throw this.sequence._throwError(this, "scaleIn", "options.ease must be of type string");
+		if (typeof options.delay !== "number") throw this.sequence._throwError(this, "scaleIn", "options.delay must be of type number");
 		this._scaleIn = {
 			value: scale,
 			duration: duration,
@@ -63,15 +63,15 @@ export default {
 	 * @returns this
 	 */
 	scaleOut(scale, duration, options={}){
-		if(typeof options !== "object") this.sequence._throwError(this, "scaleOut", "options must be of type object");
+		if(typeof options !== "object") throw this.sequence._throwError(this, "scaleOut", "options must be of type object");
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0
 		}, options);
-		if(typeof duration !== "number") this.sequence._throwError(this, "scaleOut", "duration must be of type number");
-		if(!(typeof scale === "number" || typeof scale === "object")) this.sequence._throwError(this, "scaleOut", "scale must be of type number or object");
-		if(typeof options.ease !== "string") this.sequence._throwError(this, "scaleOut", "options.ease must be of type string");
-		if(typeof options.delay !== "number") this.sequence._throwError(this, "scaleOut", "options.delay must be of type number");
+		if(typeof duration !== "number") throw this.sequence._throwError(this, "scaleOut", "duration must be of type number");
+		if(!(typeof scale === "number" || typeof scale === "object")) throw this.sequence._throwError(this, "scaleOut", "scale must be of type number or object");
+		if(typeof options.ease !== "string") throw this.sequence._throwError(this, "scaleOut", "options.ease must be of type string");
+		if(typeof options.delay !== "number") throw this.sequence._throwError(this, "scaleOut", "options.delay must be of type number");
 		this._scaleOut = {
 			value: scale,
 			duration: duration,

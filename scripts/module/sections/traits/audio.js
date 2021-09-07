@@ -14,7 +14,7 @@ export default {
 	 * @returns this
 	 */
 	volume(inVolume) {
-		if(typeof inVolume !== "number") this.sequence._throwError(this, "volume", "inVolume must be of type number");
+		if(typeof inVolume !== "number") throw this.sequence._throwError(this, "volume", "inVolume must be of type number");
 		this._volume = Math.max(0, Math.min(1.0, inVolume));
 		return this;
 	},
@@ -27,14 +27,14 @@ export default {
 	 * @returns this
 	 */
 	fadeInAudio(duration, options={}) {
-		if(typeof options !== "object") this.sequence._throwError(this, "fadeInAudio", "options must be of type object");
+		if(typeof options !== "object") throw this.sequence._throwError(this, "fadeInAudio", "options must be of type object");
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0
 		}, options);
-		if(typeof duration !== "number") this.sequence._throwError(this, "fadeInAudio", "duration must be of type number");
-		if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeInAudio", "options.ease must be of type string");
-		if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeInAudio", "options.delay must be of type number");
+		if(typeof duration !== "number") throw this.sequence._throwError(this, "fadeInAudio", "duration must be of type number");
+		if(typeof options.ease !== "string") throw this.sequence._throwError(this, "fadeInAudio", "options.ease must be of type string");
+		if(typeof options.delay !== "number") throw this.sequence._throwError(this, "fadeInAudio", "options.delay must be of type number");
 		this._fadeInAudio = {
 			duration: duration,
 			ease: options.ease,
@@ -51,14 +51,14 @@ export default {
 	 * @returns this
 	 */
 	fadeOutAudio(duration, options={}) {
-		if(typeof options !== "object") this.sequence._throwError(this, "fadeOutAudio", "options must be of type object");
+		if(typeof options !== "object") throw this.sequence._throwError(this, "fadeOutAudio", "options must be of type object");
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0
 		}, options);
-		if(typeof duration !== "number") this.sequence._throwError(this, "fadeOutAudio", "duration must be of type number");
-		if(typeof options.ease !== "string") this.sequence._throwError(this, "fadeOutAudio", "ease must be of type string");
-		if(typeof options.delay !== "number") this.sequence._throwError(this, "fadeOutAudio", "delay must be of type number");
+		if(typeof duration !== "number") throw this.sequence._throwError(this, "fadeOutAudio", "duration must be of type number");
+		if(typeof options.ease !== "string") throw this.sequence._throwError(this, "fadeOutAudio", "ease must be of type string");
+		if(typeof options.delay !== "number") throw this.sequence._throwError(this, "fadeOutAudio", "delay must be of type number");
 		this._fadeOutAudio = {
 			duration: duration,
 			ease: options.ease,

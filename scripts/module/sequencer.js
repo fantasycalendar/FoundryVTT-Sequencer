@@ -3,6 +3,7 @@ import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
 import AnimationSection from './sections/animation.js';
+import { throwError } from "./lib/lib.js";
 
 export default class Sequence{
 
@@ -63,12 +64,12 @@ export default class Sequence{
         if(typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
             if (!macro) {
-                this._throwError(this, "macro", `Macro '${inMacro}' was not found`);
+                throw this._throwError(this, "macro", `Macro '${inMacro}' was not found`);
             }
         } else if(inMacro instanceof Macro) {
             macro = inMacro;
         } else {
-            this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
+            throw this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
         let func = new FunctionSection(this, async () => {
@@ -124,8 +125,8 @@ export default class Sequence{
      * @returns {Sequence} this
      */
     wait(msMin = 1, msMax = 1){
-        if(msMin < 1) this._throwError(this, "wait", 'Wait ms cannot be less than 1')
-        if(msMax < 1) this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
+        if(msMin < 1) throw this._throwError(this, "wait", 'Wait ms cannot be less than 1')
+        if(msMax < 1) throw this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
         let wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         let section = this._createWaitSection(wait);
         this.sections.push(section);
@@ -140,7 +141,7 @@ export default class Sequence{
      */
     sequence(inSequence){
         if(!(inSequence instanceof Sequence)) inSequence = inSequence.sequence;
-        if(!(inSequence instanceof Sequence)) this._throwError(this, "sequence", `could not find the sequence from the given parameter`);
+        if(!(inSequence instanceof Sequence)) throw this._throwError(this, "sequence", `could not find the sequence from the given parameter`);
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
@@ -193,16 +194,9 @@ export default class Sequence{
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
-    _throwWarning(self, func, warning){
-        warning = `Sequencer | ${self.constructor.name} | ${func} - ${warning}`;
-        ui.notifications.warn(warning);
-        console.warn(warning)
-    }
-
     _throwError(self, func, error){
-        error = `Sequencer | ${self.constructor.name} | ${func} - ${error}`;
-        ui.notifications.error(error);
-        throw new Error(error);
+        error = `${self.constructor.name} | ${func} - ${error}`;
+        return lib.throwError("Sequencer", error);
     }
 
     _log(...args){

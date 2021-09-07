@@ -33,10 +33,10 @@ export default class Section{
      * @returns {Section} this
      */
     repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax){
-        if(typeof inRepetitions !== "number") this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
-        if(typeof inRepeatDelayMin !== "number") this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
+        if(typeof inRepetitions !== "number") throw this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
+        if(typeof inRepeatDelayMin !== "number") throw this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
         if(inRepeatDelayMax && typeof inRepeatDelayMax !== "number"){
-            this.sequence._throwError(this, "repeats", "repeatDelayMax must be of type number");
+            throw this.sequence._throwError(this, "repeats", "repeatDelayMax must be of type number");
         }
         this._repetitions = inRepetitions;
         this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
@@ -63,7 +63,7 @@ export default class Section{
      * @returns {Section} this
      */
     waitUntilFinished(inDelay=0){
-        if(typeof inDelay !== "number") this.sequence._throwError(this, "waitUntilFinished", "inDelay must be of type number");
+        if(typeof inDelay !== "number") throw this.sequence._throwError(this, "waitUntilFinished", "inDelay must be of type number");
         this._waitUntilFinished = true;
         this._waitUntilFinishedDelay = inDelay;
         return this;
@@ -90,8 +90,8 @@ export default class Section{
      * @returns {Section} this
      */
     delay(msMin, msMax) {
-        if(typeof msMin !== "number") this.sequence._throwError(this, "delay", "msMin must be of type number");
-        if(msMax && typeof msMax !== "number") this.sequence._throwError(this, "delay", "msMax must be of type number");
+        if(typeof msMin !== "number") throw this.sequence._throwError(this, "delay", "msMin must be of type number");
+        if(msMax && typeof msMax !== "number") throw this.sequence._throwError(this, "delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
         return this;
@@ -104,7 +104,7 @@ export default class Section{
      * @returns {Section} this
      */
     duration(inDuration){
-        if(typeof inDuration !== "number") this.sequence._throwError(this, "duration", "inDuration must be of type number");
+        if(typeof inDuration !== "number") throw this.sequence._throwError(this, "duration", "inDuration must be of type number");
         this._duration = inDuration;
         return this;
     }
@@ -157,7 +157,7 @@ export default class Section{
 		}
 		if(inLocation instanceof Document){
 			let object = lib.getObjectFromScene(inLocation.id);
-			if(!object) this.sequence._throwError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
+			if(!object) throw this.sequence._throwError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
 			return object;
 		}
 		return inLocation;

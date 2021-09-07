@@ -16,7 +16,7 @@ export default {
 	 * @returns this
 	 */
 	randomRotation(inBool = true) {
-		if(typeof inBool !== "boolean") this.sequence._throwError(this, "randomRotation", "inBool must be of type boolean");
+		if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomRotation", "inBool must be of type boolean");
 		this._randomRotation = inBool;
 		return this;
 	},
@@ -28,7 +28,7 @@ export default {
 	 * @returns this
 	 */
 	rotate(inRotation){
-		if(typeof inRotation !== "number") this.sequence._throwError(this, "opacity", "inRotation must be of type number");
+		if(typeof inRotation !== "number") throw this.sequence._throwError(this, "opacity", "inRotation must be of type number");
 		this._angle = inRotation;
 		return this;
 	},
@@ -48,13 +48,13 @@ export default {
 			offset: 0,
 			towardsCenter: true
 		}, options);
-		if(typeof options.duration !== "number") this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
-		if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateTowards", "options.ease must be of type string");
-		if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
-		if(typeof options.offset !== "number") this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
-		if(typeof options.towardsCenter !== "boolean") this.sequence._throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
+		if(typeof options.duration !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
+		if(typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateTowards", "options.ease must be of type string");
+		if(typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
+		if(typeof options.offset !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
+		if(typeof options.towardsCenter !== "boolean") throw this.sequence._throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
 		inLocation = this._validateLocation(inLocation);
-		if(!inLocation) this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
+		if(!inLocation) throw this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
 		options.target = this._validateLocation(inLocation);
 		this._rotateTowards = options;
 		return this;
@@ -69,15 +69,15 @@ export default {
 	 * @returns this
 	 */
 	rotateIn(degrees, duration, options={}){
-		if(typeof options !== "object") this.sequence._throwError(this, "rotateIn", "options must be of type object");
+		if(typeof options !== "object") throw this.sequence._throwError(this, "rotateIn", "options must be of type object");
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0
 		}, options);
-		if(typeof degrees !== "number") this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
-		if(typeof duration !== "number") this.sequence._throwError(this, "rotateOut", "duration must be of type number");
-		if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateIn", "options.ease must be of type string");
-		if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateIn", "options.delay must be of type number");
+		if(typeof degrees !== "number") throw this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
+		if(typeof duration !== "number") throw this.sequence._throwError(this, "rotateOut", "duration must be of type number");
+		if(typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateIn", "options.ease must be of type string");
+		if(typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateIn", "options.delay must be of type number");
 		this._rotateIn = {
 			value: degrees,
 			duration: duration,
@@ -96,15 +96,15 @@ export default {
 	 * @returns this
 	 */
 	rotateOut(degrees, duration, options={}){
-		if(typeof options !== "object") this.sequence._throwError(this, "rotateOut", "options must be of type object");
+		if(typeof options !== "object") throw this.sequence._throwError(this, "rotateOut", "options must be of type object");
 		options = foundry.utils.mergeObject({
 			ease: "linear",
 			delay: 0
 		}, options);
-		if(typeof degrees !== "number") this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
-		if(typeof duration !== "number") this.sequence._throwError(this, "rotateOut", "duration must be of type number");
-		if(typeof options.ease !== "string") this.sequence._throwError(this, "rotateOut", "options.ease must be of type string");
-		if(typeof options.delay !== "number") this.sequence._throwError(this, "rotateOut", "options.delay must be of type number");
+		if(typeof degrees !== "number") throw this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
+		if(typeof duration !== "number") throw this.sequence._throwError(this, "rotateOut", "duration must be of type number");
+		if(typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateOut", "options.ease must be of type string");
+		if(typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateOut", "options.delay must be of type number");
 		this._rotateOut = {
 			value: degrees,
 			duration: duration,

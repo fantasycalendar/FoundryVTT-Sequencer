@@ -252,17 +252,29 @@ export function transformVector(inVector, context=false){
     }
 }
 
-export function getAllObjects(){
+export function getAllObjects(inSceneId){
+    const scene = inSceneId ? game.scenes.get(inSceneId) : game.scenes.get(game.canvas.id);
     return [
-        ...canvas.tokens.placeables,
-        ...canvas.templates.placeables,
-        ...canvas.background.placeables,
-        ...canvas.foreground.placeables
+        ...Array.from(scene.tokens).map(obj => obj._object),
+        ...Array.from(scene.templates).map(obj => obj._object),
+        ...Array.from(scene.tiles).map(obj => obj._object)
     ].deepFlatten().filter(Boolean);
 }
 
-export function getObjectFromScene(inId){
-    return getAllObjects().find(obj => obj.id === inId);
+export function getObjectFromScene(inId, inSceneId){
+    return getAllObjects(inSceneId).find(obj => obj.id === inId);
+}
+
+export function throwError(inClassName, error){
+    error = `${inClassName} | ${error}`;
+    ui.notifications.error(error);
+    return new Error(error);
+}
+
+export function isResponsibleGM() {
+    if (!game.user.isGM) return false;
+    const connectedGMs = game.users.filter(user => user.active && user.isGM);
+    return !connectedGMs.some(other => other.data._id < game.user.data._id);
 }
 
 export class SequencerFile{
@@ -333,4 +345,13 @@ export class SequencerFile{
 		return template(inMustache);
 	}
 
+}
+
+export function groupBy(xs, key) {
+    return xs.reduce(function(acc, obj) {
+        let property = getProperty(obj, key);
+        acc[property] = acc[property] || [];
+        acc[property].push(obj);
+        return acc;
+    }, {});
 }
