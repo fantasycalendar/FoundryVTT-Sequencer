@@ -164,7 +164,11 @@ export function deepSet(obj, path, value) {
         for (i = 0; i < path.length - 1; i++) {
             obj = obj[path[i]];
         }
-        obj[path[i]] = value;
+        if(is_function(obj[path[i]])){
+            obj[path[i]](value)
+        }else{
+            obj[path[i]] = value;
+        }
     }catch(err){
         throw new Error(`Could not set property "${path}"`)
     }

@@ -24,7 +24,7 @@ function onSocketEvent(socketData) {
         case SOCKET_HANDLERS.PLAY_EFFECT:
             return SequencerEffectManager.play(...args);
         case SOCKET_HANDLERS.END_EFFECT:
-            return SequencerEffectManager.endEffect(...args);
+            return SequencerEffectManager.endEffects(...args);
         case SOCKET_HANDLERS.END_ALL_EFFECTS:
             return SequencerEffectManager.endAllEffects(...args);
         case SOCKET_HANDLERS.PLAY_SOUND:

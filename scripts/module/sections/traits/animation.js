@@ -2,7 +2,7 @@ export default {
 
 	_animations: false,
 
-	animate(target, inPropertyName, inData={}){
+	animateProperty(target, inPropertyName, inData={}){
 		if(!this._animations) this._animations = [];
 		let parent = target?.uuid ?? target;
 
@@ -10,11 +10,12 @@ export default {
 		if(!target?.uuid && typeof parent !== "string") this.sequence._throwError(this, "filter", `target must be of type string or UUID`);
 
 		this._animations.push({
-			name: inPropertyName,
+			name: inPropertyName.toLowerCase(),
 			isUUID: target?.uuid ?? false,
 			parent: parent,
 			from: inData?.from ?? 0,
 			to: inData?.to ?? 0,
+            offset: inData?.offset ?? 0,
 			duration: inData?.duration ?? 0,
 			ease: inData?.ease ?? "linear",
 			delay: inData?.delay ?? 0

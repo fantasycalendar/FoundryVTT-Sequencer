@@ -10,8 +10,9 @@ import rotation from "./traits/rotation.js";
 import scale from "./traits/scale.js";
 import time from "./traits/time.js";
 import users from "./traits/users.js";
+import animation from "./traits/animation.js";
 
-class EffectSection extends Section {
+export default class EffectSection extends Section {
 
     constructor(inSequence, inFile="") {
         super(inSequence)
@@ -434,6 +435,7 @@ class EffectSection extends Section {
 		Object.assign(this.constructor.prototype, scale);
 		Object.assign(this.constructor.prototype, time);
 		Object.assign(this.constructor.prototype, users);
+		Object.assign(this.constructor.prototype, animation);
 	}
 
 	get _to(){
@@ -479,7 +481,8 @@ class EffectSection extends Section {
                 rotateIn: this._rotateIn,
                 rotateOut: this._rotateOut,
                 fadeInAudio: this._fadeInAudio,
-                fadeOutAudio: this._fadeOutAudio
+                fadeOutAudio: this._fadeOutAudio,
+                animations: this._animations
             },
 			sceneId: game.user.viewedScene,
 			users: Array.from(this._users)
@@ -902,7 +905,3 @@ class EffectSection extends Section {
     }
 
 }
-
-// Apply traits
-
-export default EffectSection;
