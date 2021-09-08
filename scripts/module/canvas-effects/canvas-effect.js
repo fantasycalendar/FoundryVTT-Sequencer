@@ -217,27 +217,75 @@ export default class CanvasEffect {
 
     }
 
+    counterAnimate(animation){
+
+        if(this.data.zeroSpriteRotation && animation.target === this.spriteContainer){
+            delete animation.target;
+            let counterAnimation = foundry.utils.duplicate(animation);
+            animation.target = this.spriteContainer;
+            counterAnimation.target = this.sprite;
+            if(counterAnimation.values){
+                counterAnimation.values = counterAnimation.values.map(value => value*-1);
+            }else{
+                counterAnimation.from *= -1;
+                counterAnimation.to *= -1;
+            }
+            animation = [animation, counterAnimation];
+        }
+
+        return animation;
+
+    }
+
     playCustomAnimations(){
 
         if(!this.data.animatedProperties.animations) return 0;
 
-        const animations = this.data.animatedProperties.animations;
+        let animationsToSend = [];
 
-        for(let animation of animations){
+        const animations = foundry.utils.duplicate(this.data.animatedProperties.animations);
 
-            if(this.actualCreationTime >= (this.data.timestamp + animation.duration + animation.delay)) return;
+        const oneShotAnimations = animations.filter(animation => !animation.looping);
 
-            animation.parent = getProperty(this, animation.parent);
+        for(let animation of oneShotAnimations){
 
-            if(animation.name.indexOf("rotation") > -1){
-                animation.from = (animation.from / 180) * Math.PI;
-                animation.to = (animation.to / 180) * Math.PI;
-                animation.offset = (animation.offset / 180) * Math.PI;
+            animation.target = getProperty(this, animation.target);
+
+            if(!animation.target) continue;
+
+            if(animation.propertyName.indexOf("rotation") > -1){
+                let offset = (animation.offset / 180) * Math.PI;
+                animation.from = ((animation.from / 180) * Math.PI) + offset;
+                animation.to = ((animation.to / 180) * Math.PI) + offset;
             }
 
-            SequencerAnimationEngine.animate(animation, this.actualCreationTime - this.data.timestamp);
+            animationsToSend.concat(this.counterAnimate(animation))
 
         }
+
+        const loopingAnimations = animations.filter(animation => animation.looping);
+
+        for(let animation of loopingAnimations){
+
+            animation.target = getProperty(this, animation.target);
+
+            if(!animation.target) continue;
+
+            if(animation.propertyName.indexOf("rotation") > -1){
+                let offset = (animation.offset / 180) * Math.PI;
+                animation.values = animation.values.map(value => {
+                    return ((value / 180) * Math.PI) + offset;
+                });
+            }
+
+            animationsToSend.concat(this.counterAnimate(animation))
+
+        }
+
+        SequencerAnimationEngine.animate(
+            animationsToSend,
+            this.actualCreationTime - this.data.timestamp
+        );
 
     }
 
@@ -252,8 +300,8 @@ export default class CanvasEffect {
         this.sprite.alpha = 0.0;
 
         SequencerAnimationEngine.animate({
-            name: "alpha",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "alpha",
             to: this.data.opacity,
             duration: fadeIn.duration,
             ease: fadeIn.ease,
@@ -275,8 +323,8 @@ export default class CanvasEffect {
             : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
         SequencerAnimationEngine.animate({
-            name: "alpha",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "alpha",
             to: 0.0,
             duration: fadeOut.duration,
             ease: fadeOut.ease,
@@ -316,16 +364,16 @@ export default class CanvasEffect {
         this.sprite.scale.set(fromScale.x, fromScale.y);
 
         SequencerAnimationEngine.animate([{
-            name: "scale.x",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "scale.x",
             from: fromScale.x,
             to: toScale.x,
             duration: scaleIn.duration,
             ease: scaleIn.ease,
             delay: scaleIn.delay
         }, {
-            name: "scale.y",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "scale.y",
             from: fromScale.y,
             to: toScale.y,
             duration: scaleIn.duration,
@@ -349,15 +397,15 @@ export default class CanvasEffect {
             : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
 
         SequencerAnimationEngine.animate([{
-            name: "scale.x",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "scale.x",
             to: scale.x,
             duration: scaleOut.duration,
             ease: scaleOut.ease,
             delay: scaleOut.delay
         }, {
-            name: "scale.y",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "scale.y",
             to: scale.y,
             duration: scaleOut.duration,
             ease: scaleOut.ease,
@@ -376,14 +424,14 @@ export default class CanvasEffect {
         let original_radians = this.spriteContainer.rotation;
         this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
 
-        SequencerAnimationEngine.animate({
-            name: "rotation",
-            parent: this.spriteContainer,
+        SequencerAnimationEngine.animate(this.counterAnimate({
+            target: this.spriteContainer,
+            propertyName: "rotation",
             to: original_radians,
             duration: rotateIn.duration,
             ease: rotateIn.ease,
             delay: rotateIn.delay
-        })
+        }))
 
         return rotateIn.duration + rotateIn.delay;
     }
@@ -398,14 +446,14 @@ export default class CanvasEffect {
             ? Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0)
             : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
 
-        SequencerAnimationEngine.animate({
-            name: "rotation",
-            parent: this.spriteContainer,
+        SequencerAnimationEngine.animate(this.counterAnimate({
+            target: this.spriteContainer,
+            propertyName: "rotation",
             to: (rotateOut.value / 180) * Math.PI,
             duration: rotateOut.duration,
             ease: rotateOut.ease,
             delay: rotateOut.delay
-        })
+        }))
 
         return rotateOut.duration + rotateOut.delay;
 
@@ -421,8 +469,8 @@ export default class CanvasEffect {
         if(this.actualCreationTime > (this.data.timestamp + duration + delay)) return;
 
         SequencerAnimationEngine.animate({
-            name: "rotation",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "rotation",
             to: this.data.audioVolume,
             duration: fadeInAudio.duration,
             ease: fadeInAudio.ease,
@@ -443,8 +491,8 @@ export default class CanvasEffect {
             : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
 
         SequencerAnimationEngine.animate({
-            name: "rotation",
-            parent: this.sprite,
+            target: this.sprite,
+            propertyName: "rotation",
             to: 0.0,
             duration: fadeInAudio.duration,
             ease: fadeOutAudio.ease,
@@ -470,15 +518,15 @@ export default class CanvasEffect {
         if(this.actualCreationTime > (this.data.timestamp + duration + moves.delay)) return;
 
         SequencerAnimationEngine.animate([{
-            name: "position.x",
-            parent: this.spriteContainer,
+            target: this.spriteContainer,
+            propertyName: "position.x",
             to: moves.target.x,
             duration: duration,
             ease: moves.ease,
             delay: moves.delay
         }, {
-            name: "position.y",
-            parent: this.spriteContainer,
+            target: this.spriteContainer,
+            propertyName: "position.y",
             to: moves.target.y,
             duration: duration,
             ease: moves.ease,

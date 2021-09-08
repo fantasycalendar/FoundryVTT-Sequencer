@@ -11,20 +11,23 @@ export default class SequencerAnimationEngine {
 			attributes: attributes.map(attribute => {
                 attribute.easeFunction = easeFunctions[attribute.ease];
                 attribute.complete = false;
+                attribute.initialized = false;
                 attribute.progress = 0;
-                attribute.offset = attribute.offset ?? 0;
 
                 attribute.duration = attribute.duration ?? 0;
                 attribute.durationDone = timeDifference ?? 0;
 
-                if(attribute.loops) {
-                    attribute.loopDuration = attribute.loopDuration ?? 0;
+                if(attribute?.looping) {
+                    attribute.loopDuration = attribute.loopDuration ?? attribute.duration ?? 0;
                     attribute.loopDurationDone = timeDifference % attribute.loopDuration ?? 0;
                     attribute.loops = attribute.loops ?? 0;
                     attribute.loopsDone = Math.floor(attribute.durationDone / attribute.duration);
                     attribute.index = (attribute.loopsDone) % attribute.values.length;
                     attribute.nextIndex = (attribute.loopsDone+1) % attribute.values.length;
-
+                    if(!attribute.pingPong && attribute.nextIndex === 0){
+                        attribute.index = 0;
+                        attribute.nextIndex = 1;
+                    }
                 }
 				return attribute;
 			}),
@@ -51,7 +54,9 @@ export default class SequencerAnimationEngine {
 
                 if (animData.totalDt < attribute.delay) continue;
 
-                if(attribute?.loops){
+                if( attribute?.looping && attribute?.indefinite){
+                    attribute = this.handleIndefiniteLoop(dt, attribute);
+                }else if(attribute?.looping){
                     attribute = this.handleLoops(dt, attribute);
                 }else{
                     attribute = this.handleDefault(dt, attribute);
@@ -76,24 +81,22 @@ export default class SequencerAnimationEngine {
 
     }
 
-    static handleLoops(dt, attribute){
+    static _handleBaseLoop(dt, attribute){
 
-        if(attribute?.index === undefined){
+        if(!attribute.initialized){
             if(attribute.values.length === 1){
-                attribute.values.unshift(lib.deepGet(attribute.parent, attribute.name));
+                attribute.values.unshift(lib.deepGet(
+                    attribute.target,
+                    attribute.propertyName
+                ));
             }
-            attribute.index = 0;
-            attribute.nextIndex = 1;
-            attribute.loopsDone = 0;
+            attribute.initialized = true;
         }
 
         attribute.loopDurationDone += dt;
         attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
 
-        attribute.durationDone += dt;
-        attribute.overallProgress = attribute.durationDone / attribute.duration;
-
-        let val = lib.lerp(
+        attribute.val = lib.lerp(
             attribute.values[attribute.index],
             attribute.values[attribute.nextIndex],
             attribute.easeFunction(attribute.progress)
@@ -106,19 +109,53 @@ export default class SequencerAnimationEngine {
             attribute.index = (attribute.index + 1) % attribute.values.length;
             attribute.nextIndex = (attribute.nextIndex + 1) % attribute.values.length;
 
+            if(!attribute.pingPong && attribute.nextIndex === 0){
+                attribute.index = 0;
+                attribute.nextIndex = 1;
+            }
+
             attribute.loopsDone++;
 
-            val = lib.lerp(
+            attribute.val = lib.lerp(
                 attribute.values[attribute.index],
                 attribute.values[attribute.nextIndex],
                 attribute.easeFunction(attribute.progress - 1.0)
             );
 
-            if (attribute.loopsDone === attribute.loops * 2) {
-                attribute.complete = true;
-                val = attribute.values[attribute.index];
-            }
+        }
 
+        return attribute;
+
+    }
+
+    static handleIndefiniteLoop(dt, attribute){
+
+        attribute = this._handleBaseLoop(dt, attribute);
+
+        try{
+            lib.deepSet(
+                attribute.target,
+                attribute.propertyName,
+                attribute.val
+            );
+        }catch(err){
+            attribute.complete = true;
+        }
+
+        return attribute;
+
+    }
+
+    static handleLoops(dt, attribute){
+
+        attribute = this._handleBaseLoop(dt, attribute);
+
+        attribute.durationDone += dt;
+        attribute.overallProgress = attribute.durationDone / attribute.duration;
+
+        if (attribute.progress >= 1.0 && attribute.loopsDone === attribute.loops * 2) {
+            attribute.complete = true;
+            attribute.val = attribute.values[attribute.index];
         }
 
         if(attribute.overallProgress >= 1.0){
@@ -126,7 +163,11 @@ export default class SequencerAnimationEngine {
         }
 
         try{
-			lib.deepSet(attribute.parent, attribute.name, val);
+			lib.deepSet(
+			    attribute.target,
+                attribute.propertyName,
+                attribute.val
+            );
         }catch(err){
         	attribute.complete = true;
 		}
@@ -138,25 +179,32 @@ export default class SequencerAnimationEngine {
     static handleDefault(dt, attribute){
 
         if(attribute.from === undefined){
-            attribute.from = lib.deepGet(attribute.parent, attribute.name);
+            attribute.from = lib.deepGet(
+                attribute.target,
+                attribute.propertyName
+            );
         }
 
         attribute.durationDone += dt;
         attribute.progress = attribute.durationDone / attribute.duration;
 
-        let val = lib.lerp(
-            attribute.from + attribute.offset,
-            attribute.to + attribute.offset,
+        attribute.val = lib.lerp(
+            attribute.from,
+            attribute.to,
             attribute.easeFunction(attribute.progress)
         );
 
         if (attribute.progress >= 1.0) {
-            val = attribute.to;
+            attribute.val = attribute.to;
             attribute.complete = true;
         }
 
 		try{
-			lib.deepSet(attribute.parent, attribute.name, val);
+			lib.deepSet(
+			    attribute.target,
+                attribute.propertyName,
+                attribute.val
+            );
 		}catch(err){
 			attribute.complete = true;
 		}

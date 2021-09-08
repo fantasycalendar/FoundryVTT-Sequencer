@@ -40,6 +40,7 @@ export default class EffectSection extends Section {
         this._offset = false;
 		this._size = false;
 		this._persist = false;
+		this._zeroSpriteRotation = false;
 		this._distance = 0;
 		this._extraEndDuration = 0;
     }
@@ -413,6 +414,18 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Causes the effect to be played below tiles
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection} this
+     */
+    zeroSpriteRotation(inBool=true){
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "zeroSpriteRotation", "inBool must be of type boolean");
+        this._zeroSpriteRotation = inBool;
+        return this;
+    }
+
     async _run() {
         let data = await this._sanitizeEffectData();
 		let push = !(data.users.length === 1 && data.users.includes(game.userId));
@@ -484,6 +497,7 @@ export default class EffectSection extends Section {
                 fadeOutAudio: this._fadeOutAudio,
                 animations: this._animations
             },
+            zeroSpriteRotation: this._zeroSpriteRotation,
 			sceneId: game.user.viewedScene,
 			users: Array.from(this._users)
         };

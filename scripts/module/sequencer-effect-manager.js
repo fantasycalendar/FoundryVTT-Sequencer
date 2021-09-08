@@ -159,11 +159,10 @@ export default class SequencerEffectManager {
     static async _addFlagsToObject(inObject, inEffects){
         if(!lib.isResponsibleGM()) return;
         if(!Array.isArray(inEffects)) inEffects = [inEffects];
-        const effects = new Map(await inObject.getFlag('sequencer', 'effects') ?? []);
-        for(const effect of inEffects) {
-            effects.set(effect.data.id, effect.data);
-        }
-        await inObject.setFlag('sequencer', 'effects', Array.from(effects));
+        let flagsToSet = flagBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
+        flagsToSet.effects.push(...inEffects);
+        flagBuffer.set(inObject.id, flagsToSet);
+        addFlagDebounce();
     }
 
     static async _removeFlagsFromObject(inObject, inEffects = false){
@@ -179,3 +178,26 @@ export default class SequencerEffectManager {
         await inObject.setFlag('sequencer', 'effects', Array.from(effects));
     }
 }
+
+const flagBuffer = new Map();
+
+const addFlagDebounce = debounce(async () => {
+    const flags = Array.from(flagBuffer);
+    flagBuffer.clear();
+    for(let flagData of flags){
+
+        const obj = flagData[1].obj;
+        const newEffects = flagData[1].effects;
+
+        let objectFlags = await obj.getFlag('sequencer', 'effects');
+        const existingEffects = new Map(objectFlags ?? []);
+        for(const effect of newEffects) {
+            existingEffects.set(effect.data.id, effect.data);
+        }
+
+        console.log(Array.from(existingEffects));
+
+        await obj.setFlag('sequencer', 'effects', Array.from(existingEffects));
+
+    }
+}, 100);

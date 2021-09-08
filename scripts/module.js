@@ -16,6 +16,12 @@ Hooks.once("canvasPan", () => {
     SequencerEffectManager._setUpPersists();
 });
 
+Hooks.once("updateScene", () => {
+    setTimeout(() => {
+        SequencerEffectManager._setUpPersists();
+    }, 100);
+});
+
 Hooks.once('ready', async function() {
 	window.Sequence = Sequence;
 	window.SequencerPreloader = SequencerPreloader;
