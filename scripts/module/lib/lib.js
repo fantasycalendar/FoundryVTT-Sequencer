@@ -259,9 +259,9 @@ export function transformVector(inVector, context=false){
 export function getAllObjects(inSceneId){
     const scene = inSceneId ? game.scenes.get(inSceneId) : game.scenes.get(game.canvas.id);
     return [
-        ...Array.from(scene.tokens).map(obj => obj._object),
-        ...Array.from(scene.templates).map(obj => obj._object),
-        ...Array.from(scene.tiles).map(obj => obj._object)
+        ...Array.from(scene.tokens).map(obj => obj?.object),
+        ...Array.from(scene.templates).map(obj => obj?.object),
+        ...Array.from(scene.tiles).map(obj => obj?.object)
     ].deepFlatten().filter(Boolean);
 }
 

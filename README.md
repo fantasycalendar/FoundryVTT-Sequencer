@@ -294,6 +294,7 @@ new Sequence()
 - *Sequencer* - Added `SequencerEffectManager`
   - Added `SequencerEffectManager.endEffect()` which given a name will end any effects that fits the given parameters
   - Added `SequencerEffectManager.endAllEffects()` which will terminate all effects on the canvas
+- *Sequencer* - Fixed Documents not properly resolving into their canvas object  
 - *Effects* - Added `.attachTo()` which causes the effect to be attached to a given object
 - *Effects* - Added `.persist()` which causes the effect to become permanent on the canvas until removed
 - *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately

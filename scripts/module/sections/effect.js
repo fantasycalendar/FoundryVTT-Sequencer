@@ -789,6 +789,7 @@ export default class EffectSection extends Section {
         if(typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
 
         return pos;
+
     }
 
     _getHalfSize(inObj) {

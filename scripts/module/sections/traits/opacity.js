@@ -3,7 +3,7 @@ export default {
 	/**
 	 * Base properties
 	 */
-	_opacity: 1.0,
+	_opacity: false,
 	_fadeIn: false,
 	_fadeOut: false,
 

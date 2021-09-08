@@ -155,9 +155,11 @@ export default class Section{
 		if(typeof inLocation === "string" && !this.sequence._cachedOffsetExists(inLocation)){
 			inLocation = lib.getObjectFromScene(inLocation) ?? inLocation;
 		}
-		if(inLocation instanceof Document){
-			let object = lib.getObjectFromScene(inLocation.id);
-			if(!object) throw this.sequence._throwError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
+		if(inLocation instanceof foundry.abstract.Document){
+            let object = inLocation?.object;
+            if(!object) object = lib.getObjectFromScene(inLocation.id);
+            if(!object) throw this.sequence._throwError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
+            if(!(object instanceof PlaceableObject)) throw this.sequence._throwError(this, "_validateLocation", `Object provided must be instance of PlaceableObject!`);
 			return object;
 		}
 		return inLocation;
