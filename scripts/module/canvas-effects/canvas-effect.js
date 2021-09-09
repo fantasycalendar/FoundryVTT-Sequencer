@@ -170,7 +170,10 @@ export default class CanvasEffect {
 
 		this.data.animationDuration /= (this.data.playbackRate ?? 1.0);
 
-		if(this.source) this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
+		if(this.source){
+		    this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
+            if(this.data.noLoop) this.source.loop = false;
+        }
 
 	}
 
@@ -676,6 +679,15 @@ class PersistentCanvasEffect extends CanvasEffect{
         super.calculateDuration();
         if (!this.source) return;
         this.source.loop = false;
+        if(this.data.noLoop){
+            let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+            if(creationTimeDifference >= this.data.animationDuration){
+                this.source.currentTime = this.data.endTime;
+                return;
+            }
+            this.source.currentTime = creationTimeDifference / 1000;
+            return;
+        }
         this._resetVideo();
     }
 

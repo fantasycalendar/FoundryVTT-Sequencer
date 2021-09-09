@@ -43,6 +43,7 @@ export default class EffectSection extends Section {
 		this._zeroSpriteRotation = false;
 		this._distance = 0;
 		this._extraEndDuration = 0;
+		this._noLoop = false;
     }
 
 	/**
@@ -426,6 +427,18 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Causes the effect to be played below tiles
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection} this
+     */
+    noLoop(inBool=true){
+        if(typeof inBool !== "boolean") throw this.sequence._throwError(this, "noLoop", "inBool must be of type boolean");
+        this._noLoop = inBool;
+        return this;
+    }
+
     async _run() {
         let data = await this._sanitizeEffectData();
 		let push = !(data.users.length === 1 && data.users.includes(game.userId));
@@ -485,6 +498,7 @@ export default class EffectSection extends Section {
             opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
             audioVolume: this._volume,
 			time: false,
+            noLoop: this._noLoop,
 			animatedProperties: {
                 moves: this._moveTowards,
                 fadeIn: this._fadeIn,
