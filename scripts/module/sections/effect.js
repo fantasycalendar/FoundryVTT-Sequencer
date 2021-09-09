@@ -613,11 +613,11 @@ export default class EffectSection extends Section {
                     if(target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
                 }
                 if(to){
-                    target.x += offset.x;
-                    target.y += offset.y;
+                    target.x -= offset.x;
+                    target.y -= offset.y;
                 }else{
-                    origin.x += offset.x;
-                    origin.y += offset.y;
+                    origin.x -= offset.x;
+                    origin.y -= offset.y;
                 }
             }
 
