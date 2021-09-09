@@ -209,8 +209,8 @@ export default class CanvasEffect {
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
 
         this.spriteContainer.pivot.set(
-            lib.lerp(this.sprite.width*0.5,this.sprite.width*-0.5, this.data.anchor.x),
-            lib.lerp(this.sprite.height*0.5,this.sprite.height*-0.5, this.data.anchor.y)
+            lib.lerp(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
+            lib.lerp(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
         );
 
 		if(this.source?.currentTime !== undefined){
