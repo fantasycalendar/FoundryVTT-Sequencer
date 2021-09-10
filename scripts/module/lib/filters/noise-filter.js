@@ -1,24 +1,23 @@
-export default class NoiseFilter extends PIXI.filters.NoiseFilter{
+export default class NoiseFilter extends PIXI.filters.NoiseFilter {
 
-	constructor(inData = {}){
-		super();
+    constructor(inData = {}) {
+        super();
 
-		inData = foundry.utils.mergeObject({
-			noise: 0.5,
-			seed: Math.random()
-		}, inData)
+        inData = foundry.utils.mergeObject({
+            noise: 0.5,
+            seed: Math.random()
+        }, inData)
 
-		this.isValid = true;
-		for(let [key, value] of Object.entries(inData)) {
-			try {
-				this[key] = value;
-			} catch (err) {
-				let warning = `Sequencer | ${this.constructor.name} | Could not set property ${key}`;
-				ui.notifications.warn(warning);
-				console.warn(warning)
-				this.isValid = false;
-			}
-		}
-	}
-
+        this.isValid = true;
+        for (let [key, value] of Object.entries(inData)) {
+            try {
+                this[key] = value;
+            } catch (err) {
+                let warning = `Sequencer | ${this.constructor.name} | Could not set property ${key}`;
+                ui.notifications.warn(warning);
+                console.warn(warning)
+                this.isValid = false;
+            }
+        }
+    }
 }

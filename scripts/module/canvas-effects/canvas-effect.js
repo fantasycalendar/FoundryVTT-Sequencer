@@ -214,10 +214,25 @@ export default class CanvasEffect {
         );
 
 		if(this.source?.currentTime !== undefined){
-			this.source.play();
-			this.source.playbackRate = this.data.playbackRate;
+            this.source.playbackRate = this.data.playbackRate;
+            this.tryPlay();
 		}
 
+    }
+
+    tryPlay(){
+        return new Promise(resolve => {
+            if (this.source) {
+                try {
+                    this.source.play();
+                    resolve();
+                } catch (err) {
+                    setTimeout(() => {
+                        resolve(this.tryPlay());
+                    }, 10)
+                }
+            }
+        });
     }
 
     counterAnimate(animation){
@@ -589,12 +604,13 @@ export default class CanvasEffect {
             video.src = URL.createObjectURL(blob);
             video.playbackRate = this.data.playbackRate;
             video.autoplay = false;
+            video.muted = true;
             if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
+                video.muted = false;
             }
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
             video.volume *= game.settings.get("core", "globalInterfaceVolume");
-
 			let texture = await PIXI.Texture.from(video);
 
             let canplay = true;
@@ -694,7 +710,7 @@ class PersistentCanvasEffect extends CanvasEffect{
     async _resetVideo(){
         if(this.ended) return;
         this.source.currentTime = this.data.startTime;
-        await this.source.play();
+        await this.tryPlay();
         setTimeout(() => {
             this._resetVideo();
         }, this.data.animationDuration);

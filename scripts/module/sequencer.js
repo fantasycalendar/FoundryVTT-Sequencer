@@ -3,9 +3,8 @@ import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
 import AnimationSection from './sections/animation.js';
-import { throwError } from "./lib/lib.js";
 
-export default class Sequence{
+export default class Sequence {
 
     constructor() {
         this.sections = [];
@@ -20,25 +19,25 @@ export default class Sequence{
      *
      * @returns {Sequence} this
      */
-    async play(){
-		this._log("Preparing cache")
-		await this._prepareOffsetCache();
-		this.effectIndex = 0;
-		this._log("Playing sections")
+    async play() {
+        this._log("Preparing cache")
+        await this._prepareOffsetCache();
+        this.effectIndex = 0;
+        this._log("Playing sections")
 
-		let promises = [];
-		for(let section of this.sections){
-			if(section instanceof EffectSection) this.effectIndex++;
-			if(section.shouldWaitUntilFinished) {
-				promises.push(await section._execute());
-			}else{
-				promises.push(section._execute());
-			}
-			if(!section.isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
-		}
+        let promises = [];
+        for (let section of this.sections) {
+            if (section instanceof EffectSection) this.effectIndex++;
+            if (section.shouldWaitUntilFinished) {
+                promises.push(await section._execute());
+            } else {
+                promises.push(section._execute());
+            }
+            if (!section.isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
+        }
 
-		return Promise.allSettled(promises).then(() => this._log("Finished playing sections"));
-	}
+        return Promise.allSettled(promises).then(() => this._log("Finished playing sections"));
+    }
 
     /**
      * Creates a section that will run a function.
@@ -46,7 +45,7 @@ export default class Sequence{
      * @param {function} inFunc
      * @returns {Sequence} this
      */
-    thenDo(inFunc){
+    thenDo(inFunc) {
         let func = new FunctionSection(this, inFunc);
         this.sections.push(func)
         return this;
@@ -59,14 +58,14 @@ export default class Sequence{
      * @param {boolean} [inWaitUntilFinished=true] inWaitUntilFinished
      * @returns {Sequence} this
      */
-    macro(inMacro, inWaitUntilFinished = true){
+    macro(inMacro, inWaitUntilFinished = true) {
         let macro;
-        if(typeof inMacro === "string") {
+        if (typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
             if (!macro) {
                 throw this._throwError(this, "macro", `Macro '${inMacro}' was not found`);
             }
-        } else if(inMacro instanceof Macro) {
+        } else if (inMacro instanceof Macro) {
             macro = inMacro;
         } else {
             throw this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
@@ -86,7 +85,7 @@ export default class Sequence{
      * @param {string} [inFile] inFile
      * @returns {Section}
      */
-    effect(inFile=""){
+    effect(inFile = "") {
         let effect = new EffectSection(this, inFile);
         this.sections.push(effect);
         return effect;
@@ -98,7 +97,7 @@ export default class Sequence{
      * @param {string} [inFile] inFile
      * @returns {Section}
      */
-    sound(inFile=""){
+    sound(inFile = "") {
         let sound = new SoundSection(this, inFile);
         this.sections.push(sound);
         return sound;
@@ -110,7 +109,7 @@ export default class Sequence{
      * @param {Token|Tile|boolean} [inTarget=false] inTarget
      * @returns {AnimationSection}
      */
-    animation(inTarget = false){
+    animation(inTarget = false) {
         let animation = new AnimationSection(this, inTarget);
         this.sections.push(animation);
         return animation;
@@ -124,9 +123,9 @@ export default class Sequence{
      * @param {number} [msMax=1] maxMs
      * @returns {Sequence} this
      */
-    wait(msMin = 1, msMax = 1){
-        if(msMin < 1) throw this._throwError(this, "wait", 'Wait ms cannot be less than 1')
-        if(msMax < 1) throw this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
+    wait(msMin = 1, msMax = 1) {
+        if (msMin < 1) throw this._throwError(this, "wait", 'Wait ms cannot be less than 1')
+        if (msMax < 1) throw this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
         let wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         let section = this._createWaitSection(wait);
         this.sections.push(section);
@@ -139,22 +138,22 @@ export default class Sequence{
      * @param {Sequence|FunctionSection|EffectSection|AnimationSection|SoundSection} inSequence
      * @returns {Sequence} this
      */
-    sequence(inSequence){
-        if(!(inSequence instanceof Sequence)) inSequence = inSequence.sequence;
-        if(!(inSequence instanceof Sequence)) throw this._throwError(this, "sequence", `could not find the sequence from the given parameter`);
+    sequence(inSequence) {
+        if (!(inSequence instanceof Sequence)) inSequence = inSequence.sequence;
+        if (!(inSequence instanceof Sequence)) throw this._throwError(this, "sequence", `could not find the sequence from the given parameter`);
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
 
-    async _prepareOffsetCache(){
+    async _prepareOffsetCache() {
         this._cachedOffsets = {};
-        for(let section of this.sections) {
+        for (let section of this.sections) {
             await section._prepareOffsetCache();
         }
     }
 
-    _insertCachedOffset(inName, inObject, inOffset, inExtraOffset){
-        if(this._cachedOffsets[inName] === undefined){
+    _insertCachedOffset(inName, inObject, inOffset, inExtraOffset) {
+        if (this._cachedOffsets[inName] === undefined) {
             this._cachedOffsets[inName] = [];
         }
         this._cachedOffsets[inName].push({
@@ -164,43 +163,43 @@ export default class Sequence{
         });
     }
 
-    _cachedOffsetExists(inName){
-		return this._cachedOffsets[inName] !== undefined;
-	}
+    _cachedOffsetExists(inName) {
+        return this._cachedOffsets[inName] !== undefined;
+    }
 
-    _getCachedOffset(inName, inIndex){
-        if(!this._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
+    _getCachedOffset(inName, inIndex) {
+        if (!this._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
         let normalizedIndex = inIndex % this._cachedOffsets[inName].length;
         return this._cachedOffsets?.[inName]?.[normalizedIndex];
     }
 
-    _createWaitSection(ms = 1){
-        return new FunctionSection(this, async function(){
+    _createWaitSection(ms = 1) {
+        return new FunctionSection(this, async function () {
             return new Promise(async (resolve) => {
                 setTimeout(resolve, ms)
             });
         });
     }
 
-    _getFileFromCache(inFile){
-        if(inFile in this._fileCache){
+    _getFileFromCache(inFile) {
+        if (inFile in this._fileCache) {
             return this._fileCache[inFile];
         }
         return false;
     }
 
-    _addFileToCache(inFile, data){
+    _addFileToCache(inFile, data) {
         this._fileCache[inFile] = data;
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
-    _throwError(self, func, error){
+    _throwError(self, func, error) {
         error = `${self.constructor.name} | ${func} - ${error}`;
         return lib.throwError("Sequencer", error);
     }
 
-    _log(...args){
-        if(this.debug) console.log(`DEBUG | Sequencer |`, ...args);
+    _log(...args) {
+        if (this.debug) console.log(`DEBUG | Sequencer |`, ...args);
     }
 
 }

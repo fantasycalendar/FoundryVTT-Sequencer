@@ -1,3 +1,13 @@
+import * as lib from "../lib/lib.js";
+
+export function registerEase(easeName, easeFunction, overwrite = false){
+    if(typeof easeName !== "string") lib.throwError("registerEase", "easeName must be of type string")
+    if(!lib.is_function(easeFunction)) lib.throwError("registerEase", "easeFunction must be of type function")
+    if(easeFunctions[easeName] !== undefined && !overwrite) lib.throwError("registerEase", `${easeName} is already a defined ease function`)
+    if(game.settings.get("sequencer", "debug")) console.log(`Sequencer | registerEase | Registered ease function: ${easeName}`);
+    easeFunctions[easeName] = easeFunction;
+}
+
 export const easeFunctions = {
     "linear": linear,
     "easeInSine": easeInSine,

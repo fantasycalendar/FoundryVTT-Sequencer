@@ -5,11 +5,11 @@ import BlurFilterPass from "./filters/blur-filter-pass.js";
 import GlowFilter from "./filters/glow-filter.js";
 
 const filters = {
-	"ColorMatrix": ColorMatrixFilter,
-	"Blur": BlurFilter,
-	"BlurDirectional": BlurFilterPass,
-	"Noise": NoiseFilter,
-	"Glow": GlowFilter,
+    "ColorMatrix": ColorMatrixFilter,
+    "Blur": BlurFilter,
+    "BlurDirectional": BlurFilterPass,
+    "Noise": NoiseFilter,
+    "Glow": GlowFilter,
 }
 
 export default filters;

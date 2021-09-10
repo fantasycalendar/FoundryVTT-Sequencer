@@ -1,4 +1,4 @@
-export default function registerSettings(){
+export default function registerSettings() {
 
     game.settings.register("sequencer", "debug", {
         name: "Enable debugging",
@@ -27,15 +27,15 @@ export default function registerSettings(){
         type: Boolean
     });
 
-	// Define a settings submenu which handles advanced configuration needs
-	game.settings.registerMenu("sequencer", "openSequencerDatabaseViewer", {
-		name: "Open Sequencer Database Viewer",
-		hint: "This opens the sequencer database viewer ",
-		label: "Open Database Viewer",
-		icon: "fas fa-bars",
-		type: SequencerDatabaseViewer,
-		restricted: true
-	});
+    // Define a settings submenu which handles advanced configuration needs
+    game.settings.registerMenu("sequencer", "openSequencerDatabaseViewer", {
+        name: "Open Sequencer Database Viewer",
+        hint: "This opens the sequencer database viewer ",
+        label: "Open Database Viewer",
+        icon: "fas fa-bars",
+        type: Sequencer.DatabaseViewer,
+        restricted: true
+    });
 
     game.settings.register("sequencer", "fileCache", {
         name: "fileCache",

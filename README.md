@@ -297,8 +297,7 @@ new Sequence()
 - *Sequencer* - Fixed Documents not properly resolving into their canvas object  
 - *Effects* - Added `.attachTo()` which causes the effect to be attached to a given object
 - *Effects* - Added `.persist()` which causes the effect to become permanent on the canvas until removed
-- *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately
-- *Effects* - Fixed `.offset()` being inverted relative to the given location  
+- *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately 
 
 ### Version 0.6.12
 - *Sequencer* - Fixed an issue where the preloader would sometimes fail to preload
