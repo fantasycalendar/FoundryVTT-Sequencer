@@ -22,11 +22,11 @@ function onSocketEvent(socketData) {
         case SOCKET_HANDLERS.PLAY_EFFECT:
             return Sequencer.EffectManager.play(...args);
         case SOCKET_HANDLERS.END_EFFECT:
-            return Sequencer.EffectManager.endEffects(...args);
+            return Sequencer.EffectManager._endEffects(...args);
         case SOCKET_HANDLERS.END_ALL_EFFECTS:
-            return Sequencer.EffectManager.endAllEffects(...args);
+            return Sequencer.EffectManager._endManyEffects(...args);
         case SOCKET_HANDLERS.PLAY_SOUND:
-            return SequencerAudioHelper.play(...args, false);
+            return SequencerAudioHelper.play(...args);
         case SOCKET_HANDLERS.PRELOAD:
             return Sequencer.Preloader.preload(...args);
         case SOCKET_HANDLERS.PRELOAD_RESPONSE:

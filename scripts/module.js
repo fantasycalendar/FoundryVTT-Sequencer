@@ -37,7 +37,6 @@ Hooks.once("updateScene", () => {
 });
 
 Hooks.once('ready', async function () {
-
     registerSettings();
     registerSocket();
     console.log("Sequencer | Ready to go!")

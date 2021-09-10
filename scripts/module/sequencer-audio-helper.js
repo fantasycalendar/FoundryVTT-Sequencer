@@ -44,7 +44,7 @@ export default class SequencerAudioHelper {
                 from: 0.0,
                 to: data.volume,
                 duration: Math.min(data.fadeIn.duration, data.duration),
-                ease: easeFunctions[data.fadeIn.ease],
+                ease: data.fadeIn.ease,
                 delay: Math.min(data.fadeIn.delay, data.duration)
             });
         }
@@ -56,7 +56,7 @@ export default class SequencerAudioHelper {
                 from: data.volume,
                 to: 0.0,
                 duration: Math.min(data.fadeOut.duration, data.duration),
-                ease: easeFunctions[data.fadeOut.ease],
+                ease: data.fadeOut.ease,
                 delay: Math.max(data.duration - data.fadeOut.duration + data.fadeOut.delay, 0)
             });
         }

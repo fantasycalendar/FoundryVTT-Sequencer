@@ -62,7 +62,7 @@ class SoundSection extends Section {
 
     async _sanitizeSoundData() {
 
-        let file = this._determineFile(this._file)
+        let file = await this._determineFile(this._file)
 
         if (file instanceof lib.SequencerFile) {
             if (file.timeRange) {

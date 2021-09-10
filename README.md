@@ -291,13 +291,17 @@ new Sequence()
 ## Changelog
 
 ### Version 1.0.0
-- *Sequencer* - Added `SequencerEffectManager`
-  - Added `SequencerEffectManager.endEffect()` which given a name will end any effects that fits the given parameters
-  - Added `SequencerEffectManager.endAllEffects()` which will terminate all effects on the canvas
-- *Sequencer* - Fixed Documents not properly resolving into their canvas object  
+- *Sequencer* - Added `Sequencer.EffectManager`
+  - Added `Sequencer.EffectManager.endEffect()` which given a name will end any effects that fits the given parameters
+  - Added `Sequencer.EffectManager.endAllEffects()` which will terminate all effects on the canvas
+- *Sequencer* - `SequencerDatabase` is deprecated, and is now accessible with `Sequencer.Database` - 1.1.0 will remove the old path entirely 
+- *Sequencer* - `SequencerDatabaseViewer` is deprecated, and is now accessible with `Sequencer.DatabaseViewer` - 1.1.0 will remove the old path entirely 
+- *Sequencer* - `SequencerPreloader` is deprecated, and is now accessible with `Sequencer.Preloader` - 1.1.0 will remove the old path entirely 
+- *Sequencer* - Fixed Documents sometimes not properly resolving to their PlaceableObject
 - *Effects* - Added `.attachTo()` which causes the effect to be attached to a given object
 - *Effects* - Added `.persist()` which causes the effect to become permanent on the canvas until removed
-- *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately 
+- *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately
+- *Effects & Sounds* - Added support for wildcard paths
 
 ### Version 0.6.12
 - *Sequencer* - Fixed an issue where the preloader would sometimes fail to preload
@@ -570,6 +574,7 @@ new Sequence()
 * ghost (ghost#2000 on discord) for his fixes to the audio sections
 * Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects  
 * League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
+* Foundry VTT Core code for heaps of inspiration
 
 ### Oujia Board Scene
 - Code - Copyright © 2020 md-mention2reply

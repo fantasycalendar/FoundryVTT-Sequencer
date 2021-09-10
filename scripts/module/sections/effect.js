@@ -534,7 +534,7 @@ export default class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        let file = this._determineFile(data.file);
+        let file = await this._determineFile(data.file);
         let template;
         if (file instanceof lib.SequencerFile) {
             data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();

@@ -34,10 +34,10 @@ export default class SequencerEffectManager {
      * End an effect that is playing on the canvas based on its name
      *
      * @param {object} inData An object containing data to determine which effects to end
-     * @param {boolean} [push=false] A flag indicating whether or not to make other clients end the effects
+     * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
      * @returns {Promise} A promise that resolves when the effects have ended
      */
-    static async endEffects(inData = {}, push = false) {
+    static async endEffects(inData = {}, push = true) {
 
         if (inData?.object) {
             if (!(inData.object instanceof PlaceableObject || typeof inData.object === "string")) {
@@ -74,10 +74,10 @@ export default class SequencerEffectManager {
     /**
      * End all effects that are playing on the canvas
      *
-     * @param {boolean} [push=false] A flag indicating whether or not to make other clients end all effects
+     * @param {boolean} [push=true] A flag indicating whether or not to make other clients end all effects
      * @returns {Promise} A promise that resolves when all of the effects have ended
      */
-    static async endAllEffects(push = false) {
+    static async endAllEffects(push = true) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS);
         return this._endManyEffects();
     }

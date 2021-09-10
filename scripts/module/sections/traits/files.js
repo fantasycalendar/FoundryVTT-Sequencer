@@ -66,7 +66,7 @@ export default {
 
     },
 
-    _determineFile(inFile) {
+    async _determineFile(inFile) {
 
         if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
 
@@ -84,6 +84,8 @@ export default {
                 if (dbEntry) {
                     inFile = dbEntry;
                 }
+            } else {
+                inFile = await this._applyWildcard(inFile);
             }
         }
 
@@ -125,6 +127,38 @@ export default {
             inFile = template(this._mustache);
         }
         return inFile;
+    },
+
+    async _applyWildcard(inFile) {
+
+        if (!inFile.includes("*")) return inFile;
+
+        if (Array.isArray(inFile)) return inFile.map(async (file) => await this._applyWildcard(file));
+
+        inFile = this._applyBaseFolder(inFile);
+
+        let source = 'data';
+        const browseOptions = { wildcard: true };
+
+        if (/\.s3\./.test(inFile)) {
+            source = 's3'
+            const { bucket, keyPrefix } = FilePicker.parseS3URL(inFile);
+            if (bucket) {
+                browseOptions.bucket = bucket;
+                inFile = keyPrefix;
+            }
+        }
+
+        let images = [];
+        try {
+            const content = await FilePicker.browse(source, inFile, browseOptions);
+            images = content.files;
+        } catch (err) {
+            throw this.sequence._throwError(this, "_applyWildcard", err);
+        }
+
+        return images;
+
     }
 
 }
