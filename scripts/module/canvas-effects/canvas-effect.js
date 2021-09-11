@@ -104,7 +104,8 @@ export default class CanvasEffect {
 
     }
 
-    playAnimations(){
+    async initializeEffect(){
+        await this.spawnSprite();
         this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
@@ -121,7 +122,7 @@ export default class CanvasEffect {
 
     calculateDuration() {
 
-		this.data.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
+		this.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
 
 		let moves = this.data.animatedProperties.moves;
 
@@ -129,7 +130,7 @@ export default class CanvasEffect {
 
 			let durationFromSpeed = (this.data.distance / this.data.speed) * 1000;
 
-			this.data.animationDuration = Math.max(durationFromSpeed, this.data.duration);
+			this.animationDuration = Math.max(durationFromSpeed, this.data.duration);
 
 		}else{
 
@@ -144,34 +145,34 @@ export default class CanvasEffect {
 					moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + moves.delay;
 				}
 
-				this.data.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
+				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
 
-				this.data.animationDuration = this.data.animationDuration || 1000;
+				this.animationDuration = this.animationDuration || 1000;
 
 			}
 
 		}
 
-        this.data.startTime = 0;
+        this.startTime = 0;
 		if(this.data.time?.start && this.source?.currentTime !== undefined) {
 			let currentTime = !this.data.time.start.isPerc
 				? this.data.time.start.value ?? 0
-				: (this.data.animationDuration * this.data.time.start.value);
+				: (this.animationDuration * this.data.time.start.value);
 			this.source.currentTime = currentTime / 1000;
-            this.data.startTime = this.source.currentTime;
+            this.startTime = this.source.currentTime;
 		}
 
 		if(this.data.time?.end){
-			this.data.animationDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.data.animationDuration - this.data.time.end.value
-				: this.data.animationDuration * this.data.time.end.value;
+			this.animationDuration = !this.data.time.end.isPerc
+				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.animationDuration - this.data.time.end.value
+				: this.animationDuration * this.data.time.end.value;
 		}
-        this.data.endTime = this.data.animationDuration;
+        this.endTime = this.animationDuration;
 
-		this.data.animationDuration /= (this.data.playbackRate ?? 1.0);
+		this.animationDuration /= (this.data.playbackRate ?? 1.0);
 
 		if(this.source){
-		    this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
+		    this.source.loop = (this.animationDuration / 1000) > this.source.duration;
             if(this.data.noLoop) this.source.loop = false;
         }
 
@@ -179,7 +180,7 @@ export default class CanvasEffect {
 
     async spawnSprite() {
 
-		if(this.source && this.data.time?.start && this.source?.currentTime !== undefined) {
+		if(this.source && this.startTime && this.source?.currentTime !== undefined) {
 			await lib.wait(15)
 		}
 
@@ -197,12 +198,13 @@ export default class CanvasEffect {
 		this.container.sortChildren();
 
         if(this.data.size){
-            this.sprite.width = this.data.size.width * this.data.scale.x;
-            this.sprite.height = this.data.size.height * this.data.scale.y;
+            this.sprite.width = this.data.size.width * this.data.scale.x * this.data.gridSizeDifference;
+            this.sprite.height = this.data.size.height * this.data.scale.y * this.data.gridSizeDifference;
         } else {
-            this.data.scale.x *= this.data.gridSizeDifference;
-            this.data.scale.y *= this.data.gridSizeDifference;
-            this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
+            this.sprite.scale.set(
+                this.data.scale.x * this.data.gridSizeDifference,
+                this.data.scale.y * this.data.gridSizeDifference
+            );
         }
 
         this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
@@ -235,7 +237,7 @@ export default class CanvasEffect {
         });
     }
 
-    counterAnimate(animation){
+    counterAnimateRotation(animation){
 
         if(this.data.zeroSpriteRotation && animation.target === this.spriteContainer){
             delete animation.target;
@@ -277,7 +279,7 @@ export default class CanvasEffect {
                 animation.to = ((animation.to / 180) * Math.PI) + offset;
             }
 
-            animationsToSend.concat(this.counterAnimate(animation))
+            animationsToSend.concat(this.counterAnimateRotation(animation))
 
         }
 
@@ -296,7 +298,7 @@ export default class CanvasEffect {
                 });
             }
 
-            animationsToSend.concat(this.counterAnimate(animation))
+            animationsToSend.concat(this.counterAnimateRotation(animation))
 
         }
 
@@ -337,7 +339,7 @@ export default class CanvasEffect {
         let fadeOut = this.data.animatedProperties.fadeOut;
 
         fadeOut.delay = typeof immediate !== "number"
-            ? Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0)
+            ? Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0)
             : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
         SequencerAnimationEngine.animate({
@@ -411,7 +413,7 @@ export default class CanvasEffect {
         let scale = this._determineScale(scaleOut)
 
         scaleOut.delay = typeof immediate !== "number"
-            ? Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
+            ? Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0)
             : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
 
         SequencerAnimationEngine.animate([{
@@ -442,7 +444,7 @@ export default class CanvasEffect {
         let original_radians = this.spriteContainer.rotation;
         this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
 
-        SequencerAnimationEngine.animate(this.counterAnimate({
+        SequencerAnimationEngine.animate(this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: original_radians,
@@ -461,10 +463,10 @@ export default class CanvasEffect {
         let rotateOut = this.data.animatedProperties.rotateOut;
 
         rotateOut.delay = typeof immediate !== "number"
-            ? Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0)
+            ? Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0)
             : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
 
-        SequencerAnimationEngine.animate(this.counterAnimate({
+        SequencerAnimationEngine.animate(this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: (rotateOut.value / 180) * Math.PI,
@@ -488,7 +490,7 @@ export default class CanvasEffect {
 
         SequencerAnimationEngine.animate({
             target: this.sprite,
-            propertyName: "rotation",
+            propertyName: "volume",
             to: this.data.audioVolume,
             duration: fadeInAudio.duration,
             ease: fadeInAudio.ease,
@@ -505,12 +507,12 @@ export default class CanvasEffect {
         const fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
 
         fadeOutAudio.delay = typeof immediate !== "number"
-            ? Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
+            ? Math.max(this.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
             : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
 
         SequencerAnimationEngine.animate({
             target: this.sprite,
-            propertyName: "rotation",
+            propertyName: "volume",
             to: 0.0,
             duration: fadeInAudio.duration,
             ease: fadeOutAudio.ease,
@@ -526,7 +528,7 @@ export default class CanvasEffect {
 
         let moves = this.data.animatedProperties.moves;
 
-        let movementDuration = this.data.animationDuration;
+        let movementDuration = this.animationDuration;
 		if(this.data.speed){
 			movementDuration = (this.data.distance / this.data.speed) * 1000;
 		}
@@ -558,7 +560,7 @@ export default class CanvasEffect {
         setTimeout(() => {
             this.resolve();
             this.endEffect();
-        }, this.data.animationDuration)
+        }, this.animationDuration)
     }
 
 	endEffect(){
@@ -664,15 +666,12 @@ export default class CanvasEffect {
             	reject();
 			}else {
 				this.calculateDuration();
-				if(shouldPlay) {
-					await this.spawnSprite();
-					this.playAnimations();
-				}
+				if(shouldPlay) this.initializeEffect();
 			}
         });
 
         return {
-            duration: this.data.animationDuration,
+            duration: this.animationDuration,
             promise: promise
         }
     };
@@ -681,7 +680,9 @@ export default class CanvasEffect {
 
 class PersistentCanvasEffect extends CanvasEffect{
 
-    playAnimations(){
+    async initializeEffect(){
+        this.startLoop();
+        await this.spawnSprite();
         this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
@@ -691,29 +692,29 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.debug();
     }
 
-    calculateDuration() {
-        super.calculateDuration();
+    startLoop() {
         if (!this.source) return;
-        this.source.loop = false;
         if(this.data.noLoop){
+            this.source.loop = false;
             let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
-            if(creationTimeDifference >= this.data.animationDuration){
-                this.source.currentTime = this.data.endTime;
+            if(creationTimeDifference >= this.animationDuration){
+                this.source.currentTime = this.endTime;
                 return;
             }
             this.source.currentTime = creationTimeDifference / 1000;
             return;
         }
-        this._resetVideo();
+        this.source.loop = this.startTime !== 0 || this.endTime !== this.source.duration;
+        this.resetLoop();
     }
 
-    async _resetVideo(){
-        if(this.ended) return;
-        this.source.currentTime = this.data.startTime;
+    async resetLoop(){
+        if(this.ended || this.source.loop) return;
+        this.source.currentTime = this.startTime;
         await this.tryPlay();
         setTimeout(() => {
-            this._resetVideo();
-        }, this.data.animationDuration);
+            this.resetLoop();
+        }, this.animationDuration);
     }
 
     async endEffect(){
