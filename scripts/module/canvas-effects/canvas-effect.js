@@ -1,6 +1,7 @@
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
+import filters from "../lib/filters.js";
 
 export default class CanvasEffect {
 
@@ -19,6 +20,7 @@ export default class CanvasEffect {
         this.resolve = false;
         this._context = false;
         this.loopOffset = 0;
+        this.filters = {};
 
 		this.actualCreationTime = (+new Date())
         // Set default values
@@ -168,7 +170,7 @@ export default class CanvasEffect {
 				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.animationDuration - this.data.time.end.value
 				: this.animationDuration * this.data.time.end.value;
 		}
-        this.endTime = this.animationDuration;
+        this.endTime = this.animationDuration / 1000;
 
 		this.animationDuration /= (this.data.playbackRate ?? 1.0);
 
@@ -189,6 +191,8 @@ export default class CanvasEffect {
         this.spriteContainer.sortChildren();
         this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
         this.container.addChild(this.spriteContainer);
+
+        this.applyFilters();
 
         this.sprite.alpha = this.data.opacity;
 
@@ -237,7 +241,24 @@ export default class CanvasEffect {
         });
     }
 
+    applyFilters(){
+
+        if(!this.data.filters) return;
+
+        this.sprite.filters = [];
+
+        for(let [filterName, filterData] of Object.entries(this.data.filters)){
+             const filter = new filters[filterName](filterData.data);
+             this.sprite.filters.push(filter);
+             const filterKeyName = filterData.name || filterName;
+             this.filters[filterKeyName] = filter;
+        }
+
+    }
+
     counterAnimateRotation(animation){
+
+        if(!Array.isArray(animation)) animation = [animation]
 
         if(this.data.zeroSpriteRotation && animation.target === this.spriteContainer){
             delete animation.target;
@@ -250,7 +271,7 @@ export default class CanvasEffect {
                 counterAnimation.from *= -1;
                 counterAnimation.to *= -1;
             }
-            animation = [animation, counterAnimation];
+            animation.push(counterAnimation);
         }
 
         return animation;
@@ -279,7 +300,7 @@ export default class CanvasEffect {
                 animation.to = ((animation.to / 180) * Math.PI) + offset;
             }
 
-            animationsToSend.concat(this.counterAnimateRotation(animation))
+            animationsToSend = animationsToSend.concat(this.counterAnimateRotation(animation))
 
         }
 
@@ -298,7 +319,7 @@ export default class CanvasEffect {
                 });
             }
 
-            animationsToSend.concat(this.counterAnimateRotation(animation))
+            animationsToSend = animationsToSend.concat(this.counterAnimateRotation(animation))
 
         }
 
@@ -666,7 +687,9 @@ export default class CanvasEffect {
             	reject();
 			}else {
 				this.calculateDuration();
-				if(shouldPlay) this.initializeEffect();
+				if(shouldPlay){
+				    this.initializeEffect();
+                }
 			}
         });
 
@@ -716,7 +739,7 @@ class PersistentCanvasEffect extends CanvasEffect{
         setTimeout(() => {
             this.loopOffset = 0;
             this.resetLoop();
-        }, this.animationDuration - this.loopOffset*1000);
+        }, this.animationDuration - (this.loopOffset*1000));
     }
 
     async endEffect(){

@@ -50,6 +50,7 @@ export default class SequencerAnimationEngine {
 
             for (let attribute of animData.attributes) {
 
+
                 if (attribute.complete) continue;
 
                 if (animData.totalDt < attribute.delay) continue;

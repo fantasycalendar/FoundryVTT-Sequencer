@@ -521,6 +521,7 @@ export default class EffectSection extends Section {
                 fadeOutAudio: this._fadeOutAudio,
                 animations: this._animations
             },
+            filters: this._filters,
             zeroSpriteRotation: this._zeroSpriteRotation,
             sceneId: game.user.viewedScene,
             users: Array.from(this._users)
