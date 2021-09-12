@@ -18,6 +18,7 @@ export default class CanvasEffect {
 		this.loader = SequencerFileCache;
         this.resolve = false;
         this._context = false;
+        this.loopOffset = 0;
 
 		this.actualCreationTime = (+new Date())
         // Set default values
@@ -180,22 +181,16 @@ export default class CanvasEffect {
 
     async spawnSprite() {
 
-		if(this.source && this.startTime && this.source?.currentTime !== undefined) {
-			await lib.wait(15)
-		}
-
         this.sprite = new PIXI.Sprite(this.texture);
         this.spriteContainer = new PIXI.Container();
         this.spriteContainer.addChild(this.sprite);
         this.sprite.anchor.set(0.5, 0.5);
-
-		this.texture.update();
-
-		this.sprite.alpha = this.data.opacity;
+        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.spriteContainer.sortChildren();
         this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
-		this.container.addChild(this.spriteContainer);
-        this.spriteContainer.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
-		this.container.sortChildren();
+        this.container.addChild(this.spriteContainer);
+
+        this.sprite.alpha = this.data.opacity;
 
         if(this.data.size){
             this.sprite.width = this.data.size.width * this.data.scale.x * this.data.gridSizeDifference;
@@ -215,10 +210,15 @@ export default class CanvasEffect {
             lib.lerp(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
         );
 
-		if(this.source?.currentTime !== undefined){
+        if(this.source && (this.startTime || this.loopOffset > 0) && this.source?.currentTime !== undefined) {
+            await lib.wait(15)
+            this.texture.update();
+        }
+
+        if(this.source?.currentTime !== undefined){
             this.source.playbackRate = this.data.playbackRate;
             this.tryPlay();
-		}
+        }
 
     }
 
@@ -694,9 +694,9 @@ class PersistentCanvasEffect extends CanvasEffect{
 
     startLoop() {
         if (!this.source) return;
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
         if(this.data.noLoop){
             this.source.loop = false;
-            let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
             if(creationTimeDifference >= this.animationDuration){
                 this.source.currentTime = this.endTime;
                 return;
@@ -704,17 +704,19 @@ class PersistentCanvasEffect extends CanvasEffect{
             this.source.currentTime = creationTimeDifference / 1000;
             return;
         }
-        this.source.loop = this.startTime !== 0 || this.endTime !== this.source.duration;
+        this.source.loop = this.startTime === 0 && this.endTime === this.source.duration;
+        this.loopOffset = (creationTimeDifference % this.animationDuration) / 1000;
         this.resetLoop();
     }
 
     async resetLoop(){
+        this.source.currentTime = this.startTime + this.loopOffset;
         if(this.ended || this.source.loop) return;
-        this.source.currentTime = this.startTime;
         await this.tryPlay();
         setTimeout(() => {
+            this.loopOffset = 0;
             this.resetLoop();
-        }, this.animationDuration);
+        }, this.animationDuration - this.loopOffset*1000);
     }
 
     async endEffect(){
@@ -725,8 +727,12 @@ class PersistentCanvasEffect extends CanvasEffect{
             this.rotateOut(this.data.extraEndDuration)
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
-        setTimeout(() => { super.endEffect() }, waitDuration);
         this.resolve(waitDuration);
+        return new Promise(resolve => setTimeout(() => {
+            super.endEffect()
+            resolve();
+        }, waitDuration));
+
     }
 
 }

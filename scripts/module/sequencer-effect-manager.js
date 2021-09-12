@@ -31,13 +31,46 @@ export default class SequencerEffectManager {
     }
 
     /**
-     * End an effect that is playing on the canvas based on its name
+     * End effects that is playing on the canvas based on a set of filters
      *
-     * @param {object} inData An object containing data to determine which effects to end
+     * @param {object} inData An object containing filters that determine which effects to end
+     *                             - object: An ID or a PlaceableObject
+     *                             - name: The name of the effect
+     *                             - sceneId: the ID of the scene to search within
      * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
      * @returns {Promise} A promise that resolves when the effects have ended
      */
     static async endEffects(inData = {}, push = true) {
+
+        inData = this._validateFilters(inData);
+
+        if (!inData.name && !inData.attachTo && !inData.sceneId) return;
+
+        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
+        return this._endEffects(inData);
+    }
+
+    /**
+     * Get effects that is playing on the canvas based on a set of filters
+     *
+     * @param {object} inData An object containing filters that determine which effects to return
+     *                             - object: An ID or a PlaceableObject
+     *                             - name: The name of the effect
+     *                             - sceneId: the ID of the scene to search within
+     * @returns {Array} An array containing effects that match the given filter
+     */
+    static getEffects(inData = {}){
+
+        inData = this._validateFilters(inData);
+
+        return EffectsContainer.effects
+            .filter(effect => !inData.name || inData.name === effect.data.name)
+            .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo)
+            .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId);
+
+    }
+
+    static _validateFilters(inData){
 
         if (inData?.object) {
             if (!(inData.object instanceof PlaceableObject || typeof inData.object === "string")) {
@@ -59,16 +92,12 @@ export default class SequencerEffectManager {
             if (!game.scenes.get(inData.sceneId)) throw lib.throwError("SequencerEffectManager", "endEffects | inData.sceneId must be a valid scene id (could not find scene)")
         }
 
-        inData = foundry.utils.mergeObject({
+        return foundry.utils.mergeObject({
             name: false,
             attachTo: false,
             sceneId: false
         }, inData);
 
-        if (!inData.name && !inData.attachTo && !inData.sceneId) return;
-
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
-        return this._endEffects(inData);
     }
 
     /**
@@ -82,13 +111,13 @@ export default class SequencerEffectManager {
         return this._endManyEffects();
     }
 
-    static async _playEffect(data) {
+    static async _playEffect(data, setFlags = true) {
 
         const effect = CanvasEffect.make(data);
 
         if (!effect.context) return false;
 
-        if (data.persist) await this._addFlagsToObject(effect.contextDocument, effect);
+        if (data.persist && setFlags) flagManager.addFlags(effect.contextDocument, effect);
 
         const playData = await effect.play();
 
@@ -108,7 +137,7 @@ export default class SequencerEffectManager {
             const doc = obj?.document ?? obj;
             let effects = new Map(doc.getFlag('sequencer', 'effects') ?? []);
             effects.forEach(effect => {
-                this._playEffect(effect);
+                this._playEffect(effect, false);
             })
         })
     }
@@ -121,9 +150,9 @@ export default class SequencerEffectManager {
             })
     }
 
-    static async _removeEffect(effect) {
-        await effect.endEffect();
+    static _removeEffect(effect) {
         EffectsContainer.delete(effect);
+        return effect.endEffect();
     }
 
     static _endEffects(inData) {
@@ -139,62 +168,98 @@ export default class SequencerEffectManager {
 
     }
 
-    static _endManyEffects(inEffects = false) {
+    static async _endManyEffects(inEffects = false) {
 
-        const effectsToEnd = inEffects || EffectsContainer.effects;
+        const effectsByObjectId = Object.values(lib.groupBy((inEffects || EffectsContainer.effects), "context.id"));
 
-        const effectsByObjectId = lib.groupBy(effectsToEnd, "context.id");
+        effectsByObjectId.forEach(effects => flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects));
 
-        return Promise.allSettled(Object.values(effectsByObjectId)
-            .map(effectGroup =>
-                [
-                    ...effectGroup.map(effect => effect.endEffect()),
-                    this._removeFlagsFromObject(effectGroup[0].contextDocument)
-                ]
-            ));
+        return Promise.allSettled(...effectsByObjectId.map(
+            effects => effects.map(effect => this._removeEffect(effect))
+        ));
 
-    }
-
-    static async _addFlagsToObject(inObject, inEffects) {
-        if (!lib.isResponsibleGM()) return;
-        if (!Array.isArray(inEffects)) inEffects = [inEffects];
-        let flagsToSet = flagBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
-        flagsToSet.effects.push(...inEffects);
-        flagBuffer.set(inObject.id, flagsToSet);
-        addFlagDebounce();
-    }
-
-    static async _removeFlagsFromObject(inObject, inEffects = false) {
-        if (!lib.isResponsibleGM()) return;
-        if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
-        let effects = new Map();
-        if (inEffects) {
-            const effects = new Map(await inObject.getFlag('sequencer', 'effects') ?? []);
-            for (const effect of inEffects) {
-                effects.delete(effect.data.id);
-            }
-        }
-        await inObject.setFlag('sequencer', 'effects', Array.from(effects));
     }
 }
 
-const flagBuffer = new Map();
+const flagManager = {
 
-const addFlagDebounce = debounce(async () => {
-    const flags = Array.from(flagBuffer);
-    flagBuffer.clear();
-    for (let flagData of flags) {
+    flagAddBuffer: new Map(),
+    flagRemoveBuffer: new Map(),
 
-        const obj = flagData[1].obj;
-        const newEffects = flagData[1].effects;
+    addFlags: (inObject, inEffects) => {
 
-        let objectFlags = await obj.getFlag('sequencer', 'effects');
-        const existingEffects = new Map(objectFlags ?? []);
-        for (const effect of newEffects) {
-            existingEffects.set(effect.data.id, effect.data);
+        if (!lib.isResponsibleGM()) return;
+
+        if (!Array.isArray(inEffects)) inEffects = [inEffects];
+
+        let flagsToSet = flagManager.flagAddBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
+
+        flagsToSet.effects.push(...inEffects);
+
+        flagManager.flagAddBuffer.set(inObject.id, flagsToSet);
+
+        flagManager.updateFlags();
+
+    },
+
+    removeFlags: (inObject, inEffects, removeAll) => {
+
+        if (!lib.isResponsibleGM()) return;
+
+        if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
+
+        let flagsToSet = flagManager.flagRemoveBuffer.get(inObject.id) ?? { obj: inObject, effects: [], removeAll: removeAll };
+
+        if(inEffects) flagsToSet.effects.push(...inEffects);
+
+        flagManager.flagRemoveBuffer.set(inObject.id, flagsToSet);
+        
+        flagManager.updateFlags();
+
+    },
+
+    updateFlags: debounce(async () => {
+
+        let flagsToAdd = Array.from(flagManager.flagAddBuffer);
+        let flagsToRemove = Array.from(flagManager.flagRemoveBuffer);
+
+        flagManager.flagAddBuffer.clear();
+        flagManager.flagRemoveBuffer.clear();
+
+        let objects = new Set([...flagsToAdd.map(effect => effect[0]), ...flagsToRemove.map(effect => effect[0])])
+
+        flagsToAdd = new Map(flagsToAdd);
+        flagsToRemove = new Map(flagsToRemove);
+
+        for(let objectId of objects) {
+
+            let toAdd = flagsToAdd.get(objectId) ?? { effects: [] };
+            let toRemove = flagsToRemove.get(objectId) ?? { effects: [], removeAll: false };
+
+            let obj = toAdd.obj ?? toRemove.obj;
+
+            if (toRemove?.removeAll) {
+                await obj.setFlag('sequencer', 'effects', []);
+                if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | All flags removed for object with ID "${obj.id}"`);
+                continue;
+            }
+
+            let flagsToSet = new Map(await obj.getFlag('sequencer', 'effects') ?? []);
+
+            for (const effect of toAdd.effects) {
+                flagsToSet.set(effect.data.id, effect.data);
+            }
+
+            for (const effect of toRemove.effects) {
+                flagsToSet.delete(effect.data.id);
+            }
+
+            await obj.setFlag('sequencer', 'effects', Array.from(flagsToSet));
+
+            if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Flags set for object with ID "${obj.id}"`, Array.from(flagsToSet))
+
         }
 
-        await obj.setFlag('sequencer', 'effects', Array.from(existingEffects));
+    }, 150)
 
-    }
-}, 100);
+};
