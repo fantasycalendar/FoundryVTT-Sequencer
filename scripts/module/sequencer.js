@@ -6,7 +6,8 @@ import AnimationSection from './sections/animation.js';
 
 export default class Sequence {
 
-    constructor() {
+    constructor(moduleName="Sequencer") {
+        this.moduleName = moduleName;
         this.sections = [];
         this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
@@ -194,8 +195,7 @@ export default class Sequence {
     }
 
     _throwError(self, func, error) {
-        error = `${self.constructor.name} | ${func} - ${error}`;
-        return lib.throwError("Sequencer", error);
+        return lib.throwError(this.moduleName, `${self.constructor.name} | ${func} - ${error}`);
     }
 
     _log(...args) {

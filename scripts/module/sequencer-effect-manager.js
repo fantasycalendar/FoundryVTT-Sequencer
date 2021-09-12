@@ -117,9 +117,9 @@ export default class SequencerEffectManager {
 
         if (!effect.context) return false;
 
-        if (data.persist && setFlags) flagManager.addFlags(effect.contextDocument, effect);
-
         const playData = await effect.play();
+
+        if (data.persist && setFlags) flagManager.addFlags(effect.contextDocument, effect);
 
         EffectsContainer.add(effect);
 
@@ -133,11 +133,17 @@ export default class SequencerEffectManager {
     static _setUpPersists() {
         const allObjects = lib.getAllObjects()
         allObjects.push(canvas.scene);
-        allObjects.map(obj => {
+        allObjects.forEach(obj => {
             const doc = obj?.document ?? obj;
-            let effects = new Map(doc.getFlag('sequencer', 'effects') ?? []);
+            let effects = doc.getFlag('sequencer', 'effects') ?? [];
             effects.forEach(effect => {
-                this._playEffect(effect, false);
+                this._playEffect(effect, false)
+                    .then((result) => {
+                        if(!result) flagManager.removeFlags(doc, effect);
+                    })
+                    .catch(() => {
+                        flagManager.removeFlags(doc, effect)
+                    });
             })
         })
     }
@@ -247,11 +253,11 @@ const flagManager = {
             let flagsToSet = new Map(await obj.getFlag('sequencer', 'effects') ?? []);
 
             for (const effect of toAdd.effects) {
-                flagsToSet.set(effect.data.id, effect.data);
+                flagsToSet.set(effect?.data?.id ?? effect.id, effect.data);
             }
 
             for (const effect of toRemove.effects) {
-                flagsToSet.delete(effect.data.id);
+                flagsToSet.delete(effect?.data?.id ?? effect.id);
             }
 
             await obj.setFlag('sequencer', 'effects', Array.from(flagsToSet));

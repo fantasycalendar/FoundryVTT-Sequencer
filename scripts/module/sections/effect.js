@@ -481,6 +481,7 @@ export default class EffectSection extends Section {
     async _sanitizeEffectData() {
 
         let data = {
+            moduleName: this.sequence.moduleName,
             file: this._file,
             position: {
                 x: 0,
