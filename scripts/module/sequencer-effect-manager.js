@@ -178,6 +178,8 @@ export default class SequencerEffectManager {
 
         const effectsByObjectId = Object.values(lib.groupBy((inEffects || EffectsContainer.effects), "context.id"));
 
+        if(!effectsByObjectId.length) return true;
+
         effectsByObjectId.forEach(effects => flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects));
 
         return Promise.allSettled(...effectsByObjectId.map(
