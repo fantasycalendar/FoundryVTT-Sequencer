@@ -271,6 +271,7 @@ export function getObjectFromScene(inId, inSceneId) {
 }
 
 export function throwError(inClassName, error) {
+    inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
     ui.notifications.error(error);
     return new Error(error);
@@ -359,4 +360,36 @@ export function groupBy(xs, key) {
         acc[property].push(obj);
         return acc;
     }, {});
+}
+
+export function sequenceProxyWrap(inSequence){
+    return new Proxy(inSequence, {
+        get: function (target, prop) {
+            if(target[prop] === undefined){
+                if(Sequencer.SectionManager.externalSections[prop] === undefined){
+                    throw throwError(target.sequence.moduleName, `${target.constructor.name} | Property or method "${prop}" does not exist!`);
+                }
+                target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
+                return Reflect.get(target, "_createCustomSection");
+            }
+            return Reflect.get(target, prop);
+        }
+    })
+}
+
+export function sectionProxyWrap(inClass){
+    return new Proxy(inClass, {
+        get: function (target, prop) {
+            if(target[prop] === undefined){
+                if(target.sequence[prop] === undefined){
+                    throw throwError(target.sequence.moduleName, `${target.constructor.name} | Property or method "${prop}" does not exist!`);
+                }
+                let targetProperty = Reflect.get(target.sequence, prop);
+                return is_function(targetProperty)
+                    ? targetProperty.bind(target.sequence)
+                    : targetProperty;
+            }
+            return Reflect.get(target, prop);
+        },
+    });
 }

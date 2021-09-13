@@ -7,6 +7,9 @@ import SequencerDatabase from "./module/sequencer-database.js";
 import SequencerDatabaseViewer from "./module/sequencer-database-viewer.js";
 import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
+import Section from "./module/sections/section.js";
+import SequencerSectionManager from "./module/sequencer-section-manager.js";
+import traits from "./module/sections/traits/_traits.js";
 
 Hooks.once('init', async function () {
     registerLayers();
@@ -17,7 +20,9 @@ Hooks.once('init', async function () {
         DatabaseViewer: SequencerDatabaseViewer,
         Preloader: SequencerPreloader,
         EffectManager: SequencerEffectManager,
-        registerEase: registerEase
+        SectionManager: new SequencerSectionManager(),
+        registerEase: registerEase,
+        BaseSection: Section
     }
 
     window.SequencerPreloader = Sequencer.Preloader;

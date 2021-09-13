@@ -1,17 +1,13 @@
 import * as lib from "../lib/lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./section.js";
-
-// Traits
-import files from "./traits/files.js";
-import audio from "./traits/audio.js";
-import time from "./traits/time.js";
-import users from "./traits/users.js";
+import traits from "./traits/_traits.js";
 
 class SoundSection extends Section {
 
     constructor(inSequence, inFile = "") {
         super(inSequence);
+        this._waitUntilFinished = false;
         this._file = inFile;
         this._volume = 0.8;
         this._overrides = [];
@@ -32,13 +28,13 @@ class SoundSection extends Section {
     }
 
     _applyTraits() {
-        Object.assign(this.constructor.prototype, files);
-        Object.assign(this.constructor.prototype, audio);
-        Object.assign(this.constructor.prototype, time);
-        Object.assign(this.constructor.prototype, users);
+        Object.assign(this.constructor.prototype, traits.files);
+        Object.assign(this.constructor.prototype, traits.audio);
+        Object.assign(this.constructor.prototype, traits.time);
+        Object.assign(this.constructor.prototype, traits.users);
     }
 
-    async _run(repetition) {
+    async run(repetition) {
         let { play, ...data } = await this._sanitizeSoundData();
 
         if (!play) {

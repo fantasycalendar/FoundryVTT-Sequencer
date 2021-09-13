@@ -9,24 +9,27 @@ export default class Sequence {
     constructor(moduleName="Sequencer") {
         this.moduleName = moduleName;
         this.sections = [];
-        this._cachedOffsets = {};
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
+        this.sectionToCreate = undefined;
         this.debug = game.settings.get("sequencer", "debug");
+        return lib.sequenceProxyWrap(this);
     }
 
     /**
      * Plays all of this sequence's sections
      *
-     * @returns {Sequence} this
+     * @returns {Promise}
      */
     async play() {
-        this._log("Preparing cache")
-        await this._prepareOffsetCache();
+        this._log("Initializing sections")
+        for (let section of this.sections) {
+            await section._initialize();
+        }
         this.effectIndex = 0;
         this._log("Playing sections")
 
-        let promises = [];
+        const promises = [];
         for (let section of this.sections) {
             if (section instanceof EffectSection) this.effectIndex++;
             if (section.shouldWaitUntilFinished) {
@@ -34,10 +37,10 @@ export default class Sequence {
             } else {
                 promises.push(section._execute());
             }
-            if (!section.isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
+            if (!section._isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
         }
 
-        return Promise.allSettled(promises).then(() => this._log("Finished playing sections"));
+        return Promise.allSettled(promises).then(() => this._log("Finished playing sections")).then();
     }
 
     /**
@@ -47,9 +50,9 @@ export default class Sequence {
      * @returns {Sequence} this
      */
     thenDo(inFunc) {
-        let func = new FunctionSection(this, inFunc);
+        const func = lib.sectionProxyWrap(new FunctionSection(this, inFunc));
         this.sections.push(func)
-        return this;
+        return func;
     }
 
     /**
@@ -72,10 +75,9 @@ export default class Sequence {
             throw this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
-        let func = new FunctionSection(this, async () => {
+        const func = lib.sectionProxyWrap(new FunctionSection(this, async () => {
             await macro.execute();
-        }, inWaitUntilFinished);
-
+        }, inWaitUntilFinished));
         this.sections.push(func)
         return this;
     }
@@ -87,7 +89,7 @@ export default class Sequence {
      * @returns {Section}
      */
     effect(inFile = "") {
-        let effect = new EffectSection(this, inFile);
+        const effect = lib.sectionProxyWrap(new EffectSection(this, inFile));
         this.sections.push(effect);
         return effect;
     }
@@ -99,7 +101,7 @@ export default class Sequence {
      * @returns {Section}
      */
     sound(inFile = "") {
-        let sound = new SoundSection(this, inFile);
+        const sound = lib.sectionProxyWrap(new SoundSection(this, inFile));
         this.sections.push(sound);
         return sound;
     }
@@ -111,7 +113,7 @@ export default class Sequence {
      * @returns {AnimationSection}
      */
     animation(inTarget = false) {
-        let animation = new AnimationSection(this, inTarget);
+        const animation = lib.sectionProxyWrap(new AnimationSection(this, inTarget));
         this.sections.push(animation);
         return animation;
     }
@@ -127,8 +129,8 @@ export default class Sequence {
     wait(msMin = 1, msMax = 1) {
         if (msMin < 1) throw this._throwError(this, "wait", 'Wait ms cannot be less than 1')
         if (msMax < 1) throw this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
-        let wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
-        let section = this._createWaitSection(wait);
+        const wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
+        const section = lib.sectionProxyWrap(this._createWaitSection(wait));
         this.sections.push(section);
         return this;
     }
@@ -146,32 +148,11 @@ export default class Sequence {
         return this;
     }
 
-    async _prepareOffsetCache() {
-        this._cachedOffsets = {};
-        for (let section of this.sections) {
-            await section._prepareOffsetCache();
-        }
-    }
-
-    _insertCachedOffset(inName, inObject, inOffset, inExtraOffset) {
-        if (this._cachedOffsets[inName] === undefined) {
-            this._cachedOffsets[inName] = [];
-        }
-        this._cachedOffsets[inName].push({
-            "object": inObject,
-            "offset": inOffset,
-            "extraOffset": inExtraOffset
-        });
-    }
-
-    _cachedOffsetExists(inName) {
-        return this._cachedOffsets[inName] !== undefined;
-    }
-
-    _getCachedOffset(inName, inIndex) {
-        if (!this._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
-        let normalizedIndex = inIndex % this._cachedOffsets[inName].length;
-        return this._cachedOffsets?.[inName]?.[normalizedIndex];
+    _createCustomSection(...args){
+        const func = lib.sectionProxyWrap(new this.sectionToCreate(this, ...args));
+        this.sectionToCreate = undefined;
+        this.sections.push(func)
+        return func;
     }
 
     _createWaitSection(ms = 1) {

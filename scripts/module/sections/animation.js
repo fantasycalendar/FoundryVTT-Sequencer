@@ -3,15 +3,13 @@ import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 
 // Traits
-import moves from "./traits/moves.js";
-import opacity from "./traits/opacity.js";
-import rotation from "./traits/rotation.js";
-import audio from "./traits/audio.js";
+import traits from "./traits/_traits.js";
 
 class AnimationSection extends Section {
 
     constructor(inSequence, inTarget) {
         super(inSequence);
+        this._waitUntilFinished = false;
         this._teleportTo = false;
         this._originObject = false;
         this._moveSpeed = 23;
@@ -90,15 +88,15 @@ class AnimationSection extends Section {
         return this;
     }
 
-    async _run() {
+    async run() {
         return this._runAnimate();
     }
 
     _applyTraits() {
-        Object.assign(this.constructor.prototype, moves);
-        Object.assign(this.constructor.prototype, opacity);
-        Object.assign(this.constructor.prototype, rotation);
-        Object.assign(this.constructor.prototype, audio);
+        Object.assign(this.constructor.prototype, traits.moves);
+        Object.assign(this.constructor.prototype, traits.opacity);
+        Object.assign(this.constructor.prototype, traits.rotation);
+        Object.assign(this.constructor.prototype, traits.audio);
     }
 
     async _updateObject(obj, attributes, animate = false, animation = {}) {
@@ -109,9 +107,9 @@ class AnimationSection extends Section {
         if (!(await this._shouldPlay())) return;
         return new Promise(async (resolve) => {
             if (this._shouldAsync) {
-                await this._run();
+                await this.run();
             } else {
-                this._run();
+                this.run();
             }
             resolve();
         });

@@ -137,7 +137,7 @@ export default class SequencerEffectManager {
             const doc = obj?.document ?? obj;
             let effects = doc.getFlag('sequencer', 'effects') ?? [];
             effects.forEach(effect => {
-                this._playEffect(effect, false)
+                this._playEffect(effect[1], false)
                     .then((result) => {
                         if(!result) flagManager.removeFlags(doc, effect);
                     })

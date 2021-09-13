@@ -1,21 +1,12 @@
 import * as lib from "../lib/lib.js";
 import Section from "./section.js";
-
-// Traits
-import files from "./traits/files.js";
-import audio from "./traits/audio.js";
-import moves from "./traits/moves.js";
-import opacity from "./traits/opacity.js";
-import rotation from "./traits/rotation.js";
-import scale from "./traits/scale.js";
-import time from "./traits/time.js";
-import users from "./traits/users.js";
-import animation from "./traits/animation.js";
+import traits from "./traits/_traits.js";
 
 export default class EffectSection extends Section {
 
     constructor(inSequence, inFile = "") {
         super(inSequence)
+        this._waitUntilFinished = false;
         this._file = inFile;
         this._from = false;
         this._reachTowards = false;
@@ -44,6 +35,7 @@ export default class EffectSection extends Section {
         this._distance = 0;
         this._extraEndDuration = 0;
         this._noLoop = false;
+        this._offsets = [];
     }
 
     get _to() {
@@ -453,7 +445,7 @@ export default class EffectSection extends Section {
         return this;
     }
 
-    async _run() {
+    async run() {
         let data = await this._sanitizeEffectData();
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
         let canvasEffectData = await Sequencer.EffectManager.play(data, push);
@@ -467,15 +459,15 @@ export default class EffectSection extends Section {
     }
 
     _applyTraits() {
-        Object.assign(this.constructor.prototype, files);
-        Object.assign(this.constructor.prototype, audio);
-        Object.assign(this.constructor.prototype, moves);
-        Object.assign(this.constructor.prototype, opacity);
-        Object.assign(this.constructor.prototype, rotation);
-        Object.assign(this.constructor.prototype, scale);
-        Object.assign(this.constructor.prototype, time);
-        Object.assign(this.constructor.prototype, users);
-        Object.assign(this.constructor.prototype, animation);
+        Object.assign(this.constructor.prototype, traits.files);
+        Object.assign(this.constructor.prototype, traits.audio);
+        Object.assign(this.constructor.prototype, traits.moves);
+        Object.assign(this.constructor.prototype, traits.opacity);
+        Object.assign(this.constructor.prototype, traits.rotation);
+        Object.assign(this.constructor.prototype, traits.scale);
+        Object.assign(this.constructor.prototype, traits.time);
+        Object.assign(this.constructor.prototype, traits.users);
+        Object.assign(this.constructor.prototype, traits.animation);
     }
 
     async _sanitizeEffectData() {
@@ -522,7 +514,6 @@ export default class EffectSection extends Section {
                 fadeOutAudio: this._fadeOutAudio,
                 animations: this._animations
             },
-            filters: this._filters,
             zeroSpriteRotation: this._zeroSpriteRotation,
             sceneId: game.user.viewedScene,
             users: Array.from(this._users)
@@ -819,7 +810,7 @@ export default class EffectSection extends Section {
 
         let from_offset = { x: 0, y: 0 };
         if (typeof from === "string") {
-            let cachedFrom = this.sequence._getCachedOffset(from, this._currentRepetition);
+            let cachedFrom = this._getCachedOffset(from, this._currentRepetition);
             from = cachedFrom.object;
             from_offset = cachedFrom.offset;
             if (cachedFrom.extraOffset && applyOffsets) {
@@ -830,7 +821,7 @@ export default class EffectSection extends Section {
 
         let to_offset = { x: 0, y: 0 };
         if (typeof to === "string") {
-            let cachedTo = this.sequence._getCachedOffset(to, this._currentRepetition);
+            let cachedTo = this._getCachedOffset(to, this._currentRepetition);
             to = cachedTo.object;
             to_offset = cachedTo.offset;
             if (cachedTo.extraOffset && applyOffsets) {
@@ -861,6 +852,13 @@ export default class EffectSection extends Section {
         return inPosition;
     }
 
+    async _initialize() {
+        this._offsets = [];
+        for (let index = 0; index < this._repetitions; index++) {
+            await this._cacheOffsets();
+        }
+    }
+
     async _cacheOffsets() {
 
         let [from, to, from_target, to_target] = this._getPositions(this._from, this._to, false);
@@ -887,7 +885,7 @@ export default class EffectSection extends Section {
         this._offsets.push(offset);
 
         if (this._name) {
-            this.sequence._insertCachedOffset(
+            this._insertCachedOffset(
                 this._name,
                 origin_object,
                 offset,
@@ -895,6 +893,35 @@ export default class EffectSection extends Section {
             );
         }
 
+    }
+
+    _insertCachedOffset(inName, inObject, inOffset, inExtraOffset) {
+        if (this.sequence._cachedOffsets === undefined) {
+            this.sequence._cachedOffsets = {};
+        }
+        if (this.sequence._cachedOffsets[inName] === undefined) {
+            this.sequence._cachedOffsets[inName] = [];
+        }
+        this.sequence._cachedOffsets[inName].push({
+            "object": inObject,
+            "offset": inOffset,
+            "extraOffset": inExtraOffset
+        });
+    }
+
+    _cachedOffsetExists(inName) {
+        return typeof inName === "string" && this.sequence?._cachedOffsets[inName] !== undefined;
+    }
+
+    _getCachedOffset(inName, inIndex) {
+        if (!this.sequence?._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
+        let normalizedIndex = inIndex % this.sequence?._cachedOffsets[inName].length;
+        return this.sequence?._cachedOffsets?.[inName]?.[normalizedIndex];
+    }
+
+    _validateLocation(inLocation) {
+        if(this._cachedOffsetExists(inLocation)) return inLocation;
+        return super._validateLocation(inLocation);
     }
 
     _calculateMissedPosition(target, position, missed) {

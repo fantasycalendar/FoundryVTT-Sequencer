@@ -6,9 +6,8 @@ export default class Section {
         this.sequence = inSequence;
         this._applyTraits();
         this._playIf = true;
-        this._waitUntilFinished = false;
+        this._waitUntilFinished = true;
         this._async = false;
-        this._offsets = [];
         this._waitUntilFinishedDelay = 0;
         this._repetitions = 1;
         this._currentRepetition = 0;
@@ -21,37 +20,36 @@ export default class Section {
         this._duration = false;
     }
 
-    get _shouldAsync() {
-        return this._async || this._waitAnyway
-    }
-
-    get shouldWaitUntilFinished() {
-        return this._waitUntilFinished || this._waitAnyway
-    }
-
-    get _waitAnyway() {
-        return ((this._async || this._waitUntilFinished) && this.isLastRepetition)
-            || (this.isLastRepetition && this.isLastSection);
-    }
-
-    get isLastSection() {
-        return (this.sequence.sections.length - 1) === this.sequence.sections.indexOf(this);
-    }
-
-    get isLastRepetition() {
-        return (this._repetitions === 1 || this._repetitions === this._currentRepetition + 1);
-    }
-
-    get _currentWaitTime() {
-        let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
-        return waitUntilFinishedDelay + this._repeatDelay;
-    }
-
-    _applyTraits() {
-    }
+    /**
+     * Main method that runs when the section is executed by the Sequence
+     *
+     * @returns {Promise<void>}
+     * @private
+     */
+    async run() {}
 
     /**
-     * Causes the effect or sound to be repeated n amount of times, with an optional delay. If given inRepeatDelayMin
+     * Method overwritten by inheriting classes to store data or prepare before the Sequence executes it (see EffectsSection)
+     *
+     * @private
+     */
+    async _initialize() {}
+
+    /**
+     * Overridden method for all inherited classes. Use:
+     * - Object.assign(this.constructor.prototype, trait)
+     * to assign traits to this section
+     */
+    _applyTraits() {}
+
+
+    /** ------------------------------------------------------------------------------------------------------------------------------ *
+     * Methods below this point should NOT be overridden by child instances of the class, they are integral to the sequence functioning
+     * ------------------------------------------------------------------------------------------------------------------------------- */
+
+
+    /**
+     * Causes the section to be repeated n amount of times, with an optional delay. If given inRepeatDelayMin
      * and inRepeatDelayMax, a random repetition delay will be picked for every repetition
      *
      * @param {number} inRepetitions
@@ -136,24 +134,18 @@ export default class Section {
         return this;
     }
 
+    /**
+     * Whether the section should actually play at all
+     *
+     * @returns {Promise<*|boolean>}
+     * @private
+     */
     async _shouldPlay() {
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
 
-    async _prepareOffsetCache() {
-        this._offsets = [];
-        for (let index = 0; index < this._repetitions; index++) {
-            this._cacheOffsets();
-        }
-    }
-
-    /**
-     * Overridden method in EffectSection
-     */
-    _cacheOffsets() {}
-
     _validateLocation(inLocation) {
-        if (typeof inLocation === "string" && !this.sequence._cachedOffsetExists(inLocation)) {
+        if (typeof inLocation === "string") {
             inLocation = lib.getObjectFromScene(inLocation) ?? inLocation;
         }
         if (inLocation instanceof foundry.abstract.Document) {
@@ -176,9 +168,9 @@ export default class Section {
                     self._currentRepetition = i;
                     self._repeatDelay = i !== self._repetitions - 1 ? lib.random_float_between(self._repeatDelayMin, self._repeatDelayMax) : 0;
                     if (self._shouldAsync) {
-                        await self._run();
+                        await self.run();
                     } else {
-                        self._run();
+                        self.run();
                     }
                     if (self._repetitions > 1 && i !== self._repetitions - 1) {
                         await self._delayBetweenRepetitions();
@@ -196,36 +188,30 @@ export default class Section {
         });
     }
 
-    async _run() {
+    get _shouldAsync() {
+        return this._async || this._waitAnyway
     }
 
-    // I know this is nasty - but it is needed due to Proxies not changing scope when calling Reflect.getEntry
-    play(...args) {
-        return this.sequence.play(...args)
+    get shouldWaitUntilFinished() {
+        return this._waitUntilFinished || this._waitAnyway
     }
 
-    thenDo(...args) {
-        return this.sequence.thenDo(...args)
+    get _waitAnyway() {
+        return ((this._async || this._waitUntilFinished) && this._isLastRepetition)
+            || (this._isLastRepetition && this._isLastSection);
     }
 
-    macro(...args) {
-        return this.sequence.macro(...args)
+    get _isLastSection() {
+        return (this.sequence.sections.length - 1) === this.sequence.sections.indexOf(this);
     }
 
-    effect(...args) {
-        return this.sequence.effect(...args)
+    get _isLastRepetition() {
+        return (this._repetitions === 1 || this._repetitions === this._currentRepetition + 1);
     }
 
-    sound(...args) {
-        return this.sequence.sound(...args)
-    }
-
-    wait(...args) {
-        return this.sequence.wait(...args)
-    }
-
-    animation(...args) {
-        return this.sequence.animation(...args)
+    get _currentWaitTime() {
+        let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
+        return waitUntilFinishedDelay + this._repeatDelay;
     }
 
 }

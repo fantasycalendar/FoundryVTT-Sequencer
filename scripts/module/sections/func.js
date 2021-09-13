@@ -10,13 +10,13 @@ export default class FunctionSection extends Section {
         this._waitUntilFinished = inFunc.constructor.name === 'AsyncFunction';
     }
 
-    async _run() {
+    async run() {
         this.sequence._log("Running function");
         await this._func();
     }
 
     async _execute() {
-        await this._run();
+        await this.run();
     }
 
 }
