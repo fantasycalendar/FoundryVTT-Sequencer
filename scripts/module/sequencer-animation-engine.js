@@ -48,8 +48,9 @@ export default class SequencerAnimationEngine {
 
             animData.totalDt += dt;
 
-            for (let attribute of animData.attributes) {
+            let attributeDeltas = [];
 
+            for (let attribute of animData.attributes) {
 
                 if (attribute.complete) continue;
 
@@ -63,6 +64,29 @@ export default class SequencerAnimationEngine {
                     attribute = this.handleDefault(dt, attribute);
                 }
 
+                let delta = attributeDeltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
+
+                if(!delta){
+                    attributeDeltas.push({
+                        target: attribute.target,
+                        propertyName: attribute.propertyName,
+                        value: 0
+                    })
+                    delta = attributeDeltas[attributeDeltas.length-1];
+                }
+
+                delta.value += attribute.value;
+
+            }
+
+            for (let delta of attributeDeltas) {
+                try{
+                    lib.deepSet(
+                        delta.target,
+                        delta.propertyName,
+                        delta.value
+                    )
+                }catch(err){}
             }
 
             animData.attributes = animData.attributes.filter(a => !a.complete);
@@ -97,7 +121,7 @@ export default class SequencerAnimationEngine {
         attribute.loopDurationDone += dt;
         attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
 
-        attribute.val = lib.lerp(
+        attribute.value = lib.lerp(
             attribute.values[attribute.index],
             attribute.values[attribute.nextIndex],
             attribute.easeFunction(attribute.progress)
@@ -117,7 +141,7 @@ export default class SequencerAnimationEngine {
 
             attribute.loopsDone++;
 
-            attribute.val = lib.lerp(
+            attribute.value = lib.lerp(
                 attribute.values[attribute.index],
                 attribute.values[attribute.nextIndex],
                 attribute.easeFunction(attribute.progress - 1.0)
@@ -131,19 +155,7 @@ export default class SequencerAnimationEngine {
 
     static handleIndefiniteLoop(dt, attribute) {
 
-        attribute = this._handleBaseLoop(dt, attribute);
-
-        try {
-            lib.deepSet(
-                attribute.target,
-                attribute.propertyName,
-                attribute.val
-            );
-        } catch (err) {
-            attribute.complete = true;
-        }
-
-        return attribute;
+        return this._handleBaseLoop(dt, attribute);
 
     }
 
@@ -156,20 +168,10 @@ export default class SequencerAnimationEngine {
 
         if (attribute.progress >= 1.0 && attribute.loopsDone === attribute.loops * 2) {
             attribute.complete = true;
-            attribute.val = attribute.values[attribute.index];
+            attribute.value = attribute.values[attribute.index];
         }
 
         if (attribute.overallProgress >= 1.0) {
-            attribute.complete = true;
-        }
-
-        try {
-            lib.deepSet(
-                attribute.target,
-                attribute.propertyName,
-                attribute.val
-            );
-        } catch (err) {
             attribute.complete = true;
         }
 
@@ -189,24 +191,14 @@ export default class SequencerAnimationEngine {
         attribute.durationDone += dt;
         attribute.progress = attribute.durationDone / attribute.duration;
 
-        attribute.val = lib.lerp(
+        attribute.value = lib.lerp(
             attribute.from,
             attribute.to,
             attribute.easeFunction(attribute.progress)
         );
 
         if (attribute.progress >= 1.0) {
-            attribute.val = attribute.to;
-            attribute.complete = true;
-        }
-
-        try {
-            lib.deepSet(
-                attribute.target,
-                attribute.propertyName,
-                attribute.val
-            );
-        } catch (err) {
+            attribute.value = attribute.to;
             attribute.complete = true;
         }
 

@@ -58,9 +58,9 @@ export default class Sequence {
     /**
      * Creates a section that will run a macro based on a name or a direct reference to a macro.
      *
-     * @param {string|Macro} [inMacro] inFile
-     * @param {boolean} [inWaitUntilFinished=true] inWaitUntilFinished
-     * @returns {Sequence} this
+     * @param {string|Macro} [inMacro]
+     * @param {boolean} [inWaitUntilFinished=true]
+     * @returns {Sequence}
      */
     macro(inMacro, inWaitUntilFinished = true) {
         let macro;

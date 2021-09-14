@@ -9,7 +9,6 @@ import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
 import Section from "./module/sections/section.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
-import traits from "./module/sections/traits/_traits.js";
 
 Hooks.once('init', async function () {
     registerLayers();
@@ -35,7 +34,7 @@ Hooks.on("canvasReady", () => {
     Sequencer.EffectManager._setUpPersists();
 });
 
-Hooks.once("updateScene", () => {
+Hooks.on("updateScene", () => {
     setTimeout(() => {
         Sequencer.EffectManager._setUpPersists();
     }, 100);
@@ -44,8 +43,8 @@ Hooks.once("updateScene", () => {
 Hooks.once('ready', async function () {
     registerSettings();
     registerSocket();
-    console.log("Sequencer | Ready to go!")
     setTimeout(() => {
+        console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
     }, 100);
 });

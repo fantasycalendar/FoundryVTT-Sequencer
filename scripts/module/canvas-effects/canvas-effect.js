@@ -1,7 +1,7 @@
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
-import filters from "../lib/filters.js";
+/*import filters from "../lib/filters.js";*/
 
 export default class CanvasEffect {
 
@@ -192,7 +192,7 @@ export default class CanvasEffect {
         this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
         this.container.addChild(this.spriteContainer);
 
-        this.applyFilters();
+        // this.applyFilters();
 
         this.sprite.alpha = this.data.opacity;
 
@@ -241,7 +241,7 @@ export default class CanvasEffect {
         });
     }
 
-    applyFilters(){
+    /*applyFilters(){
 
         if(!this.data.filters) return;
 
@@ -254,11 +254,9 @@ export default class CanvasEffect {
              this.filters[filterKeyName] = filter;
         }
 
-    }
+    }*/
 
     counterAnimateRotation(animation){
-
-        if(!Array.isArray(animation)) animation = [animation]
 
         if(this.data.zeroSpriteRotation && animation.target === this.spriteContainer){
             delete animation.target;
@@ -271,7 +269,11 @@ export default class CanvasEffect {
                 counterAnimation.from *= -1;
                 counterAnimation.to *= -1;
             }
-            animation.push(counterAnimation);
+            if(!Array.isArray(animation)) {
+                animation = [animation, counterAnimation]
+            }else{
+                animation.push(counterAnimation);
+            }
         }
 
         return animation;

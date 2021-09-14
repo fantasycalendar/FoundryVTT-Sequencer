@@ -1,8 +1,6 @@
 import { easeFunctions } from "../canvas-effects/ease.js";
 import * as lib from "../lib/lib.js";
 import Section from "./section.js";
-
-// Traits
 import traits from "./traits/_traits.js";
 
 class AnimationSection extends Section {
