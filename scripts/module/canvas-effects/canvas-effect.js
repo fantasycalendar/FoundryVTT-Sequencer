@@ -1,7 +1,7 @@
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
-/*import filters from "../lib/filters.js";*/
+import filters from "../lib/filters.js";
 
 export default class CanvasEffect {
 
@@ -181,7 +181,7 @@ export default class CanvasEffect {
 
 	}
 
-    async spawnSprite() {
+    async spawnSprite(show = true) {
 
         this.sprite = new PIXI.Sprite(this.texture);
         this.spriteContainer = new PIXI.Container();
@@ -192,9 +192,9 @@ export default class CanvasEffect {
         this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
         this.container.addChild(this.spriteContainer);
 
-        // this.applyFilters();
+        this.applyFilters();
 
-        this.sprite.alpha = this.data.opacity;
+        this.sprite.alpha = show ? this.data.opacity : 0;
 
         if(this.data.size){
             this.sprite.width = this.data.size.width * this.data.scale.x * this.data.gridSizeDifference;
@@ -241,7 +241,7 @@ export default class CanvasEffect {
         });
     }
 
-    /*applyFilters(){
+    applyFilters(){
 
         if(!this.data.filters) return;
 
@@ -254,7 +254,7 @@ export default class CanvasEffect {
              this.filters[filterKeyName] = filter;
         }
 
-    }*/
+    }
 
     counterAnimateRotation(animation){
 
@@ -595,6 +595,7 @@ export default class CanvasEffect {
 				this.source.load();
 			} catch (err) {}
 			try {
+                this.sprite.filters = [];
                 this.spriteContainer.removeChild(this.sprite);
 				this.container.removeChild(this.spriteContainer);
                 this.spriteContainer.destroy();
@@ -709,7 +710,7 @@ class PersistentCanvasEffect extends CanvasEffect{
 
     async initializeEffect(){
         this.startLoop();
-        await this.spawnSprite();
+        await this.spawnSprite(false);
         this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
@@ -717,6 +718,9 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.scaleIn();
         this.rotateIn();
         this.debug();
+        setTimeout(() => {
+            this.sprite.alpha = this.data.opacity;
+        }, 50);
     }
 
     startLoop() {

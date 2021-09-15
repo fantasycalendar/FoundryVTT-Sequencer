@@ -7,6 +7,7 @@ import rotation from "./rotation.js";
 import scale from "./scale.js";
 import time from "./time.js";
 import users from "./users.js";
+import filter from "./filter.js";
 
 const traits = {
     animation,
@@ -17,7 +18,8 @@ const traits = {
     rotation,
     scale,
     time,
-    users
+    users,
+    filter
 };
 
 export default traits;

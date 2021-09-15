@@ -70,6 +70,7 @@ export default class SequencerAnimationEngine {
                     attributeDeltas.push({
                         target: attribute.target,
                         propertyName: attribute.propertyName,
+                        hasAnimationProperty: attribute.hasAnimationProperty,
                         value: 0
                     })
                     delta = attributeDeltas[attributeDeltas.length-1];

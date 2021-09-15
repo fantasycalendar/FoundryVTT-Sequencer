@@ -11,6 +11,9 @@
   "esmodules": [
     "scripts/module.js"
   ],
+  "scripts": [
+    "scripts/module/lib/ext/pixi-filters.js"
+  ],
   "packs": [
     {
       "name": "sequencer-sample-macros",

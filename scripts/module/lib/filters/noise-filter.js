@@ -1,5 +1,10 @@
 export default class NoiseFilter extends PIXI.filters.NoiseFilter {
 
+    /**
+     * Properties & default values:
+     *     - noise [0.5]
+     *     - seed [Math.random()]
+     */
     constructor(inData = {}) {
         super();
 
