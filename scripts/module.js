@@ -49,6 +49,29 @@ Hooks.once('ready', async function () {
     }, 100);
 });
 
+
+/**
+ * Creation & delete hooks for persistent effects
+ */
+
+Hooks.on("createToken", (document) => {
+    if(!document.data?.flags?.sequencer?.effects) return;
+    const effects = Sequencer.EffectManager._patchCreationData(document);
+    document.data.update({"flags.sequencer.effects": effects});
+});
+
+Hooks.on("createTile", (document) => {
+    if(!document.data?.flags?.sequencer?.effects) return;
+    const effects = Sequencer.EffectManager._patchCreationData(document);
+    document.data.update({"flags.sequencer.effects": effects});
+});
+
+Hooks.on("createMeasuredTemplate", (document) => {
+    if(!document.data?.flags?.sequencer?.effects) return;
+    const effects = Sequencer.EffectManager._patchCreationData(document);
+    document.data.update({"flags.sequencer.effects": effects});
+});
+
 Hooks.on("preDeleteToken", (obj) => {
     Sequencer.EffectManager._tearDownPersists(obj.id);
 });

@@ -1,5 +1,12 @@
 export default class ColorMatrixFilter extends PIXI.filters.ColorMatrixFilter {
 
+    /**
+     * Properties & default values:
+     *     - hue [false]
+     *     - brightness [1]
+     *     - contrast [1]
+     *     - saturate [1]
+     */
     constructor(inData) {
         super();
         this.isValid = true;

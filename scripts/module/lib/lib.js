@@ -366,9 +366,7 @@ export function sequenceProxyWrap(inSequence){
     return new Proxy(inSequence, {
         get: function (target, prop) {
             if(target[prop] === undefined){
-                if(Sequencer.SectionManager.externalSections[prop] === undefined){
-                    throw throwError(target.sequence.moduleName, `${target.constructor.name} | Property or method "${prop}" does not exist!`);
-                }
+                if(Sequencer.SectionManager.externalSections[prop] === undefined) return undefined;
                 target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
                 return Reflect.get(target, "_createCustomSection");
             }
@@ -381,9 +379,6 @@ export function sectionProxyWrap(inClass){
     return new Proxy(inClass, {
         get: function (target, prop) {
             if(target[prop] === undefined){
-                if(target.sequence[prop] === undefined){
-                    throw throwError(target.sequence.moduleName, `${target.constructor.name} | Property or method "${prop}" does not exist!`);
-                }
                 let targetProperty = Reflect.get(target.sequence, prop);
                 return is_function(targetProperty)
                     ? targetProperty.bind(target.sequence)

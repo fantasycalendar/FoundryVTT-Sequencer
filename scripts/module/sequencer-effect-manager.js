@@ -135,16 +135,12 @@ export default class SequencerEffectManager {
         allObjects.push(canvas.scene);
         allObjects.forEach(obj => {
             const doc = obj?.document ?? obj;
-            let effects = doc.getFlag('sequencer', 'effects') ?? [];
-            effects.forEach(effect => {
-                this._playEffect(effect[1], false)
-                    .then((result) => {
-                        if(!result) flagManager.removeFlags(doc, effect);
-                    })
-                    .catch(() => {
-                        flagManager.removeFlags(doc, effect)
-                    });
-            })
+            let objEffects = doc.getFlag('sequencer', 'effects') ?? [];
+            objEffects = objEffects.map(effect => {
+                if(effect[1].attachTo) effect[1].attachTo = doc.object.id;
+                return effect;
+            });
+            this._playEffectMap(objEffects, doc);
         })
     }
 
@@ -154,6 +150,34 @@ export default class SequencerEffectManager {
             .forEach(effect => {
                 EffectsContainer.delete(effect);
             })
+    }
+
+    static _patchCreationData(inDocument){
+
+        let effects = inDocument.data.flags.sequencer.effects ?? [];
+
+        effects = effects.map(effect => {
+            if(effect[1].attachTo) effect[1].attachTo = inDocument.object.id;
+            return effect;
+        });
+
+        this._playEffectMap(effects, inDocument);
+
+        return effects;
+
+    }
+
+    static _playEffectMap(inEffects, inDocument){
+        if(inEffects instanceof Map) inEffects = Array.from(inEffects);
+        inEffects.forEach(effect => {
+            this._playEffect(effect[1], false)
+                .then((result) => {
+                    if(!result) flagManager.removeFlags(inDocument, effect);
+                })
+                .catch(() => {
+                    flagManager.removeFlags(inDocument, effect)
+                });
+        })
     }
 
     static _removeEffect(effect) {
