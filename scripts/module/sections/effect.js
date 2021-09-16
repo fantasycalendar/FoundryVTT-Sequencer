@@ -60,7 +60,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection} this
      */
     name(inName) {
-        if (typeof inName !== "string") throw this.sequence._throwError(this, "name", "inBaseFolder must be of type string");
+        if (typeof inName !== "string") throw this.sequence._throwError(this, "name", "inName must be of type string");
         this._name = inName;
         return this;
     }
