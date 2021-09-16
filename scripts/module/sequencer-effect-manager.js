@@ -95,7 +95,7 @@ export default class SequencerEffectManager {
         return foundry.utils.mergeObject({
             name: false,
             attachTo: false,
-            sceneId: false
+            sceneId: game.user.viewedScene
         }, inData);
 
     }
@@ -108,7 +108,7 @@ export default class SequencerEffectManager {
      */
     static async endAllEffects(push = true) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS);
-        return this._endManyEffects();
+        return this._endEffects({ sceneId: game.user.viewedScene });
     }
 
     static async _playEffect(data, setFlags = true) {
