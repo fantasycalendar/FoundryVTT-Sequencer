@@ -103,12 +103,13 @@ export default class SequencerEffectManager {
     /**
      * End all effects that are playing on the canvas
      *
+     * @param {object} [inData] A parameter which determines which scene to end all effects on, defaults to current viewed scene
      * @param {boolean} [push=true] A flag indicating whether or not to make other clients end all effects
      * @returns {Promise} A promise that resolves when all of the effects have ended
      */
-    static async endAllEffects(push = true) {
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS);
-        return this._endEffects({ sceneId: game.user.viewedScene });
+    static async endAllEffects(inData = { sceneId: game.user.viewedScene }, push = true) {
+        if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS, inData);
+        return this._endEffects(inData);
     }
 
     static async _playEffect(data, setFlags = true) {
