@@ -297,9 +297,8 @@ export default class CanvasEffect {
             if(!animation.target) continue;
 
             if(animation.propertyName.indexOf("rotation") > -1){
-                let offset = (animation.offset / 180) * Math.PI;
-                animation.from = ((animation.from / 180) * Math.PI) + offset;
-                animation.to = ((animation.to / 180) * Math.PI) + offset;
+                animation.from = ((animation.from / 180) * Math.PI);
+                animation.to = ((animation.to / 180) * Math.PI);
             }
 
             animationsToSend = animationsToSend.concat(this.counterAnimateRotation(animation))
@@ -315,9 +314,8 @@ export default class CanvasEffect {
             if(!animation.target) continue;
 
             if(animation.propertyName.indexOf("rotation") > -1){
-                let offset = (animation.offset / 180) * Math.PI;
                 animation.values = animation.values.map(value => {
-                    return ((value / 180) * Math.PI) + offset;
+                    return ((value / 180) * Math.PI);
                 });
             }
 
