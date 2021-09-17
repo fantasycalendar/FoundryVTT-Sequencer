@@ -16,6 +16,9 @@ export default class SequencerDatabaseViewer extends FormApplication {
     }
 
     static show(){
+        for(let app of Object.values(ui.windows)){
+            if(app instanceof SequencerDatabaseViewer) return app.render(true);
+        }
         return new SequencerDatabaseViewer().render(true);
     }
 
