@@ -15,6 +15,10 @@ export default class SequencerDatabaseViewer extends FormApplication {
         this.list = false;
     }
 
+    static show(){
+        return new SequencerDatabaseViewer().render(true);
+    }
+
     /** @override */
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
