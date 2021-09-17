@@ -24,7 +24,7 @@ export default {
         if (typeof inOptions.duration !== "number") throw this.sequence._throwError(this, "animateProperty", `inOptions.duration must be of type number`);
         if (inOptions?.delay && typeof inOptions.delay !== "number") throw this.sequence._throwError(this, "animateProperty", `inOptions.delay must be of type number`);
         if (inOptions?.offset && typeof inOptions.offset !== "number") throw this.sequence._throwError(this, "animateProperty", `inOptions.offset must be of type number`);
-        if (inOptions?.ease && typeof inOptions.ease !== "number") throw this.sequence._throwError(this, "animateProperty", `inOptions.ease must be of type string`);
+        if (inOptions?.ease && typeof inOptions.ease !== "string") throw this.sequence._throwError(this, "animateProperty", `inOptions.ease must be of type string`);
 
         this._animations.push({
             target: inTarget,

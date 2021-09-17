@@ -8,26 +8,45 @@ export default class SequencerSectionManager {
     }
 
     /**
-     * Registers a class by a name that will then be available
+     * Registers a class by a name that will then be available through the Sequencer
      *
-     * @param {String}      inName
+     * @param {String}      inModuleName
+     * @param {String}      inMethodName
      * @param {Class}       inClass
      * @param {Boolean}     overwrite
      * @returns {Boolean}               Whether the registration succeeded
      */
-    registerSection(inName, inClass, overwrite = false){
+    registerSection(inModuleName, inMethodName, inClass, overwrite = false){
 
         if(!(inClass.prototype instanceof Section)) {
-            throw lib.throwError("SequencerSectionManager", `inClass must be instance of Sequencer.BaseSection`);
+            throw lib.throwError(inModuleName, `inClass must be instance of Sequencer.BaseSection`);
         }
 
-        if(this.externalSections[inName] && !overwrite){
-            throw lib.throwError("SequencerSectionManager", `${inName} is already a registered Section with the class ${inClass.constructor.name}`);
+        let coreMethods = Object.getOwnPropertyNames(Sequence.prototype)
+            .filter(method => {
+                return !method.startsWith("_") && method !== "constructor"
+            });
+
+        if(coreMethods.includes(inMethodName)){
+            throw lib.throwError(inModuleName, `${inMethodName} is an existing protected method of the Sequence class - please register with another method name!`);
         }
 
-        if(game.settings.get('sequencer', 'debug')) console.log(`DEBUG | Sequencer.SectionManager | Successfully ${inName} to Sequencer with the class ${inClass.constructor.name}`)
+        if(this.externalSections[inMethodName] && !overwrite){
+            throw lib.throwError(inModuleName, `${inMethodName} is already a registered Section with the class ${this.externalSections[inMethodName].constructor.name}`);
+        }
 
-        this.externalSections[inName] = inClass;
+        coreMethods = coreMethods.concat(Object.keys(this.externalSections));
+
+        const clashingMethods = Object.getOwnPropertyNames(inClass.prototype).filter(method => coreMethods.includes(method));
+
+        if(clashingMethods.length){
+            let errors = clashingMethods.join(", ");
+            throw lib.throwError(inModuleName, `${inMethodName} cannot contain the following methods: ${errors}<br>These methods are existing methods on the Sequence or from already registered Sections. Please rename these methods to avoid conflicts.`);
+        }
+
+        if(game.settings.get('sequencer', 'debug')) console.log(`DEBUG | Sequencer.SectionManager | Successfully registered ${inMethodName} with Sequencer!`)
+
+        this.externalSections[inMethodName] = inClass;
 
         return true;
 
