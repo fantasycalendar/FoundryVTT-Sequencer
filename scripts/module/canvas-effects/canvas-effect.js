@@ -632,11 +632,11 @@ export default class CanvasEffect {
         	let blob = await this.loader.loadVideo(this.data.file);
 
         	if(!blob){
-        	    let error = "Sequencer | "
-                if(this.data.moduleName !== "Sequencer") error += `Module: ${this.data.moduleName}`;
-				error += ` | CanvasEffect | Play Effect - Could not play: ${this.data.file}`;
+        	    let error = "Sequencer "
+                if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
+				error += ` | CanvasEffect | Play Effect - Could not play:<br>${this.data.file}`;
 				ui.notifications.error(error);
-				console.error(error)
+				console.error(error.replace("<br>", "\n"))
         		reject();
         		return;
 			}
@@ -674,11 +674,13 @@ export default class CanvasEffect {
 			let texture = await this.loader.loadImage(this.data.file);
 
 			if(!texture){
-				let error = `Sequencer | CanvasEffect | Play Effect - Could not load: ${this.data.file}`;
-				ui.notifications.error(error);
-				console.error(error)
-				reject();
-				return;
+                let error = "Sequencer "
+                if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
+                error += ` | CanvasEffect | Play Effect - Could not play:<br>${this.data.file}`;
+                ui.notifications.error(error);
+                console.error(error.replace("<br>", "\n"))
+                reject();
+                return;
 			}
 
 			resolve(texture);
