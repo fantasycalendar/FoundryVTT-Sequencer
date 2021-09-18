@@ -50,20 +50,36 @@
 
             {{#if noEffects}}
                 <h2>No effects currently running...</h2>
-            {{else}}
-                <h2>Effects currently running:</h2>
             {{/if}}
 
-            {{#each effects as |effect key|}}
-
-                <div class="database-entry hover-highlight" data-id="{{ key }}">
-                    <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                    <div class="database-entry-text hover-text">
-                        {{ effect }}
+            {{#if persistentEffects}}
+                <h2>Persistent effects currently running:</h2>
+                {{#each persistentEffects as |effect key|}}
+                    <div class="database-entry hover-highlight" data-id="{{ key }}">
+                        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
+                        <div class="database-entry-text hover-text">
+                            {{ effect }}
+                        </div>
                     </div>
-                </div>
+                {{/each}}
+            {{/if}}
 
-            {{/each}}
+
+            {{#if hasBothEffects}}
+                <hr>
+            {{/if}}
+
+            {{#if temporaryEffects}}
+                <h2>Temporary effects currently running:</h2>
+                {{#each temporaryEffects as |effect key|}}
+                    <div class="database-entry hover-highlight" data-id="{{ key }}">
+                        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
+                        <div class="database-entry-text hover-text">
+                            {{ effect }}
+                        </div>
+                    </div>
+                {{/each}}
+            {{/if}}
 
         </div>
 

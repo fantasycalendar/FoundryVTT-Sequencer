@@ -198,7 +198,8 @@ export default class CanvasEffect {
 
         this.applyFilters();
 
-        this.sprite.alpha = show ? this.data.opacity : 0;
+        this.sprite.alpha = this.data.opacity;
+        this.sprite.visible = show;
 
         if(this.data.size){
             this.sprite.width = this.data.size.width * this.data.scale.x * this.data.gridSizeDifference;
@@ -351,7 +352,7 @@ export default class CanvasEffect {
 
         let fadeIn = this.data.animatedProperties.fadeIn;
 
-        if(this.actualCreationTime > (this.data.timestamp + fadeIn.duration + fadeIn.delay)) return;
+        if(this.actualCreationTime - (this.data.timestamp + fadeIn.duration + fadeIn.delay) > 0) return;
 
         this.sprite.alpha = 0.0;
 
@@ -410,7 +411,7 @@ export default class CanvasEffect {
         let scaleIn = this.data.animatedProperties.scaleIn;
         let fromScale = this._determineScale(scaleIn)
 
-        if(this.actualCreationTime > (this.data.timestamp + scaleIn.duration + scaleIn.delay)) return;
+        if(this.actualCreationTime - (this.data.timestamp + scaleIn.duration + scaleIn.delay) > 0) return;
 
         let toScale = {
             x: this.sprite.scale.x,
@@ -477,6 +478,9 @@ export default class CanvasEffect {
         if(!this.data.animatedProperties.rotateIn || !this.sprite) return 0;
 
         let rotateIn = this.data.animatedProperties.rotateIn;
+
+        if(this.actualCreationTime - (this.data.timestamp + rotateIn.duration + rotateIn.delay) > 0) return;
+
         let original_radians = this.spriteContainer.rotation;
         this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
 
@@ -522,7 +526,7 @@ export default class CanvasEffect {
         let fadeInAudio = this.data.animatedProperties.fadeInAudio;
         this.source.volume = 0.0;
 
-        if(this.actualCreationTime > (this.data.timestamp + duration + delay)) return;
+        if(this.actualCreationTime - (this.data.timestamp + fadeInAudio.duration + fadeInAudio.delay) > 0) return;
 
         SequencerAnimationEngine.animate({
             target: this.sprite,
@@ -571,7 +575,7 @@ export default class CanvasEffect {
 
         const duration = movementDuration - moves.delay;
 
-        if(this.actualCreationTime > (this.data.timestamp + duration + moves.delay)) return;
+        if(this.actualCreationTime - (this.data.timestamp + duration + moves.delay) > 0) return;
 
         SequencerAnimationEngine.animate([{
             target: this.spriteContainer,
@@ -613,9 +617,7 @@ export default class CanvasEffect {
 				this.container.removeChild(this.spriteContainer);
                 this.spriteContainer.destroy();
 				this.sprite.destroy();
-			} catch (err) {
-			    console.log(err);
-            }
+			} catch (err) {}
 		}
     }
 
@@ -723,7 +725,7 @@ class PersistentCanvasEffect extends CanvasEffect{
 
     async initializeEffect(){
         this.startLoop();
-        await this.spawnSprite(false);
+        await this.spawnSprite();
         this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
@@ -731,8 +733,17 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.scaleIn();
         this.rotateIn();
         this.debug();
+        this.timeoutSpriteVisibility();
+    }
+
+    timeoutSpriteVisibility(){
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+        if(creationTimeDifference === 0){
+            this.sprite.visible = true;
+            return;
+        }
         setTimeout(() => {
-            this.sprite.alpha = this.data.opacity;
+            this.sprite.visible = true;
         }, 50);
     }
 

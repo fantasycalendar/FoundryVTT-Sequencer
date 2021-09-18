@@ -40,14 +40,27 @@ export default class SequencerEffectsViewer extends FormApplication {
     getData() {
         let data = super.getData();
         data.noEffects = this.effects.length === 0;
-        data.effects = this.effects.map(effect => {
-            let fileName = effect.data.file.split('\\').pop().split('/').pop();
-            let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
-            if(effect.data.creatorUserId !== game.userId){
-                name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
-            }
-            return name;
-        })
+        data.persistentEffects = this.effects
+            .filter(effect => effect.data.persist)
+            .map(effect => {
+                let fileName = effect.data.file.split('\\').pop().split('/').pop();
+                let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
+                if(effect.data.creatorUserId !== game.userId){
+                    name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
+                }
+                return name;
+            })
+        data.temporaryEffects = this.effects
+            .filter(effect => !effect.data.persist)
+            .map(effect => {
+                let fileName = effect.data.file.split('\\').pop().split('/').pop();
+                let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
+                if(effect.data.creatorUserId !== game.userId){
+                    name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
+                }
+                return name;
+            })
+        data.hasBothEffects = data.persistentEffects.length && data.temporaryEffects;
         return data;
     }
 
@@ -70,10 +83,9 @@ export default class SequencerEffectsViewer extends FormApplication {
         });
     }
 
-    async _endEffect(index){
+    _endEffect(index){
         const effect = this.effects[index];
-        await SequencerEffectManager.endEffects({ effects: effect, sceneId: game.user.viewedScene });
-        this.render(true);
+        Sequencer.EffectManager.endEffects({ effects: effect, sceneId: game.user.viewedScene });
     }
 
     _showHighlight(index, show = true){

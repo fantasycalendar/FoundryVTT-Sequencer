@@ -143,9 +143,7 @@ export function deepGet(obj, path) {
             obj = obj[path[i]];
         }
         return obj[path[i]];
-    } catch (err) {
-        throw new Error(`Could not find property "${path}"`)
-    }
+    } catch (err) {}
 }
 
 /**
@@ -170,9 +168,7 @@ export function deepSet(obj, path, value) {
         } else {
             obj[path[i]] = value;
         }
-    } catch (err) {
-        throw new Error(`Could not set property "${path}"`)
-    }
+    } catch (err) {}
 }
 
 /**

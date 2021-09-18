@@ -247,9 +247,10 @@ export default class SequencerEffectManager {
 
         if(!effectsByObjectId.length) return true;
 
-        effectsByObjectId.forEach(effects => flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects));
-
-        debounceShowViewer();
+        effectsByObjectId.forEach(effects => {
+                effects = effects.filter(effect => effect.data.persist)
+                if(effects.length) flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects)
+            });
 
         return Promise.allSettled(...effectsByObjectId.map(
             effects => effects.map(effect => this._removeEffect(effect))
