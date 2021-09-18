@@ -2,12 +2,12 @@
 
     <style>
 
-        .database-entries-container{
+        .effects-container{
             max-height: calc(424px - 5rem);
             display:flex;
         }
 
-        .database-entries {
+        .effects {
             padding: 5px 0;
             max-height: calc(425px - 5rem);
             overflow-y: scroll;
@@ -15,12 +15,12 @@
             flex-direction: row;
         }
 
-        .database-entry{
+        .effect{
             display:flex;
             flex: 1 0 auto;
         }
 
-        .database-entry > button{
+        .effect > button{
             flex: 0;
             font-size: 0.7rem;
             height: 1.25rem;
@@ -32,7 +32,7 @@
             min-width: 1.5rem;
         }
 
-        .database-entry > div{
+        .effect > div{
             flex: 1;
             line-height:1.25rem;
         }
@@ -44,20 +44,20 @@
 
     </style>
 
-    <div class="database-entries-container">
+    <div class="effects-container">
 
-        <div class="database-entries">
+        <div class="effects">
 
             {{#if noEffects}}
                 <h2>No effects currently running...</h2>
             {{/if}}
 
             {{#if persistentEffects}}
-                <h2>Persistent effects currently running:</h2>
+                <h2>Persistent effects:</h2>
                 {{#each persistentEffects as |effect key|}}
-                    <div class="database-entry hover-highlight" data-id="{{ key }}">
+                    <div class="effect hover-highlight" data-id="{{ key }}">
                         <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                        <div class="database-entry-text hover-text">
+                        <div class="effect-text hover-text">
                             {{ effect }}
                         </div>
                     </div>
@@ -70,11 +70,11 @@
             {{/if}}
 
             {{#if temporaryEffects}}
-                <h2>Temporary effects currently running:</h2>
+                <h2>Temporary effects:</h2>
                 {{#each temporaryEffects as |effect key|}}
-                    <div class="database-entry hover-highlight" data-id="{{ key }}">
+                    <div class="effect hover-highlight" data-id="{{ key }}">
                         <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                        <div class="database-entry-text hover-text">
+                        <div class="effect-text hover-text">
                             {{ effect }}
                         </div>
                     </div>
