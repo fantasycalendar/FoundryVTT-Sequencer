@@ -474,7 +474,9 @@ export default class EffectSection extends Section {
     async _sanitizeEffectData() {
 
         let data = {
+            id: randomID(),
             moduleName: this.sequence.moduleName,
+            creatorUserId: game.userId,
             file: this._file,
             position: {
                 x: 0,
@@ -866,14 +868,14 @@ export default class EffectSection extends Section {
         let [from, to, from_target, to_target] = this._getPositions(this._from, this._to, false);
 
         from_target = this._calculateMissedPosition(from, from_target, !this._to && this._missed);
-        to_target = to ? this._calculateMissedPosition(to, to_target, this._missed) : false;
+        to_target = to ? this._calculateMissedPosition(to, to_target, this._missed, from_target) : false;
 
-        let from_origin = this._getCleanPosition(from);
-        let to_origin = this._getCleanPosition(to, true);
+        const from_origin = this._getCleanPosition(from);
+        const to_origin = this._getCleanPosition(to, true);
 
-        let origin_object = to || from;
-        let origin_position = to ? to_origin : from_origin;
-        let target_position = to ? to_target : from_target;
+        const origin_object = to || from;
+        const origin_position = to ? to_origin : from_origin;
+        const target_position = to ? to_target : from_target;
 
         let offset = {
             x: origin_position.x - target_position.x,
@@ -912,7 +914,7 @@ export default class EffectSection extends Section {
     }
 
     _cachedOffsetExists(inName) {
-        return typeof inName === "string" && this.sequence?._cachedOffsets[inName] !== undefined;
+        return typeof inName === "string" && this.sequence?._cachedOffsets?.[inName];
     }
 
     _getCachedOffset(inName, inIndex) {
@@ -926,26 +928,66 @@ export default class EffectSection extends Section {
         return super._validateLocation(inLocation);
     }
 
-    _calculateMissedPosition(target, position, missed) {
+    _calculateMissedPosition(target, position, missed, origin) {
 
         if (!missed) return position;
 
-        let width = (target?.data?.width ?? 1) * canvas.grid.size;
-        let height = (target?.data?.height ?? 1) * canvas.grid.size;
+        const size = this._getHalfSize(target);
+        const halfWidth = size.x;
+        const halfHeight = size.y;
 
-        let XorY = Math.random() < 0.5;
-        let flipX = Math.random() < 0.5 ? -1 : 1;
-        let flipY = Math.random() < 0.5 ? -1 : 1;
+        const XorY = Math.random() < 0.5;
+        let flipX = Math.random() > 0.5 ? -1 : 1;
+        let flipY = Math.random() > 0.5 ? -1 : 1;
 
-        let tokenOffset = canvas.grid.size / 5;
+        const tokenOffset = canvas.grid.size / 5;
+
+        if(origin && target !== origin){
+
+            let ray = new Ray(position, origin);
+
+            let startRadians = ray.angle - (Math.PI/2);
+            let endRadians = startRadians + (Math.PI);
+
+            let radius = lib.lerp(halfHeight, halfHeight, 0.5);
+
+            let distance = (ray.distance / canvas.grid.size) - 1;
+
+            if(distance <= 1.25){
+
+                let randomAngle = XorY ? startRadians : endRadians;
+
+                let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+                let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+
+                if(x === position.x) x += lib.random_float_between(tokenOffset*-1, tokenOffset);
+                if(y === position.y) y += lib.random_float_between(tokenOffset*-1, tokenOffset);
+
+                return { x, y };
+
+            }
+
+            distance = Math.max(Math.abs(distance - 15), 6);
+
+            endRadians += (Math.PI / distance);
+            startRadians -= (Math.PI / distance);
+
+            let randomAngle = lib.lerp(startRadians, endRadians, Math.random());
+
+            let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+            let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+
+            return { x, y };
+
+        }
 
         // If it's X, random position in Y axis
         if (XorY) {
-            position.x += ((width / 2) + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipX;
-            position.y += lib.random_float_between(tokenOffset, (height / 2) + canvas.grid.size / 2) * flipY;
+            position.x += (halfWidth + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipX;
+            position.y += lib.random_float_between(tokenOffset, halfHeight + canvas.grid.size / 2) * flipY;
         } else {
-            position.x += lib.random_float_between(tokenOffset, (width / 2) + canvas.grid.size / 2) * flipX;
-            position.y += ((height / 2) + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipY;
+            position.x += lib.random_float_between(tokenOffset, halfWidth + canvas.grid.size / 2) * flipX;
+            position.y += (halfHeight + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipY;
         }
 
         return position;

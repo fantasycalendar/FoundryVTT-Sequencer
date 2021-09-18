@@ -135,10 +135,7 @@ export default class Section {
     }
 
     /**
-     * Whether the section should actually play at all
-     *
-     * @returns {Promise<*|boolean>}
-     * @private
+     * Private methods - do not touch!
      */
     async _shouldPlay() {
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;

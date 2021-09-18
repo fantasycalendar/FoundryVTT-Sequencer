@@ -366,7 +366,7 @@ export function sequenceProxyWrap(inSequence){
     return new Proxy(inSequence, {
         get: function (target, prop) {
             if(target[prop] === undefined){
-                if(Sequencer.SectionManager.externalSections[prop] === undefined) return undefined;
+                if(Sequencer.SectionManager.externalSections[prop] === undefined) return Reflect.get(target, prop);
                 target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
                 return Reflect.get(target, "_createCustomSection");
             }

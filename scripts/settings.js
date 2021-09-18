@@ -1,32 +1,5 @@
 export default function registerSettings() {
 
-    game.settings.register("sequencer", "debug", {
-        name: "Enable debugging",
-        hint: "This will make the sequencer log into the console what it is doing.",
-        scope: "world",
-        config: true,
-        default: false,
-        type: Boolean
-    });
-
-    game.settings.register("sequencer", "effectsEnabled", {
-        name: "Enable Effects",
-        hint: "Enables effects to be played on this client",
-        scope: "world",
-        config: true,
-        default: true,
-        type: Boolean
-    });
-
-    game.settings.register("sequencer", "soundsEnabled", {
-        name: "Enable Sounds",
-        hint: "Enables sounds to be played on this client",
-        scope: "world",
-        config: true,
-        default: true,
-        type: Boolean
-    });
-
     // Define a settings submenu which handles advanced configuration needs
     game.settings.registerMenu("sequencer", "openSequencerDatabaseViewer", {
         name: "Open Sequencer Database Viewer",
@@ -35,6 +8,45 @@ export default function registerSettings() {
         icon: "fas fa-bars",
         type: Sequencer.DatabaseViewer,
         restricted: true
+    });
+
+    game.settings.register("sequencer", "debug", {
+        name: "Enable debugging",
+        hint: "This will make the sequencer log into the console what it is doing.",
+        scope: "client",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register("sequencer", "effectsEnabled", {
+        name: "Enable Effects",
+        hint: "Enables effects to be played on this client",
+        scope: "client",
+        config: true,
+        default: true,
+        onChange: debouncedReload,
+        type: Boolean
+    });
+
+    game.settings.register("sequencer", "soundsEnabled", {
+        name: "Enable Sounds",
+        hint: "Enables sounds to be played on this client",
+        scope: "client",
+        config: true,
+        default: true,
+        onChange: debouncedReload,
+        type: Boolean
+    });
+
+    game.settings.register("sequencer", "toolButtonsEnabled", {
+        name: "Enable Tool-menu Buttons",
+        hint: "Enables the buttons in the left-hand control menu to open the database viewer and effect manager",
+        scope: "client",
+        config: true,
+        default: true,
+        onChange: debouncedReload,
+        type: Boolean
     });
 
     game.settings.register("sequencer", "fileCache", {
@@ -47,6 +59,34 @@ export default function registerSettings() {
 
     game.settings.set('sequencer', 'fileCache', {});
 
+    Hooks.on("getSceneControlButtons", (controls) => {
+        if(!game.settings.get("sequencer", "toolButtonsEnabled")) return;
+        const bar = controls.find(c => c.name === "token");
+        bar.tools.push({
+            icon: "fas fa-database",
+            name: "effectdatabase",
+            title: "Show Sequencer Database",
+            button: true,
+            onClick: () => {
+                Sequencer.DatabaseViewer.show();
+            },
+        });
+        if (!game.user.isTrusted) return;
+        bar.tools.push({
+            icon: "fas fa-atom",
+            name: "effectviewer",
+            title: "Show Sequencer Effects Viewer",
+            button: true,
+            onClick: () => {
+                Sequencer.EffectManager.show();
+            },
+        });
+    });
+
     console.log("Sequencer | Registered settings");
 
 }
+
+const debouncedReload = debounce(() => {
+    window.location.reload()
+}, 100)

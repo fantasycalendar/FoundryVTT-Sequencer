@@ -1,6 +1,7 @@
 import CanvasEffect from "./canvas-effects/canvas-effect.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
+import SequencerEffectsViewer from "./formapplications/sequencer-effects-viewer.js";
 
 const EffectsContainer = {
     _effects: new Set(),
@@ -15,13 +16,33 @@ const EffectsContainer = {
     }
 };
 
-
 export default class SequencerEffectManager {
+
+    /**
+     * Returns all of the currently running effects on the canvas
+     *
+     * @returns {Array}
+     */
+    static get effects(){
+        return EffectsContainer.effects;
+    }
+
+    /**
+     * Opens the Sequencer Effects Viewer UI
+     *
+     * @returns {SequencerEffectsViewer}
+     */
+    static show(){
+        const effects = EffectsContainer.effects
+            .filter(effect => effect.data.sceneId === game.user.viewedScene)
+            .filter(effect => effect.data.creatorUserId === game.userId || game.user.isGM);
+        return SequencerEffectsViewer.show(effects);
+    }
 
     /**
      * Play an effect on the canvas.
      *
-     * @param {object} data The data that describes the audio to play.
+     * @param {object} data The data that describes the audio to play
      * @param {boolean} [push=false] A flag indicating whether or not to make other clients play the effect
      * @returns {CanvasEffect} A CanvasEffect object
      */
@@ -31,43 +52,61 @@ export default class SequencerEffectManager {
     }
 
     /**
-     * End effects that is playing on the canvas based on a set of filters
-     *
-     * @param {object} inData An object containing filters that determine which effects to end
-     *                             - object: An ID or a PlaceableObject
-     *                             - name: The name of the effect
-     *                             - sceneId: the ID of the scene to search within
-     * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
-     * @returns {Promise} A promise that resolves when the effects have ended
-     */
-    static async endEffects(inData = {}, push = true) {
-
-        inData = this._validateFilters(inData);
-
-        if (!inData.name && !inData.attachTo && !inData.sceneId) return;
-
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
-        return this._endEffects(inData);
-    }
-
-    /**
      * Get effects that is playing on the canvas based on a set of filters
      *
      * @param {object} inData An object containing filters that determine which effects to return
      *                             - object: An ID or a PlaceableObject
      *                             - name: The name of the effect
      *                             - sceneId: the ID of the scene to search within
+     *                             - effects: a single CanvasEffect or its ID, or an array of such
      * @returns {Array} An array containing effects that match the given filter
      */
     static getEffects(inData = {}){
+        const filters = this._validateFilters(inData);
+        return this._filterEffects(filters);
+    }
 
+    /**
+     * End effects that is playing on the canvas based on a set of filters
+     *
+     * @param {object} inData An object containing filters that determine which effects to end
+     *                             - object: An ID or a PlaceableObject
+     *                             - name: The name of the effect
+     *                             - sceneId: the ID of the scene to search within
+     *                             - effects: a single CanvasEffect or its ID, or an array of such
+     * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
+     * @returns {Promise} A promise that resolves when the effects have ended
+     */
+    static async endEffects(inData = {}, push = true) {
         inData = this._validateFilters(inData);
+        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects) return;
+        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
+        return this._endEffects(inData);
+    }
 
+    /**
+     * End all effects that are playing on the canvas
+     *
+     * @param {string} [inSceneId] A parameter which determines which scene to end all effects on, defaults to current viewed scene
+     * @param {boolean} [push=true] A flag indicating whether or not to make other clients end all effects
+     * @returns {Promise} A promise that resolves when all of the effects have ended
+     */
+    static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
+        if(!game.user.isGM) return;
+        if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS, inSceneId);
+        return this._endAllEffects(inSceneId);
+    }
+
+    static _endAllEffects(inSceneId = game.user.viewedScene){
+        return this._endEffects({ sceneId: inSceneId });
+    }
+
+    static _filterEffects(inData){
         return EffectsContainer.effects
+            .filter(effect => !inData.effects || inData.effects.includes(effect.data.id))
             .filter(effect => !inData.name || inData.name === effect.data.name)
             .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo)
             .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId);
-
     }
 
     static _validateFilters(inData){
@@ -92,24 +131,22 @@ export default class SequencerEffectManager {
             if (!game.scenes.get(inData.sceneId)) throw lib.throwError("SequencerEffectManager", "endEffects | inData.sceneId must be a valid scene id (could not find scene)")
         }
 
+        if(inData?.effects){
+            if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
+            inData.effects = inData.effects.map(effect => {
+                if(!(typeof effect === "string" || effect instanceof CanvasEffect))  throw lib.throwError("SequencerEffectManager", "endEffects | entries in inData.effects must be of type string or CanvasEffect")
+                if(effect instanceof CanvasEffect) return effect.data.id;
+                return effect;
+            })
+        }
+
         return foundry.utils.mergeObject({
             name: false,
             attachTo: false,
-            sceneId: game.user.viewedScene
+            sceneId: game.user.viewedScene,
+            effects: false
         }, inData);
 
-    }
-
-    /**
-     * End all effects that are playing on the canvas
-     *
-     * @param {string} [inSceneId] A parameter which determines which scene to end all effects on, defaults to current viewed scene
-     * @param {boolean} [push=true] A flag indicating whether or not to make other clients end all effects
-     * @returns {Promise} A promise that resolves when all of the effects have ended
-     */
-    static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS, inSceneId);
-        return this._endEffects({ sceneId: inSceneId });
     }
 
     static async _playEffect(data, setFlags = true) {
@@ -128,10 +165,13 @@ export default class SequencerEffectManager {
             playData.promise.then(() => this._removeEffect(effect));
         }
 
+        debounceShowViewer();
+
         return playData;
     }
 
     static _setUpPersists() {
+        this._tearDownPersists();
         const allObjects = lib.getAllObjects()
         allObjects.push(canvas.scene);
         allObjects.forEach(obj => {
@@ -143,13 +183,15 @@ export default class SequencerEffectManager {
             });
             this._playEffectMap(objEffects, doc);
         })
+        debounceShowViewer();
     }
 
     static _tearDownPersists(inId) {
         EffectsContainer.effects
-            .filter(effect => effect.data?.attachTo === inId)
+            .filter(effect => !inId || effect.data?.attachTo === inId)
             .forEach(effect => {
                 EffectsContainer.delete(effect);
+                debounceShowViewer();
             })
     }
 
@@ -163,6 +205,8 @@ export default class SequencerEffectManager {
         });
 
         this._playEffectMap(effects, inDocument);
+
+        debounceShowViewer();
 
         return effects;
 
@@ -183,15 +227,13 @@ export default class SequencerEffectManager {
 
     static _removeEffect(effect) {
         EffectsContainer.delete(effect);
+        debounceShowViewer();
         return effect.endEffect();
     }
 
     static _endEffects(inData) {
 
-        let effects = EffectsContainer.effects
-            .filter(effect => !inData.name || inData.name === effect.data.name)
-            .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo)
-            .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId);
+        let effects = this._filterEffects(inData);
 
         if (!effects.length) return;
 
@@ -207,12 +249,19 @@ export default class SequencerEffectManager {
 
         effectsByObjectId.forEach(effects => flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects));
 
+        debounceShowViewer();
+
         return Promise.allSettled(...effectsByObjectId.map(
             effects => effects.map(effect => this._removeEffect(effect))
         ));
 
     }
 }
+
+const debounceShowViewer = debounce(async () => {
+    if(!SequencerEffectsViewer.isVisible) return;
+    SequencerEffectManager.show();
+}, 100);
 
 const flagManager = {
 

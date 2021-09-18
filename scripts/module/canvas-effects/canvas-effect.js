@@ -19,13 +19,13 @@ export default class CanvasEffect {
 		this.loader = SequencerFileCache;
         this.resolve = false;
         this._context = false;
+        this.highlight = false;
         this.loopOffset = 0;
         this.filters = {};
 
 		this.actualCreationTime = (+new Date())
         // Set default values
         this.data = foundry.utils.mergeObject({
-            id: randomID(),
             timestamp: (+new Date()),
             position: { x: 0, y: 0 },
             rotation: 0,
@@ -105,6 +105,10 @@ export default class CanvasEffect {
 
         return container;
 
+    }
+
+    _showHighlight(show){
+        this.highlight.visible = show;
     }
 
     async initializeEffect(){
@@ -205,6 +209,17 @@ export default class CanvasEffect {
                 this.data.scale.y * this.data.gridSizeDifference
             );
         }
+
+        this.highlight = new PIXI.Graphics();
+        this.highlight.lineStyle(4, "0xFFFFFF")
+        this.highlight.moveTo(this.sprite.width/-2,this.sprite.height/-2);
+        this.highlight.lineTo(this.sprite.width/2,this.sprite.height/-2);
+        this.highlight.lineTo(this.sprite.width/2,this.sprite.height/2);
+        this.highlight.lineTo(this.sprite.width/-2,this.sprite.height/2);
+        this.highlight.lineTo(this.sprite.width/-2,this.sprite.height/-2);
+        this.highlight.lineTo(this.sprite.width/2,this.sprite.height/-2);
+        this.highlight.visible = false;
+        this.sprite.addChild(this.highlight);
 
         this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));

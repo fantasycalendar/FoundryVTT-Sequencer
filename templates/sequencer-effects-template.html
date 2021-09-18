@@ -1,0 +1,72 @@
+<form id="sequencer-database-form" class="dialog-content" onsubmit="event.preventDefault();">
+
+    <style>
+
+        .database-entries-container{
+            max-height: calc(424px - 5rem);
+            display:flex;
+        }
+
+        .database-entries {
+            padding: 5px 0;
+            max-height: calc(425px - 5rem);
+            overflow-y: scroll;
+            flex: 1;
+            flex-direction: row;
+        }
+
+        .database-entry{
+            display:flex;
+            flex: 1 0 auto;
+        }
+
+        .database-entry > button{
+            flex: 0;
+            font-size: 0.7rem;
+            height: 1.25rem;
+            line-height: normal;
+            margin-right: 5px;
+        }
+
+        .btn_end{
+            min-width: 1.5rem;
+        }
+
+        .database-entry > div{
+            flex: 1;
+            line-height:1.25rem;
+        }
+
+        .hover-highlight:hover > .hover-text{
+            color: #000;
+            text-shadow: 0 0 10px red;
+        }
+
+    </style>
+
+    <div class="database-entries-container">
+
+        <div class="database-entries">
+
+            {{#if noEffects}}
+                <h2>No effects currently running...</h2>
+            {{else}}
+                <h2>Effects currently running:</h2>
+            {{/if}}
+
+            {{#each effects as |effect key|}}
+
+                <div class="database-entry hover-highlight" data-id="{{ key }}">
+                    <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
+                    <div class="database-entry-text hover-text">
+                        {{ effect }}
+                    </div>
+                </div>
+
+            {{/each}}
+
+        </div>
+
+    </div>
+
+</form>
