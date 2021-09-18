@@ -68,7 +68,7 @@ export default function registerSettings() {
             title: "Show Sequencer Database",
             button: true,
             onClick: () => {
-                Sequencer.DatabaseViewer.show();
+                Sequencer.DatabaseViewer.show(true);
             },
         });
         if (!game.user.isTrusted) return;
@@ -78,7 +78,7 @@ export default function registerSettings() {
             title: "Show Sequencer Effects Viewer",
             button: true,
             onClick: () => {
-                Sequencer.EffectManager.show();
+                Sequencer.EffectManager.show(true);
             },
         });
     });

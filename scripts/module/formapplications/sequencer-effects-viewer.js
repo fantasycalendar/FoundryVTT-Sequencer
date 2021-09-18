@@ -5,12 +5,12 @@ export default class SequencerEffectsViewer extends FormApplication {
         this.effects = effects;
     }
 
-    static show(effects){
+    static show(inFocus, effects){
         if (!game.user.isTrusted) return;
         for(let app of Object.values(ui.windows)){
             if(app instanceof this){
-                app.effects = effects;
-                return app.render(true, { focus: true });
+                if(effects) app.effects = effects;
+                return app.render(true, { focus: inFocus });
             }
         }
         return new this(effects).render(true);
@@ -40,25 +40,34 @@ export default class SequencerEffectsViewer extends FormApplication {
     getData() {
         let data = super.getData();
         data.noEffects = this.effects.length === 0;
+        let index = -1;
         data.persistentEffects = this.effects
             .filter(effect => effect.data.persist)
             .map(effect => {
+                index++;
                 let fileName = effect.data.file.split('\\').pop().split('/').pop();
                 let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
                 if(effect.data.creatorUserId !== game.userId){
                     name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
                 }
-                return name;
+                return {
+                    name,
+                    index
+                };
             })
         data.temporaryEffects = this.effects
             .filter(effect => !effect.data.persist)
             .map(effect => {
+                index++;
                 let fileName = effect.data.file.split('\\').pop().split('/').pop();
                 let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
                 if(effect.data.creatorUserId !== game.userId){
                     name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
                 }
-                return name;
+                return {
+                    name,
+                    index
+                };
             })
         data.hasBothEffects = data.persistentEffects.length && data.temporaryEffects;
         return data;

@@ -108,6 +108,21 @@ export default class CanvasEffect {
     }
 
     _showHighlight(show){
+        if(!this.highlight){
+            let width = this.sprite.width / this.sprite.scale.x;
+            let height = this.sprite.height / this.sprite.scale.x;
+            this.highlight = new PIXI.Graphics();
+            this.highlight.lineStyle(4, "0xFFFFFF")
+            this.highlight.moveTo(width/-2,height/-2);
+            this.highlight.lineTo(width/2,height/-2);
+            this.highlight.lineTo(width/2,height/2);
+            this.highlight.lineTo(width/-2,height/2);
+            this.highlight.lineTo(width/-2,height/-2);
+            this.highlight.lineTo(width/2,height/-2);
+            this.highlight.visible = false;
+            this.sprite.addChild(this.highlight);
+        }
+
         this.highlight.visible = show;
     }
 
@@ -210,17 +225,6 @@ export default class CanvasEffect {
                 this.data.scale.y * this.data.gridSizeDifference
             );
         }
-
-        this.highlight = new PIXI.Graphics();
-        this.highlight.lineStyle(4, "0xFFFFFF")
-        this.highlight.moveTo(this.sprite.width/-2,this.sprite.height/-2);
-        this.highlight.lineTo(this.sprite.width/2,this.sprite.height/-2);
-        this.highlight.lineTo(this.sprite.width/2,this.sprite.height/2);
-        this.highlight.lineTo(this.sprite.width/-2,this.sprite.height/2);
-        this.highlight.lineTo(this.sprite.width/-2,this.sprite.height/-2);
-        this.highlight.lineTo(this.sprite.width/2,this.sprite.height/-2);
-        this.highlight.visible = false;
-        this.sprite.addChild(this.highlight);
 
         this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));

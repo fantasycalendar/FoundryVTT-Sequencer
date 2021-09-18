@@ -15,11 +15,11 @@ export default class SequencerDatabaseViewer extends FormApplication {
         this.list = false;
     }
 
-    static show(){
+    static show(inFocus = false){
         if (!game.user.isTrusted) return;
         for(let app of Object.values(ui.windows)){
             if(app instanceof this){
-                return app.render(true, { focus: true });
+                return app.render(true, { focus: inFocus });
             }
         }
         return new this().render(true);

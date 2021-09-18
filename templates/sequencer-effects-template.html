@@ -55,10 +55,10 @@
             {{#if persistentEffects}}
                 <h2>Persistent effects:</h2>
                 {{#each persistentEffects as |effect key|}}
-                    <div class="effect hover-highlight" data-id="{{ key }}">
+                    <div class="effect hover-highlight" data-id="{{ effect.index }}">
                         <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
                         <div class="effect-text hover-text">
-                            {{ effect }}
+                            {{ effect.name }}
                         </div>
                     </div>
                 {{/each}}
@@ -72,10 +72,10 @@
             {{#if temporaryEffects}}
                 <h2>Temporary effects:</h2>
                 {{#each temporaryEffects as |effect key|}}
-                    <div class="effect hover-highlight" data-id="{{ key }}">
+                    <div class="effect hover-highlight" data-id="{{ effect.index }}">
                         <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
                         <div class="effect-text hover-text">
-                            {{ effect }}
+                            {{ effect.name }}
                         </div>
                     </div>
                 {{/each}}

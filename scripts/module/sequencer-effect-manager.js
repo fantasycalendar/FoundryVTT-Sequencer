@@ -32,11 +32,11 @@ export default class SequencerEffectManager {
      *
      * @returns {SequencerEffectsViewer}
      */
-    static show(){
+    static show(inFocus = false){
         const effects = EffectsContainer.effects
             .filter(effect => effect.data.sceneId === game.user.viewedScene)
             .filter(effect => effect.data.creatorUserId === game.userId || game.user.isGM);
-        return SequencerEffectsViewer.show(effects);
+        return SequencerEffectsViewer.show(inFocus, effects);
     }
 
     /**
