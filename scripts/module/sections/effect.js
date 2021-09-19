@@ -940,55 +940,55 @@ export default class EffectSection extends Section {
 
         const tokenOffset = canvas.grid.size / 5;
 
-        if(origin_position){
+        if(!origin_position){
 
-            let ray = new Ray(position, origin_position);
-
-            let startRadians = ray.angle - (Math.PI/2);
-            let endRadians = startRadians + (Math.PI);
-
-            let radius = lib.lerp(halfHeight, halfHeight, 0.5);
-
-            let distance = (ray.distance / canvas.grid.size) - 1;
-
-            if(distance <= 1.25){
-
-                let randomAngle = XorY ? startRadians : endRadians;
-
-                let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-                let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-
-                if(x === position.x) x += lib.random_float_between(tokenOffset*-1, tokenOffset);
-                if(y === position.y) y += lib.random_float_between(tokenOffset*-1, tokenOffset);
-
-                return { x, y };
-
+            // If it's X, random position in Y axis
+            if (XorY) {
+                position.x += (halfWidth + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipX;
+                position.y += lib.random_float_between(tokenOffset, halfHeight + canvas.grid.size / 2) * flipY;
+            } else {
+                position.x += lib.random_float_between(tokenOffset, halfWidth + canvas.grid.size / 2) * flipX;
+                position.y += (halfHeight + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipY;
             }
 
-            distance = Math.max(Math.abs(distance - 15), 6);
+            return position;
 
-            endRadians += (Math.PI / distance);
-            startRadians -= (Math.PI / distance);
+        }
 
-            let randomAngle = lib.lerp(startRadians, endRadians, Math.random());
+        let ray = new Ray(position, origin_position);
+
+        let startRadians = ray.angle - (Math.PI/2);
+        let endRadians = startRadians + (Math.PI);
+
+        let radius = lib.lerp(halfHeight, halfHeight, 0.5);
+
+        let distance = (ray.distance / canvas.grid.size) - 1;
+
+        if(distance <= 1.25){
+
+            let randomAngle = XorY ? startRadians : endRadians;
 
             let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
             let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+
+            if(x === position.x) x += lib.random_float_between(tokenOffset*-1, tokenOffset);
+            if(y === position.y) y += lib.random_float_between(tokenOffset*-1, tokenOffset);
 
             return { x, y };
 
         }
 
-        // If it's X, random position in Y axis
-        if (XorY) {
-            position.x += (halfWidth + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipX;
-            position.y += lib.random_float_between(tokenOffset, halfHeight + canvas.grid.size / 2) * flipY;
-        } else {
-            position.x += lib.random_float_between(tokenOffset, halfWidth + canvas.grid.size / 2) * flipX;
-            position.y += (halfHeight + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipY;
-        }
+        distance = Math.max(Math.abs(distance - 15), 6);
 
-        return position;
+        endRadians += (Math.PI / distance);
+        startRadians -= (Math.PI / distance);
+
+        let randomAngle = lib.lerp(startRadians, endRadians, Math.random());
+
+        let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+        let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+
+        return { x, y };
 
     }
 
