@@ -1,19 +1,32 @@
 import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
+import filters from "../lib/filters.js";
 
 export default class CanvasEffect {
 
-    constructor(container, inData) {
+    static make(inData){
+        return inData.persist
+            ? new PersistentCanvasEffect(inData)
+            : new CanvasEffect(inData);
+    }
 
-        this.container = container;
+    constructor(inData) {
+
         this.ended = false;
         this.texture = false;
 		this.source = false;
 		this.loader = SequencerFileCache;
+        this.resolve = false;
+        this._context = false;
+        this.highlight = false;
+        this.loopOffset = 0;
+        this.filters = {};
 
+		this.actualCreationTime = (+new Date())
         // Set default values
         this.data = foundry.utils.mergeObject({
+            timestamp: (+new Date()),
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1.0, y: 1.0 },
@@ -23,7 +36,99 @@ export default class CanvasEffect {
 
     }
 
-    playAnimations(){
+    get layer(){
+        return this.data.layer ?? 2;
+    }
+
+    get contextDocument(){
+        return this.context?.document ?? this.context;
+    }
+
+    get context(){
+        if(!this._context){
+            this._context = this.data.attachTo
+                ? lib.getObjectFromScene(this.data.attachTo, this.data.sceneId)
+                : game.scenes.get(this.data.sceneId);
+        }
+        return this._context;
+    }
+
+    _getTokenContainer(){
+
+        let containers = this.context.children.filter(child => child?.parentName === "sequencer");
+
+        if(!containers.length) {
+            let aboveContainer = new PIXI.Container();
+            aboveContainer.sortableChildren = true;
+            aboveContainer.parentName = "sequencer";
+            aboveContainer.below = false;
+            aboveContainer.zIndex = 1000;
+            this.context.addChild(aboveContainer);
+            containers.push(aboveContainer);
+
+            let belowContainer = new PIXI.Container();
+            belowContainer.sortableChildren = true;
+            belowContainer.parentName = "sequencer";
+            belowContainer.below = true;
+            belowContainer.zIndex = -1000;
+            this.context.addChild(belowContainer);
+            containers.push(belowContainer);
+
+            this.context.sortChildren();
+        }
+
+        return containers.find(child => child?.below === (this.layer ?? 2) < 2);
+    }
+
+    _getCanvasContainer(){
+
+        let layer = [
+            canvas.background,
+            canvas.sequencerEffectsBelowTokens,
+            canvas.sequencerEffectsAboveTokens
+        ][this.layer];
+
+        let container = layer.children.find(child => child?.parentName === "sequencer");
+
+        if(!container) {
+            if(layer === canvas.background){
+                layer.sortableChildren = true;
+                layer.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
+            }
+            container = new PIXI.Container();
+            container.sortableChildren = true;
+            container.parentName = "sequencer";
+            container.zIndex = 0.5;
+            layer.addChild(container);
+            layer.sortChildren();
+        }
+
+        return container;
+
+    }
+
+    _showHighlight(show){
+        if(!this.highlight){
+            let width = this.sprite.width / this.sprite.scale.x;
+            let height = this.sprite.height / this.sprite.scale.x;
+            this.highlight = new PIXI.Graphics();
+            this.highlight.lineStyle(4, "0xFFFFFF")
+            this.highlight.moveTo(width/-2,height/-2);
+            this.highlight.lineTo(width/2,height/-2);
+            this.highlight.lineTo(width/2,height/2);
+            this.highlight.lineTo(width/-2,height/2);
+            this.highlight.lineTo(width/-2,height/-2);
+            this.highlight.lineTo(width/2,height/-2);
+            this.highlight.visible = false;
+            this.sprite.addChild(this.highlight);
+        }
+
+        this.highlight.visible = show;
+    }
+
+    async initializeEffect(){
+        await this.spawnSprite();
+        this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
         this.fadeOut();
@@ -39,7 +144,7 @@ export default class CanvasEffect {
 
     calculateDuration() {
 
-		this.data.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
+		this.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
 
 		let moves = this.data.animatedProperties.moves;
 
@@ -47,7 +152,7 @@ export default class CanvasEffect {
 
 			let durationFromSpeed = (this.data.distance / this.data.speed) * 1000;
 
-			this.data.animationDuration = Math.max(durationFromSpeed, this.data.duration);
+			this.animationDuration = Math.max(durationFromSpeed, this.data.duration);
 
 		}else{
 
@@ -62,97 +167,233 @@ export default class CanvasEffect {
 					moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + moves.delay;
 				}
 
-				this.data.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
+				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
 
-				this.data.animationDuration = this.data.animationDuration || 1000;
+				this.animationDuration = this.animationDuration || 1000;
 
 			}
 
 		}
 
+        this.startTime = 0;
 		if(this.data.time?.start && this.source?.currentTime !== undefined) {
 			let currentTime = !this.data.time.start.isPerc
 				? this.data.time.start.value ?? 0
-				: (this.data.animationDuration * this.data.time.start.value);
+				: (this.animationDuration * this.data.time.start.value);
 			this.source.currentTime = currentTime / 1000;
+            this.startTime = this.source.currentTime;
 		}
 
 		if(this.data.time?.end){
-			this.data.animationDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.data.animationDuration - this.data.time.end.value
-				: this.data.animationDuration * this.data.time.end.value;
+			this.animationDuration = !this.data.time.end.isPerc
+				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.animationDuration - this.data.time.end.value
+				: this.animationDuration * this.data.time.end.value;
 		}
+        this.endTime = this.animationDuration / 1000;
 
-		this.data.animationDuration /= (this.data.playbackRate ?? 1.0);
+		this.animationDuration /= (this.data.playbackRate ?? 1.0);
 
-		if(this.source) this.source.loop = (this.data.animationDuration / 1000) > this.source.duration;
+		if(this.source){
+		    this.source.loop = (this.animationDuration / 1000) > this.source.duration;
+            if(this.data.noLoop) this.source.loop = false;
+        }
 
 	}
 
-    async spawnSprite() {
+    async spawnSprite(show = true) {
 
-		this.sprite = new PIXI.Sprite(this.texture);
+        this.sprite = new PIXI.Sprite(this.texture);
+        this.spriteContainer = new PIXI.Container();
+        this.spriteContainer.addChild(this.sprite);
+        this.sprite.anchor.set(0.5, 0.5);
+        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.spriteContainer.sortChildren();
+        this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+        this.container.addChild(this.spriteContainer);
 
-		if(this.source && this.data.time?.start && this.source?.currentTime !== undefined) {
-			await lib.wait(15)
-		}
+        this.applyFilters();
 
-		this.texture.update();
-
-		this.sprite.alpha = this.data.opacity;
-		this.container.addChild(this.sprite);
-		this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
-		this.container.sortChildren();
-
-        this.sprite.anchor.set(this.data.anchor.x, this.data.anchor.y);
-		this.sprite.position.set(this.data.position.x, this.data.position.y);
-		this.sprite.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
+        this.sprite.alpha = this.data.opacity;
+        this.sprite.visible = show;
 
         if(this.data.size){
-        	this.sprite.width = this.data.size.width * this.data.scale.x;
-        	this.sprite.height = this.data.size.height * this.data.scale.y;
-		} else {
-			this.data.scale.x *= this.data.gridSizeDifference;
-			this.data.scale.y *= this.data.gridSizeDifference;
-			this.sprite.scale.set(this.data.scale.x, this.data.scale.y);
-		}
+            this.sprite.width = this.data.size.width * this.data.scale.x * this.data.gridSizeDifference;
+            this.sprite.height = this.data.size.height * this.data.scale.y * this.data.gridSizeDifference;
+        } else {
+            this.sprite.scale.set(
+                this.data.scale.x * this.data.gridSizeDifference,
+                this.data.scale.y * this.data.gridSizeDifference
+            );
+        }
 
-		if(this.source?.currentTime !== undefined){
-			this.source.play();
-			this.source.playbackRate = this.data.playbackRate;
-		}
+        this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
+        this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
+
+        this.spriteContainer.pivot.set(
+            lib.lerp(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
+            lib.lerp(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
+        );
+
+        if(this.source && (this.startTime || this.loopOffset > 0) && this.source?.currentTime !== undefined) {
+            await lib.wait(15)
+            this.texture.update();
+        }
+
+        if(this.source?.currentTime !== undefined){
+            this.source.playbackRate = this.data.playbackRate;
+            this.tryPlay();
+        }
+
+    }
+
+    tryPlay(){
+        return new Promise(resolve => {
+            if (this.source) {
+                try {
+                    this.source.play();
+                    resolve();
+                } catch (err) {
+                    setTimeout(() => {
+                        resolve(this.tryPlay());
+                    }, 10)
+                }
+            }
+        });
+    }
+
+    applyFilters(){
+
+        if(!this.data.filters) return;
+
+        this.sprite.filters = [];
+
+        for(let [filterName, filterData] of Object.entries(this.data.filters)){
+             const filter = new filters[filterName](filterData.data);
+             this.sprite.filters.push(filter);
+             const filterKeyName = filterData.name || filterName;
+             this.filters[filterKeyName] = filter;
+        }
+
+    }
+
+    counterAnimateRotation(animation){
+
+        if(this.data.zeroSpriteRotation && animation.target === this.spriteContainer){
+            delete animation.target;
+            let counterAnimation = foundry.utils.duplicate(animation);
+            animation.target = this.spriteContainer;
+            counterAnimation.target = this.sprite;
+            if(counterAnimation.values){
+                counterAnimation.values = counterAnimation.values.map(value => value*-1);
+            }else{
+                counterAnimation.from *= -1;
+                counterAnimation.to *= -1;
+            }
+            if(!Array.isArray(animation)) {
+                animation = [animation, counterAnimation]
+            }else{
+                animation.push(counterAnimation);
+            }
+        }
+
+        return animation;
+
+    }
+
+    playCustomAnimations(){
+
+        if(!this.data.animatedProperties.animations) return 0;
+
+        let animationsToSend = [];
+
+        const animations = foundry.utils.duplicate(this.data.animatedProperties.animations);
+
+        const oneShotAnimations = animations.filter(animation => !animation.looping);
+
+        for(let animation of oneShotAnimations){
+
+            animation.target = getProperty(this, animation.target);
+
+            if(!animation.target) continue;
+
+            if(animation.propertyName.indexOf("rotation") > -1){
+                animation.from = ((animation.from / 180) * Math.PI);
+                animation.to = ((animation.to / 180) * Math.PI);
+            }
+
+            animationsToSend = animationsToSend.concat(this.counterAnimateRotation(animation))
+
+        }
+
+        const loopingAnimations = animations.filter(animation => animation.looping);
+
+        for(let animation of loopingAnimations){
+
+            animation.target = getProperty(this, animation.target);
+
+            if(!animation.target) continue;
+
+            if(animation.propertyName.indexOf("rotation") > -1){
+                animation.values = animation.values.map(value => {
+                    return ((value / 180) * Math.PI);
+                });
+            }
+
+            animationsToSend = animationsToSend.concat(this.counterAnimateRotation(animation))
+
+        }
+
+        SequencerAnimationEngine.animate(
+            animationsToSend,
+            this.actualCreationTime - this.data.timestamp
+        );
 
     }
 
     fadeIn(){
-        if(this.data.animatedProperties.fadeIn) {
-            let fadeIn = this.data.animatedProperties.fadeIn;
-            this.sprite.alpha = 0.0;
 
-            SequencerAnimationEngine.animate({
-                name: "alpha",
-                parent: this.sprite,
-                to: this.data.opacity,
-                duration: Math.min(fadeIn.duration, this.data.animationDuration),
-                ease: fadeIn.ease,
-                delay: Math.min(fadeIn.delay, this.data.animationDuration)
-            })
-        }
+        if(!this.data.animatedProperties.fadeIn || !this.sprite) return 0;
+
+        let fadeIn = this.data.animatedProperties.fadeIn;
+
+        if(this.actualCreationTime - (this.data.timestamp + fadeIn.duration + fadeIn.delay) > 0) return;
+
+        this.sprite.alpha = 0.0;
+
+        SequencerAnimationEngine.animate({
+            target: this.sprite,
+            propertyName: "alpha",
+            to: this.data.opacity,
+            duration: fadeIn.duration,
+            ease: fadeIn.ease,
+            delay: fadeIn.delay
+        })
+
+        return fadeIn.duration + fadeIn.delay;
+
     }
 
-    fadeOut(){
-        if(this.data.animatedProperties.fadeOut) {
-            let fadeOut = this.data.animatedProperties.fadeOut;
+    fadeOut(immediate = false){
 
-            SequencerAnimationEngine.animate({
-                name: "alpha",
-                parent: this.sprite,
-                to: 0.0,
-                duration: Math.min(fadeOut.duration, this.data.animationDuration),
-                ease: fadeOut.ease,
-                delay: Math.max(this.data.animationDuration - fadeOut.duration + fadeOut.delay, 0)
-            })
-        }
+        if(!this.data.animatedProperties.fadeOut || !this.sprite) return 0;
+
+        let fadeOut = this.data.animatedProperties.fadeOut;
+
+        fadeOut.delay = typeof immediate !== "number"
+            ? Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0)
+            : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
+
+        SequencerAnimationEngine.animate({
+            target: this.sprite,
+            propertyName: "alpha",
+            to: 0.0,
+            duration: fadeOut.duration,
+            ease: fadeOut.ease,
+            delay: fadeOut.delay
+        })
+
+        return fadeOut.duration + fadeOut.delay;
+
     }
 
     _determineScale(property){
@@ -168,157 +409,202 @@ export default class CanvasEffect {
     }
 
     scaleIn(){
-        if(this.data.animatedProperties.scaleIn) {
-            let scaleIn = this.data.animatedProperties.scaleIn;
-            let fromScale = this._determineScale(scaleIn)
 
-			let toScale = {
-            	x: this.sprite.scale.x,
-            	y: this.sprite.scale.y
-			}
+        if(!this.data.animatedProperties.scaleIn || !this.sprite) return 0;
 
-			this.sprite.scale.set(fromScale.x, fromScale.y);
+        let scaleIn = this.data.animatedProperties.scaleIn;
+        let fromScale = this._determineScale(scaleIn)
 
-            SequencerAnimationEngine.animate([{
-                name: "scale.x",
-                parent: this.sprite,
-                from: fromScale.x,
-                to: toScale.x,
-                duration: Math.min(scaleIn.duration, this.data.animationDuration),
-                ease: scaleIn.ease,
-                delay: Math.min(scaleIn.delay, this.data.animationDuration)
-            }, {
-                name: "scale.y",
-                parent: this.sprite,
-                from: fromScale.y,
-                to: toScale.y,
-                duration: Math.min(scaleIn.duration, this.data.animationDuration),
-                ease: scaleIn.ease,
-                delay: Math.min(scaleIn.delay, this.data.animationDuration)
-            }])
+        if(this.actualCreationTime - (this.data.timestamp + scaleIn.duration + scaleIn.delay) > 0) return;
 
+        let toScale = {
+            x: this.sprite.scale.x,
+            y: this.sprite.scale.y
         }
+
+        this.sprite.scale.set(fromScale.x, fromScale.y);
+
+        SequencerAnimationEngine.animate([{
+            target: this.sprite,
+            propertyName: "scale.x",
+            from: fromScale.x,
+            to: toScale.x,
+            duration: scaleIn.duration,
+            ease: scaleIn.ease,
+            delay: scaleIn.delay
+        }, {
+            target: this.sprite,
+            propertyName: "scale.y",
+            from: fromScale.y,
+            to: toScale.y,
+            duration: scaleIn.duration,
+            ease: scaleIn.ease,
+            delay: scaleIn.delay
+        }])
+
+        return scaleIn.duration + scaleIn.delay;
 
     }
 
-    scaleOut(){
-        if(this.data.animatedProperties.scaleOut) {
-            let scaleOut = this.data.animatedProperties.scaleOut;
-            let scale = this._determineScale(scaleOut)
+    scaleOut(immediate = false){
 
-            SequencerAnimationEngine.animate([{
-                name: "scale.x",
-                parent: this.sprite,
-                to: scale.x,
-                duration: Math.min(scaleOut.duration, this.data.animationDuration),
-                ease: scaleOut.ease,
-                delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
-            }, {
-                name: "scale.y",
-                parent: this.sprite,
-                to: scale.y,
-                duration: Math.min(scaleOut.duration, this.data.animationDuration),
-                ease: scaleOut.ease,
-                delay: Math.max(this.data.animationDuration - scaleOut.duration + scaleOut.delay, 0)
-            }])
-        }
+        if(!this.data.animatedProperties.scaleOut || !this.sprite) return 0;
+
+        let scaleOut = this.data.animatedProperties.scaleOut;
+        let scale = this._determineScale(scaleOut)
+
+        scaleOut.delay = typeof immediate !== "number"
+            ? Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0)
+            : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
+
+        SequencerAnimationEngine.animate([{
+            target: this.sprite,
+            propertyName: "scale.x",
+            to: scale.x,
+            duration: scaleOut.duration,
+            ease: scaleOut.ease,
+            delay: scaleOut.delay
+        }, {
+            target: this.sprite,
+            propertyName: "scale.y",
+            to: scale.y,
+            duration: scaleOut.duration,
+            ease: scaleOut.ease,
+            delay: scaleOut.delay
+        }])
+
+        return scaleOut.duration + scaleOut.delay;
+
     }
 
     rotateIn(){
-        if(this.data.animatedProperties.rotateIn) {
-            let rotateIn = this.data.animatedProperties.rotateIn;
-            let original_radians = this.sprite.rotation;
-            this.sprite.rotation = Math.toRadians(rotateIn.value)
 
-            SequencerAnimationEngine.animate({
-                name: "rotation",
-                parent: this.sprite,
-                to: original_radians,
-                duration: Math.min(rotateIn.duration, this.data.animationDuration),
-                ease: rotateIn.ease,
-                delay: Math.min(rotateIn.delay, this.data.animationDuration)
-            })
-        }
+        if(!this.data.animatedProperties.rotateIn || !this.sprite) return 0;
+
+        let rotateIn = this.data.animatedProperties.rotateIn;
+
+        if(this.actualCreationTime - (this.data.timestamp + rotateIn.duration + rotateIn.delay) > 0) return;
+
+        let original_radians = this.spriteContainer.rotation;
+        this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
+
+        SequencerAnimationEngine.animate(this.counterAnimateRotation({
+            target: this.spriteContainer,
+            propertyName: "rotation",
+            to: original_radians,
+            duration: rotateIn.duration,
+            ease: rotateIn.ease,
+            delay: rotateIn.delay
+        }))
+
+        return rotateIn.duration + rotateIn.delay;
     }
 
-    rotateOut(){
-        if(this.data.animatedProperties.rotateOut) {
-            let rotateOut = this.data.animatedProperties.rotateOut;
+    rotateOut(immediate = false){
 
-            SequencerAnimationEngine.animate({
-                name: "rotation",
-                parent: this.sprite,
-                to: Math.toRadians(rotateOut.value),
-                duration: Math.min(rotateOut.duration, this.data.animationDuration),
-                ease: rotateOut.ease,
-                delay: Math.max(this.data.animationDuration - rotateOut.duration + rotateOut.delay, 0)
-            })
-        }
+        if(!this.data.animatedProperties.rotateOut || !this.sprite) return 0;
+
+        let rotateOut = this.data.animatedProperties.rotateOut;
+
+        rotateOut.delay = typeof immediate !== "number"
+            ? Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0)
+            : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
+
+        SequencerAnimationEngine.animate(this.counterAnimateRotation({
+            target: this.spriteContainer,
+            propertyName: "rotation",
+            to: (rotateOut.value / 180) * Math.PI,
+            duration: rotateOut.duration,
+            ease: rotateOut.ease,
+            delay: rotateOut.delay
+        }))
+
+        return rotateOut.duration + rotateOut.delay;
+
     }
 
     fadeInAudio(){
-        if(this.data.animatedProperties.fadeInAudio && this.source?.volume !== undefined) {
-            let fadeInAudio = this.data.animatedProperties.fadeInAudio;
-            this.source.volume = 0.0;
 
-            SequencerAnimationEngine.animate({
-                name: "rotation",
-                parent: this.sprite,
-                to: this.data.audioVolume,
-                duration: Math.min(fadeInAudio.duration, this.data.animationDuration),
-                ease: fadeInAudio.ease,
-                delay: Math.min(fadeInAudio.delay, this.data.animationDuration)
-            })
-        }
+        if(!this.data.animatedProperties.fadeInAudio || this.source?.volume === undefined || !this.sprite) return 0;
+
+        let fadeInAudio = this.data.animatedProperties.fadeInAudio;
+        this.source.volume = 0.0;
+
+        if(this.actualCreationTime - (this.data.timestamp + fadeInAudio.duration + fadeInAudio.delay) > 0) return;
+
+        SequencerAnimationEngine.animate({
+            target: this.sprite,
+            propertyName: "volume",
+            to: this.data.audioVolume,
+            duration: fadeInAudio.duration,
+            ease: fadeInAudio.ease,
+            delay: fadeInAudio.delay
+        })
+
+        return fadeInAudio.duration + fadeInAudio.delay;
     }
 
-    fadeOutAudio(){
-        if(this.data.animatedProperties.fadeOutAudio && this.source?.volume !== undefined) {
-            let fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
+    fadeOutAudio(immediate = false){
 
-            SequencerAnimationEngine.animate({
-                name: "rotation",
-                parent: this.sprite,
-                to: 0.0,
-                duration: Math.min(fadeOutAudio.duration, this.data.animationDuration),
-                ease: fadeOutAudio.ease,
-                delay: Math.max(this.data.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
-            })
+        if(!this.data.animatedProperties.fadeOutAudio || this.source?.volume === undefined || !this.sprite) return 0;
 
-        }
+        const fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
+
+        fadeOutAudio.delay = typeof immediate !== "number"
+            ? Math.max(this.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
+            : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
+
+        SequencerAnimationEngine.animate({
+            target: this.sprite,
+            propertyName: "volume",
+            to: 0.0,
+            duration: fadeInAudio.duration,
+            ease: fadeOutAudio.ease,
+            delay: fadeOutAudio.delay
+        })
+
+        return fadeOutAudio.duration + fadeOutAudio.delay;
     }
 
     moveTowards(){
-        if (!this.data.animatedProperties.moves) return;
+
+        if (!this.data.animatedProperties.moves || !this.sprite) return 0;
 
         let moves = this.data.animatedProperties.moves;
 
-        let movementDuration = this.data.animationDuration;
+        let movementDuration = this.animationDuration;
 		if(this.data.speed){
 			movementDuration = (this.data.distance / this.data.speed) * 1000;
 		}
 
+        const duration = movementDuration - moves.delay;
+
+        if(this.actualCreationTime - (this.data.timestamp + duration + moves.delay) > 0) return;
+
         SequencerAnimationEngine.animate([{
-            name: "position.x",
-            parent: this.sprite,
+            target: this.spriteContainer,
+            propertyName: "position.x",
             to: moves.target.x,
-            duration: movementDuration - moves.delay,
+            duration: duration,
             ease: moves.ease,
-            delay: Math.max(moves.delay, 0)
+            delay: moves.delay
         }, {
-            name: "position.y",
-            parent: this.sprite,
+            target: this.spriteContainer,
+            propertyName: "position.y",
             to: moves.target.y,
-            duration: movementDuration - moves.delay,
+            duration: duration,
             ease: moves.ease,
-            delay: Math.max(moves.delay, 0)
-        }]);
+            delay: moves.delay
+        }], this.data.timestamp - this.actualCreationTime);
+
+        return duration + moves.delay;
     }
 
     setEndTimeout(){
         setTimeout(() => {
+            this.resolve();
             this.endEffect();
-        }, this.data.animationDuration)
+        }, this.animationDuration)
     }
 
 	endEffect(){
@@ -330,7 +616,10 @@ export default class CanvasEffect {
 				this.source.load();
 			} catch (err) {}
 			try {
-				this.container.removeChild(this.sprite);
+                this.sprite.filters = [];
+                this.spriteContainer.removeChild(this.sprite);
+				this.container.removeChild(this.spriteContainer);
+                this.spriteContainer.destroy();
 				this.sprite.destroy();
 			} catch (err) {}
 		}
@@ -347,9 +636,11 @@ export default class CanvasEffect {
         	let blob = await this.loader.loadVideo(this.data.file);
 
         	if(!blob){
-				let error = `Sequencer | CanvasEffect | Play Effect - Could not play: ${this.data.file}`;
+        	    let error = "Sequencer "
+                if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
+				error += ` | CanvasEffect | Play Effect - Could not play:<br>${this.data.file}`;
 				ui.notifications.error(error);
-				console.error(error)
+				console.error(error.replace("<br>", "\n"))
         		reject();
         		return;
 			}
@@ -360,12 +651,13 @@ export default class CanvasEffect {
             video.src = URL.createObjectURL(blob);
             video.playbackRate = this.data.playbackRate;
             video.autoplay = false;
+            video.muted = true;
             if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
+                video.muted = false;
             }
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
             video.volume *= game.settings.get("core", "globalInterfaceVolume");
-
 			let texture = await PIXI.Texture.from(video);
 
             let canplay = true;
@@ -377,10 +669,6 @@ export default class CanvasEffect {
                 resolve(texture);
             };
 
-            video.onended = () => {
-                this.endEffect();
-            }
-
         });
     }
 
@@ -390,11 +678,13 @@ export default class CanvasEffect {
 			let texture = await this.loader.loadImage(this.data.file);
 
 			if(!texture){
-				let error = `Sequencer | CanvasEffect | Play Effect - Could not load: ${this.data.file}`;
-				ui.notifications.error(error);
-				console.error(error)
-				reject();
-				return;
+                let error = "Sequencer "
+                if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
+                error += ` | CanvasEffect | Play Effect - Could not play:<br>${this.data.file}`;
+                ui.notifications.error(error);
+                console.error(error.replace("<br>", "\n"))
+                reject();
+                return;
 			}
 
 			resolve(texture);
@@ -411,27 +701,99 @@ export default class CanvasEffect {
         return this.loadImage();
     }
 
-    async play(playEffect = true) {
+    async play() {
 
         this.texture = await this.loadFile();
 
+        const shouldPlay = !(game.user.viewedScene !== this.data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (this.data.users.length && !this.data.users.includes(game.userId)));
+
         let promise = new Promise(async (resolve, reject) => {
+            this.resolve = resolve;
             if(!this.texture){
             	reject();
 			}else {
 				this.calculateDuration();
-				if(playEffect) {
-					await this.spawnSprite();
-					this.playAnimations();
-				}
-				setTimeout(resolve, this.data.animationDuration);
+				if(shouldPlay){
+				    this.initializeEffect();
+                }
 			}
         });
 
         return {
-            duration: this.data.animationDuration,
+            duration: this.animationDuration,
             promise: promise
         }
     };
+
+}
+
+class PersistentCanvasEffect extends CanvasEffect{
+
+    async initializeEffect(){
+        this.startLoop();
+        await this.spawnSprite();
+        this.playCustomAnimations();
+        this.moveTowards();
+        this.fadeIn();
+        this.fadeInAudio();
+        this.scaleIn();
+        this.rotateIn();
+        this.debug();
+        this.timeoutSpriteVisibility();
+    }
+
+    timeoutSpriteVisibility(){
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+        if(creationTimeDifference === 0){
+            this.sprite.visible = true;
+            return;
+        }
+        setTimeout(() => {
+            this.sprite.visible = true;
+        }, 50);
+    }
+
+    startLoop() {
+        if (!this.source) return;
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+        if(this.data.noLoop){
+            this.source.loop = false;
+            if(creationTimeDifference >= this.animationDuration){
+                this.source.currentTime = this.endTime;
+                return;
+            }
+            this.source.currentTime = creationTimeDifference / 1000;
+            return;
+        }
+        this.source.loop = this.startTime === 0 && this.endTime === this.source.duration;
+        this.loopOffset = (creationTimeDifference % this.animationDuration) / 1000;
+        this.resetLoop();
+    }
+
+    async resetLoop(){
+        this.source.currentTime = this.startTime + this.loopOffset;
+        if(this.ended || this.source.loop) return;
+        await this.tryPlay();
+        setTimeout(() => {
+            this.loopOffset = 0;
+            this.resetLoop();
+        }, this.animationDuration - (this.loopOffset*1000));
+    }
+
+    async endEffect(){
+        const durations = [
+            this.fadeOut(this.data.extraEndDuration),
+            this.fadeOutAudio(this.data.extraEndDuration),
+            this.scaleOut(this.data.extraEndDuration),
+            this.rotateOut(this.data.extraEndDuration)
+        ].filter(Boolean);
+        const waitDuration = Math.max(...durations);
+        this.resolve(waitDuration);
+        return new Promise(resolve => setTimeout(() => {
+            super.endEffect()
+            resolve();
+        }, waitDuration));
+
+    }
 
 }

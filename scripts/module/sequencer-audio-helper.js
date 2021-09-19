@@ -23,19 +23,18 @@ export default class SequencerAudioHelper {
      */
     static async _play(data) {
 
-		if(!game.settings.get('sequencer', 'soundsEnabled')
-			|| game.user.viewedScene !== data.sceneId
-			|| (data.users.length && !data.users.includes(game.userId)))
-		{
-			return new Promise(resolve => setTimeout(resolve, data.duration));
-		}
+        if (!game.settings.get('sequencer', 'soundsEnabled')
+            || game.user.viewedScene !== data.sceneId
+            || (data.users.length && !data.users.includes(game.userId))) {
+            return new Promise(resolve => setTimeout(resolve, data.duration));
+        }
 
-		if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing sound:`, data);
+        if (game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing sound:`, data);
 
         const sound = await game.audio.play(data.src, {
             volume: data.fadeIn ? 0 : data.volume,
             loop: data.loop,
-			offset: data.startTime
+            offset: data.startTime
         });
 
         if (data.fadeIn) {
@@ -45,7 +44,7 @@ export default class SequencerAudioHelper {
                 from: 0.0,
                 to: data.volume,
                 duration: Math.min(data.fadeIn.duration, data.duration),
-                ease: easeFunctions[data.fadeIn.ease],
+                ease: data.fadeIn.ease,
                 delay: Math.min(data.fadeIn.delay, data.duration)
             });
         }
@@ -57,7 +56,7 @@ export default class SequencerAudioHelper {
                 from: data.volume,
                 to: 0.0,
                 duration: Math.min(data.fadeOut.duration, data.duration),
-                ease: easeFunctions[data.fadeOut.ease],
+                ease: data.fadeOut.ease,
                 delay: Math.max(data.duration - data.fadeOut.duration + data.fadeOut.delay, 0)
             });
         }

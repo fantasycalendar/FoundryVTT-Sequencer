@@ -1,15 +1,15 @@
 import SequencerAudioHelper from "./module/sequencer-audio-helper.js";
-import SequencerEffectHelper from "./module/sequencer-effect-helper.js";
-import SequencerPreloader from "./module/sequencer-preloader.js";
 
 const sequencerSocketEvent = "module.sequencer";
 
 export const SOCKET_HANDLERS = {
     PLAY_EFFECT: "playEffect",
+    END_EFFECT: "endEffect",
+    END_ALL_EFFECTS: "endAllEffects",
     PLAY_SOUND: "playSound",
-	PRELOAD: "preload",
-	PRELOAD_RESPONSE: "preload_response",
-	PRELOAD_DONE: "preload_done"
+    PRELOAD: "preload",
+    PRELOAD_RESPONSE: "preload_response",
+    PRELOAD_DONE: "preload_done"
 };
 
 export function emitSocketEvent(handler, ...args) {
@@ -20,15 +20,19 @@ function onSocketEvent(socketData) {
     const { handler, args } = socketData;
     switch (handler) {
         case SOCKET_HANDLERS.PLAY_EFFECT:
-            return SequencerEffectHelper.play(...args);
+            return Sequencer.EffectManager.play(...args);
+        case SOCKET_HANDLERS.END_EFFECT:
+            return Sequencer.EffectManager._endEffects(...args);
+        case SOCKET_HANDLERS.END_ALL_EFFECTS:
+            return Sequencer.EffectManager._endAllEffects(...args);
         case SOCKET_HANDLERS.PLAY_SOUND:
-            return SequencerAudioHelper.play(...args, false);
-		case SOCKET_HANDLERS.PRELOAD:
-            return SequencerPreloader.preload(...args);
-		case SOCKET_HANDLERS.PRELOAD_RESPONSE:
-            return SequencerPreloader.handleResponse(...args);
-		case SOCKET_HANDLERS.PRELOAD_DONE:
-            return SequencerPreloader.handleDone(...args);
+            return SequencerAudioHelper.play(...args);
+        case SOCKET_HANDLERS.PRELOAD:
+            return Sequencer.Preloader.preload(...args);
+        case SOCKET_HANDLERS.PRELOAD_RESPONSE:
+            return Sequencer.Preloader.handleResponse(...args);
+        case SOCKET_HANDLERS.PRELOAD_DONE:
+            return Sequencer.Preloader.handleDone(...args);
         default:
             console.warn(`Sequencer | Received socket event for unknown handler '${handler}'`);
     }

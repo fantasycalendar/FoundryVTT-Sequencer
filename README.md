@@ -290,6 +290,21 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.0.0
+- *Sequencer* - Added recent Sequencer tools to the menu in the top left - you can disable these in the module settings
+- *Sequencer* - Added `Sequencer.EffectManager` to manage persistent effects - [read more here](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager)
+- *Sequencer* - Added the ability for you to implement your own Sequencer functions - [read more here](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Section-Manager)
+- *Sequencer* - `SequencerDatabase` is deprecated, and is now accessible with `Sequencer.Database` - 1.1.0 will remove the old path entirely 
+- *Sequencer* - `SequencerDatabaseViewer` is deprecated, and is now accessible with `Sequencer.DatabaseViewer` - 1.1.0 will remove the old path entirely 
+- *Sequencer* - `SequencerPreloader` is deprecated, and is now accessible with `Sequencer.Preloader` - 1.1.0 will remove the old path entirely 
+- *Sequencer* - Fixed Documents sometimes not properly resolving to their PlaceableObject
+- *Sequencer* - Fixed settings not being client side - whoops
+- *Effects* - Added `.attachTo()` which causes the effect to be attached to a given object
+- *Effects* - Added `.persist()` which causes the effect to become permanent on the canvas until removed
+- *Effects* - Added `.extraEndDuration()` which allows `.persist()`-ed effects to stick around for a bit longer instead of end immediately
+- *Effects* - Tweaked `.missed()` to hit an area only facing the origin of the effect, if it had an origin and target
+- *Effects & Sounds* - Added support for wildcard paths, like `modules/jb2a_patreon/Library/1st_Level/Bardic_Inspiration/BardicInspiration_01_*_400x400.webm`
+
 ### Version 0.6.12
 - *Sequencer* - Fixed an issue where the preloader would sometimes fail to preload
 - *Effects* - Fixed effects not playing on hex grids
@@ -559,7 +574,9 @@ new Sequence()
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
 * ghost (ghost#2000 on discord) for his fixes to the audio sections
+* Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects  
 * League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
+* Foundry VTT Core code for heaps of inspiration
 
 ### Oujia Board Scene
 - Code - Copyright © 2020 md-mention2reply

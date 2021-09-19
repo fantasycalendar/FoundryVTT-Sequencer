@@ -17,7 +17,7 @@ export function lerp(p1, p2, t) {
  * @param  {number}     max    The maximum value
  * @return {number}            A random value between the range given
  */
-export function random_float_between(min, max){
+export function random_float_between(min, max) {
     return Math.random() * (max - min) + min;
 }
 
@@ -28,7 +28,7 @@ export function random_float_between(min, max){
  * @param  {number}     max    The maximum value
  * @return {int}               A random integer between the range given
  */
-export function random_int_between(min, max){
+export function random_int_between(min, max) {
     return Math.floor(random_float_between(min, max));
 }
 
@@ -38,7 +38,7 @@ export function random_int_between(min, max){
  * @param  {function}   inFunc    The function object to be tested
  * @return {boolean}              A boolean whether the function is actually a function
  */
-export function is_function(inFunc){
+export function is_function(inFunc) {
     return inFunc && (
         {}.toString.call(inFunc) === '[object Function]'
         ||
@@ -53,9 +53,9 @@ export function is_function(inFunc){
  * @param  {boolean} recurse    Whether to recurse if the randomly chosen element is also an array
  * @return {object}             A random element from the array
  */
-export function random_array_element(inArray, recurse=false){
+export function random_array_element(inArray, recurse = false) {
     let choice = inArray[Math.floor(random_float_between(0, inArray.length))];
-    if(recurse && Array.isArray(choice)){
+    if (recurse && Array.isArray(choice)) {
         return random_array_element(choice, true);
     }
     return choice;
@@ -68,16 +68,17 @@ export function random_array_element(inArray, recurse=false){
  * @param  {boolean}  recurse    Whether to recurse if the randomly chosen element is also an object
  * @return {object}              A random element from the object
  */
-export function random_object_element(inObject, recurse=false){
+export function random_object_element(inObject, recurse = false) {
     let keys = Object.keys(inObject).filter(k => !k.startsWith("_"));
     let choice = inObject[random_array_element(keys)];
-    if(typeof choice === "object" && recurse){
+    if (typeof choice === "object" && recurse) {
         return random_object_element(choice, true)
     }
     return choice;
 }
 
-export async function fileExists(inFile){}
+export async function fileExists(inFile) {
+}
 
 /**
  * Determines the dimensions of a given image file
@@ -85,7 +86,7 @@ export async function fileExists(inFile){}
  * @param  {string}     inFile    The file to be loaded
  * @return {Promise}              A promise that will return the dimensions of the file
  */
-export async function getDimensions(inFile){
+export async function getDimensions(inFile) {
     return new Promise(resolve => {
         let video = document.createElement("video");
         video.crossOrigin = "anonymous";
@@ -101,7 +102,7 @@ export async function getDimensions(inFile){
         }
         video.onerror = () => {
             console.error(`File not found: ${inFile}`);
-            resolve({ x:0, y:0 });
+            resolve({ x: 0, y: 0 });
         }
     })
 }
@@ -112,11 +113,11 @@ export async function getDimensions(inFile){
  * @param  {string}     inFile    The sound file to be loaded
  * @return {Promise}              A promise that will return the dimensions of the file
  */
-export async function getSoundDuration(inFile){
+export async function getSoundDuration(inFile) {
     return new Promise((resolve) => {
         let audio = new Audio();
         audio.onloadedmetadata = () => {
-            resolve(audio.duration*1000); // ms
+            resolve(audio.duration * 1000); // ms
         }
         audio.onerror = () => {
             resolve(false);
@@ -134,17 +135,15 @@ export async function getSoundDuration(inFile){
  * @param   {array|string}   path      The path in the object to the property in a dot-notated string
  * @returns {any}                      Property value, if found
  */
-export function deepGet(obj, path){
-    if(!Array.isArray(path)) path = path.split('.');
+export function deepGet(obj, path) {
+    if (!Array.isArray(path)) path = path.split('.');
     try {
         let i;
         for (i = 0; i < path.length - 1; i++) {
             obj = obj[path[i]];
         }
         return obj[path[i]];
-    }catch(err){
-        throw new Error(`Could not find property "${path}"`)
-    }
+    } catch (err) {}
 }
 
 /**
@@ -158,16 +157,18 @@ export function deepGet(obj, path){
  * @param  {any}            value     The value to set
  */
 export function deepSet(obj, path, value) {
-    if(!Array.isArray(path)) path = path.split('.');
-    try{
+    if (!Array.isArray(path)) path = path.split('.');
+    try {
         let i;
         for (i = 0; i < path.length - 1; i++) {
             obj = obj[path[i]];
         }
-        obj[path[i]] = value;
-    }catch(err){
-        throw new Error(`Could not set property "${path}"`)
-    }
+        if (is_function(obj[path[i]])) {
+            obj[path[i]](value)
+        } else {
+            obj[path[i]] = value;
+        }
+    } catch (err) {}
 }
 
 /**
@@ -182,7 +183,7 @@ export function deepSet(obj, path, value) {
 export function flattenObject(obj) {
     let toReturn = [];
     for (let i in obj) {
-    	if (i.startsWith("_")) continue;
+        if (i.startsWith("_")) continue;
         if (!obj.hasOwnProperty(i)) continue;
         if ((typeof obj[i]) == 'object') {
             let flatObject = flattenObject(obj[i]);
@@ -198,8 +199,8 @@ export function flattenObject(obj) {
 }
 
 
-export function wait(ms){
-	return new Promise(resolve => setTimeout(resolve, ms));
+export function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -209,18 +210,18 @@ export function wait(ms){
  * @param  {number}     degrees   Number of degrees of which to rotate the vector
  * @return {object}               The rotated vector
  */
-export function rotateVector(vector, degrees){
-    if((vector.x === 0 && vector.y === 0) || degrees === 0) return vector;
+export function rotateVector(vector, degrees) {
+    if ((vector.x === 0 && vector.y === 0) || degrees === 0) return vector;
 
-    let distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+    let distance = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
     let radians = degrees * (Math.PI / 180);
 
     let cos1 = vector.x / distance;
     let sin1 = vector.y / distance;
     let cos2 = Math.cos(radians);
     let sin2 = Math.sin(radians);
-    let cos3 = cos1*cos2 - sin1*sin2;
-    let sin3 = sin1*cos2 + cos1*sin2;
+    let cos3 = cos1 * cos2 - sin1 * sin2;
+    let sin3 = sin1 * cos2 + cos1 * sin2;
 
     vector.x = (distance * cos3);
     vector.y = (distance * sin3);
@@ -228,21 +229,21 @@ export function rotateVector(vector, degrees){
     return vector;
 }
 
-export function transformVector(inVector, context=false){
+export function transformVector(inVector, context = false) {
 
     let zoomLevel = canvas.background.worldTransform.a;
     let worldTransform = canvas.background.worldTransform;
     let localX = 0;
     let localY = 0;
-    if(context) {
+    if (context) {
         localX = context.localTransform.tx;
         localY = context.localTransform.ty;
     }
 
-    if(Array.isArray(inVector)) {
+    if (Array.isArray(inVector)) {
         return [
-             (inVector[0] + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
-             (inVector[1] + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
+            (inVector[0] + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
+            (inVector[1] + localY) * zoomLevel + Math.min(worldTransform.ty, 0)
         ]
     }
 
@@ -252,72 +253,134 @@ export function transformVector(inVector, context=false){
     }
 }
 
-export class SequencerFile{
+export function getAllObjects(inSceneId) {
+    const scene = inSceneId ? game.scenes.get(inSceneId) : game.scenes.get(game.canvas.id);
+    return [
+        ...Array.from(scene.tokens).map(obj => obj?.object),
+        ...Array.from(scene.templates).map(obj => obj?.object),
+        ...Array.from(scene.tiles).map(obj => obj?.object)
+    ].deepFlatten().filter(Boolean);
+}
 
-	constructor(inData, inTemplate){
-		inData = foundry.utils.duplicate(inData);
-		this.template = inTemplate;
-		this.timeRange = inData?._timeRange;
-		this.originalFile = inData?.file ?? inData;
-		delete this.originalFile['_template'];
-		delete this.originalFile['_timeRange'];
-		this.file = foundry.utils.duplicate(this.originalFile);
-		this.fileIndex = false;
-		this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.originalFile)) ? Object.keys(this.originalFile).filter(key => key.endsWith('ft')).length > 0 : false;
-	}
+export function getObjectFromScene(inId, inSceneId) {
+    return getAllObjects(inSceneId).find(obj => obj.id === inId);
+}
 
-	getAllFiles(){
-	    if(this.rangeFind){
-            return Object.values(this.file).deepFlatten();
-        }
-	    return [this.file].deepFlatten();
+export function throwError(inClassName, error) {
+    inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+    error = `${inClassName} | ${error}`;
+    ui.notifications.error(error);
+    return new Error(error.replace("<br>", "\n"));
+}
+
+export function isResponsibleGM() {
+    if (!game.user.isGM) return false;
+    const connectedGMs = game.users.filter(user => user.active && user.isGM);
+    return !connectedGMs.some(other => other.data._id < game.user.data._id);
+}
+
+export class SequencerFile {
+
+    constructor(inData, inTemplate) {
+        inData = foundry.utils.duplicate(inData);
+        this.template = inTemplate;
+        this.timeRange = inData?._timeRange;
+        this.originalFile = inData?.file ?? inData;
+        delete this.originalFile['_template'];
+        delete this.originalFile['_timeRange'];
+        this.file = foundry.utils.duplicate(this.originalFile);
+        this.fileIndex = false;
+        this.rangeFind = (typeof this.file !== "string" && !Array.isArray(this.originalFile)) ? Object.keys(this.originalFile).filter(key => key.endsWith('ft')).length > 0 : false;
     }
 
-	getFile(inFt){
-		if(inFt && this.rangeFind && this.file[inFt]) {
-			if(Array.isArray(this.file[inFt])) {
-				return typeof this.fileIndex === "number" ? this.file[inFt][this.fileIndex] : random_array_element(this.file[inFt]);
-			}
-			return this.file[inFt];
-		}else if(Array.isArray(this.file)){
-			return typeof this.fileIndex === "number" ? this.file[this.fileIndex] : random_array_element(this.file);
-		}
-		return this.file;
-	}
+    getAllFiles() {
+        if (this.rangeFind) {
+            return Object.values(this.file).deepFlatten();
+        }
+        return [this.file].deepFlatten();
+    }
 
-	applyBaseFolder(baseFolder){
-		return this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
-	}
+    getFile(inFt) {
+        if (inFt && this.rangeFind && this.file[inFt]) {
+            if (Array.isArray(this.file[inFt])) {
+                return typeof this.fileIndex === "number" ? this.file[inFt][this.fileIndex] : random_array_element(this.file[inFt]);
+            }
+            return this.file[inFt];
+        } else if (Array.isArray(this.file)) {
+            return typeof this.fileIndex === "number" ? this.file[this.fileIndex] : random_array_element(this.file);
+        }
+        return this.file;
+    }
 
-	applyMustache(inMustache){
-		return this._applyFunctionToFiles(this._applyMustache, inMustache);
-	}
+    applyBaseFolder(baseFolder) {
+        return this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
+    }
 
-	_applyFunctionToFiles(inFunction, inData){
+    applyMustache(inMustache) {
+        return this._applyFunctionToFiles(this._applyMustache, inMustache);
+    }
 
-		if(this.rangeFind){
-			for(let key of Object.keys(this.originalFile)){
-				if(Array.isArray(this.originalFile[key])){
-					this.file[key] = this.originalFile[key].map(file => inFunction(inData, file))
-					continue;
-				}
-				this.file[key] = inFunction(inData, this.originalFile[key])
-			}
-		}else{
-			this.file = inFunction(inData, this.originalFile)
-		}
+    _applyFunctionToFiles(inFunction, inData) {
 
-		return this;
+        if (this.rangeFind) {
+            for (let key of Object.keys(this.originalFile)) {
+                if (Array.isArray(this.originalFile[key])) {
+                    this.file[key] = this.originalFile[key].map(file => inFunction(inData, file))
+                    continue;
+                }
+                this.file[key] = inFunction(inData, this.originalFile[key])
+            }
+        } else {
+            this.file = inFunction(inData, this.originalFile)
+        }
 
-	}
+        return this;
 
-	_applyBaseFolder(baseFolder, file){
-		return file.startsWith(baseFolder) ? file : baseFolder + file;
-	}
+    }
 
-	_applyMustache(inMustache, file){
-		let template = Handlebars.compile(file);
-		return template(inMustache);
-	}
+    _applyBaseFolder(baseFolder, file) {
+        return file.startsWith(baseFolder) ? file : baseFolder + file;
+    }
 
+    _applyMustache(inMustache, file) {
+        let template = Handlebars.compile(file);
+        return template(inMustache);
+    }
+
+}
+
+export function groupBy(xs, key) {
+    return xs.reduce(function (acc, obj) {
+        let property = getProperty(obj, key);
+        acc[property] = acc[property] || [];
+        acc[property].push(obj);
+        return acc;
+    }, {});
+}
+
+export function sequenceProxyWrap(inSequence){
+    return new Proxy(inSequence, {
+        get: function (target, prop) {
+            if(target[prop] === undefined){
+                if(Sequencer.SectionManager.externalSections[prop] === undefined) return Reflect.get(target, prop);
+                target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
+                return Reflect.get(target, "_createCustomSection");
+            }
+            return Reflect.get(target, prop);
+        }
+    })
+}
+
+export function sectionProxyWrap(inClass){
+    return new Proxy(inClass, {
+        get: function (target, prop) {
+            if(target[prop] === undefined){
+                let targetProperty = Reflect.get(target.sequence, prop);
+                return is_function(targetProperty)
+                    ? targetProperty.bind(target.sequence)
+                    : targetProperty;
+            }
+            return Reflect.get(target, prop);
+        },
+    });
 }

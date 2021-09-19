@@ -1,25 +1,20 @@
-import {easeFunctions} from "../canvas-effects/ease.js";
+import { easeFunctions } from "../canvas-effects/ease.js";
 import * as lib from "../lib/lib.js";
 import Section from "./section.js";
+import traits from "./traits/_traits.js";
 
-// Traits
-import files from "./traits/files.js";
-import moves from "./traits/moves.js";
-import opacity from "./traits/opacity.js";
-import rotation from "./traits/rotation.js";
-import audio from "./traits/audio.js";
-
-class AnimationSection extends Section{
+class AnimationSection extends Section {
 
     constructor(inSequence, inTarget) {
         super(inSequence);
+        this._waitUntilFinished = false;
         this._teleportTo = false;
         this._originObject = false;
         this._moveSpeed = 23;
         this._offset = { x: 0, y: 0 };
         this._closestSquare = false;
         this._snapToSquare = false;
-        if(inTarget) this.on(inTarget);
+        if (inTarget) this.on(inTarget);
     }
 
     /**
@@ -28,9 +23,9 @@ class AnimationSection extends Section{
      * @param {object|string} inTarget
      * @returns {AnimationSection} this
      */
-    on(inTarget){
+    on(inTarget) {
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence._throwError(this, "on", "could not find position of given object");
+        if (!inTarget) throw this.sequence._throwError(this, "on", "could not find position of given object");
         this._originObject = this._validateLocation(inTarget);
         return this;
     }
@@ -42,14 +37,14 @@ class AnimationSection extends Section{
      * @param {object} options
      * @returns {AnimationSection} this
      */
-    teleportTo(inTarget, options = {}){
+    teleportTo(inTarget, options = {}) {
         options = foundry.utils.mergeObject({
             delay: 0,
             target: { x: 0, y: 0 }
         }, options);
-        if(typeof options.delay !== "number") this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
+        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if(!inTarget) this.sequence._throwError(this, "teleportTo", "could not find position of given object");
+        if (!inTarget) throw this.sequence._throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
         return this;
@@ -61,7 +56,7 @@ class AnimationSection extends Section{
      * @param {object} inOffset
      * @returns {AnimationSection} this
      */
-    offset(inOffset){
+    offset(inOffset) {
         inOffset = foundry.utils.mergeObject({ x: 0, y: 0 }, inOffset);
         this._offset = this._validateLocation(inOffset);
         return this;
@@ -73,8 +68,8 @@ class AnimationSection extends Section{
      * @param {boolean} inBool
      * @returns {AnimationSection} this
      */
-    closestSquare(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
+    closestSquare(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
         this._closestSquare = inBool;
         return this;
     }
@@ -85,34 +80,34 @@ class AnimationSection extends Section{
      * @param {boolean} inBool
      * @returns {AnimationSection} this
      */
-    snapToSquare(inBool = true){
-        if(typeof inBool !== "boolean") this.sequence._throwError(this, "snapToSquare", "inBool must be of type boolean");
+    snapToSquare(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToSquare", "inBool must be of type boolean");
         this._snapToSquare = inBool;
         return this;
     }
 
-    async _run() {
+    async run() {
         return this._runAnimate();
     }
 
     _applyTraits() {
-		Object.assign(this.constructor.prototype, moves);
-		Object.assign(this.constructor.prototype, opacity);
-		Object.assign(this.constructor.prototype, rotation);
-		Object.assign(this.constructor.prototype, audio);
-	}
-
-	async _updateObject(obj, attributes, animate = false, animation={}){
-        await obj.document.update(attributes, {animate: animate, animation: animation});
+        Object.assign(this.constructor.prototype, traits.moves);
+        Object.assign(this.constructor.prototype, traits.opacity);
+        Object.assign(this.constructor.prototype, traits.rotation);
+        Object.assign(this.constructor.prototype, traits.audio);
     }
 
-    async _execute(){
-        if(!(await this._shouldPlay())) return;
+    async _updateObject(obj, attributes, animate = false, animation = {}) {
+        await obj.document.update(attributes, { animate: animate, animation: animation });
+    }
+
+    async _execute() {
+        if (!(await this._shouldPlay())) return;
         return new Promise(async (resolve) => {
             if (this._shouldAsync) {
-                await this._run();
+                await this.run();
             } else {
-                this._run();
+                this.run();
             }
             resolve();
         });
@@ -138,17 +133,17 @@ class AnimationSection extends Section{
 
         if (dx > 0 && Math.abs(dx) > originRight) {
             dx -= originSizeWidth;
-        } else if (dx < 0 && Math.abs(dx) > targetSizeWidth){
+        } else if (dx < 0 && Math.abs(dx) > targetSizeWidth) {
             dx += targetSizeHeight;
-        }else{
+        } else {
             dx = 0;
         }
 
         if (dy > 0 && Math.abs(dy) > originBottom) {
             dy -= originSizeHeight;
-        } else if (dy < 0 && Math.abs(dy) > targetSizeHeight){
+        } else if (dy < 0 && Math.abs(dy) > targetSizeHeight) {
             dy += targetSizeHeight;
-        }else{
+        } else {
             dy = 0;
         }
 
@@ -159,16 +154,16 @@ class AnimationSection extends Section{
 
     }
 
-    _getCleanPosition(obj, measure = false){
+    _getCleanPosition(obj, measure = false) {
 
         let pos = {
             x: obj?.data?.x ?? obj?.x ?? 0,
             y: obj?.data?.y ?? obj?.y ?? 0
         }
 
-        if(obj instanceof MeasuredTemplate){
-            if(measure){
-                if(obj.data.t === "cone" || obj.data.t === "ray"){
+        if (obj instanceof MeasuredTemplate) {
+            if (measure) {
+                if (obj.data.t === "cone" || obj.data.t === "ray") {
                     pos.x = obj.ray.B.x;
                     pos.y = obj.ray.B.y;
                 }
@@ -178,7 +173,7 @@ class AnimationSection extends Section{
         return pos;
     }
 
-    _snapLocationToGrid(inLocation){
+    _snapLocationToGrid(inLocation) {
         let coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
         return {
             x: coords[1] * canvas.grid.size,
@@ -189,7 +184,7 @@ class AnimationSection extends Section{
     /**
      * This needs a rewrite, jeesus.
      */
-    async _runAnimate(){
+    async _runAnimate() {
 
         let animData = {
             attributes: [],
@@ -200,7 +195,7 @@ class AnimationSection extends Section{
 
         let overallDuration = this._duration ? this._duration : 0;
 
-        if(this._rotateTowards){
+        if (this._rotateTowards) {
 
             let offset = (this._angle ? this._angle : 0) + this._rotateTowards.offset;
 
@@ -213,7 +208,7 @@ class AnimationSection extends Section{
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
 
-            if(this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
+            if (this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
 
             animData.attributes.push({
                 name: "rotationTowards",
@@ -238,7 +233,7 @@ class AnimationSection extends Section{
 
         }
 
-        if(this._fadeIn){
+        if (this._fadeIn) {
 
             let to = typeof this._opacity === "number" ? this._opacity : 1.0;
 
@@ -260,7 +255,7 @@ class AnimationSection extends Section{
 
         }
 
-        if(this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined){
+        if (this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined) {
 
             let to = typeof this._volume === "number" ? this._volume : 1.0;
 
@@ -282,15 +277,15 @@ class AnimationSection extends Section{
 
         }
 
-        if(this._rotateIn){
+        if (this._rotateIn) {
 
             let from = this._angle ? this._angle : this._originObject.data.rotation;
             let to = this._rotateIn.value;
 
-            if(Math.abs(from - to) > 180){
-                if(to < 0){
+            if (Math.abs(from - to) > 180) {
+                if (to < 0) {
                     to += 360;
-                }else if(from > to){
+                } else if (from > to) {
                     from -= 360;
                 }
             }
@@ -313,7 +308,7 @@ class AnimationSection extends Section{
 
         }
 
-        if(this._moveTowards){
+        if (this._moveTowards) {
 
             let originLoc = this._getCleanPosition(this._originObject);
             let targetLoc = this._closestSquare
@@ -323,7 +318,7 @@ class AnimationSection extends Section{
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
 
-            if(this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
+            if (this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
 
             let originalDx = targetLoc.x - originLoc.x;
             let originalDy = targetLoc.y - originLoc.y;
@@ -339,7 +334,7 @@ class AnimationSection extends Section{
 
             if (!this._duration && this._moveTowards.ease === "linear") {
                 await this._updateObject(this._originObject, targetLoc, true);
-            }else{
+            } else {
                 animData.attributes.push({
                     name: "position",
                     origin: originLoc,
@@ -356,7 +351,7 @@ class AnimationSection extends Section{
             }
         }
 
-        if(this._fadeOut){
+        if (this._fadeOut) {
 
             let from = typeof this._opacity === "number" ? this._opacity : this._originObject.alpha;
 
@@ -373,7 +368,7 @@ class AnimationSection extends Section{
             })
         }
 
-        if(this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined){
+        if (this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
 
             let from = typeof this._volume === "number" ? this._volume : this._originObject.data.video.volume;
 
@@ -390,17 +385,17 @@ class AnimationSection extends Section{
             })
         }
 
-        if(this._rotateOut){
+        if (this._rotateOut) {
 
             let from = this._rotateOut.value;
             let to = this._angle ? this._angle : this._originObject.data.rotation;
 
-            if(this._rotateIn) from += this._rotateIn.value;
+            if (this._rotateIn) from += this._rotateIn.value;
 
-            if(Math.abs(from - to) > 180){
-                if(to < 0){
+            if (Math.abs(from - to) > 180) {
+                if (to < 0) {
                     to += 360;
-                }else if(from > to){
+                } else if (from > to) {
                     from -= 360;
                 }
             }
@@ -419,39 +414,39 @@ class AnimationSection extends Section{
 
         }
 
-        if(this._teleportTo){
+        if (this._teleportTo) {
             setTimeout(async () => {
                 let targetLocation = this._closestSquare
                     ? this._getClosestSquare(this._originObject, this._teleportTo.target)
                     : this._getCleanPosition(this._teleportTo.target);
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
-                if(this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
+                if (this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
                 await this._updateObject(this._originObject, targetLocation);
             }, this._teleportTo.delay);
-            if(overallDuration <= this._teleportTo.delay){
+            if (overallDuration <= this._teleportTo.delay) {
                 this._waitUntilFinished = true;
             }
             overallDuration = overallDuration > this._teleportTo.delay ? overallDuration : this._teleportTo.delay;
         }
 
         let updateAttributes = {};
-        if(typeof this._angle === "number" && !this._rotateIn && !this._rotateOut){
+        if (typeof this._angle === "number" && !this._rotateIn && !this._rotateOut) {
             updateAttributes["rotation"] = this._angle;
         }
 
-        if(typeof this._opacity === "number" && !this._fadeIn && !this._fadeOut){
+        if (typeof this._opacity === "number" && !this._fadeIn && !this._fadeOut) {
             updateAttributes["alpha"] = this._opacity;
         }
 
-        if(typeof this._volume === "number" && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined){
+        if (typeof this._volume === "number" && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
             updateAttributes["video.volume"] = this._volume;
         }
 
-        if(Object.keys(updateAttributes).length){
-			setTimeout(async () => {
-				await this._updateObject(this._originObject, updateAttributes);
-			},1);
+        if (Object.keys(updateAttributes).length) {
+            setTimeout(async () => {
+                await this._updateObject(this._originObject, updateAttributes);
+            }, 1);
         }
 
         return new Promise(async (resolve) => {
@@ -461,7 +456,7 @@ class AnimationSection extends Section{
 
     }
 
-    async _animate(animData, resolve, timespan){
+    async _animate(animData, resolve, timespan) {
 
         // If it's not the first tick
         if (timespan) {
@@ -475,13 +470,13 @@ class AnimationSection extends Section{
 
                 animData.totalDt += dt;
 
-                for(let attribute of animData.attributes) {
+                for (let attribute of animData.attributes) {
 
-                    if(attribute.done) continue;
+                    if (attribute.done) continue;
 
-                    if(animData.totalDt < attribute.delay) continue;
+                    if (animData.totalDt < attribute.delay) continue;
 
-                    if(attribute.name === "position"){
+                    if (attribute.name === "position") {
 
                         attribute.speed = attribute.originalDistance / (attribute.duration / dt);
 
@@ -501,21 +496,21 @@ class AnimationSection extends Section{
                         animatedAttributes['x'] = x;
                         animatedAttributes['y'] = y;
 
-                    }else{
+                    } else {
 
-                        if(attribute.name === "rotationTowards" && !attribute.from && !attribute.to){
+                        if (attribute.name === "rotationTowards" && !attribute.from && !attribute.to) {
 
                             let target = attribute.target;
-                            if(this._rotateTowards.towardsCenter) target = target?.center ?? target;
+                            if (this._rotateTowards.towardsCenter) target = target?.center ?? target;
                             let ray = new Ray(attribute.originLocation, target)
-                            let angle = (ray.angle * 180/Math.PI) - 90;
+                            let angle = (ray.angle * 180 / Math.PI) - 90;
                             angle += attribute.offset;
                             attribute.from = attribute.origin.data.rotation;
                             attribute.to = angle;
-                            if(Math.abs(attribute.from - attribute.to) > 180){
-                                if(attribute.to < 0){
+                            if (Math.abs(attribute.from - attribute.to) > 180) {
+                                if (attribute.to < 0) {
                                     attribute.to += 360;
-                                }else if(attribute.from > attribute.to){
+                                } else if (attribute.from > attribute.to) {
                                     attribute.from -= 360;
                                 }
                             }
@@ -539,13 +534,13 @@ class AnimationSection extends Section{
 
                 }
 
-                if(Object.keys(animatedAttributes).length > 0) {
+                if (Object.keys(animatedAttributes).length > 0) {
                     await this._updateObject(this._originObject, animatedAttributes);
                 }
 
                 animData.attributes = animData.attributes.filter(a => !a.done);
 
-                if(animData.attributes.length === 0) return;
+                if (animData.attributes.length === 0) return;
 
                 animData.lastTimespan = timespan;
 
