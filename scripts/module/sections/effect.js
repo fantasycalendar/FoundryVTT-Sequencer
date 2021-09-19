@@ -926,7 +926,7 @@ export default class EffectSection extends Section {
         return super._validateLocation(inLocation);
     }
 
-    _calculateMissedPosition(target, position, missed, origin) {
+    _calculateMissedPosition(target, position, missed, origin_position) {
 
         if (!missed) return position;
 
@@ -940,9 +940,9 @@ export default class EffectSection extends Section {
 
         const tokenOffset = canvas.grid.size / 5;
 
-        if(origin && target !== origin){
+        if(origin_position){
 
-            let ray = new Ray(position, origin);
+            let ray = new Ray(position, origin_position);
 
             let startRadians = ray.angle - (Math.PI/2);
             let endRadians = startRadians + (Math.PI);
