@@ -11,6 +11,7 @@ export default class Sequence {
         this.sections = [];
         this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
+        this._cachedOffsets = {};
         this.sectionToCreate = undefined;
         this.debug = game.settings.get("sequencer", "debug");
         return lib.sequenceProxyWrap(this);

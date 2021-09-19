@@ -878,13 +878,11 @@ export default class EffectSection extends Section {
         const target_position = to ? to_target : from_target;
 
         let offset = {
-            x: origin_position.x - target_position.x,
-            y: origin_position.y - target_position.y
+            x: this._missed ? origin_position.x - target_position.x : 0,
+            y: this._missed ? origin_position.y - target_position.y : 0
         }
 
-        if (this._randomOffset) {
-            offset = this._getRandomOffset(to || from, offset)
-        }
+        if (this._randomOffset) offset = this._getRandomOffset(to || from, offset)
 
         this._offsets.push(offset);
 
@@ -914,13 +912,13 @@ export default class EffectSection extends Section {
     }
 
     _cachedOffsetExists(inName) {
-        return typeof inName === "string" && this.sequence?._cachedOffsets?.[inName];
+        return typeof inName === "string" && this.sequence._cachedOffsets[inName] !== undefined;
     }
 
     _getCachedOffset(inName, inIndex) {
-        if (!this.sequence?._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
-        let normalizedIndex = inIndex % this.sequence?._cachedOffsets[inName].length;
-        return this.sequence?._cachedOffsets?.[inName]?.[normalizedIndex];
+        if (!this.sequence._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
+        let normalizedIndex = inIndex % this.sequence._cachedOffsets[inName].length;
+        return this.sequence._cachedOffsets?.[inName]?.[normalizedIndex];
     }
 
     _validateLocation(inLocation) {
