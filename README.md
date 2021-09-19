@@ -168,7 +168,7 @@ let sequence = new Sequence()
     .wait(1000)
         .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
-    .atLocation(tokenD)
+        .atLocation(tokenD)
         .reachTowards({
             x: tokenD.center.x + canvas.grid.size*4,
             y: tokenD.center.y
