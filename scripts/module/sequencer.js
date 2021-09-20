@@ -3,6 +3,7 @@ import FunctionSection from './sections/func.js';
 import EffectSection from './sections/effect.js';
 import SoundSection from './sections/sound.js';
 import AnimationSection from './sections/animation.js';
+import Section from "./sections/section.js";
 
 export default class Sequence {
 
@@ -142,9 +143,9 @@ export default class Sequence {
      * @param {Sequence|FunctionSection|EffectSection|AnimationSection|SoundSection} inSequence
      * @returns {Sequence} this
      */
-    sequence(inSequence) {
-        if (!(inSequence instanceof Sequence)) inSequence = inSequence.sequence;
-        if (!(inSequence instanceof Sequence)) throw this._throwError(this, "sequence", `could not find the sequence from the given parameter`);
+    addSequence(inSequence) {
+        if (inSequence instanceof Section) inSequence = inSequence.sequence;
+        if (!(inSequence instanceof Sequence)) throw this._throwError(this, "addSequence", `could not find the sequence from the given parameter`);
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
