@@ -290,6 +290,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.0.1
+- *Sequencer* - Renamed `.sequence()` method on Sequences to `.addSequence()` due to internal code conflicts
+- *Effects* - Added `.filter()` - was technically added in 1.0.0, but was left undocumented
+
 ### Version 1.0.0
 - *Sequencer* - Added recent Sequencer tools to the menu in the top left - you can disable these in the module settings
 - *Sequencer* - Added `Sequencer.EffectManager` to manage persistent effects - [read more here](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager)
