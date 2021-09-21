@@ -217,8 +217,8 @@ export default class CanvasEffect {
         this.sprite.visible = show;
 
         if(this.data.size){
-            this.sprite.width = this.data.size.width * this.data.scale.x * this.data.gridSizeDifference;
-            this.sprite.height = this.data.size.height * this.data.scale.y * this.data.gridSizeDifference;
+            this.sprite.width = this.data.size.width * this.data.scale.x;
+            this.sprite.height = this.data.size.height * this.data.scale.y;
         } else {
             this.sprite.scale.set(
                 this.data.scale.x * this.data.gridSizeDifference,

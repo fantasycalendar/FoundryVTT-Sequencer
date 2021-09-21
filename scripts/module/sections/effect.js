@@ -584,7 +584,7 @@ export default class EffectSection extends Section {
         if (this._reachTowards) {
             data = await this._calculateHitVector(data);
         } else {
-            data.gridSizeDifference = this._gridSizeDifference(this._gridSize);
+            data.gridSizeDifference = this._size ? 1.0 : this._gridSizeDifference(this._gridSize);
         }
 
         let flipX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5) ? -1 : 1;

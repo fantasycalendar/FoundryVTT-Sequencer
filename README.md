@@ -293,6 +293,7 @@ new Sequence()
 ### Version 1.0.1
 - *Sequencer* - Renamed `.sequence()` method on Sequences to `.addSequence()` due to internal code conflicts
 - *Effects* - Added `.filter()` - was technically added in 1.0.0, but was left undocumented
+- *Effects* - Fixed `.size()` being scaled to account for grid size differences - it should now set the exact width/height in pixels 
 
 ### Version 1.0.0
 - *Sequencer* - Added recent Sequencer tools to the menu in the top left - you can disable these in the module settings
