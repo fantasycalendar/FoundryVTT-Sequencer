@@ -107,6 +107,12 @@ export default class CanvasEffect {
 
     }
 
+    _getContainer(){
+
+        return this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+
+    }
+
     _showHighlight(show){
         if(!this.highlight){
             let width = this.sprite.width / this.sprite.scale.x;
@@ -140,6 +146,13 @@ export default class CanvasEffect {
         this.rotateOut();
         this.setEndTimeout();
         this.debug();
+        this.timeoutSpriteVisibility();
+    }
+
+    timeoutSpriteVisibility(){
+        setTimeout(() => {
+            this.sprite.visible = true;
+        }, this.data.animatedProperties.animations ? 50 : 0);
     }
 
     calculateDuration() {
@@ -200,7 +213,7 @@ export default class CanvasEffect {
 
 	}
 
-    async spawnSprite(show = true) {
+    async spawnSprite() {
 
         this.sprite = new PIXI.Sprite(this.texture);
         this.spriteContainer = new PIXI.Container();
@@ -208,13 +221,13 @@ export default class CanvasEffect {
         this.sprite.anchor.set(0.5, 0.5);
         this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
         this.spriteContainer.sortChildren();
-        this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+        this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
 
         this.applyFilters();
 
         this.sprite.alpha = this.data.opacity;
-        this.sprite.visible = show;
+        this.sprite.visible = false;
 
         if(this.data.size){
             this.sprite.width = this.data.size.width * this.data.scale.x;
