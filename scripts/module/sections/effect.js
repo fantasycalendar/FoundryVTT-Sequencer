@@ -35,6 +35,7 @@ export default class EffectSection extends Section {
         this._distance = 0;
         this._extraEndDuration = 0;
         this._noLoop = false;
+        this._snapToGrid = false;
         this._offsets = [];
     }
 
@@ -207,6 +208,18 @@ export default class EffectSection extends Section {
         inOffset = foundry.utils.mergeObject(inOffset, options);
         if (typeof inOffset.local !== "boolean") throw this.sequence._throwError(this, "offset", "options.local must be of type boolean");
         this._offset = inOffset;
+        return this;
+    }
+
+    /**
+     * Causes the final effect location to be snapped to the grid
+     *
+     * @param {boolean} inBool
+     * @returns {EffectSection} this
+     */
+    snapToGrid(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
+        this._snapToGrid = inBool;
         return this;
     }
 
@@ -799,6 +812,8 @@ export default class EffectSection extends Section {
 
         if (typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
 
+        if(this._snapToGrid) pos = this._snapLocationToGrid(pos);
+
         return pos;
 
     }
@@ -935,8 +950,8 @@ export default class EffectSection extends Section {
         const halfHeight = size.y;
 
         const XorY = Math.random() < 0.5;
-        let flipX = Math.random() > 0.5 ? -1 : 1;
-        let flipY = Math.random() > 0.5 ? -1 : 1;
+        const flipX = Math.random() > 0.5 ? -1 : 1;
+        const flipY = Math.random() > 0.5 ? -1 : 1;
 
         const tokenOffset = canvas.grid.size / 5;
 
@@ -955,18 +970,18 @@ export default class EffectSection extends Section {
 
         }
 
-        let ray = new Ray(position, origin_position);
+        const ray = new Ray(position, origin_position);
 
         let startRadians = ray.angle - (Math.PI/2);
         let endRadians = startRadians + (Math.PI);
 
-        let radius = lib.lerp(halfHeight, halfHeight, 0.5);
+        const radius = lib.lerp(halfHeight, halfHeight, 0.5);
 
         let distance = (ray.distance / canvas.grid.size) - 1;
 
         if(distance <= 1.25){
 
-            let randomAngle = XorY ? startRadians : endRadians;
+            const randomAngle = XorY ? startRadians : endRadians;
 
             let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
             let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
@@ -983,19 +998,27 @@ export default class EffectSection extends Section {
         endRadians += (Math.PI / distance);
         startRadians -= (Math.PI / distance);
 
-        let randomAngle = lib.lerp(startRadians, endRadians, Math.random());
+        const randomAngle = lib.lerp(startRadians, endRadians, Math.random());
 
-        let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-        let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+        const x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+        const y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
 
         return { x, y };
 
     }
 
+    _snapLocationToGrid(inLocation) {
+        const coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
+        return {
+            x: coords[1] * canvas.grid.size,
+            y: coords[0] * canvas.grid.size
+        }
+    }
+
     _getRandomOffset(target, position) {
 
-        let width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
-        let height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
+        const width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
+        const height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
 
         position.x += lib.random_float_between((width / 2) * -1, width / 2);
         position.y += lib.random_float_between((height / 2) * -1, height / 2);

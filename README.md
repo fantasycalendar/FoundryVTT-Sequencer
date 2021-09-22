@@ -290,6 +290,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.1.0
+- *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
+- *Effects* - Added `.snapToGrid()` which snaps the effect to the given location's closest grid section
+
 ### Version 1.0.1
 - *Sequencer* - Renamed `.sequence()` method on Sequences to `.addSequence()` due to internal code conflicts
 - *Effects* - Added `.filter()` - was technically added in 1.0.0, but was left undocumented

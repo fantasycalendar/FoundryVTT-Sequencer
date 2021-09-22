@@ -177,6 +177,10 @@ export default class Sequence {
         game.settings.set("sequencer", "fileCache", this._fileCache);
     }
 
+    _showWarning(self, func, warning) {
+        lib.showWarning(this.moduleName, `${self.constructor.name} | ${func} - ${warning}`);
+    }
+
     _throwError(self, func, error) {
         return lib.throwError(this.moduleName, `${self.constructor.name} | ${func} - ${error}`);
     }

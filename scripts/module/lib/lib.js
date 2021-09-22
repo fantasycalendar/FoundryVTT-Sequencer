@@ -266,6 +266,12 @@ export function getObjectFromScene(inId, inSceneId) {
     return getAllObjects(inSceneId).find(obj => obj.id === inId);
 }
 
+export function showWarning(inClassName, warning) {
+    inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+    warning = `${inClassName} | ${warning}`;
+    console.warn(warning.replace("<br>", "\n"));
+}
+
 export function throwError(inClassName, error) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
