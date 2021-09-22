@@ -290,6 +290,9 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.0.2 Hotfix
+- *Sequencer* - Changed Effect Viewer icon to something less controversial
+
 ### Version 1.0.1
 - *Sequencer* - Renamed `.sequence()` method on Sequences to `.addSequence()` due to internal code conflicts
 - *Effects* - Added `.filter()` - was technically added in 1.0.0, but was left undocumented
