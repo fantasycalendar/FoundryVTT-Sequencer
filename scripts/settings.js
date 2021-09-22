@@ -73,7 +73,7 @@ export default function registerSettings() {
         });
         if (!game.user.isTrusted) return;
         bar.tools.push({
-            icon: "fas fa-atom",
+            icon: "fas fa-film",
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
