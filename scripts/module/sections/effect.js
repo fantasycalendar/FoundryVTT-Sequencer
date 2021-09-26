@@ -36,6 +36,7 @@ export default class EffectSection extends Section {
         this._extraEndDuration = 0;
         this._noLoop = false;
         this._snapToGrid = false;
+        this._screenSpace = false;
         this._offsets = [];
     }
 
@@ -458,6 +459,12 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    screenSpace(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "screenSpace", "inBool must be of type boolean");
+        this._screenSpace = inBool;
+        return this;
+    }
+
     async run() {
         let data = await this._sanitizeEffectData();
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
@@ -532,6 +539,7 @@ export default class EffectSection extends Section {
                 animations: this._animations
             },
             zeroSpriteRotation: this._zeroSpriteRotation,
+            screenSpace: this._screenSpace,
             sceneId: game.user.viewedScene,
             users: Array.from(this._users)
         };

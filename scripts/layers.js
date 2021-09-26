@@ -1,4 +1,9 @@
-import { BaseEffectsLayer, BelowTokensEffectsLayer } from "./module/canvas-effects/effects-layer.js";
+import {
+    BaseEffectsLayer,
+    BelowTokensEffectsLayer,
+    ScreenSpaceEffectLayer
+} from "./module/canvas-effects/effects-layer.js";
+import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 
 export default function registerLayers() {
 

@@ -109,6 +109,8 @@ export default class CanvasEffect {
 
     _getContainer(){
 
+        if(this.data.screenSpace) return Sequencer.UILayer.container;
+
         return this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
 
     }
