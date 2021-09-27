@@ -294,6 +294,10 @@ new Sequence()
 - *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
 - *Effects* - Added `.snapToGrid()` which snaps the effect to the given location's closest grid section
 
+### Version 1.0.3
+- *Sequencer* - Added animated space backgrounds (thanks to Keirsti on the Foundry VTT discord server)
+- *Sequencer* - Fixed Hyperspace macro placing the hyperspace intro and out incorrectly
+
 ### Version 1.0.2 Hotfix
 - *Sequencer* - Changed Effect Viewer icon to something less controversial
 
@@ -600,6 +604,7 @@ new Sequence()
 - Hyperdrive Animations - Copyright © 2020 Adam Oresten
 - Sounds [HellScape Tabletop Assets](https://www.patreon.com/HellScapeAssets) - Copyright © 2020 AurelTristen
 - Sci-fi Cockpits - Copyright © 2020 Vattalus Assets
+- Stellaris Animated Backgrounds - Copyright © 2021 Paradox Interactive
 
 ### Other Attributions
 - [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev
