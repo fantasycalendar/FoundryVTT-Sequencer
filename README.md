@@ -297,6 +297,8 @@ new Sequence()
 - *Effects* - Added `.screenSpaceScale()` which can help you stretch and fit the effect to the screen, even on different screen sizes
 - *Effects* - Added `.spriteAnchor()` which controls the effect's core anchor point within its container (defaults to 0.5 on X and Y)
 - *Effects* - Added `.snapToGrid()` which snaps the effect to the given location's closest grid section
+- *Effects* - Tweaked `.size()` to also accept only one of height or width, the other will be automatically resized to keep the effect's ratio
+- *Effects* - Added support on `.atLocation()` for a secondary options object, currently accepts `cacheLocation: boolean`, which causes the given object's location to be cached immediately rather than used on runtime
 - *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
 
 ### Version 1.0.3
