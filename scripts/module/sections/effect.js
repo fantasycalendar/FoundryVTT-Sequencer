@@ -10,7 +10,8 @@ export default class EffectSection extends Section {
         this._file = inFile;
         this._from = false;
         this._reachTowards = false;
-        this._anchor = { x: 0.5, y: 0.5 };
+        this._anchor = false;
+        this._spriteAnchor = false;
         this._randomOffset = false;
         this._missed = false;
         this._JB2A = false;
@@ -37,6 +38,9 @@ export default class EffectSection extends Section {
         this._noLoop = false;
         this._snapToGrid = false;
         this._screenSpace = false;
+        this._screenSpaceAnchor = false;
+        this._screenSpacePosition = { x: 0, y: 0 };
+        this._screenSpaceScale = false;
         this._offsets = [];
     }
 
@@ -165,13 +169,17 @@ export default class EffectSection extends Section {
      *  or a string reference (see .name())
      *
      * @param {object|string} inLocation
+     * @param {object} inOptions
      * @returns {EffectSection} this
      */
-    atLocation(inLocation) {
-        if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "inLocation must not be undefined");
+    atLocation(inLocation, inOptions = {}) {
+        inOptions = foundry.utils.mergeObject({
+            cacheLocation: false
+        }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
-        this._from = inLocation;
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
+        this._from = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
         this._attachTo = false;
         return this;
     }
@@ -181,13 +189,17 @@ export default class EffectSection extends Section {
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
      * @param {object|string} inLocation
+     * @param {object} inOptions
      * @returns {EffectSection} this
      */
-    reachTowards(inLocation) {
-        if (inLocation === undefined) throw this.sequence._throwError(this, "reachTowards", "inLocation must not be undefined");
+    reachTowards(inLocation, inOptions = {}) {
+        inOptions = foundry.utils.mergeObject({
+            cacheLocation: false
+        }, inOptions)
         inLocation = this._validateLocation(inLocation);
-        if (inLocation === undefined) throw this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
-        this._reachTowards = inLocation;
+        if (inLocation === undefined) throw this.sequence._throwError(this, "reachTowards", "could not find position of given object");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
+        this._reachTowards = inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation;
         return this;
     }
 
@@ -238,8 +250,19 @@ export default class EffectSection extends Section {
                 height: inSize
             }
         }
-        if (typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
-        if (typeof inSize?.height !== "number") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
+
+        if(inSize?.width ^ inSize?.height){
+            if(inSize?.width){
+                if (typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
+                inSize['height'] = "auto"
+            }else{
+                if (typeof inSize?.height !== "number") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
+                inSize['width'] = "auto"
+            }
+        }
+
+        if (typeof inSize?.width !== "number" && inSize?.width !== "auto") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
+        if (typeof inSize?.height !== "number" && inSize?.height !== "auto") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
         inSize = {
             width: inSize?.width ?? canvas.grid.size,
             height: inSize?.height ?? canvas.grid.size
@@ -291,7 +314,7 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
+     *  Anchors the sprite's container according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
      * @returns {EffectSection} this
@@ -309,7 +332,36 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.y must be of type number!`);
+
         this._anchor = inAnchor;
+        return this;
+    }
+
+    /**
+     *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
+     *
+     * @param {number|object} inAnchor
+     * @returns {EffectSection} this
+     */
+    spriteAnchor(inAnchor) {
+        if (typeof inAnchor === "number") {
+            inAnchor = {
+                x: inAnchor,
+                y: inAnchor
+            }
+        }
+
+        inAnchor = {
+            x: inAnchor?.x ?? 0.5,
+            y: inAnchor?.y ?? 0.5
+        }
+
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.y must be of type number!`);
+
+        this._spriteAnchor = inAnchor;
         return this;
     }
 
@@ -459,11 +511,92 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Causes the effect to be played in screen space instead of world space (where tokens are)
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection} this
+     */
     screenSpace(inBool = true){
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "screenSpace", "inBool must be of type boolean");
         this._screenSpace = inBool;
         return this;
     }
+
+    /**
+     *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
+     *
+     * @param {object} inPosition
+     * @returns {EffectSection} this
+     */
+    screenSpacePosition(inPosition) {
+        inPosition = {
+            x: inPosition?.x ?? 0,
+            y: inPosition?.y ?? 0
+        }
+        if (typeof inPosition.x !== "number") throw this.sequence._throwError(self, "screenSpacePosition", `inPosition.x must be of type number!`);
+        if (typeof inPosition.y !== "number") throw this.sequence._throwError(self, "screenSpacePosition", `inPosition.y must be of type number!`);
+        this._screenSpacePosition = inPosition;
+        return this;
+    }
+
+    /**
+     *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number in screen space
+     *
+     * @param {number|object} inAnchor
+     * @returns {EffectSection} this
+     */
+    screenSpaceAnchor(inAnchor) {
+        if (typeof inAnchor === "number") {
+            inAnchor = {
+                x: inAnchor,
+                y: inAnchor
+            }
+        }
+
+        inAnchor = {
+            x: inAnchor?.x ?? 0.5,
+            y: inAnchor?.y ?? 0.5
+        }
+
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
+
+        this._screenSpaceAnchor = inAnchor;
+        return this;
+    }
+
+    /**
+     *  Sets up various properties relating to scale on the
+     *
+     * @param {object} inOptions
+     * @returns {EffectSection} this
+     */
+    screenSpaceScale(inOptions){
+
+        inOptions = foundry.utils.mergeObject({
+            x: 1.0,
+            y: 1.0,
+            fitX: false,
+            fitY: false,
+            ratioX: false,
+            ratioY: false
+        }, inOptions)
+
+        if (typeof inOptions.x !== "number") throw this.sequence._throwError(self, "screenSpaceScale", `inOptions.x must be of type number!`);
+        if (typeof inOptions.y !== "number") throw this.sequence._throwError(self, "screenSpaceScale", `inOptions.y must be of type number!`);
+        if (typeof inOptions.fitX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitX must be of type boolean");
+        if (typeof inOptions.fitY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitY must be of type boolean");
+        if (typeof inOptions.ratioX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
+        if (typeof inOptions.ratioY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioY must be of type boolean");
+
+        if(inOptions.ratioX && inOptions.ratioY) throw this.sequence._throwError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one must win out")
+
+        this._screenSpaceScale = inOptions;
+
+        return this;
+    }
+
 
     async run() {
         let data = await this._sanitizeEffectData();
@@ -503,6 +636,7 @@ export default class EffectSection extends Section {
                 y: 0,
             },
             anchor: this._anchor,
+            spriteAnchor: this._spriteAnchor,
             scale: {
                 x: 1.0,
                 y: 1.0
@@ -540,6 +674,9 @@ export default class EffectSection extends Section {
             },
             zeroSpriteRotation: this._zeroSpriteRotation,
             screenSpace: this._screenSpace,
+            screenSpaceAnchor: this._screenSpaceAnchor,
+            screenSpacePosition: this._screenSpacePosition,
+            screenSpaceScale: this._screenSpaceScale,
             sceneId: game.user.viewedScene,
             users: Array.from(this._users)
         };

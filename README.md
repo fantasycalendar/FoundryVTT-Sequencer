@@ -291,8 +291,13 @@ new Sequence()
 ## Changelog
 
 ### Version 1.1.0
-- *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
+- *Effects* - Added `.screenSpace()` which causes the effect to be played on the screen rather than in the game canvas
+- *Effects* - Added `.screenSpaceAnchor()` which causes the effect to anchor itself to a side on the screen space layer
+- *Effects* - Added `.screenSpacePosition()`, pretty straightforward what this does, sets the position of the effect in screen space
+- *Effects* - Added `.screenSpaceScale()` which can help you stretch and fit the effect to the screen, even on different screen sizes
+- *Effects* - Added `.spriteAnchor()` which controls the effect's core anchor point within its container (defaults to 0.5 on X and Y)
 - *Effects* - Added `.snapToGrid()` which snaps the effect to the given location's closest grid section
+- *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
 
 ### Version 1.0.3
 - *Sequencer* - Added animated space backgrounds (thanks to Keirsti on the Foundry VTT discord server)

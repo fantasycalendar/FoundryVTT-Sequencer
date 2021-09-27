@@ -107,9 +107,23 @@ export default class CanvasEffect {
 
     }
 
+    _getScreenSpaceContainer(){
+
+        let container = new PIXI.Container();
+
+        container.effect = this;
+
+        container.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+
+        Sequencer.UILayer.container.addChild(container);
+
+        return container;
+
+    }
+
     _getContainer(){
 
-        if(this.data.screenSpace) return Sequencer.UILayer.container;
+        if(this.data.screenSpace) return this._getScreenSpaceContainer();
 
         return this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
 
@@ -117,8 +131,8 @@ export default class CanvasEffect {
 
     _showHighlight(show){
         if(!this.highlight){
-            let width = this.sprite.width / this.sprite.scale.x;
-            let height = this.sprite.height / this.sprite.scale.x;
+            let width = this.sprite.width;
+            let height = this.sprite.height;
             this.highlight = new PIXI.Graphics();
             this.highlight.lineStyle(4, "0xFFFFFF")
             this.highlight.moveTo(width/-2,height/-2);
@@ -174,15 +188,24 @@ export default class CanvasEffect {
 			if(!this.data.duration && !this.source){
 
 				let animProp = this.data.animatedProperties;
-				let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0);
-				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
-				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0);
+				let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0) ;
+				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0) ;
+				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0) ;
 				let moveDuration = 0;
 				if(moves) {
 					moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + moves.delay;
 				}
 
-				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
+                let animationDurations = animProp.animations ? Math.max(...animProp.animations.map(animation => {
+                    if(animation.looping){
+                        if(animation.loops === 0) return 0;
+                        return ((animation?.duration ?? 0) * (animation?.loops ?? 0)) + (animation?.delay ?? 0);
+                    }else{
+                        return (animation?.duration ?? 0) + (animation?.delay ?? 0);
+                    }
+                })) : 0;
+
+				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration, animationDurations);
 
 				this.animationDuration = this.animationDuration || 1000;
 
@@ -220,8 +243,11 @@ export default class CanvasEffect {
         this.sprite = new PIXI.Sprite(this.texture);
         this.spriteContainer = new PIXI.Container();
         this.spriteContainer.addChild(this.sprite);
-        this.sprite.anchor.set(0.5, 0.5);
-        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.sprite.anchor.set(
+            this.data.spriteAnchor?.x ?? 0.5,
+            this.data.spriteAnchor?.y ?? 0.5
+        );
+        this.spriteContainer.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
         this.spriteContainer.sortChildren();
         this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
@@ -232,8 +258,23 @@ export default class CanvasEffect {
         this.sprite.visible = false;
 
         if(this.data.size){
-            this.sprite.width = this.data.size.width * this.data.scale.x;
-            this.sprite.height = this.data.size.height * this.data.scale.y;
+
+            const ratio = this.sprite.height / this.sprite.width;
+
+            let height = this.sprite.height;
+            let width = this.sprite.width;
+
+            if(this.data.size.width === "auto"){
+                height = this.data.size.height;
+                width = height / ratio;
+            }else if(this.data.size.height === "auto"){
+                width = this.data.size.width;
+                height = width * ratio;
+            }
+
+            this.sprite.width = width * this.data.scale.x;
+            this.sprite.height = height * this.data.scale.y;
+
         } else {
             this.sprite.scale.set(
                 this.data.scale.x * this.data.gridSizeDifference,
@@ -243,6 +284,22 @@ export default class CanvasEffect {
 
         this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
+
+        if(!this.data.anchor){
+
+            if(!this.data.screenSpaceAnchor){
+                this.data.screenSpaceAnchor = { x: 0.5, y: 0.5 };
+            }
+
+            if(this.data.screenSpace){
+                this.data.anchor = { ...this.data.screenSpaceAnchor };
+            }else{
+                this.data.anchor = { x: 0.5, y: 0.5 };
+            }
+
+        }else if(!this.data.screenSpaceAnchor){
+            this.data.screenSpaceAnchor = { ...this.data.anchor };
+        }
 
         this.spriteContainer.pivot.set(
             lib.lerp(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
@@ -631,6 +688,9 @@ export default class CanvasEffect {
 				this.source.load();
 			} catch (err) {}
 			try {
+			    if(this.data.screenSpace){
+			        Sequencer.UILayer.removeContainerByEffect(this);
+                }
                 this.sprite.filters = [];
                 this.spriteContainer.removeChild(this.sprite);
 				this.container.removeChild(this.spriteContainer);
