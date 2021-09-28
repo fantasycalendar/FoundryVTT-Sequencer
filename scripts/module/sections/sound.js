@@ -19,7 +19,7 @@ class SoundSection extends Section {
      * on the distance to the target.
      *
      * @param {function} inFunc
-     * @returns {SoundSection} this
+     * @returns {SoundSection}
      */
     addOverride(inFunc) {
         if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
@@ -34,11 +34,11 @@ class SoundSection extends Section {
         Object.assign(this.constructor.prototype, traits.users);
     }
 
-    async run(repetition) {
+    async run() {
         let { play, ...data } = await this._sanitizeSoundData();
 
         if (!play) {
-            throw this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
+            this.sequence._showWarning(this, "Play", `File not found: ${data.src}`);
             return new Promise((reject) => reject());
         }
 

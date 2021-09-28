@@ -296,11 +296,13 @@ new Sequence()
     - Added `.screenSpaceAnchor()` which causes the effect to anchor itself to a side on the screen space layer
     - Added `.screenSpacePosition()`, pretty straightforward what this does, sets the position of the effect in screen space
     - Added `.screenSpaceScale()` which can help you stretch and fit the effect to the screen, even on different screen sizes
-    - Added `.spriteAnchor()` which controls the effect's core anchor point within its container (defaults to 0.5 on X and Y)
+- *Effects* - Added `.spriteAnchor()` which controls the effect's core anchor point within its container (defaults to 0.5 on X and Y)
+- *Effects* - Added support on `.atLocation()` for a secondary options object, which currently accepts:
+    - `cacheLocation: boolean` - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - *Effects* - Added `.snapToGrid()` which snaps the effect to the given location's closest grid section
 - *Effects* - Added `.scaleToObject()` which scales the effect to the bounds of the object, with an optional scalar on top of that
 - *Effects* - Tweaked `.size()` to also accept only one of height or width, the other will be automatically resized to keep the effect's ratio
-- *Effects* - Added support on `.atLocation()` for a secondary options object, currently accepts `cacheLocation: boolean`, which causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
+- *Effects* - Fixed `.persist()`ing effects with an end duration that doesn't loop would not properly stop at its end duration
 - *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
 
 ### Version 1.0.3

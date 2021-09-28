@@ -237,6 +237,12 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Causes the effect to be scaled to the target object's width
+     *
+     * @param {number} inScale
+     * @returns {EffectSection} this
+     */
     scaleToObject(inScale = 1.0){
         if (typeof inScale !== "number") throw this.sequence._throwError(self, "scaleToObject", `inScale must be of type number!`);
         this._scaleToObject = true;
@@ -805,9 +811,13 @@ export default class EffectSection extends Section {
             }
 
             if (this._to) {
-                target = this._applyOffsets(target);
+                target = this._snapToGrid
+                    ? this._applyOffsets(this._snapLocationToGrid(target))
+                    : this._applyOffsets(target);
             } else {
-                origin = this._applyOffsets(origin);
+                origin = this._snapToGrid
+                    ? this._applyOffsets(this._snapLocationToGrid(origin))
+                    : this._applyOffsets(origin);
             }
 
             data.position = origin;
@@ -974,8 +984,6 @@ export default class EffectSection extends Section {
         };
 
         if (typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
-
-        if(this._snapToGrid) pos = this._snapLocationToGrid(pos);
 
         return pos;
 

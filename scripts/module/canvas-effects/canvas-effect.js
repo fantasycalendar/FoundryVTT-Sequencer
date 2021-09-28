@@ -162,6 +162,7 @@ export default class CanvasEffect {
         this.rotateOut();
         this.setEndTimeout();
         this.debug();
+        this.tryPlay();
         this.timeoutSpriteVisibility();
     }
 
@@ -232,8 +233,7 @@ export default class CanvasEffect {
 		this.animationDuration /= (this.data.playbackRate ?? 1.0);
 
 		if(this.source){
-		    this.source.loop = (this.animationDuration / 1000) > this.source.duration;
-            if(this.data.noLoop) this.source.loop = false;
+		    this.source.loop = (this.animationDuration / 1000) > this.source.duration && !this.source.loop;
         }
 
 	}
@@ -313,13 +313,12 @@ export default class CanvasEffect {
         );
 
         if(this.source && (this.startTime || this.loopOffset > 0) && this.source?.currentTime !== undefined) {
-            await lib.wait(15)
+            await lib.wait(20)
             this.texture.update();
         }
 
         if(this.source?.currentTime !== undefined){
             this.source.playbackRate = this.data.playbackRate;
-            this.tryPlay();
         }
 
     }
@@ -701,8 +700,11 @@ export default class CanvasEffect {
                 this.spriteContainer.removeChild(this.sprite);
 				this.container.removeChild(this.spriteContainer);
                 this.spriteContainer.destroy();
+                if(this.highlight) this.highlight.destroy()
 				this.sprite.destroy();
-			} catch (err) {}
+			} catch (err) {
+			    console.log(err);
+            }
 		}
     }
 
@@ -811,7 +813,7 @@ export default class CanvasEffect {
 class PersistentCanvasEffect extends CanvasEffect{
 
     async initializeEffect(){
-        this.startLoop();
+        this.startEffect();
         await this.spawnSprite();
         this.playCustomAnimations();
         this.moveTowards();
@@ -821,31 +823,30 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.rotateIn();
         this.debug();
         this.timeoutSpriteVisibility();
+        this.setEndTimeout();
     }
 
-    timeoutSpriteVisibility(){
-        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
-        if(creationTimeDifference === 0){
-            this.sprite.visible = true;
-            return;
-        }
-        setTimeout(() => {
-            this.sprite.visible = true;
-        }, 50);
-    }
-
-    startLoop() {
+    async startEffect() {
         if (!this.source) return;
+
         let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
-        if(this.data.noLoop){
-            this.source.loop = false;
-            if(creationTimeDifference >= this.animationDuration){
-                this.source.currentTime = this.endTime;
-                return;
-            }
+
+        if(!this.data.noLoop) return this.startLoop(creationTimeDifference);
+
+        if(creationTimeDifference < this.animationDuration){
             this.source.currentTime = creationTimeDifference / 1000;
+            this.tryPlay();
             return;
         }
+
+        this.source.pause();
+        this.source.currentTime = this.endTime;
+        setTimeout(() => {
+            this.texture.update();
+        }, 250)
+    }
+
+    async startLoop(creationTimeDifference) {
         this.source.loop = this.startTime === 0 && this.endTime === this.source.duration;
         this.loopOffset = (creationTimeDifference % this.animationDuration) / 1000;
         this.resetLoop();
@@ -861,12 +862,31 @@ class PersistentCanvasEffect extends CanvasEffect{
         }, this.animationDuration - (this.loopOffset*1000));
     }
 
+    timeoutSpriteVisibility(){
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+        if(creationTimeDifference === 0){
+            this.sprite.visible = true;
+            return;
+        }
+        setTimeout(() => {
+            this.sprite.visible = true;
+        }, 50);
+    }
+
+    setEndTimeout(){
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+        if(!this.data.noLoop || creationTimeDifference >= this.animationDuration || !this.source) return;
+        setTimeout(() => {
+            this.source.pause();
+        }, this.animationDuration)
+    }
+
     async endEffect(){
         const durations = [
             this.fadeOut(this.data.extraEndDuration),
             this.fadeOutAudio(this.data.extraEndDuration),
             this.scaleOut(this.data.extraEndDuration),
-            this.rotateOut(this.data.extraEndDuration)
+            this.rotateOut(this.data.extraEndDuration),
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
         this.resolve(waitDuration);
