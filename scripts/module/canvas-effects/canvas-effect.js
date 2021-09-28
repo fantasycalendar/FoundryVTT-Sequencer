@@ -679,13 +679,14 @@ export default class CanvasEffect {
 
     setEndTimeout(){
         setTimeout(() => {
-            this.resolve();
             this.endEffect();
+            this.resolve(this.data);
         }, this.animationDuration)
     }
 
 	endEffect(){
 		if(!this.ended) {
+            Hooks.call("endedSequencerEffect", this.data);
 			this.ended = true;
 			try {
 				this.source.removeAttribute('src');
@@ -797,6 +798,7 @@ export default class CanvasEffect {
 			}else {
 				this.calculateDuration();
 				if(shouldPlay){
+                    Hooks.call("createSequencerEffect", this.data);
 				    this.initializeEffect();
                 }
 			}
@@ -833,9 +835,10 @@ class PersistentCanvasEffect extends CanvasEffect{
 
         if(!this.data.noLoop) return this.startLoop(creationTimeDifference);
 
+        this.tryPlay();
+
         if(creationTimeDifference < this.animationDuration){
             this.source.currentTime = creationTimeDifference / 1000;
-            this.tryPlay();
             return;
         }
 
@@ -843,7 +846,7 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.source.currentTime = this.endTime;
         setTimeout(() => {
             this.texture.update();
-        }, 250)
+        }, 350)
     }
 
     async startLoop(creationTimeDifference) {
@@ -892,7 +895,7 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
             super.endEffect()
-            resolve();
+            resolve(this.data);
         }, waitDuration));
 
     }

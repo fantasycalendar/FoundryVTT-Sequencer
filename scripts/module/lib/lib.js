@@ -1,3 +1,5 @@
+import SequencerFileCache from "../sequencer-file-cache.js";
+
 /**
  * This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
@@ -87,10 +89,11 @@ export async function fileExists(inFile) {
  * @return {Promise}              A promise that will return the dimensions of the file
  */
 export async function getDimensions(inFile) {
-    return new Promise(resolve => {
+    return new Promise(async (resolve) => {
+        let blob = await SequencerFileCache.loadFile(inFile);
         let video = document.createElement("video");
         video.crossOrigin = "anonymous";
-        video.src = inFile;
+        video.src = URL.createObjectURL(blob);
         video.onloadedmetadata = () => {
             let dimensions = {
                 x: video.videoWidth,
@@ -105,27 +108,6 @@ export async function getDimensions(inFile) {
             resolve({ x: 0, y: 0 });
         }
     })
-}
-
-/**
- *  Determines the duration of a given sound file
- *
- * @param  {string}     inFile    The sound file to be loaded
- * @return {Promise}              A promise that will return the dimensions of the file
- */
-export async function getSoundDuration(inFile) {
-    return new Promise((resolve) => {
-        let audio = new Audio();
-        audio.onloadedmetadata = () => {
-            resolve(audio.duration * 1000); // ms
-        }
-        audio.onerror = () => {
-            resolve(false);
-        }
-        audio.preload = "auto";
-        audio.crossOrigin = "anonymous";
-        audio.src = inFile;
-    });
 }
 
 /**

@@ -291,6 +291,17 @@ new Sequence()
 ## Changelog
 
 ### Version 1.1.0
+- *Sequencer* - Added hooks:
+  - `createSequencerSequence`
+  - `endedSequencerSequence`
+  - Effects:
+    - `preCreateSequencerEffect` - Provides the effect's data
+    - `createSequencerEffect` - Provides the effect's data
+    - `endedSequencerEffect` - Provides the effect's data
+  - Sounds:
+    - `preCreateSequencerSound` - Provides the sound's data
+    - `createSequencerSound` - Provides the sound's data
+    - `endedSequencerSound` - Provides the sound's data
 - *Effects* - Added screen space layer for UI effects!
     - Added `.screenSpace()` which causes the effect to be played on the screen rather than in the game canvas
     - Added `.screenSpaceAnchor()` which causes the effect to anchor itself to a side on the screen space layer

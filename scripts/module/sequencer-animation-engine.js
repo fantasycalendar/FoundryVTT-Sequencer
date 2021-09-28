@@ -9,7 +9,7 @@ export default class SequencerAnimationEngine {
 
         let animData = {
             attributes: attributes.map(attribute => {
-                attribute.easeFunction = easeFunctions[attribute.ease];
+                attribute.easeFunction = easeFunctions[attribute.ease] ?? easeFunctions["linear"];
                 attribute.complete = false;
                 attribute.initialized = false;
                 attribute.progress = 0;

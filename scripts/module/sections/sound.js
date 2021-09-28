@@ -42,18 +42,10 @@ class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
+        Hooks.call("preCreateSequencerSound", data);
+
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
         return SequencerAudioHelper.play(data, push);
-    }
-
-    async _getSoundDuration(inFilePath) {
-        let cachedDuration = this.sequence._getFileFromCache(inFilePath);
-        if (!cachedDuration) {
-            cachedDuration = await lib.getSoundDuration(inFilePath);
-            if (!cachedDuration) return false;
-            this.sequence._addFileToCache(inFilePath, cachedDuration)
-        }
-        return cachedDuration;
     }
 
     async _sanitizeSoundData() {
@@ -68,13 +60,14 @@ class SoundSection extends Section {
             file = file.getFile();
         }
 
-        let duration = await this._getSoundDuration(file);
-        if (!duration) {
+        let soundFile = await AudioHelper.preloadSound(file);
+        if (!soundFile) {
             return {
                 play: false,
                 src: file
             };
         }
+        let duration = soundFile.duration*1000;
 
         let startTime = (this._startTime ? (!this._startPerc ? this._startTime : this._startTime * duration) : 0) / 1000;
 

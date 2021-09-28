@@ -612,7 +612,8 @@ export default class EffectSection extends Section {
 
 
     async run() {
-        let data = await this._sanitizeEffectData();
+        const data = await this._sanitizeEffectData();
+        Hooks.call("preCreateSequencerEffect", data);
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
         let canvasEffectData = await Sequencer.EffectManager.play(data, push);
         let totalDuration = this._currentWaitTime;
@@ -909,22 +910,7 @@ export default class EffectSection extends Section {
 
     async _getFileDimensions(inFile) {
         let filePath = inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
-        if (this._JB2A) {
-            let parts = filePath.replace(".webm", "").split("_");
-            let dimensionString = parts[parts.length - 1].toLowerCase().split('x');
-            if (!isNaN(dimensionString[0]) && !isNaN(dimensionString[1])) {
-                return {
-                    x: Number(dimensionString[0]),
-                    y: Number(dimensionString[1])
-                }
-            }
-        }
-        let cachedFile = this.sequence._getFileFromCache(filePath);
-        if (!cachedFile) {
-            cachedFile = await lib.getDimensions(filePath);
-            this.sequence._addFileToCache(filePath, cachedFile)
-        }
-        return cachedFile;
+        return await lib.getDimensions(filePath);
     }
 
     _getTrueLength(inDimensions) {
@@ -936,12 +922,15 @@ export default class EffectSection extends Section {
         if (data.distance === 0) return data;
 
         let dimensions = await this._getFileDimensions(data.file);
-        let trueDistanceAfterMargin = this._getTrueLength(dimensions);
+        let trueDistanceAfterPadding = this._getTrueLength(dimensions);
 
-        data.scale.x = data.distance / trueDistanceAfterMargin;
-        data.scale.y = data.distance / trueDistanceAfterMargin;
+        data.scale.x = data.distance / trueDistanceAfterPadding;
+        data.scale.y = data.distance / trueDistanceAfterPadding;
 
-        data.anchor.x = this._startPoint / dimensions.x;
+        data.anchor = {
+            x: this._startPoint / dimensions.x,
+            y: data.anchor.y ?? 0.5
+        }
 
         return data;
     }
