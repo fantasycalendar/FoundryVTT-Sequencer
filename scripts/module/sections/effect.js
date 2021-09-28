@@ -37,6 +37,7 @@ export default class EffectSection extends Section {
         this._extraEndDuration = 0;
         this._noLoop = false;
         this._snapToGrid = false;
+        this._scaleToObject = false;
         this._screenSpace = false;
         this._screenSpaceAnchor = false;
         this._screenSpacePosition = { x: 0, y: 0 };
@@ -234,6 +235,12 @@ export default class EffectSection extends Section {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
         this._snapToGrid = inBool;
         return this;
+    }
+
+    scaleToObject(inScale = 1.0){
+        if (typeof inScale !== "number") throw this.sequence._throwError(self, "scaleToObject", `inScale must be of type number!`);
+        this._scaleToObject = true;
+        return this.scale(inScale);
     }
 
     /**
@@ -737,7 +744,12 @@ export default class EffectSection extends Section {
             y: data.scale.y * (scale?.y ?? 1.0)
         }
 
-        data.size = this._size;
+        if(this._scaleToObject){
+            const object = this._getCachedObject(this._from, this._to);
+            data.size = this._getObjectSize(object);
+        }else{
+            data.size = this._size;
+        }
 
         if (this._reachTowards) {
             data = await this._calculateHitVector(data);
@@ -769,7 +781,13 @@ export default class EffectSection extends Section {
 
             let [from, to, origin, target] = this._getPositions(this._from, this._to);
 
-            if (this._attachTo) origin = this._getHalfSize(this._from);
+            if (this._attachTo){
+                const size = this._getHalfSize(this._from);
+                origin = {
+                    x: size.width,
+                    y: size.height
+                };
+            }
 
             if (this._offset) {
                 let offset = this._offset;
@@ -945,8 +963,8 @@ export default class EffectSection extends Section {
 
             if (obj instanceof Token) {
                 const halfSize = this._getHalfSize(obj);
-                pos.x += halfSize.x;
-                pos.y += halfSize.y;
+                pos.x += halfSize.width;
+                pos.y += halfSize.height;
             }
         }
 
@@ -964,9 +982,17 @@ export default class EffectSection extends Section {
     }
 
     _getHalfSize(inObj) {
+        const size = this._getObjectSize(inObj)
         return {
-            x: (inObj?.hitArea?.width ?? inObj?.w ?? canvas.grid.size) / 2,
-            y: (inObj?.hitArea?.height ?? inObj?.h ?? canvas.grid.size) / 2
+            width: size.width / 2,
+            height: size.height / 2
+        }
+    }
+
+    _getObjectSize(inObj) {
+        return {
+            width: inObj?.hitArea?.width ?? inObj?.w ?? canvas.grid.size,
+            height: inObj?.hitArea?.height ?? inObj?.h ?? canvas.grid.size
         }
     }
 
@@ -1006,6 +1032,22 @@ export default class EffectSection extends Section {
         }
 
         return [from, to, from_position, to_position];
+
+    }
+
+    _getCachedObject(from, to){
+
+        if (typeof to === "string") {
+            return this._getCachedOffset(to, this._currentRepetition).object;
+        }else if(to){
+            return to;
+        }
+
+        if (typeof from === "string") {
+            return this._getCachedOffset(from, this._currentRepetition).object;
+        }else{
+            return from;
+        }
 
     }
 
@@ -1091,8 +1133,8 @@ export default class EffectSection extends Section {
         if (!missed) return position;
 
         const size = this._getHalfSize(target);
-        const halfWidth = size.x;
-        const halfHeight = size.y;
+        const halfWidth = size.width;
+        const halfHeight = size.height;
 
         const XorY = Math.random() < 0.5;
         const flipX = Math.random() > 0.5 ? -1 : 1;

@@ -131,10 +131,10 @@ export default class CanvasEffect {
 
     _showHighlight(show){
         if(!this.highlight){
-            let width = this.sprite.width;
-            let height = this.sprite.height;
+            let width = (this.sprite.width / this.sprite.scale.x) * 1.1;
+            let height = (this.sprite.height / this.sprite.scale.y) * 1.1;
             this.highlight = new PIXI.Graphics();
-            this.highlight.lineStyle(4, "0xFFFFFF")
+            this.highlight.lineStyle((3 / this.sprite.scale.x) * 1.1, "0xFFFFFF")
             this.highlight.moveTo(width/-2,height/-2);
             this.highlight.lineTo(width/2,height/-2);
             this.highlight.lineTo(width/2,height/2);
@@ -261,15 +261,21 @@ export default class CanvasEffect {
 
             const ratio = this.sprite.height / this.sprite.width;
 
-            let height = this.sprite.height;
-            let width = this.sprite.width;
+            let { height, width } = this.data.size;
 
-            if(this.data.size.width === "auto"){
-                height = this.data.size.height;
-                width = height / ratio;
-            }else if(this.data.size.height === "auto"){
-                width = this.data.size.width;
-                height = width * ratio;
+            if(this.data.size.width === "auto" || this.data.size.height === "auto"){
+
+                height = this.sprite.height;
+                width = this.sprite.width;
+
+                if(this.data.size.width === "auto"){
+                    height = this.data.size.height;
+                    width = height / ratio;
+                }else if(this.data.size.height === "auto"){
+                    width = this.data.size.width;
+                    height = width * ratio;
+                }
+
             }
 
             this.sprite.width = width * this.data.scale.x;
