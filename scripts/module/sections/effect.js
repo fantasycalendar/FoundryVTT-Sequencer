@@ -9,6 +9,7 @@ export default class EffectSection extends Section {
         this._waitUntilFinished = false;
         this._file = inFile;
         this._from = false;
+        this._atLocation = false;
         this._reachTowards = false;
         this._anchor = false;
         this._spriteAnchor = false;
@@ -153,22 +154,6 @@ export default class EffectSection extends Section {
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {object|string} inObject
-     * @returns {EffectSection} this
-     */
-    attachTo(inObject) {
-        if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "inObject must not be undefined");
-        inObject = this._validateLocation(inObject);
-        if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "could not find given object");
-        this._from = inObject;
-        this._attachTo = true;
-        return this;
-    }
-
-    /**
-     *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
-     *  or a string reference (see .name())
-     *
      * @param {object|string} inLocation
      * @param {object} inOptions
      * @returns {EffectSection} this
@@ -181,7 +166,26 @@ export default class EffectSection extends Section {
         if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
         this._from = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
-        this._attachTo = false;
+        this._atLocation = true;
+        return this;
+    }
+
+    /**
+     *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
+     *  or a string reference (see .name())
+     *
+     * @param {object|string} inObject
+     * @returns {EffectSection} this
+     */
+    attachTo(inObject) {
+        inObject = this._validateLocation(inObject);
+        if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "could not find given object");
+        const isValidObject = inObject instanceof Token || inObject instanceof Tile || inObject instanceof Drawing;
+        if (!isValidObject){
+            this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
+        }
+        this._from = inObject;
+        this._attachTo = isValidObject;
         return this;
     }
 
@@ -264,7 +268,7 @@ export default class EffectSection extends Section {
             }
         }
 
-        if(inSize?.width ^ inSize?.height){
+        if((inSize?.width === undefined) ^ (inSize?.height === undefined)){
             if(inSize?.width){
                 if (typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
                 inSize['height'] = "auto"
@@ -603,15 +607,34 @@ export default class EffectSection extends Section {
         if (typeof inOptions.ratioX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
         if (typeof inOptions.ratioY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioY must be of type boolean");
 
-        if(inOptions.ratioX && inOptions.ratioY) throw this.sequence._throwError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one must win out")
+        if(inOptions.ratioX && inOptions.ratioY) throw this.sequence._throwError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one axis must fit or be set directly")
 
         this._screenSpaceScale = inOptions;
 
         return this;
     }
 
+    _expressWarnings(){
+        if(this._reachTowards && this._anchor){
+            this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .anchor() - reachTowards will manually set the X axis of the anchor and may not behave like you expect.", true);
+        }
+        if(this._reachTowards && (this._scaleMin || this._scaleMax)){
+            this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .scale() - reachTowards will manually set the scale of the effect, completely ruining your scaling attempts. Try .gridSize() instead.", true);
+        }
+        if(this._reachTowards && this._scaleToObject){
+            throw this.sequence._throwError(this, "reachTowards", "You're trying to reach towards an object, while scaling to fit another??? Make up your mind!");
+        }
+        if(this._reachTowards && this._randomRotation){
+            throw this.sequence._throwError(this, "reachTowards", "You're trying to reach towards an object, while trying to randomly rotate the effect? What?");
+        }
+        if(this._atLocation && this._attachTo){
+            this.sequence._showWarning(this, "atLocation", "you have called .attachTo() and .atLocation() on this effect, calling .atLocation() makes this effect static. Please use only one.", true);
+        }
+    }
+
 
     async run() {
+        this._expressWarnings();
         const data = await this._sanitizeEffectData();
         Hooks.call("preCreateSequencerEffect", data);
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
@@ -723,17 +746,19 @@ export default class EffectSection extends Section {
         this._endPoint = template[2];
         data.template = template;
 
-        data.time = {
-            start: typeof this._startTime === "number" ? {
-                value: this._startTime,
-                isPerc: this._startPerc
-            } : false,
-            end: typeof this._endTime === "number" ? {
-                value: this._endTime,
-                isPerc: this._endPerc
-            } : false,
-            isRange: this._isRange
-        };
+        if(this._startTime || this._endTime) {
+            data.time = {
+                start: typeof this._startTime === "number" ? {
+                    value: this._startTime,
+                    isPerc: this._startPerc
+                } : false,
+                end: typeof this._endTime === "number" ? {
+                    value: this._endTime,
+                    isPerc: this._endPerc
+                } : false,
+                isRange: this._isRange
+            };
+        }
 
         let scale = this._scaleMin;
         if (typeof this._scaleMin === "number") {

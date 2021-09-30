@@ -240,7 +240,8 @@ export function getAllObjects(inSceneId) {
     return [
         ...Array.from(scene.tokens).map(obj => obj?.object),
         ...Array.from(scene.templates).map(obj => obj?.object),
-        ...Array.from(scene.tiles).map(obj => obj?.object)
+        ...Array.from(scene.tiles).map(obj => obj?.object),
+        ...Array.from(scene.drawings).map(obj => obj?.object)
     ].deepFlatten().filter(Boolean);
 }
 
@@ -248,16 +249,17 @@ export function getObjectFromScene(inId, inSceneId) {
     return getAllObjects(inSceneId).find(obj => obj.id === inId);
 }
 
-export function showWarning(inClassName, warning) {
+export function showWarning(inClassName, warning, notify = false) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     warning = `${inClassName} | ${warning}`;
+    if(notify) ui.notifications.warn(warning);
     console.warn(warning.replace("<br>", "\n"));
 }
 
-export function throwError(inClassName, error) {
+export function throwError(inClassName, error, notify = true) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
-    ui.notifications.error(error);
+    if(notify) ui.notifications.error(error);
     return new Error(error.replace("<br>", "\n"));
 }
 

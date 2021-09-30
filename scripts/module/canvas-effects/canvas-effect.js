@@ -857,8 +857,9 @@ class PersistentCanvasEffect extends CanvasEffect{
 
     async resetLoop(){
         this.source.currentTime = this.startTime + this.loopOffset;
-        if(this.ended || this.source.loop) return;
+        if(this.ended) return;
         await this.tryPlay();
+        if(this.source.loop) return;
         setTimeout(() => {
             this.loopOffset = 0;
             this.resetLoop();

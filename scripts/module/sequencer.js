@@ -167,8 +167,9 @@ export default class Sequence {
             });
         });
     }
-    _showWarning(self, func, warning) {
-        lib.showWarning(this.moduleName, `${self.constructor.name} | ${func} - ${warning}`);
+
+    _showWarning(self, func, warning, notify) {
+        lib.showWarning(this.moduleName, `${self.constructor.name} | ${func} - ${warning}`, notify);
     }
 
     _throwError(self, func, error) {
