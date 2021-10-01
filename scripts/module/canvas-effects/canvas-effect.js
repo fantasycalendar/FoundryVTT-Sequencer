@@ -732,24 +732,28 @@ export default class CanvasEffect {
             let video = document.createElement("video");
             video.preload = "auto";
             video.crossOrigin = "anonymous";
-            video.src = URL.createObjectURL(blob);
             video.playbackRate = this.data.playbackRate;
             video.autoplay = false;
             video.muted = true;
+            video.src = URL.createObjectURL(blob);
+
             if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
                 video.muted = false;
             }
+
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
             video.volume *= game.settings.get("core", "globalInterfaceVolume");
-			let texture = await PIXI.Texture.from(video);
 
             let canplay = true;
             video.oncanplay = async () => {
                 if(!canplay) return;
                 canplay = false;
-				this.source = video;
-				this.source.pause();
+                this.source = video;
+                video.height = video.videoHeight;
+                video.width = video.videoWidth;
+                const baseTexture = PIXI.BaseTexture.from(video, { resourceOptions: { autoPlay: false } });
+                const texture = new PIXI.Texture(baseTexture);
                 resolve(texture);
             };
 
