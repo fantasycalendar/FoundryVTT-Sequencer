@@ -3,7 +3,6 @@ import { reactiveEl as html } from "../lib/html.js";
 
 const MAX_NODES = 24
 
-// const template = html``
 export default class SequencerDatabaseViewer extends FormApplication {
   constructor(dialogData = {}, options = {}) {
     super(dialogData, options);
@@ -74,7 +73,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
   static show(inFocus = false) {
     if (!game.user.isTrusted) return;
-    for (let app of Object.values(ui.windows)) {
+    for (const app of Object.values(ui.windows)) {
       if (app instanceof this) {
         return app.render(true, { focus: inFocus });
       }
@@ -83,7 +82,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
   }
 
   static get isVisible() {
-    for (let app of Object.values(ui.windows)) {
+    for (const app of Object.values(ui.windows)) {
       if (app instanceof this) return app;
     }
   }
@@ -118,7 +117,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
   /** @override */
   getData() {
-    let data = super.getData();
+    const data = super.getData();
     data.packs = this.packs;
     data.entries = this.getFilteredEntries().slice(0, 20);
     return data;
@@ -137,7 +136,6 @@ export default class SequencerDatabaseViewer extends FormApplication {
       const wrapperHeight = entries.length * 20
       wrapper.style.height = `${wrapperHeight}px`;
 
-      const scrollTop = clamp(scroller.scrollTop - 100, wrapperHeight)
       const scrolledIndex = (Math.floor(scroller.scrollTop/20) - 5)
       const startIndex = clamp(scrolledIndex, entries.length - MAX_NODES)
 
@@ -151,12 +149,12 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     wrapper.append(...this.listItems)
 
-    let filter = html.find('select[name="pack-select"]');
-    let input = html.find('input[name="search-field"]');
+    const filter = html.find('select[name="pack-select"]');
+    const input = html.find('input[name="search-field"]');
     [this.player] = html.find(".database-player");
     [this.image] = html.find(".database-image");
 
-    let filterDebounce = debounce(() => {
+    const filterDebounce = debounce(() => {
       this.search = strToSearchRegexStr(input.val());
       this.filter = filter.val();
       scroller.scrollTop = 0
@@ -178,7 +176,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     entry = entry?.file ?? entry;
 
-    let isImage = !entry.toLowerCase().endsWith("webm");
+    const isImage = !entry.toLowerCase().endsWith("webm");
 
     player.classList.toggle("hidden", isImage);
     image.classList.toggle("hidden", !isImage);
@@ -189,7 +187,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
     }
 
     player.onerror = () => {
-      let error = `Sequencer Database Viewer | Could not play file: ${entry}`;
+      const error = `Sequencer Database Viewer | Could not play file: ${entry}`;
       ui.notifications.error(error);
       console.error(error);
     };
@@ -207,7 +205,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
       entry = entry?.file ?? entry;
     }
 
-    let tempInput = document.createElement("input");
+    const tempInput = document.createElement("input");
     tempInput.value = `${entry}`;
     document.body.appendChild(tempInput);
     tempInput.select();
