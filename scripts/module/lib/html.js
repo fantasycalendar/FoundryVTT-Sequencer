@@ -70,12 +70,20 @@ export function reactiveEl(str, ...exprs) {
   const { frag, props } = _template(str, exprs)
   if(frag.childNodes.length > 1) throw new Error("There can only be one root element")
   const child = frag.childNodes[0]
+  let prev = {}
   child.update = (data) => {
+    if(data === prev) return
+    prev = data
     for (const [,values] of props) {
       for(const fn of values) {
         fn(data)
       }
     }
+    const event = new CustomEvent('update', {
+      detail: {data}
+    })
+    child.dispatchEvent(event)
+
     return child
   }
 
