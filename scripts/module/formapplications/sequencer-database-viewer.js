@@ -143,7 +143,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
       this.listItems.forEach((el,i) => el.update(entries[startIndex + i]))
 
-      wrapper.style.paddingTop = (scrollTop) + "px"
+      wrapper.style.paddingTop = (startIndex * 20) + "px"
     }
 
     rerenderList()
