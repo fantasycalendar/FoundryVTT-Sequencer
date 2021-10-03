@@ -121,7 +121,6 @@ export default class SequencerDatabaseViewer extends FormApplication {
   getData() {
     const data = super.getData();
     data.packs = this.packs;
-    data.entries = this.getFilteredEntries().slice(0, 20);
     return data;
   }
 
