@@ -8,30 +8,34 @@ function _template(str, ...exprs) {
     "text/html"
   );
   const iterator = doc.createNodeIterator(doc.body, NodeFilter.SHOW_ALL);
-  const postProcess = []
+  const postProcess = [];
   const props = new Map();
   let cNode;
   while ((cNode = iterator.nextNode())) {
-    const node = cNode
+    const node = cNode;
     if (node instanceof Text) {
       const fullText = node.textContent;
       let newNodes = [];
       let lastIndex = 0;
       for (const match of fullText.matchAll(mustacheRegex)) {
         const name = match[1].trim();
-        newNodes.push(doc.createTextNode(fullText.slice(lastIndex, match.index)));
+        newNodes.push(
+          doc.createTextNode(fullText.slice(lastIndex, match.index))
+        );
 
         const reactiveNode = doc.createTextNode("");
-        newNodes.push(reactiveNode)
+        newNodes.push(reactiveNode);
 
-        const propHandlers = props.get(name) ?? new Set;
-        propHandlers.add((data) => (reactiveNode.textContent = data?.[name] ?? ''));
+        const propHandlers = props.get(name) ?? new Set();
+        propHandlers.add(
+          (data) => (reactiveNode.textContent = data?.[name] ?? "")
+        );
         props.set(name, propHandlers);
 
         lastIndex = match.index + match[0].length;
       }
       newNodes.push(doc.createTextNode(fullText.slice(lastIndex)));
-      postProcess.push(() => node.replaceWith(...newNodes))
+      postProcess.push(() => node.replaceWith(...newNodes));
     } else if (node instanceof HTMLElement) {
       const attributes = node.getAttributeNames();
       for (const attr of attributes) {
@@ -42,62 +46,73 @@ function _template(str, ...exprs) {
               attr,
               value.replace(mustacheRegex, (_, x) => {
                 const trimmed = x.trim();
-                if (typeof data === 'object' && trimmed in data) {
+                if (typeof data === "object" && trimmed in data) {
                   return data[trimmed];
                 }
                 return "";
               })
             );
-          for (const [,rawName] of value.matchAll(mustacheRegex)) {
-            const name = rawName.trim()
-            const propHandlers = props.get(name) ?? new Set;
-            propHandlers.add(handlers)
-            props.set(name, propHandlers)
+          for (const [, rawName] of value.matchAll(mustacheRegex)) {
+            const name = rawName.trim();
+            const propHandlers = props.get(name) ?? new Set();
+            propHandlers.add(handlers);
+            props.set(name, propHandlers);
           }
         }
       }
     }
   }
 
-  postProcess.forEach(fn => fn())
+  postProcess.forEach((fn) => fn());
 
   const frag = document.createDocumentFragment();
   frag.append(...doc.body.childNodes);
-  return { frag, props }
+  return { frag, props };
 }
 
 export function reactiveEl(str, ...exprs) {
-  const { frag, props } = _template(str, exprs)
-  if(frag.childNodes.length > 1) throw new Error("There can only be one root element")
-  const child = frag.childNodes[0]
-  let prev = {}
-  child.update = (data) => {
-    if(data === prev) return
-    prev = data
-    for (const [,values] of props) {
-      for(const fn of values) {
-        fn(data)
+  const { frag, props } = _template(str, exprs);
+  if (frag.childNodes.length > 1)
+    throw new Error("There can only be one root element");
+  const child = frag.childNodes[0];
+  let oldData = null;
+
+  const forceUpdate = (data) => {
+    for (const [, values] of props) {
+      for (const fn of values) {
+        fn(data);
       }
     }
-    const event = new CustomEvent('update', {
-      detail: {data}
-    })
-    child.dispatchEvent(event)
 
-    return child
-  }
+    const event = new CustomEvent("update", {
+      detail: { data, oldData },
+    });
 
-  return child
+    oldData = data;
+    child.dispatchEvent(event);
+
+    return child;
+  };
+
+  const update = (data) => {
+    if (data === oldData) return;
+    return forceUpdate(data);
+  };
+
+  child.update = update;
+  child.forceUpdate = forceUpdate;
+
+  return child;
 }
 
 export function template(str, ...exprs) {
-  const { frag, props } = _template(str, exprs)
+  const { frag, props } = _template(str, exprs);
 
-  for (const [,values] of props) {
-    for(const fn of values) {
-      fn(data)
+  for (const [, values] of props) {
+    for (const fn of values) {
+      fn(data);
     }
   }
 
-  return frag.cloneNode()
+  return frag.cloneNode();
 }
