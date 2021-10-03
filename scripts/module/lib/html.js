@@ -25,7 +25,7 @@ function _template(str, ...exprs) {
         newNodes.push(reactiveNode)
 
         const propHandlers = props.get(name) ?? new Set;
-        propHandlers.add((data) => (reactiveNode.textContent = data[name]));
+        propHandlers.add((data) => (reactiveNode.textContent = data?.[name] ?? ''));
         props.set(name, propHandlers);
 
         lastIndex = match.index + match[0].length;
@@ -37,12 +37,12 @@ function _template(str, ...exprs) {
       for (const attr of attributes) {
         const value = node.getAttribute(attr);
         if (value.match(mustacheRegex)) {
-          const handlers = (data) =>
+          const handlers = (data = {}) =>
             node.setAttribute(
               attr,
               value.replace(mustacheRegex, (_, x) => {
                 const trimmed = x.trim();
-                if (trimmed in data) {
+                if (typeof data === 'object' && trimmed in data) {
                   return data[trimmed];
                 }
                 return "";

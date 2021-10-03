@@ -1,7 +1,8 @@
 import { cache } from "../lib/cache.js";
 import { reactiveEl as html } from "../lib/html.js";
+import { clamp, strToSearchRegexStr } from "../lib/lib.js";
 
-const MAX_NODES = 24
+const MAX_NODES = 24;
 
 export default class SequencerDatabaseViewer extends FormApplication {
   constructor(dialogData = {}, options = {}) {
@@ -18,11 +19,11 @@ export default class SequencerDatabaseViewer extends FormApplication {
     });
     this.list = false;
     // cache getFilteredEntries method, breaking cache whenever search or filter property changes
-    cache(this, 'getFilteredEntries', ['search', 'filter'])
-    cache(this, 'getSearchRegex', ['search'])
+    cache(this, "getFilteredEntries", ["search", "filter"]);
+    cache(this, "getSearchRegex", ["search"]);
 
     this.listItems = Array.from(
-      { length: Math.min(this.getFilteredEntries().length, MAX_NODES)  },
+      { length: Math.min(this.getFilteredEntries().length, MAX_NODES) },
       () => {
         const el = html`<div class="database-entry" data-id="{{ entry }}">
           <button type="button" class="btn_play">
@@ -38,35 +39,35 @@ export default class SequencerDatabaseViewer extends FormApplication {
             <div class="database-entry-text-highlight"></div>
             {{ entry }}
           </div>
-        </div>`
+        </div>`;
 
-        const highlight = el.querySelector('.database-entry-text-highlight')
+        const highlight = el.querySelector(".database-entry-text-highlight");
 
-        el.addEventListener('update', e => {
-          highlight.replaceChildren()
-          if(!this.search) return
-          const entry = e.detail.data.entry
-          const regex = this.getSearchRegex()
+        el.addEventListener("update", (e) => {
+          highlight.replaceChildren();
+          if (!this.search) return;
+          const entry = e.detail.data?.entry ?? "";
+          const regex = this.getSearchRegex();
 
-          highlight.innerHTML = entry.replace(regex, '<mark>$&</mark>')
-        })
+          highlight.innerHTML = entry.replace(regex, "<mark>$&</mark>");
+        });
 
-        el.addEventListener('click', e => {
-          const entry = e.currentTarget.dataset.id
+        el.addEventListener("click", (e) => {
+          const entry = e.currentTarget.dataset.id;
           switch (e.target.className) {
             case "btn_play":
-              this.playAsset(entry)
-              break
+              this.playAsset(entry);
+              break;
             case "btn_copy_filepath":
-              this.copyText($(e.target), entry, true)
-              break
+              this.copyText($(e.target), entry, true);
+              break;
             case "btn_copy_databasepath":
-              this.copyText($(e.target), entry, false)
-              break
+              this.copyText($(e.target), entry, false);
+              break;
           }
-        })
+        });
 
-        return el
+        return el;
       }
     );
   }
@@ -98,17 +99,18 @@ export default class SequencerDatabaseViewer extends FormApplication {
     });
   }
 
-  getSearchRegex () {
-    return new RegExp(this.search, 'gu')
+  getSearchRegex() {
+    return new RegExp(this.search, "gu");
   }
 
   getFilteredEntries() {
-    const searchParts = this.search.split('|')
-    const {search,filter} = this
+    const searchParts = this.search.split("|");
+    const { search, filter } = this;
     return this.entries.filter((part) => {
       return (
         (filter === "all" || filter === part.pack) &&
-        (search === "" || part.entry.match(this.getSearchRegex())?.length >= searchParts.length)
+        (search === "" ||
+          part.entry.match(this.getSearchRegex())?.length >= searchParts.length)
       );
     });
   }
@@ -124,53 +126,55 @@ export default class SequencerDatabaseViewer extends FormApplication {
   }
 
   /** @override */
-  activateListeners(html) {
-    super.activateListeners(html);
+  activateListeners($html) {
+    super.activateListeners($html);
 
-    const [scroller] = html.find(".database-entries");
-    const [wrapper] = html.find(".database-entries-wrapper");
+    const [html] = $html;
+
+    const scroller = html.querySelector(".database-entries");
+    const wrapper = html.querySelector(".database-entries-wrapper");
 
     const rerenderList = () => {
-      const entries = this.getFilteredEntries()
+      const entries = this.getFilteredEntries();
 
-      const wrapperHeight = entries.length * 20
+      const wrapperHeight = entries.length * 20;
+
+      const scrolledIndex = Math.floor(scroller.scrollTop / 20) - 5;
+      const startIndex = clamp(
+        scrolledIndex,
+        Math.max(entries.length - MAX_NODES, 0)
+      );
+
+      this.listItems.forEach((el, i) => el.update(entries[startIndex + i]));
+
       wrapper.style.height = `${wrapperHeight}px`;
+      wrapper.style.paddingTop = startIndex * 20 + "px";
+    };
 
-      const scrolledIndex = (Math.floor(scroller.scrollTop/20) - 5)
-      const startIndex = clamp(scrolledIndex, entries.length - MAX_NODES)
+    rerenderList();
+    scroller.addEventListener("scroll", rerenderList, { passive: true });
 
-      this.listItems.forEach((el,i) => el.update(entries[startIndex + i]))
+    wrapper.append(...this.listItems);
 
-      wrapper.style.paddingTop = (startIndex * 20) + "px"
-    }
-
-    rerenderList()
-    scroller.addEventListener("scroll", rerenderList, {passive: true});
-
-    wrapper.append(...this.listItems)
-
-    const filter = html.find('select[name="pack-select"]');
-    const input = html.find('input[name="search-field"]');
-    [this.player] = html.find(".database-player");
-    [this.image] = html.find(".database-image");
+    const filter = html.querySelector('select[name="pack-select"]');
+    const input = html.querySelector('input[name="search-field"]');
+    this.player = html.querySelector(".database-player");
+    this.image = html.querySelector(".database-image");
 
     const filterDebounce = debounce(() => {
-      this.search = strToSearchRegexStr(input.val());
-      this.filter = filter.val();
-      scroller.scrollTop = 0
-      rerenderList()
+      this.search = strToSearchRegexStr(input.value);
+      this.filter = filter.value;
+      scroller.scrollTop = 0;
+      rerenderList();
     }, 400);
 
-    filter.change(filterDebounce);
-    input.keyup(function (e) {
-      filterDebounce();
-    });
-
+    filter.addEventListener("change", filterDebounce);
+    input.addEventListener("input", filterDebounce);
   }
 
   playAsset(entryText) {
     if (!this.autoplay) return;
-    const { player, image } = this
+    const { player, image } = this;
 
     let entry = window.Sequencer.Database.getEntry(entryText);
 
@@ -221,17 +225,4 @@ export default class SequencerDatabaseViewer extends FormApplication {
   }
 
   async _updateObject() {}
-}
-
-function clamp (num,max,min = 0){
-  const _max = Math.max(min,max)
-  const _min = Math.min(min,max)
-  return Math.max(_min, Math.min(_max, num))
-}
-
-function strToSearchRegexStr(str) {
-  return str.trim()
-    .replace(/[^A-Za-z0-9 .*_-]/g, "")
-    .replace(/\*+/g, ".*?")
-    .replace(/\s+/g,'|')
 }
