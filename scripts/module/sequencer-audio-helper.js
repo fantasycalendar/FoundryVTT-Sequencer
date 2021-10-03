@@ -40,8 +40,8 @@ export default class SequencerAudioHelper {
 
         if (data.fadeIn) {
             SequencerAnimationEngine.animate({
-                name: "volume",
-                parent: sound,
+                target: sound,
+                propertyName: "volume",
                 from: 0.0,
                 to: data.volume,
                 duration: Math.min(data.fadeIn.duration, data.duration),
@@ -52,8 +52,8 @@ export default class SequencerAudioHelper {
 
         if (data.fadeOut) {
             SequencerAnimationEngine.animate({
-                name: "volume",
-                parent: sound,
+                target: sound,
+                propertyName: "volume",
                 from: data.volume,
                 to: 0.0,
                 duration: Math.min(data.fadeOut.duration, data.duration),

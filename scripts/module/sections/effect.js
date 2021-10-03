@@ -1012,9 +1012,23 @@ export default class EffectSection extends Section {
     }
 
     _getObjectSize(inObj) {
+        const width =
+               inObj?.hitArea?.width
+            ?? inObj?.w
+            ?? inObj?.shape?.width
+            ?? inObj?.shape?.radius*2
+            ?? canvas.grid.size;
+
+        const height =
+               inObj?.hitArea?.height
+            ?? inObj?.h
+            ?? inObj?.shape?.height
+            ?? inObj?.shape?.radius*2
+            ?? canvas.grid.size;
+
         return {
-            width: inObj?.hitArea?.width ?? inObj?.w ?? canvas.grid.size,
-            height: inObj?.hitArea?.height ?? inObj?.h ?? canvas.grid.size
+            width,
+            height
         }
     }
 

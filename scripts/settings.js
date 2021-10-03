@@ -49,16 +49,6 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register("sequencer", "experimentalRenderPatch", {
-        name: "Experimental Render Patch",
-        hint: "!!! DO NOT ENABLE UNLESS YOU KNOW EXACTLY WHAT YOU ARE DOING !!!!\nThis enables a patch for a render bug within Pixi that causes transparent video files to not clear its alpha, causing rendering artifacts.",
-        scope: "client",
-        config: true,
-        default: false,
-        onChange: debouncedReload,
-        type: Boolean
-    });
-
     Hooks.on("getSceneControlButtons", (controls) => {
         if(!game.settings.get("sequencer", "toolButtonsEnabled")) return;
         const bar = controls.find(c => c.name === "token");

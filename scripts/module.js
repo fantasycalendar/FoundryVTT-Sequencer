@@ -10,7 +10,6 @@ import { registerEase } from "./module/canvas-effects/ease.js";
 import Section from "./module/sections/section.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
-import { libWrapper } from "./module/lib/libWrapper/shim.js";
 
 Hooks.once('init', async function () {
 
@@ -36,10 +35,6 @@ Hooks.once('init', async function () {
     registerSettings();
     registerSocket();
 
-    if(game.settings.get('sequencer', 'experimentalRenderPatch')) {
-        libWrapper.register("sequencer", "PIXI.resources.BaseImageResource.prototype.upload", RENDERPATCH);
-    }
-
 });
 
 Hooks.on("canvasReady", () => {
@@ -53,27 +48,9 @@ Hooks.once('ready', async function () {
     }, 100);
 });
 
-function RENDERPATCH(wrapped, ...args){
-
-    let renderer = args[0];
-    let baseTexture = args[1];
-    let source = args[3];
-    source = source || this.source;
-
-    const isNotVideo = !source.videoWidth
-    if(isNotVideo) return wrapped(...args);
-
-    const gl = renderer.gl;
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, PIXI.ALPHA_MODES.UNPACK_PREMULTIPLY_ALPHA_WEBGL);
-    gl.texImage2D(baseTexture.target, 0, baseTexture.format, baseTexture.format, baseTexture.type, source);
-    return true;
-
-}
-
 /**
  * Creation & delete hooks for persistent effects
  */
-
 Hooks.on("createToken", (document) => {
     if(!document.data?.flags?.sequencer?.effects) return;
     const effects = Sequencer.EffectManager._patchCreationData(document);
