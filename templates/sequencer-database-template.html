@@ -14,9 +14,16 @@
         .database-entries {
             padding: 5px 0;
             max-height: calc(425px - 5rem);
+            overflow-x: hidden;
             overflow-y: scroll;
             flex: 1;
             flex-direction: row;
+        }
+
+        .database-entries-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .database-entry{
@@ -36,6 +43,10 @@
             min-width: 1.5rem;
         }
 
+        .btn_play * {
+            pointer-events: none;
+        }
+
         .btn_copy_filepath, .btn_copy_databasepath{
             min-width: 4.5rem;
             padding: 0;
@@ -45,6 +56,22 @@
             flex: 1;
             line-height:1.25rem;
         }
+
+        .database-entry-text {
+            position: relative;
+        }
+
+        .database-entry-text-highlight {
+            pointer-events: none;
+            color: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
         .database-player-container {
             padding: 5px;
             width: 345px;
@@ -79,18 +106,8 @@
     <div class="database-entries-container">
 
         <div class="database-entries">
-
-            {{#each entries as |part key|}}
-
-                <div class="database-entry" data-id="{{ part.entry }}">
-                    <button type="button" class="btn_play"><i class="fas fa-play"></i></button>
-                    <button type="button" class="btn_copy_filepath"><i class="fas fa-copy"></i> Filepath</button>
-                    <button type="button" class="btn_copy_databasepath"><i class="fas fa-copy"></i> Database</button>
-                    <div class="database-entry-text">{{ part.entry }}</div>
-                </div>
-
-            {{/each}}
-
+            <div class="database-entries-wrapper">
+            </div>
         </div>
         <div class="database-player-container">
             <video class="database-player" controls autoplay preload width="335" height="335"></video>

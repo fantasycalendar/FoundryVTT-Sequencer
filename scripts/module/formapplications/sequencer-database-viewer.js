@@ -1,32 +1,100 @@
-export default class SequencerDatabaseViewer extends FormApplication {
+import { cache } from "../lib/cache.js";
+import { reactiveEl as html } from "../lib/html.js";
+import { clamp, strToSearchRegexStr } from "../lib/lib.js";
 
+const MAX_NODES = 24;
+
+export default class SequencerDatabaseViewer extends FormApplication {
     constructor(dialogData = {}, options = {}) {
         super(dialogData, options);
-        this.filter = "all"
+        this.filter = "all";
         this.search = "";
         this.autoplay = true;
         this.packs = Object.keys(window.Sequencer.Database.entries);
-        this.entries = window.Sequencer.Database.flattenedEntries.map(entry => {
-            return {
-                pack: entry.split('.')[0],
-                entry: entry
-            };
-        });
-        this.list = false;
+        this.entries = window.Sequencer.Database.flattenedEntries.map(
+            (entry) => {
+                return {
+                    pack: entry.split(".")[0],
+                    entry: entry,
+                };
+            }
+        );
+
+        // cache getFilteredEntries method, breaking cache whenever search or filter property changes
+        cache(this, "getFilteredEntries", ["search", "filter"]);
+        cache(this, "getSearchRegex", ["search"]);
+
+        this.listItems = Array.from(
+            { length: Math.min(this.getFilteredEntries().length, MAX_NODES) },
+            () => {
+                const el = html`<div
+                    class="database-entry"
+                    data-id="{{ entry }}"
+                >
+                    <button type="button" class="btn_play">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button type="button" class="btn_copy_filepath">
+                        <i class="fas fa-copy"></i> Filepath
+                    </button>
+                    <button type="button" class="btn_copy_databasepath">
+                        <i class="fas fa-copy"></i> Database
+                    </button>
+                    <div class="database-entry-text" title="{{entry}}">
+                        <div class="database-entry-text-highlight"></div>
+                        {{ entry }}
+                    </div>
+                </div>`;
+
+                const highlight = el.querySelector(
+                    ".database-entry-text-highlight"
+                );
+
+                el.addEventListener("update", (e) => {
+                    highlight.replaceChildren();
+                    if (!this.search) return;
+                    const entry = e.detail.data?.entry ?? "";
+                    const regex = this.getSearchRegex();
+
+                    highlight.innerHTML = entry.replace(
+                        regex,
+                        "<mark>$&</mark>"
+                    );
+                });
+
+                el.addEventListener("click", (e) => {
+                    const entry = e.currentTarget.dataset.id;
+                    switch (e.target.className) {
+                        case "btn_play":
+                            this.playAsset(entry);
+                            break;
+                        case "btn_copy_filepath":
+                            this.copyText($(e.target), entry, true);
+                            break;
+                        case "btn_copy_databasepath":
+                            this.copyText($(e.target), entry, false);
+                            break;
+                    }
+                });
+
+                return el;
+            }
+        );
     }
 
-    static show(inFocus = false){
-        for(let app of Object.values(ui.windows)){
-            if(app instanceof this){
+    static show(inFocus = false) {
+        if (!game.user.isTrusted) return;
+        for (const app of Object.values(ui.windows)) {
+            if (app instanceof this) {
                 return app.render(true, { focus: inFocus });
             }
         }
         return new this().render(true);
     }
 
-    static get isVisible(){
-        for(let app of Object.values(ui.windows)){
-            if(app instanceof this) return app;
+    static get isVisible() {
+        for (const app of Object.values(ui.windows)) {
+            if (app instanceof this) return app;
         }
     }
 
@@ -41,37 +109,20 @@ export default class SequencerDatabaseViewer extends FormApplication {
         });
     }
 
-    getFilteredEntries(search = "") {
-        let searchParts = search.split(" ");
-        let regex = new RegExp(searchParts.join("|"), "g");
-        return this.entries.filter(part => {
-            return (this.filter === "all" || this.filter === part.pack)
-                && (search === "" || part.entry.match(regex)?.length >= searchParts.length);
-        });
+    getSearchRegex() {
+        return new RegExp(this.search, "gu");
     }
 
-    /* -------------------------------------------- */
-
-    refreshView(html) {
-
-        if (!this.list) this.list = html.find(".database-entries");
-
-        let search = this.search.replace(/[^A-Za-z0-9 .*_-]/g, "")
-            .replace(".", "\.")
-            .replace("*", "(.*?)");
-
-        let filteredEntries = this.getFilteredEntries(search).map(part => part.entry);
-
-        let regex = new RegExp(search.split(" ").join("|"), "g");
-
-        this.list.children().each(function () {
-            let index = filteredEntries.indexOf($(this).attr("data-id"));
-            $(this).toggleClass('hidden', index === -1);
-            let innerHtmlElement = $(this).find('.database-entry-text');
-            let entry = innerHtmlElement.text()
-            innerHtmlElement.html(search !== "" ? entry.replace(regex, (str) => {
-                return `<mark>${str}</mark>`
-            }) : entry);
+    getFilteredEntries() {
+        const searchParts = this.search.split("|");
+        const { search, filter } = this;
+        return this.entries.filter((part) => {
+            return (
+                (filter === "all" || filter === part.pack) &&
+                (search === "" ||
+                    part.entry.match(this.getSearchRegex())?.length >=
+                        searchParts.length)
+            );
         });
     }
 
@@ -79,100 +130,111 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     /** @override */
     getData() {
-        let data = super.getData();
+        const data = super.getData();
         data.packs = this.packs;
-        data.entries = this.getFilteredEntries();
         return data;
     }
 
     /** @override */
-    activateListeners(html) {
-        super.activateListeners(html);
+    activateListeners($html) {
+        super.activateListeners($html);
 
-        let filter = html.find('select[name="pack-select"]');
-        let input = html.find('input[name="search-field"]');
-        this.player = html.find('.database-player');
-        this.image = html.find('.database-image');
+        const [html] = $html;
 
-        let filterDebounce = debounce(() => {
-            this.search = input.val();
-            this.filter = filter.val();
-            this.refreshView(html);
-        }, 500)
+        const scroller = html.querySelector(".database-entries");
+        const wrapper = html.querySelector(".database-entries-wrapper");
 
-        filter.change(filterDebounce);
-        input.keyup(function (e) {
-            filterDebounce()
-        });
+        const rerenderList = () => {
+            const entries = this.getFilteredEntries();
 
-        let self = this;
-        html.find('.btn_play').click(function () {
-            let entry = $(this).siblings(".database-entry-text").text();
-            self.playAsset.bind(self)(entry);
-        });
-        html.find('.btn_copy_databasepath').click(function () {
-            let entry = $(this).siblings(".database-entry-text").text();
-            self.copyText($(this), entry, false);
-        });
-        html.find('.btn_copy_filepath').click(function () {
-            let entry = $(this).siblings(".database-entry-text").text();
-            self.copyText($(this), entry, true);
-        });
+            const wrapperHeight = entries.length * 20;
+
+            const scrolledIndex = Math.floor(scroller.scrollTop / 20) - 5;
+            const startIndex = clamp(
+                scrolledIndex,
+                Math.max(entries.length - MAX_NODES, 0)
+            );
+
+            this.listItems.forEach((el, i) =>
+                el.update(entries[startIndex + i])
+            );
+
+            wrapper.style.height = `${wrapperHeight}px`;
+            wrapper.style.paddingTop = startIndex * 20 + "px";
+        };
+
+        rerenderList();
+        scroller.addEventListener("scroll", rerenderList, { passive: true });
+
+        wrapper.append(...this.listItems);
+
+        const filter = html.querySelector('select[name="pack-select"]');
+        const input = html.querySelector('input[name="search-field"]');
+        this.player = html.querySelector(".database-player");
+        this.image = html.querySelector(".database-image");
+
+        const filterDebounce = debounce(() => {
+            this.search = strToSearchRegexStr(input.value);
+            this.filter = filter.value;
+            scroller.scrollTop = 0;
+            rerenderList();
+        }, 400);
+
+        filter.addEventListener("change", filterDebounce);
+        input.addEventListener("input", filterDebounce);
     }
 
     playAsset(entryText) {
         if (!this.autoplay) return;
+        const { player, image } = this;
 
         let entry = window.Sequencer.Database.getEntry(entryText);
 
         entry = entry?.file ?? entry;
 
-        let isImage = !entry.toLowerCase().endsWith("webm");
+        const isImage = !entry.toLowerCase().endsWith("webm");
 
-        this.player.toggleClass('hidden', isImage)
-        this.image.toggleClass('hidden', !isImage)
+        player.classList.toggle("hidden", isImage);
+        image.classList.toggle("hidden", !isImage);
 
         if (isImage) {
-            this.image[0].src = entry;
+            image.src = entry;
             return;
         }
 
-        this.player[0].onerror = () => {
-            let error = `Sequencer Database Viewer | Could not play file: ${entry}`;
+        player.onerror = () => {
+            const error = `Sequencer Database Viewer | Could not play file: ${entry}`;
             ui.notifications.error(error);
             console.error(error);
-        }
+        };
 
-        this.player[0].oncanplay = () => {
-            this.player[0].play();
-        }
+        player.oncanplay = () => {
+            player.play();
+        };
 
-        this.player[0].src = entry;
+        player.src = entry;
     }
 
     copyText(button, entry, getFilepath) {
-
         if (getFilepath) {
             entry = window.Sequencer.Database.getEntry(entry);
             entry = entry?.file ?? entry;
         }
 
-        let tempInput = document.createElement("input");
+        const tempInput = document.createElement("input");
         tempInput.value = `${entry}`;
         document.body.appendChild(tempInput);
         tempInput.select();
         document.execCommand("copy");
         document.body.removeChild(tempInput);
-        document.execCommand('copy');
+        document.execCommand("copy");
 
         button.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
     }
 
     async _onSubmit(event) {
-        super._onSubmit(event, { preventClose: true })
+        super._onSubmit(event, { preventClose: true });
     }
 
-    async _updateObject() {
-    }
-
+    async _updateObject() {}
 }
