@@ -17,7 +17,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
         entry: entry,
       };
     });
-    this.list = false;
+
     // cache getFilteredEntries method, breaking cache whenever search or filter property changes
     cache(this, "getFilteredEntries", ["search", "filter"]);
     cache(this, "getSearchRegex", ["search"]);
