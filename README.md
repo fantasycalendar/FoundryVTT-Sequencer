@@ -302,6 +302,7 @@ new Sequence()
     - `preCreateSequencerSound` - Provides the sound's data
     - `createSequencerSound` - Provides the sound's data
     - `endedSequencerSound` - Provides the sound's data
+- *Sequencer* - Vastly improved the speed of the Database Viewer (thanks to Naito#1235 on discord!)
 - *Effects* - Added screen space layer for UI effects!
     - Added `.screenSpace()` which causes the effect to be played on the screen rather than in the game canvas
     - Added `.screenSpaceAnchor()` which causes the effect to anchor itself to a side on the screen space layer
@@ -314,7 +315,9 @@ new Sequence()
 - *Effects* - Added `.scaleToObject()` which scales the effect to the bounds of the object, with an optional scalar on top of that
 - *Effects* - Tweaked `.size()` to also accept only one of height or width, the other will be automatically resized to keep the effect's ratio
 - *Effects* - Fixed `.persist()`ing effects with an end duration that doesn't loop would not properly stop at its end duration
+- *Effects* - Improved look of transparent .webm files
 - *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
+- *Foundry* - Added libwrapper patch for .webm transparency not playing correctly in Foundry
 
 ### Version 1.0.3
 - *Sequencer* - Added animated space backgrounds (thanks to Keirsti on the Foundry VTT discord server)

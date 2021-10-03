@@ -10,6 +10,7 @@ import { registerEase } from "./module/canvas-effects/ease.js";
 import Section from "./module/sections/section.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
+import registerLibwrappers from "./libwrapper.js";
 
 Hooks.once('init', async function () {
 
@@ -34,6 +35,7 @@ Hooks.once('init', async function () {
 
     registerSettings();
     registerSocket();
+    registerLibwrappers();
 
 });
 

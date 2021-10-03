@@ -753,7 +753,9 @@ export default class CanvasEffect {
                 video.height = video.videoHeight;
                 video.width = video.videoWidth;
                 const baseTexture = PIXI.BaseTexture.from(video, { resourceOptions: { autoPlay: false } });
-                baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA;
+                baseTexture.alphaMode = this.data.file.toLowerCase().endsWith('.webm')
+                    ? PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA
+                    : baseTexture.alphaMode;
                 const texture = new PIXI.Texture(baseTexture);
                 resolve(texture);
             };
