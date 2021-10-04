@@ -1,5 +1,4 @@
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
-import { easeFunctions } from "./canvas-effects/ease.js";
 import SequencerAnimationEngine from "./sequencer-animation-engine.js";
 
 export default class SequencerAudioHelper {
@@ -8,7 +7,7 @@ export default class SequencerAudioHelper {
      *
      * @param {{src: string, loop?: boolean, volume?: number, fadeIn?: {duration: number}, fadeOut?: {duration: number}, duration?: number}} data The data that describes the audio to play.
      * @param {boolean} [push=false] A flag indicating whether or not to make other clients play the audio, too.
-     * @returns {Promise<Sound | Howl>} A promise that resolves when the audio file has finished playing.
+     * @returns {Promise<Sound>} A promise that resolves when the audio file has finished playing.
      */
     static async play(data, push = false) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_SOUND, data);
@@ -29,6 +28,8 @@ export default class SequencerAudioHelper {
             return new Promise(resolve => setTimeout(resolve, data.duration));
         }
 
+        Hooks.call("createSequencerSound", data);
+
         if (game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing sound:`, data);
 
         const sound = await game.audio.play(data.src, {
@@ -39,8 +40,8 @@ export default class SequencerAudioHelper {
 
         if (data.fadeIn) {
             SequencerAnimationEngine.animate({
-                name: "volume",
-                parent: sound,
+                target: sound,
+                propertyName: "volume",
                 from: 0.0,
                 to: data.volume,
                 duration: Math.min(data.fadeIn.duration, data.duration),
@@ -51,8 +52,8 @@ export default class SequencerAudioHelper {
 
         if (data.fadeOut) {
             SequencerAnimationEngine.animate({
-                name: "volume",
-                parent: sound,
+                target: sound,
+                propertyName: "volume",
                 from: data.volume,
                 to: 0.0,
                 duration: Math.min(data.fadeOut.duration, data.duration),
@@ -70,6 +71,8 @@ export default class SequencerAudioHelper {
         return new Promise((resolve) => {
             sound.on("stop", resolve);
             sound.on("end", resolve);
+        }).then(() => {
+            Hooks.call("endedSequencerSound", data);
         });
     }
 }

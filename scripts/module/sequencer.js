@@ -10,7 +10,6 @@ export default class Sequence {
     constructor(moduleName="Sequencer") {
         this.moduleName = moduleName;
         this.sections = [];
-        this._fileCache = game.settings.get("sequencer", "fileCache");
         this.effectIndex = 0;
         this._cachedOffsets = {};
         this.sectionToCreate = undefined;
@@ -24,6 +23,7 @@ export default class Sequence {
      * @returns {Promise}
      */
     async play() {
+        Hooks.call("createSequencerSequence");
         this._log("Initializing sections")
         for (let section of this.sections) {
             await section._initialize();
@@ -42,7 +42,10 @@ export default class Sequence {
             if (!section._isLastSection) await new Promise((resolve) => setTimeout(resolve, 1));
         }
 
-        return Promise.allSettled(promises).then(() => this._log("Finished playing sections")).then();
+        return Promise.allSettled(promises).then(() => {
+            Hooks.call("endedSequencerSequence");
+            this._log("Finished playing sections")
+        });
     }
 
     /**
@@ -165,16 +168,8 @@ export default class Sequence {
         });
     }
 
-    _getFileFromCache(inFile) {
-        if (inFile in this._fileCache) {
-            return this._fileCache[inFile];
-        }
-        return false;
-    }
-
-    _addFileToCache(inFile, data) {
-        this._fileCache[inFile] = data;
-        game.settings.set("sequencer", "fileCache", this._fileCache);
+    _showWarning(self, func, warning, notify) {
+        lib.showWarning(this.moduleName, `${self.constructor.name} | ${func} - ${warning}`, notify);
     }
 
     _throwError(self, func, error) {

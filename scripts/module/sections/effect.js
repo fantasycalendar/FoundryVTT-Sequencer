@@ -9,8 +9,10 @@ export default class EffectSection extends Section {
         this._waitUntilFinished = false;
         this._file = inFile;
         this._from = false;
+        this._atLocation = false;
         this._reachTowards = false;
-        this._anchor = { x: 0.5, y: 0.5 };
+        this._anchor = false;
+        this._spriteAnchor = false;
         this._randomOffset = false;
         this._missed = false;
         this._JB2A = false;
@@ -35,6 +37,12 @@ export default class EffectSection extends Section {
         this._distance = 0;
         this._extraEndDuration = 0;
         this._noLoop = false;
+        this._snapToGrid = false;
+        this._scaleToObject = false;
+        this._screenSpace = false;
+        this._screenSpaceAnchor = false;
+        this._screenSpacePosition = { x: 0, y: 0 };
+        this._screenSpaceScale = false;
         this._offsets = [];
     }
 
@@ -146,15 +154,19 @@ export default class EffectSection extends Section {
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {object|string} inObject
+     * @param {object|string} inLocation
+     * @param {object} inOptions
      * @returns {EffectSection} this
      */
-    attachTo(inObject) {
-        if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "inObject must not be undefined");
-        inObject = this._validateLocation(inObject);
-        if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "could not find given object");
-        this._from = inObject;
-        this._attachTo = true;
+    atLocation(inLocation, inOptions = {}) {
+        inOptions = foundry.utils.mergeObject({
+            cacheLocation: false
+        }, inOptions)
+        inLocation = this._validateLocation(inLocation);
+        if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
+        this._from = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
+        this._atLocation = true;
         return this;
     }
 
@@ -162,15 +174,18 @@ export default class EffectSection extends Section {
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {object|string} inLocation
+     * @param {object|string} inObject
      * @returns {EffectSection} this
      */
-    atLocation(inLocation) {
-        if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "inLocation must not be undefined");
-        inLocation = this._validateLocation(inLocation);
-        if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
-        this._from = inLocation;
-        this._attachTo = false;
+    attachTo(inObject) {
+        inObject = this._validateLocation(inObject);
+        if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "could not find given object");
+        const isValidObject = inObject instanceof Token || inObject instanceof Tile || inObject instanceof Drawing;
+        if (!isValidObject){
+            this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
+        }
+        this._from = inObject;
+        this._attachTo = isValidObject;
         return this;
     }
 
@@ -179,13 +194,17 @@ export default class EffectSection extends Section {
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
      * @param {object|string} inLocation
+     * @param {object} inOptions
      * @returns {EffectSection} this
      */
-    reachTowards(inLocation) {
-        if (inLocation === undefined) throw this.sequence._throwError(this, "reachTowards", "inLocation must not be undefined");
+    reachTowards(inLocation, inOptions = {}) {
+        inOptions = foundry.utils.mergeObject({
+            cacheLocation: false
+        }, inOptions)
         inLocation = this._validateLocation(inLocation);
-        if (inLocation === undefined) throw this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
-        this._reachTowards = inLocation;
+        if (inLocation === undefined) throw this.sequence._throwError(this, "reachTowards", "could not find position of given object");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
+        this._reachTowards = inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation;
         return this;
     }
 
@@ -211,6 +230,30 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Causes the final effect location to be snapped to the grid
+     *
+     * @param {boolean} inBool
+     * @returns {EffectSection} this
+     */
+    snapToGrid(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
+        this._snapToGrid = inBool;
+        return this;
+    }
+
+    /**
+     * Causes the effect to be scaled to the target object's width
+     *
+     * @param {number} inScale
+     * @returns {EffectSection} this
+     */
+    scaleToObject(inScale = 1.0){
+        if (typeof inScale !== "number") throw this.sequence._throwError(self, "scaleToObject", `inScale must be of type number!`);
+        this._scaleToObject = true;
+        return this.scale(inScale);
+    }
+
+    /**
      * Sets the width and the height of the effect in pixels, this size is set before any scaling
      *
      * @param {number} inSize
@@ -224,8 +267,19 @@ export default class EffectSection extends Section {
                 height: inSize
             }
         }
-        if (typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
-        if (typeof inSize?.height !== "number") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
+
+        if((inSize?.width === undefined) ^ (inSize?.height === undefined)){
+            if(inSize?.width){
+                if (typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
+                inSize['height'] = "auto"
+            }else{
+                if (typeof inSize?.height !== "number") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
+                inSize['width'] = "auto"
+            }
+        }
+
+        if (typeof inSize?.width !== "number" && inSize?.width !== "auto") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
+        if (typeof inSize?.height !== "number" && inSize?.height !== "auto") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
         inSize = {
             width: inSize?.width ?? canvas.grid.size,
             height: inSize?.height ?? canvas.grid.size
@@ -277,7 +331,7 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
+     *  Anchors the sprite's container according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
      * @returns {EffectSection} this
@@ -295,7 +349,36 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.y must be of type number!`);
+
         this._anchor = inAnchor;
+        return this;
+    }
+
+    /**
+     *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
+     *
+     * @param {number|object} inAnchor
+     * @returns {EffectSection} this
+     */
+    spriteAnchor(inAnchor) {
+        if (typeof inAnchor === "number") {
+            inAnchor = {
+                x: inAnchor,
+                y: inAnchor
+            }
+        }
+
+        inAnchor = {
+            x: inAnchor?.x ?? 0.5,
+            y: inAnchor?.y ?? 0.5
+        }
+
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.y must be of type number!`);
+
+        this._spriteAnchor = inAnchor;
         return this;
     }
 
@@ -445,8 +528,115 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * Causes the effect to be played in screen space instead of world space (where tokens are)
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection} this
+     */
+    screenSpace(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "screenSpace", "inBool must be of type boolean");
+        this._screenSpace = inBool;
+        return this;
+    }
+
+    /**
+     *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
+     *
+     * @param {object} inPosition
+     * @returns {EffectSection} this
+     */
+    screenSpacePosition(inPosition) {
+        inPosition = {
+            x: inPosition?.x ?? 0,
+            y: inPosition?.y ?? 0
+        }
+        if (typeof inPosition.x !== "number") throw this.sequence._throwError(self, "screenSpacePosition", `inPosition.x must be of type number!`);
+        if (typeof inPosition.y !== "number") throw this.sequence._throwError(self, "screenSpacePosition", `inPosition.y must be of type number!`);
+        this._screenSpacePosition = inPosition;
+        return this;
+    }
+
+    /**
+     *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number in screen space
+     *
+     * @param {number|object} inAnchor
+     * @returns {EffectSection} this
+     */
+    screenSpaceAnchor(inAnchor) {
+        if (typeof inAnchor === "number") {
+            inAnchor = {
+                x: inAnchor,
+                y: inAnchor
+            }
+        }
+
+        inAnchor = {
+            x: inAnchor?.x ?? 0.5,
+            y: inAnchor?.y ?? 0.5
+        }
+
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
+
+        this._screenSpaceAnchor = inAnchor;
+        return this;
+    }
+
+    /**
+     *  Sets up various properties relating to scale on the
+     *
+     * @param {object} inOptions
+     * @returns {EffectSection} this
+     */
+    screenSpaceScale(inOptions){
+
+        inOptions = foundry.utils.mergeObject({
+            x: 1.0,
+            y: 1.0,
+            fitX: false,
+            fitY: false,
+            ratioX: false,
+            ratioY: false
+        }, inOptions)
+
+        if (typeof inOptions.x !== "number") throw this.sequence._throwError(self, "screenSpaceScale", `inOptions.x must be of type number!`);
+        if (typeof inOptions.y !== "number") throw this.sequence._throwError(self, "screenSpaceScale", `inOptions.y must be of type number!`);
+        if (typeof inOptions.fitX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitX must be of type boolean");
+        if (typeof inOptions.fitY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitY must be of type boolean");
+        if (typeof inOptions.ratioX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
+        if (typeof inOptions.ratioY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioY must be of type boolean");
+
+        if(inOptions.ratioX && inOptions.ratioY) throw this.sequence._throwError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one axis must fit or be set directly")
+
+        this._screenSpaceScale = inOptions;
+
+        return this;
+    }
+
+    _expressWarnings(){
+        if(this._reachTowards && this._anchor){
+            this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .anchor() - reachTowards will manually set the X axis of the anchor and may not behave like you expect.", true);
+        }
+        if(this._reachTowards && (this._scaleMin || this._scaleMax)){
+            this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .scale() - reachTowards will manually set the scale of the effect, completely ruining your scaling attempts. Try .gridSize() instead.", true);
+        }
+        if(this._reachTowards && this._scaleToObject){
+            throw this.sequence._throwError(this, "reachTowards", "You're trying to reach towards an object, while scaling to fit another??? Make up your mind!");
+        }
+        if(this._reachTowards && this._randomRotation){
+            throw this.sequence._throwError(this, "reachTowards", "You're trying to reach towards an object, while trying to randomly rotate the effect? What?");
+        }
+        if(this._atLocation && this._attachTo){
+            this.sequence._showWarning(this, "atLocation", "you have called .attachTo() and .atLocation() on this effect, calling .atLocation() makes this effect static. Please use only one.", true);
+        }
+    }
+
+
     async run() {
-        let data = await this._sanitizeEffectData();
+        this._expressWarnings();
+        const data = await this._sanitizeEffectData();
+        Hooks.call("preCreateSequencerEffect", data);
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
         let canvasEffectData = await Sequencer.EffectManager.play(data, push);
         let totalDuration = this._currentWaitTime;
@@ -483,6 +673,7 @@ export default class EffectSection extends Section {
                 y: 0,
             },
             anchor: this._anchor,
+            spriteAnchor: this._spriteAnchor,
             scale: {
                 x: 1.0,
                 y: 1.0
@@ -519,6 +710,10 @@ export default class EffectSection extends Section {
                 animations: this._animations
             },
             zeroSpriteRotation: this._zeroSpriteRotation,
+            screenSpace: this._screenSpace,
+            screenSpaceAnchor: this._screenSpaceAnchor,
+            screenSpacePosition: this._screenSpacePosition,
+            screenSpaceScale: this._screenSpaceScale,
             sceneId: game.user.viewedScene,
             users: Array.from(this._users)
         };
@@ -551,17 +746,19 @@ export default class EffectSection extends Section {
         this._endPoint = template[2];
         data.template = template;
 
-        data.time = {
-            start: typeof this._startTime === "number" ? {
-                value: this._startTime,
-                isPerc: this._startPerc
-            } : false,
-            end: typeof this._endTime === "number" ? {
-                value: this._endTime,
-                isPerc: this._endPerc
-            } : false,
-            isRange: this._isRange
-        };
+        if(this._startTime || this._endTime) {
+            data.time = {
+                start: typeof this._startTime === "number" ? {
+                    value: this._startTime,
+                    isPerc: this._startPerc
+                } : false,
+                end: typeof this._endTime === "number" ? {
+                    value: this._endTime,
+                    isPerc: this._endPerc
+                } : false,
+                isRange: this._isRange
+            };
+        }
 
         let scale = this._scaleMin;
         if (typeof this._scaleMin === "number") {
@@ -579,7 +776,12 @@ export default class EffectSection extends Section {
             y: data.scale.y * (scale?.y ?? 1.0)
         }
 
-        data.size = this._size;
+        if(this._scaleToObject){
+            const object = this._getCachedObject(this._from, this._to);
+            data.size = this._getObjectSize(object);
+        }else{
+            data.size = this._size;
+        }
 
         if (this._reachTowards) {
             data = await this._calculateHitVector(data);
@@ -611,7 +813,13 @@ export default class EffectSection extends Section {
 
             let [from, to, origin, target] = this._getPositions(this._from, this._to);
 
-            if (this._attachTo) origin = this._getHalfSize(this._from);
+            if (this._attachTo){
+                const size = this._getHalfSize(this._from);
+                origin = {
+                    x: size.width,
+                    y: size.height
+                };
+            }
 
             if (this._offset) {
                 let offset = this._offset;
@@ -629,9 +837,13 @@ export default class EffectSection extends Section {
             }
 
             if (this._to) {
-                target = this._applyOffsets(target);
+                target = this._snapToGrid
+                    ? this._applyOffsets(this._snapLocationToGrid(target))
+                    : this._applyOffsets(target);
             } else {
-                origin = this._applyOffsets(origin);
+                origin = this._snapToGrid
+                    ? this._applyOffsets(this._snapLocationToGrid(origin))
+                    : this._applyOffsets(origin);
             }
 
             data.position = origin;
@@ -723,22 +935,7 @@ export default class EffectSection extends Section {
 
     async _getFileDimensions(inFile) {
         let filePath = inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
-        if (this._JB2A) {
-            let parts = filePath.replace(".webm", "").split("_");
-            let dimensionString = parts[parts.length - 1].toLowerCase().split('x');
-            if (!isNaN(dimensionString[0]) && !isNaN(dimensionString[1])) {
-                return {
-                    x: Number(dimensionString[0]),
-                    y: Number(dimensionString[1])
-                }
-            }
-        }
-        let cachedFile = this.sequence._getFileFromCache(filePath);
-        if (!cachedFile) {
-            cachedFile = await lib.getDimensions(filePath);
-            this.sequence._addFileToCache(filePath, cachedFile)
-        }
-        return cachedFile;
+        return await lib.getDimensions(filePath);
     }
 
     _getTrueLength(inDimensions) {
@@ -750,12 +947,15 @@ export default class EffectSection extends Section {
         if (data.distance === 0) return data;
 
         let dimensions = await this._getFileDimensions(data.file);
-        let trueDistanceAfterMargin = this._getTrueLength(dimensions);
+        let trueDistanceAfterPadding = this._getTrueLength(dimensions);
 
-        data.scale.x = data.distance / trueDistanceAfterMargin;
-        data.scale.y = data.distance / trueDistanceAfterMargin;
+        data.scale.x = data.distance / trueDistanceAfterPadding;
+        data.scale.y = data.distance / trueDistanceAfterPadding;
 
-        data.anchor.x = this._startPoint / dimensions.x;
+        data.anchor = {
+            x: this._startPoint / dimensions.x,
+            y: data.anchor.y ?? 0.5
+        }
 
         return data;
     }
@@ -787,8 +987,8 @@ export default class EffectSection extends Section {
 
             if (obj instanceof Token) {
                 const halfSize = this._getHalfSize(obj);
-                pos.x += halfSize.x;
-                pos.y += halfSize.y;
+                pos.x += halfSize.width;
+                pos.y += halfSize.height;
             }
         }
 
@@ -804,9 +1004,31 @@ export default class EffectSection extends Section {
     }
 
     _getHalfSize(inObj) {
+        const size = this._getObjectSize(inObj)
         return {
-            x: (inObj?.hitArea?.width ?? inObj?.w ?? canvas.grid.size) / 2,
-            y: (inObj?.hitArea?.height ?? inObj?.h ?? canvas.grid.size) / 2
+            width: size.width / 2,
+            height: size.height / 2
+        }
+    }
+
+    _getObjectSize(inObj) {
+        const width =
+               inObj?.hitArea?.width
+            ?? inObj?.w
+            ?? inObj?.shape?.width
+            ?? inObj?.shape?.radius*2
+            ?? canvas.grid.size;
+
+        const height =
+               inObj?.hitArea?.height
+            ?? inObj?.h
+            ?? inObj?.shape?.height
+            ?? inObj?.shape?.radius*2
+            ?? canvas.grid.size;
+
+        return {
+            width,
+            height
         }
     }
 
@@ -846,6 +1068,22 @@ export default class EffectSection extends Section {
         }
 
         return [from, to, from_position, to_position];
+
+    }
+
+    _getCachedObject(from, to){
+
+        if (typeof to === "string") {
+            return this._getCachedOffset(to, this._currentRepetition).object;
+        }else if(to){
+            return to;
+        }
+
+        if (typeof from === "string") {
+            return this._getCachedOffset(from, this._currentRepetition).object;
+        }else{
+            return from;
+        }
 
     }
 
@@ -931,12 +1169,12 @@ export default class EffectSection extends Section {
         if (!missed) return position;
 
         const size = this._getHalfSize(target);
-        const halfWidth = size.x;
-        const halfHeight = size.y;
+        const halfWidth = size.width;
+        const halfHeight = size.height;
 
         const XorY = Math.random() < 0.5;
-        let flipX = Math.random() > 0.5 ? -1 : 1;
-        let flipY = Math.random() > 0.5 ? -1 : 1;
+        const flipX = Math.random() > 0.5 ? -1 : 1;
+        const flipY = Math.random() > 0.5 ? -1 : 1;
 
         const tokenOffset = canvas.grid.size / 5;
 
@@ -955,18 +1193,18 @@ export default class EffectSection extends Section {
 
         }
 
-        let ray = new Ray(position, origin_position);
+        const ray = new Ray(position, origin_position);
 
         let startRadians = ray.angle - (Math.PI/2);
         let endRadians = startRadians + (Math.PI);
 
-        let radius = lib.lerp(halfHeight, halfHeight, 0.5);
+        const radius = lib.lerp(halfHeight, halfHeight, 0.5);
 
         let distance = (ray.distance / canvas.grid.size) - 1;
 
         if(distance <= 1.25){
 
-            let randomAngle = XorY ? startRadians : endRadians;
+            const randomAngle = XorY ? startRadians : endRadians;
 
             let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
             let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
@@ -983,19 +1221,27 @@ export default class EffectSection extends Section {
         endRadians += (Math.PI / distance);
         startRadians -= (Math.PI / distance);
 
-        let randomAngle = lib.lerp(startRadians, endRadians, Math.random());
+        const randomAngle = lib.lerp(startRadians, endRadians, Math.random());
 
-        let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-        let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+        const x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
+        const y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
 
         return { x, y };
 
     }
 
+    _snapLocationToGrid(inLocation) {
+        const coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
+        return {
+            x: coords[1] * canvas.grid.size,
+            y: coords[0] * canvas.grid.size
+        }
+    }
+
     _getRandomOffset(target, position) {
 
-        let width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
-        let height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
+        const width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
+        const height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
 
         position.x += lib.random_float_between((width / 2) * -1, width / 2);
         position.y += lib.random_float_between((height / 2) * -1, height / 2);

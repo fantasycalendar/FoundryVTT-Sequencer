@@ -9,9 +9,10 @@ import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
 import Section from "./module/sections/section.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
+import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
+import registerLibwrappers from "./libwrapper.js";
 
 Hooks.once('init', async function () {
-    registerLayers();
 
     window.Sequence = Sequence;
     window.Sequencer = {
@@ -21,8 +22,11 @@ Hooks.once('init', async function () {
         EffectManager: SequencerEffectManager,
         SectionManager: new SequencerSectionManager(),
         registerEase: registerEase,
-        BaseSection: Section
+        BaseSection: Section,
+        UILayer: new SequencerUILayer()
     }
+
+    registerLayers();
 
     window.SequencerPreloader = Sequencer.Preloader;
     window.SequencerDatabase = Sequencer.Database;
@@ -31,6 +35,8 @@ Hooks.once('init', async function () {
 
     registerSettings();
     registerSocket();
+    registerLibwrappers();
+
 });
 
 Hooks.on("canvasReady", () => {
@@ -44,11 +50,9 @@ Hooks.once('ready', async function () {
     }, 100);
 });
 
-
 /**
  * Creation & delete hooks for persistent effects
  */
-
 Hooks.on("createToken", (document) => {
     if(!document.data?.flags?.sequencer?.effects) return;
     const effects = Sequencer.EffectManager._patchCreationData(document);

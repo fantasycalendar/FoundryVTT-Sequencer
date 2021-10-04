@@ -19,7 +19,7 @@ class SoundSection extends Section {
      * on the distance to the target.
      *
      * @param {function} inFunc
-     * @returns {SoundSection} this
+     * @returns {SoundSection}
      */
     addOverride(inFunc) {
         if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
@@ -34,26 +34,18 @@ class SoundSection extends Section {
         Object.assign(this.constructor.prototype, traits.users);
     }
 
-    async run(repetition) {
+    async run() {
         let { play, ...data } = await this._sanitizeSoundData();
 
         if (!play) {
-            throw this.sequence._throwError(this, "Play", `File not found: ${data.src}`);
+            this.sequence._showWarning(this, "Play", `File not found: ${data.src}`);
             return new Promise((reject) => reject());
         }
 
+        Hooks.call("preCreateSequencerSound", data);
+
         let push = !(data.users.length === 1 && data.users.includes(game.userId));
         return SequencerAudioHelper.play(data, push);
-    }
-
-    async _getSoundDuration(inFilePath) {
-        let cachedDuration = this.sequence._getFileFromCache(inFilePath);
-        if (!cachedDuration) {
-            cachedDuration = await lib.getSoundDuration(inFilePath);
-            if (!cachedDuration) return false;
-            this.sequence._addFileToCache(inFilePath, cachedDuration)
-        }
-        return cachedDuration;
     }
 
     async _sanitizeSoundData() {
@@ -68,13 +60,14 @@ class SoundSection extends Section {
             file = file.getFile();
         }
 
-        let duration = await this._getSoundDuration(file);
-        if (!duration) {
+        let soundFile = await AudioHelper.preloadSound(file);
+        if (!soundFile) {
             return {
                 play: false,
                 src: file
             };
         }
+        let duration = soundFile.duration*1000;
 
         let startTime = (this._startTime ? (!this._startPerc ? this._startTime : this._startTime * duration) : 0) / 1000;
 

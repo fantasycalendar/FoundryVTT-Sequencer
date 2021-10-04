@@ -107,12 +107,34 @@ export default class CanvasEffect {
 
     }
 
+    _getScreenSpaceContainer(){
+
+        let container = new PIXI.Container();
+
+        container.effect = this;
+
+        container.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+
+        Sequencer.UILayer.container.addChild(container);
+
+        return container;
+
+    }
+
+    _getContainer(){
+
+        if(this.data.screenSpace) return this._getScreenSpaceContainer();
+
+        return this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+
+    }
+
     _showHighlight(show){
         if(!this.highlight){
-            let width = this.sprite.width / this.sprite.scale.x;
-            let height = this.sprite.height / this.sprite.scale.x;
+            let width = (this.sprite.width / this.sprite.scale.x) * 1.1;
+            let height = (this.sprite.height / this.sprite.scale.y) * 1.1;
             this.highlight = new PIXI.Graphics();
-            this.highlight.lineStyle(4, "0xFFFFFF")
+            this.highlight.lineStyle((3 / this.sprite.scale.x) * 1.1, "0xFFFFFF")
             this.highlight.moveTo(width/-2,height/-2);
             this.highlight.lineTo(width/2,height/-2);
             this.highlight.lineTo(width/2,height/2);
@@ -140,6 +162,14 @@ export default class CanvasEffect {
         this.rotateOut();
         this.setEndTimeout();
         this.debug();
+        this.tryPlay();
+        this.timeoutSpriteVisibility();
+    }
+
+    timeoutSpriteVisibility(){
+        setTimeout(() => {
+            this.sprite.visible = true;
+        }, this.data.animatedProperties.animations ? 50 : 0);
     }
 
     calculateDuration() {
@@ -159,15 +189,24 @@ export default class CanvasEffect {
 			if(!this.data.duration && !this.source){
 
 				let animProp = this.data.animatedProperties;
-				let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0);
-				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0);
-				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0);
+				let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0) ;
+				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0) ;
+				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0) ;
 				let moveDuration = 0;
 				if(moves) {
 					moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + moves.delay;
 				}
 
-				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration);
+                let animationDurations = animProp.animations ? Math.max(...animProp.animations.map(animation => {
+                    if(animation.looping){
+                        if(animation.loops === 0) return 0;
+                        return ((animation?.duration ?? 0) * (animation?.loops ?? 0)) + (animation?.delay ?? 0);
+                    }else{
+                        return (animation?.duration ?? 0) + (animation?.delay ?? 0);
+                    }
+                })) : 0;
+
+				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration, animationDurations);
 
 				this.animationDuration = this.animationDuration || 1000;
 
@@ -194,31 +233,54 @@ export default class CanvasEffect {
 		this.animationDuration /= (this.data.playbackRate ?? 1.0);
 
 		if(this.source){
-		    this.source.loop = (this.animationDuration / 1000) > this.source.duration;
-            if(this.data.noLoop) this.source.loop = false;
+		    this.source.loop = (this.animationDuration / 1000) > this.source.duration && !this.source.loop;
         }
 
 	}
 
-    async spawnSprite(show = true) {
+    async spawnSprite() {
 
         this.sprite = new PIXI.Sprite(this.texture);
         this.spriteContainer = new PIXI.Container();
         this.spriteContainer.addChild(this.sprite);
-        this.sprite.anchor.set(0.5, 0.5);
-        this.sprite.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.sprite.anchor.set(
+            this.data.spriteAnchor?.x ?? 0.5,
+            this.data.spriteAnchor?.y ?? 0.5
+        );
+        this.spriteContainer.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
         this.spriteContainer.sortChildren();
-        this.container = this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+        this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
 
         this.applyFilters();
 
         this.sprite.alpha = this.data.opacity;
-        this.sprite.visible = show;
+        this.sprite.visible = false;
 
         if(this.data.size){
-            this.sprite.width = this.data.size.width * this.data.scale.x;
-            this.sprite.height = this.data.size.height * this.data.scale.y;
+
+            const ratio = this.sprite.height / this.sprite.width;
+
+            let { height, width } = this.data.size;
+
+            if(this.data.size.width === "auto" || this.data.size.height === "auto"){
+
+                height = this.sprite.height;
+                width = this.sprite.width;
+
+                if(this.data.size.width === "auto"){
+                    height = this.data.size.height;
+                    width = height / ratio;
+                }else if(this.data.size.height === "auto"){
+                    width = this.data.size.width;
+                    height = width * ratio;
+                }
+
+            }
+
+            this.sprite.width = width * this.data.scale.x;
+            this.sprite.height = height * this.data.scale.y;
+
         } else {
             this.sprite.scale.set(
                 this.data.scale.x * this.data.gridSizeDifference,
@@ -229,19 +291,34 @@ export default class CanvasEffect {
         this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
 
+        if(!this.data.anchor){
+
+            if(!this.data.screenSpaceAnchor){
+                this.data.screenSpaceAnchor = { x: 0.5, y: 0.5 };
+            }
+
+            if(this.data.screenSpace){
+                this.data.anchor = { ...this.data.screenSpaceAnchor };
+            }else{
+                this.data.anchor = { x: 0.5, y: 0.5 };
+            }
+
+        }else if(!this.data.screenSpaceAnchor){
+            this.data.screenSpaceAnchor = { ...this.data.anchor };
+        }
+
         this.spriteContainer.pivot.set(
             lib.lerp(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
             lib.lerp(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
         );
 
         if(this.source && (this.startTime || this.loopOffset > 0) && this.source?.currentTime !== undefined) {
-            await lib.wait(15)
+            await lib.wait(20)
             this.texture.update();
         }
 
         if(this.source?.currentTime !== undefined){
             this.source.playbackRate = this.data.playbackRate;
-            this.tryPlay();
         }
 
     }
@@ -602,13 +679,14 @@ export default class CanvasEffect {
 
     setEndTimeout(){
         setTimeout(() => {
-            this.resolve();
             this.endEffect();
+            this.resolve(this.data);
         }, this.animationDuration)
     }
 
 	endEffect(){
 		if(!this.ended) {
+            Hooks.call("endedSequencerEffect", this.data);
 			this.ended = true;
 			try {
 				this.source.removeAttribute('src');
@@ -616,12 +694,18 @@ export default class CanvasEffect {
 				this.source.load();
 			} catch (err) {}
 			try {
+			    if(this.data.screenSpace){
+			        Sequencer.UILayer.removeContainerByEffect(this);
+                }
                 this.sprite.filters = [];
                 this.spriteContainer.removeChild(this.sprite);
 				this.container.removeChild(this.spriteContainer);
                 this.spriteContainer.destroy();
+                if(this.highlight) this.highlight.destroy()
 				this.sprite.destroy();
-			} catch (err) {}
+			} catch (err) {
+			    console.log(err);
+            }
 		}
     }
 
@@ -648,24 +732,31 @@ export default class CanvasEffect {
             let video = document.createElement("video");
             video.preload = "auto";
             video.crossOrigin = "anonymous";
-            video.src = URL.createObjectURL(blob);
             video.playbackRate = this.data.playbackRate;
             video.autoplay = false;
             video.muted = true;
+            video.src = URL.createObjectURL(blob);
+
             if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
                 video.muted = false;
             }
+
             video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
             video.volume *= game.settings.get("core", "globalInterfaceVolume");
-			let texture = await PIXI.Texture.from(video);
 
             let canplay = true;
             video.oncanplay = async () => {
                 if(!canplay) return;
                 canplay = false;
-				this.source = video;
-				this.source.pause();
+                this.source = video;
+                video.height = video.videoHeight;
+                video.width = video.videoWidth;
+                const baseTexture = PIXI.BaseTexture.from(video, { resourceOptions: { autoPlay: false } });
+                baseTexture.alphaMode = this.data.file.toLowerCase().endsWith('.webm')
+                    ? PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA
+                    : baseTexture.alphaMode;
+                const texture = new PIXI.Texture(baseTexture);
                 resolve(texture);
             };
 
@@ -714,6 +805,7 @@ export default class CanvasEffect {
 			}else {
 				this.calculateDuration();
 				if(shouldPlay){
+                    Hooks.call("createSequencerEffect", this.data);
 				    this.initializeEffect();
                 }
 			}
@@ -730,7 +822,7 @@ export default class CanvasEffect {
 class PersistentCanvasEffect extends CanvasEffect{
 
     async initializeEffect(){
-        this.startLoop();
+        this.startEffect();
         await this.spawnSprite();
         this.playCustomAnimations();
         this.moveTowards();
@@ -740,6 +832,45 @@ class PersistentCanvasEffect extends CanvasEffect{
         this.rotateIn();
         this.debug();
         this.timeoutSpriteVisibility();
+        this.setEndTimeout();
+    }
+
+    async startEffect() {
+        if (!this.source) return;
+
+        let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
+
+        if(!this.data.noLoop) return this.startLoop(creationTimeDifference);
+
+        this.tryPlay();
+
+        if(creationTimeDifference < this.animationDuration){
+            this.source.currentTime = creationTimeDifference / 1000;
+            return;
+        }
+
+        this.source.pause();
+        this.source.currentTime = this.endTime;
+        setTimeout(() => {
+            this.texture.update();
+        }, 350)
+    }
+
+    async startLoop(creationTimeDifference) {
+        this.source.loop = this.startTime === 0 && this.endTime === this.source.duration;
+        this.loopOffset = (creationTimeDifference % this.animationDuration) / 1000;
+        this.resetLoop();
+    }
+
+    async resetLoop(){
+        this.source.currentTime = this.startTime + this.loopOffset;
+        if(this.ended) return;
+        await this.tryPlay();
+        if(this.source.loop) return;
+        setTimeout(() => {
+            this.loopOffset = 0;
+            this.resetLoop();
+        }, this.animationDuration - (this.loopOffset*1000));
     }
 
     timeoutSpriteVisibility(){
@@ -753,31 +884,12 @@ class PersistentCanvasEffect extends CanvasEffect{
         }, 50);
     }
 
-    startLoop() {
-        if (!this.source) return;
+    setEndTimeout(){
         let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
-        if(this.data.noLoop){
-            this.source.loop = false;
-            if(creationTimeDifference >= this.animationDuration){
-                this.source.currentTime = this.endTime;
-                return;
-            }
-            this.source.currentTime = creationTimeDifference / 1000;
-            return;
-        }
-        this.source.loop = this.startTime === 0 && this.endTime === this.source.duration;
-        this.loopOffset = (creationTimeDifference % this.animationDuration) / 1000;
-        this.resetLoop();
-    }
-
-    async resetLoop(){
-        this.source.currentTime = this.startTime + this.loopOffset;
-        if(this.ended || this.source.loop) return;
-        await this.tryPlay();
+        if(!this.data.noLoop || creationTimeDifference >= this.animationDuration || !this.source) return;
         setTimeout(() => {
-            this.loopOffset = 0;
-            this.resetLoop();
-        }, this.animationDuration - (this.loopOffset*1000));
+            this.source.pause();
+        }, this.animationDuration)
     }
 
     async endEffect(){
@@ -785,13 +897,13 @@ class PersistentCanvasEffect extends CanvasEffect{
             this.fadeOut(this.data.extraEndDuration),
             this.fadeOutAudio(this.data.extraEndDuration),
             this.scaleOut(this.data.extraEndDuration),
-            this.rotateOut(this.data.extraEndDuration)
+            this.rotateOut(this.data.extraEndDuration),
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
         this.resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
             super.endEffect()
-            resolve();
+            resolve(this.data);
         }, waitDuration));
 
     }

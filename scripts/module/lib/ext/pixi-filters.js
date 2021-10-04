@@ -1,6 +1,6 @@
 /*!
- * pixi-filters - v4.1.4
- * Compiled Thu, 22 Jul 2021 21:37:37 UTC
+ * pixi-filters - v4.1.5
+ * Compiled Wed, 29 Sep 2021 14:03:01 UTC
  *
  * pixi-filters is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license

@@ -1,4 +1,7 @@
-import { BaseEffectsLayer, BelowTokensEffectsLayer } from "./module/canvas-effects/effects-layer.js";
+import {
+    BaseEffectsLayer,
+    BelowTokensEffectsLayer
+} from "./module/canvas-effects/effects-layer.js";
 
 export default function registerLayers() {
 

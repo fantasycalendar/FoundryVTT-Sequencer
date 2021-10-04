@@ -13,7 +13,7 @@ class AnimationSection extends Section {
         this._moveSpeed = 23;
         this._offset = { x: 0, y: 0 };
         this._closestSquare = false;
-        this._snapToSquare = false;
+        this._snapToGrid = false;
         if (inTarget) this.on(inTarget);
     }
 
@@ -21,7 +21,7 @@ class AnimationSection extends Section {
      * Sets the target object to be animated
      *
      * @param {object|string} inTarget
-     * @returns {AnimationSection} this
+     * @returns {AnimationSection}
      */
     on(inTarget) {
         inTarget = this._validateLocation(inTarget);
@@ -35,7 +35,7 @@ class AnimationSection extends Section {
      *
      * @param {object|string} inTarget
      * @param {object} options
-     * @returns {AnimationSection} this
+     * @returns {AnimationSection}
      */
     teleportTo(inTarget, options = {}) {
         options = foundry.utils.mergeObject({
@@ -54,7 +54,7 @@ class AnimationSection extends Section {
      * Causes the movement or teleportation to be offset in the X and/or Y axis
      *
      * @param {object} inOffset
-     * @returns {AnimationSection} this
+     * @returns {AnimationSection}
      */
     offset(inOffset) {
         inOffset = foundry.utils.mergeObject({ x: 0, y: 0 }, inOffset);
@@ -66,7 +66,7 @@ class AnimationSection extends Section {
      * Causes the movement or teleportation to pick the closest non-intersecting square, if the target is a token or tile
      *
      * @param {boolean} inBool
-     * @returns {AnimationSection} this
+     * @returns {AnimationSection}
      */
     closestSquare(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
@@ -75,14 +75,25 @@ class AnimationSection extends Section {
     }
 
     /**
-     * Causes the final location to be snapped to its square
+     * DEPRECATED, see snapToGrid
      *
      * @param {boolean} inBool
-     * @returns {AnimationSection} this
+     * @returns {AnimationSection}
      */
     snapToSquare(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToSquare", "inBool must be of type boolean");
-        this._snapToSquare = inBool;
+        this.sequence._showWarning(this, "snapToSquare", "snapToSquare has been deprecated and will be removed in 1.2.0")
+        return this.snapToGrid(inBool);
+    }
+
+    /**
+     * Causes the final location to be snapped to the grid
+     *
+     * @param {boolean} inBool
+     * @returns {AnimationSection}
+     */
+    snapToGrid(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
+        this._snapToGrid = inBool;
         return this;
     }
 
@@ -208,7 +219,7 @@ class AnimationSection extends Section {
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
 
-            if (this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
+            if (this._snapToGrid) targetLoc = this._snapLocationToGrid(targetLoc);
 
             animData.attributes.push({
                 name: "rotationTowards",
@@ -318,7 +329,7 @@ class AnimationSection extends Section {
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
 
-            if (this._snapToSquare) targetLoc = this._snapLocationToGrid(targetLoc);
+            if (this._snapToGrid) targetLoc = this._snapLocationToGrid(targetLoc);
 
             let originalDx = targetLoc.x - originLoc.x;
             let originalDy = targetLoc.y - originLoc.y;
@@ -421,7 +432,7 @@ class AnimationSection extends Section {
                     : this._getCleanPosition(this._teleportTo.target);
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
-                if (this._snapToSquare) targetLocation = this._snapLocationToGrid(targetLocation);
+                if (this._snapToGrid) targetLocation = this._snapLocationToGrid(targetLocation);
                 await this._updateObject(this._originObject, targetLocation);
             }, this._teleportTo.delay);
             if (overallDuration <= this._teleportTo.delay) {

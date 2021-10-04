@@ -1,3 +1,5 @@
+import SequencerFileCache from "../sequencer-file-cache.js";
+
 /**
  * This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
@@ -39,10 +41,10 @@ export function random_int_between(min, max) {
  * @return {boolean}              A boolean whether the function is actually a function
  */
 export function is_function(inFunc) {
-    return (
-        inFunc &&
-        ({}.toString.call(inFunc) === "[object Function]" ||
-            {}.toString.call(inFunc) === "[object AsyncFunction]")
+    return inFunc && (
+        {}.toString.call(inFunc) === '[object Function]'
+        ||
+        {}.toString.call(inFunc) === '[object AsyncFunction]'
     );
 }
 
@@ -77,7 +79,6 @@ export function random_object_element(inObject, recurse = false) {
     return choice;
 }
 
-export async function fileExists(inFile) {}
 
 /**
  * Determines the dimensions of a given image file
@@ -86,10 +87,11 @@ export async function fileExists(inFile) {}
  * @return {Promise}              A promise that will return the dimensions of the file
  */
 export async function getDimensions(inFile) {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+        let blob = await SequencerFileCache.loadFile(inFile);
         let video = document.createElement("video");
         video.crossOrigin = "anonymous";
-        video.src = inFile;
+        video.src = URL.createObjectURL(blob);
         video.onloadedmetadata = () => {
             let dimensions = {
                 x: video.videoWidth,
@@ -103,27 +105,6 @@ export async function getDimensions(inFile) {
             console.error(`File not found: ${inFile}`);
             resolve({ x: 0, y: 0 });
         };
-    });
-}
-
-/**
- *  Determines the duration of a given sound file
- *
- * @param  {string}     inFile    The sound file to be loaded
- * @return {Promise}              A promise that will return the dimensions of the file
- */
-export async function getSoundDuration(inFile) {
-    return new Promise((resolve) => {
-        let audio = new Audio();
-        audio.onloadedmetadata = () => {
-            resolve(audio.duration * 1000); // ms
-        };
-        audio.onerror = () => {
-            resolve(false);
-        };
-        audio.preload = "auto";
-        audio.crossOrigin = "anonymous";
-        audio.src = inFile;
     });
 }
 
@@ -255,32 +236,35 @@ export function getAllObjects(inSceneId) {
         ? game.scenes.get(inSceneId)
         : game.scenes.get(game.canvas.id);
     return [
-        ...Array.from(scene.tokens).map((obj) => obj?.object),
-        ...Array.from(scene.templates).map((obj) => obj?.object),
-        ...Array.from(scene.tiles).map((obj) => obj?.object),
-    ]
-        .deepFlatten()
-        .filter(Boolean);
+        ...Array.from(scene.tokens).map(obj => obj?.object),
+        ...Array.from(scene.templates).map(obj => obj?.object),
+        ...Array.from(scene.tiles).map(obj => obj?.object),
+        ...Array.from(scene.drawings).map(obj => obj?.object)
+    ].deepFlatten().filter(Boolean);
 }
 
 export function getObjectFromScene(inId, inSceneId) {
     return getAllObjects(inSceneId).find((obj) => obj.id === inId);
 }
 
-export function throwError(inClassName, error) {
-    inClassName =
-        inClassName !== "Sequencer"
-            ? "Sequencer | Module: " + inClassName
-            : inClassName;
+export function showWarning(inClassName, warning, notify = false) {
+    inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+    warning = `${inClassName} | ${warning}`;
+    if(notify) ui.notifications.warn(warning);
+    console.warn(warning.replace("<br>", "\n"));
+}
+
+export function throwError(inClassName, error, notify = true) {
+    inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
-    ui.notifications.error(error);
+    if(notify) ui.notifications.error(error);
     return new Error(error.replace("<br>", "\n"));
 }
 
 export function isResponsibleGM() {
     if (!game.user.isGM) return false;
-    const connectedGMs = game.users.filter((user) => user.active && user.isGM);
-    return !connectedGMs.some((other) => other.data._id < game.user.data._id);
+    const connectedGMs = game.users.filter(user => user.active && user.isGM);
+    return !connectedGMs.some(other => other.data._id < game.user.data._id);
 }
 
 export class SequencerFile {
@@ -372,14 +356,9 @@ export function groupBy(xs, key) {
 export function sequenceProxyWrap(inSequence) {
     return new Proxy(inSequence, {
         get: function (target, prop) {
-            if (target[prop] === undefined) {
-                if (
-                    Sequencer.SectionManager.externalSections[prop] ===
-                    undefined
-                )
-                    return Reflect.get(target, prop);
-                target.sectionToCreate =
-                    Sequencer.SectionManager.externalSections[prop];
+            if(target[prop] === undefined){
+                if(Sequencer.SectionManager.externalSections[prop] === undefined) return Reflect.get(target, prop);
+                target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
                 return Reflect.get(target, "_createCustomSection");
             }
             return Reflect.get(target, prop);

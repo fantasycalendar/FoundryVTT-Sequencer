@@ -40,19 +40,12 @@ const SequencerFileCache = {
         return src;
     },
 
-    isAudioFile(inSrc) {
-        return inSrc.toLowerCase().endsWith(".ogg")
-            || inSrc.toLowerCase().endsWith(".mp3")
-            || inSrc.toLowerCase().endsWith(".flac")
-            || inSrc.toLowerCase().endsWith(".wav");
-    },
-
     async loadFile(inSrc) {
         return new Promise(async (resolve, reject) => {
             let file;
             if (inSrc.toLowerCase().endsWith(".webm")) {
                 file = await this.loadVideo(inSrc);
-            } else if (this.isAudioFile(inSrc)) {
+            } else if (AudioHelper.hasAudioExtension(inSrc)) {
                 try {
                     file = await AudioHelper.preloadSound(inSrc);
                 } catch (err) {
@@ -62,9 +55,9 @@ const SequencerFileCache = {
                 file = await this.loadImage(inSrc);
             }
             if (file) {
-                resolve(inSrc, file);
+                resolve(file);
             } else {
-                reject(inSrc);
+                reject();
             }
         })
     }

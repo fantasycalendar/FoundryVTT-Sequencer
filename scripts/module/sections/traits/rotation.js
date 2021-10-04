@@ -46,16 +46,18 @@ export default {
             ease: "linear",
             delay: 0,
             offset: 0,
-            towardsCenter: true
+            towardsCenter: true,
+            cacheLocation: false
         }, options);
         if (typeof options.duration !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateTowards", "options.ease must be of type string");
         if (typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
         if (typeof options.offset !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
         if (typeof options.towardsCenter !== "boolean") throw this.sequence._throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
-        inLocation = this._validateLocation(inLocation);
-        if (!inLocation) throw this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
+        if (typeof options.cacheLocation !== "boolean") throw this.sequence._throwError(this, "rotateTowards", "options.cacheLocation must be of type boolean");
         options.target = this._validateLocation(inLocation);
+        if (!options.target) throw this.sequence._throwError(this, "rotateTowards", "could not find position of given object");
+        options.target = options.cacheLocation ? this._getCleanPosition(options.target, true) : options.target;
         this._rotateTowards = options;
         return this;
     },
