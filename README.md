@@ -57,7 +57,9 @@ To start the sequence off, you simply call `play()` on the sequence.
 
 ## Usage Example
 
-To getEntry the following result:
+### This example uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
+
+To get the following result:
 
 * Plays an effect on a token's location
 * Wait for 400 milliseconds
@@ -70,7 +72,6 @@ To getEntry the following result:
 
 ![Animation showing the Sequencer](images/Animation2.gif)
 
-*Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 You'd have to write something like this (with FXMaster installed):
 
@@ -193,6 +194,8 @@ sequence.play();
 
 ## Magic Missile
 
+### Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
+
 ![One token firing three magic missiles on another token](images/magic_missile.gif)
 ```js
 new Sequence()
@@ -224,8 +227,6 @@ new Sequence()
     .play();
 ```
 
-*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
-
 ## Magic Circle
 
 ![A magic circle fading, rotating, and scaling in, then fading, rotating, and scaling out](images/scalerotationfade.gif)
@@ -251,6 +252,8 @@ new Sequence()
 
 ## Lightning Strike
 
+### Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
+
 ![Random lightning strikes on a token](images/lightning_strike.gif)
 
 ```js
@@ -267,9 +270,9 @@ new Sequence()
     .play();
 ```
 
-*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
-
 ## Acid Splash
+
+### Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
 ![Acid splash hitting two tokens with random rotation and scales](images/acid_splash.gif)
 
@@ -286,7 +289,6 @@ new Sequence()
     .play();
 ```
 
-*Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)*
 
 ## Changelog
 
@@ -318,6 +320,10 @@ new Sequence()
 - *Effects* - Improved look of transparent .webm files
 - *Animations* - Renamed `.snapToSquare()` method to `.snapToGrid()` - the old method will be fully removed in 1.2.0
 - *Foundry* - Added libwrapper patch for .webm transparency not playing correctly in Foundry
+- *Sequencer* - Updated some sample macros
+- *Sequencer* - The `SequencerDatabase` accessor has been removed, and is now accessible with `Sequencer.Database`
+- *Sequencer* - The `SequencerDatabaseViewer` accessor has been removed, and is now accessible with `Sequencer.DatabaseViewer`
+- *Sequencer* - The `SequencerPreloader` accessor is deprecated, and is now accessible with `Sequencer.Preloader`
 
 ### Version 1.0.3
 - *Sequencer* - Added animated space backgrounds (thanks to Keirsti on the Foundry VTT discord server)
@@ -491,7 +497,7 @@ new Sequence()
 ### Version 0.4.4
 - *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Animations) how to use it!
 - *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc
-- *Effects* - Tweaked how effects getEntry locations when dealing with raw template data
+- *Effects* - Tweaked how effects get locations when dealing with raw template data
 - *Sequencer* - Added `.sequence()` so you can combine multiple sequences into one
 - *Sequencer* - Updated all sample macros to 0.8.x conventions
 
@@ -615,7 +621,8 @@ new Sequence()
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
 * ghost (ghost#2000 on discord) for his fixes to the audio sections
-* Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects  
+* Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects
+* Naito (Naito#1235 on discord) for his assistance with improving the Database Viewer's speed
 * League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
 * Foundry VTT Core code for heaps of inspiration
 
