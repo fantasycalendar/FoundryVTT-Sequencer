@@ -46,20 +46,6 @@ export default class EffectSection extends Section {
         this._offsets = [];
     }
 
-    get _to() {
-        return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
-    }
-
-    get _distanceMatching() {
-        return {
-            "90ft": canvas.grid.size * 15,
-            "60ft": canvas.grid.size * 9,
-            "30ft": canvas.grid.size * 5,
-            "15ft": canvas.grid.size * 2,
-            "05ft": 0
-        }
-    }
-
     /**
      * Causes the effect's position to be stored and can then be used  with .atLocation(), .reachTowards(),
      * and .rotateTowards() to refer to previous effects' locations
@@ -584,7 +570,7 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  Sets up various properties relating to scale on the
+     *  Sets up various properties relating to scale of the effect on the screen
      *
      * @param {object} inOptions
      * @returns {EffectSection} this
@@ -807,6 +793,10 @@ export default class EffectSection extends Section {
 
     }
 
+    get _to() {
+        return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
+    }
+
     _determineTargets(data) {
 
         if (this._from) {
@@ -873,6 +863,16 @@ export default class EffectSection extends Section {
         }
 
         return data;
+    }
+
+    get _distanceMatching() {
+        return {
+            "90ft": canvas.grid.size * 15,
+            "60ft": canvas.grid.size * 9,
+            "30ft": canvas.grid.size * 5,
+            "15ft": canvas.grid.size * 2,
+            "05ft": 0
+        }
     }
 
     _rangeFind(inFile) {

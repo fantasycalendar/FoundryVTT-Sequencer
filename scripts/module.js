@@ -47,6 +47,7 @@ Hooks.once('ready', async function () {
     setTimeout(() => {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
+        Hooks.call('sequencerReady')
     }, 100);
 });
 
