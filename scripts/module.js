@@ -11,6 +11,7 @@ import Section from "./module/sections/section.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import registerLibwrappers from "./libwrapper.js";
+import * as deprecation from "./deprecation.js";
 
 Hooks.once('init', async function () {
 
@@ -48,6 +49,7 @@ Hooks.once('ready', async function () {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
+        deprecation.check()
     }, 100);
 });
 

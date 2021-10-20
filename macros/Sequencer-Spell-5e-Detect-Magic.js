@@ -23,7 +23,6 @@ if(!game.modules.get("midi-qol")?.active){
 
 const actorD = game.actors.get(args[0].actor._id);
 const tokenD = canvas.tokens.get(args[0].tokenId);
-const itemD = actorD.items.getName(args[0].item.name);
 
 if(error){
     ui.notifications.error(error);

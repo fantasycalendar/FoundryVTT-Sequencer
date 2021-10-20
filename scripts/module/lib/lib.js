@@ -239,12 +239,25 @@ export function getAllObjects(inSceneId) {
         ...Array.from(scene.tokens).map(obj => obj?.object),
         ...Array.from(scene.templates).map(obj => obj?.object),
         ...Array.from(scene.tiles).map(obj => obj?.object),
-        ...Array.from(scene.drawings).map(obj => obj?.object)
+        ...Array.from(scene.drawings).map(obj => obj?.object),
+        ...canvas.templates.preview.children
     ].deepFlatten().filter(Boolean);
 }
 
-export function getObjectFromScene(inId, inSceneId) {
-    return getAllObjects(inSceneId).find((obj) => obj.id === inId);
+export function getObjectFromScene(inObjectId, inSceneId) {
+    return getAllObjects(inSceneId).find(obj => checkObjectByIdentifier(obj, inObjectId));
+}
+
+export function getObjectIdentifier(inObject){
+    return inObject?.id
+        ?? inObject?.document?.name
+        ?? inObject?.name
+        ?? (inObject?.tag !== "" ? inObject?.tag : undefined)
+        ?? (inObject?.label !== "" ? inObject?.label : undefined);
+}
+
+export function checkObjectByIdentifier(inObject, inIdentifier) {
+    return getObjectIdentifier(inObject) === inIdentifier;
 }
 
 export function showWarning(inClassName, warning, notify = false) {

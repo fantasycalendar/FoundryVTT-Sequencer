@@ -14,6 +14,7 @@ export default class CanvasEffect {
     constructor(inData) {
 
         this.ended = false;
+        this.text = false;
         this.texture = false;
 		this.source = false;
 		this.loader = SequencerFileCache;
@@ -53,7 +54,7 @@ export default class CanvasEffect {
         return this._context;
     }
 
-    _getTokenContainer(){
+    _getPlaceableObjectContainer(){
 
         let containers = this.context.children.filter(child => child?.parentName === "sequencer");
 
@@ -125,14 +126,15 @@ export default class CanvasEffect {
 
         if(this.data.screenSpace) return this._getScreenSpaceContainer();
 
-        return this.data.attachTo ? this._getTokenContainer() : this._getCanvasContainer();
+        return this.data.attachTo ? this._getPlaceableObjectContainer() : this._getCanvasContainer();
 
     }
 
     _showHighlight(show){
         if(!this.highlight){
-            let width = (this.sprite.width / this.sprite.scale.x) * 1.1;
-            let height = (this.sprite.height / this.sprite.scale.y) * 1.1;
+            const bounds = this.spriteContainer.getLocalBounds();
+            let width = bounds.width * 1.1;
+            let height = bounds.height * 1.1;
             this.highlight = new PIXI.Graphics();
             this.highlight.lineStyle((3 / this.sprite.scale.x) * 1.1, "0xFFFFFF")
             this.highlight.moveTo(width/-2,height/-2);
@@ -142,14 +144,15 @@ export default class CanvasEffect {
             this.highlight.lineTo(width/-2,height/-2);
             this.highlight.lineTo(width/2,height/-2);
             this.highlight.visible = false;
-            this.sprite.addChild(this.highlight);
+            this.highlight.zIndex = 10;
+            this.spriteContainer.addChild(this.highlight);
         }
 
         this.highlight.visible = show;
     }
 
     async initializeEffect(){
-        await this.spawnSprite();
+        await this.attachSprite();
         this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
@@ -238,17 +241,8 @@ export default class CanvasEffect {
 
 	}
 
-    async spawnSprite() {
+    async attachSprite() {
 
-        this.sprite = new PIXI.Sprite(this.texture);
-        this.spriteContainer = new PIXI.Container();
-        this.spriteContainer.addChild(this.sprite);
-        this.sprite.anchor.set(
-            this.data.spriteAnchor?.x ?? 0.5,
-            this.data.spriteAnchor?.y ?? 0.5
-        );
-        this.spriteContainer.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
-        this.spriteContainer.sortChildren();
         this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
 
@@ -782,25 +776,61 @@ export default class CanvasEffect {
         })
     }
 
-    async loadFile(){
-        let fileExt = this.data.file.match(/(?:\.([^.]+))?$/)[1].toLowerCase();
+    async prepareSprite() {
 
-        if(fileExt === "webm"){
-            return this.loadVideo();
+        if(this.data.file !== ""){
+            let fileExt = this.data.file.match(/(?:\.([^.]+))?$/)[1].toLowerCase();
+
+            if(fileExt === "webm"){
+                this.texture = await this.loadVideo();
+            }else{
+                this.texture = await this.loadImage();
+            }
+            if(!this.texture) return;
         }
 
-        return this.loadImage();
+        if(this.data.text){
+            this.text = new PIXI.Text(this.data.text.text, this.data.text)
+        }
+
+        this.sprite = new PIXI.Sprite();
+
+        this.sprite.anchor.set(
+            this.data.spriteAnchor?.x ?? 0.5,
+            this.data.spriteAnchor?.y ?? 0.5
+        );
+
+        this.spriteContainer = new PIXI.Container();
+        this.spriteContainer.sortableChildren = true;
+        this.spriteContainer.addChild(this.sprite);
+
+        if(this.texture){
+            this.sprite.texture = this.texture;
+            this.sprite.zIndex = 0;
+        }
+
+        if(this.text){
+            this.sprite.addChild(this.text);
+            this.text.anchor.set(
+                this.data.text?.anchor?.x ?? 0.5,
+                this.data.text?.anchor?.y ?? 0.5
+            );
+        }
+
+        this.spriteContainer.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.spriteContainer.sortChildren();
+
     }
 
     async play() {
 
-        this.texture = await this.loadFile();
+        await this.prepareSprite();
 
         const shouldPlay = !(game.user.viewedScene !== this.data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (this.data.users.length && !this.data.users.includes(game.userId)));
 
         let promise = new Promise(async (resolve, reject) => {
             this.resolve = resolve;
-            if(!this.texture){
+            if(!this.sprite){
             	reject();
 			}else {
 				this.calculateDuration();
@@ -823,7 +853,7 @@ class PersistentCanvasEffect extends CanvasEffect{
 
     async initializeEffect(){
         this.startEffect();
-        await this.spawnSprite();
+        await this.attachSprite();
         this.playCustomAnimations();
         this.moveTowards();
         this.fadeIn();
@@ -851,9 +881,11 @@ class PersistentCanvasEffect extends CanvasEffect{
 
         this.source.pause();
         this.source.currentTime = this.endTime;
-        setTimeout(() => {
-            this.texture.update();
-        }, 350)
+        if(this.texture) {
+            setTimeout(() => {
+                this.texture.update();
+            }, 350);
+        }
     }
 
     async startLoop(creationTimeDifference) {

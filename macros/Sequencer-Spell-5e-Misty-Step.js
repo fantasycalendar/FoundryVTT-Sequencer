@@ -21,6 +21,11 @@ if(!game.modules.get("midi-qol")?.active){
     error = `You need to have MidiQOL ${installed} to run this macro!`;
 }
 
+if(!game.modules.get("warpgate")?.active){
+    let installed = game.modules.get("warpgate") && !game.modules.get("warpgate").active ? "enabled" : "installed";
+    error = `You need to have WarpGate ${installed} to run this macro!`;
+}
+
 if(error){
     ui.notifications.error(error);
     return;
@@ -30,87 +35,61 @@ const lastArg = args[args.length - 1];
 let tactor;
 if (lastArg.tokenId) tactor = canvas.tokens.get(lastArg.tokenId).actor;
 else tactor = game.actors.get(lastArg.actorId);
-const target = canvas.tokens.get(lastArg.tokenId) || token;
+const tokenD = canvas.tokens.get(lastArg.tokenId) || token;
 
-let range = MeasuredTemplate.create({
+let range = await MeasuredTemplate.create({
     t: "circle",
     user: game.user._id,
-    x: target.x + canvas.grid.size / 2,
-    y: target.y + canvas.grid.size / 2,
+    x: tokenD.x + canvas.grid.size / 2,
+    y: tokenD.y + canvas.grid.size / 2,
     direction: 0,
     distance: 30,
-    borderColor: "#FF0000",
-    flags: {
-        world: {
-            MistyStep: {
-                ActorId: tactor.id
-            }
-        }
-    }
+    borderColor: "#FF0000"
 });
 
-range.then(result => {
+let position = await warpgate.crosshairs.show({
+    size: 1,
+    tag: randomID(),
+    label: "Teleport to",
+    drawOutline: false,
+    drawIcon: false
+}, { show: async (crosshair) => {
 
-    let templateData = {
-        t: "circle",
-        user: game.user._id,
-        distance: 2.5,
-        direction: 45,
-        x: 0,
-        y: 0,
-        fillColor: game.user.color,
-        flags: {
-            world: {
-                MistyStep: {
-                    ActorId: tactor.id
-                }
-            }
-        }
-    };
+    new Sequence()
+        .effect()
+            .from(tokenD)
+            .attachTo(crosshair)
+            .persist()
+            .opacity(0.5)
+        .play();
 
+}})
 
-    Hooks.once("createMeasuredTemplate", deleteTemplatesAndMove);
+range[0].delete();
 
-    const doc = new MeasuredTemplateDocument(templateData, {parent: canvas.scene});
-    let template = new game.dnd5e.canvas.AbilityTemplate(doc);
-    template.actorSheet = tactor.sheet;
-    template.drawPreview();
-
-    async function deleteTemplatesAndMove(template) {
-
-        let removeTemplates = canvas.templates.placeables.filter(i => i.data.flags.world?.MistyStep?.ActorId === tactor.id);
-        removeTemplates = removeTemplates.map(template => template.id);
-        if(removeTemplates) await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", removeTemplates);
-
-        new Sequence()
-            .effect()
-                .baseFolder("modules/jb2a_patreon/Library/2nd_Level/Misty_Step")
-                .file("MistyStep_01_Regular_Blue_400x400.webm")
-                .atLocation(target)
-                .JB2A()
-                .randomRotation()
-            .wait(750)
-            .thenDo(async () => {
-                await target.document.update({
-                    x: template.data.x - (canvas.grid.size * 0.5),
-                    y: template.data.y - (canvas.grid.size * 0.5),
-                    hidden: true
-                }, { animate: false });
-            })
-            .effect()
-                .baseFolder("modules/jb2a_patreon/Library/2nd_Level/Misty_Step")
-                .file("MistyStep_02_Regular_Blue_400x400.webm")
-                .atLocation(template)
-                .JB2A()
-                .randomRotation()
-            .wait(1500)
-            .thenDo(async () => {
-                await target.document.update({
-                    hidden: false
-                }, { animate: false });
-            })
-            .play();
-
-
-    };
-});
+new Sequence()
+    .effect()
+        .file("jb2a.misty_step.01.blue")
+        .atLocation(tokenD)
+        .randomRotation()
+        .scaleToObject(2)
+    .wait(750)
+    .animation()
+        .on(tokenD)
+        .opacity(0.0)
+        .waitUntilFinished()
+    .animation()
+        .on(tokenD)
+        .teleportTo(position)
+        .snapToGrid()
+        .waitUntilFinished()
+    .effect()
+        .file("jb2a.misty_step.02.blue")
+        .atLocation(tokenD)
+        .randomRotation()
+        .scaleToObject(2)
+    .wait(1500)
+    .animation()
+        .on(tokenD)
+        .opacity(1.0)
+    .play();

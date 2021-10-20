@@ -76,7 +76,7 @@ To get the following result:
 You'd have to write something like this (with FXMaster installed):
 
 ```js
-async function wait(ms){
+async function wait(ms) {
     return new Promise(resolve => {
         setTimeout(resolve, ms);
     });
@@ -112,11 +112,11 @@ AudioHelper.play({
 await wait(600);
 
 let to_location = {
-    x: token.center.x+500,
+    x: token.center.x + canvas.grid.size*4,
     y: token.center.y
 }
 
-let ray = new Ray(token.center, this._to);
+let ray = new Ray(token.center, this._target);
 
 data = {
     file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm",
@@ -138,7 +138,7 @@ canvas.fxmaster.playVideo(data);
 
 await wait(100);
 
-await token.update({ x: token.position.x+500, y: token.position.y }, { animate: false });
+await token.update({ x: token.position.x + canvas.grid.size*4, y: token.position.y }, { animate: false });
 
 data = {
     file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
@@ -291,6 +291,15 @@ new Sequence()
 
 
 ## Changelog
+
+### Version 1.1.1
+- *Sequencer* - Removed Hyperspace sample from compendiums, as it was getting too big
+- *Sequencer* - Added warning for Hyperspace assets that are going to be removed in a future update, and instead put into a separate module:
+    - https://foundryvtt.com/packages/nrsap
+- *Sequencer* - Prepared Sequencer for v9, it _should_ be compatible to test
+- *Effects* - Added `.from()` which creates an effect based on the given object, effectively copying the object as an effect
+- *Effects* - Added support for `.attachTo()` for temporary measured templates before they have been created, for use with WarpGate
+- *Effects* - Removed warning when `.attachTo()` and `.atLocation()` are used on the same effect - `.attachTo()` always wins out
 
 ### Version 1.1.0
 - *Sequencer* - Added hooks:

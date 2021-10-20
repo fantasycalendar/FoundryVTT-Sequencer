@@ -37,36 +37,33 @@ async function runMacro(template){
 
     let templateC = canvas.templates.placeables.find(t => t.id === template._id);
 
-    if(template){
+    if(templateC){
+
         new Sequence()
             .effect()
-                .baseFolder("modules/jb2a_patreon/Library/Generic/Fireflies")
-                .file("Fireflies_01_Green_Few01_400x400.webm")
+                .file("jb2a.fireflies.few.01.red")
                 .atLocation(templateC)
-				.scale(2)
-                .JB2A()
+                .scaleToObject()
+                .fadeOut(500)
             .effect()
-                .baseFolder("modules/jb2a_patreon/Library/Generic/Fireflies")
-                .file("Fireflies_01_Green_Few02_400x400.webm")
+                .file("jb2a.fireflies.few.02.red")
                 .atLocation(templateC)
-				.scale(2)
-                .JB2A()
+                .scaleToObject()
+                .fadeOut(500)
             .effect()
-                .baseFolder("modules/jb2a_patreon/Library/Generic/Fireflies")
-                .file("Fireflies_01_Green_Many01_400x400.webm")
+                .file("jb2a.fireflies.many.01.red")
                 .atLocation(templateC)
-				.scale(2)
-                .JB2A()
+                .scaleToObject()
+                .fadeOut(500)
             .effect()
-                .baseFolder("modules/jb2a_patreon/Library/Generic/Fireflies")
-                .file("Fireflies_01_Green_Many02_400x400.webm")
+                .file("jb2a.fireflies.many.02.red")
                 .atLocation(templateC)
-				.scale(2)
-                .JB2A()
+                .scaleToObject()
+                .fadeOut(500)
             .waitUntilFinished()
             .thenDo(() => {
                 try {
-                    canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [template._id]);
+                    canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [templateC._id]);
                 }catch(err){}
             })
             .play()
