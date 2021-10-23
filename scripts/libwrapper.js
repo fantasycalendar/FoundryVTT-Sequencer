@@ -6,13 +6,13 @@ export default function registerLibwrappers(){
 
 function PIXIUPLOAD(wrapped, ...args){
     let baseTexture = args[1];
+    if(baseTexture.sequencer_patched) return wrapped(...args);
     let source = args[3];
     source = source || this.source;
     const isVideo = !!source.videoWidth
     if(isVideo) {
-        baseTexture.alphaMode = (source?.src ?? "").toLowerCase().endsWith('.webm')
-            ? PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA
-            : baseTexture.alphaMode;
+        baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA;
+        baseTexture.sequencer_patched = true;
     }
     return wrapped(...args);
 }

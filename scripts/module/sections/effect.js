@@ -8,8 +8,8 @@ export default class EffectSection extends Section {
         super(inSequence)
         this._waitUntilFinished = false;
         this._file = inFile;
-        this._from = false;
-        this._atLocation = false;
+        this._text = false;
+        this._origin = false;
         this._reachTowards = false;
         this._anchor = false;
         this._spriteAnchor = false;
@@ -51,7 +51,7 @@ export default class EffectSection extends Section {
      * and .rotateTowards() to refer to previous effects' locations
      *
      * @param {string} inName
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     name(inName) {
         if (typeof inName !== "string") throw this.sequence._throwError(this, "name", "inName must be of type string");
@@ -64,7 +64,7 @@ export default class EffectSection extends Section {
      * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     persist(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "persist", "inBool must be of type boolean");
@@ -77,7 +77,7 @@ export default class EffectSection extends Section {
      * it play half as fast.
      *
      * @param {number} inNumber
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     playbackRate(inNumber = 1.0) {
         if (typeof inNumber !== "number") throw this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
@@ -89,7 +89,7 @@ export default class EffectSection extends Section {
      * Causes the effect to target a location close to the .reachTowards() location, but not on it.
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     missed(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "missed", "inBool must be of type boolean");
@@ -101,7 +101,7 @@ export default class EffectSection extends Section {
      * Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which
      * the Sequencer figures out from the path.
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     JB2A() {
         this._JB2A = true;
@@ -114,7 +114,7 @@ export default class EffectSection extends Section {
      * on the distance to the target.
      *
      * @param {function} inFunc
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     addOverride(inFunc) {
         if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
@@ -128,7 +128,7 @@ export default class EffectSection extends Section {
      * on the distance to the target.
      *
      * @param {function} inFunc
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
         if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addPostOverride", "The given function needs to be an actual function.");
@@ -142,7 +142,7 @@ export default class EffectSection extends Section {
      *
      * @param {object|string} inLocation
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     atLocation(inLocation, inOptions = {}) {
         inOptions = foundry.utils.mergeObject({
@@ -151,8 +151,7 @@ export default class EffectSection extends Section {
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
-        this._from = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
-        this._atLocation = true;
+        this._origin = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
         return this;
     }
 
@@ -161,17 +160,18 @@ export default class EffectSection extends Section {
      *  or a string reference (see .name())
      *
      * @param {object|string} inObject
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     attachTo(inObject) {
         inObject = this._validateLocation(inObject);
         if (inObject === undefined) throw this.sequence._throwError(this, "attachTo", "could not find given object");
-        const isValidObject = inObject instanceof Token || inObject instanceof Tile || inObject instanceof Drawing;
+        const isValidObject = inObject instanceof Token || inObject instanceof Tile || inObject instanceof Drawing || inObject instanceof MeasuredTemplate;
         if (!isValidObject){
             this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
         }
-        this._from = inObject;
+        this._origin = inObject;
         this._attachTo = isValidObject;
+        if(!inObject?.id) this.locally();
         return this;
     }
 
@@ -181,7 +181,7 @@ export default class EffectSection extends Section {
      *
      * @param {object|string} inLocation
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
         inOptions = foundry.utils.mergeObject({
@@ -195,11 +195,48 @@ export default class EffectSection extends Section {
     }
 
     /**
+     *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
+     *
+     * @param {object} inObject
+     * @param {object} inOptions
+     * @returns {EffectSection}
+     */
+    from(inObject, inOptions = {}){
+        if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._throwError(this, "from", "inObject must be of type Token or Tile");
+        if(!inObject?.data?.img) throw this.sequence._throwError(this, "from", "could not find the image for the given object");
+        inOptions = foundry.utils.mergeObject({
+            cacheLocation: false
+        }, inOptions)
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "from", "inOptions.cacheLocation must be of type boolean");
+        this.atLocation(inObject, inOptions)
+        this.file(inObject?.data?.img);
+        this.size(this._getObjectSize(inObject));
+        if(inObject?.data?.rotation) this.rotate(inObject?.data?.rotation + 90);
+        return this;
+    }
+
+    /**
+     *  Creates a text element, attached to the sprite. The options for the text are available here:
+     *  https://pixijs.io/pixi-text-style/
+     *
+     * @param {string} inText
+     * @param {object} inOptions
+     * @returns {EffectSection}
+     */
+    text(inText, inOptions={}){
+        if (typeof inText !== "string") throw this.sequence._throwError(this, "text", "inText must be of type string");
+        this._text = foundry.utils.mergeObject({
+            text: inText
+        }, inOptions);
+        return this;
+    }
+
+    /**
      *  Causes the effect to be offset relative to its location based on a given vector
      *
      * @param {object} inOffset
      * @param {object} options
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     offset(inOffset, options = {}) {
         if (inOffset === undefined) throw this.sequence._throwError(this, "offset", "inOffset must not be undefined");
@@ -219,7 +256,7 @@ export default class EffectSection extends Section {
      * Causes the final effect location to be snapped to the grid
      *
      * @param {boolean} inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     snapToGrid(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
@@ -231,7 +268,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be scaled to the target object's width
      *
      * @param {number} inScale
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     scaleToObject(inScale = 1.0){
         if (typeof inScale !== "number") throw this.sequence._throwError(self, "scaleToObject", `inScale must be of type number!`);
@@ -242,8 +279,8 @@ export default class EffectSection extends Section {
     /**
      * Sets the width and the height of the effect in pixels, this size is set before any scaling
      *
-     * @param {number} inSize
-     * @returns {EffectSection} this
+     * @param {number|object} inSize
+     * @returns {EffectSection}
      */
     size(inSize) {
         if (!(typeof inSize === "number" || typeof inSize === "object")) throw this.sequence._throwError(this, "size", "inSize be of type number or object");
@@ -279,7 +316,7 @@ export default class EffectSection extends Section {
      * grid, so this will make the effect scale up or down to match the active scene's grid size
      *
      * @param {number} inGridSize
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     gridSize(inGridSize) {
         if (typeof inGridSize !== "number") throw this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
@@ -294,7 +331,7 @@ export default class EffectSection extends Section {
      *  'anchor point'
      *
      * @param {number} inStartPoint
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
         if (typeof inStartPoint !== "number") throw this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
@@ -307,7 +344,7 @@ export default class EffectSection extends Section {
      *  The same as the start point, except from the right and how many pixels to offset the target from
      *
      * @param {number} inEndPoint
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
         if (typeof inEndPoint !== "number") throw this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
@@ -320,7 +357,7 @@ export default class EffectSection extends Section {
      *  Anchors the sprite's container according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     anchor(inAnchor) {
         if (typeof inAnchor === "number") {
@@ -346,7 +383,7 @@ export default class EffectSection extends Section {
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     spriteAnchor(inAnchor) {
         if (typeof inAnchor === "number") {
@@ -374,7 +411,7 @@ export default class EffectSection extends Section {
      *  Note: If this is used, it will override the anchor set by Aim Towards, which sets the sprite's anchor to the
      *  outermost edge of the location the sprite is played at
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     center() {
         this.anchor(0.5);
@@ -386,7 +423,7 @@ export default class EffectSection extends Section {
      * scales how much offset should be added. Defaults to 1.0, which covers the entire target position, 0.5 would cover half.
      *
      * @param {number} [inOffsetScale=1.0] inOffsetScale
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
         if (typeof inOffsetScale !== "number") throw this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
@@ -398,7 +435,7 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped X scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its horizontal axis
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     randomizeMirrorX() {
         this._randomMirrorX = true;
@@ -409,7 +446,7 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped Y scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its vertical axis
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     randomizeMirrorY() {
         this._randomMirrorY = true;
@@ -421,7 +458,7 @@ export default class EffectSection extends Section {
      * mirroring the sprite on its horizontal axis
      *
      * @param {boolean} inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     mirrorX(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "mirrorX", "inBool must be of type boolean");
@@ -434,7 +471,7 @@ export default class EffectSection extends Section {
      * mirroring the sprite on its vertical axis
      *
      * @param {boolean} inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     mirrorY(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "mirrorY", "inBool must be of type boolean");
@@ -446,7 +483,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be played below tokens
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     belowTokens(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "belowTokens", "inBool must be of type boolean");
@@ -458,7 +495,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be played below tiles
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     belowTiles(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "belowTiles", "inBool must be of type boolean");
@@ -470,7 +507,7 @@ export default class EffectSection extends Section {
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
      * @param {number} inZIndex
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     zIndex(inZIndex) {
         if (typeof inZIndex !== "number") throw this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
@@ -482,7 +519,7 @@ export default class EffectSection extends Section {
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
      * @param {number} inExtraDuration
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     extraEndDuration(inExtraDuration) {
         if (typeof inExtraDuration !== "number") throw this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
@@ -494,7 +531,7 @@ export default class EffectSection extends Section {
      * Causes the effect to not rotate should its container rotate
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     zeroSpriteRotation(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "zeroSpriteRotation", "inBool must be of type boolean");
@@ -506,7 +543,7 @@ export default class EffectSection extends Section {
      * If the effect would loop due to its duration or persistence, this causes it not to
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     noLoop(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "noLoop", "inBool must be of type boolean");
@@ -518,7 +555,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be played in screen space instead of world space (where tokens are)
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpace(inBool = true){
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "screenSpace", "inBool must be of type boolean");
@@ -530,7 +567,7 @@ export default class EffectSection extends Section {
      *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
      *
      * @param {object} inPosition
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpacePosition(inPosition) {
         inPosition = {
@@ -547,7 +584,7 @@ export default class EffectSection extends Section {
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number in screen space
      *
      * @param {number|object} inAnchor
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpaceAnchor(inAnchor) {
         if (typeof inAnchor === "number") {
@@ -573,7 +610,7 @@ export default class EffectSection extends Section {
      *  Sets up various properties relating to scale of the effect on the screen
      *
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpaceScale(inOptions){
 
@@ -613,11 +650,7 @@ export default class EffectSection extends Section {
         if(this._reachTowards && this._randomRotation){
             throw this.sequence._throwError(this, "reachTowards", "You're trying to reach towards an object, while trying to randomly rotate the effect? What?");
         }
-        if(this._atLocation && this._attachTo){
-            this.sequence._showWarning(this, "atLocation", "you have called .attachTo() and .atLocation() on this effect, calling .atLocation() makes this effect static. Please use only one.", true);
-        }
     }
-
 
     async run() {
         this._expressWarnings();
@@ -654,6 +687,7 @@ export default class EffectSection extends Section {
             moduleName: this.sequence.moduleName,
             creatorUserId: game.userId,
             file: this._file,
+            text: this._text,
             position: {
                 x: 0,
                 y: 0,
@@ -666,7 +700,7 @@ export default class EffectSection extends Section {
             },
             name: this._name,
             persist: this._persist,
-            attachTo: this._attachTo ? this._from.id : false,
+            attachTo: this._attachTo ? lib.getObjectIdentifier(this._origin) : false,
             gridSizeDifference: 1.0,
             angle: this._angle,
             rotation: 0,
@@ -712,25 +746,27 @@ export default class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        let file = await this._determineFile(data.file);
-        let template;
-        if (file instanceof lib.SequencerFile) {
-            data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();
-            template = file.template;
-            if (file.timeRange) {
-                [this._startTime, this._endTime] = file.timeRange;
-                this._isRange = true;
+        if(data.file !== ""){
+            let file = await this._determineFile(data.file);
+            let template;
+            if (file instanceof lib.SequencerFile) {
+                data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();
+                template = file.template;
+                if (file.timeRange) {
+                    [this._startTime, this._endTime] = file.timeRange;
+                    this._isRange = true;
+                }
+            } else {
+                data.file = file;
             }
-        } else {
-            data.file = file;
+
+            template = this._customTemplate ? this._determineTemplate(data.file) : (template ?? this._determineTemplate(data.file));
+
+            this._gridSize = template[0];
+            this._startPoint = template[1];
+            this._endPoint = template[2];
+            data.template = template;
         }
-
-        template = this._customTemplate ? this._determineTemplate(data.file) : (template ?? this._determineTemplate(data.file));
-
-        this._gridSize = template[0];
-        this._startPoint = template[1];
-        this._endPoint = template[2];
-        data.template = template;
 
         if(this._startTime || this._endTime) {
             data.time = {
@@ -763,7 +799,7 @@ export default class EffectSection extends Section {
         }
 
         if(this._scaleToObject){
-            const object = this._getCachedObject(this._from, this._to);
+            const object = this._getCachedObject(this._origin, this._target);
             data.size = this._getObjectSize(object);
         }else{
             data.size = this._size;
@@ -785,26 +821,30 @@ export default class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        if (typeof data.file !== "string") {
-            throw this.sequence._throwError(this, "file", "inFile must be of type string or array");
+        if ((typeof data.file !== "string" || data.file === "") && !this._text) {
+            throw this.sequence._throwError(this, "file", "an effect must have text or  must be of type string or array");
         }
 
         return data;
 
     }
 
-    get _to() {
+    get _target() {
         return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
     }
 
     _determineTargets(data) {
 
-        if (this._from) {
+        if (this._origin) {
 
-            let [from, to, origin, target] = this._getPositions(this._from, this._to);
+            let [from, to, origin, target] = this._getPositions(this._origin, this._target);
 
             if (this._attachTo){
-                const size = this._getHalfSize(this._from);
+                const size = this._getHalfSize(this._origin);
+                if(this._origin?.data?.t === "circle"){
+                    size.width = 0;
+                    size.height = 0;
+                }
                 origin = {
                     x: size.width,
                     y: size.height
@@ -826,7 +866,7 @@ export default class EffectSection extends Section {
                 }
             }
 
-            if (this._to) {
+            if (this._target) {
                 target = this._snapToGrid
                     ? this._applyOffsets(this._snapLocationToGrid(target))
                     : this._applyOffsets(target);
@@ -838,7 +878,7 @@ export default class EffectSection extends Section {
 
             data.position = origin;
 
-            if (this._to) {
+            if (this._target) {
 
                 let ray = new Ray(origin, target);
 
@@ -987,8 +1027,9 @@ export default class EffectSection extends Section {
 
             if (obj instanceof Token) {
                 const halfSize = this._getHalfSize(obj);
-                pos.x += halfSize.width;
-                pos.y += halfSize.height;
+                const objectScale = obj?.data?.scale ?? 1.0;
+                pos.x += halfSize.width / objectScale;
+                pos.y += halfSize.height / objectScale;
             }
         }
 
@@ -1026,9 +1067,11 @@ export default class EffectSection extends Section {
             ?? inObj?.shape?.radius*2
             ?? canvas.grid.size;
 
+        const objectScale = inObj?.data?.scale ?? 1.0;
+
         return {
-            width,
-            height
+            width: width * objectScale,
+            height: height * objectScale
         }
     }
 
@@ -1103,9 +1146,9 @@ export default class EffectSection extends Section {
 
     async _cacheOffsets() {
 
-        let [from, to, from_target, to_target] = this._getPositions(this._from, this._to, false);
+        let [from, to, from_target, to_target] = this._getPositions(this._origin, this._target, false);
 
-        from_target = this._calculateMissedPosition(from, from_target, !this._to && this._missed);
+        from_target = this._calculateMissedPosition(from, from_target, !this._target && this._missed);
         to_target = to ? this._calculateMissedPosition(to, to_target, this._missed, from_target) : false;
 
         const from_origin = this._getCleanPosition(from);

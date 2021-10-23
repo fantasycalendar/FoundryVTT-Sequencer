@@ -5,10 +5,23 @@ import {
 
 export default function registerLayers() {
 
-    CONFIG.Canvas.layers = foundry.utils.mergeObject(Canvas.layers, {
-        sequencerEffectsBelowTokens: BelowTokensEffectsLayer,
-        sequencerEffectsAboveTokens: BaseEffectsLayer
-    });
+    const layers = isNewerVersion((game?.version ?? game.data.version), "9.00")
+        ? {
+            sequencerEffectsBelowTokens: {
+                layerClass: BelowTokensEffectsLayer,
+                group: "primary"
+            },
+            sequencerEffectsAboveTokens: {
+                layerClass: BaseEffectsLayer,
+                group: "primary"
+            }
+        }
+        : {
+            sequencerEffectsBelowTokens: BelowTokensEffectsLayer,
+            sequencerEffectsAboveTokens: BaseEffectsLayer
+        }
+
+    CONFIG.Canvas.layers = foundry.utils.mergeObject(Canvas.layers, layers);
 
     if (!Object.is(Canvas.layers, CONFIG.Canvas.layers)) {
         const layers = Canvas.layers;

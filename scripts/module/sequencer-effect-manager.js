@@ -157,7 +157,9 @@ export default class SequencerEffectManager {
 
         const playData = await effect.play();
 
-        if (data.persist && setFlags) flagManager.addFlags(effect.contextDocument, effect);
+        if (data.persist && setFlags && effect.context?.id){
+            flagManager.addFlags(effect.contextDocument, effect);
+        }
 
         EffectsContainer.add(effect);
 
@@ -248,9 +250,9 @@ export default class SequencerEffectManager {
         if(!effectsByObjectId.length) return true;
 
         effectsByObjectId.forEach(effects => {
-                effects = effects.filter(effect => effect.data.persist)
-                if(effects.length) flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects)
-            });
+            effects = effects.filter(effect => effect.data.persist)
+            if(effects.length) flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects)
+        });
 
         return Promise.allSettled(...effectsByObjectId.map(
             effects => effects.map(effect => this._removeEffect(effect))

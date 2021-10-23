@@ -45,11 +45,7 @@ export default class SequencerEffectsViewer extends FormApplication {
             .filter(effect => effect.data.persist)
             .map(effect => {
                 index++;
-                let fileName = effect.data.file.split('\\').pop().split('/').pop();
-                let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
-                if(effect.data.creatorUserId !== game.userId){
-                    name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
-                }
+                const name = this.formatEffectName(effect);
                 return {
                     name,
                     index
@@ -59,11 +55,7 @@ export default class SequencerEffectsViewer extends FormApplication {
             .filter(effect => !effect.data.persist)
             .map(effect => {
                 index++;
-                let fileName = effect.data.file.split('\\').pop().split('/').pop();
-                let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
-                if(effect.data.creatorUserId !== game.userId){
-                    name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
-                }
+                const name = this.formatEffectName(effect);
                 return {
                     name,
                     index
@@ -71,6 +63,16 @@ export default class SequencerEffectsViewer extends FormApplication {
             })
         data.hasBothEffects = data.persistentEffects.length && data.temporaryEffects;
         return data;
+    }
+
+    formatEffectName(effect){
+        let fileName = effect.data.file.split('\\').pop().split('/').pop();
+        fileName = fileName !== "" ? fileName : "Text: " + effect.data.text.text;
+        let name = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
+        if(effect.data.creatorUserId !== game.userId){
+            name += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
+        }
+        return name;
     }
 
     /** @override */
