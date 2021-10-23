@@ -1,8 +1,42 @@
-export function check(){
-    checkHyperspace();
+export async function check(){
+    await checkPerfectVision();
+    await checkHyperspace();
 }
 
-function checkHyperspace(){
+async function checkPerfectVision(){
+    if(!game.modules.get("perfect-vision")?.active) return;
+
+    if(game.settings.get("sequencer", "perfect-vision-warning")) return;
+
+    const content = `
+        <h2>Perfect Vision Conflict</h2>
+        
+        <p>Hi there! I can see that you're using the Sequencer and the Perfect Vision modules.</p>
+        <p>Sadly, due to conflicts with Perfect Vision, effects that should play under tokens or tiles will instead always play on top.</p>
+        <p>It doesn't prevent you from using Sequencer or any modules that depend on it, but keep this in mind when using it.</p>
+        
+        <p>Thanks,<br>Wasp</p>`;
+
+    await new Promise(resolve => {
+        new Dialog({
+            title: "Sequencer Conflict Warning",
+            content: content,
+            buttons: {
+                ok: { icon: '<i class="fas fa-check"></i>', label: 'Understood' },
+                dont_remind: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "Don't remind me again",
+                    callback: () => game.settings.set("sequencer", "perfect-vision-warning", true)
+                }
+            },
+            close: () => {
+                resolve()
+            }
+        }).render(true);
+    });
+}
+
+async function checkHyperspace(){
 
     if(!hasHyperspaceAssets()) return;
 
@@ -22,14 +56,23 @@ function checkHyperspace(){
         
         `;
 
-        new Dialog({
-            title: "Sequencer Deprecation Warning",
-            content: content,
-            buttons: {
-                ok: { icon: '<i class="fas fa-check"></i>', label: 'Understood' },
-                dont_remind: { icon: '<i class="fas fa-times"></i>', label: "Don't remind me again", callback: () => game.settings.set("sequencer", "hyperspace-deprecation-warning", true) }
-            }
-        }).render(true);
+        await new Promise(resolve => {
+            new Dialog({
+                title: "Sequencer Deprecation Warning",
+                content: content,
+                buttons: {
+                    ok: { icon: '<i class="fas fa-check"></i>', label: 'Understood' },
+                    dont_remind: {
+                        icon: '<i class="fas fa-times"></i>',
+                        label: "Don't remind me again",
+                        callback: () => game.settings.set("sequencer", "hyperspace-deprecation-warning", true)
+                    }
+                },
+                close: () => {
+                    resolve()
+                }
+            }).render(true);
+        });
         return;
     }
 
@@ -40,18 +83,25 @@ function checkHyperspace(){
     <p>To reduce the size of the Sequencer module, I will be removing the assets in the future.</p>
     <p>I can see that you have <strong>Nachtrose's Sci-Fi (and modern) Animated Pack</strong> installed, would you like me to update your scenes and tiles to point to his assets instead?</p>
     <p>Don't worry, nothing will break or change visually, this will just future proof you once I remove the assets from Sequencer.</p> 
-    <p>If you do decide to do it yourself, this warning will pop up again if you missed anything.</p> 
-    
-    `;
+    <p>If you do decide to do it yourself, this warning will pop up again if you missed anything.</p>`;
 
-    new Dialog({
-        title: "Sequencer Deprecation Warning",
-        content: content,
-        buttons: {
-            ok: { icon: '<i class="fas fa-check"></i>', label: 'Yes, update my scenes and tiles', callback: updateHyperspaceAssets },
-            dont_remind: { icon: '<i class="fas fa-times"></i>', label: "No, I'll do it myself" }
-        }
-    }).render(true);
+    await new Promise(resolve => {
+        new Dialog({
+            title: "Sequencer Deprecation Warning",
+            content: content,
+            buttons: {
+                ok: {
+                    icon: '<i class="fas fa-check"></i>',
+                    label: 'Yes, update my scenes and tiles',
+                    callback: updateHyperspaceAssets
+                },
+                dont_remind: { icon: '<i class="fas fa-times"></i>', label: "No, I'll do it myself" }
+            },
+            close: () => {
+                resolve()
+            }
+        }).render(true);
+    });
 
 }
 
