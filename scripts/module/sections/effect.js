@@ -51,7 +51,7 @@ export default class EffectSection extends Section {
      * and .rotateTowards() to refer to previous effects' locations
      *
      * @param {string} inName
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     name(inName) {
         if (typeof inName !== "string") throw this.sequence._throwError(this, "name", "inName must be of type string");
@@ -64,7 +64,7 @@ export default class EffectSection extends Section {
      * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     persist(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "persist", "inBool must be of type boolean");
@@ -77,7 +77,7 @@ export default class EffectSection extends Section {
      * it play half as fast.
      *
      * @param {number} inNumber
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     playbackRate(inNumber = 1.0) {
         if (typeof inNumber !== "number") throw this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
@@ -89,7 +89,7 @@ export default class EffectSection extends Section {
      * Causes the effect to target a location close to the .reachTowards() location, but not on it.
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     missed(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "missed", "inBool must be of type boolean");
@@ -101,7 +101,7 @@ export default class EffectSection extends Section {
      * Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which
      * the Sequencer figures out from the path.
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     JB2A() {
         this._JB2A = true;
@@ -114,7 +114,7 @@ export default class EffectSection extends Section {
      * on the distance to the target.
      *
      * @param {function} inFunc
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     addOverride(inFunc) {
         if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
@@ -128,7 +128,7 @@ export default class EffectSection extends Section {
      * on the distance to the target.
      *
      * @param {function} inFunc
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
         if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addPostOverride", "The given function needs to be an actual function.");
@@ -142,7 +142,7 @@ export default class EffectSection extends Section {
      *
      * @param {object|string} inLocation
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     atLocation(inLocation, inOptions = {}) {
         inOptions = foundry.utils.mergeObject({
@@ -160,7 +160,7 @@ export default class EffectSection extends Section {
      *  or a string reference (see .name())
      *
      * @param {object|string} inObject
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     attachTo(inObject) {
         inObject = this._validateLocation(inObject);
@@ -181,7 +181,7 @@ export default class EffectSection extends Section {
      *
      * @param {object|string} inLocation
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
         inOptions = foundry.utils.mergeObject({
@@ -199,7 +199,7 @@ export default class EffectSection extends Section {
      *
      * @param {object} inObject
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     from(inObject, inOptions = {}){
         if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._throwError(this, "from", "inObject must be of type Token or Tile");
@@ -215,6 +215,14 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     *  Creates a text element, attached to the sprite. The options for the text are available here:
+     *  https://pixijs.io/pixi-text-style/
+     *
+     * @param {string} inText
+     * @param {object} inOptions
+     * @returns {EffectSection}
+     */
     text(inText, inOptions={}){
         if (typeof inText !== "string") throw this.sequence._throwError(this, "text", "inText must be of type string");
         this._text = foundry.utils.mergeObject({
@@ -228,7 +236,7 @@ export default class EffectSection extends Section {
      *
      * @param {object} inOffset
      * @param {object} options
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     offset(inOffset, options = {}) {
         if (inOffset === undefined) throw this.sequence._throwError(this, "offset", "inOffset must not be undefined");
@@ -248,7 +256,7 @@ export default class EffectSection extends Section {
      * Causes the final effect location to be snapped to the grid
      *
      * @param {boolean} inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     snapToGrid(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
@@ -260,7 +268,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be scaled to the target object's width
      *
      * @param {number} inScale
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     scaleToObject(inScale = 1.0){
         if (typeof inScale !== "number") throw this.sequence._throwError(self, "scaleToObject", `inScale must be of type number!`);
@@ -272,7 +280,7 @@ export default class EffectSection extends Section {
      * Sets the width and the height of the effect in pixels, this size is set before any scaling
      *
      * @param {number|object} inSize
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     size(inSize) {
         if (!(typeof inSize === "number" || typeof inSize === "object")) throw this.sequence._throwError(this, "size", "inSize be of type number or object");
@@ -308,7 +316,7 @@ export default class EffectSection extends Section {
      * grid, so this will make the effect scale up or down to match the active scene's grid size
      *
      * @param {number} inGridSize
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     gridSize(inGridSize) {
         if (typeof inGridSize !== "number") throw this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
@@ -323,7 +331,7 @@ export default class EffectSection extends Section {
      *  'anchor point'
      *
      * @param {number} inStartPoint
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
         if (typeof inStartPoint !== "number") throw this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
@@ -336,7 +344,7 @@ export default class EffectSection extends Section {
      *  The same as the start point, except from the right and how many pixels to offset the target from
      *
      * @param {number} inEndPoint
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
         if (typeof inEndPoint !== "number") throw this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
@@ -349,7 +357,7 @@ export default class EffectSection extends Section {
      *  Anchors the sprite's container according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     anchor(inAnchor) {
         if (typeof inAnchor === "number") {
@@ -375,7 +383,7 @@ export default class EffectSection extends Section {
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
      *
      * @param {number|object} inAnchor
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     spriteAnchor(inAnchor) {
         if (typeof inAnchor === "number") {
@@ -403,7 +411,7 @@ export default class EffectSection extends Section {
      *  Note: If this is used, it will override the anchor set by Aim Towards, which sets the sprite's anchor to the
      *  outermost edge of the location the sprite is played at
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     center() {
         this.anchor(0.5);
@@ -415,7 +423,7 @@ export default class EffectSection extends Section {
      * scales how much offset should be added. Defaults to 1.0, which covers the entire target position, 0.5 would cover half.
      *
      * @param {number} [inOffsetScale=1.0] inOffsetScale
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
         if (typeof inOffsetScale !== "number") throw this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
@@ -427,7 +435,7 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped X scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its horizontal axis
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     randomizeMirrorX() {
         this._randomMirrorX = true;
@@ -438,7 +446,7 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped Y scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its vertical axis
      *
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     randomizeMirrorY() {
         this._randomMirrorY = true;
@@ -450,7 +458,7 @@ export default class EffectSection extends Section {
      * mirroring the sprite on its horizontal axis
      *
      * @param {boolean} inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     mirrorX(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "mirrorX", "inBool must be of type boolean");
@@ -463,7 +471,7 @@ export default class EffectSection extends Section {
      * mirroring the sprite on its vertical axis
      *
      * @param {boolean} inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     mirrorY(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "mirrorY", "inBool must be of type boolean");
@@ -475,7 +483,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be played below tokens
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     belowTokens(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "belowTokens", "inBool must be of type boolean");
@@ -487,7 +495,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be played below tiles
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     belowTiles(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "belowTiles", "inBool must be of type boolean");
@@ -499,7 +507,7 @@ export default class EffectSection extends Section {
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
      * @param {number} inZIndex
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     zIndex(inZIndex) {
         if (typeof inZIndex !== "number") throw this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
@@ -511,7 +519,7 @@ export default class EffectSection extends Section {
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
      * @param {number} inExtraDuration
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     extraEndDuration(inExtraDuration) {
         if (typeof inExtraDuration !== "number") throw this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
@@ -523,7 +531,7 @@ export default class EffectSection extends Section {
      * Causes the effect to not rotate should its container rotate
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     zeroSpriteRotation(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "zeroSpriteRotation", "inBool must be of type boolean");
@@ -535,7 +543,7 @@ export default class EffectSection extends Section {
      * If the effect would loop due to its duration or persistence, this causes it not to
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     noLoop(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "noLoop", "inBool must be of type boolean");
@@ -547,7 +555,7 @@ export default class EffectSection extends Section {
      * Causes the effect to be played in screen space instead of world space (where tokens are)
      *
      * @param {boolean} [inBool=true] inBool
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpace(inBool = true){
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "screenSpace", "inBool must be of type boolean");
@@ -559,7 +567,7 @@ export default class EffectSection extends Section {
      *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
      *
      * @param {object} inPosition
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpacePosition(inPosition) {
         inPosition = {
@@ -576,7 +584,7 @@ export default class EffectSection extends Section {
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number in screen space
      *
      * @param {number|object} inAnchor
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpaceAnchor(inAnchor) {
         if (typeof inAnchor === "number") {
@@ -602,7 +610,7 @@ export default class EffectSection extends Section {
      *  Sets up various properties relating to scale of the effect on the screen
      *
      * @param {object} inOptions
-     * @returns {EffectSection} this
+     * @returns {EffectSection}
      */
     screenSpaceScale(inOptions){
 

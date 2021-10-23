@@ -294,9 +294,11 @@ new Sequence()
 
 ### Version 1.1.1
 - *Sequencer* - Removed Hyperspace sample from compendiums, as it was getting too big
+- *Sequencer* - Added compatibility warning if user has Perfect Vision installed
 - *Sequencer* - Added warning for Hyperspace assets that are going to be removed in a future update, and instead put into a separate module:
-    - https://foundryvtt.com/packages/nrsap
+    - https://foundryvtt.com/packages/nrsap by Nachtrose#9287 on Discord
 - *Sequencer* - Prepared Sequencer for v9, it _should_ be compatible to test
+- *Effects* - Added `.text()` which allows you to create text snippets on the canvas
 - *Effects* - Added `.from()` which creates an effect based on the given object, effectively copying the object as an effect
 - *Effects* - Added support for `.attachTo()` for temporary measured templates before they have been created, for use with WarpGate
 - *Effects* - Removed warning when `.attachTo()` and `.atLocation()` are used on the same effect - `.attachTo()` always wins out
