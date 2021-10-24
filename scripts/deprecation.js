@@ -1,39 +1,5 @@
 export async function check(){
-    await checkPerfectVision();
     await checkHyperspace();
-}
-
-async function checkPerfectVision(){
-    if(!game.modules.get("perfect-vision")?.active) return;
-
-    if(game.settings.get("sequencer", "perfect-vision-warning")) return;
-
-    const content = `
-        <h2>Perfect Vision Conflict</h2>
-        
-        <p>Hi there! I can see that you're using the Sequencer and the Perfect Vision modules.</p>
-        <p>Sadly, due to conflicts with Perfect Vision, effects that should play under tokens or tiles will instead always play on top.</p>
-        <p>It doesn't prevent you from using Sequencer or any modules that depend on it, but keep this in mind when using it.</p>
-        
-        <p>Thanks,<br>Wasp</p>`;
-
-    await new Promise(resolve => {
-        new Dialog({
-            title: "Sequencer Conflict Warning",
-            content: content,
-            buttons: {
-                ok: { icon: '<i class="fas fa-check"></i>', label: 'Understood' },
-                dont_remind: {
-                    icon: '<i class="fas fa-times"></i>',
-                    label: "Don't remind me again",
-                    callback: () => game.settings.set("sequencer", "perfect-vision-warning", true)
-                }
-            },
-            close: () => {
-                resolve()
-            }
-        }).render(true);
-    });
 }
 
 async function checkHyperspace(){

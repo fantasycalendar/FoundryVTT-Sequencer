@@ -10,14 +10,16 @@ const SequencerDatabase = {
      *
      * @param  {string}      moduleName    The namespace to assign to the inserted entries
      * @param  {object}      entries       The entries to merge into the database
-     * @return {void}
+     * @return {boolean}
      */
     registerEntries(moduleName, entries) {
+        if(moduleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
         this._flatten(entries, moduleName);
         this.entries = foundry.utils.mergeObject(this.entries,
             { [moduleName]: this._processFiles(entries) }
         );
         console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
+        return true;
     },
 
     /**

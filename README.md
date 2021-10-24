@@ -292,6 +292,10 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.1.2
+- *Sequencer* - Removed compatibility warning regarding Perfect Vision as the module was updated to support Sequencer
+- *Sequencer* - Added warning when trying to register database entries under a module name containing dots (as it uses dot-notated paths)
+
 ### Version 1.1.1
 - *Sequencer* - Removed Hyperspace sample from compendiums, as it was getting too big
 - *Sequencer* - Added compatibility warning if user has Perfect Vision installed
