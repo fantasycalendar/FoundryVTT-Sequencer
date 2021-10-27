@@ -292,12 +292,14 @@ new Sequence()
 
 ## Changelog
 
+### Version 1.1.3
+- *Sequencer* - Added `validateEntries` method to the Sequencer Database, which is helpful for module creators to validate their asset entries to the database
+- *Sequencer* - Minor speed improvements to how the database retrieves files
+- *Sequencer* - Removed the requirement for a user to be trusted to use the Database Viewer
+
 ### Version 1.1.2
 - *Sequencer* - Removed compatibility warning regarding Perfect Vision as the module was updated to support Sequencer
 - *Sequencer* - Added warning when trying to register database entries under a module name containing dots (as it uses dot-notated paths)
-- *Sequencer* - Added `validateEntries` to the database, which is helpful for module creators to validate their asset entries to the Sequencer Database
-- *Sequencer* - Minor speed improvements to how the database retrieves files
-- *Sequencer* - Removed the requirement for a user to be trusted to use the Database Viewer
 
 ### Version 1.1.1
 - *Sequencer* - Removed Hyperspace sample from compendiums, as it was getting too big
