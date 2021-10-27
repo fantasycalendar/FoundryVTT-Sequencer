@@ -1,4 +1,5 @@
 import * as lib from './lib/lib.js';
+import loadingBar from "./lib/loadingBar.js";
 
 const SequencerDatabase = {
 
@@ -8,18 +9,43 @@ const SequencerDatabase = {
     /**
      *  Registers a set of entries to the database on the given module name
      *
-     * @param  {string}      moduleName    The namespace to assign to the inserted entries
-     * @param  {object}      entries       The entries to merge into the database
+     * @param  {string}      inModuleName  The namespace to assign to the inserted entries
+     * @param  {object}      inEntries     The entries to merge into the database
      * @return {boolean}
      */
-    registerEntries(moduleName, entries) {
-        if(moduleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
-        this._flatten(entries, moduleName);
+    registerEntries(inModuleName, inEntries) {
+        if(inModuleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
+        if(this.entries[inModuleName]) lib.showWarning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
+        this._flatten(inEntries, inModuleName);
         this.entries = foundry.utils.mergeObject(this.entries,
-            { [moduleName]: this._processFiles(entries) }
+            { [inModuleName]: this._processFiles(inModuleName, inEntries) }
         );
-        console.log(`Sequencer | Database | Entries for "${moduleName}" registered`);
+        console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
         return true;
+    },
+
+    /**
+     *  Registers a set of entries to the database on the given module name
+     *
+     * @param  {string}     inModuleName    The namespace to assign to the inserted entries
+     * @return {boolean}
+     */
+    async validateEntries(inModuleName) {
+        const entries = this.getEntry(inModuleName);
+        ui.notifications.info(`Validating paths registered to "${inModuleName}"...`)
+        let isValid = true;
+        loadingBar.init(`Validating paths registered to "${inModuleName}"...`, entries.length);
+        for(let entry of entries){
+            const result = await entry.validate()
+            loadingBar.incrementProgress();
+            isValid = !(!result || !isValid);
+        }
+        if(!isValid){
+            ui.notifications.error(`Validation of paths registered to "${inModuleName}" failed! Errors logged in console.`)
+        }else{
+            ui.notifications.info(`Validation of paths registered to "${inModuleName}" complete! No errors found!`)
+        }
+        loadingBar.hide();
     },
 
     /**
@@ -38,44 +64,43 @@ const SequencerDatabase = {
      *  Gets the entry in the database by a dot-notated string
      *
      * @param  {string}             inString    The entry to find in the database
-     * @return {object|boolean}                 The found entry in the database, or false if not found (with warning)
+     * @return {array|lib.SequencerFile}        The found entry in the database, or false if not found (with warning)
      */
     getEntry(inString) {
         if (typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
         inString = inString.replace(/\[[0-9]+]$/, "");
         if (!this.entryExists(inString)) return this._throwError("getEntry", `Could not find ${inString} in database`);
-        let parts = inString.split('.');
-        let length = parts.length - 1;
 
-        let index = 0;
-        let entry = parts?.[index];
-        let currentInspect = this.entries?.[entry];
-
-        while (index < length && currentInspect && entry) {
-            index++;
-            entry = parts?.[index];
-            currentInspect = currentInspect?.[entry];
-            if (currentInspect instanceof lib.SequencerFile && index < length) {
-                currentInspect = currentInspect.file;
-            }
+        const ft = inString.endsWith("ft") ? inString.split('.').pop() : false;
+        if(ft){
+            inString = inString.split('.');
+            inString.pop()
+            inString = inString.join('.');
         }
 
-        if (!currentInspect) return this._throwError("getEntry", `Could not find ${inString} in database`);
+        const module = inString.split('.')[0];
+        const foundFiles = this.entries[module].filter(entry => {
+            return entry.dbPath.startsWith(inString);
+        }).map(entry => {
+            return ft ? entry.file[ft] : entry;
+        })
 
-        return currentInspect;
+        if (!foundFiles.length) return this._throwError("getEntry", `Could not find ${inString} in database`);
+
+        return foundFiles.length === 1 ? foundFiles[0] : foundFiles;
     },
 
-    getAllFileEntries(inString) {
-        if (typeof inString !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
-        if (!this.entryExists(inString)) return this._throwError("getAllFileEntries", `Could not find ${inString} in database`);
-        return this.getAllFilesUnder(inString);
-    },
-
-    getAllFilesUnder(inString) {
-        if (typeof inString !== "string") return this._throwError("getAllFilesUnder", "inString must be of type string");
-        if (!this.entryExists(inString)) return this._throwError("getAllFilesUnder", `Could not find ${inString} in database`);
-        let entries = this.getEntry(inString);
-        return Array.from(new Set(this._recurseEntriesUnder(entries)));
+    /**
+     *  Gets all files under a module
+     *
+     * @param  {string}         inModuleName    The module to get all files from
+     * @return {array|boolean}                  The found entries in the database under the module's name, or false if not found (with warning)
+     */
+    getAllFileEntries(inModuleName) {
+        if (typeof inModuleName !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
+        if (!this.entryExists(inModuleName)) return this._throwError("getAllFileEntries", `Could not find ${inModuleName} in database`);
+        const entries = this._recurseEntriesUnder(inModuleName);
+        return Array.from(new Set(entries.flat()));
     },
 
     _throwError(inFunctionName, inError) {
@@ -85,25 +110,12 @@ const SequencerDatabase = {
         return false;
     },
 
-    _recurseEntriesUnder(entries, listEntries = []) {
-
-        if (entries instanceof lib.SequencerFile) {
-            listEntries = listEntries.concat(entries.getAllFiles());
-        } else {
-            if (Array.isArray(entries)) {
-                for (let i = 0; i < entries.length; i++) {
-                    listEntries = this._recurseEntriesUnder(entries[i], listEntries);
-                }
-            } else {
-                for (let [key, entry] of Object.entries(entries)) {
-                    if (key.startsWith('_')) continue;
-                    listEntries = this._recurseEntriesUnder(entry, listEntries);
-                }
-            }
-        }
-
-        return listEntries;
-
+    _recurseEntriesUnder(inModuleName) {
+        return this.entries[inModuleName]
+            .filter(entry => entry.moduleName === inModuleName)
+            .map(entry => {
+                return entry.getAllFiles();
+            }).flat();
     },
 
     _flatten(entries, inModule) {
@@ -111,13 +123,15 @@ const SequencerDatabase = {
         this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
     },
 
-    _processFiles(entries) {
+    _processFiles(moduleName, entries) {
         entries = foundry.utils.duplicate(entries);
         let globalTemplate = entries?._templates ?? false;
-        return this._recurseFiles(entries, globalTemplate);
+        let entryCache = [];
+        this._recurseFiles(entryCache, moduleName, entries, globalTemplate);
+        return entryCache;
     },
 
-    _recurseFiles(entries, globalTemplate, template) {
+    _recurseFiles(entryCache, dbPath, entries, globalTemplate, template) {
 
         if (entries?._template) {
             template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
@@ -125,12 +139,13 @@ const SequencerDatabase = {
 
         if (typeof entries === "string" || typeof entries?.file === "string") {
 
-            entries = new lib.SequencerFile(entries, template);
+            entryCache.push(new lib.SequencerFile(entries, template, dbPath));
 
         } else if (Array.isArray(entries)) {
 
             for (let i = 0; i < entries.length; i++) {
-                entries[i] = this._recurseFiles(entries[i], globalTemplate, template);
+                let recurseDBPath = dbPath + "." + i;
+                this._recurseFiles(entryCache, recurseDBPath, entries[i], globalTemplate, template);
             }
 
         } else {
@@ -140,11 +155,12 @@ const SequencerDatabase = {
             let foundDistances = Object.keys(entries).filter(entry => feetTest.test(entry)).length !== 0;
 
             if (foundDistances) {
-                entries = new lib.SequencerFile(entries, template);
+                entryCache.push(new lib.SequencerFile(entries, template, dbPath));
             } else {
                 for (let entry of Object.keys(entries)) {
                     if (entry.startsWith('_')) continue;
-                    entries[entry] = this._recurseFiles(entries[entry], globalTemplate, template);
+                    let recurseDBPath = dbPath + "." + entry;
+                    this._recurseFiles(entryCache, recurseDBPath, entries[entry], globalTemplate, template);
                 }
             }
         }

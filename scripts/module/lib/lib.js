@@ -3,6 +3,36 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 /**
  * This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
+ * @param  {string}         inFile      The start value
+ * @param  {object}         inOptions   The end value
+ * @return {array|boolean}              Interpolated value
+ */
+export async function getFiles(inFile, { applyWildCard = false, softFail = false } = {}) {
+
+    let source = 'data';
+    const browseOptions = { wildcard: applyWildCard };
+
+    if (/\.s3\./.test(inFile)) {
+        source = 's3'
+        const { bucket, keyPrefix } = FilePicker.parseS3URL(inFile);
+        if (bucket) {
+            browseOptions.bucket = bucket;
+            inFile = keyPrefix;
+        }
+    }
+
+    try {
+        return (await FilePicker.browse(source, inFile, browseOptions)).files;
+    } catch (err) {
+        if(softFail) return false;
+        throw throwError("Sequencer", `getFiles | ${err}`);
+    }
+}
+
+
+/**
+ * This function linearly interpolates between p1 and p2 based on a normalized value of t
+ *
  * @param  {number}     p1     The start value
  * @param  {number}     p2     The end value
  * @param  {number}     t      The normalized percentage
@@ -281,9 +311,11 @@ export function isResponsibleGM() {
 }
 
 export class SequencerFile {
-    constructor(inData, inTemplate) {
+    constructor(inData, inTemplate, inDBPath) {
         inData = foundry.utils.duplicate(inData);
         this.template = inTemplate;
+        this.dbPath = inDBPath;
+        this.moduleName = inDBPath.split('.')[0];
         this.timeRange = inData?._timeRange;
         this.originalFile = inData?.file ?? inData;
         delete this.originalFile["_template"];
@@ -298,6 +330,31 @@ export class SequencerFile {
                 : false;
     }
 
+    async validate(){
+        let isValid = true;
+        const directories = {};
+        const allFiles = this.getAllFiles();
+        for(const file of allFiles) {
+            let directory = file.split("/")
+            directory.pop()
+            directory = directory.join('/')
+            if(directories[directory] === undefined){
+                directories[directory] = await getFiles(directory);
+            }
+        }
+        for(const file of allFiles) {
+            let directory = file.split("/")
+            directory.pop()
+            directory = directory.join('/')
+
+            if(directories[directory].indexOf(file) === -1) {
+                console.warn(`"${this.dbPath}" has an incorrect file path, could not find file. Points to:\n${file}`)
+                isValid = false;
+            }
+        }
+        return isValid;
+    }
+
     getAllFiles() {
         if (this.rangeFind) {
             return Object.values(this.file).deepFlatten();
@@ -306,7 +363,7 @@ export class SequencerFile {
     }
 
     getFile(inFt) {
-        if (inFt && this.rangeFind && this.file[inFt]) {
+        if (this.hasRangeFind(inFt)) {
             if (Array.isArray(this.file[inFt])) {
                 return typeof this.fileIndex === "number"
                     ? this.file[inFt][this.fileIndex]
@@ -319,6 +376,10 @@ export class SequencerFile {
                 : random_array_element(this.file);
         }
         return this.file;
+    }
+
+    hasRangeFind(inFt){
+        return inFt && this.rangeFind && this.file[inFt];
     }
 
     applyBaseFolder(baseFolder) {

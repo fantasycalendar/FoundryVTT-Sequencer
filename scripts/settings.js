@@ -56,13 +56,6 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register("sequencer", "perfect-vision-warning", {
-        scope: "world",
-        config: false,
-        default: false,
-        type: Boolean
-    });
-
     Hooks.on("getSceneControlButtons", (controls) => {
         if(!game.settings.get("sequencer", "toolButtonsEnabled")) return;
         const bar = controls.find(c => c.name === "token");

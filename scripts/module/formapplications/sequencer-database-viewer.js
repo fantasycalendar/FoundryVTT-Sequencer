@@ -83,7 +83,6 @@ export default class SequencerDatabaseViewer extends FormApplication {
     }
 
     static show(inFocus = false) {
-        if (!game.user.isTrusted) return;
         for (const app of Object.values(ui.windows)) {
             if (app instanceof this) {
                 return app.render(true, { focus: inFocus });
