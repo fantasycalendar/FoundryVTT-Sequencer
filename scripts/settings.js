@@ -49,6 +49,20 @@ export default function registerSettings() {
         type: Boolean
     });
 
+    game.settings.register("sequencer", "user-effect-opacity", {
+        name: "Player only effect opacity for GM",
+        hint: "If users create effects visible only for other players, this setting allows you to set an opacity that these effects will be visible for you as a GM, making sure they're not abusing each other's computers.",
+        scope: "client",
+        config: true,
+        default: 50,
+        type: Number,
+        range: {
+            min: 0,
+            max: 100,
+            step: 1
+        }
+    });
+
     game.settings.register("sequencer", "hyperspace-deprecation-warning", {
         scope: "world",
         config: false,

@@ -151,7 +151,7 @@ export default class CanvasEffect {
         this.highlight.visible = show;
     }
 
-    async initializeEffect(){
+    async initialize(){
         await this.attachSprite();
         this.playCustomAnimations();
         this.moveTowards();
@@ -241,10 +241,28 @@ export default class CanvasEffect {
 
 	}
 
+    get shouldShowGMs(){
+        // If the effect is going to be played for a subset of users
+        // And the current user is a GM
+        // And the users do not contain the GM
+        // And the GM has not set the opacity user-specific effects to 0
+        // And it is not an effect that is only played for the user who created the effect
+        return this.data.users.length
+            && game.user.isGM
+            && !this.data.users.includes(game.userId)
+            && game.settings.get("sequencer", "user-effect-opacity") !== 0
+            && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId));
+    }
+
     async attachSprite() {
 
         this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
+
+        if(this.shouldShowGMs){
+            this.container.alpha = game.settings.get("sequencer", "user-effect-opacity") / 100;
+            this.container.filters = [new PIXI.filters.ColorMatrixFilter({ saturation: -1 })];
+        }
 
         this.applyFilters();
 
@@ -826,7 +844,11 @@ export default class CanvasEffect {
 
         await this.prepareSprite();
 
-        const shouldPlay = !(game.user.viewedScene !== this.data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (this.data.users.length && !this.data.users.includes(game.userId)));
+        const skipPlay = (
+                game.user.viewedScene !== this.data.sceneId
+            || !game.settings.get('sequencer', 'effectsEnabled')
+            || (this.data.users.length && !this.data.users.includes(game.userId) && !game.user.isGM)
+        );
 
         let promise = new Promise(async (resolve, reject) => {
             this.resolve = resolve;
@@ -834,9 +856,9 @@ export default class CanvasEffect {
             	reject();
 			}else {
 				this.calculateDuration();
-				if(shouldPlay){
+				if(!skipPlay){
                     Hooks.call("createSequencerEffect", this.data);
-				    this.initializeEffect();
+				    this.initialize();
                 }
 			}
         });
@@ -851,7 +873,7 @@ export default class CanvasEffect {
 
 class PersistentCanvasEffect extends CanvasEffect{
 
-    async initializeEffect(){
+    async initialize(){
         this.startEffect();
         await this.attachSprite();
         this.playCustomAnimations();
