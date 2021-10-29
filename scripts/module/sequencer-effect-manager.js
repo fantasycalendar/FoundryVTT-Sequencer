@@ -79,7 +79,7 @@ export default class SequencerEffectManager {
      */
     static async endEffects(inData = {}, push = true) {
         inData = this._validateFilters(inData);
-        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects) return;
+        if (!inData) throw lib.throwError("SequencerEffectManager", "endEffects | Incorrect or incomplete parameters provided")
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
         return this._endEffects(inData);
     }
@@ -134,11 +134,13 @@ export default class SequencerEffectManager {
         if(inData?.effects){
             if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
             inData.effects = inData.effects.map(effect => {
-                if(!(typeof effect === "string" || effect instanceof CanvasEffect))  throw lib.throwError("SequencerEffectManager", "endEffects | entries in inData.effects must be of type string or CanvasEffect")
+                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.throwError("SequencerEffectManager", "endEffects | entries in inData.effects must be of type string or CanvasEffect")
                 if(effect instanceof CanvasEffect) return effect.data.id;
                 return effect;
             })
         }
+
+        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects) return false;
 
         return foundry.utils.mergeObject({
             name: false,
