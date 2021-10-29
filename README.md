@@ -293,9 +293,12 @@ new Sequence()
 ## Changelog
 
 ### Version 1.1.3
+- *Sequencer* - Added `sequencerEffectManagerReady` hook which is called when every effect has been set up on the current loaded scene
 - *Sequencer* - Added `validateEntries` method to the Sequencer Database, which is helpful for module creators to validate their asset entries to the database
 - *Sequencer* - Minor speed improvements to how the database retrieves files
 - *Sequencer* - Removed the requirement for a user to be trusted to use the Database Viewer
+- *Sequencer* - Fixed `Sequencer.EffectManager.endEffects` not throwing error when incorrect or incomplete parameters were given, and instead ended all effects (whoops)
+- *Effects* - Made user-created effects that were made to be displayed only for other users also show up for GMs, though saturated and with 50% opacity. This is to ensure no player-to-player abuse would occur.
 
 ### Version 1.1.2
 - *Sequencer* - Removed compatibility warning regarding Perfect Vision as the module was updated to support Sequencer
