@@ -25,7 +25,7 @@ const SequencerDatabase = {
     },
 
     /**
-     *  Registers a set of entries to the database on the given module name
+     *  Validates the entries under a certain module name, checking whether paths to assets are correct or not
      *
      * @param  {string}     inModuleName    The namespace to assign to the inserted entries
      * @return {boolean}
@@ -91,6 +91,21 @@ const SequencerDatabase = {
     },
 
     /**
+     *  Get all valid entries under a certain path
+     *
+     * @param  {string}             inPath      The database path to get entries under
+     * @return {array}                          An array containing the next layer of valid paths
+     */
+    getPathsUnder(inPath){
+        if (typeof inPath !== "string") return this._throwError("getPathsUnder", "inString must be of type string")
+        inPath = inPath.replace(/\[[0-9]+]$/, "");
+        if (!this.entryExists(inPath)) return this._throwError("getPathsUnder", `Could not find ${inPath} in database`);
+        let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
+        if(entries.length === 0) return [];
+        return lib.makeArrayUnique(entries.map(e => e.split(inPath)[1].split('.')[1]));
+    },
+
+    /**
      *  Gets all files under a module
      *
      * @param  {string}         inModuleName    The module to get all files from
@@ -100,7 +115,7 @@ const SequencerDatabase = {
         if (typeof inModuleName !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
         if (!this.entryExists(inModuleName)) return this._throwError("getAllFileEntries", `Could not find ${inModuleName} in database`);
         const entries = this._recurseEntriesUnder(inModuleName);
-        return Array.from(new Set(entries.flat()));
+        return lib.makeArrayUnique(entries.flat());
     },
 
     _throwError(inFunctionName, inError) {
@@ -120,7 +135,7 @@ const SequencerDatabase = {
 
     _flatten(entries, inModule) {
         let flattened = lib.flattenObject(foundry.utils.duplicate({ [inModule]: entries }));
-        this.flattenedEntries = Array.from(new Set(this.flattenedEntries.concat(Object.keys(flattened))));
+        this.flattenedEntries = lib.makeArrayUnique(this.flattenedEntries.concat(Object.keys(flattened)));
     },
 
     _processFiles(moduleName, entries) {

@@ -261,6 +261,12 @@ export function transformVector(inVector, context = false) {
     };
 }
 
+/**
+ *  Gets all objects from a scene
+ *
+ * @param  {String}     inSceneId   The scene ID to get all valid objects from
+ * @return {Array}                  Array containing all objects
+ */
 export function getAllObjects(inSceneId) {
     const scene = inSceneId
         ? game.scenes.get(inSceneId)
@@ -274,10 +280,23 @@ export function getAllObjects(inSceneId) {
     ].deepFlatten().filter(Boolean);
 }
 
+/**
+ *  Gets an object by an unique identifier, such as an ID, name, tag, label
+ *
+ * @param  {String}     inObjectId  The object identifier to search for
+ * @param  {String}     inSceneId   The scene ID to search within
+ * @return {any}                    Object if found, else undefined
+ */
 export function getObjectFromScene(inObjectId, inSceneId) {
     return getAllObjects(inSceneId).find(obj => checkObjectByIdentifier(obj, inObjectId));
 }
 
+/**
+ *  Get the unique identifier from an object
+ *
+ * @param  {Object}     inObject    The object to get the unique identifier from
+ * @return {String}                 The identifier
+ */
 export function getObjectIdentifier(inObject){
     return inObject?.id
         ?? inObject?.document?.name
@@ -286,8 +305,18 @@ export function getObjectIdentifier(inObject){
         ?? (inObject?.label !== "" ? inObject?.label : undefined);
 }
 
-export function checkObjectByIdentifier(inObject, inIdentifier) {
+function checkObjectByIdentifier(inObject, inIdentifier) {
     return getObjectIdentifier(inObject) === inIdentifier;
+}
+
+/**
+ *  Turns an array containing multiples of the same string, objects, etc, and removes duplications, and returns a fresh array
+ *
+ * @param  {Array}     inArray     An array of multiple duplicate entries to be made unique
+ * @return {Array}                 An array containing only unique objects
+ */
+export function makeArrayUnique(inArray){
+    return Array.from(new Set(inArray));
 }
 
 export function showWarning(inClassName, warning, notify = false) {

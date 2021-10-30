@@ -1,6 +1,7 @@
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
 import loadingBar from "./lib/loadingBar.js";
+import * as lib from './lib/lib.js';
 
 const SequencerPreloader = {
 
@@ -35,12 +36,12 @@ const SequencerPreloader = {
     },
 
     cleanSrcs(inSrcs) {
-        return Array.from(new Set(inSrcs.map(src => {
+        return lib.makeArrayUnique(inSrcs.map(src => {
             if (window.Sequencer.Database.entryExists(src)) {
                 return window.Sequencer.Database.getAllFilesUnder(src);
             }
             return src;
-        }))).deepFlatten();
+        })).deepFlatten();
     },
 
     async preloadForClients(inSrcs, showProgressBar = false) {
