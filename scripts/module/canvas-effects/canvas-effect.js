@@ -336,10 +336,10 @@ export default class CanvasEffect {
     }
 
     tryPlay(){
-        return new Promise(resolve => {
-            if (this.source) {
+        return new Promise(async (resolve) => {
+            if (this.source && !this.ended) {
                 try {
-                    this.source.play();
+                    await this.source.play();
                     resolve();
                 } catch (err) {
                     setTimeout(() => {
