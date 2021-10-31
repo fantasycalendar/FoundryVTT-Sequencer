@@ -71,18 +71,27 @@ const SequencerDatabase = {
         inString = inString.replace(/\[[0-9]+]$/, "");
         if (!this.entryExists(inString)) return this._throwError("getEntry", `Could not find ${inString} in database`);
 
-        const ft = inString.endsWith("ft") ? inString.split('.').pop() : false;
-        if(ft){
-            inString = inString.split('.');
-            inString.pop()
-            inString = inString.join('.');
+        let feetTest = new RegExp(/[0-9]+ft/g);
+
+        let ft = false;
+        let index = false;
+        if(feetTest.test(inString)){
+            ft = inString.match(feetTest)[0];
+            const split = inString.split(ft);
+            if(inString.length > 1){
+                index = split[1].substring(1);
+            }
+            inString = split[0].slice(0, -1);
         }
 
         const module = inString.split('.')[0];
         const foundFiles = this.entries[module].filter(entry => {
             return entry.dbPath.startsWith(inString);
         }).map(entry => {
-            return ft ? entry.file[ft] : entry;
+            let foundFile = entry;
+            if(ft) foundFile = entry.file?.[ft] ?? foundFile;
+            if(index) foundFile = foundFile?.[index] ?? foundFile;
+            return foundFile;
         })
 
         if (!foundFiles.length) return this._throwError("getEntry", `Could not find ${inString} in database`);
