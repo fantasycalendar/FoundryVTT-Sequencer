@@ -210,7 +210,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "from", "inOptions.cacheLocation must be of type boolean");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
-        this.size(this._getObjectSize(inObject));
+        this.size(this._getIconSize(inObject));
         if(inObject?.data?.rotation) this.rotate(inObject?.data?.rotation + 90);
         return this;
     }
@@ -1027,9 +1027,8 @@ export default class EffectSection extends Section {
 
             if (obj instanceof Token) {
                 const halfSize = this._getHalfSize(obj);
-                const objectScale = obj?.data?.scale ?? 1.0;
-                pos.x += halfSize.width / objectScale;
-                pos.y += halfSize.height / objectScale;
+                pos.x += halfSize.width;
+                pos.y += halfSize.height;
             }
         }
 
@@ -1067,12 +1066,20 @@ export default class EffectSection extends Section {
             ?? inObj?.shape?.radius*2
             ?? canvas.grid.size;
 
-        const objectScale = inObj?.data?.scale ?? 1.0;
-
         return {
-            width: width * objectScale,
-            height: height * objectScale
+            width,
+            height
         }
+    }
+
+    _getIconSize(inObj){
+        if(inObj.icon){
+            return {
+                width: inObj.icon.width,
+                height: inObj.icon.height
+            }
+        }
+        return this._getObjectSize(inObj);
     }
 
     _getPositions(from, to, applyOffsets = true) {
