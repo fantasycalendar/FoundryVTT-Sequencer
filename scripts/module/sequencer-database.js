@@ -85,20 +85,25 @@ const SequencerDatabase = {
         }
 
         const module = inString.split('.')[0];
-        const foundFiles = this.entries[module].filter(entry => {
-            return entry.dbPath.startsWith(inString);
-        }).map(entry => {
-            let foundFile = entry;
-            if(ft) foundFile = entry.file?.[ft] ?? foundFile;
-            if(index) foundFile = foundFile?.[index] ?? foundFile;
-            return foundFile;
-        })
+        const exactEntries = this.entries[module].filter(entry => {
+                return entry.dbPath === inString;
+            });
 
-        if (!foundFiles.length) return this._throwError("getEntry", `Could not find ${inString} in database`);
+        const filteredEntries = (exactEntries.length
+            ? exactEntries
+            : this.entries[module].filter(entry => {
+                return entry.dbPath.startsWith(inString);
+            })).map(entry => {
+                let foundFile = entry;
+                if(ft) foundFile = entry.file?.[ft] ?? foundFile;
+                if(index) foundFile = foundFile?.[index] ?? foundFile;
+                return foundFile;
+            });
 
-        return foundFiles.length === 1 ? foundFiles[0] : foundFiles;
+        if (!filteredEntries.length) return this._throwError("getEntry", `Could not find ${inString} in database`);
+
+        return filteredEntries.length === 1 ? filteredEntries[0] : filteredEntries;
     },
-
     /**
      *  Get all valid entries under a certain path
      *
