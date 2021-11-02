@@ -2,6 +2,7 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
 import filters from "../lib/filters.js";
+import { getObjectFromScene } from "../lib/lib.js";
 
 export default class CanvasEffect {
 
@@ -131,7 +132,7 @@ export default class CanvasEffect {
     }
 
     _showHighlight(show){
-        if(!this.highlight){
+        if(!this.highlight && this.sprite){
             const bounds = this.spriteContainer.getLocalBounds();
             let width = bounds.width * 1.1;
             let height = bounds.height * 1.1;
@@ -151,7 +152,7 @@ export default class CanvasEffect {
         this.highlight.visible = show;
     }
 
-    async initializeEffect(){
+    async initialize(){
         await this.attachSprite();
         this.playCustomAnimations();
         this.moveTowards();
@@ -241,10 +242,36 @@ export default class CanvasEffect {
 
 	}
 
+	timeoutRemove(){
+        if(!lib.getObjectFromScene(this.data.attachTo)){
+            Sequencer.EffectManager.endEffects({ effects: this });
+            return;
+        }
+        setTimeout(this.timeoutRemove.bind(this), 1000);
+    }
+
+    get shouldShowGMs(){
+        // If the effect is going to be played for a subset of users
+        // And the current user is a GM
+        // And the users do not contain the GM
+        // And the GM has not set the opacity user-specific effects to 0
+        // And it is not an effect that is only played for the user who created the effect
+        return this.data.users.length
+            && game.user.isGM
+            && !this.data.users.includes(game.userId)
+            && game.settings.get("sequencer", "user-effect-opacity") !== 0
+            && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId));
+    }
+
     async attachSprite() {
 
         this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
+
+        if(this.shouldShowGMs){
+            this.container.alpha = game.settings.get("sequencer", "user-effect-opacity") / 100;
+            this.container.filters = [new PIXI.filters.ColorMatrixFilter({ saturation: -1 })];
+        }
 
         this.applyFilters();
 
@@ -318,10 +345,10 @@ export default class CanvasEffect {
     }
 
     tryPlay(){
-        return new Promise(resolve => {
-            if (this.source) {
+        return new Promise(async (resolve) => {
+            if (this.source && !this.ended) {
                 try {
-                    this.source.play();
+                    await this.source.play();
                     resolve();
                 } catch (err) {
                     setTimeout(() => {
@@ -826,7 +853,11 @@ export default class CanvasEffect {
 
         await this.prepareSprite();
 
-        const shouldPlay = !(game.user.viewedScene !== this.data.sceneId || !game.settings.get('sequencer', 'effectsEnabled') || (this.data.users.length && !this.data.users.includes(game.userId)));
+        const skipPlay = (
+                game.user.viewedScene !== this.data.sceneId
+            || !game.settings.get('sequencer', 'effectsEnabled')
+            || (this.data.users.length && !this.data.users.includes(game.userId) && !game.user.isGM)
+        );
 
         let promise = new Promise(async (resolve, reject) => {
             this.resolve = resolve;
@@ -834,9 +865,9 @@ export default class CanvasEffect {
             	reject();
 			}else {
 				this.calculateDuration();
-				if(shouldPlay){
+				if(!skipPlay){
                     Hooks.call("createSequencerEffect", this.data);
-				    this.initializeEffect();
+				    this.initialize();
                 }
 			}
         });
@@ -851,7 +882,7 @@ export default class CanvasEffect {
 
 class PersistentCanvasEffect extends CanvasEffect{
 
-    async initializeEffect(){
+    async initialize(){
         this.startEffect();
         await this.attachSprite();
         this.playCustomAnimations();

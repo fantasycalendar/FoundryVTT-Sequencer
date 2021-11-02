@@ -79,7 +79,7 @@ export default class SequencerEffectManager {
      */
     static async endEffects(inData = {}, push = true) {
         inData = this._validateFilters(inData);
-        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects) return;
+        if (!inData) throw lib.throwError("SequencerEffectManager", "endEffects | Incorrect or incomplete parameters provided")
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
         return this._endEffects(inData);
     }
@@ -134,11 +134,13 @@ export default class SequencerEffectManager {
         if(inData?.effects){
             if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
             inData.effects = inData.effects.map(effect => {
-                if(!(typeof effect === "string" || effect instanceof CanvasEffect))  throw lib.throwError("SequencerEffectManager", "endEffects | entries in inData.effects must be of type string or CanvasEffect")
+                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.throwError("SequencerEffectManager", "endEffects | entries in inData.effects must be of type string or CanvasEffect")
                 if(effect instanceof CanvasEffect) return effect.data.id;
                 return effect;
             })
         }
+
+        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects) return false;
 
         return foundry.utils.mergeObject({
             name: false,
@@ -159,6 +161,8 @@ export default class SequencerEffectManager {
 
         if (data.persist && setFlags && effect.context?.id){
             flagManager.addFlags(effect.contextDocument, effect);
+        }else{
+            effect.timeoutRemove();
         }
 
         EffectsContainer.add(effect);
@@ -174,18 +178,21 @@ export default class SequencerEffectManager {
 
     static _setUpPersists() {
         this._tearDownPersists();
-        const allObjects = lib.getAllObjects()
+        const allObjects = lib.getAllObjects();
         allObjects.push(canvas.scene);
-        allObjects.forEach(obj => {
+        let promises = allObjects.map(obj => {
             const doc = obj?.document ?? obj;
             let objEffects = doc.getFlag('sequencer', 'effects') ?? [];
             objEffects = objEffects.map(effect => {
                 if(effect[1].attachTo) effect[1].attachTo = doc.object.id;
                 return effect;
             });
-            this._playEffectMap(objEffects, doc);
-        })
+            return this._playEffectMap(objEffects, doc);
+        }).flat();
         debounceShowViewer();
+        return Promise.all(promises).then(() => {
+            Hooks.call("sequencerEffectManagerReady");
+        });
     }
 
     static _tearDownPersists(inId) {
@@ -216,15 +223,15 @@ export default class SequencerEffectManager {
 
     static _playEffectMap(inEffects, inDocument){
         if(inEffects instanceof Map) inEffects = Array.from(inEffects);
-        inEffects.forEach(effect => {
-            this._playEffect(effect[1], false)
+        return Promise.all(inEffects.map(effect => {
+            return this._playEffect(effect[1], false)
                 .then((result) => {
                     if(!result) flagManager.removeFlags(inDocument, effect);
                 })
                 .catch(() => {
                     flagManager.removeFlags(inDocument, effect)
                 });
-        })
+        }));
     }
 
     static _removeEffect(effect) {
@@ -275,6 +282,8 @@ const flagManager = {
 
         if (!lib.isResponsibleGM()) return;
 
+        if(!inObject?.id) return;
+
         if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
         let flagsToSet = flagManager.flagAddBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
@@ -290,6 +299,8 @@ const flagManager = {
     removeFlags: (inObject, inEffects, removeAll) => {
 
         if (!lib.isResponsibleGM()) return;
+
+        if(!inObject?.id) return;
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 

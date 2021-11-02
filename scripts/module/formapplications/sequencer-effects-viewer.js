@@ -45,9 +45,8 @@ export default class SequencerEffectsViewer extends FormApplication {
             .filter(effect => effect.data.persist)
             .map(effect => {
                 index++;
-                const name = this.formatEffectName(effect);
                 return {
-                    name,
+                    name: this.formatEffectName(effect),
                     index
                 };
             })
@@ -55,9 +54,8 @@ export default class SequencerEffectsViewer extends FormApplication {
             .filter(effect => !effect.data.persist)
             .map(effect => {
                 index++;
-                const name = this.formatEffectName(effect);
                 return {
-                    name,
+                    name: this.formatEffectName(effect),
                     index
                 };
             })

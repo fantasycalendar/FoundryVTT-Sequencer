@@ -137,27 +137,7 @@ export default {
 
         inFile = this._applyBaseFolder(inFile);
 
-        let source = 'data';
-        const browseOptions = { wildcard: true };
-
-        if (/\.s3\./.test(inFile)) {
-            source = 's3'
-            const { bucket, keyPrefix } = FilePicker.parseS3URL(inFile);
-            if (bucket) {
-                browseOptions.bucket = bucket;
-                inFile = keyPrefix;
-            }
-        }
-
-        let images = [];
-        try {
-            const content = await FilePicker.browse(source, inFile, browseOptions);
-            images = content.files;
-        } catch (err) {
-            throw this.sequence._throwError(this, "_applyWildcard", err);
-        }
-
-        return images;
+        return lib.getFiles(inFile, { applyWildCard: true });
 
     }
 

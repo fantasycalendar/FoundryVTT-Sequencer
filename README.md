@@ -289,8 +289,21 @@ new Sequence()
     .play();
 ```
 
+## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation & Guides](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
+
+### Version 1.1.3
+- *Sequencer* - Added `sequencerEffectManagerReady` hook which is called when every effect has been set up on the scene that's currently loaded
+- *Sequencer* - Added `validateEntries` method to the Sequencer Database, which is helpful for module creators to validate their asset entries to the database
+- *Sequencer* - Added `getPathsUnder` method to the Sequencer Database, which retrieves valid entries under a certain database path
+- *Sequencer* - Minor speed improvements to how the database retrieves files
+- *Sequencer* - Removed the requirement for a user to be trusted to use the Database Viewer
+- *Sequencer* - Fixed `Sequencer.EffectManager.endEffects` not throwing error when incorrect or incomplete parameters were given, and instead ended all effects (whoops)
+- *Effects* - Made user-created effects that were made to be displayed only for other users also show up for GMs, though saturated and with 50% opacity. This is to ensure no player-to-player abuse would occur
+- *Effects* - Fixed scaled tokens causing effects to not play on the correct location
+- *Effects* - Fixed temporary effects attached to warpgate cursors no longer stays around for longer than they should
 
 ### Version 1.1.2
 - *Sequencer* - Removed compatibility warning regarding Perfect Vision as the module was updated to support Sequencer
