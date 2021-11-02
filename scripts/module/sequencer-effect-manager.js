@@ -161,6 +161,8 @@ export default class SequencerEffectManager {
 
         if (data.persist && setFlags && effect.context?.id){
             flagManager.addFlags(effect.contextDocument, effect);
+        }else{
+            effect.timeoutRemove();
         }
 
         EffectsContainer.add(effect);
@@ -280,6 +282,8 @@ const flagManager = {
 
         if (!lib.isResponsibleGM()) return;
 
+        if(!inObject?.id) return;
+
         if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
         let flagsToSet = flagManager.flagAddBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
@@ -295,6 +299,8 @@ const flagManager = {
     removeFlags: (inObject, inEffects, removeAll) => {
 
         if (!lib.isResponsibleGM()) return;
+
+        if(!inObject?.id) return;
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 

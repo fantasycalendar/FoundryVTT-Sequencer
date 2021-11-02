@@ -2,6 +2,7 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
 import filters from "../lib/filters.js";
+import { getObjectFromScene } from "../lib/lib.js";
 
 export default class CanvasEffect {
 
@@ -131,7 +132,7 @@ export default class CanvasEffect {
     }
 
     _showHighlight(show){
-        if(!this.highlight){
+        if(!this.highlight && this.sprite){
             const bounds = this.spriteContainer.getLocalBounds();
             let width = bounds.width * 1.1;
             let height = bounds.height * 1.1;
@@ -240,6 +241,14 @@ export default class CanvasEffect {
         }
 
 	}
+
+	timeoutRemove(){
+        if(!lib.getObjectFromScene(this.data.attachTo)){
+            Sequencer.EffectManager.endEffects({ effects: this });
+            return;
+        }
+        setTimeout(this.timeoutRemove.bind(this), 1000);
+    }
 
     get shouldShowGMs(){
         // If the effect is going to be played for a subset of users
