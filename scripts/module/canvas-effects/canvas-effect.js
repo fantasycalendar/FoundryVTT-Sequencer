@@ -269,8 +269,8 @@ export default class CanvasEffect {
         this.container.addChild(this.spriteContainer);
 
         if(this.shouldShowGMs){
-            this.container.alpha = game.settings.get("sequencer", "user-effect-opacity") / 100;
-            this.container.filters = [new PIXI.filters.ColorMatrixFilter({ saturation: -1 })];
+            this.spriteContainer.alpha = game.settings.get("sequencer", "user-effect-opacity") / 100;
+            this.spriteContainer.filters = [new PIXI.filters.ColorMatrixFilter({ saturation: -1 })];
         }
 
         this.applyFilters();
