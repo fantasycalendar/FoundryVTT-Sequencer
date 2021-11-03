@@ -120,15 +120,15 @@ const SequencerDatabase = {
     },
 
     /**
-     *  Gets all files under a module
+     *  Gets all files under a database path
      *
-     * @param  {string}         inModuleName    The module to get all files from
+     * @param  {string}         inDBPath    The module to get all files from
      * @return {array|boolean}                  The found entries in the database under the module's name, or false if not found (with warning)
      */
-    getAllFileEntries(inModuleName) {
-        if (typeof inModuleName !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
-        if (!this.entryExists(inModuleName)) return this._throwError("getAllFileEntries", `Could not find ${inModuleName} in database`);
-        const entries = this._recurseEntriesUnder(inModuleName);
+    getAllFileEntries(inDBPath) {
+        if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
+        if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
+        const entries = this._recurseEntriesUnder(inDBPath);
         return lib.makeArrayUnique(entries.flat());
     },
 
@@ -139,9 +139,10 @@ const SequencerDatabase = {
         return false;
     },
 
-    _recurseEntriesUnder(inModuleName) {
-        return this.entries[inModuleName]
-            .filter(entry => entry.moduleName === inModuleName)
+    _recurseEntriesUnder(inDBPath) {
+        const module = inDBPath.split('.')[0];
+        return this.entries[module]
+            .filter(entry => entry.dbPath.startsWith(inDBPath))
             .map(entry => {
                 return entry.getAllFiles();
             }).flat();

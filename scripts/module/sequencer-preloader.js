@@ -38,7 +38,7 @@ const SequencerPreloader = {
     cleanSrcs(inSrcs) {
         return lib.makeArrayUnique(inSrcs.map(src => {
             if (window.Sequencer.Database.entryExists(src)) {
-                return window.Sequencer.Database.getAllFilesUnder(src);
+                return window.Sequencer.Database.getAllFileEntries(src);
             }
             return src;
         })).deepFlatten();
@@ -133,14 +133,17 @@ const SequencerPreloader = {
         if (showProgressBar) loadingBar.init("Sequencer - Preloading files", numFilesToLoad, this.debug);
 
         let filesSucceeded = 0;
-        Promise.allSettled(
-            inSrcs.map(src => SequencerFileCache.loadFile(src).then(() => {
-                if (showProgressBar) loadingBar.incrementProgress();
-                filesSucceeded++;
-            }).catch(() => {
-                if (showProgressBar) loadingBar.incrementProgress();
-            }))
-        ).then(() => {
+        new Promise(async (resolve) => {
+            for(let src of inSrcs){
+                await SequencerFileCache.loadFile(src).then(() => {
+                    if (showProgressBar) loadingBar.incrementProgress();
+                    filesSucceeded++;
+                }).catch(() => {
+                    if (showProgressBar) loadingBar.incrementProgress();
+                });
+            }
+            resolve();
+        }).then(() => {
             if (showProgressBar) loadingBar.hide();
             if (push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_DONE, this.userId, senderId, numFilesToLoad - filesSucceeded);
             if (local) this.handleDone(this.userId, this.userId, numFilesToLoad - filesSucceeded);
