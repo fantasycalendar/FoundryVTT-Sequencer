@@ -294,6 +294,11 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.1.5
+- *Effects* - Fixed bug that caused all effects to stay transparent after playing an effect for specific user
+- *Effects* - Fixed bug with `.missed()` and `.reachTowards()` failing to play any effect
+- *Effects* - Fixed all effects sharing users 
+
 ### Version 1.1.4
 - *Sequencer* - Fixed error in the Sequencer Preloader when pre-loading files from Database paths 
 - *Effects* - Fixed bug that caused persistent effects to end when a client connected after it was created 
