@@ -296,7 +296,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 1.1.4
 - *Sequencer* - Fixed error in the Sequencer Preloader when pre-loading files from Database paths 
-- *Effects* - Fixed but that caused persistent effects to end when a client connected after it was created 
+- *Effects* - Fixed bug that caused persistent effects to end when a client connected after it was created 
 
 ### Version 1.1.3
 - *Sequencer* - Added `sequencerEffectManagerReady` hook which is called when every effect has been set up on the scene that's currently loaded
