@@ -63,8 +63,8 @@ const SequencerDatabase = {
     /**
      *  Gets the entry in the database by a dot-notated string
      *
-     * @param  {string}             inString    The entry to find in the database
-     * @return {array|lib.SequencerFile}        The found entry in the database, or false if not found (with warning)
+     * @param  {string}             inString        The entry to find in the database
+     * @return {array|lib.SequencerFile|boolean}    The found entry in the database, or false if not found (with warning)
      */
     getEntry(inString) {
         if (typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
@@ -108,7 +108,7 @@ const SequencerDatabase = {
      *  Get all valid entries under a certain path
      *
      * @param  {string}             inPath      The database path to get entries under
-     * @return {array}                          An array containing the next layer of valid paths
+     * @return {array|boolean}                  An array containing the next layer of valid paths
      */
     getPathsUnder(inPath){
         if (typeof inPath !== "string") return this._throwError("getPathsUnder", "inString must be of type string")

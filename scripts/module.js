@@ -12,11 +12,13 @@ import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import registerLibwrappers from "./libwrapper.js";
 import * as deprecation from "./deprecation.js";
+import SequencerPlayer from "./module/sequencer-effect-player.js";
 
 Hooks.once('init', async function () {
 
     window.Sequence = Sequence;
     window.Sequencer = {
+        Player: SequencerPlayer,
         Database: SequencerDatabase,
         DatabaseViewer: SequencerDatabaseViewer,
         Preloader: SequencerPreloader,
