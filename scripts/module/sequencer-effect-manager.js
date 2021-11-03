@@ -161,7 +161,9 @@ export default class SequencerEffectManager {
 
         if (data.persist && setFlags && effect.context?.id){
             flagManager.addFlags(effect.contextDocument, effect);
-        }else{
+        }
+
+        if(data.persist && !effect.context?.id){
             effect.timeoutRemove();
         }
 
