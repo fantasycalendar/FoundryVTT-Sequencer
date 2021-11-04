@@ -105,21 +105,6 @@ const SequencerDatabase = {
         return filteredEntries.length === 1 ? filteredEntries[0] : filteredEntries;
     },
     /**
-     *  Get all valid entries under a certain path
-     *
-     * @param  {string}             inPath      The database path to get entries under
-     * @return {array|boolean}                  An array containing the next layer of valid paths
-     */
-    getPathsUnder(inPath){
-        if (typeof inPath !== "string") return this._throwError("getPathsUnder", "inString must be of type string")
-        inPath = inPath.replace(/\[[0-9]+]$/, "");
-        if (!this.entryExists(inPath)) return this._throwError("getPathsUnder", `Could not find ${inPath} in database`);
-        let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
-        if(entries.length === 0) return [];
-        return lib.makeArrayUnique(entries.map(e => e.split(inPath)[1].split('.')[1]));
-    },
-
-    /**
      *  Gets all files under a database path
      *
      * @param  {string}         inDBPath    The module to get all files from
@@ -130,6 +115,37 @@ const SequencerDatabase = {
         if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
         const entries = this._recurseEntriesUnder(inDBPath);
         return lib.makeArrayUnique(entries.flat());
+    },
+
+    /**
+     *  Get all valid entries under a certain path
+     *
+     * @param  {string}             inPath      The database path to get entries under
+     * @param  {boolean}            full
+     * @param  {boolean}            softFail
+     * @param  {boolean}            includeFt
+     * @return {array|boolean}                  An array containing the next layer of valid paths
+     */
+    getPathsUnder(inPath, {full = false, softFail = false, includeFt = true}={}){
+        if(!inPath || inPath === "") return Object.keys(this.entries);
+
+        if (typeof inPath !== "string"){
+            return this._throwError("getPathsUnder", "inString must be of type string")
+        }
+
+        inPath = inPath.replace(/\[[0-9]+]$/, "");
+
+        let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
+        if(entries.length === 0) return [];
+
+        let feetTest = new RegExp(/.[0-9]+ft/g);
+        if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
+        let length = inPath.split('.').length+1;
+        return lib.makeArrayUnique(entries.map(e =>{
+            let path = includeFt ? e : e.split(feetTest)[0];
+            if(full) return path.split('.').slice(0, length).join('.');
+            return path.split(inPath)[1].split('.')[1]
+        }));
     },
 
     _throwError(inFunctionName, inError) {

@@ -294,6 +294,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.0
+- *Sequencer* - Added Sequencer Effect Player!
+
 ### Version 1.1.4
 - *Sequencer* - Fixed error in the Sequencer Preloader when pre-loading files from Database paths 
 - *Effects* - Fixed bug that caused persistent effects to end when a client connected after it was created 

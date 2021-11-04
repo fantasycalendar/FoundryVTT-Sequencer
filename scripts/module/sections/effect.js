@@ -435,9 +435,11 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped X scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its horizontal axis
      *
+     * @param {boolean} inBool
      * @returns {EffectSection}
      */
-    randomizeMirrorX() {
+    randomizeMirrorX(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomizeMirrorX", "inBool must be of type boolean");
         this._randomMirrorX = true;
         return this;
     }
@@ -446,9 +448,11 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped Y scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its vertical axis
      *
+     * @param {boolean} inBool
      * @returns {EffectSection}
      */
-    randomizeMirrorY() {
+    randomizeMirrorY(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomizeMirrorY", "inBool must be of type boolean");
         this._randomMirrorY = true;
         return this;
     }

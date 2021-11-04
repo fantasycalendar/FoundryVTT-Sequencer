@@ -1,3 +1,5 @@
+import SequencerEffectPlayerUI from "./module/formapplications/sequencer-effect-player-ui.js";
+
 export default function registerSettings() {
 
     // Define a settings submenu which handles advanced configuration needs
@@ -70,10 +72,25 @@ export default function registerSettings() {
         type: Boolean
     });
 
+    game.settings.register("sequencer", "effectPresets", {
+        scope: "client",
+        default: {},
+        type: Object
+    });
+
     Hooks.on("getSceneControlButtons", (controls) => {
-        if(!game.settings.get("sequencer", "toolButtonsEnabled")) return;
-        const bar = controls.find(c => c.name === "token");
-        bar.tools.push({
+
+        const player = {
+            icon: "fas fa-play",
+            name: "effectplayer",
+            title: "Show Sequencer Effect Player",
+            button: true,
+            onClick: () => {
+                SequencerEffectPlayerUI.show(true);
+            },
+        };
+
+        const database = {
             icon: "fas fa-database",
             name: "effectdatabase",
             title: "Show Sequencer Database",
@@ -81,17 +98,37 @@ export default function registerSettings() {
             onClick: () => {
                 Sequencer.DatabaseViewer.show(true);
             },
-        });
-        if (!game.user.isTrusted) return;
-        bar.tools.push({
+        };
+
+        const viewer = {
             icon: "fas fa-film",
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
+            visible: game.user.isTrusted,
             onClick: () => {
                 Sequencer.EffectManager.show(true);
             },
-        });
+        };
+
+        controls.push({
+            name: "sequencer",
+            title: "Sequencer Layer",
+            icon: "fas fa-film",
+            layer: "sequencerEffectsAboveTokens",
+            visible: game.user.isGM || game.user.isTrusted,
+            tools: [
+                player,
+                database,
+                viewer
+            ]
+        })
+
+        if(!game.settings.get("sequencer", "toolButtonsEnabled")) return;
+        const bar = controls.find(c => c.name === "token");
+        bar.tools.push(database);
+        bar.tools.push(viewer);
+
     });
 
     console.log("Sequencer | Registered settings");

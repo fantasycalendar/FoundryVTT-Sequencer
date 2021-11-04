@@ -26,7 +26,7 @@ export default class SequencerEffectsViewer extends FormApplication {
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             title: "Sequencer Effect Viewer",
-            template: `modules/sequencer/templates/sequencer-effects-template.html`,
+            template: `modules/sequencer/templates/sequencer-effects-viewer-template.html`,
             classes: ["dialog"],
             width: 450,
             height: 400,

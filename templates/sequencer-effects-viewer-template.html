@@ -49,36 +49,36 @@
         <div class="effects">
 
             {{#if noEffects}}
-                <h2>No effects currently running...</h2>
+            <h2>No effects currently running...</h2>
             {{/if}}
 
             {{#if persistentEffects}}
-                <h2>Persistent effects:</h2>
-                {{#each persistentEffects as |effect key|}}
-                    <div class="effect hover-highlight" data-id="{{ effect.index }}">
-                        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                        <div class="effect-text hover-text">
-                            {{ effect.name }}
-                        </div>
-                    </div>
-                {{/each}}
+            <h2>Persistent effects:</h2>
+            {{#each persistentEffects as |effect key|}}
+            <div class="effect hover-highlight" data-id="{{ effect.index }}">
+                <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
+                <div class="effect-text hover-text">
+                    {{ effect.name }}
+                </div>
+            </div>
+            {{/each}}
             {{/if}}
 
 
             {{#if hasBothEffects}}
-                <hr>
+            <hr>
             {{/if}}
 
             {{#if temporaryEffects}}
-                <h2>Temporary effects:</h2>
-                {{#each temporaryEffects as |effect key|}}
-                    <div class="effect hover-highlight" data-id="{{ effect.index }}">
-                        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                        <div class="effect-text hover-text">
-                            {{ effect.name }}
-                        </div>
-                    </div>
-                {{/each}}
+            <h2>Temporary effects:</h2>
+            {{#each temporaryEffects as |effect key|}}
+            <div class="effect hover-highlight" data-id="{{ effect.index }}">
+                <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
+                <div class="effect-text hover-text">
+                    {{ effect.name }}
+                </div>
+            </div>
+            {{/each}}
             {{/if}}
 
         </div>

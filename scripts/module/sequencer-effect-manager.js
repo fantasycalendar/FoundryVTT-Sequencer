@@ -1,7 +1,7 @@
 import CanvasEffect from "./canvas-effects/canvas-effect.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
-import SequencerEffectsViewer from "./formapplications/sequencer-effects-viewer.js";
+import SequencerEffectsViewer from "./formapplications/sequencer-effects-viewer-ui.js";
 
 const EffectsContainer = {
     _effects: new Set(),

@@ -1,14 +1,16 @@
 export default {
 
-    _users: [],
+    _users: false,
 
     _addUser(inUser) {
+        if(!this._users) this._users = [];
         if (typeof inUser !== "string") throw this.sequence._throwError(this, "_addUser", "inUser must be of type string");
         if (!game.users.has(inUser)) throw this.sequence._throwError(this, "_addUser", `user with id "${inUser}" does not exist!`);
         if (!this._users.includes(inUser)) this._users.push(inUser);
     },
 
     _deleteUser(inUser) {
+        if(!this._users) this._users = [];
         if (this._users.includes(inUser)) {
             let index = this._users.indexOf(inUser);
             this._users.splice(index, 1);

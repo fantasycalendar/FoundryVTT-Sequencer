@@ -1,0 +1,138 @@
+<form id="sequencer-database-form" class="dialog-content" onsubmit="event.preventDefault();" autocomplete="off">
+
+    <style>
+
+        .column {
+            display: inline-flex;
+            flex-direction: column;
+        }
+
+        .row {
+            display: inline-flex;
+            flex-direction: row;
+        }
+
+        .flex-grow {
+            flex:1;
+        }
+
+        .flex-shrink {
+            flex: 0;
+        }
+
+        .settings{
+            display:flex;
+            flex-direction: row;
+            align-content: flex-end;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-column, .label-column{
+            display: inline-flex;
+            flex-direction: column;
+        }
+
+        .input-column {
+            flex: 0 1 25%;
+            align-items: flex-end;
+        }
+
+        .input-row, .label-row{
+            display: inline-flex;
+            flex: 0 1 1.666rem;
+        }
+
+        .label-row{
+            padding-left: 0.2rem;
+            align-items: center;
+        }
+
+        .settings input{
+            max-width: 40px;
+        }
+
+        .user-select option:checked{
+            background: #1e90ff;
+            color: white;
+        }
+
+        .file-settings, .user-settings {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .file-settings label, .user-settings label {
+            flex: 0 1 15%;
+            align-self: center;
+        }
+
+        .file-settings input, .user-settings select {
+            flex: 1;
+        }
+
+        button {
+            flex: 0 0 24px;
+            line-height: 24px;
+            margin: -1px 0 -1px 4px;
+            order: 99;
+        }
+
+
+    </style>
+
+    <div class="file-settings mb-2">
+        <div class="row">
+            <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder="Enter DB or File Path...">
+            <button type="button" class="custom-file-picker"><i class="fas fa-file-import"></i></button>
+        </div>
+        <datalist id="dblist"></datalist>
+    </div>
+
+    <div class="settings mb-2">
+        <div class="input-column">
+            {{#each defaultSettings}}
+            <div class="input-row"><input type="{{this.type}}" class="setting" name="{{@key}}" id="{{@key}}" value="{{this.default}}"></div>
+            {{/each}}
+        </div>
+        <div class="label-column">
+            {{#each defaultSettings}}
+            <div class="label-row"><label for="{{ @key }}">{{ this.label }}</label></div>
+            {{/each}}
+        </div>
+    </div>
+
+    <div class="user-settings mb-2">
+        <label for="file">Play for users:</label>
+        <select class="user-select" id="user-select" multiple>
+            <option value="all" selected>All users</option>
+            {{#each users}}
+            <option value="{{ this.id }}">{{ this.name }}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <div class="preset-setting">
+
+        <div class="row w-100">Presets:</div>
+
+        <div class="row w-100">
+
+            <select class="preset-select flex-grow">
+
+                <option value="default">Default</option>
+                <option value="new">Create New Preset</option>
+                {{#each presets}}
+                <option>{{ @key }}</option>
+                {{/each}}
+
+            </select>
+
+            <button type="button" class="apply-preset flex-shrink"><i class="fas fa-download"></i></button>
+            <button type="button" class="delete-preset flex-shrink" disabled><i class="fas fa-times"></i></button>
+
+        </div>
+
+    </div>
+
+</form>
