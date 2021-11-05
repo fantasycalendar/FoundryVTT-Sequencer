@@ -351,7 +351,7 @@ export default class SequencerEffectPlayerUI extends FormApplication {
 
         autosuggestions.innerHTML = "";
 
-        if(results.length === 1) return;
+        if(results.length === 1 && input === results[0]) return;
 
         results.forEach(entry => {
             const option = document.createElement('option');
