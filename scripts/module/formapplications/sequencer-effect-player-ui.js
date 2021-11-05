@@ -194,23 +194,20 @@ export default class SequencerEffectPlayerUI extends FormApplication {
         this.settingsElements = html.querySelectorAll(".setting");
 
         this.settingsElements.forEach(element => {
+
             element.addEventListener('change', (e) => {
-                const settingName = element.getAttribute("name");
-                const type = element.getAttribute("type")
-                const settingValue = type === "checkbox" ? element.checked : Number(element.value);
+                const type = e.target.getAttribute("type")
+                const settingValue = type === "checkbox" ? e.target.checked : Number(e.target.value);
                 _this.setSetting(settingName, settingValue);
             });
-        })
 
-        Object.entries(SequencerEffectPlayerUI.defaultSettings).forEach((s) => {
-            let [name, setting] = s;
+            let settingName = element.getAttribute("name");
+            const setting = SequencerEffectPlayerUI.defaultSettings?.[settingName];
             if(setting?.callback){
-                const element = html.querySelector(`.setting[name="${name}"]`);
-                if(element){
-                    element.addEventListener('change', setting.callback.bind(_this));
-                }
+                element.addEventListener('change', setting.callback.bind(_this));
             }
-        })
+
+        });
 
         this.userSelect = html.querySelector('.user-select');
         this.userSelect.addEventListener('change', (e) => {
@@ -222,7 +219,6 @@ export default class SequencerEffectPlayerUI extends FormApplication {
 
         this.fileInput = html.querySelector('.file-input');
         const autosuggestions = html.querySelector('#dblist');
-        const filepicker = html.querySelector('.custom-file-picker');
 
         const debouncedSearch = debounce(() => {
             _this.showResults(autosuggestions, _this.fileInput.value);
@@ -240,6 +236,7 @@ export default class SequencerEffectPlayerUI extends FormApplication {
             debouncedSearch();
         });
 
+        const filepicker = html.querySelector('.custom-file-picker');
         filepicker.addEventListener('click', (e) => {
             new FilePicker({
                 type: "imagevideo",
@@ -251,18 +248,19 @@ export default class SequencerEffectPlayerUI extends FormApplication {
             }).browse();
         });
 
+
         this.presetSelect = html.querySelector('.preset-select');
-        const applyPresetButton = html.querySelector('.apply-preset');
         this.deletePresetButton = html.querySelector('.delete-preset');
+        const applyPresetButton = html.querySelector('.apply-preset');
+
+        applyPresetButton.addEventListener('click', (e) => {
+            _this.applyPreset(_this.presetSelect.value);
+        });
 
         this.presetSelect.addEventListener('change', () => {
             let preset_name = _this.presetSelect.value;
             _this.deletePresetButton.disabled = preset_name === "default" || preset_name === "new";
         })
-
-        applyPresetButton.addEventListener('click', (e) => {
-            _this.applyPreset(_this.presetSelect.value);
-        });
 
         this.deletePresetButton.addEventListener('click', (e) => {
             _this.deletePreset(_this.presetSelect.value);
@@ -305,13 +303,10 @@ export default class SequencerEffectPlayerUI extends FormApplication {
 
     nameNewPreset(){
         return new Promise((resolve) => {
-
-            const content = `<input type="text" placeholder="Input new preset name" id="newPresetName">`;
-
             let rejected = false;
             new Dialog({
                 title: "Create new Sequencer effect preset",
-                content: content,
+                content: `<input type="text" placeholder="Input new preset name" id="newPresetName">`,
                 buttons: {
                     ok: {
                         icon: '<i class="fas fa-check"></i>',
@@ -342,8 +337,7 @@ export default class SequencerEffectPlayerUI extends FormApplication {
     }
 
     async updateFile(inPath){
-        const exists = Sequencer.Database.entryExists(inPath) || (await srcExists(inPath));
-        if(!exists) return;
+        if(!(Sequencer.Database.entryExists(inPath) || (await srcExists(inPath)))) return;
         this.setSetting('file', inPath);
     }
 

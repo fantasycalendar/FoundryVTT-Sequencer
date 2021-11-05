@@ -114,9 +114,9 @@ export default function registerSettings() {
         controls.push({
             name: "sequencer",
             title: "Sequencer Layer",
-            icon: "fas fa-film",
+            icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
-            visible: game.user.isGM || game.user.isTrusted,
+            visible: game.user.isGM,
             tools: [
                 player,
                 database,
