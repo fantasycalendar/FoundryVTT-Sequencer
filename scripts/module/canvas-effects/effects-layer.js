@@ -12,7 +12,7 @@ export class BaseEffectsLayer extends CanvasLayer {
         return foundry.utils.mergeObject(super.layerOptions, {
             canDragCreate: false,
             zIndex: 180,
-            name: "sequencereffects",
+            name: "sequencerEffectsAboveTokens",
             interactive: true
         });
     }
@@ -56,7 +56,6 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     render(...args){
         super.render(...args);
-        if(!this.active) return;
         this.drawLine();
         this.drawPoint();
     }
@@ -68,6 +67,8 @@ export class BaseEffectsLayer extends CanvasLayer {
         if(this.sampleLine){
             this.sampleLine.clear();
         }
+
+        if(!this.active) return;
 
         this.sampleLine = new PIXI.Graphics();
         this.sampleLine.lineStyle(3, 0xff0000, 1)
@@ -86,6 +87,8 @@ export class BaseEffectsLayer extends CanvasLayer {
         if(this.point){
             this.point.clear();
         }
+
+        if(!this.active) return;
 
         let mousePos = this.mousePos;
 
@@ -109,7 +112,8 @@ export class BaseEffectsLayer extends CanvasLayer {
 export class BelowTokensEffectsLayer extends BaseEffectsLayer {
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 95
+            zIndex: 95,
+            name: "sequencerEffectsBelowTokens",
         });
     }
 }

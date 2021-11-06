@@ -269,7 +269,7 @@ export default class SequencerEffectManager {
 
 const debounceShowViewer = debounce(async () => {
     if(!SequencerEffectsUI.isVisible) return;
-    SequencerEffectsUI.activeInstance.updateEffects(SequencerEffectManager.effects);
+    SequencerEffectsUI.activeInstance.updateEffects();
 }, 100);
 
 const flagManager = {

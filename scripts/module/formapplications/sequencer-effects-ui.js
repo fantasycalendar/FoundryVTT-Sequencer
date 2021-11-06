@@ -1,6 +1,7 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
 import SequencerPlayer from "../sequencer-effect-player.js";
+import SequencerEffectManager from "../sequencer-effect-manager.js";
 
 export default class SequencerEffectsUI extends FormApplication {
 
@@ -24,7 +25,7 @@ export default class SequencerEffectsUI extends FormApplication {
             template: `modules/sequencer/templates/sequencer-effects-template.html`,
             classes: ["dialog"],
             width: "auto",
-            height: 585,
+            height: 625,
             top: 65,
             left: 120,
             resizable: true,
@@ -51,7 +52,6 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     setTab(tab){
-
         const isPlayer = tab === 1;
 
         this._tabs[0].active = isPlayer
@@ -76,6 +76,7 @@ export default class SequencerEffectsUI extends FormApplication {
         super.activateListeners(html);
         this.activateManagerListeners(html);
         this.activatePlayerListeners(html);
+        this.updateEffects();
     }
 
     /** @override */
@@ -104,9 +105,6 @@ export default class SequencerEffectsUI extends FormApplication {
         this.effectsContainer = html.find(".effects");
         this.persistentEffectsContainer = html.find(".persistent-effects");
         this.temporaryEffectsContainer = html.find(".temporary-effects");
-    }
-
-    formatEffectName(effect){
     }
 
     createEffectElement(effect){
@@ -149,7 +147,9 @@ export default class SequencerEffectsUI extends FormApplication {
         return el;
     }
 
-    updateEffects(effects) {
+    updateEffects() {
+
+        const effects = Sequencer.EffectManager.effects;
 
         this.persistentEffectsContainer.empty();
         this.temporaryEffectsContainer.empty();
@@ -274,6 +274,12 @@ export default class SequencerEffectsUI extends FormApplication {
     activatePlayerListeners(html) {
 
         if(!game.user.isGM) return;
+
+        html.find('.activate-layer').click(() => {
+            canvas.sequencerEffectsAboveTokens.activate();
+            ui.controls.control.activeTool = "play-effect";
+            ui.controls.render();
+        });
 
         const _this = this;
 
