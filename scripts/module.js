@@ -13,7 +13,6 @@ import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import registerLibwrappers from "./libwrapper.js";
 import * as deprecation from "./deprecation.js";
 import SequencerPlayer from "./module/sequencer-effect-player.js";
-import SequencerEffectPlayerUI from "./module/formapplications/sequencer-effect-player-ui.js";
 
 Hooks.once('init', async function () {
 
@@ -52,9 +51,7 @@ Hooks.once('ready', async function () {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
-        deprecation.check()
-
-        SequencerEffectPlayerUI.show();
+        deprecation.check();
     }, 100);
 });
 

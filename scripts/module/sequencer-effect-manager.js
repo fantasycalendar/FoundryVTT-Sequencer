@@ -1,7 +1,7 @@
 import CanvasEffect from "./canvas-effects/canvas-effect.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
-import SequencerEffectsViewer from "./formapplications/sequencer-effects-viewer-ui.js";
+import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 
 const EffectsContainer = {
     _effects: new Set(),
@@ -28,15 +28,12 @@ export default class SequencerEffectManager {
     }
 
     /**
-     * Opens the Sequencer Effects Viewer UI
+     * Opens the Sequencer Effects UI with the effects tab open
      *
-     * @returns {SequencerEffectsViewer}
+     * @returns {SequencerEffectsUI}
      */
-    static show(inFocus = false){
-        const effects = EffectsContainer.effects
-            .filter(effect => effect.data.sceneId === game.user.viewedScene)
-            .filter(effect => effect.data.creatorUserId === game.userId || game.user.isGM);
-        return SequencerEffectsViewer.show(inFocus, effects);
+    static show(){
+        return SequencerEffectsUI.show({ tab: 2 });
     }
 
     /**
@@ -271,8 +268,8 @@ export default class SequencerEffectManager {
 }
 
 const debounceShowViewer = debounce(async () => {
-    if(!SequencerEffectsViewer.isVisible) return;
-    SequencerEffectManager.show();
+    if(!SequencerEffectsUI.isVisible) return;
+    SequencerEffectsUI.activeInstance.updateEffects(SequencerEffectManager.effects);
 }, 100);
 
 const flagManager = {

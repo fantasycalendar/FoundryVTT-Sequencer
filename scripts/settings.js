@@ -1,4 +1,4 @@
-import SequencerEffectPlayerUI from "./module/formapplications/sequencer-effect-player-ui.js";
+import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
 
 export default function registerSettings() {
 
@@ -80,13 +80,31 @@ export default function registerSettings() {
 
     Hooks.on("getSceneControlButtons", (controls) => {
 
-        const player = {
+        const playTool = {
             icon: "fas fa-play",
+            name: "play-effect",
+            title: "Play Effect"
+        };
+
+        const player = {
+            icon: "fas fa-play-circle",
             name: "effectplayer",
-            title: "Show Sequencer Effect Player",
+            title: "Show Sequencer Effects Player",
             button: true,
+            visible: game.user.isGM,
             onClick: () => {
-                SequencerEffectPlayerUI.show(true);
+                SequencerEffectsUI.show({ inFocus: true, tab: 1 });
+            },
+        };
+
+        const viewer = {
+            icon: "fas fa-film",
+            name: "effectviewer",
+            title: "Show Sequencer Effects Viewer",
+            button: true,
+            visible: game.user.isTrusted,
+            onClick: () => {
+                SequencerEffectsUI.show({ inFocus: true, tab: 2 });
             },
         };
 
@@ -100,27 +118,18 @@ export default function registerSettings() {
             },
         };
 
-        const viewer = {
-            icon: "fas fa-film",
-            name: "effectviewer",
-            title: "Show Sequencer Effects Viewer",
-            button: true,
-            visible: game.user.isTrusted,
-            onClick: () => {
-                Sequencer.EffectManager.show(true);
-            },
-        };
-
         controls.push({
             name: "sequencer",
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
             visible: game.user.isGM,
+            activeTool: "play-effect",
             tools: [
+                playTool,
                 player,
-                database,
-                viewer
+                viewer,
+                database
             ]
         })
 

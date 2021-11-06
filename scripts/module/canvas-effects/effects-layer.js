@@ -1,8 +1,9 @@
+import SequencerPlayer from "../sequencer-effect-player.js";
+
 export class BaseEffectsLayer extends CanvasLayer {
 
     constructor(...args) {
         super(...args);
-        this.snapLocationToGrid = false;
         this.sampleLine = false;
         this.point = false;
     }
@@ -24,7 +25,7 @@ export class BaseEffectsLayer extends CanvasLayer {
             container = new PIXI.Container();
             container.sortableChildren = true;
             container.parentName = "sequencerUIContainer";
-            container.zIndex = 10;
+            container.zIndex = -1;
             this.addChild(container);
             this.sortChildren();
         }
@@ -34,24 +35,28 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     get mousePos(){
         const mouse = canvas.app.renderer.plugins.interaction.mouse;
-        const pos = mouse.getLocalPosition(canvas.app.stage);
+        let pos = mouse.getLocalPosition(canvas.app.stage);
+        if(SequencerPlayer.snapLocationToGrid){
+            pos = canvas.grid.getSnappedPosition(pos.x, pos.y, 2)
+        }
         return new PIXI.Point(pos.x, pos.y);
     }
 
     updateStartPoint(){
-        let mousePos = this.mousePos;
-        if(this.snapLocationToGrid) mousePos = canvas.grid.getSnappedPosition(mousePos.x, mousePos.y, 2)
-        this.startPos = mousePos;
+        this.startPos = this.mousePos;
     }
 
     updateEndPoint(){
-        let mousePos = this.mousePos;
-        if(this.snapLocationToGrid) mousePos = canvas.grid.getSnappedPosition(mousePos.x, mousePos.y, 2)
-        this.endPos = mousePos;
+        this.endPos = this.mousePos;
+    }
+
+    get active(){
+        return SequencerPlayer.active;
     }
 
     render(...args){
         super.render(...args);
+        if(!this.active) return;
         this.drawLine();
         this.drawPoint();
     }
@@ -72,26 +77,17 @@ export class BaseEffectsLayer extends CanvasLayer {
         // If line already present then set its position only
         this.sampleLine.moveTo(this.startPos.x, this.startPos.y);
         let mousePos = this.mousePos;
-        if(this.snapLocationToGrid) mousePos = canvas.grid.getSnappedPosition(mousePos.x, mousePos.y, 2)
         this.sampleLine.lineTo(mousePos.x, mousePos.y);
 
     }
 
     drawPoint(){
 
-        if(!this.snapLocationToGrid){
-            if(!this.point) return;
-            this.point.clear();
-            this.point = undefined;
-            return;
-        }
-
         if(this.point){
             this.point.clear();
         }
 
         let mousePos = this.mousePos;
-        mousePos = canvas.grid.getSnappedPosition(mousePos.x, mousePos.y, 2)
 
         this.point = new PIXI.Graphics();
         this.point.beginFill(0xff0000);

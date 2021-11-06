@@ -440,7 +440,7 @@ export default class EffectSection extends Section {
      */
     randomizeMirrorX(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomizeMirrorX", "inBool must be of type boolean");
-        this._randomMirrorX = true;
+        this._randomMirrorX = inBool;
         return this;
     }
 
@@ -453,7 +453,7 @@ export default class EffectSection extends Section {
      */
     randomizeMirrorY(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomizeMirrorY", "inBool must be of type boolean");
-        this._randomMirrorY = true;
+        this._randomMirrorY = inBool;
         return this;
     }
 

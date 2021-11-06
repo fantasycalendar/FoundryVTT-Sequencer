@@ -1,18 +1,28 @@
-import SequencerEffectPlayerUI from "./formapplications/sequencer-effect-player-ui.js";
+import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 
 class SequencerEffectPlayer {
 
     constructor(){
         this.sequenceBuffer = [];
         this.initializeEvents()
+        this.snapLocationToGrid = false;
+    }
+
+    /**
+     * Opens the Sequencer Effects UI with the player tab open
+     *
+     * @returns {SequencerEffectsUI}
+     */
+    show(){
+        return SequencerEffectsUI.show({ tab: 1 });
     }
 
     get effectSettings(){
-        return SequencerEffectPlayerUI.activeSettings;
+        return SequencerEffectsUI.activeSettings;
     }
 
     get active(){
-        return SequencerEffectPlayerUI.isVisible;
+        return game.activeTool === "play-effect";
     }
 
     initializeEvents(){
