@@ -45,6 +45,10 @@ export default class CanvasEffect {
         return this.context?.document ?? this.context;
     }
 
+    get userCanUpdate(){
+        return game.user.isGM || this.data.creatorUserId === game.user.id;
+    }
+
     get context(){
         if(!this._context){
             this._context = this.data.attachTo
