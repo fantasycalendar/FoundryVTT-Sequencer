@@ -1,5 +1,4 @@
 import SequencerPlayer from "../sequencer-effect-player.js";
-import SequencerEffectsUI from "../formapplications/sequencer-effects-ui.js";
 
 export class BaseEffectsLayer extends CanvasLayer {
 
