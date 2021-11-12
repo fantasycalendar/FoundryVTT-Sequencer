@@ -115,7 +115,7 @@
             flex: 1;
         }
 
-        button {
+        .small-button {
             flex: 0 0 24px;
             line-height: 24px;
             margin: -1px 0 -1px 4px;
@@ -126,7 +126,7 @@
             margin: 0;
         }
 
-        w-100 {
+        .w-100 {
             width: 100%;
         }
 
@@ -151,14 +151,14 @@
     <section id="effect-manager-tabs" class="content">
 
         {{#if isGM}}
-        <div class="tab" data-tab="player" data-group="effect-manager">
+        <div class="tab effect-player-container" data-tab="player" data-group="effect-manager">
 
             <button type="button" class="activate-layer w-100 mb-2">Activate Layer</button>
 
             <div class="file-settings flexcol mb-2">
                 <div class="row">
                     <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder="Enter DB or File Path...">
-                    <button type="button" class="custom-file-picker"><i class="fas fa-file-import"></i></button>
+                    <button type="button" class="custom-file-picker small-button"><i class="fas fa-file-import"></i></button>
                 </div>
                 <datalist id="dblist"></datalist>
             </div>
@@ -202,8 +202,8 @@
 
                     </select>
 
-                    <button type="button" class="apply-preset flex-shrink"><i class="fas fa-download"></i></button>
-                    <button type="button" class="delete-preset flex-shrink" disabled><i class="fas fa-times"></i></button>
+                    <button type="button" class="apply-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
+                    <button type="button" class="delete-preset flex-shrink small-button" disabled><i class="fas fa-times"></i></button>
 
                 </div>
 
@@ -234,11 +234,20 @@
         <div class="tab howto-container" data-tab="howto" data-group="effect-manager">
             <p>Welcome to Sequencer Effects!</p>
             <p>With the Player <i class="fas fa-play-circle"></i>, you can quickly play effects on the canvas, and with the Manager <i class="fas fa-film"></i> you can end persisting effects whenever you want.</p>
-            <p>When using the Effects Player, you can hold these hotkeys to quickly toggle options:</p>
+            <p>When using the Player <i class="fas fa-play-circle"></i>, you need to set what effect to play. Click on the <strong>file input</strong> to see what database paths you have or just start typing to search. You can press the <i class="fas fa-file-import"></i> button next to it to search for a file directly.</p>
+            <p>Once you've picked a file, you can do any of the following actions while on the Sequencer Layer <i class="fa-list-ol"></i></p>
             <ol>
                 <li>
+                    <strong>Click</strong><br>
+                    Play an effect on the spot
+                </li>
+                <li>
+                    <strong>Click Hold + Drag</strong><br>
+                    Play an effect stretched towards a location
+                </li>
+                <li>
                     <strong>Shift</strong><br>
-                    Play multiple effects at the same time
+                    Play multiple effects at the same time after releasing shift
                 </li>
                 <li>
                     <strong>Shift + Ctrl</strong><br>
