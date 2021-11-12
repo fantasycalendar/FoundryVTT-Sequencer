@@ -851,6 +851,11 @@ export default class CanvasEffect {
 
         this.sprite = new PIXI.Sprite();
 
+        this.sprite.position.set(
+            this.data.spriteOffset?.x ?? 0,
+            this.data.spriteOffset?.y ?? 0
+        );
+
         this.sprite.anchor.set(
             this.data.spriteAnchor?.x ?? 0.5,
             this.data.spriteAnchor?.y ?? 0.5
