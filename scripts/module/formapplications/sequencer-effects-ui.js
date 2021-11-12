@@ -334,21 +334,43 @@ export default class SequencerEffectsUI extends FormApplication {
             }).browse();
         });
 
-
         this.presetSelect = html.find('.preset-select');
         this.deletePresetButton = html.find('.delete-preset');
-        const applyPresetButton = html.find('.apply-preset');
+        const savePresetButton = html.find('.save-preset');
 
-        applyPresetButton.click(function() {
-            _this.applyPreset(_this.presetSelect.val());
+        savePresetButton.click(function() {
+            const preset_name = _this.presetSelect.val();
+            if(preset_name === "default"){
+                _this.createNewPreset();
+            }else{
+                $(this).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                _this.savePreset(preset_name);
+            }
         });
 
-        this.presetSelect.change(function() {
-            let preset_name = _this.presetSelect.val();
-            _this.deletePresetButton.disabled = preset_name === "default" || preset_name === "new";
+        this.presetSelect.change(async function() {
+            const preset_name = _this.presetSelect.val();
+            const activeSettings = SequencerEffectsUI.activeSettings;
+            if(activeSettings?.name && preset_name !== activeSettings?.name && activeSettings?.name !== "default"){
+                const preset = _this.getPreset(activeSettings.name);
+                const diff = foundry.utils.diffObject(preset, SequencerEffectsUI.activeSettings);
+                delete diff['name'];
+                if(Object.keys(diff).length){
+                    $(this).val(activeSettings.name);
+                    const doSwitch = await Dialog.confirm({
+                        title: "Apply preset?",
+                        content: `<p>Are you sure you want apply the "${preset_name}" preset? Unsaved changes will be lost.</p>`
+                    });
+                    if(!doSwitch){
+                        return;
+                    }
+                    $(this).val(preset_name);
+                }
+            }
+            _this.applyPreset(preset_name);
         })
 
-        this.deletePresetButton.click(function() {
+        this.deletePresetButton.click(async function() {
             _this.deletePreset(_this.presetSelect.val());
         });
 
@@ -406,15 +428,6 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     async applyPreset(inPresetName){
-        if(inPresetName === "new"){
-            inPresetName = await this.nameNewPreset();
-            console.log(inPresetName);
-            if(!inPresetName) return;
-            await this.createPreset(inPresetName)
-            await this.render(true);
-            await lib.wait(50);
-        }
-
         const presetData = this.getPreset(inPresetName);
 
         this.applyPresetData(presetData);
@@ -423,23 +436,39 @@ export default class SequencerEffectsUI extends FormApplication {
 
         this.presetSelect.val(inPresetName);
 
-        this.deletePresetButton.disabled = inPresetName === "default" || inPresetName === "new";
+        this.deletePresetButton.prop("disabled", inPresetName === "default");
     }
 
-    async createPreset(inName){
+    async savePreset(inName){
         const presets = this.presets;
         presets[inName] = foundry.utils.duplicate(SequencerEffectsUI.activeSettings);
         await game.settings.set('sequencer', 'effectPresets', presets)
     }
 
     async deletePreset(inName){
+
+        const doDelete = await Dialog.confirm({
+            title: "Delete preset?",
+            content: `<p>Are you sure you want to delete the "${inName}" preset?</p>`
+        });
+        if(!doDelete) return;
+
         const presets = this.presets;
         delete presets[inName];
         await game.settings.set('sequencer', 'effectPresets', presets)
         await this.render(true);
     }
 
-    async nameNewPreset(inName = ""){
+    async createNewPreset(){
+        const presetName = await this.promptPresetName();
+        if(!presetName) return;
+        await this.savePreset(presetName)
+        await this.render(true);
+        await lib.wait(50);
+        this.applyPreset(presetName);
+    }
+
+    async promptPresetName(inName = ""){
 
         let presetName = await new Promise((resolve) => {
             let rejected = false;
@@ -480,15 +509,30 @@ export default class SequencerEffectsUI extends FormApplication {
             }).render(true);
         });
 
-        if(this.presets[presetName]){
+        if(presetName) {
 
-            const overwrite = await Dialog.confirm({
-                title: "Overwrite preset?",
-                content: `<p>Are you sure you want to overwrite the "${presetName}" preset?</p>`
-            });
+            if (presetName.toLowerCase() === "default") {
+                Dialog.prompt({
+                    title: "Error!",
+                    content: `<p>Sorry, you can't name your preset "default". Sequencer needs that for itself.</p>`,
+                    label: "Okay",
+                    callback: () => {
+                    }
+                });
+                return false;
+            }
 
-            if(!overwrite){
-                presetName = await this.nameNewPreset(presetName);
+            if (this.presets[presetName]) {
+
+                const overwrite = await Dialog.confirm({
+                    title: "Overwrite preset?",
+                    content: `<p>Are you sure you want to overwrite the "${presetName}" preset?</p>`
+                });
+
+                if (!overwrite) {
+                    presetName = await this.promptPresetName(presetName);
+                }
+
             }
         }
 
@@ -505,7 +549,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
         if(this.lastResults.equals(results)) return;
 
-        autosuggestions.innerHTML = "";
+        autosuggestions.html("");
 
         this.lastResults = foundry.utils.duplicate(results);
 

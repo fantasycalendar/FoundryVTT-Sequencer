@@ -27,7 +27,7 @@ const loadingBar = {
         let newPerc = Math.round(perc * 100);
 
         if (newPerc !== this.lastPerc) {
-            if (this.debug) console.log(`${newPerc}% loaded...`)
+            if (this.debug) console.log(`DEBUG | Sequencer | ${newPerc}% loaded...`)
             this.setPercentage(newPerc)
         }
 

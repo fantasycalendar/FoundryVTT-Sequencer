@@ -30,7 +30,7 @@ const SequencerAnimationEngine = {
 
     printDebug(string){
         if(!this.debug) return;
-        console.log(string);
+        console.log(`DEBUG | Sequencer | ${string}`);
     },
 
     addAnimation(attributes = [], timeDifference = 0) {
@@ -67,7 +67,7 @@ const SequencerAnimationEngine = {
                 totalDt: timeDifference,
                 resolve: resolve
             });
-            this.printDebug(`DEBUG | Sequencer | Added animations to Animation Engine`);
+            this.printDebug(`Added animations to Animation Engine`);
             if(!this.isRunning){
                 this.start();
             }
@@ -84,7 +84,7 @@ const SequencerAnimationEngine = {
 
     start(){
         this.isRunning = true;
-        this.printDebug(`DEBUG | Sequencer | Animation Engine Started`);
+        this.printDebug(`Animation Engine Started`);
         this.nextFrame();
     },
 
@@ -93,7 +93,7 @@ const SequencerAnimationEngine = {
         if(this._animations.length === 0){
             this.isRunning = false;
             this._deltas = [];
-            this.printDebug(`DEBUG | Sequencer | Animation Engine Paused`);
+            this.printDebug(`Animation Engine Paused`);
             return;
         }
 

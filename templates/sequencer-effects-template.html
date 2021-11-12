@@ -138,6 +138,10 @@
             margin-bottom: 0.5rem;
         }
 
+        .sheet-tabs{
+            min-width: 230px;
+        }
+
     </style>
 
     <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
@@ -195,14 +199,13 @@
                     <select class="preset-select flex-grow">
 
                         <option value="default">Default</option>
-                        <option value="new">Create New Preset</option>
                         {{#each presets}}
                         <option>{{ @key }}</option>
                         {{/each}}
 
                     </select>
 
-                    <button type="button" class="apply-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
+                    <button type="button" class="save-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
                     <button type="button" class="delete-preset flex-shrink small-button" disabled><i class="fas fa-times"></i></button>
 
                 </div>
