@@ -1,113 +1,194 @@
 import * as lib from "./lib/lib.js";
 import { easeFunctions } from "./canvas-effects/ease.js";
 
-export default class SequencerAnimationEngine {
 
-    static animate(attributes = [], timeDifference = 0) {
+
+const SequencerAnimationEngine = {
+
+    _animations: [],
+    _maxFPS: false,
+    _debug: undefined,
+    _deltas: [],
+
+    dt: false,
+
+    isRunning: false,
+
+    get maxFPS(){
+        if(!this._maxFPS){
+            this._maxFPS = 1000 / game.settings.get('core', "maxFPS")
+        }
+        return this._maxFPS;
+    },
+
+    get debug(){
+        if(this._debug === undefined){
+            this._debug = game.settings.get('sequencer', "debug")
+        }
+        return this._debug;
+    },
+
+    printDebug(string){
+        if(!this.debug) return;
+        console.log(string);
+    },
+
+    addAnimation(attributes = [], timeDifference = 0) {
 
         if (!Array.isArray(attributes)) attributes = [attributes];
 
-        let animData = {
-            attributes: attributes.map(attribute => {
-                attribute.easeFunction = easeFunctions[attribute.ease] ?? easeFunctions["linear"];
-                attribute.complete = false;
-                attribute.initialized = false;
-                attribute.progress = 0;
+        return new Promise((resolve) => {
+            this._animations.push({
+                attributes: attributes.map(attribute => {
+                    attribute.easeFunction = easeFunctions[attribute.ease] ?? easeFunctions["linear"];
+                    attribute.started = false;
+                    attribute.complete = false;
+                    attribute.initialized = false;
+                    attribute.progress = 0;
 
-                attribute.duration = attribute.duration ?? 0;
-                attribute.durationDone = timeDifference ?? 0;
+                    attribute.duration = attribute.duration ?? 0;
+                    attribute.durationDone = timeDifference ?? 0;
 
-                if (attribute?.looping) {
-                    attribute.loopDuration = attribute.loopDuration ?? attribute.duration ?? 0;
-                    attribute.loopDurationDone = timeDifference % attribute.loopDuration ?? 0;
-                    attribute.loops = attribute.loops ?? 0;
-                    attribute.loopsDone = Math.floor(attribute.durationDone / attribute.duration);
-                    attribute.index = (attribute.loopsDone) % attribute.values.length;
-                    attribute.nextIndex = (attribute.loopsDone + 1) % attribute.values.length;
-                    if (!attribute.pingPong && attribute.nextIndex === 0) {
-                        attribute.index = 0;
-                        attribute.nextIndex = 1;
+                    if (attribute?.looping) {
+                        attribute.loopDuration = attribute.loopDuration ?? attribute.duration ?? 0;
+                        attribute.loopDurationDone = timeDifference % attribute.loopDuration ?? 0;
+                        attribute.loops = attribute.loops ?? 0;
+                        attribute.loopsDone = Math.floor(attribute.durationDone / attribute.duration);
+                        attribute.index = (attribute.loopsDone) % attribute.values.length;
+                        attribute.nextIndex = (attribute.loopsDone + 1) % attribute.values.length;
+                        if (!attribute.pingPong && attribute.nextIndex === 0) {
+                            attribute.index = 0;
+                            attribute.nextIndex = 1;
+                        }
                     }
-                }
-                return attribute;
-            }),
-            maxFPS: 1000 / game.settings.get('core', "maxFPS"),
-            lastTimespan: performance.now(),
-            totalDt: timeDifference
+                    return attribute;
+                }),
+                complete: false,
+                totalDt: timeDifference,
+                resolve: resolve
+            });
+            this.printDebug(`DEBUG | Sequencer | Added animations to Animation Engine`);
+            if(!this.isRunning){
+                this.start();
+            }
+        });
+
+    },
+
+    endAnimations(target){
+        this._animations = this._animations.map(animation => {
+            animation.attributes = animation.attributes.filter(attribute => attribute.target !== target);
+            return animation;
+        }).filter(animation => animation.attributes.length > 0);
+    },
+
+    start(){
+        this.isRunning = true;
+        this.printDebug(`DEBUG | Sequencer | Animation Engine Started`);
+        this.nextFrame();
+    },
+
+    nextFrame(timespan = performance.now(), lastTimespan = performance.now()){
+
+        if(this._animations.length === 0){
+            this.isRunning = false;
+            this._deltas = [];
+            this.printDebug(`DEBUG | Sequencer | Animation Engine Paused`);
+            return;
         }
 
-        return new Promise((resolve) => this._animate(resolve, animData));
-    }
-
-    static _animate(resolve, animData, timespan = performance.now(), lastTimespan = performance.now()) {
-
-        let dt = timespan - lastTimespan;
+        this.dt = timespan - lastTimespan;
 
         // Limit to set FPS
-        if (dt >= animData.maxFPS) {
+        if (this.dt >= this.maxFPS) {
 
-            animData.totalDt += dt;
+            this._animations.forEach(animation => this._animate(animation));
 
-            let attributeDeltas = [];
+            this._animations = this._animations.filter(animation => !animation.complete);
 
-            for (let attribute of animData.attributes) {
+            this._applyDeltas();
 
-                if (attribute.complete) continue;
+            lastTimespan = timespan;
 
-                if (animData.totalDt < attribute.delay) continue;
+        }
 
-                if (attribute?.looping && attribute?.indefinite) {
-                    attribute = this.handleIndefiniteLoop(dt, attribute);
-                } else if (attribute?.looping) {
-                    attribute = this.handleLoops(dt, attribute);
-                } else {
-                    attribute = this.handleDefault(dt, attribute);
-                }
+        let nextFrame = this.nextFrame.bind(this);
+        requestAnimationFrame(function (timespan) {
+            nextFrame(timespan, lastTimespan);
+        });
 
-                let delta = attributeDeltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
+    },
 
-                if(!delta){
-                    attributeDeltas.push({
+    _applyDeltas() {
+
+        for(const animation of this._animations){
+
+            for(const attribute of animation.attributes) {
+
+                if(!attribute.started) continue;
+
+                let delta = this._deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
+
+                if (!delta) {
+                    this._deltas.push({
                         target: attribute.target,
                         propertyName: attribute.propertyName,
-                        hasAnimationProperty: attribute.hasAnimationProperty,
                         value: 0
                     })
-                    delta = attributeDeltas[attributeDeltas.length-1];
+                    delta = this._deltas[this._deltas.length - 1];
                 }
 
                 delta.value += attribute.value;
 
             }
 
-            for (let delta of attributeDeltas) {
-                try{
-                    lib.deepSet(
-                        delta.target,
-                        delta.propertyName,
-                        delta.value
-                    )
-                }catch(err){}
-            }
-
-            animData.attributes = animData.attributes.filter(a => !a.complete);
-
-            lastTimespan = timespan;
-
         }
 
-        if (animData.attributes.length === 0) {
-            resolve();
+        for (let delta of this._deltas) {
+            try {
+                lib.deepSet(
+                    delta.target,
+                    delta.propertyName,
+                    delta.value
+                )
+                delta.value = 0;
+            } catch (err) { }
+        }
+
+    },
+
+    _animate(animation){
+
+        animation.totalDt += this.dt;
+
+        animation.attributes.filter(attribute => !attribute.complete)
+            .forEach(attribute => this._animateAttribute(animation.totalDt, attribute));
+
+        animation.complete = animation.attributes.filter(attribute => !attribute.complete).length === 0;
+
+        if(animation.complete){
+            animation.resolve();
+        }
+
+    },
+
+    _animateAttribute(totalDt, attribute) {
+
+        if (totalDt < attribute.delay) return;
+
+        attribute.started = true;
+
+        if (attribute?.looping && attribute?.indefinite) {
+            this._handleIndefiniteLoop(attribute);
+        } else if (attribute?.looping) {
+            this._handleLoops(attribute);
         } else {
-            let self = this;
-            requestAnimationFrame(function (timespan) {
-                self._animate(resolve, animData, timespan, lastTimespan);
-            });
+            this._handleDefault(attribute);
         }
 
-    }
+    },
 
-    static _handleBaseLoop(dt, attribute) {
+    _handleBaseLoop(attribute) {
 
         if (!attribute.initialized) {
             if (attribute.values.length === 1) {
@@ -119,7 +200,7 @@ export default class SequencerAnimationEngine {
             attribute.initialized = true;
         }
 
-        attribute.loopDurationDone += dt;
+        attribute.loopDurationDone += this.dt;
         attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
 
         attribute.value = lib.lerp(
@@ -150,21 +231,19 @@ export default class SequencerAnimationEngine {
 
         }
 
-        return attribute;
+    },
 
-    }
+    _handleIndefiniteLoop(attribute) {
 
-    static handleIndefiniteLoop(dt, attribute) {
+        return this._handleBaseLoop(attribute);
 
-        return this._handleBaseLoop(dt, attribute);
+    },
 
-    }
+    _handleLoops(attribute) {
 
-    static handleLoops(dt, attribute) {
+        this._handleBaseLoop(attribute);
 
-        attribute = this._handleBaseLoop(dt, attribute);
-
-        attribute.durationDone += dt;
+        attribute.durationDone += this.dt;
         attribute.overallProgress = attribute.durationDone / attribute.duration;
 
         if (attribute.progress >= 1.0 && attribute.loopsDone === attribute.loops * 2) {
@@ -176,11 +255,9 @@ export default class SequencerAnimationEngine {
             attribute.complete = true;
         }
 
-        return attribute;
+    },
 
-    }
-
-    static handleDefault(dt, attribute) {
+    _handleDefault(attribute) {
 
         if (attribute.from === undefined) {
             attribute.from = lib.deepGet(
@@ -189,7 +266,7 @@ export default class SequencerAnimationEngine {
             );
         }
 
-        attribute.durationDone += dt;
+        attribute.durationDone += this.dt;
         attribute.progress = attribute.durationDone / attribute.duration;
 
         attribute.value = lib.lerp(
@@ -203,8 +280,8 @@ export default class SequencerAnimationEngine {
             attribute.complete = true;
         }
 
-        return attribute;
-
     }
 
 }
+
+export default SequencerAnimationEngine;

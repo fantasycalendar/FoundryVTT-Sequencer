@@ -464,7 +464,7 @@ export default class CanvasEffect {
 
         }
 
-        SequencerAnimationEngine.animate(
+        SequencerAnimationEngine.addAnimation(
             animationsToSend,
             this.actualCreationTime - this.data.timestamp
         );
@@ -481,7 +481,7 @@ export default class CanvasEffect {
 
         this.sprite.alpha = 0.0;
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "alpha",
             to: this.data.opacity,
@@ -504,7 +504,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0)
             : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "alpha",
             to: 0.0,
@@ -545,7 +545,7 @@ export default class CanvasEffect {
 
         this.sprite.scale.set(fromScale.x, fromScale.y);
 
-        SequencerAnimationEngine.animate([{
+        SequencerAnimationEngine.addAnimation([{
             target: this.sprite,
             propertyName: "scale.x",
             from: fromScale.x,
@@ -578,7 +578,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0)
             : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
 
-        SequencerAnimationEngine.animate([{
+        SequencerAnimationEngine.addAnimation([{
             target: this.sprite,
             propertyName: "scale.x",
             to: scale.x,
@@ -609,7 +609,7 @@ export default class CanvasEffect {
         let original_radians = this.spriteContainer.rotation;
         this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
 
-        SequencerAnimationEngine.animate(this.counterAnimateRotation({
+        SequencerAnimationEngine.addAnimation(this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: original_radians,
@@ -631,7 +631,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0)
             : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
 
-        SequencerAnimationEngine.animate(this.counterAnimateRotation({
+        SequencerAnimationEngine.addAnimation(this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: (rotateOut.value / 180) * Math.PI,
@@ -653,7 +653,7 @@ export default class CanvasEffect {
 
         if(this.actualCreationTime - (this.data.timestamp + fadeInAudio.duration + fadeInAudio.delay) > 0) return;
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "volume",
             to: this.data.audioVolume,
@@ -675,7 +675,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
             : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "volume",
             to: 0.0,
@@ -702,7 +702,7 @@ export default class CanvasEffect {
 
         if(this.actualCreationTime - (this.data.timestamp + duration + moves.delay) > 0) return;
 
-        SequencerAnimationEngine.animate([{
+        SequencerAnimationEngine.addAnimation([{
             target: this.spriteContainer,
             propertyName: "position.x",
             to: moves.target.x,
@@ -737,6 +737,12 @@ export default class CanvasEffect {
 				this.source.pause();
 				this.source.load();
 			} catch (err) {}
+            try {
+			    SequencerAnimationEngine.endAnimations(this.sprite);
+			    SequencerAnimationEngine.endAnimations(this.spriteContainer);
+            }catch(err){
+			    console.log(err);
+            }
 			try {
 			    if(this.data.screenSpace){
 			        Sequencer.UILayer.removeContainerByEffect(this);
