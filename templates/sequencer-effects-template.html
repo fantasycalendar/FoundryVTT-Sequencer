@@ -8,6 +8,15 @@
             display:flex;
         }
 
+        .howto-container{
+            max-width: 300px;
+        }
+
+        .howto-container li{
+            list-style: none;
+            margin-bottom: 0.5rem;
+        }
+
         .effects {
             padding: 5px 0;
             max-height: calc(425px - 5rem);
@@ -133,7 +142,8 @@
 
     <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
         {{#if isGM}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> Player</a> {{/if}}
-        <a class="item" data-tab="manager"><i class="fas fa-film"></i> Effects</a>
+        <a class="item" data-tab="manager"><i class="fas fa-film"></i> Manager</a>
+        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> How-to</a>
     </nav>
 
     <hr>
@@ -219,6 +229,28 @@
             </div>
 
         </div>
+
+        {{#if isGM}}
+        <div class="tab howto-container" data-tab="howto" data-group="effect-manager">
+            <p>Welcome to Sequencer Effects!</p>
+            <p>With the Player <i class="fas fa-play-circle"></i>, you can quickly play effects on the canvas, and with the Manager <i class="fas fa-film"></i> you can end persisting effects whenever you want.</p>
+            <p>When using the Effects Player, you can hold these hotkeys to quickly toggle options:</p>
+            <ol>
+                <li>
+                    <strong>Shift</strong><br>
+                    Play multiple effects at the same time
+                </li>
+                <li>
+                    <strong>Shift + Ctrl</strong><br>
+                    Play multiple effects one after another
+                </li>
+                <li>
+                    <strong>...and more to come in future updates!</strong>
+                </li>
+            </ol>
+        </div>
+        {{/if}}
+
     </section>
 
 </form>

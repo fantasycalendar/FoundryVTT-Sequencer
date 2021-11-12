@@ -159,35 +159,44 @@ class SequencerEffectPlayer {
             await SequencerPreloader.preloadForClients(settings.file)
         }
 
-        const sequence = new Sequence()
-            .effect()
-                .file(settings.file)
-                .forUsers(settings.users)
-                .atLocation(settings.startPos)
-                .belowTokens(settings.belowTokens)
-                .repeats(
-                    settings.repetitions,
-                    settings.repeatDelayMin,
-                    settings.repeatDelayMax
-                )
-                .randomizeMirrorY(settings.randomMirrorY)
+        const sequence = this.sequenceBuffer.length > 0 && settings.Control
+            ? this.sequenceBuffer[this.sequenceBuffer.length-1]
+            : new Sequence();
+
+        const effect = sequence.effect()
+            .file(settings.file)
+            .forUsers(settings.users)
+            .atLocation(settings.startPos)
+            .belowTokens(settings.belowTokens)
+            .repeats(
+                settings.repetitions,
+                settings.repeatDelayMin,
+                settings.repeatDelayMax
+            )
+            .randomizeMirrorY(settings.randomMirrorY)
 
         if(settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new"){
-            sequence.name("Preset: " + settings.name)
+            effect.name("Preset: " + settings.name)
         }
 
         if(settings.randomOffset){
-            sequence.randomOffset(0.75);
+            effect.randomOffset(0.75);
         }
 
         if(settings.Dragging){
-            sequence.reachTowards(settings.endPos)
+            effect.reachTowards(settings.endPos)
         }else{
-            sequence.scale(settings.scale)
-            sequence.randomRotation(settings.randomRotation)
+            effect.scale(settings.scale)
+            effect.randomRotation(settings.randomRotation)
         }
 
-        this.sequenceBuffer.push(sequence);
+        if(settings.Control){
+            effect.waitUntilFinished();
+        }
+
+        if(!settings.Control || this.sequenceBuffer.length === 0){
+            this.sequenceBuffer.push(sequence);
+        }
 
         if(!settings.Shift) this.playEffects();
 
