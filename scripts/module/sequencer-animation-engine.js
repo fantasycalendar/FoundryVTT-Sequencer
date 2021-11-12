@@ -121,21 +121,23 @@ const SequencerAnimationEngine = {
 
     _applyDeltas() {
 
+        let deltas = [];
+
         for(const animation of this._animations){
 
             for(const attribute of animation.attributes) {
 
                 if(!attribute.started) continue;
 
-                let delta = this._deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
+                let delta = deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
 
                 if (!delta) {
-                    this._deltas.push({
+                    deltas.push({
                         target: attribute.target,
                         propertyName: attribute.propertyName,
                         value: 0
                     })
-                    delta = this._deltas[this._deltas.length - 1];
+                    delta = deltas[deltas.length - 1];
                 }
 
                 delta.value += attribute.value;
@@ -144,14 +146,13 @@ const SequencerAnimationEngine = {
 
         }
 
-        for (let delta of this._deltas) {
+        for (let delta of deltas) {
             try {
                 lib.deepSet(
                     delta.target,
                     delta.propertyName,
                     delta.value
                 )
-                delta.value = 0;
             } catch (err) { }
         }
 
