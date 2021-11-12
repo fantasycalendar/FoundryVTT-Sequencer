@@ -83,18 +83,10 @@ export default function registerSettings() {
         const playTool = {
             icon: "fas fa-play",
             name: "play-effect",
-            title: "Play Effect"
-        };
-
-        const player = {
-            icon: "fas fa-play-circle",
-            name: "effectplayer",
-            title: "Show Sequencer Effects Player",
-            button: true,
-            visible: game.user.isGM,
+            title: "Play Effect",
             onClick: () => {
-                SequencerEffectsUI.show({ inFocus: true, tab: 1 });
-            },
+                SequencerEffectsUI.show({ inFocus: true, tab: "player" });
+            }
         };
 
         const viewer = {
@@ -104,7 +96,7 @@ export default function registerSettings() {
             button: true,
             visible: game.user.isTrusted,
             onClick: () => {
-                SequencerEffectsUI.show({ inFocus: true, tab: 2 });
+                SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
             },
         };
 
@@ -127,7 +119,6 @@ export default function registerSettings() {
             activeTool: "play-effect",
             tools: [
                 playTool,
-                player,
                 viewer,
                 database
             ]

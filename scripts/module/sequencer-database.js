@@ -1,6 +1,5 @@
 import * as lib from './lib/lib.js';
 import loadingBar from "./lib/loadingBar.js";
-import { strToSearchRegexStr } from "./lib/lib.js";
 
 const SequencerDatabase = {
 

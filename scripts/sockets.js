@@ -20,7 +20,7 @@ function onSocketEvent(socketData) {
     const { handler, args } = socketData;
     switch (handler) {
         case SOCKET_HANDLERS.PLAY_EFFECT:
-            return Sequencer.EffectManager.play(...args);
+            return Sequencer.EffectManager._playEffect(...args);
         case SOCKET_HANDLERS.END_EFFECT:
             return Sequencer.EffectManager._endEffects(...args);
         case SOCKET_HANDLERS.END_ALL_EFFECTS:

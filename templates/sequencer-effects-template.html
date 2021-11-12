@@ -97,12 +97,6 @@
             color: white;
         }
 
-        .file-settings, .user-settings {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-        }
-
         .file-settings label, .user-settings label {
             flex: 0 1 15%;
             align-self: center;
@@ -119,6 +113,21 @@
             order: 99;
         }
 
+        .activate-layer{
+            margin: 0;
+        }
+
+        w-100 {
+            width: 100%;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
 
     </style>
 
@@ -134,9 +143,9 @@
         {{#if isGM}}
         <div class="tab" data-tab="player" data-group="effect-manager">
 
-            <button type="button" class="activate-layer w-100 m-0 mb-2">Activate Layer</button>
+            <button type="button" class="activate-layer w-100 mb-2">Activate Layer</button>
 
-            <div class="file-settings mb-2">
+            <div class="file-settings flexcol mb-2">
                 <div class="row">
                     <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder="Enter DB or File Path...">
                     <button type="button" class="custom-file-picker"><i class="fas fa-file-import"></i></button>
@@ -144,7 +153,7 @@
                 <datalist id="dblist"></datalist>
             </div>
 
-            <div class="settings mb-2">
+            <div class="settings flexcol mb-2">
                 <div class="input-column">
                     {{#each defaultSettings}}
                     <div class="input-row"><input type="{{this.type}}" class="setting" name="{{@key}}" id="{{@key}}" value="{{this.default}}"></div>
@@ -157,7 +166,7 @@
                 </div>
             </div>
 
-            <div class="user-settings mb-2">
+            <div class="user-settings flexcol mb-2">
                 <label for="file">Play for users:</label>
                 <select class="user-select" id="user-select" multiple>
                     <option value="all" selected>All users</option>
@@ -167,7 +176,7 @@
                 </select>
             </div>
 
-            <div class="preset-setting">
+            <div class="flexcol">
 
                 <div class="row w-100">Presets:</div>
 

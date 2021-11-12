@@ -496,7 +496,3 @@ export function strToSearchRegexStr(str) {
         .replace(/\*+/g, ".*?")
         .replace(/\s+/g, "|");
 }
-
-export function waitFor(ms){
-    return new Promise(resolve => setTimeout(resolve, ms));
-}

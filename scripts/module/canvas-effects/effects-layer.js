@@ -1,9 +1,11 @@
 import SequencerPlayer from "../sequencer-effect-player.js";
+import SequencerEffectsUI from "../formapplications/sequencer-effects-ui.js";
 
 export class BaseEffectsLayer extends CanvasLayer {
 
     constructor(...args) {
         super(...args);
+        this._container = false;
         this.sampleLine = false;
         this.point = false;
     }
@@ -17,41 +19,48 @@ export class BaseEffectsLayer extends CanvasLayer {
         });
     }
 
+    activate(){
+        super.activate();
+        SequencerPlayer.show();
+    }
+
     get UIContainer(){
 
-        let container = this.children.find(child => child?.parentName === "sequencerUIContainer");
-
-        if(!container) {
-            container = new PIXI.Container();
-            container.sortableChildren = true;
-            container.parentName = "sequencerUIContainer";
-            container.zIndex = -1;
-            this.addChild(container);
+        if(!this._container) {
+            this._container = new PIXI.Container();
+            this._container.sortableChildren = true;
+            this._container.parentName = "sequencerUIContainer";
+            this._container.zIndex = -1;
+            this.addChild(this._container);
             this.sortChildren();
         }
 
-        return container;
+        return this._container;
     }
 
-    get mousePos(){
+    getMousePos(){
         const mouse = canvas.app.renderer.plugins.interaction.mouse;
         let pos = mouse.getLocalPosition(canvas.app.stage);
-        if(SequencerPlayer.snapLocationToGrid){
+        if(this.snapToGrid){
             pos = canvas.grid.getSnappedPosition(pos.x, pos.y, 2)
         }
         return new PIXI.Point(pos.x, pos.y);
     }
 
     updateStartPoint(){
-        this.startPos = this.mousePos;
+        this.startPos = this.getMousePos();
     }
 
     updateEndPoint(){
-        this.endPos = this.mousePos;
+        this.endPos = this.getMousePos();
     }
 
-    get active(){
-        return SequencerPlayer.active;
+    get playActive(){
+        return SequencerPlayer.playActive;
+    }
+
+    get snapToGrid(){
+        return SequencerPlayer.snapLocationToGrid;
     }
 
     render(...args){
@@ -68,7 +77,7 @@ export class BaseEffectsLayer extends CanvasLayer {
             this.sampleLine.clear();
         }
 
-        if(!this.active) return;
+        if(!this.playActive) return;
 
         this.sampleLine = new PIXI.Graphics();
         this.sampleLine.lineStyle(3, 0xff0000, 1)
@@ -77,26 +86,8 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         // If line already present then set its position only
         this.sampleLine.moveTo(this.startPos.x, this.startPos.y);
-        let mousePos = this.mousePos;
+        let mousePos = this.getMousePos();
         this.sampleLine.lineTo(mousePos.x, mousePos.y);
-
-    }
-
-    drawPoint(){
-
-        if(this.point){
-            this.point.clear();
-        }
-
-        if(!this.active) return;
-
-        let mousePos = this.mousePos;
-
-        this.point = new PIXI.Graphics();
-        this.point.beginFill(0xff0000);
-        this.point.drawCircle(mousePos.x, mousePos.y, 10)
-        this.point.alpha = 0.5;
-        this.UIContainer.addChild(this.point);
 
     }
 
@@ -107,6 +98,25 @@ export class BaseEffectsLayer extends CanvasLayer {
             this.sampleLine.clear();
         }
     }
+
+    drawPoint(){
+
+        if(this.point){
+            this.point.clear();
+        }
+
+        if(!this.playActive) return;
+
+        let mousePos = this.getMousePos();
+
+        this.point = new PIXI.Graphics();
+        this.point.beginFill(0xff0000);
+        this.point.drawCircle(mousePos.x, mousePos.y, 10)
+        this.point.alpha = 0.5;
+        this.UIContainer.addChild(this.point);
+
+    }
+
 }
 
 export class BelowTokensEffectsLayer extends BaseEffectsLayer {

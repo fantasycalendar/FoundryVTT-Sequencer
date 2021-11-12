@@ -1,7 +1,6 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
 import SequencerPlayer from "../sequencer-effect-player.js";
-import SequencerEffectManager from "../sequencer-effect-manager.js";
 
 export default class SequencerEffectsUI extends FormApplication {
 
@@ -13,7 +12,7 @@ export default class SequencerEffectsUI extends FormApplication {
         this.deletePresetButton = undefined;
         this.fileInput = undefined;
         this.userSelect = undefined;
-        this.lastSearch = "";
+        this.lastSearch = undefined;
         this.lastResults = [];
         this.effects = [];
     }
@@ -25,7 +24,7 @@ export default class SequencerEffectsUI extends FormApplication {
             template: `modules/sequencer/templates/sequencer-effects-template.html`,
             classes: ["dialog"],
             width: "auto",
-            height: 625,
+            height: 570,
             top: 65,
             left: 120,
             resizable: true,
@@ -37,7 +36,7 @@ export default class SequencerEffectsUI extends FormApplication {
         });
     }
 
-    static show({inFocus = true, tab = 2 }={}){
+    static show({inFocus = true, tab = "player" }={}){
         if (!game.user.isTrusted) return;
         let activeApp;
         for(let app of Object.values(ui.windows)){
@@ -46,18 +45,22 @@ export default class SequencerEffectsUI extends FormApplication {
                 break;
             }
         }
-        if(!activeApp) activeApp = new this();
-        activeApp.render(true, { focus: inFocus });
+
+        if(activeApp){
+            if(activeApp._tabs[0].active !== tab){
+                activeApp.render(true, { focus: inFocus });
+                activeApp.reapplySettings();
+            }
+        }else{
+            activeApp = new this();
+            activeApp.render(true, { focus: inFocus });
+        }
+
         return activeApp.setTab(tab);
     }
 
     setTab(tab){
-        const isPlayer = tab === 1;
-
-        this._tabs[0].active = isPlayer
-            ? "player"
-            : "manager";
-
+        this._tabs[0].active = tab;
         return this;
     }
 
@@ -137,11 +140,11 @@ export default class SequencerEffectsUI extends FormApplication {
         });
 
         el.addEventListener("mouseover", function() {
-            effect._showHighlight(true);
+            effect.highlight(true);
         });
 
         el.addEventListener("mouseleave", function() {
-            effect._showHighlight(false);
+            effect.highlight(false);
         });
 
         return el;
@@ -149,7 +152,8 @@ export default class SequencerEffectsUI extends FormApplication {
 
     updateEffects() {
 
-        const effects = Sequencer.EffectManager.effects;
+        const effects = Sequencer.EffectManager.effects
+            .filter(effect => effect.onCurrentScene && effect.userCanUpdate);
 
         this.persistentEffectsContainer.empty();
         this.temporaryEffectsContainer.empty();
@@ -203,25 +207,10 @@ export default class SequencerEffectsUI extends FormApplication {
                 default: 1.0,
                 label: "Scale",
             },
-            "preload": {
-                type: "checkbox",
-                default: false,
-                label: "Preload",
-            },
-            "persist": {
-                type: "checkbox",
-                default: false,
-                label: "Persist",
-            },
             "belowTokens": {
                 type: "checkbox",
                 default: false,
                 label: "Below Tokens",
-            },
-            "attachTo": {
-                type: "checkbox",
-                default: false,
-                label: "Attach to token",
             },
             "snapToGrid": {
                 type: "checkbox",
@@ -261,6 +250,11 @@ export default class SequencerEffectsUI extends FormApplication {
                 default: 400,
                 label: "Delay (max)"
             },
+            "preload": {
+                type: "checkbox",
+                default: false,
+                label: "Preload",
+            }
         }
     }
 
@@ -277,8 +271,8 @@ export default class SequencerEffectsUI extends FormApplication {
 
         html.find('.activate-layer').click(() => {
             canvas.sequencerEffectsAboveTokens.activate();
-            ui.controls.control.activeTool = "play-effect";
             ui.controls.render();
+            ui.controls.control.activeTool = "play-effect";
         });
 
         const _this = this;
@@ -313,6 +307,8 @@ export default class SequencerEffectsUI extends FormApplication {
         const debouncedSearch = debounce(function() {
             _this.showResults(autosuggestions, _this.fileInput.val());
         }, 250);
+
+        debouncedSearch();
 
         this.fileInput.keyup((e) => {
             debouncedSearch();
@@ -390,7 +386,10 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     reapplySettings(){
-        this.applyPresetData(this._settings);
+        let _this = this;
+        setTimeout(() => {
+            _this.applyPresetData(_this._settings);
+        }, 50);
     }
 
     setSetting(name, value){
@@ -409,10 +408,11 @@ export default class SequencerEffectsUI extends FormApplication {
     async applyPreset(inPresetName){
         if(inPresetName === "new"){
             inPresetName = await this.nameNewPreset();
+            console.log(inPresetName);
             if(!inPresetName) return;
             await this.createPreset(inPresetName)
             await this.render(true);
-            await lib.waitFor(50);
+            await lib.wait(50);
         }
 
         const presetData = this.getPreset(inPresetName);
@@ -428,7 +428,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     async createPreset(inName){
         const presets = this.presets;
-        presets[inName] = SequencerEffectsUI.activeSettings;
+        presets[inName] = foundry.utils.duplicate(SequencerEffectsUI.activeSettings);
         await game.settings.set('sequencer', 'effectPresets', presets)
     }
 
@@ -439,26 +439,30 @@ export default class SequencerEffectsUI extends FormApplication {
         await this.render(true);
     }
 
-    nameNewPreset(){
-        return new Promise((resolve) => {
+    async nameNewPreset(inName = ""){
+
+        let presetName = await new Promise((resolve) => {
             let rejected = false;
             new Dialog({
                 title: "Create new Sequencer effect preset",
-                content: `<input type="text" placeholder="Input new preset name" id="newPresetName">`,
+                content: `<p><input type="text" placeholder="Input new preset name" id="newPresetName" style="width:100%;"></p>`,
                 buttons: {
-                    ok: {
+                    okay: {
                         icon: '<i class="fas fa-check"></i>',
                         label: 'Okay',
-                        callback: (html) => {
+                        callback: async (html) => {
                             let name = html.find('#newPresetName').val();
-                            if(name === ""){
+
+                            if(name === "" || !name){
                                 name = false;
                                 rejected = true;
                             }
+
                             resolve(name);
+
                         }
                     },
-                    dont_remind: {
+                    cancel: {
                         icon: '<i class="fas fa-times"></i>',
                         label: "Cancel",
                         callback: () => {
@@ -468,10 +472,27 @@ export default class SequencerEffectsUI extends FormApplication {
                     }
                 },
                 close: () => {
-                    if(!rejected) resolve(false);
+
+                },
+                render: (html) => {
+                    html.find('#newPresetName').val(inName).focus();
                 }
             }).render(true);
         });
+
+        if(this.presets[presetName]){
+
+            const overwrite = await Dialog.confirm({
+                title: "Overwrite preset?",
+                content: `<p>Are you sure you want to overwrite the "${presetName}" preset?</p>`
+            });
+
+            if(!overwrite){
+                presetName = await this.nameNewPreset(presetName);
+            }
+        }
+
+        return presetName;
     }
 
     showResults(autosuggestions, input) {

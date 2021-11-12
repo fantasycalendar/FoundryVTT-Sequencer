@@ -13,6 +13,9 @@ const EffectsContainer = {
     },
     add(effect) {
         this._effects.add(effect);
+    },
+    get(effectId){
+        return this.effects.find(effect => effect.data.id === effectId);
     }
 };
 
@@ -27,23 +30,27 @@ export default class SequencerEffectManager {
         return EffectsContainer.effects;
     }
 
+    static getEffectByID(inId){
+        return EffectsContainer.get(inId);
+    }
+
     /**
      * Opens the Sequencer Effects UI with the effects tab open
      *
      * @returns {SequencerEffectsUI}
      */
     static show(){
-        return SequencerEffectsUI.show({ tab: 2 });
+        return SequencerEffectsUI.show({ tab: "manager" });
     }
 
     /**
      * Play an effect on the canvas.
      *
      * @param {object} data The data that describes the audio to play
-     * @param {boolean} [push=false] A flag indicating whether or not to make other clients play the effect
+     * @param {boolean} [push=true] A flag indicating whether or not to make other clients play the effect
      * @returns {CanvasEffect} A CanvasEffect object
      */
-    static async play(data, push = false) {
+    static async play(data, push = true) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, data);
         return this._playEffect(data);
     }
@@ -355,6 +362,6 @@ const flagManager = {
 
         }
 
-    }, 150)
+    }, 250)
 
 };
