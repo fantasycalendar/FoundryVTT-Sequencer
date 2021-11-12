@@ -97,20 +97,15 @@ const SequencerAnimationEngine = {
             return;
         }
 
-        this.dt = timespan - lastTimespan;
+        this.dt = Math.min(timespan - lastTimespan, this.maxFPS);
 
-        // Limit to set FPS
-        if (this.dt >= this.maxFPS) {
+        this._animations.forEach(animation => this._animate(animation));
 
-            this._animations.forEach(animation => this._animate(animation));
+        this._animations = this._animations.filter(animation => !animation.complete);
 
-            this._animations = this._animations.filter(animation => !animation.complete);
+        this._applyDeltas();
 
-            this._applyDeltas();
-
-            lastTimespan = timespan;
-
-        }
+        lastTimespan = timespan;
 
         let nextFrame = this.nextFrame.bind(this);
         requestAnimationFrame(function (timespan) {
