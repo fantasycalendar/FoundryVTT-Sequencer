@@ -295,7 +295,9 @@ Click the link above to go to the documentation where each feature is listed.
 ## Changelog
 
 ### Version 1.2.0
-- *Sequencer* - Added Sequencer Effect Player!
+- *Sequencer* - Added the Sequencer Effect Player!
+- *Sequencer* - Refactored the Sequencer Animation Engine, which fixes some animation funkiness
+- *Effects* - Added `.spriteOffset()` which allows you to add an offset to the effect's sprite's location
 
 ### Version 1.1.4
 - *Sequencer* - Fixed error in the Sequencer Preloader when pre-loading files from Database paths 
