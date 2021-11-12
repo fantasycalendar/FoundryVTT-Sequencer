@@ -24,7 +24,7 @@ export default class SequencerEffectsUI extends FormApplication {
             template: `modules/sequencer/templates/sequencer-effects-template.html`,
             classes: ["dialog"],
             width: "auto",
-            height: 570,
+            height: 575,
             top: 65,
             left: 120,
             resizable: true,
