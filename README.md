@@ -294,6 +294,10 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.2
+- *Sequencer* - Added Stretch or Move checkbox to Sequencer Player
+- *Sequencer* - Added Move Speed input to Sequencer Player
+
 ### Version 1.2.1
 - *Sequencer* - Fixed file picker being broken
 

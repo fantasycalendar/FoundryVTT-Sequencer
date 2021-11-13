@@ -184,7 +184,14 @@ class SequencerEffectPlayer {
         }
 
         if(settings.Dragging){
-            effect.reachTowards(settings.endPos)
+            if(settings.moveTowards){
+                effect.moveTowards(settings.endPos)
+                if(settings.moveSpeed){
+                    effect.moveSpeed(settings.moveSpeed)
+                }
+            }else{
+                effect.reachTowards(settings.endPos)
+            }
         }else{
             effect.scale(settings.scale)
             effect.randomRotation(settings.randomRotation)

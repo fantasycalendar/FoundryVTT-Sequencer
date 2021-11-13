@@ -24,7 +24,7 @@ export default class SequencerEffectsUI extends FormApplication {
             template: `modules/sequencer/templates/sequencer-effects-template.html`,
             classes: ["dialog"],
             width: "auto",
-            height: 575,
+            height: 635,
             top: 65,
             left: 120,
             resizable: true,
@@ -254,6 +254,16 @@ export default class SequencerEffectsUI extends FormApplication {
                 type: "checkbox",
                 default: false,
                 label: "Preload",
+            },
+            "moveTowards": {
+                type: "checkbox",
+                default: false,
+                label: "Drag Behavior:<br>Stretch or Move",
+            },
+            "moveSpeed": {
+                type: "number",
+                default: 0,
+                label: "Move speed",
             }
         }
     }
