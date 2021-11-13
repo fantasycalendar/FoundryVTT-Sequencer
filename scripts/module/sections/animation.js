@@ -75,17 +75,6 @@ class AnimationSection extends Section {
     }
 
     /**
-     * DEPRECATED, see snapToGrid
-     *
-     * @param {boolean} inBool
-     * @returns {AnimationSection}
-     */
-    snapToSquare(inBool = true) {
-        this.sequence._showWarning(this, "snapToSquare", "snapToSquare has been deprecated and will be removed in 1.2.0")
-        return this.snapToGrid(inBool);
-    }
-
-    /**
      * Causes the final location to be snapped to the grid
      *
      * @param {boolean} inBool
