@@ -1,8 +1,6 @@
 import * as lib from "./lib/lib.js";
 import { easeFunctions } from "./canvas-effects/ease.js";
 
-
-
 const SequencerAnimationEngine = {
 
     _animations: [],

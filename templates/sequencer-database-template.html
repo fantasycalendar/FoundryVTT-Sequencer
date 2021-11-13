@@ -95,12 +95,12 @@
 
     <div class="top-row flex mb-2">
         <select name="pack-select" class="w-15" onsubmit="event.preventDefault();">
-            <option value="all">All</option>
+            <option value="all">{{ localize "SEQUENCER.DatabaseAll" }}</option>
             {{#each packs as |pack index|}}
                 <option>{{ pack }}</option>
             {{/each}}
         </select>
-        <input placeholder="Search..." name="search-field" type="text" class="ml-2" onsubmit="event.preventDefault();">
+        <input placeholder='{{ localize "SEQUENCER.DatabaseSearch" }}' name="search-field" type="text" class="ml-2" onsubmit="event.preventDefault();">
     </div>
 
     <div class="database-entries-container">

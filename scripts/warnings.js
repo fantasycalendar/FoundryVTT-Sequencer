@@ -4,6 +4,8 @@ export async function check(){
 
 async function checkHyperspace(){
 
+    if(!game.user.isGM) return;
+
     if(!hasHyperspaceAssets()) return;
 
     if(!game.modules.get("NRSAP")){

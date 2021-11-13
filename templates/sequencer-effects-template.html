@@ -145,23 +145,23 @@
     </style>
 
     <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
-        {{#if isGM}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> Player</a> {{/if}}
-        <a class="item" data-tab="manager"><i class="fas fa-film"></i> Manager</a>
-        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> How-to</a>
+        {{#if canCreateEffects}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> {{ localize "SEQUENCER.Player" }}</a> {{/if}}
+        <a class="item" data-tab="manager"><i class="fas fa-film"></i> {{ localize "SEQUENCER.Manager" }}</a>
+        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> {{ localize "SEQUENCER.HowTo" }}</a>
     </nav>
 
     <hr>
 
     <section id="effect-manager-tabs" class="content">
 
-        {{#if isGM}}
+        {{#if canCreateEffects}}
         <div class="tab effect-player-container" data-tab="player" data-group="effect-manager">
 
-            <button type="button" class="activate-layer w-100 mb-2">Activate Layer</button>
+            <button type="button" class="activate-layer w-100 mb-2">{{ localize "SEQUENCER.PlayerActivateLayer" }}</button>
 
             <div class="file-settings flexcol mb-2">
                 <div class="row">
-                    <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder="Enter DB or File Path...">
+                    <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder='{{ localize "SEQUENCER.PlayerPathInput" }}'>
                     <button type="button" class="custom-file-picker small-button"><i class="fas fa-file-import"></i></button>
                 </div>
                 <datalist id="dblist"></datalist>
@@ -183,7 +183,7 @@
             <div class="user-settings flexcol mb-2">
                 <label for="file">Play for users:</label>
                 <select class="user-select" id="user-select" multiple>
-                    <option value="all" selected>All users</option>
+                    <option value="all" selected>{{ localize "SEQUENCER.PlayerAllUsers" }}</option>
                     {{#each users}}
                     <option value="{{ this.id }}">{{ this.name }}</option>
                     {{/each}}
@@ -192,13 +192,13 @@
 
             <div class="flexcol">
 
-                <div class="row w-100">Presets:</div>
+                <div class="row w-100">{{ localize "SEQUENCER.PlayerPresets" }}</div>
 
                 <div class="row w-100">
 
                     <select class="preset-select flex-grow">
 
-                        <option value="default">Default</option>
+                        <option value="default">{{ localize "SEQUENCER.PlayerPresetsDefault" }}</option>
                         {{#each presets}}
                         <option>{{ @key }}</option>
                         {{/each}}
@@ -206,6 +206,7 @@
                     </select>
 
                     <button type="button" class="save-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
+                    <button type="button" class="copy-preset flex-shrink small-button" disabled><i class="fas fa-copy"></i></button>
                     <button type="button" class="delete-preset flex-shrink small-button" disabled><i class="fas fa-times"></i></button>
 
                 </div>
@@ -217,47 +218,47 @@
 
         <div class="tab effects-container" data-tab="manager" data-group="effect-manager">
 
-            <h2 class="no-effects">No active effects...</h2>
+            <h2 class="no-effects">{{ localize "SEQUENCER.ManagerNoEffects" }}</h2>
 
             <div class="effects" style="display: none">
 
-                <h2>Persistent effects:</h2>
+                <h2>{{ localize "SEQUENCER.ManagerPersistentEffects" }}</h2>
                 <div class="persistent-effects"></div>
 
                 <hr>
 
-                <h2>Temporary effects:</h2>
+                <h2>{{ localize "SEQUENCER.ManagerTemporaryEffects" }}</h2>
                 <div class="temporary-effects"></div>
 
             </div>
 
         </div>
 
-        {{#if isGM}}
+        {{#if canCreateEffects}}
         <div class="tab howto-container" data-tab="howto" data-group="effect-manager">
-            <p>Welcome to Sequencer Effects!</p>
-            <p>With the Player <i class="fas fa-play-circle"></i>, you can quickly play effects on the canvas, and with the Manager <i class="fas fa-film"></i> you can end persisting effects whenever you want.</p>
-            <p>When using the Player <i class="fas fa-play-circle"></i>, you need to set what effect to play. Click on the <strong>file input</strong> to see what database paths you have or just start typing to search. You can press the <i class="fas fa-file-import"></i> button next to it to search for a file directly.</p>
-            <p>Once you've picked a file, you can do any of the following actions while on the Sequencer Layer <i class="fa-list-ol"></i></p>
+            <p>{{ localize "SEQUENCER.HowToWelcome" }}</p>
+            <p>{{{ localize "SEQUENCER.HowToExplanation" }}}</p>
+            <p>{{{ localize "SEQUENCER.HowToPlayerExplanation" }}}</p>
+            <p>{{{ localize "SEQUENCER.HowToLayerExplanation" }}}</p>
             <ol>
                 <li>
-                    <strong>Click</strong><br>
-                    Play an effect on the spot
+                    <strong>{{ localize "SEQUENCER.HowToClick" }}</strong><br>
+                    {{ localize "SEQUENCER.HowToClickLabel" }}
                 </li>
                 <li>
-                    <strong>Click Hold + Drag</strong><br>
-                    Play an effect stretched towards a location
+                    <strong>{{ localize "SEQUENCER.HowToClickDrag" }}</strong><br>
+                    {{ localize "SEQUENCER.HowToClickDragLabel" }}
                 </li>
                 <li>
-                    <strong>Shift</strong><br>
-                    Play multiple effects at the same time after releasing shift
+                    <strong>{{ localize "SEQUENCER.HowToShift" }}</strong><br>
+                    {{ localize "SEQUENCER.HowToShiftLabel" }}
                 </li>
                 <li>
-                    <strong>Shift + Ctrl</strong><br>
-                    Play multiple effects one after another
+                    <strong>{{ localize "SEQUENCER.HowToShiftControl" }}</strong><br>
+                    {{ localize "SEQUENCER.HowToShiftControlLabel" }}
                 </li>
                 <li>
-                    <strong>...and more to come in future updates!</strong>
+                    <strong>{{ localize "SEQUENCER.HowToMoreToCome" }}</strong>
                 </li>
             </ol>
         </div>

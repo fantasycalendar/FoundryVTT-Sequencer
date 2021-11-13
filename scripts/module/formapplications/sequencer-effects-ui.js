@@ -20,7 +20,7 @@ export default class SequencerEffectsUI extends FormApplication {
     /** @override */
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            title: "Sequencer Effects",
+            title: game.i18n.localize("SEQUENCER.Effects"),
             template: `modules/sequencer/templates/sequencer-effects-template.html`,
             classes: ["dialog"],
             width: "auto",
@@ -37,7 +37,6 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     static show({inFocus = true, tab = "player" }={}){
-        if (!game.user.isTrusted) return;
         let activeApp;
         for(let app of Object.values(ui.windows)){
             if(app instanceof this){
@@ -45,7 +44,6 @@ export default class SequencerEffectsUI extends FormApplication {
                 break;
             }
         }
-
         if(activeApp){
             if(activeApp._tabs[0].active !== tab){
                 activeApp.render(true, { focus: inFocus });
@@ -85,7 +83,7 @@ export default class SequencerEffectsUI extends FormApplication {
     /** @override */
     getData() {
         let data = super.getData()
-        data.isGM = game.user.isGM;
+        data.canCreateEffects = game.user.can("SEQUENCER_EFFECT_CREATE");
         data = this.getPlayerData(data);
         return data;
     }
@@ -116,7 +114,11 @@ export default class SequencerEffectsUI extends FormApplication {
         fileName = fileName !== "" ? fileName : "Text: " + effect.data.text.text;
         let effectName = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
         if(effect.data.creatorUserId !== game.userId){
-            effectName += ` (${game.users.get(effect.data.creatorUserId)?.name ?? "Unknown"}'s effect)`
+            let user_name = game.users.get(effect.data.creatorUserId)?.name;
+            let formattedUsername = (user_name
+                ? game.i18n.format("SEQUENCER.ManagerPlayersEffect", { user_name })
+                : game.i18n.localize("SEQUENCER.ManagerUnknownEffect"));
+            effectName += ` (${formattedUsername})`;
         }
 
         const el = html`
@@ -153,7 +155,7 @@ export default class SequencerEffectsUI extends FormApplication {
     updateEffects() {
 
         const effects = Sequencer.EffectManager.effects
-            .filter(effect => effect.onCurrentScene && effect.userCanUpdate);
+            .filter(effect => effect.onCurrentScene && effect.userCanDelete);
 
         this.persistentEffectsContainer.empty();
         this.temporaryEffectsContainer.empty();
@@ -205,17 +207,17 @@ export default class SequencerEffectsUI extends FormApplication {
             "scale": {
                 type: "number",
                 default: 1.0,
-                label: "Scale",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionScale"),
             },
             "belowTokens": {
                 type: "checkbox",
                 default: false,
-                label: "Below Tokens",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionBelowTokens"),
             },
             "snapToGrid": {
                 type: "checkbox",
                 default: false,
-                label: "Snap to grid",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionSnapToGrid"),
                 callback: (e) => {
                     SequencerPlayer.snapLocationToGrid = e.target.checked;
                 }
@@ -223,47 +225,47 @@ export default class SequencerEffectsUI extends FormApplication {
             "randomRotation": {
                 type: "checkbox",
                 default: false,
-                label: "Random rotation",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionRandomRotation"),
             },
             "randomMirrorY": {
                 type: "checkbox",
                 default: false,
-                label: "Random mirror",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionRandomMirrorY"),
             },
             "randomOffset": {
                 type: "checkbox",
                 default: false,
-                label: "Random offset",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionRandomOffset"),
             },
             "repetitions": {
                 type: "number",
                 default: 1.0,
-                label: "Repetitions",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionRepetitions"),
             },
             "repeatDelayMin": {
                 type: "number",
                 default: 200,
-                label: "Delay (min)",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionDelayMin"),
             },
             "repeatDelayMax": {
                 type: "number",
                 default: 400,
-                label: "Delay (max)"
+                label: game.i18n.localize("SEQUENCER.PlayerOptionDelayMax"),
             },
             "preload": {
                 type: "checkbox",
                 default: false,
-                label: "Preload",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionPreload"),
             },
             "moveTowards": {
                 type: "checkbox",
                 default: false,
-                label: "Drag Behavior:<br>Stretch or Move",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionDragBehavior"),
             },
             "moveSpeed": {
                 type: "number",
                 default: 0,
-                label: "Move speed",
+                label: game.i18n.localize("SEQUENCER.PlayerOptionMoveSpeed"),
             }
         }
     }
@@ -277,7 +279,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     activatePlayerListeners(html) {
 
-        if(!game.user.isGM) return;
+        if(!game.user.can("SEQUENCER_EFFECT_CREATE")) return;
 
         html.find('.activate-layer').click(() => {
             canvas.sequencerEffectsAboveTokens.activate();
@@ -351,11 +353,17 @@ export default class SequencerEffectsUI extends FormApplication {
         savePresetButton.click(function() {
             const preset_name = _this.presetSelect.val();
             if(preset_name === "default"){
-                _this.createNewPreset();
+                _this.newPreset();
             }else{
                 $(this).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
                 _this.savePreset(preset_name);
             }
+        });
+
+        this.copyPresetButton = html.find('.copy-preset');
+        this.copyPresetButton.click(function() {
+            $(this).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+            _this.newPreset(true);
         });
 
         this.presetSelect.change(async function() {
@@ -368,8 +376,8 @@ export default class SequencerEffectsUI extends FormApplication {
                 if(Object.keys(diff).length){
                     $(this).val(activeSettings.name);
                     const doSwitch = await Dialog.confirm({
-                        title: "Apply preset?",
-                        content: `<p>Are you sure you want apply the "${preset_name}" preset? Unsaved changes will be lost.</p>`
+                        title: game.i18n.localize("SEQUENCER.PlayerApplyPresetTitle"),
+                        content: `<p>${game.i18n.format("SEQUENCER.PlayerApplyPresetContent", { preset_name })}</p>`
                     });
                     if(!doSwitch){
                         return;
@@ -429,7 +437,11 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     get presets(){
-        return game.settings.get('sequencer', 'effectPresets');
+        let presets = game.settings.get('sequencer', 'effectPresets');
+        for(let [name, preset] of Object.entries(presets)){
+            presets[name] = foundry.utils.mergeObject(SequencerEffectsUI.defaultSettingsMap, preset);
+        }
+        return presets;
     }
 
     getPreset(inName){
@@ -447,6 +459,7 @@ export default class SequencerEffectsUI extends FormApplication {
         this.presetSelect.val(inPresetName);
 
         this.deletePresetButton.prop("disabled", inPresetName === "default");
+        this.copyPresetButton.prop("disabled", inPresetName === "default");
     }
 
     async savePreset(inName){
@@ -458,8 +471,8 @@ export default class SequencerEffectsUI extends FormApplication {
     async deletePreset(inName){
 
         const doDelete = await Dialog.confirm({
-            title: "Delete preset?",
-            content: `<p>Are you sure you want to delete the "${inName}" preset?</p>`
+            title: game.i18n.localize("SEQUENCER.PlayerDeletePresetTitle"),
+            content: `<p>${game.i18n.format("SEQUENCER.PlayerDeletePresetContent", { preset_name: inName })}</p>`
         });
         if(!doDelete) return;
 
@@ -469,8 +482,8 @@ export default class SequencerEffectsUI extends FormApplication {
         await this.render(true);
     }
 
-    async createNewPreset(){
-        const presetName = await this.promptPresetName();
+    async newPreset(copy){
+        const presetName = await this.promptPresetName(copy);
         if(!presetName) return;
         await this.savePreset(presetName)
         await this.render(true);
@@ -478,17 +491,21 @@ export default class SequencerEffectsUI extends FormApplication {
         this.applyPreset(presetName);
     }
 
-    async promptPresetName(inName = ""){
+    async promptPresetName(copy = false, inName = ""){
+
+        let title = copy
+            ? game.i18n.localize("SEQUENCER.PlayerCopyPresetTitle")
+            : game.i18n.localize("SEQUENCER.PlayerCreateNewPresetTitle");
 
         let presetName = await new Promise((resolve) => {
             let rejected = false;
             new Dialog({
-                title: "Create new Sequencer effect preset",
-                content: `<p><input type="text" placeholder="Input new preset name" id="newPresetName" style="width:100%;"></p>`,
+                title: title,
+                content: `<p><input type="text" placeholder="${game.i18n.localize("SEQUENCER.PlayerCreateNewPresetInputLabel")}" id="newPresetName" style="width:100%;"></p>`,
                 buttons: {
                     okay: {
                         icon: '<i class="fas fa-check"></i>',
-                        label: 'Okay',
+                        label: game.i18n.localize("SEQUENCER.OK"),
                         callback: async (html) => {
                             let name = html.find('#newPresetName').val();
 
@@ -503,7 +520,7 @@ export default class SequencerEffectsUI extends FormApplication {
                     },
                     cancel: {
                         icon: '<i class="fas fa-times"></i>',
-                        label: "Cancel",
+                        label: game.i18n.localize("SEQUENCER.Cancel"),
                         callback: () => {
                             rejected = true;
                             resolve(false);
@@ -523,11 +540,10 @@ export default class SequencerEffectsUI extends FormApplication {
 
             if (presetName.toLowerCase() === "default") {
                 Dialog.prompt({
-                    title: "Error!",
-                    content: `<p>Sorry, you can't name your preset "default". Sequencer needs that for itself.</p>`,
-                    label: "Okay",
-                    callback: () => {
-                    }
+                    title: game.i18n.localize("SEQUENCER.PlayerDefaultErrorTitle"),
+                    content: `<p>${game.i18n.localize("SEQUENCER.PlayerDefaultErrorContent")}</p>`,
+                    label: game.i18n.localize("SEQUENCER.OK"),
+                    callback: () => {}
                 });
                 return false;
             }
@@ -535,12 +551,12 @@ export default class SequencerEffectsUI extends FormApplication {
             if (this.presets[presetName]) {
 
                 const overwrite = await Dialog.confirm({
-                    title: "Overwrite preset?",
-                    content: `<p>Are you sure you want to overwrite the "${presetName}" preset?</p>`
+                    title: game.i18n.localize("SEQUENCER.PlayerOverwritePresetTitle"),
+                    content: `<p>${game.i18n.format("SEQUENCER.PlayerOverwritePresetContent", { preset_name: presetName })}</p>`
                 });
 
                 if (!overwrite) {
-                    presetName = await this.promptPresetName(presetName);
+                    presetName = await this.promptPresetName(copy, presetName);
                 }
 
             }

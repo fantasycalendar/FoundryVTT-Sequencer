@@ -49,6 +49,10 @@ export default class CanvasEffect {
         return game.user.isGM || this.data.creatorUserId === game.user.id;
     }
 
+    get userCanDelete(){
+        return this.userCanUpdate || game.user.can("SEQUENCER_EFFECT_DELETE");
+    }
+
     get context(){
         if(!this._context){
             this._context = this.data.attachTo
@@ -271,14 +275,12 @@ export default class CanvasEffect {
         setTimeout(this.timeoutRemove.bind(this), 1000);
     }
 
-    get shouldShowGMs(){
+    get shouldShowFadedVersion(){
         // If the effect is going to be played for a subset of users
-        // And the current user is a GM
         // And the users do not contain the GM
         // And the GM has not set the opacity user-specific effects to 0
         // And it is not an effect that is only played for the user who created the effect
         return this.data.users.length
-            && game.user.isGM
             && !this.data.users.includes(game.userId)
             && game.settings.get("sequencer", "user-effect-opacity") !== 0
             && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId));
@@ -289,7 +291,7 @@ export default class CanvasEffect {
         this.container = this._getContainer();
         this.container.addChild(this.spriteContainer);
 
-        if(this.shouldShowGMs){
+        if(this.shouldShowFadedVersion){
             this.spriteContainer.alpha = game.settings.get("sequencer", "user-effect-opacity") / 100;
             this.spriteContainer.filters = [new PIXI.filters.ColorMatrixFilter({ saturation: -1 })];
         }
@@ -740,13 +742,13 @@ export default class CanvasEffect {
 				this.source.removeAttribute('src');
 				this.source.pause();
 				this.source.load();
-			} catch (err) {}
+			} catch (err) { }
+
             try {
 			    SequencerAnimationEngine.endAnimations(this.sprite);
 			    SequencerAnimationEngine.endAnimations(this.spriteContainer);
-            }catch(err){
-			    console.log(err);
-            }
+            }catch(err) { }
+
 			try {
 			    if(this.data.screenSpace){
 			        Sequencer.UILayer.removeContainerByEffect(this);
@@ -757,9 +759,7 @@ export default class CanvasEffect {
                 this.spriteContainer.destroy();
                 if(this.highlightBox) this.highlightBox.destroy()
 				this.sprite.destroy();
-			} catch (err) {
-			    console.log(err);
-            }
+			} catch (err) { }
 		}
     }
 
@@ -776,7 +776,7 @@ export default class CanvasEffect {
         	if(!blob){
         	    let error = "Sequencer "
                 if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
-				error += ` | CanvasEffect | Play Effect - Could not play:<br>${this.data.file}`;
+				error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.ErrorCouldNotPlay")}:<br>${this.data.file}`;
 				ui.notifications.error(error);
 				console.error(error.replace("<br>", "\n"))
         		reject();
@@ -825,7 +825,7 @@ export default class CanvasEffect {
 			if(!texture){
                 let error = "Sequencer "
                 if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
-                error += ` | CanvasEffect | Play Effect - Could not play:<br>${this.data.file}`;
+                error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.ErrorCouldNotPlay")}:<br>${this.data.file}`;
                 ui.notifications.error(error);
                 console.error(error.replace("<br>", "\n"))
                 reject();
@@ -891,10 +891,15 @@ export default class CanvasEffect {
 
         await this.prepareSprite();
 
-        const skipPlay = (
-                game.user.viewedScene !== this.data.sceneId
-            || !game.settings.get('sequencer', 'effectsEnabled')
-            || (this.data.users.length && !this.data.users.includes(game.userId) && !game.user.isGM)
+        const shouldPlay = (
+            game.settings.get('sequencer', 'effectsEnabled') &&
+            game.user.viewedScene === this.data.sceneId &&
+            (
+                game.user.isGM ||
+                this.data.users.length === 0 ||
+                this.data.users.includes(game.userId) ||
+                this.data.creatorUserId === game.userId
+            )
         );
 
         let promise = new Promise(async (resolve, reject) => {
@@ -903,7 +908,7 @@ export default class CanvasEffect {
             	reject();
 			}else {
 				this.calculateDuration();
-				if(!skipPlay){
+				if(shouldPlay){
                     Hooks.call("createSequencerEffect", this.data);
 				    this.initialize();
                 }

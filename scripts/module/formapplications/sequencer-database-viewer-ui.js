@@ -11,11 +11,17 @@ export default class SequencerDatabaseViewer extends FormApplication {
         this.search = "";
         this.autoplay = true;
         this.packs = Object.keys(window.Sequencer.Database.entries);
+
+        let localizedFilepathButton = game.i18n.localize("SEQUENCER.DatabaseFilepathButton");
+        let localizedDatabaseButton = game.i18n.localize("SEQUENCER.DatabaseButton");
+
         this.entries = window.Sequencer.Database.flattenedEntries.map(
             (entry) => {
                 return {
                     pack: entry.split(".")[0],
                     entry: entry,
+                    fileButton: localizedFilepathButton,
+                    dbButton: localizedDatabaseButton,
                 };
             }
         );
@@ -35,10 +41,10 @@ export default class SequencerDatabaseViewer extends FormApplication {
                         <i class="fas fa-play"></i>
                     </button>
                     <button type="button" class="btn_copy_filepath">
-                        <i class="fas fa-copy"></i> Filepath
+                        <i class="fas fa-copy"></i> {{ fileButton }}
                     </button>
                     <button type="button" class="btn_copy_databasepath">
-                        <i class="fas fa-copy"></i> Database
+                        <i class="fas fa-copy"></i> {{ dbButton }}
                     </button>
                     <div class="database-entry-text" title="{{entry}}">
                         <div class="database-entry-text-highlight"></div>
@@ -100,7 +106,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
     /** @override */
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            title: "Sequencer Database Viewer",
+            title: game.i18n.localize("SEQUENCER.Database"),
             template: `modules/sequencer/templates/sequencer-database-template.html`,
             classes: ["dialog"],
             width: 900,

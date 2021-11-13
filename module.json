@@ -14,6 +14,13 @@
   "scripts": [
     "scripts/module/lib/ext/pixi-filters.js"
   ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "languages/en.json"
+    }
+  ],
   "packs": [
     {
       "name": "sequencer-sample-macros",

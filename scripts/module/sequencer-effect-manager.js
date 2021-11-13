@@ -13,9 +13,6 @@ const EffectsContainer = {
     },
     add(effect) {
         this._effects.add(effect);
-    },
-    get(effectId){
-        return this.effects.find(effect => effect.data.id === effectId);
     }
 };
 
@@ -28,10 +25,6 @@ export default class SequencerEffectManager {
      */
     static get effects(){
         return EffectsContainer.effects;
-    }
-
-    static getEffectByID(inId){
-        return EffectsContainer.get(inId);
     }
 
     /**
@@ -51,6 +44,7 @@ export default class SequencerEffectManager {
      * @returns {CanvasEffect} A CanvasEffect object
      */
     static async play(data, push = true) {
+        if(!game.user.can("SEQUENCER_EFFECT_CREATE")) return;
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, data);
         return this._playEffect(data);
     }
@@ -96,7 +90,6 @@ export default class SequencerEffectManager {
      * @returns {Promise} A promise that resolves when all of the effects have ended
      */
     static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
-        if(!game.user.isGM) return;
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS, inSceneId);
         return this._endAllEffects(inSceneId);
     }
@@ -258,7 +251,9 @@ export default class SequencerEffectManager {
 
     static async _endManyEffects(inEffects = false) {
 
-        const effectsByObjectId = Object.values(lib.groupBy((inEffects || EffectsContainer.effects), "context.id"));
+        const effectsToEnd = (inEffects || EffectsContainer.effects).filter(effect => effect.userCanDelete)
+
+        const effectsByObjectId = Object.values(lib.groupBy(effectsToEnd, "context.id"));
 
         if(!effectsByObjectId.length) return true;
 

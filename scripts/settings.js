@@ -4,17 +4,16 @@ export default function registerSettings() {
 
     // Define a settings submenu which handles advanced configuration needs
     game.settings.registerMenu("sequencer", "openSequencerDatabaseViewer", {
-        name: "Open Sequencer Database Viewer",
-        hint: "This opens the sequencer database viewer ",
-        label: "Open Database Viewer",
+        name: game.i18n.localize("SEQUENCER.SettingsDatabaseViewerTitle"),
+        label: game.i18n.localize("SEQUENCER.SettingsDatabaseViewerLabel"),
         icon: "fas fa-bars",
         type: Sequencer.DatabaseViewer,
         restricted: true
     });
 
     game.settings.register("sequencer", "debug", {
-        name: "Enable debugging",
-        hint: "This will make the sequencer log into the console what it is doing.",
+        name: game.i18n.localize("SEQUENCER.SettingsDebugTitle"),
+        hint: game.i18n.localize("SEQUENCER.SettingsDebugHint"),
         scope: "client",
         config: true,
         default: false,
@@ -22,8 +21,8 @@ export default function registerSettings() {
     });
 
     game.settings.register("sequencer", "effectsEnabled", {
-        name: "Enable Effects",
-        hint: "Enables effects to be played on this client",
+        name: game.i18n.localize("SEQUENCER.SettingsEnableEffectsTitle"),
+        hint: game.i18n.localize("SEQUENCER.SettingsEnableEffectsHint"),
         scope: "client",
         config: true,
         default: true,
@@ -32,18 +31,8 @@ export default function registerSettings() {
     });
 
     game.settings.register("sequencer", "soundsEnabled", {
-        name: "Enable Sounds",
-        hint: "Enables sounds to be played on this client",
-        scope: "client",
-        config: true,
-        default: true,
-        onChange: debouncedReload,
-        type: Boolean
-    });
-
-    game.settings.register("sequencer", "toolButtonsEnabled", {
-        name: "Enable Tool-menu Buttons",
-        hint: "Enables the buttons in the left-hand control menu to open the database viewer and effect manager",
+        name: game.i18n.localize("SEQUENCER.SettingsEnableSoundsTitle"),
+        hint: game.i18n.localize("SEQUENCER.SettingsEnableSoundsHint"),
         scope: "client",
         config: true,
         default: true,
@@ -52,8 +41,8 @@ export default function registerSettings() {
     });
 
     game.settings.register("sequencer", "user-effect-opacity", {
-        name: "Player only effect opacity for GM",
-        hint: "If users create effects visible only for other players, this setting allows you to set an opacity that these effects will be visible for you as a GM, making sure they're not abusing each other's computers.",
+        name: game.i18n.localize("SEQUENCER.SettingsExternalEffectOpacityTitle"),
+        hint: game.i18n.localize("SEQUENCER.SettingsExternalEffectOpacityHint"),
         scope: "client",
         config: true,
         default: 50,
@@ -72,6 +61,13 @@ export default function registerSettings() {
         type: Boolean
     });
 
+    game.settings.register("sequencer", "permissions-warning", {
+        scope: "world",
+        config: false,
+        default: false,
+        type: Boolean
+    });
+
     game.settings.register("sequencer", "effectPresets", {
         scope: "client",
         default: {},
@@ -84,6 +80,7 @@ export default function registerSettings() {
             icon: "fas fa-play",
             name: "play-effect",
             title: "Play Effect",
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.settings.get('sequencer', 'effectsEnabled'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "player" });
             }
@@ -94,7 +91,7 @@ export default function registerSettings() {
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
-            visible: game.user.isTrusted,
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.settings.get('sequencer', 'effectsEnabled'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
             },
@@ -115,7 +112,7 @@ export default function registerSettings() {
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
-            visible: game.user.isGM,
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.settings.get('sequencer', 'effectsEnabled'),
             activeTool: "play-effect",
             tools: [
                 playTool,
@@ -124,7 +121,6 @@ export default function registerSettings() {
             ]
         })
 
-        if(!game.settings.get("sequencer", "toolButtonsEnabled")) return;
         const bar = controls.find(c => c.name === "token");
         bar.tools.push(database);
         bar.tools.push(viewer);

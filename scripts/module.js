@@ -1,18 +1,20 @@
 import registerSettings from "./settings.js";
-import { registerSocket } from "./sockets.js";
 import registerLayers from "./layers.js";
+import registerLibwrappers from "./libwrapper.js";
+import { registerSocket } from "./sockets.js";
+import { registerEase } from "./module/canvas-effects/ease.js";
+import { registerPermissions, patchPermissions } from "./permissions.js";
+
 import Sequence from "./module/sequencer.js";
-import SequencerPreloader from "./module/sequencer-preloader.js";
+import SequencerPlayer from "./module/sequencer-effect-player.js";
 import SequencerDatabase from "./module/sequencer-database.js";
 import SequencerDatabaseViewer from "./module/formapplications/sequencer-database-viewer-ui.js";
+import SequencerPreloader from "./module/sequencer-preloader.js";
 import SequencerEffectManager from "./module/sequencer-effect-manager.js";
-import { registerEase } from "./module/canvas-effects/ease.js";
-import Section from "./module/sections/section.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
+import Section from "./module/sections/section.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
-import registerLibwrappers from "./libwrapper.js";
-import * as deprecation from "./deprecation.js";
-import SequencerPlayer from "./module/sequencer-effect-player.js";
+import * as warnings from "./warnings.js";
 
 Hooks.once('init', async function () {
 
@@ -29,16 +31,13 @@ Hooks.once('init', async function () {
         UILayer: new SequencerUILayer()
     }
 
-    registerLayers();
-
-    window.SequencerPreloader = Sequencer.Preloader;
     window.SequencerDatabase = Sequencer.Database;
-    window.SequencerDatabaseViewer = Sequencer.DatabaseViewer;
-    window.SequencerEffectManager = Sequencer.EffectManager;
 
+    registerLayers();
     registerSettings();
     registerSocket();
     registerLibwrappers();
+    registerPermissions();
 
 });
 
@@ -51,9 +50,14 @@ Hooks.once('ready', async function () {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
-        deprecation.check();
+        runReadyMethods();
     }, 100);
 });
+
+function runReadyMethods(){
+    patchPermissions();
+    warnings.check();
+}
 
 /**
  * Creation & delete hooks for persistent effects

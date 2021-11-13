@@ -56,7 +56,7 @@ const SequencerPreloader = {
 
         inSrcs = this.cleanSrcs(inSrcs);
 
-        if (!game.user.isGM) return;
+        if (!game.user.can("SEQUENCER_PRELOAD_CLIENTS")) return;
 
         this.expectedClients = new Set(game.users
             .filter(user => user.active)
