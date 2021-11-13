@@ -1082,15 +1082,17 @@ export default class EffectSection extends Section {
                inObj?.hitArea?.width
             ?? inObj?.w
             ?? inObj?.shape?.width
-            ?? inObj?.shape?.radius*2
-            ?? canvas.grid.size;
+            ?? (inObj?.shape?.radius
+                    ? inObj?.shape?.radius*2
+                    : canvas.grid.size)
 
         const height =
                inObj?.hitArea?.height
             ?? inObj?.h
             ?? inObj?.shape?.height
-            ?? inObj?.shape?.radius*2
-            ?? canvas.grid.size;
+            ?? (inObj?.shape?.radius
+                   ? inObj?.shape?.radius*2
+                   : canvas.grid.size)
 
         return {
             width,

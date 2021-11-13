@@ -300,6 +300,11 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Fixed the Sequencer Preloader sometimes not succeeding and getting stuck
 - *Effects* - Added `.spriteOffset()` which allows you to add an offset to the effect's sprite's location
 
+### Version 1.1.5
+- *Effects* - Fixed bug that caused all effects to stay transparent after playing an effect for specific user
+- *Effects* - Fixed bug with `.missed()` and `.reachTowards()` failing to play any effect
+- *Effects* - Fixed all effects sharing users 
+
 ### Version 1.1.4
 - *Sequencer* - Fixed error in the Sequencer Preloader when pre-loading files from Database paths 
 - *Effects* - Fixed bug that caused persistent effects to end when a client connected after it was created 
