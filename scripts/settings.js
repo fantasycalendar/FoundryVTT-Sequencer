@@ -61,13 +61,6 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register("sequencer", "permissions-warning", {
-        scope: "world",
-        config: false,
-        default: false,
-        type: Boolean
-    });
-
     game.settings.register("sequencer", "effectPresets", {
         scope: "client",
         default: {},
@@ -80,7 +73,7 @@ export default function registerSettings() {
             icon: "fas fa-play",
             name: "play-effect",
             title: "Play Effect",
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.settings.get('sequencer', 'effectsEnabled'),
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE"),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "player" });
             }
@@ -91,10 +84,10 @@ export default function registerSettings() {
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.settings.get('sequencer', 'effectsEnabled'),
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE"),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
-            },
+            }
         };
 
         const database = {
@@ -104,7 +97,7 @@ export default function registerSettings() {
             button: true,
             onClick: () => {
                 Sequencer.DatabaseViewer.show(true);
-            },
+            }
         };
 
         controls.push({
@@ -112,7 +105,7 @@ export default function registerSettings() {
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.settings.get('sequencer', 'effectsEnabled'),
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE"),
             activeTool: "play-effect",
             tools: [
                 playTool,

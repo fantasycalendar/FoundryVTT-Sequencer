@@ -294,6 +294,11 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.3
+- *Sequencer* - Added granular permissions - check it out in Configure Settings -> Open Permissions Configuration
+- *Sequencer* - Added localization support 
+- *Sequencer* - Fixed the Sequencer Player throwing an error if the layer was active while switching scene 
+
 ### Version 1.2.2
 - *Sequencer* - Added Stretch or Move checkbox to Sequencer Player
 - *Sequencer* - Added Move Speed input to Sequencer Player
