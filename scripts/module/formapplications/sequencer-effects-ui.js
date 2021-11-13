@@ -328,7 +328,7 @@ export default class SequencerEffectsUI extends FormApplication {
                 type: "imagevideo",
                 displayMode: "tiles",
                 callback: async (imagePath) => {
-                    fileInput.val(imagePath);
+                    _this.fileInput.val(imagePath);
                     _this.updateFile(imagePath);
                 }
             }).browse();

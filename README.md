@@ -294,6 +294,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.1
+- *Sequencer* - Fixed file picker being broken
+
 ### Version 1.2.0
 - *Sequencer* - Added the [Sequencer Effect Player](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Player)!
 - *Sequencer* - Refactored the Sequencer Animation Engine, which fixes some animation funkiness
