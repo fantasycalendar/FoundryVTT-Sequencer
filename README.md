@@ -295,10 +295,12 @@ Click the link above to go to the documentation where each feature is listed.
 ## Changelog
 
 ### Version 1.2.0
-- *Sequencer* - Added the Sequencer Effect Player!
+- *Sequencer* - Added the [Sequencer Effect Player](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Player)!
 - *Sequencer* - Refactored the Sequencer Animation Engine, which fixes some animation funkiness
 - *Sequencer* - Fixed the Sequencer Preloader sometimes not succeeding and getting stuck
 - *Effects* - Added `.spriteOffset()` which allows you to add an offset to the effect's sprite's location
+- *Effects* - Removed the `.snapToSquare()` method, use `.snapToGrid()` instead
+- *Effects* - Added optional boolean parameters to `.randomizeMirrorX()` and `.randomizeMirrorY()`
 
 ### Version 1.1.5
 - *Effects* - Fixed bug that caused all effects to stay transparent after playing an effect for specific user
