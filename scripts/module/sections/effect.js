@@ -31,6 +31,7 @@ export default class EffectSection extends Section {
         this._layer = 2;
         this._zIndex = 0;
         this._offset = false;
+        this._spriteOffset = false;
         this._size = false;
         this._persist = false;
         this._zeroSpriteRotation = false;
@@ -248,7 +249,27 @@ export default class EffectSection extends Section {
         }, inOffset);
         inOffset = foundry.utils.mergeObject(inOffset, options);
         if (typeof inOffset.local !== "boolean") throw this.sequence._throwError(this, "offset", "options.local must be of type boolean");
+        if (typeof inOffset.x !== "number") throw this.sequence._throwError(this, "offset", `inOffset.x must be of type number!`);
+        if (typeof inOffset.y !== "number") throw this.sequence._throwError(this, "offset", `inOffset.y must be of type number!`);
         this._offset = inOffset;
+        return this;
+    }
+
+    /**
+     *  Causes the effect's sprite to be offset relative to its location based on a given vector
+     *
+     * @param {object} inOffset
+     * @returns {EffectSection}
+     */
+    spriteOffset(inOffset) {
+        if (inOffset === undefined) throw this.sequence._throwError(this, "spriteOffset", "inOffset must not be undefined");
+        inOffset = foundry.utils.mergeObject({
+            x: 0,
+            y: 0
+        }, inOffset);
+        if (typeof inOffset.x !== "number") throw this.sequence._throwError(this, "spriteOffset", `inOffset.x must be of type number!`);
+        if (typeof inOffset.y !== "number") throw this.sequence._throwError(this, "spriteOffset", `inOffset.y must be of type number!`);
+        this._spriteOffset = inOffset;
         return this;
     }
 
@@ -271,7 +292,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     scaleToObject(inScale = 1.0){
-        if (typeof inScale !== "number") throw this.sequence._throwError(self, "scaleToObject", `inScale must be of type number!`);
+        if (typeof inScale !== "number") throw this.sequence._throwError(this, "scaleToObject", `inScale must be of type number!`);
         this._scaleToObject = true;
         return this.scale(inScale);
     }
@@ -372,8 +393,8 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
-        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.x must be of type number!`);
-        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.y must be of type number!`);
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.y must be of type number!`);
 
         this._anchor = inAnchor;
         return this;
@@ -398,8 +419,8 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
-        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.x must be of type number!`);
-        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "anchor", `inAnchor.y must be of type number!`);
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.y must be of type number!`);
 
         this._spriteAnchor = inAnchor;
         return this;
@@ -435,10 +456,12 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped X scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its horizontal axis
      *
+     * @param {boolean} inBool
      * @returns {EffectSection}
      */
-    randomizeMirrorX() {
-        this._randomMirrorX = true;
+    randomizeMirrorX(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomizeMirrorX", "inBool must be of type boolean");
+        this._randomMirrorX = inBool;
         return this;
     }
 
@@ -446,10 +469,12 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped Y scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its vertical axis
      *
+     * @param {boolean} inBool
      * @returns {EffectSection}
      */
-    randomizeMirrorY() {
-        this._randomMirrorY = true;
+    randomizeMirrorY(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "randomizeMirrorY", "inBool must be of type boolean");
+        this._randomMirrorY = inBool;
         return this;
     }
 
@@ -574,8 +599,8 @@ export default class EffectSection extends Section {
             x: inPosition?.x ?? 0,
             y: inPosition?.y ?? 0
         }
-        if (typeof inPosition.x !== "number") throw this.sequence._throwError(self, "screenSpacePosition", `inPosition.x must be of type number!`);
-        if (typeof inPosition.y !== "number") throw this.sequence._throwError(self, "screenSpacePosition", `inPosition.y must be of type number!`);
+        if (typeof inPosition.x !== "number") throw this.sequence._throwError(this, "screenSpacePosition", `inPosition.x must be of type number!`);
+        if (typeof inPosition.y !== "number") throw this.sequence._throwError(this, "screenSpacePosition", `inPosition.y must be of type number!`);
         this._screenSpacePosition = inPosition;
         return this;
     }
@@ -599,8 +624,8 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
-        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(self, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
-        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(self, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
+        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(this, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
+        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(this, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
 
         this._screenSpaceAnchor = inAnchor;
         return this;
@@ -623,8 +648,8 @@ export default class EffectSection extends Section {
             ratioY: false
         }, inOptions)
 
-        if (typeof inOptions.x !== "number") throw this.sequence._throwError(self, "screenSpaceScale", `inOptions.x must be of type number!`);
-        if (typeof inOptions.y !== "number") throw this.sequence._throwError(self, "screenSpaceScale", `inOptions.y must be of type number!`);
+        if (typeof inOptions.x !== "number") throw this.sequence._throwError(this, "screenSpaceScale", `inOptions.x must be of type number!`);
+        if (typeof inOptions.y !== "number") throw this.sequence._throwError(this, "screenSpaceScale", `inOptions.y must be of type number!`);
         if (typeof inOptions.fitX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitX must be of type boolean");
         if (typeof inOptions.fitY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitY must be of type boolean");
         if (typeof inOptions.ratioX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
@@ -693,6 +718,7 @@ export default class EffectSection extends Section {
                 y: 0,
             },
             anchor: this._anchor,
+            spriteOffset: this._spriteOffset,
             spriteAnchor: this._spriteAnchor,
             scale: {
                 x: 1.0,
@@ -1037,7 +1063,7 @@ export default class EffectSection extends Section {
             y: pos?.y ?? obj?.y ?? obj?.data?.y,
         };
 
-        if (typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(self, "getCleanPosition", `Could not get position from: ${obj}`);
+        if (typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(this, "getCleanPosition", `Could not get position from: ${obj}`);
 
         return pos;
 

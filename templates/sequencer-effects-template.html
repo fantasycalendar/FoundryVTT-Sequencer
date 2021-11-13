@@ -1,10 +1,20 @@
-<form id="sequencer-database-form" class="dialog-content" onsubmit="event.preventDefault();">
+<form id="sequencer-effects-form" class="dialog-content" onsubmit="event.preventDefault();" autocomplete="off">
 
     <style>
 
         .effects-container{
-            max-height: calc(424px - 5rem);
+            height: 100%;
+            width: 400px;
             display:flex;
+        }
+
+        .howto-container{
+            max-width: 300px;
+        }
+
+        .howto-container li{
+            list-style: none;
+            margin-bottom: 0.5rem;
         }
 
         .effects {
@@ -42,47 +52,217 @@
             text-shadow: 0 0 10px red;
         }
 
+        .column {
+            display: inline-flex;
+            flex-direction: column;
+        }
+
+        .row {
+            display: inline-flex;
+            flex-direction: row;
+        }
+
+        .flex-grow {
+            flex:1;
+        }
+
+        .flex-shrink {
+            flex: 0;
+        }
+
+        .settings{
+            display:flex;
+            flex-direction: row;
+            align-content: flex-end;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-column, .label-column{
+            display: inline-flex;
+            flex-direction: column;
+        }
+
+        .input-column {
+            flex: 0 1 25%;
+            align-items: flex-end;
+        }
+
+        .input-row, .label-row{
+            display: inline-flex;
+            flex: 0 1 1.666rem;
+        }
+
+        .label-row{
+            padding-left: 0.2rem;
+            align-items: center;
+        }
+
+        .settings input{
+            max-width: 40px;
+        }
+
+        .user-select option:checked{
+            background: #1e90ff;
+            color: white;
+        }
+
+        .file-settings label, .user-settings label {
+            flex: 0 1 15%;
+            align-self: center;
+        }
+
+        .file-settings input, .user-settings select {
+            flex: 1;
+        }
+
+        .small-button {
+            flex: 0 0 24px;
+            line-height: 24px;
+            margin: -1px 0 -1px 4px;
+            order: 99;
+        }
+
+        .activate-layer{
+            margin: 0;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .sheet-tabs{
+            min-width: 230px;
+        }
+
     </style>
 
-    <div class="effects-container">
+    <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
+        {{#if isGM}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> Player</a> {{/if}}
+        <a class="item" data-tab="manager"><i class="fas fa-film"></i> Manager</a>
+        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> How-to</a>
+    </nav>
 
-        <div class="effects">
+    <hr>
 
-            {{#if noEffects}}
-                <h2>No effects currently running...</h2>
-            {{/if}}
+    <section id="effect-manager-tabs" class="content">
 
-            {{#if persistentEffects}}
+        {{#if isGM}}
+        <div class="tab effect-player-container" data-tab="player" data-group="effect-manager">
+
+            <button type="button" class="activate-layer w-100 mb-2">Activate Layer</button>
+
+            <div class="file-settings flexcol mb-2">
+                <div class="row">
+                    <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder="Enter DB or File Path...">
+                    <button type="button" class="custom-file-picker small-button"><i class="fas fa-file-import"></i></button>
+                </div>
+                <datalist id="dblist"></datalist>
+            </div>
+
+            <div class="settings flexcol mb-2">
+                <div class="input-column">
+                    {{#each defaultSettings}}
+                    <div class="input-row"><input type="{{this.type}}" class="setting" name="{{@key}}" id="{{@key}}" value="{{this.default}}"></div>
+                    {{/each}}
+                </div>
+                <div class="label-column">
+                    {{#each defaultSettings}}
+                    <div class="label-row"><label for="{{ @key }}">{{ this.label }}</label></div>
+                    {{/each}}
+                </div>
+            </div>
+
+            <div class="user-settings flexcol mb-2">
+                <label for="file">Play for users:</label>
+                <select class="user-select" id="user-select" multiple>
+                    <option value="all" selected>All users</option>
+                    {{#each users}}
+                    <option value="{{ this.id }}">{{ this.name }}</option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="flexcol">
+
+                <div class="row w-100">Presets:</div>
+
+                <div class="row w-100">
+
+                    <select class="preset-select flex-grow">
+
+                        <option value="default">Default</option>
+                        {{#each presets}}
+                        <option>{{ @key }}</option>
+                        {{/each}}
+
+                    </select>
+
+                    <button type="button" class="save-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
+                    <button type="button" class="delete-preset flex-shrink small-button" disabled><i class="fas fa-times"></i></button>
+
+                </div>
+
+            </div>
+
+        </div>
+        {{/if}}
+
+        <div class="tab effects-container" data-tab="manager" data-group="effect-manager">
+
+            <h2 class="no-effects">No active effects...</h2>
+
+            <div class="effects" style="display: none">
+
                 <h2>Persistent effects:</h2>
-                {{#each persistentEffects as |effect key|}}
-                    <div class="effect hover-highlight" data-id="{{ effect.index }}">
-                        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                        <div class="effect-text hover-text">
-                            {{ effect.name }}
-                        </div>
-                    </div>
-                {{/each}}
-            {{/if}}
+                <div class="persistent-effects"></div>
 
-
-            {{#if hasBothEffects}}
                 <hr>
-            {{/if}}
 
-            {{#if temporaryEffects}}
                 <h2>Temporary effects:</h2>
-                {{#each temporaryEffects as |effect key|}}
-                    <div class="effect hover-highlight" data-id="{{ effect.index }}">
-                        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-                        <div class="effect-text hover-text">
-                            {{ effect.name }}
-                        </div>
-                    </div>
-                {{/each}}
-            {{/if}}
+                <div class="temporary-effects"></div>
+
+            </div>
 
         </div>
 
-    </div>
+        {{#if isGM}}
+        <div class="tab howto-container" data-tab="howto" data-group="effect-manager">
+            <p>Welcome to Sequencer Effects!</p>
+            <p>With the Player <i class="fas fa-play-circle"></i>, you can quickly play effects on the canvas, and with the Manager <i class="fas fa-film"></i> you can end persisting effects whenever you want.</p>
+            <p>When using the Player <i class="fas fa-play-circle"></i>, you need to set what effect to play. Click on the <strong>file input</strong> to see what database paths you have or just start typing to search. You can press the <i class="fas fa-file-import"></i> button next to it to search for a file directly.</p>
+            <p>Once you've picked a file, you can do any of the following actions while on the Sequencer Layer <i class="fa-list-ol"></i></p>
+            <ol>
+                <li>
+                    <strong>Click</strong><br>
+                    Play an effect on the spot
+                </li>
+                <li>
+                    <strong>Click Hold + Drag</strong><br>
+                    Play an effect stretched towards a location
+                </li>
+                <li>
+                    <strong>Shift</strong><br>
+                    Play multiple effects at the same time after releasing shift
+                </li>
+                <li>
+                    <strong>Shift + Ctrl</strong><br>
+                    Play multiple effects one after another
+                </li>
+                <li>
+                    <strong>...and more to come in future updates!</strong>
+                </li>
+            </ol>
+        </div>
+        {{/if}}
+
+    </section>
 
 </form>

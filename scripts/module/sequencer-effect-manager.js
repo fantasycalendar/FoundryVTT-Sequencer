@@ -1,7 +1,7 @@
 import CanvasEffect from "./canvas-effects/canvas-effect.js";
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
-import SequencerEffectsViewer from "./formapplications/sequencer-effects-viewer.js";
+import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 
 const EffectsContainer = {
     _effects: new Set(),
@@ -13,6 +13,9 @@ const EffectsContainer = {
     },
     add(effect) {
         this._effects.add(effect);
+    },
+    get(effectId){
+        return this.effects.find(effect => effect.data.id === effectId);
     }
 };
 
@@ -27,26 +30,27 @@ export default class SequencerEffectManager {
         return EffectsContainer.effects;
     }
 
+    static getEffectByID(inId){
+        return EffectsContainer.get(inId);
+    }
+
     /**
-     * Opens the Sequencer Effects Viewer UI
+     * Opens the Sequencer Effects UI with the effects tab open
      *
-     * @returns {SequencerEffectsViewer}
+     * @returns {SequencerEffectsUI}
      */
-    static show(inFocus = false){
-        const effects = EffectsContainer.effects
-            .filter(effect => effect.data.sceneId === game.user.viewedScene)
-            .filter(effect => effect.data.creatorUserId === game.userId || game.user.isGM);
-        return SequencerEffectsViewer.show(inFocus, effects);
+    static show(){
+        return SequencerEffectsUI.show({ tab: "manager" });
     }
 
     /**
      * Play an effect on the canvas.
      *
      * @param {object} data The data that describes the audio to play
-     * @param {boolean} [push=false] A flag indicating whether or not to make other clients play the effect
+     * @param {boolean} [push=true] A flag indicating whether or not to make other clients play the effect
      * @returns {CanvasEffect} A CanvasEffect object
      */
-    static async play(data, push = false) {
+    static async play(data, push = true) {
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, data);
         return this._playEffect(data);
     }
@@ -271,8 +275,8 @@ export default class SequencerEffectManager {
 }
 
 const debounceShowViewer = debounce(async () => {
-    if(!SequencerEffectsViewer.isVisible) return;
-    SequencerEffectManager.show();
+    if(!SequencerEffectsUI.isVisible) return;
+    SequencerEffectsUI.activeInstance.updateEffects();
 }, 100);
 
 const flagManager = {
@@ -358,6 +362,6 @@ const flagManager = {
 
         }
 
-    }, 150)
+    }, 250)
 
 };

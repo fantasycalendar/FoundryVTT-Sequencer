@@ -4,7 +4,7 @@ import registerLayers from "./layers.js";
 import Sequence from "./module/sequencer.js";
 import SequencerPreloader from "./module/sequencer-preloader.js";
 import SequencerDatabase from "./module/sequencer-database.js";
-import SequencerDatabaseViewer from "./module/formapplications/sequencer-database-viewer.js";
+import SequencerDatabaseViewer from "./module/formapplications/sequencer-database-viewer-ui.js";
 import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
 import Section from "./module/sections/section.js";
@@ -12,11 +12,13 @@ import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import registerLibwrappers from "./libwrapper.js";
 import * as deprecation from "./deprecation.js";
+import SequencerPlayer from "./module/sequencer-effect-player.js";
 
 Hooks.once('init', async function () {
 
     window.Sequence = Sequence;
     window.Sequencer = {
+        Player: SequencerPlayer,
         Database: SequencerDatabase,
         DatabaseViewer: SequencerDatabaseViewer,
         Preloader: SequencerPreloader,
@@ -49,7 +51,7 @@ Hooks.once('ready', async function () {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
-        deprecation.check()
+        deprecation.check();
     }, 100);
 });
 

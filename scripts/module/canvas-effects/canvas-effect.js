@@ -2,7 +2,6 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
 import filters from "../lib/filters.js";
-import { getObjectFromScene } from "../lib/lib.js";
 
 export default class CanvasEffect {
 
@@ -21,7 +20,7 @@ export default class CanvasEffect {
 		this.loader = SequencerFileCache;
         this.resolve = false;
         this._context = false;
-        this.highlight = false;
+        this.highlightBox = false;
         this.loopOffset = 0;
         this.filters = {};
 
@@ -46,6 +45,10 @@ export default class CanvasEffect {
         return this.context?.document ?? this.context;
     }
 
+    get userCanUpdate(){
+        return game.user.isGM || this.data.creatorUserId === game.user.id;
+    }
+
     get context(){
         if(!this._context){
             this._context = this.data.attachTo
@@ -53,6 +56,10 @@ export default class CanvasEffect {
                 : game.scenes.get(this.data.sceneId);
         }
         return this._context;
+    }
+
+    get onCurrentScene(){
+        return this.data.sceneId === game.user.viewedScene;
     }
 
     _getPlaceableObjectContainer(){
@@ -131,25 +138,39 @@ export default class CanvasEffect {
 
     }
 
-    _showHighlight(show){
-        if(!this.highlight && this.sprite){
-            const bounds = this.spriteContainer.getLocalBounds();
-            let width = bounds.width * 1.1;
-            let height = bounds.height * 1.1;
-            this.highlight = new PIXI.Graphics();
-            this.highlight.lineStyle((3 / this.sprite.scale.x) * 1.1, "0xFFFFFF")
-            this.highlight.moveTo(width/-2,height/-2);
-            this.highlight.lineTo(width/2,height/-2);
-            this.highlight.lineTo(width/2,height/2);
-            this.highlight.lineTo(width/-2,height/2);
-            this.highlight.lineTo(width/-2,height/-2);
-            this.highlight.lineTo(width/2,height/-2);
-            this.highlight.visible = false;
-            this.highlight.zIndex = 10;
-            this.spriteContainer.addChild(this.highlight);
+    highlight(show){
+        if(!this.highlightBox && this.sprite){
+            this.highlightBox = this.createBox("0xFFFFFF", 1, 9);
+            this.spriteContainer.addChild(this.highlightBox);
         }
+        this.highlightBox.visible = show;
+        return this;
+    }
 
-        this.highlight.visible = show;
+    createBox(color, size, zIndex){
+
+        const bounds = this.spriteContainer.getLocalBounds();
+
+        let width = bounds.width * size;
+        let height = bounds.height * size;
+
+        let box = new PIXI.Graphics();
+        box.lineStyle({
+            width: 3 * size,
+            color: color,
+            alignment: 0
+        })
+        box.moveTo(width/-2,height/-2);
+        box.lineTo(width/2,height/-2);
+        box.lineTo(width/2,height/2);
+        box.lineTo(width/-2,height/2);
+        box.lineTo(width/-2,height/-2);
+        box.lineTo(width/2,height/-2);
+        box.visible = false;
+        box.zIndex = zIndex;
+
+        return box;
+
     }
 
     async initialize(){
@@ -237,7 +258,7 @@ export default class CanvasEffect {
 		this.animationDuration /= (this.data.playbackRate ?? 1.0);
 
 		if(this.source){
-		    this.source.loop = (this.animationDuration / 1000) > this.source.duration && !this.source.loop;
+		    this.source.loop = (this.animationDuration / 1000) > this.source.duration && !this.source.loop && !this.data.noLoop;
         }
 
 	}
@@ -276,7 +297,7 @@ export default class CanvasEffect {
         this.applyFilters();
 
         this.sprite.alpha = this.data.opacity;
-        this.sprite.visible = false;
+        this.sprite.visible = this.sourceIsPlaying;
 
         if(this.data.size){
 
@@ -310,6 +331,7 @@ export default class CanvasEffect {
         }
 
         this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
+
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
 
         if(!this.data.anchor){
@@ -344,7 +366,12 @@ export default class CanvasEffect {
 
     }
 
+    get sourceIsPlaying(){
+        return this.source && this.source.currentTime > 0 && !this.source.paused && !this.source.ended;
+    }
+
     tryPlay(){
+        if(this.sourceIsPlaying) return;
         return new Promise(async (resolve) => {
             if (this.source && !this.ended) {
                 try {
@@ -441,7 +468,7 @@ export default class CanvasEffect {
 
         }
 
-        SequencerAnimationEngine.animate(
+        SequencerAnimationEngine.addAnimation(
             animationsToSend,
             this.actualCreationTime - this.data.timestamp
         );
@@ -458,7 +485,7 @@ export default class CanvasEffect {
 
         this.sprite.alpha = 0.0;
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "alpha",
             to: this.data.opacity,
@@ -481,7 +508,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0)
             : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "alpha",
             to: 0.0,
@@ -522,7 +549,7 @@ export default class CanvasEffect {
 
         this.sprite.scale.set(fromScale.x, fromScale.y);
 
-        SequencerAnimationEngine.animate([{
+        SequencerAnimationEngine.addAnimation([{
             target: this.sprite,
             propertyName: "scale.x",
             from: fromScale.x,
@@ -555,7 +582,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0)
             : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
 
-        SequencerAnimationEngine.animate([{
+        SequencerAnimationEngine.addAnimation([{
             target: this.sprite,
             propertyName: "scale.x",
             to: scale.x,
@@ -586,7 +613,7 @@ export default class CanvasEffect {
         let original_radians = this.spriteContainer.rotation;
         this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
 
-        SequencerAnimationEngine.animate(this.counterAnimateRotation({
+        SequencerAnimationEngine.addAnimation(this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: original_radians,
@@ -608,7 +635,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0)
             : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
 
-        SequencerAnimationEngine.animate(this.counterAnimateRotation({
+        SequencerAnimationEngine.addAnimation(this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: (rotateOut.value / 180) * Math.PI,
@@ -630,7 +657,7 @@ export default class CanvasEffect {
 
         if(this.actualCreationTime - (this.data.timestamp + fadeInAudio.duration + fadeInAudio.delay) > 0) return;
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "volume",
             to: this.data.audioVolume,
@@ -652,7 +679,7 @@ export default class CanvasEffect {
             ? Math.max(this.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
             : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
 
-        SequencerAnimationEngine.animate({
+        SequencerAnimationEngine.addAnimation({
             target: this.sprite,
             propertyName: "volume",
             to: 0.0,
@@ -679,7 +706,7 @@ export default class CanvasEffect {
 
         if(this.actualCreationTime - (this.data.timestamp + duration + moves.delay) > 0) return;
 
-        SequencerAnimationEngine.animate([{
+        SequencerAnimationEngine.addAnimation([{
             target: this.spriteContainer,
             propertyName: "position.x",
             to: moves.target.x,
@@ -714,6 +741,12 @@ export default class CanvasEffect {
 				this.source.pause();
 				this.source.load();
 			} catch (err) {}
+            try {
+			    SequencerAnimationEngine.endAnimations(this.sprite);
+			    SequencerAnimationEngine.endAnimations(this.spriteContainer);
+            }catch(err){
+			    console.log(err);
+            }
 			try {
 			    if(this.data.screenSpace){
 			        Sequencer.UILayer.removeContainerByEffect(this);
@@ -722,7 +755,7 @@ export default class CanvasEffect {
                 this.spriteContainer.removeChild(this.sprite);
 				this.container.removeChild(this.spriteContainer);
                 this.spriteContainer.destroy();
-                if(this.highlight) this.highlight.destroy()
+                if(this.highlightBox) this.highlightBox.destroy()
 				this.sprite.destroy();
 			} catch (err) {
 			    console.log(err);
@@ -822,6 +855,11 @@ export default class CanvasEffect {
 
         this.sprite = new PIXI.Sprite();
 
+        this.sprite.position.set(
+            this.data.spriteOffset?.x ?? 0,
+            this.data.spriteOffset?.y ?? 0
+        );
+
         this.sprite.anchor.set(
             this.data.spriteAnchor?.x ?? 0.5,
             this.data.spriteAnchor?.y ?? 0.5
@@ -897,7 +935,7 @@ class PersistentCanvasEffect extends CanvasEffect{
     }
 
     async startEffect() {
-        if (!this.source) return;
+        if (!this.source || this.sourceIsPlaying) return;
 
         let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
 

@@ -63,8 +63,8 @@ const SequencerDatabase = {
     /**
      *  Gets the entry in the database by a dot-notated string
      *
-     * @param  {string}             inString    The entry to find in the database
-     * @return {array|lib.SequencerFile}        The found entry in the database, or false if not found (with warning)
+     * @param  {string}             inString        The entry to find in the database
+     * @return {array|lib.SequencerFile|boolean}    The found entry in the database, or false if not found (with warning)
      */
     getEntry(inString) {
         if (typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
@@ -105,6 +105,19 @@ const SequencerDatabase = {
         return filteredEntries.length === 1 ? filteredEntries[0] : filteredEntries;
     },
     /**
+     *  Gets all files under a database path
+     *
+     * @param  {string}         inDBPath    The module to get all files from
+     * @return {array|boolean}                  The found entries in the database under the module's name, or false if not found (with warning)
+     */
+    getAllFileEntries(inDBPath) {
+        if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
+        if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
+        const entries = this._recurseEntriesUnder(inDBPath);
+        return lib.makeArrayUnique(entries.flat());
+    },
+
+    /**
      *  Get all valid entries under a certain path
      *
      * @param  {string}             inPath      The database path to get entries under
@@ -120,16 +133,43 @@ const SequencerDatabase = {
     },
 
     /**
-     *  Gets all files under a database path
+     *  Get all valid entries under a certain path
      *
-     * @param  {string}         inDBPath    The module to get all files from
-     * @return {array|boolean}                  The found entries in the database under the module's name, or false if not found (with warning)
+     * @param  {string}             inPath      The database path to search for
+     * @return {array|boolean}                  An array containing potential database paths
      */
-    getAllFileEntries(inDBPath) {
-        if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
-        if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
-        const entries = this._recurseEntriesUnder(inDBPath);
-        return lib.makeArrayUnique(entries.flat());
+    searchFor(inPath){
+
+        const modules = Object.keys(this.entries);
+
+        if((!inPath || inPath === "") && !modules.includes(inPath)) return modules;
+
+        if (typeof inPath !== "string"){
+            return this._throwError("getPathsUnder", "inString must be of type string")
+        }
+
+        inPath = inPath.replace(/\[[0-9]+]$/, "");
+
+        let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
+
+        let feetTest = new RegExp(/.[0-9]+ft/g);
+        if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
+        let length = inPath.split('.').length+1;
+        const foundEntries = lib.makeArrayUnique(entries.map(e =>{
+            let path = e.split(feetTest)[0];
+            return path.split('.').slice(0, length).join('.');
+        }));
+
+        if(foundEntries.length === 0){
+            let regexSearch = new RegExp(lib.strToSearchRegexStr(inPath), "gu");
+            return lib.makeArrayUnique(this.flattenedEntries.filter(e => {
+                    return e.match(regexSearch)?.length;
+                }).map(e =>{
+                    return e.split(feetTest)[0];
+                }))
+        }
+
+        return foundEntries;
     },
 
     _throwError(inFunctionName, inError) {
