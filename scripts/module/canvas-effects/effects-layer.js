@@ -23,6 +23,22 @@ export class BaseEffectsLayer extends CanvasLayer {
         SequencerPlayer.show();
     }
 
+    deactivate(){
+        super.deactivate();
+        if(this.point){
+            this.point.clear();
+            this.point = false;
+        }
+        if(this.sampleLine){
+            this.sampleLine.clear();
+            this.sampleLine = false;
+        }
+        if(this._container){
+            this._container.destroy();
+            this._container = false;
+        }
+    }
+
     get UIContainer(){
 
         if(!this._container) {
