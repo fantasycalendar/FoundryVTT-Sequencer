@@ -703,6 +703,7 @@ export default class EffectSection extends Section {
         Object.assign(this.constructor.prototype, traits.users);
         Object.assign(this.constructor.prototype, traits.animation);
         Object.assign(this.constructor.prototype, traits.filter);
+        Object.assign(this.constructor.prototype, traits.tint);
     }
 
     async _sanitizeEffectData() {
@@ -743,6 +744,7 @@ export default class EffectSection extends Section {
             time: false,
             noLoop: this._noLoop,
             filters: this._filters,
+            tint: this._tint?.decimal,
             animatedProperties: {
                 moves: this._moveTowards,
                 fadeIn: this._fadeIn,

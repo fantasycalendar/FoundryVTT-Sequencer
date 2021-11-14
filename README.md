@@ -294,6 +294,12 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.4
+- *Sequencer* - Fixed error caused by preload option on Sequencer Effect Player 
+- *Sequencer* - Fixed error when pressing ESC in the Sequencer Layer 
+- *Sequencer* - Fixed permissions not being loaded properly 
+- *Effects & Animations* - Added `.tint()` which allows you to tint effects, tokens, and tiles
+
 ### Version 1.2.3
 - *Sequencer* - Added granular permissions - check it out in Configure Settings -> Open Permissions Configuration
 - *Sequencer* - Added localization support 

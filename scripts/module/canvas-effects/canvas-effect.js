@@ -865,6 +865,8 @@ export default class CanvasEffect {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
+        if(this.data.tint) this.sprite.tint = this.data.tint;
+
         this.spriteContainer = new PIXI.Container();
         this.spriteContainer.sortableChildren = true;
         this.spriteContainer.addChild(this.sprite);

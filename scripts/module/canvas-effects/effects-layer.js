@@ -7,14 +7,13 @@ export class BaseEffectsLayer extends CanvasLayer {
         this._container = false;
         this.sampleLine = false;
         this.point = false;
+        this._controlled = {};
     }
 
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
-            canDragCreate: false,
             zIndex: 180,
-            name: "sequencerEffectsAboveTokens",
-            interactive: true
+            name: "sequencerEffectsAboveTokens"
         });
     }
 

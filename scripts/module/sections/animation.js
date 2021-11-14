@@ -95,6 +95,7 @@ class AnimationSection extends Section {
         Object.assign(this.constructor.prototype, traits.opacity);
         Object.assign(this.constructor.prototype, traits.rotation);
         Object.assign(this.constructor.prototype, traits.audio);
+        Object.assign(this.constructor.prototype, traits.tint);
     }
 
     async _updateObject(obj, attributes, animate = false, animation = {}) {
@@ -441,6 +442,10 @@ class AnimationSection extends Section {
 
         if (typeof this._volume === "number" && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
             updateAttributes["video.volume"] = this._volume;
+        }
+
+        if(this._tint){
+            updateAttributes['tint'] = this._tint.hexadecimal;
         }
 
         if (Object.keys(updateAttributes).length) {

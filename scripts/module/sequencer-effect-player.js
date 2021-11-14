@@ -156,7 +156,7 @@ class SequencerEffectPlayer {
         }
 
         if(settings.preload){
-            await SequencerPreloader.preloadForClients(settings.file)
+            await Sequencer.Preloader.preloadForClients(settings.file)
         }
 
         const sequence = this.sequenceBuffer.length > 0 && settings.Control

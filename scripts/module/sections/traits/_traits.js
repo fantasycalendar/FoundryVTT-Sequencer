@@ -8,6 +8,7 @@ import scale from "./scale.js";
 import time from "./time.js";
 import users from "./users.js";
 import filter from "./filter.js";
+import tint from "./tint.js";
 
 const traits = {
     animation,
@@ -19,7 +20,8 @@ const traits = {
     scale,
     time,
     users,
-    filter
+    filter,
+    tint
 };
 
 export default traits;
