@@ -1,5 +1,6 @@
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerAnimationEngine from "./sequencer-animation-engine.js";
+import * as lib from './lib/lib.js';
 
 export default class SequencerAudioHelper {
     /**

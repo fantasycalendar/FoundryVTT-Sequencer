@@ -294,6 +294,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.6 Hotfix
+- *Sounds* - Fixed sounds being broken
+
 ### Version 1.2.5
 - *Sequencer* - Made hooks `createSequencerEffect` and `endedSequencerEffect` instead supply the CanvasEffect itself, rather than its data
 - *Effects* - Fixed bug that caused effects to linger for other clients after having been ended
