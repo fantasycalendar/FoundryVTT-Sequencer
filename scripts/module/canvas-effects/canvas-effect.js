@@ -736,7 +736,7 @@ export default class CanvasEffect {
 
 	endEffect(){
 		if(!this.ended) {
-            Hooks.call("endedSequencerEffect", this.data);
+            Hooks.call("endedSequencerEffect", this);
 			this.ended = true;
 			try {
 				this.source.removeAttribute('src');
@@ -911,7 +911,7 @@ export default class CanvasEffect {
 			}else {
 				this.calculateDuration();
 				if(shouldPlay){
-                    Hooks.call("createSequencerEffect", this.data);
+                    Hooks.call("createSequencerEffect", this);
 				    this.initialize();
                 }
 			}
