@@ -6,19 +6,11 @@ import * as lib from './lib/lib.js';
 const SequencerPreloader = {
 
     _userId: undefined,
-    _debug: undefined,
     responseResolve: false,
     doneResolve: false,
     clientsDone: new Set(),
     expectedClients: new Set(),
     clientsResponded: new Set(),
-
-    get debug() {
-        if (this._debug === undefined) {
-            this._debug = game.settings.get('sequencer', 'debug');
-        }
-        return this._debug;
-    },
 
     get userId() {
         if (this._userId === undefined) {
@@ -108,16 +100,14 @@ const SequencerPreloader = {
         if (this.expectedClients.size !== this.clientsResponded.size) return;
         if (this.clientsDone.size !== this.clientsResponded.size) return;
 
-        if (this.debug) {
-            this.clientsDone.forEach(user => {
-                if (filesFailedToLoad > 0) {
-                    console.log(`DEBUG | Sequencer | ${game.users.get(user.userId).name} preloaded files, failed to preload ${filesFailedToLoad} files`);
-                } else {
-                    console.log(`DEBUG | Sequencer | ${game.users.get(user.userId).name} preloaded files successfully`);
-                }
-            });
-            console.log(`DEBUG | Sequencer | All clients responded to file preloads`);
-        }
+        this.clientsDone.forEach(user => {
+            if (filesFailedToLoad > 0) {
+                lib.debug(`${game.users.get(user.userId).name} preloaded files, failed to preload ${filesFailedToLoad} files`);
+            } else {
+                lib.debug(`${game.users.get(user.userId).name} preloaded files successfully`);
+            }
+        });
+        lib.debug(`All clients responded to file preloads`);
 
         this.doneResolve();
 
@@ -133,10 +123,10 @@ const SequencerPreloader = {
         if (local) this.handleResponse(this.userId);
 
         let startTime = performance.now()
-        if (this.debug) console.log(`DEBUG | Sequencer | Preloading ${inSrcs.length} files...`);
+        lib.debug(`Preloading ${inSrcs.length} files...`);
         let numFilesToLoad = inSrcs.length;
 
-        if (showProgressBar) loadingBar.init("Sequencer - Preloading files", numFilesToLoad, this.debug);
+        if (showProgressBar) loadingBar.init("Sequencer - Preloading files", numFilesToLoad);
 
         let filesSucceeded = 0;
         new Promise(async (resolve) => {
@@ -153,7 +143,7 @@ const SequencerPreloader = {
             if (showProgressBar) loadingBar.hide();
             if (push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_DONE, this.userId, senderId, numFilesToLoad - filesSucceeded);
             if (local) this.handleDone(this.userId, this.userId, numFilesToLoad - filesSucceeded);
-            if (this.debug) console.log(`DEBUG | Sequencer | Preloading ${numFilesToLoad - filesSucceeded} files took ${(performance.now() - startTime) / 1000}s`);
+            lib.debug(`Preloading ${numFilesToLoad - filesSucceeded} files took ${(performance.now() - startTime) / 1000}s`);
         });
     },
 

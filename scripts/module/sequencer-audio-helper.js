@@ -30,7 +30,7 @@ export default class SequencerAudioHelper {
 
         Hooks.call("createSequencerSound", data);
 
-        if (game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing sound:`, data);
+        lib.debug(`Playing sound:`, data);
 
         const sound = await game.audio.play(data.src, {
             volume: data.fadeIn ? 0 : data.volume,

@@ -13,7 +13,6 @@ export default class Sequence {
         this.effectIndex = 0;
         this._cachedOffsets = {};
         this.sectionToCreate = undefined;
-        this.debug = game.settings.get("sequencer", "debug");
         return lib.sequenceProxyWrap(this);
     }
 
@@ -24,12 +23,12 @@ export default class Sequence {
      */
     async play() {
         Hooks.call("createSequencerSequence");
-        this._log("Initializing sections")
+        lib.debug("Initializing sections")
         for (let section of this.sections) {
             await section._initialize();
         }
         this.effectIndex = 0;
-        this._log("Playing sections")
+        lib.debug("Playing sections")
 
         const promises = [];
         for (let section of this.sections) {
@@ -44,7 +43,7 @@ export default class Sequence {
 
         return Promise.allSettled(promises).then(() => {
             Hooks.call("endedSequencerSequence");
-            this._log("Finished playing sections")
+            lib.debug("Finished playing sections")
         });
     }
 
@@ -174,10 +173,6 @@ export default class Sequence {
 
     _throwError(self, func, error) {
         return lib.throwError(this.moduleName, `${self.constructor.name} | ${func} - ${error}`);
-    }
-
-    _log(...args) {
-        if (this.debug) console.log(`DEBUG | Sequencer |`, ...args);
     }
 
 }

@@ -10,13 +10,12 @@ const loadingBar = {
     current: 0,
     lastPerc: 0,
 
-    init(context, total, debug) {
+    init(context, total) {
 
         this.context = context;
         this.total = total;
         this.current = 0;
         this.lastPerc = 0;
-        this.debug = debug;
 
     },
 
@@ -27,7 +26,7 @@ const loadingBar = {
         let newPerc = Math.round(perc * 100);
 
         if (newPerc !== this.lastPerc) {
-            if (this.debug) console.log(`DEBUG | Sequencer | ${newPerc}% loaded...`)
+            lib.debug(`${newPerc}% loaded...`)
             this.setPercentage(newPerc)
         }
 

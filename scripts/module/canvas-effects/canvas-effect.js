@@ -764,7 +764,7 @@ export default class CanvasEffect {
     }
 
     debug(){
-        if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Playing effect:`, this.data);
+        lib.debug(`Playing effect:`, this.data);
     }
 
     async loadVideo(){

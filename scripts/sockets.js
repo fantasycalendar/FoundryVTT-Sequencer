@@ -1,11 +1,11 @@
 import SequencerAudioHelper from "./module/sequencer-audio-helper.js";
+import { debug } from "./module/lib/lib.js";
 
 const sequencerSocketEvent = "module.sequencer";
 
 export const SOCKET_HANDLERS = {
     PLAY_EFFECT: "playEffect",
-    END_EFFECT: "endEffect",
-    END_ALL_EFFECTS: "endAllEffects",
+    END_EFFECTS: "endEffect",
     PLAY_SOUND: "playSound",
     PRELOAD: "preload",
     PRELOAD_RESPONSE: "preload_response",
@@ -13,18 +13,18 @@ export const SOCKET_HANDLERS = {
 };
 
 export function emitSocketEvent(handler, ...args) {
+    debug(`Emitted socket message: ${handler}`, ...args)
     game.socket.emit(sequencerSocketEvent, { args, handler });
 }
 
 function onSocketEvent(socketData) {
     const { handler, args } = socketData;
+    debug(`Received socket message: ${handler}`, args);
     switch (handler) {
         case SOCKET_HANDLERS.PLAY_EFFECT:
             return Sequencer.EffectManager._playEffect(...args);
-        case SOCKET_HANDLERS.END_EFFECT:
+        case SOCKET_HANDLERS.END_EFFECTS:
             return Sequencer.EffectManager._endEffects(...args);
-        case SOCKET_HANDLERS.END_ALL_EFFECTS:
-            return Sequencer.EffectManager._endAllEffects(...args);
         case SOCKET_HANDLERS.PLAY_SOUND:
             return SequencerAudioHelper.play(...args);
         case SOCKET_HANDLERS.PRELOAD:

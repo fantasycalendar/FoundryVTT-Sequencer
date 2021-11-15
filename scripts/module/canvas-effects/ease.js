@@ -4,7 +4,7 @@ export function registerEase(easeName, easeFunction, overwrite = false){
     if(typeof easeName !== "string") lib.throwError("registerEase", "easeName must be of type string")
     if(!lib.is_function(easeFunction)) lib.throwError("registerEase", "easeFunction must be of type function")
     if(easeFunctions[easeName] !== undefined && !overwrite) return;
-    if(game.settings.get("sequencer", "debug")) console.log(`Sequencer | registerEase | Registered ease function: ${easeName}`);
+    lib.debug(`registerEase | Registered ease function: ${easeName}`);
     easeFunctions[easeName] = easeFunction;
 }
 

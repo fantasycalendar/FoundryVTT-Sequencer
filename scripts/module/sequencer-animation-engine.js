@@ -19,18 +19,6 @@ const SequencerAnimationEngine = {
         return this._maxFPS;
     },
 
-    get debug(){
-        if(this._debug === undefined){
-            this._debug = game.settings.get('sequencer', "debug")
-        }
-        return this._debug;
-    },
-
-    printDebug(string){
-        if(!this.debug) return;
-        console.log(`DEBUG | Sequencer | ${string}`);
-    },
-
     addAnimation(attributes = [], timeDifference = 0) {
 
         if (!Array.isArray(attributes)) attributes = [attributes];
@@ -65,7 +53,7 @@ const SequencerAnimationEngine = {
                 totalDt: timeDifference,
                 resolve: resolve
             });
-            this.printDebug(`Added animations to Animation Engine`);
+            lib.debug(`Added animations to Animation Engine`);
             if(!this.isRunning){
                 this.start();
             }
@@ -82,7 +70,7 @@ const SequencerAnimationEngine = {
 
     start(){
         this.isRunning = true;
-        this.printDebug(`Animation Engine Started`);
+        lib.debug(`Animation Engine Started`);
         this.nextFrame();
     },
 
@@ -91,7 +79,7 @@ const SequencerAnimationEngine = {
         if(this._animations.length === 0){
             this.isRunning = false;
             this._deltas = [];
-            this.printDebug(`Animation Engine Paused`);
+            lib.debug(`Animation Engine Paused`);
             return;
         }
 

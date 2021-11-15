@@ -3,18 +3,7 @@ import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 
-const EffectsContainer = {
-    _effects: new Set(),
-    get effects() {
-        return Array.from(this._effects);
-    },
-    delete(effect) {
-        this._effects.delete(effect);
-    },
-    add(effect) {
-        this._effects.add(effect);
-    }
-};
+const EffectsContainer = new Map();
 
 export default class SequencerEffectManager {
 
@@ -24,7 +13,7 @@ export default class SequencerEffectManager {
      * @returns {Array}
      */
     static get effects(){
-        return EffectsContainer.effects;
+        return Array.from(EffectsContainer.values());
     }
 
     /**
@@ -78,8 +67,10 @@ export default class SequencerEffectManager {
     static async endEffects(inData = {}, push = true) {
         inData = this._validateFilters(inData);
         if (!inData) throw lib.throwError("SequencerEffectManager", "endEffects | Incorrect or incomplete parameters provided")
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECT, inData);
-        return this._endEffects(inData);
+        const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
+        if (!effectsToEnd.length) throw lib.throwError("SequencerEffectManager", "endEffects | Found no effects you could end")
+        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
+        return this._endEffects(effectsToEnd);
     }
 
     /**
@@ -90,16 +81,14 @@ export default class SequencerEffectManager {
      * @returns {Promise} A promise that resolves when all of the effects have ended
      */
     static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_ALL_EFFECTS, inSceneId);
-        return this._endAllEffects(inSceneId);
-    }
-
-    static _endAllEffects(inSceneId = game.user.viewedScene){
-        return this._endEffects({ sceneId: inSceneId });
+        const inData = this._validateFilters({ sceneId: inSceneId });
+        const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
+        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
+        return this._endEffects(effectsToEnd);
     }
 
     static _filterEffects(inData){
-        return EffectsContainer.effects
+        return this.effects
             .filter(effect => !inData.effects || inData.effects.includes(effect.data.id))
             .filter(effect => !inData.name || inData.name === effect.data.name)
             .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo)
@@ -164,7 +153,7 @@ export default class SequencerEffectManager {
             effect.timeoutRemove();
         }
 
-        EffectsContainer.add(effect);
+        EffectsContainer.set(effect.data.id, effect);
 
         if (!data.persist) {
             playData.promise.then(() => this._removeEffect(effect));
@@ -195,10 +184,10 @@ export default class SequencerEffectManager {
     }
 
     static _tearDownPersists(inId) {
-        EffectsContainer.effects
+        this.effects
             .filter(effect => !inId || effect.data?.attachTo === inId)
             .forEach(effect => {
-                EffectsContainer.delete(effect);
+                EffectsContainer.delete(effect.data.id);
                 debounceShowViewer();
             })
     }
@@ -234,14 +223,14 @@ export default class SequencerEffectManager {
     }
 
     static _removeEffect(effect) {
-        EffectsContainer.delete(effect);
+        EffectsContainer.delete(effect.data.id);
         debounceShowViewer();
         return effect.endEffect();
     }
 
-    static _endEffects(inData) {
+    static _endEffects(inEffectIds) {
 
-        let effects = this._filterEffects(inData);
+        let effects = inEffectIds.map(id => EffectsContainer.get(id));
 
         if (!effects.length) return;
 
@@ -251,7 +240,7 @@ export default class SequencerEffectManager {
 
     static async _endManyEffects(inEffects = false) {
 
-        const effectsToEnd = (inEffects || EffectsContainer.effects).filter(effect => effect.userCanDelete)
+        const effectsToEnd = (inEffects || this.effects);
 
         const effectsByObjectId = Object.values(lib.groupBy(effectsToEnd, "context.id"));
 
@@ -337,7 +326,7 @@ const flagManager = {
 
             if (toRemove?.removeAll) {
                 await obj.setFlag('sequencer', 'effects', []);
-                if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | All flags removed for object with ID "${obj.id}"`);
+                lib.debug(`All flags removed for object with ID "${obj.id}"`);
                 continue;
             }
 
@@ -353,7 +342,7 @@ const flagManager = {
 
             await obj.setFlag('sequencer', 'effects', Array.from(flagsToSet));
 
-            if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | Flags set for object with ID "${obj.id}"`, Array.from(flagsToSet))
+            lib.debug(`Flags set for object with ID "${obj.id}"`, Array.from(flagsToSet))
 
         }
 

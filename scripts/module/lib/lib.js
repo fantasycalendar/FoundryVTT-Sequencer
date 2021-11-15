@@ -319,6 +319,10 @@ export function makeArrayUnique(inArray){
     return Array.from(new Set(inArray));
 }
 
+export function debug(msg, args){
+    if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args ? args : "")
+}
+
 export function showWarning(inClassName, warning, notify = false) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     warning = `${inClassName} | ${warning}`;
