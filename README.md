@@ -294,6 +294,10 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.5
+- *Sequencer* - Made hooks `createSequencerEffect` and `endedSequencerEffect` instead supply the CanvasEffect itself, rather than its data
+- *Effects* - Fixed bug that caused effects to linger for other clients after having been ended
+
 ### Version 1.2.4
 - *Sequencer* - Fixed error caused by preload option on Sequencer Effect Player 
 - *Sequencer* - Fixed error when pressing ESC in the Sequencer Layer 
