@@ -294,7 +294,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
-### Version 1.2.7
+### Version 1.2.8
 - *Sequencer* - Added sidebar tool permissions, you can now hide them from players
 - *Effects* - Added `.origin()` which provides a way to tag an effect with a string you can then search for with the Effect Manager
 - *Effects* - Added support for using both `.reachTowards()` and `.scale()` and will now scale the effect whilst keeping the range finding correct
