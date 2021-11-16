@@ -299,6 +299,9 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Added `.origin()` which provides a way to tag an effect with a string you can then search for with the Effect Manager
 - *Effects* - Added support for using both `.reachTowards()` and `.scale()` and will now scale the effect whilst keeping the range finding correct
 
+### Version 1.2.7 Hotfix
+- *Sounds* - ACTUALLY Fixed sounds being broken
+
 ### Version 1.2.6 Hotfix
 - *Sounds* - Fixed sounds being broken
 
