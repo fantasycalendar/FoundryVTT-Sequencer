@@ -73,6 +73,8 @@
   "SEQUENCER.PermissionSoundCreateHint": "Allow players with this role to play sounds through Sequencer.",
   "SEQUENCER.PermissionPreloadClients": "Sequencer: Preloading for others",
   "SEQUENCER.PermissionPreloadClientsHint": "Allow players with this role to be able to preload effects and sounds for other players.",
+  "SEQUENCER.PermissionUseSidebarTools": "Sequencer: Use sidebar tools",
+  "SEQUENCER.PermissionUseSidebarToolsHint": "Allow players with this role to use the sidebar tools (they also need to be able to play effects).",
 
   "SEQUENCER.ErrorCouldNotPlay": "Could not play",
 

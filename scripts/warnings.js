@@ -1,10 +1,9 @@
 export async function check(){
+    if(!game.user.isGM) return;
     await checkHyperspace();
 }
 
 async function checkHyperspace(){
-
-    if(!game.user.isGM) return;
 
     if(!hasHyperspaceAssets()) return;
 

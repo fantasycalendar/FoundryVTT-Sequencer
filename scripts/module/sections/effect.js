@@ -9,8 +9,9 @@ export default class EffectSection extends Section {
         this._waitUntilFinished = false;
         this._file = inFile;
         this._text = false;
-        this._origin = false;
+        this._source = false;
         this._reachTowards = false;
+        this._origin = false;
         this._anchor = false;
         this._spriteAnchor = false;
         this._randomOffset = false;
@@ -152,7 +153,7 @@ export default class EffectSection extends Section {
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._throwError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._throwError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
-        this._origin = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
+        this._source = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
         return this;
     }
 
@@ -170,7 +171,7 @@ export default class EffectSection extends Section {
         if (!isValidObject){
             this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
         }
-        this._origin = inObject;
+        this._source = inObject;
         this._attachTo = isValidObject;
         if(!inObject?.id) this.locally();
         return this;
@@ -637,7 +638,7 @@ export default class EffectSection extends Section {
      * @param {object} inOptions
      * @returns {EffectSection}
      */
-    screenSpaceScale(inOptions){
+    screenSpaceScale(inOptions) {
 
         inOptions = foundry.utils.mergeObject({
             x: 1.0,
@@ -655,19 +656,28 @@ export default class EffectSection extends Section {
         if (typeof inOptions.ratioX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
         if (typeof inOptions.ratioY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioY must be of type boolean");
 
-        if(inOptions.ratioX && inOptions.ratioY) throw this.sequence._throwError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one axis must fit or be set directly")
+        if (inOptions.ratioX && inOptions.ratioY) throw this.sequence._throwError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one axis must fit or be set directly")
 
         this._screenSpaceScale = inOptions;
 
         return this;
     }
 
+    /**
+     *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid
+     *
+     * @param {string} inOrigin
+     * @returns {Section}
+     */
+    origin(inOrigin){
+        if (typeof inOrigin !== "string") throw this.sequence._throwError(this, "origin", "inOrigin must be of type string");
+        this._origin = inOrigin;
+        return this;
+    }
+
     _expressWarnings(){
         if(this._reachTowards && this._anchor){
             this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .anchor() - reachTowards will manually set the X axis of the anchor and may not behave like you expect.", true);
-        }
-        if(this._reachTowards && (this._scaleMin || this._scaleMax)){
-            this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .scale() - reachTowards will manually set the scale of the effect, completely ruining your scaling attempts. Try .gridSize() instead.", true);
         }
         if(this._reachTowards && this._scaleToObject){
             throw this.sequence._throwError(this, "reachTowards", "You're trying to reach towards an object, while scaling to fit another??? Make up your mind!");
@@ -710,8 +720,10 @@ export default class EffectSection extends Section {
 
         let data = {
             id: randomID(),
-            moduleName: this.sequence.moduleName,
+            sceneId: game.user.viewedScene,
             creatorUserId: game.userId,
+            origin: this._origin,
+            moduleName: this.sequence.moduleName,
             file: this._file,
             text: this._text,
             position: {
@@ -727,7 +739,7 @@ export default class EffectSection extends Section {
             },
             name: this._name,
             persist: this._persist,
-            attachTo: this._attachTo ? lib.getObjectIdentifier(this._origin) : false,
+            attachTo: this._attachTo ? lib.getObjectIdentifier(this._source) : false,
             gridSizeDifference: 1.0,
             angle: this._angle,
             rotation: 0,
@@ -762,7 +774,6 @@ export default class EffectSection extends Section {
             screenSpaceAnchor: this._screenSpaceAnchor,
             screenSpacePosition: this._screenSpacePosition,
             screenSpaceScale: this._screenSpaceScale,
-            sceneId: game.user.viewedScene,
             users: Array.from(this._users)
         };
 
@@ -810,24 +821,10 @@ export default class EffectSection extends Section {
             };
         }
 
-        let scale = this._scaleMin;
-        if (typeof this._scaleMin === "number") {
-            if (this._scaleMax && typeof this._scaleMax === "number") {
-                scale = lib.random_float_between(this._scaleMin, this._scaleMax);
-            }
-            scale = {
-                x: scale,
-                y: scale
-            }
-        }
-
-        data.scale = {
-            x: data.scale.x * (scale?.x ?? 1.0),
-            y: data.scale.y * (scale?.y ?? 1.0)
-        }
+        data.scale = this._getCalculatedScale();
 
         if(this._scaleToObject){
-            const object = this._getCachedObject(this._origin, this._target);
+            const object = this._getCachedObject(this._source, this._target);
             data.size = this._getObjectSize(object);
         }else{
             data.size = this._size;
@@ -863,13 +860,13 @@ export default class EffectSection extends Section {
 
     _determineTargets(data) {
 
-        if (this._origin) {
+        if (this._source) {
 
-            let [from, to, origin, target] = this._getPositions(this._origin, this._target);
+            let [from, to, origin, target] = this._getPositions(this._source, this._target);
 
             if (this._attachTo){
-                const size = this._getHalfSize(this._origin);
-                if(this._origin?.data?.t === "circle"){
+                const size = this._getHalfSize(this._source);
+                if(this._source?.data?.t === "circle"){
                     size.width = 0;
                     size.height = 0;
                 }
@@ -934,11 +931,12 @@ export default class EffectSection extends Section {
     }
 
     get _distanceMatching() {
+        let distanceScale = this._getCalculatedScale();
         return {
-            "90ft": canvas.grid.size * 15,
-            "60ft": canvas.grid.size * 9,
-            "30ft": canvas.grid.size * 5,
-            "15ft": canvas.grid.size * 2,
+            "90ft": canvas.grid.size * 15 * distanceScale.x,
+            "60ft": canvas.grid.size * 9 * distanceScale.x,
+            "30ft": canvas.grid.size * 5 * distanceScale.x,
+            "15ft": canvas.grid.size * 2 * distanceScale.x,
             "05ft": 0
         }
     }
@@ -978,6 +976,23 @@ export default class EffectSection extends Section {
 
         return lib.random_array_element(possibleFiles).file;
 
+    }
+
+    _getCalculatedScale(){
+        let scale = this._scaleMin;
+        if (typeof this._scaleMin === "number") {
+            if (this._scaleMax && typeof this._scaleMax === "number") {
+                scale = lib.random_float_between(this._scaleMin, this._scaleMax);
+            }
+            scale = {
+                x: scale,
+                y: scale
+            }
+        }
+        return {
+            x: (scale?.x ?? 1.0),
+            y: (scale?.y ?? 1.0)
+        }
     }
 
     _gridSizeDifference(inGridSize) {
@@ -1183,16 +1198,16 @@ export default class EffectSection extends Section {
 
     async _cacheOffsets() {
 
-        let [from, to, from_target, to_target] = this._getPositions(this._origin, this._target, false);
+        let [from, to, from_target, to_target] = this._getPositions(this._source, this._target, false);
 
         from_target = this._calculateMissedPosition(from, from_target, !this._target && this._missed);
         to_target = to ? this._calculateMissedPosition(to, to_target, this._missed, from_target) : false;
 
-        const from_origin = this._getCleanPosition(from);
-        const to_origin = this._getCleanPosition(to, true);
+        const from_source = this._getCleanPosition(from);
+        const to_source = this._getCleanPosition(to, true);
 
         const origin_object = to || from;
-        const origin_position = to ? to_origin : from_origin;
+        const origin_position = to ? to_source : from_source;
         const target_position = to ? to_target : from_target;
 
         let offset = {

@@ -27,6 +27,13 @@ function getCustomPermissions(){
             hint: "SEQUENCER.PermissionPreloadClientsHint",
             disableGM: false,
             defaultRole: foundry.CONST.USER_ROLES.TRUSTED,
+        },
+
+        SEQUENCER_USE_SIDEBAR_TOOLS: {
+            label: "SEQUENCER.PermissionUseSidebarTools",
+            hint: "SEQUENCER.PermissionUseSidebarToolsHint",
+            disableGM: false,
+            defaultRole: foundry.CONST.USER_ROLES.PLAYER,
         }
     }
 }
@@ -41,20 +48,21 @@ export function registerPermissions(){
 
 export function patchPermissions(){
 
-    let permissions = game.settings.get("core", "permissions");
+    if(!game.user.isGM) return;
 
-    if(!Object.keys(permissions).includes("SEQUENCER_EFFECT_CREATE")){
+    const permissions = game.settings.get("core", "permissions");
 
-        const custom_permissions = Object.fromEntries(Object.entries(getCustomPermissions()).map(entry => {
-            return [entry[0], Array.fromRange(foundry.CONST.USER_ROLES.GAMEMASTER + 1).slice(entry[1].defaultRole)]
-        }))
+    const custom_permissions = Object.fromEntries(Object.entries(getCustomPermissions()).map(entry => {
+        return [entry[0], Array.fromRange(foundry.CONST.USER_ROLES.GAMEMASTER + 1).slice(entry[1].defaultRole)]
+    }))
 
-        game.settings.set("core", "permissions", {
-            ...permissions,
-            ...custom_permissions
-        })
+    const newPermissions = foundry.utils.mergeObject(custom_permissions, permissions);
 
-        console.log('Sequencer | Patched permissions')
+    if(JSON.stringify(newPermissions) !== JSON.stringify(permissions)) {
+
+        game.settings.set("core", "permissions", newPermissions);
+
+        console.log('Sequencer | Patched permissions');
 
     }
 

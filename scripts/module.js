@@ -47,10 +47,10 @@ Hooks.on("canvasReady", () => {
 
 Hooks.once('ready', async function () {
     setTimeout(() => {
+        runReadyMethods();
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
-        runReadyMethods();
     }, 100);
 });
 

@@ -73,7 +73,7 @@ export default function registerSettings() {
             icon: "fas fa-play",
             name: "play-effect",
             title: "Play Effect",
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE"),
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.user.can('SEQUENCE_USE_SIDEBAR_TOOLS'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "player" });
             }
@@ -84,7 +84,7 @@ export default function registerSettings() {
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE"),
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.user.can('SEQUENCE_USE_SIDEBAR_TOOLS'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
             }
@@ -95,6 +95,7 @@ export default function registerSettings() {
             name: "effectdatabase",
             title: "Show Sequencer Database",
             button: true,
+            visible: game.user.can('SEQUENCE_USE_SIDEBAR_TOOLS'),
             onClick: () => {
                 Sequencer.DatabaseViewer.show(true);
             }
@@ -105,7 +106,7 @@ export default function registerSettings() {
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE"),
+            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.user.can("SEQUENCER_SHOW_TOOLS"),
             activeTool: "play-effect",
             tools: [
                 playTool,

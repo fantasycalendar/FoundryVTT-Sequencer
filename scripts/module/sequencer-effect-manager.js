@@ -92,47 +92,50 @@ export default class SequencerEffectManager {
             .filter(effect => !inData.effects || inData.effects.includes(effect.data.id))
             .filter(effect => !inData.name || inData.name === effect.data.name)
             .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo)
-            .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId);
+            .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId)
+            .filter(effect => !inData.origin || inData.origin === effect.data.origin);
     }
 
     static _validateFilters(inData){
 
         if (inData?.object) {
             if (!(inData.object instanceof PlaceableObject || typeof inData.object === "string")) {
-                throw lib.throwError("SequencerEffectManager", "endEffects | inData.object must be instance of PlaceableObject or of type string")
+                throw lib.throwError("SequencerEffectManager", "inData.object must be instance of PlaceableObject or of type string")
             } else if (inData.object instanceof PlaceableObject) {
                 inData.attachTo = inData.object.id;
             } else if (typeof inData.object === "string") {
                 if (!lib.getObjectFromScene(inData.object)) {
-                    throw lib.throwError("SequencerEffectManager", `endEffects | could not find object with ID: ${inData.object}`)
+                    throw lib.throwError("SequencerEffectManager", `could not find object with ID: ${inData.object}`)
                 }
                 inData.attachTo = inData.object;
             }
             delete inData.object;
         }
 
-        if (inData?.name && typeof inData?.name !== "string") throw lib.throwError("SequencerEffectManager", "endEffects | inData.name must be of type string")
+        if (inData?.name && typeof inData?.name !== "string") throw lib.throwError("SequencerEffectManager", "inData.name must be of type string")
+        if (inData?.origin && typeof inData?.origin !== "string") throw lib.throwError("SequencerEffectManager", "inData.origin must be of type string")
         if (inData?.sceneId) {
-            if (typeof inData.sceneId !== "string") throw lib.throwError("SequencerEffectManager", "endEffects | inData.sceneId must be of type string")
-            if (!game.scenes.get(inData.sceneId)) throw lib.throwError("SequencerEffectManager", "endEffects | inData.sceneId must be a valid scene id (could not find scene)")
+            if (typeof inData.sceneId !== "string") throw lib.throwError("SequencerEffectManager", "inData.sceneId must be of type string")
+            if (!game.scenes.get(inData.sceneId)) throw lib.throwError("SequencerEffectManager", "inData.sceneId must be a valid scene id (could not find scene)")
         }
 
         if(inData?.effects){
             if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
             inData.effects = inData.effects.map(effect => {
-                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.throwError("SequencerEffectManager", "endEffects | entries in inData.effects must be of type string or CanvasEffect")
+                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.throwError("SequencerEffectManager", "entries in inData.effects must be of type string or CanvasEffect")
                 if(effect instanceof CanvasEffect) return effect.data.id;
                 return effect;
             })
         }
 
-        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects) return false;
+        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects && !inData.origin) return false;
 
         return foundry.utils.mergeObject({
+            effects: false,
             name: false,
             attachTo: false,
             sceneId: game.user.viewedScene,
-            effects: false
+            origin: false
         }, inData);
 
     }
