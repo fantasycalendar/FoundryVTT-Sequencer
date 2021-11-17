@@ -294,6 +294,10 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.10
+- *Sequencer* - Fixed misspelled permission which caused players to not be able to see the toolbar buttons   
+- *Sequencer* - Added `End All Effects` button to the Effect Manager
+
 ### Version 1.2.9
 - *Sequencer* - Removed error from the Effect Manager when no effects were removed  
 - *Effects* - Fixed `.randomOffset()` on tiles would result in pretty crazy behavior

@@ -42,6 +42,7 @@
   "SEQUENCER.ManagerTemporaryEffects": "Temporary effects:",
   "SEQUENCER.ManagerPlayersEffect": "{user_name}'s effect",
   "SEQUENCER.ManagerUnknownEffect": "Unknown user's effect",
+  "SEQUENCER.ManagerEndAllEffects": "End All Effects",
 
   "SEQUENCER.HowTo": "How-to",
   "SEQUENCER.HowToWelcome": "Welcome to Sequencer Effects!",

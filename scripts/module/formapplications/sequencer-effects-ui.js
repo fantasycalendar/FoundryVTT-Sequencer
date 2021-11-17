@@ -106,6 +106,10 @@ export default class SequencerEffectsUI extends FormApplication {
         this.effectsContainer = html.find(".effects");
         this.persistentEffectsContainer = html.find(".persistent-effects");
         this.temporaryEffectsContainer = html.find(".temporary-effects");
+
+        html.find(".end-all-effects").click(function() {
+            Sequencer.EffectManager.endAllEffects();
+        });
     }
 
     createEffectElement(effect){

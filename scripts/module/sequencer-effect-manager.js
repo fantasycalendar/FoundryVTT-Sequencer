@@ -83,6 +83,7 @@ export default class SequencerEffectManager {
     static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
         const inData = this._validateFilters({ sceneId: inSceneId });
         const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
+        if (!effectsToEnd.length) return;
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
     }
