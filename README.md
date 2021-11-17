@@ -294,6 +294,10 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.9
+- *Sequencer* - Removed error from the Effect Manager when no effects were removed  
+- *Effects* - Fixed `.randomOffset()` on tiles would result in pretty crazy behavior
+
 ### Version 1.2.8
 - *Sequencer* - Added sidebar tool permissions, you can now hide them from players
 - *Effects* - Added `.origin()` which provides a way to tag an effect with a string you can then search for with the Effect Manager

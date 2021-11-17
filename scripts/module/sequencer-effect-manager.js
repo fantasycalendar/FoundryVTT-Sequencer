@@ -68,7 +68,7 @@ export default class SequencerEffectManager {
         inData = this._validateFilters(inData);
         if (!inData) throw lib.throwError("SequencerEffectManager", "endEffects | Incorrect or incomplete parameters provided")
         const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
-        if (!effectsToEnd.length) throw lib.throwError("SequencerEffectManager", "endEffects | Found no effects you could end")
+        if (!effectsToEnd.length) return;
         if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
     }
@@ -162,7 +162,7 @@ export default class SequencerEffectManager {
             playData.promise.then(() => this._removeEffect(effect));
         }
 
-        debounceShowViewer();
+        debounceUpdateEffectViewer();
 
         return playData;
     }
@@ -180,7 +180,7 @@ export default class SequencerEffectManager {
             });
             return this._playEffectMap(objEffects, doc);
         }).flat();
-        debounceShowViewer();
+        debounceUpdateEffectViewer();
         return Promise.all(promises).then(() => {
             Hooks.call("sequencerEffectManagerReady");
         });
@@ -191,7 +191,7 @@ export default class SequencerEffectManager {
             .filter(effect => !inId || effect.data?.attachTo === inId)
             .forEach(effect => {
                 EffectsContainer.delete(effect.data.id);
-                debounceShowViewer();
+                debounceUpdateEffectViewer();
             })
     }
 
@@ -206,7 +206,7 @@ export default class SequencerEffectManager {
 
         this._playEffectMap(effects, inDocument);
 
-        debounceShowViewer();
+        debounceUpdateEffectViewer();
 
         return effects;
 
@@ -227,7 +227,7 @@ export default class SequencerEffectManager {
 
     static _removeEffect(effect) {
         EffectsContainer.delete(effect.data.id);
-        debounceShowViewer();
+        debounceUpdateEffectViewer();
         return effect.endEffect();
     }
 
@@ -261,7 +261,7 @@ export default class SequencerEffectManager {
     }
 }
 
-const debounceShowViewer = debounce(async () => {
+const debounceUpdateEffectViewer = debounce(async () => {
     if(!SequencerEffectsUI.isVisible) return;
     SequencerEffectsUI.activeInstance.updateEffects();
 }, 100);

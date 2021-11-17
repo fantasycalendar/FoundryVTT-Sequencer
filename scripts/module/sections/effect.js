@@ -1335,8 +1335,12 @@ export default class EffectSection extends Section {
 
     _getRandomOffset(target, position) {
 
-        const width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
-        const height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
+        let width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
+        let height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
+        if(target instanceof Tile){
+            width = (target?.data?.width ?? canvas.grid.size) * this._randomOffset;
+            height = (target?.data?.height ?? canvas.grid.size) * this._randomOffset;
+        }
 
         position.x += lib.random_float_between((width / 2) * -1, width / 2);
         position.y += lib.random_float_between((height / 2) * -1, height / 2);
