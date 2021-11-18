@@ -1,6 +1,6 @@
-const loadingBar = {
+import { debug } from "./lib.js";
 
-    debug: false,
+const loadingBar = {
 
     loadingParent: false,
     loadingBar: false,
@@ -26,7 +26,7 @@ const loadingBar = {
         let newPerc = Math.round(perc * 100);
 
         if (newPerc !== this.lastPerc) {
-            lib.debug(`${newPerc}% loaded...`)
+            debug(`${newPerc}% loaded...`)
             this.setPercentage(newPerc)
         }
 

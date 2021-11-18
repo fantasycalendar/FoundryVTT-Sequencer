@@ -5,7 +5,7 @@
 This module implements a basic pipeline that can be used for managing the flow of a set of functions, effects, sounds, and macros.
 
 ## Effects shown in this readme
-* [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.jb2a.com/))
+* [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.patreon.com/JB2A))
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
@@ -293,6 +293,13 @@ new Sequence()
 Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
+
+### Version 1.2.11
+- *Sequencer* - Added French localization (thanks to Elfenduil)
+- *Sequencer* - Fixed error with `Sequencer.Database.validateEntries()` throwing an error
+- *Effects* - Improved handling of the `Glow` filter when used with `.fadeIn()` and `.fadeOut()`
+    - Due to this change, it is now recommended that if you use `.animateProperty()` or `.loopProperty()` on the `sprite`'s `alpha` property to instead use it on the `alphaFilter`'s `alpha` property   
+- *Macros* - Updated the Misty Step macro to be more generic and not specifically _require_ MidiQOL
 
 ### Version 1.2.10
 - *Sequencer* - Fixed misspelled permission which caused players to not be able to see the toolbar buttons   

@@ -292,13 +292,13 @@ export default class CanvasEffect {
         this.container.addChild(this.spriteContainer);
 
         if(this.shouldShowFadedVersion){
-            this.spriteContainer.alpha = game.settings.get("sequencer", "user-effect-opacity") / 100;
-            this.spriteContainer.filters = [new PIXI.filters.ColorMatrixFilter({ saturation: -1 })];
+            this.spriteContainer.filters = [
+                new PIXI.filters.ColorMatrixFilter({ saturation: -1 }),
+                new PIXI.filters.AlphaFilter({ alpha: game.settings.get("sequencer", "user-effect-opacity") / 100 })
+            ];
         }
 
         this.applyFilters();
-
-        this.sprite.alpha = this.data.opacity;
         this.sprite.visible = this.sourceIsPlaying;
 
         if(this.data.size){
@@ -390,16 +390,17 @@ export default class CanvasEffect {
 
     applyFilters(){
 
-        if(!this.data.filters) return;
-
+        this.alphaFilter = new PIXI.filters.AlphaFilter(this.data.opacity)
         this.sprite.filters = [];
 
-        for(let [filterName, filterData] of Object.entries(this.data.filters)){
+        for(let [filterName, filterData] of Object.entries(this.data.filters ?? {})){
              const filter = new filters[filterName](filterData.data);
              this.sprite.filters.push(filter);
              const filterKeyName = filterData.name || filterName;
              this.filters[filterKeyName] = filter;
         }
+
+        this.sprite.filters.push(this.alphaFilter)
 
     }
 
@@ -485,10 +486,10 @@ export default class CanvasEffect {
 
         if(this.actualCreationTime - (this.data.timestamp + fadeIn.duration + fadeIn.delay) > 0) return;
 
-        this.sprite.alpha = 0.0;
+        this.alphaFilter.alpha = 0.0;
 
         SequencerAnimationEngine.addAnimation({
-            target: this.sprite,
+            target: this.alphaFilter,
             propertyName: "alpha",
             to: this.data.opacity,
             duration: fadeIn.duration,
@@ -511,7 +512,7 @@ export default class CanvasEffect {
             : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
         SequencerAnimationEngine.addAnimation({
-            target: this.sprite,
+            target: this.alphaFilter,
             propertyName: "alpha",
             to: 0.0,
             duration: fadeOut.duration,
