@@ -108,7 +108,7 @@ const SequencerAnimationEngine = {
 
             for(const attribute of animation.attributes) {
 
-                if(!attribute.started) continue;
+                if(!attribute.started || attribute.complete) continue;
 
                 let delta = deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
 
