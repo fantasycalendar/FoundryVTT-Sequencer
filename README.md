@@ -294,6 +294,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.2.12 Hotfix
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` applying animations that were already complete
+
 ### Version 1.2.11
 - *Sequencer* - Added French localization (thanks to Elfenduil)
 - *Sequencer* - Fixed error with `Sequencer.Database.validateEntries()` throwing an error
