@@ -2,10 +2,11 @@ import {
     BaseEffectsLayer,
     BelowTokensEffectsLayer
 } from "./module/canvas-effects/effects-layer.js";
+import { isVersion9 } from "./module/lib/lib.js";
 
 export default function registerLayers() {
 
-    const layers = isNewerVersion((game?.version ?? game.data.version), "9.00")
+    const layers = isVersion9()
         ? {
             sequencerEffectsBelowTokens: {
                 layerClass: BelowTokensEffectsLayer,

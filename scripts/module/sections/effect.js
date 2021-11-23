@@ -1,6 +1,7 @@
 import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
+import { getObjectDimensions } from "../lib/lib.js";
 
 export default class EffectSection extends Section {
 
@@ -106,6 +107,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     JB2A() {
+        this.sequence._showWarning(this, "JB2A", "This method has been deprecated, and will be removed in 1.4.0", true);
         this._JB2A = true;
         return this;
     }
@@ -825,7 +827,7 @@ export default class EffectSection extends Section {
 
         if(this._scaleToObject){
             const object = this._getCachedObject(this._source, this._target);
-            data.size = this._getObjectSize(object);
+            data.size = lib.getObjectDimensions(object);
         }else{
             data.size = this._size;
         }
@@ -865,7 +867,7 @@ export default class EffectSection extends Section {
             let [from, to, origin, target] = this._getPositions(this._source, this._target);
 
             if (this._attachTo){
-                const size = this._getHalfSize(this._source);
+                const size = lib.getObjectDimensions(this._source, true);
                 if(this._source?.data?.t === "circle"){
                     size.width = 0;
                     size.height = 0;
@@ -1069,7 +1071,7 @@ export default class EffectSection extends Section {
             }
 
             if (obj instanceof Token) {
-                const halfSize = this._getHalfSize(obj);
+                const halfSize = lib.getObjectDimensions(obj, true);
                 pos.x += halfSize.width;
                 pos.y += halfSize.height;
             }
@@ -1086,37 +1088,6 @@ export default class EffectSection extends Section {
 
     }
 
-    _getHalfSize(inObj) {
-        const size = this._getObjectSize(inObj)
-        return {
-            width: size.width / 2,
-            height: size.height / 2
-        }
-    }
-
-    _getObjectSize(inObj) {
-        const width =
-               inObj?.hitArea?.width
-            ?? inObj?.w
-            ?? inObj?.shape?.width
-            ?? (inObj?.shape?.radius
-                    ? inObj?.shape?.radius*2
-                    : canvas.grid.size)
-
-        const height =
-               inObj?.hitArea?.height
-            ?? inObj?.h
-            ?? inObj?.shape?.height
-            ?? (inObj?.shape?.radius
-                   ? inObj?.shape?.radius*2
-                   : canvas.grid.size)
-
-        return {
-            width,
-            height
-        }
-    }
-
     _getIconSize(inObj){
         if(inObj.icon){
             return {
@@ -1124,7 +1095,7 @@ export default class EffectSection extends Section {
                 height: inObj.icon.height
             }
         }
-        return this._getObjectSize(inObj);
+        return lib.getObjectDimensions(inObj);
     }
 
     _getPositions(from, to, applyOffsets = true) {
@@ -1263,7 +1234,7 @@ export default class EffectSection extends Section {
 
         if (!missed) return position;
 
-        const size = this._getHalfSize(target);
+        const size = lib.getObjectDimensions(target, true);
         const halfWidth = size.width;
         const halfHeight = size.height;
 

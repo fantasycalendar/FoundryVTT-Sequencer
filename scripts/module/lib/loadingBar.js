@@ -1,50 +1,38 @@
-import { debug } from "./lib.js";
+import { debug, isVersion9 } from "./lib.js";
 
-const loadingBar = {
+class loading_bar {
 
-    loadingParent: false,
-    loadingBar: false,
-    loadingLabel: false,
+    constructor() {
+        this.total = 0;
+        this.current = 0;
+        this.lastPct = 0;
+        this.setPercentage = false;
+    }
 
-    total: 0,
-    current: 0,
-    lastPerc: 0,
-
-    init(context, total) {
+    init(context, total){
+        this.setPercentage = this.setPercentage || (isVersion9()
+            ? (pct) => { SceneNavigation.displayProgressBar({ label: this.context, pct: pct }); }
+            : (pct) => { SceneNavigation._onLoadProgress(this.context, pct); });
 
         this.context = context;
         this.total = total;
         this.current = 0;
-        this.lastPerc = 0;
-
-    },
+        this.lastPct = 0;
+        this.setPercentage(1)
+    }
 
     incrementProgress() {
-
         this.current += 1;
-        let perc = this.current / this.total;
-        let newPerc = Math.round(perc * 100);
-
-        if (newPerc !== this.lastPerc) {
-            debug(`${newPerc}% loaded...`)
-            this.setPercentage(newPerc)
+        const pct = Math.round((this.current / this.total) * 100);
+        if (pct !== this.lastPct) {
+            debug(`${pct}% loaded...`)
+            this.setPercentage(pct)
         }
-
-        this.lastPerc = newPerc;
-
-    },
-
-    setPercentage(perc) {
-        SceneNavigation._onLoadProgress(this.context, perc);
-    },
-
-    hide() {
-        this.setPercentage(100);
-        this.total = 0;
-        this.current = 0;
-        this.lastPerc = 0;
+        this.lastPct = pct;
     }
 
 }
 
-export default loadingBar;
+const LoadingBar = new loading_bar();
+
+export default LoadingBar;

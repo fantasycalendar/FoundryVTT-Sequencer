@@ -40,7 +40,8 @@ class AnimationSection extends Section {
     teleportTo(inTarget, options = {}) {
         options = foundry.utils.mergeObject({
             delay: 0,
-            target: { x: 0, y: 0 }
+            target: { x: 0, y: 0 },
+            relativeToCenter: false
         }, options);
         if (typeof options.delay !== "number") throw this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
@@ -311,18 +312,28 @@ class AnimationSection extends Section {
 
         if (this._moveTowards) {
 
-            let originLoc = this._getCleanPosition(this._originObject);
-            let targetLoc = this._closestSquare
+            let originLocation = this._getCleanPosition(this._originObject);
+            let targetLocation = this._closestSquare
                 ? this._getClosestSquare(this._originObject, this._moveTowards.target)
                 : this._getCleanPosition(this._moveTowards.target);
 
-            targetLoc.x += this._offset.x;
-            targetLoc.y += this._offset.y;
+            targetLocation.x += this._offset.x;
+            targetLocation.y += this._offset.y;
 
-            if (this._snapToGrid) targetLoc = this._snapLocationToGrid(targetLoc);
+            if (this._moveTowards.relativeToCenter){
+                const dimensions = lib.getObjectDimensions(this._originObject);
+                targetLocation.x -= dimensions.width/2;
+                targetLocation.y -= dimensions.height/2;
+                if(this._snapToGrid){
+                    targetLocation.x -= 0.01;
+                    targetLocation.y -= 0.01;
+                }
+            }
 
-            let originalDx = targetLoc.x - originLoc.x;
-            let originalDy = targetLoc.y - originLoc.y;
+            if (this._snapToGrid) targetLocation = this._snapLocationToGrid(targetLocation);
+
+            let originalDx = targetLocation.x - originLocation.x;
+            let originalDy = targetLocation.y - originLocation.y;
             let originalDistance = Math.sqrt(originalDx * originalDx + originalDy * originalDy);
 
             let duration = this._duration
@@ -334,12 +345,12 @@ class AnimationSection extends Section {
             overallDuration = overallDuration > moveDuration ? overallDuration : moveDuration;
 
             if (!this._duration && this._moveTowards.ease === "linear") {
-                await this._updateObject(this._originObject, targetLoc, true);
+                await this._updateObject(this._originObject, targetLocation, true);
             } else {
                 animData.attributes.push({
                     name: "position",
-                    origin: originLoc,
-                    target: targetLoc,
+                    origin: originLocation,
+                    target: targetLocation,
                     originalDistance: originalDistance,
                     currentDistance: 0,
                     progress: 0,
@@ -367,6 +378,10 @@ class AnimationSection extends Section {
                 delay: overallDuration - this._fadeOut.duration,
                 ease: easeFunctions[this._fadeOut.ease]
             })
+
+            let fadeOutDuration = this._fadeOut.duration + this._fadeOut.delay;
+
+            overallDuration = overallDuration > fadeOutDuration ? overallDuration : fadeOutDuration;
         }
 
         if (this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
@@ -384,6 +399,10 @@ class AnimationSection extends Section {
                 delay: overallDuration - this._fadeOutAudio.duration,
                 ease: easeFunctions[this._fadeOutAudio.ease]
             })
+
+            let fadeOutAudioDuration = this._fadeOutAudio.duration + this._fadeOutAudio.delay;
+
+            overallDuration = overallDuration > fadeOutAudioDuration ? overallDuration : fadeOutAudioDuration;
         }
 
         if (this._rotateOut) {
@@ -413,6 +432,10 @@ class AnimationSection extends Section {
                 ease: easeFunctions[this._rotateOut.ease]
             });
 
+            let rotateOutDuration = this._rotateOut.duration + this._rotateOut.delay;
+
+            overallDuration = overallDuration > rotateOutDuration ? overallDuration : rotateOutDuration;
+
         }
 
         if (this._teleportTo) {
@@ -422,6 +445,15 @@ class AnimationSection extends Section {
                     : this._getCleanPosition(this._teleportTo.target);
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
+                if (this._teleportTo.relativeToCenter){
+                    const dimensions = lib.getObjectDimensions(this._originObject);
+                    targetLocation.x -= dimensions.width/2;
+                    targetLocation.y -= dimensions.height/2;
+                    if(this._snapToGrid){
+                        targetLocation.x -= 0.01;
+                        targetLocation.y -= 0.01;
+                    }
+                }
                 if (this._snapToGrid) targetLocation = this._snapLocationToGrid(targetLocation);
                 await this._updateObject(this._originObject, targetLocation);
             }, this._teleportTo.delay);

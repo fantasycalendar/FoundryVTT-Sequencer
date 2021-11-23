@@ -1,6 +1,16 @@
 import SequencerFileCache from "../sequencer-file-cache.js";
 
 /**
+ * This function is a backwards compatible method for both 0.8.9 and 9.224 that returns a boolean whether
+ * you're on version 8 or 9
+ *
+ * @return {boolean}                    If the user is on version 9
+ */
+export function isVersion9(){
+    return isNewerVersion((game?.version ?? game.data.version), "9.00");
+}
+
+/**
  * This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
  * @param  {string}         inFile      The start value
@@ -238,6 +248,16 @@ export function rotateVector(vector, degrees) {
     return vector;
 }
 
+/**
+ *  Scales and positions a vector based on the world transform of a context. This has been used to transform the space
+ *  in which a filter exists in, as a PIXI filter exists in screen space position, rotation, and scale, and this could
+ *  transform that filter to another context, such as a token on a canvas, so that the filter would react properly to
+ *  the token moving, and the canvas scaling (zooming)
+ *
+ * @param  {object}     inVector    The vector to be transformed
+ * @param  {object}     context     The context of which to transform the vector against
+ * @return {object}                 The transformed vector
+ */
 export function transformVector(inVector, context = false) {
     let zoomLevel = canvas.background.worldTransform.a;
     let worldTransform = canvas.background.worldTransform;
@@ -298,7 +318,8 @@ export function getObjectFromScene(inObjectId, inSceneId) {
  * @return {String}                 The identifier
  */
 export function getObjectIdentifier(inObject){
-    return inObject?.id
+    return inObject?.document?.uuid
+        ?? inObject?.id
         ?? inObject?.document?.name
         ?? inObject?.name
         ?? (inObject?.tag !== "" ? inObject?.tag : undefined)
@@ -318,6 +339,7 @@ function checkObjectByIdentifier(inObject, inIdentifier) {
 export function makeArrayUnique(inArray){
     return Array.from(new Set(inArray));
 }
+
 
 export function debug(msg, args = ""){
     if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
@@ -485,6 +507,29 @@ export function sectionProxyWrap(inClass) {
             return Reflect.get(target, prop);
         },
     });
+}
+
+export function getObjectDimensions(inObj, half = false){
+    const width =
+        (inObj?.hitArea?.width
+        ?? inObj?.w
+        ?? inObj?.shape?.width
+        ?? (inObj?.shape?.radius
+        ? inObj?.shape?.radius*2
+        : canvas.grid.size)) / (half ? 2 : 1);
+
+    const height =
+        (inObj?.hitArea?.height
+        ?? inObj?.h
+        ?? inObj?.shape?.height
+        ?? (inObj?.shape?.radius
+        ? inObj?.shape?.radius*2
+        : canvas.grid.size)) / (half ? 2 : 1)
+
+    return {
+        width,
+        height
+    }
 }
 
 export function clamp(num, max, min = 0) {

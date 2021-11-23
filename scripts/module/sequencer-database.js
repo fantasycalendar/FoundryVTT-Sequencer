@@ -1,5 +1,5 @@
 import * as lib from './lib/lib.js';
-import loadingBar from "./lib/loadingBar.js";
+import LoadingBar from "./lib/loadingBar.js";
 
 const SequencerDatabase = {
 
@@ -17,8 +17,9 @@ const SequencerDatabase = {
         if(inModuleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
         if(this.entries[inModuleName]) lib.showWarning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
         this._flatten(inEntries, inModuleName);
+        const processedEntries = this._processEntries(inModuleName, inEntries);
         this.entries = foundry.utils.mergeObject(this.entries,
-            { [inModuleName]: this._processFiles(inModuleName, inEntries) }
+            { [inModuleName]: processedEntries }
         );
         console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
         return true;
@@ -34,10 +35,10 @@ const SequencerDatabase = {
         const entries = this.getEntry(inModuleName);
         ui.notifications.info(`Validating paths registered to "${inModuleName}"...`)
         let isValid = true;
-        loadingBar.init(`Validating paths registered to "${inModuleName}"...`, entries.length);
+        LoadingBar.init(`Validating paths registered to "${inModuleName}"...`, entries.length);
         for(let entry of entries){
             const result = await entry.validate()
-            loadingBar.incrementProgress();
+            LoadingBar.incrementProgress();
             isValid = !(!result || !isValid);
         }
         if(!isValid){
@@ -45,7 +46,6 @@ const SequencerDatabase = {
         }else{
             ui.notifications.info(`Validation of paths registered to "${inModuleName}" complete! No errors found!`)
         }
-        loadingBar.hide();
     },
 
     /**
@@ -149,27 +149,30 @@ const SequencerDatabase = {
         }
 
         inPath = inPath.replace(/\[[0-9]+]$/, "");
+        inPath = inPath.trim()
 
         let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
 
         let feetTest = new RegExp(/.[0-9]+ft/g);
         if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
         let length = inPath.split('.').length+1;
-        const foundEntries = lib.makeArrayUnique(entries.map(e =>{
+        let foundEntries = entries.map(e =>{
             let path = e.split(feetTest)[0];
             return path.split('.').slice(0, length).join('.');
-        }));
+        });
 
         if(foundEntries.length === 0){
-            let regexSearch = new RegExp(lib.strToSearchRegexStr(inPath), "gu");
-            return lib.makeArrayUnique(this.flattenedEntries.filter(e => {
-                    return e.match(regexSearch)?.length;
-                }).map(e =>{
-                    return e.split(feetTest)[0];
-                }))
+            const regexString = lib.strToSearchRegexStr(inPath);
+            const searchParts = regexString.split('|').length;
+            const regexSearch = new RegExp(regexString, "gu");
+            foundEntries = this.flattenedEntries.filter(e => {
+                return e.match(regexSearch)?.length >= searchParts;
+            }).map(e =>{
+                return e.split(feetTest)[0];
+            });
         }
 
-        return foundEntries;
+        return lib.makeArrayUnique(foundEntries);
     },
 
     _throwError(inFunctionName, inError) {
@@ -193,15 +196,15 @@ const SequencerDatabase = {
         this.flattenedEntries = lib.makeArrayUnique(this.flattenedEntries.concat(Object.keys(flattened)));
     },
 
-    _processFiles(moduleName, entries) {
+    _processEntries(moduleName, entries) {
         entries = foundry.utils.duplicate(entries);
         let globalTemplate = entries?._templates ?? false;
         let entryCache = [];
-        this._recurseFiles(entryCache, moduleName, entries, globalTemplate);
+        this._recurseEntries(entryCache, moduleName, entries, globalTemplate);
         return entryCache;
     },
 
-    _recurseFiles(entryCache, dbPath, entries, globalTemplate, template) {
+    _recurseEntries(entryCache, dbPath, entries, globalTemplate, template) {
 
         if (entries?._template) {
             template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
@@ -215,7 +218,7 @@ const SequencerDatabase = {
 
             for (let i = 0; i < entries.length; i++) {
                 let recurseDBPath = dbPath + "." + i;
-                this._recurseFiles(entryCache, recurseDBPath, entries[i], globalTemplate, template);
+                this._recurseEntries(entryCache, recurseDBPath, entries[i], globalTemplate, template);
             }
 
         } else {
@@ -230,7 +233,7 @@ const SequencerDatabase = {
                 for (let entry of Object.keys(entries)) {
                     if (entry.startsWith('_')) continue;
                     let recurseDBPath = dbPath + "." + entry;
-                    this._recurseFiles(entryCache, recurseDBPath, entries[entry], globalTemplate, template);
+                    this._recurseEntries(entryCache, recurseDBPath, entries[entry], globalTemplate, template);
                 }
             }
         }

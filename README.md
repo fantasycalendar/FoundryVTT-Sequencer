@@ -202,28 +202,9 @@ new Sequence()
     .effect()
         .atLocation(canvas.tokens.controlled[0])
         .reachTowards(canvas.tokens.controlled[1])
-        .baseFolder("Images/Effects/Magic_Missile")
-        .startPoint(200)
-        .endPoint(200)
-        .setMustache({
-            "color": () => {
-                return ['Blue', 'Green', 'Purple', 'Yellow'][Math.floor(Math.random() * 4)]
-            },
-            "number": () => {
-                return Math.floor(Math.random() * 9) + 1;
-            }
-        })
-        .addOverride(
-            async (effect, data) => {
-                if(data.distance <= 1800){
-                    data.file = "MagicMissile_01_Regular_{{color}}_30ft_0{{number}}_1600x400.webm";
-                }else{
-                    data.file = "MagicMissile_01_Regular_{{color}}_60ft_0{{number}}_2800x400.webm";
-                }
-                return data
-            }
-        )
+        .file("jb2a.magic_missile")
         .repeats(3, 200, 300)
+        .randomizeMirrorY()
     .play();
 ```
 
@@ -236,8 +217,7 @@ new Sequence()
     .effect()
         .file("modules/jb2a_patreon/Library/Generic/Magic_Signs/Abjuration_01_Blue_Circle_800x800.webm")
         .atLocation(canvas.tokens.controlled[0])
-        .JB2A()
-        .scale(0.5)
+        .scale(0.25)
         .belowTokens()
         .fadeIn(1500, {ease: "easeOutCubic", delay: 500})
         .fadeOut(1500)
@@ -293,6 +273,13 @@ new Sequence()
 Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
+
+### Version 1.3.0
+- *Sequencer* - Sequencer is now v9 ready!
+- *Sequencer* - Improved search accuracy functionality on the Effect Player
+- *Animations* - Added `relativeToCenter` option to `.teleportTo()` and `.moveTowards()`, which will offset the location relative to the object's center, effectively centering the animated object on the location - use with `.snapToGrid()` for reliable snapping!
+- *Animations* - Fixed `.fadeOut()`, `.fadeOutAudio()`, and `.rotateOut()` not correctly setting the duration of the animation, causing `.waitUntilFinished()` to not actually wait for the animation to finish
+- *Effects* - Deprecated `.JB2A()` as the recommended workflow is now to use Database paths
 
 ### Version 1.2.12 Hotfix
 - *Effects* - Fixed `.animateProperty()` and `.loopProperty()` applying animations that were already complete

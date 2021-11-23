@@ -1,6 +1,6 @@
 import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
-import loadingBar from "./lib/loadingBar.js";
+import LoadingBar from "./lib/loadingBar.js";
 import * as lib from './lib/lib.js';
 
 const SequencerPreloader = {
@@ -126,21 +126,20 @@ const SequencerPreloader = {
         lib.debug(`Preloading ${inSrcs.length} files...`);
         let numFilesToLoad = inSrcs.length;
 
-        if (showProgressBar) loadingBar.init("Sequencer - Preloading files", numFilesToLoad);
+        if (showProgressBar) LoadingBar.init("Sequencer - Preloading files", numFilesToLoad);
 
         let filesSucceeded = 0;
         new Promise(async (resolve) => {
             for(let src of inSrcs){
                 await SequencerFileCache.loadFile(src).then(() => {
-                    if (showProgressBar) loadingBar.incrementProgress();
+                    if (showProgressBar) LoadingBar.incrementProgress();
                     filesSucceeded++;
                 }).catch(() => {
-                    if (showProgressBar) loadingBar.incrementProgress();
+                    if (showProgressBar) LoadingBar.incrementProgress();
                 });
             }
             resolve();
         }).then(() => {
-            if (showProgressBar) loadingBar.hide();
             if (push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_DONE, this.userId, senderId, numFilesToLoad - filesSucceeded);
             if (local) this.handleDone(this.userId, this.userId, numFilesToLoad - filesSucceeded);
             lib.debug(`Preloading ${numFilesToLoad - filesSucceeded} files took ${(performance.now() - startTime) / 1000}s`);
