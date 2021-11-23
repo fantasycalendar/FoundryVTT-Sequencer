@@ -274,6 +274,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.3.1
+- *Sequencer* - Fixed minor spelling issue
+
 ### Version 1.3.0
 - *Sequencer* - Sequencer is now v9 ready!
 - *Sequencer* - Improved search accuracy functionality on the Effect Player
