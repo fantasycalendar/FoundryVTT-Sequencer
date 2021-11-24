@@ -318,8 +318,7 @@ export function getObjectFromScene(inObjectId, inSceneId) {
  * @return {String}                 The identifier
  */
 export function getObjectIdentifier(inObject){
-    return inObject?.document?.uuid
-        ?? inObject?.id
+    return inObject?.id
         ?? inObject?.document?.name
         ?? inObject?.name
         ?? (inObject?.tag !== "" ? inObject?.tag : undefined)

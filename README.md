@@ -274,6 +274,12 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.3.2
+- *Sequencer* - Minor backend updates to flag handling
+- *Effects* - Fixed static images failing to load in v9
+- *Effects* - Fixed effects attached to tokens that were copied to another scene would not play
+- *Effects* - Reverted some code that would break persisting effects
+
 ### Version 1.3.1
 - *Sequencer* - Fixed minor spelling issue
 

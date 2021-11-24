@@ -2,6 +2,7 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
 import filters from "../lib/filters.js";
+import flagManager from "../flag-manager.js";
 
 export default class CanvasEffect {
 
@@ -27,6 +28,7 @@ export default class CanvasEffect {
 		this.actualCreationTime = (+new Date())
         // Set default values
         this.data = foundry.utils.mergeObject({
+            flagVersion: flagManager.latestFlagVersion,
             timestamp: (+new Date()),
             position: { x: 0, y: 0 },
             rotation: 0,
@@ -772,7 +774,7 @@ export default class CanvasEffect {
 
         return new Promise(async (resolve, reject) => {
 
-        	let blob = await this.loader.loadVideo(this.data.file);
+        	const blob = await this.loader.loadVideo(this.data.file);
 
         	if(!blob){
         	    let error = "Sequencer "
@@ -821,7 +823,7 @@ export default class CanvasEffect {
     async loadImage(){
         return new Promise(async (resolve, reject) => {
 
-			let texture = await this.loader.loadImage(this.data.file);
+			const texture = await loadTexture(this.data.file);
 
 			if(!texture){
                 let error = "Sequencer "

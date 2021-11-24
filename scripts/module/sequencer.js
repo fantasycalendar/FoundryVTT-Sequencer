@@ -168,11 +168,11 @@ export default class Sequence {
     }
 
     _showWarning(self, func, warning, notify) {
-        lib.showWarning(this.moduleName, `${self.constructor.name} | ${func} - ${warning}`, notify);
+        lib.showWarning(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`, notify);
     }
 
     _throwError(self, func, error) {
-        return lib.throwError(this.moduleName, `${self.constructor.name} | ${func} - ${error}`);
+        return lib.throwError(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${error}`);
     }
 
 }

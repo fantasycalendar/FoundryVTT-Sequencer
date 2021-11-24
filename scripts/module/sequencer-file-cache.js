@@ -17,29 +17,6 @@ const SequencerFileCache = {
         return src;
     },
 
-    _loader: false,
-
-    get loader() {
-        if (!this._loader) {
-            this._loader = new TextureLoader();
-        }
-        return this._loader;
-    },
-
-    async loadImage(inSrc) {
-        let src = await this.loader.getCache(inSrc);
-
-        if (!src) {
-            try {
-                src = await this._loader.loadTexture(inSrc);
-            } catch (err) {
-                return false;
-            }
-        }
-
-        return src;
-    },
-
     async loadFile(inSrc) {
         return new Promise(async (resolve, reject) => {
             let file;
@@ -52,7 +29,7 @@ const SequencerFileCache = {
                     console.error(`Failed to load audio: ${inSrc}`)
                 }
             } else {
-                file = await this.loadImage(inSrc);
+                file = await loadTexture(inSrc);
             }
             if (file) {
                 resolve(file);

@@ -107,7 +107,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     JB2A() {
-        this.sequence._showWarning(this, "JB2A", "This method has been deprecated, and will be removed in 1.4.0", true);
+        this.sequence._showWarning(this, "JB2A", "This method has been deprecated, and will be removed in 1.4.0");
         this._JB2A = true;
         return this;
     }
