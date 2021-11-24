@@ -278,6 +278,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Minor backend updates to flag handling
 - *Effects* - Fixed static images failing to load in v9
 - *Effects* - Fixed effects attached to tokens that were copied to another scene would not play
+- *Effects* - Suppressed recent deprecation warnings until the next release
 - *Effects* - Reverted some code that would break persisting effects
 
 ### Version 1.3.1
@@ -725,12 +726,6 @@ Click the link above to go to the documentation where each feature is listed.
 - Art - Copyright © 2020 Matheus Moreno Mota
 - Sound - https://99sounds.org/license/
 - Image - https://pixabay.com/service/license/
-
-### Hyperspeed Scene
-- Hyperdrive Animations - Copyright © 2020 Adam Oresten
-- Sounds [HellScape Tabletop Assets](https://www.patreon.com/HellScapeAssets) - Copyright © 2020 AurelTristen
-- Sci-fi Cockpits - Copyright © 2020 Vattalus Assets
-- Stellaris Animated Backgrounds - Copyright © 2021 Paradox Interactive
 
 ### Other Attributions
 - [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev
