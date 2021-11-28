@@ -274,6 +274,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.3.3
+- *Sounds* - Fixed `.fadeInAudio()` and `.fadeOutAudio()` being broken
+
 ### Version 1.3.2
 - *Sequencer* - Minor backend updates to flag handling
 - *Effects* - Fixed static images failing to load in v9
