@@ -1,7 +1,8 @@
 import { libWrapper } from "./module/lib/libWrapper/shim.js";
+import CONSTANTS from "./module/constants.js";
 
 export default function registerLibwrappers(){
-    libWrapper.register("sequencer", "PIXI.resources.BaseImageResource.prototype.upload", PIXIUPLOAD);
+    libWrapper.register(CONSTANTS.MODULE_NAME, "PIXI.resources.BaseImageResource.prototype.upload", PIXIUPLOAD);
 }
 
 function PIXIUPLOAD(wrapped, ...args){

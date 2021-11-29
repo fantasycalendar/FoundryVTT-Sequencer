@@ -1,9 +1,10 @@
 import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
+import CONSTANTS from "./module/constants.js";
 
 export default function registerSettings() {
 
     // Define a settings submenu which handles advanced configuration needs
-    game.settings.registerMenu("sequencer", "openSequencerDatabaseViewer", {
+    game.settings.registerMenu(CONSTANTS.MODULE_NAME, "openSequencerDatabaseViewer", {
         name: game.i18n.localize("SEQUENCER.SettingsDatabaseViewerTitle"),
         label: game.i18n.localize("SEQUENCER.SettingsDatabaseViewerLabel"),
         icon: "fas fa-bars",
@@ -11,7 +12,7 @@ export default function registerSettings() {
         restricted: true
     });
 
-    game.settings.register("sequencer", "debug", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "debug", {
         name: game.i18n.localize("SEQUENCER.SettingsDebugTitle"),
         hint: game.i18n.localize("SEQUENCER.SettingsDebugHint"),
         scope: "client",
@@ -20,7 +21,7 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register("sequencer", "effectsEnabled", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "effectsEnabled", {
         name: game.i18n.localize("SEQUENCER.SettingsEnableEffectsTitle"),
         hint: game.i18n.localize("SEQUENCER.SettingsEnableEffectsHint"),
         scope: "client",
@@ -30,7 +31,7 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register("sequencer", "soundsEnabled", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "soundsEnabled", {
         name: game.i18n.localize("SEQUENCER.SettingsEnableSoundsTitle"),
         hint: game.i18n.localize("SEQUENCER.SettingsEnableSoundsHint"),
         scope: "client",
@@ -40,7 +41,7 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register("sequencer", "user-effect-opacity", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "user-effect-opacity", {
         name: game.i18n.localize("SEQUENCER.SettingsExternalEffectOpacityTitle"),
         hint: game.i18n.localize("SEQUENCER.SettingsExternalEffectOpacityHint"),
         scope: "client",
@@ -54,14 +55,21 @@ export default function registerSettings() {
         }
     });
 
-    game.settings.register("sequencer", "hyperspace-deprecation-warning", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "hyperspace-deprecation-warning", {
         scope: "world",
         config: false,
         default: false,
         type: Boolean
     });
 
-    game.settings.register("sequencer", "effectPresets", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "effect-tools-permissions-warning", {
+        scope: "client",
+        config: false,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(CONSTANTS.MODULE_NAME, "effectPresets", {
         scope: "client",
         default: {},
         type: Object
@@ -102,7 +110,7 @@ export default function registerSettings() {
         };
 
         controls.push({
-            name: "sequencer",
+            name: CONSTANTS.MODULE_NAME,
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",

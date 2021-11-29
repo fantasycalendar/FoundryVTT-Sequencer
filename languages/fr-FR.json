@@ -49,7 +49,7 @@
 
   "SEQUENCER.HowToExplanation": "Avec le Joueur <i class=\"fas fa-play-circle\"></i>, vous pouvez jouer rapidement des effets sur le canevas, et avec le Gestionnaire <i class=\"fas fa-film\"></i> vous pouvez mettre fin aux effets persistants quand vous le souhaitez.",
   "SEQUENCER.HowToPlayerExplanation": "Lorsque vous utilisez le lecteur <i class=\"fas fa-play-circle\"></i>, vous devez définir l'effet à jouer. Cliquez sur <strong>entrée de fichier</strong> pour voir quels chemins de base de données vous avez ou commencez simplement à taper pour rechercher. Vous pouvez appuyer sur le bouton <i class=\"fas fa-file-import\"></i> à côté de celui-ci pour rechercher un fichier directement. ",
-  "SEQUENCER.HowToLayerExplanation": "Une fois que vous avez choisi un fichier, vous pouvez effectuer l'une des actions suivantes sur la couche de séquenceur <i class=\"fa-list-ol\"></i>",
+  "SEQUENCER.HowToLayerExplanation": "Une fois que vous avez choisi un fichier, vous pouvez effectuer l'une des actions suivantes sur <i class=\"fas fa-list-ol\"></i> la couche de séquenceur.",
 
   "SEQUENCER.HowToClick": "Cliquer",
   "SEQUENCER.HowToClickLabel": "Jouer un effet sur place",

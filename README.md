@@ -274,6 +274,10 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.3.4
+- *Sequencer* - Added popup warning the first time a GM opens the Effect Player to tell them about the custom Permissions
+- *Sequencer* - Added button to open Foundry's Permissions directly from the Effect Player
+
 ### Version 1.3.3
 - *Sounds* - Fixed `.fadeInAudio()` and `.fadeOutAudio()` being broken
 

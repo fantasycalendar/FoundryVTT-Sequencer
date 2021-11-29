@@ -1,4 +1,5 @@
 import SequencerFileCache from "../sequencer-file-cache.js";
+import CONSTANTS from "../constants.js";
 
 /**
  * This function is a backwards compatible method for both 0.8.9 and 9.224 that returns a boolean whether
@@ -341,7 +342,7 @@ export function makeArrayUnique(inArray){
 
 
 export function debug(msg, args = ""){
-    if(game.settings.get("sequencer", "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
+    if(game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
 }
 
 export function showWarning(inClassName, warning, notify = false) {
@@ -543,4 +544,24 @@ export function strToSearchRegexStr(str) {
         .replace(/[^A-Za-z0-9 .*_-]/g, "")
         .replace(/\*+/g, ".*?")
         .replace(/\s+/g, "|");
+}
+
+export function scrollToElement(scrollElement, scrollToElement, duration = 500){
+    if(!duration){
+        scrollElement.scrollTop(scrollElement.scrollTop() - scrollElement.offset().top + scrollToElement.offset().top);
+        return;
+    }
+
+    scrollElement.animate({
+        scrollTop: scrollElement.scrollTop() - scrollElement.offset().top + scrollToElement.offset().top
+    }, duration);
+
+    return wait(duration);
+}
+
+export async function highlightElement(element, { duration = false, color = "#FF0000", size="3px" }={}){
+    element.prop("style", `-webkit-box-shadow: inset 0px 0px ${size} ${size} ${color}; box-shadow: inset 0px 0px ${size} ${size} ${color};`);
+    if(!duration) return;
+    await wait(duration);
+    element.prop("style", "");
 }

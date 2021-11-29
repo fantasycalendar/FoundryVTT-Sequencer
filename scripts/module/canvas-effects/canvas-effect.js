@@ -3,6 +3,7 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import * as lib from "../lib/lib.js";
 import filters from "../lib/filters.js";
 import flagManager from "../flag-manager.js";
+import CONSTANTS from "../constants.js";
 
 export default class CanvasEffect {
 
@@ -284,7 +285,7 @@ export default class CanvasEffect {
         // And it is not an effect that is only played for the user who created the effect
         return this.data.users.length
             && !this.data.users.includes(game.userId)
-            && game.settings.get("sequencer", "user-effect-opacity") !== 0
+            && game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") !== 0
             && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId));
     }
 
@@ -296,7 +297,7 @@ export default class CanvasEffect {
         if(this.shouldShowFadedVersion){
             this.spriteContainer.filters = [
                 new PIXI.filters.ColorMatrixFilter({ saturation: -1 }),
-                new PIXI.filters.AlphaFilter({ alpha: game.settings.get("sequencer", "user-effect-opacity") / 100 })
+                new PIXI.filters.AlphaFilter({ alpha: game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100 })
             ];
         }
 

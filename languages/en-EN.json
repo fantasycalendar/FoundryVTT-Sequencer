@@ -36,6 +36,8 @@
   "SEQUENCER.PlayerOptionDragBehavior":  "Drag Behavior:<br>Stretch or Move",
   "SEQUENCER.PlayerOptionMoveSpeed": "Move speed",
 
+  "SEQUENCER.PlayerPermissionsWarning": "Hi there! Since you're a GM you can create effects, but by default <strong>so can your players</strong>. If you don't want that, you can configure permissions by clicking this button:",
+
   "SEQUENCER.Manager": "Manager",
   "SEQUENCER.ManagerNoEffects": "No effects currently playing...",
   "SEQUENCER.ManagerPersistentEffects": "Persistent effects:",
@@ -47,8 +49,9 @@
   "SEQUENCER.HowTo": "How-to",
   "SEQUENCER.HowToWelcome": "Welcome to Sequencer Effects!",
   "SEQUENCER.HowToExplanation": "With the Player <i class=\"fas fa-play-circle\"></i>, you can quickly play effects on the canvas, and with the Manager <i class=\"fas fa-film\"></i> you can end persisting effects whenever you want.",
+  "SEQUENCER.HowToPermissionsExplanation": "Since you're a GM, you can create effects, and by default, so can your players. You can configure permissions by clicking this button:",
   "SEQUENCER.HowToPlayerExplanation": "When using the Player <i class=\"fas fa-play-circle\"></i>, you need to set what effect to play. Click on the <strong>file input</strong> to see what database paths you have or just start typing to search. You can press the <i class=\"fas fa-file-import\"></i> button next to it to search for a file directly.",
-  "SEQUENCER.HowToLayerExplanation": "Once you've picked a file, you can do any of the following actions while on the Sequencer Layer <i class=\"fa-list-ol\"></i>",
+  "SEQUENCER.HowToLayerExplanation": "Once you've picked a file, you can do any of the following actions while on the <i class=\"fas fa-list-ol\"></i> Sequencer Layer.",
 
   "SEQUENCER.HowToClick": "Click",
   "SEQUENCER.HowToClickLabel": "Play an effect on the spot",

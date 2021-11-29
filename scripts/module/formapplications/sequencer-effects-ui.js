@@ -1,6 +1,7 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
 import SequencerPlayer from "../sequencer-effect-player.js";
+import CONSTANTS from "../constants.js";
 
 export default class SequencerEffectsUI extends FormApplication {
 
@@ -54,6 +55,10 @@ export default class SequencerEffectsUI extends FormApplication {
             activeApp.render(true, { focus: inFocus });
         }
 
+        if(tab === "player"){
+            activeApp.promptPermissionsWarning();
+        }
+
         return activeApp.setTab(tab);
     }
 
@@ -83,6 +88,7 @@ export default class SequencerEffectsUI extends FormApplication {
     /** @override */
     getData() {
         let data = super.getData()
+        data.userIsGM = game.user.isGM;
         data.canCreateEffects = game.user.can("SEQUENCER_EFFECT_CREATE");
         data = this.getPlayerData(data);
         return data;
@@ -396,6 +402,46 @@ export default class SequencerEffectsUI extends FormApplication {
             _this.deletePreset(_this.presetSelect.val());
         });
 
+        html.find('.open-permissions').click(function(){
+            _this.renderPermissionsConfig();
+        });
+
+    }
+
+    promptPermissionsWarning() {
+        if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "effect-tools-permissions-warning")) return;
+
+        const content = `<p>${ game.i18n.localize("SEQUENCER.PlayerPermissionsWarning") }</p><p><button type="button" class="w-100 open-permissions"><i class="fas fa-user-lock"></i> Open Permission Configuration</button></p>`
+        Dialog.prompt({
+            title: "Sequencer Permissions",
+            content: content,
+            rejectClose: false,
+            label: game.i18n.localize('SEQUENCER.OK'),
+            callback: () => {
+                game.settings.set(CONSTANTS.MODULE_NAME, "effect-tools-permissions-warning", true)
+            },
+            render: (html) => {
+                const thisDialog = html.closest('.app.window-app.dialog').attr('id').split("-")[1];
+                const _this = this;
+                html.find('.open-permissions').click(function(){
+                    _this.renderPermissionsConfig();
+                    ui.windows[thisDialog].close();
+                });
+            }
+        })
+    }
+
+    async renderPermissionsConfig() {
+        const permissions = new PermissionConfig().render(true);
+
+        await lib.wait(250);
+
+        const permissionsList = $(permissions.element).find(".permissions-list");
+        const permissionToScrollTo = permissionsList.find('input[name="SEQUENCER_SOUND_CREATE.1"]');
+        await lib.scrollToElement(permissionsList, permissionToScrollTo);
+
+        const corePermission = $(permissions.element).find('input[name="SEQUENCER_USE_SIDEBAR_TOOLS.1"]').parent().parent();
+        await lib.highlightElement(corePermission);
     }
 
     async updateFile(inPath){

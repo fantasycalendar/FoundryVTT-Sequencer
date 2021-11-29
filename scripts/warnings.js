@@ -1,3 +1,5 @@
+import CONSTANTS from "./module/constants.js";
+
 export async function check(){
     if(!game.user.isGM) return;
     await checkHyperspace();
@@ -9,7 +11,7 @@ async function checkHyperspace(){
 
     if(!game.modules.get("NRSAP")){
 
-        if(game.settings.get("sequencer", "hyperspace-deprecation-warning")) return;
+        if(game.settings.get(CONSTANTS.MODULE_NAME, "hyperspace-deprecation-warning")) return;
 
         const content = `
         <h2>Sequencer Hyperspace Assets Warning</h2>
@@ -32,7 +34,7 @@ async function checkHyperspace(){
                     dont_remind: {
                         icon: '<i class="fas fa-times"></i>',
                         label: "Don't remind me again",
-                        callback: () => game.settings.set("sequencer", "hyperspace-deprecation-warning", true)
+                        callback: () => game.settings.set(CONSTANTS.MODULE_NAME, "hyperspace-deprecation-warning", true)
                     }
                 },
                 close: () => {
