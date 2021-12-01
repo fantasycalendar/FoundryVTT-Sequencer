@@ -44,7 +44,7 @@ export default class SequencerSectionManager {
             throw lib.throwError(inModuleName, `${inMethodName} cannot contain the following methods: ${errors}<br>These methods are existing methods on the Sequence or from already registered Sections. Please rename these methods to avoid conflicts.`);
         }
 
-        if(game.settings.get('sequencer', 'debug')) console.log(`DEBUG | Sequencer.SectionManager | Successfully registered ${inMethodName} with Sequencer!`)
+        lib.debug(`SectionManager | Successfully registered ${inMethodName} with Sequencer!`)
 
         this.externalSections[inMethodName] = inClass;
 
