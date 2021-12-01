@@ -25,6 +25,7 @@ export default class CanvasEffect {
         this.highlightBox = false;
         this.loopOffset = 0;
         this.filters = {};
+        this.originalSpriteDimensions = {};
 
 		this.actualCreationTime = (+new Date())
         // Set default values
@@ -303,6 +304,9 @@ export default class CanvasEffect {
 
         this.applyFilters();
         this.sprite.visible = this.sourceIsPlaying;
+
+        this.originalSpriteDimensions.width = this.sprite.width;
+        this.originalSpriteDimensions.height = this.sprite.height;
 
         if(this.data.size){
 
