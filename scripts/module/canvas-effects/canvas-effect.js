@@ -529,13 +529,18 @@ export default class CanvasEffect {
 
     _determineScale(property){
         let scale = {
-            x: property.value?.x * this.data.gridSizeDifference ?? 1.0,
-            y: property.value?.y * this.data.gridSizeDifference ?? 1.0
+            x: this.sprite.scale.x,
+            y: this.sprite.scale.y
         };
+
         if(typeof property.value === "number"){
-            scale.x = property.value * this.data.gridSizeDifference
-            scale.y = property.value * this.data.gridSizeDifference
+            scale.x *= property.value * this.data.gridSizeDifference;
+            scale.y *= property.value * this.data.gridSizeDifference;
+        }else{
+            scale.x *= property.value.x * this.data.gridSizeDifference;
+            scale.y *= property.value.y * this.data.gridSizeDifference;
         }
+
         return scale;
     }
 
