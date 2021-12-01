@@ -116,7 +116,7 @@ let to_location = {
     y: token.center.y
 }
 
-let ray = new Ray(token.center, this._target);
+let ray = new Ray(token.center, to_location);
 
 data = {
     file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm",
@@ -217,13 +217,13 @@ new Sequence()
     .effect()
         .file("modules/jb2a_patreon/Library/Generic/Magic_Signs/Abjuration_01_Blue_Circle_800x800.webm")
         .atLocation(canvas.tokens.controlled[0])
-        .scale(0.25)
+        .scaleToObject(2)
         .belowTokens()
         .fadeIn(1500, {ease: "easeOutCubic", delay: 500})
         .fadeOut(1500)
         .rotateIn(90, 2500, {ease: "easeInOutCubic"})
         .rotateOut(350, 1500, {ease: "easeInCubic"})
-        .scaleIn(1, 2500, {ease: "easeInOutCubic"})
+        .scaleIn(2, 2500, {ease: "easeInOutCubic"})
         .scaleOut(0, 1500, {ease: "easeInCubic"})
     .play()
 ```
@@ -243,7 +243,10 @@ new Sequence()
         .file('Images/Effects/Lightning/LightningStrike_01{{letter}}_800x800.webm')
         .setMustache({
             // random letter between a to f
-            "letter": String.fromCharCode(Math.floor(Math.random()*6)+1+64).toLowerCase()
+            "letter": () => {
+                const letters = ['a', 'b', 'c', 'd', 'e', 'f']; 
+                return letters[Math.floor(Math.random() * letters.length)];
+            }
         })
         .scale(2)
         .randomizeMirrorX()
@@ -273,6 +276,10 @@ new Sequence()
 Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
+
+### Version 1.3.5
+- *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
+- *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Breaking change <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> - Fixed issue where setting the `.size()` of an effect and then scaling it would result in unexpected behavior. As a result, `.scaleIn()` and `.scaleOut()` now function as _multipliers_ to the existing scale on the effect.
 
 ### Version 1.3.4
 - *Sequencer* - Added popup warning the first time a GM opens the Effect Player to tell them about the custom Permissions
