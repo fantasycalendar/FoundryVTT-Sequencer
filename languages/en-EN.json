@@ -49,7 +49,7 @@
   "SEQUENCER.HowTo": "How-to",
   "SEQUENCER.HowToWelcome": "Welcome to Sequencer Effects!",
   "SEQUENCER.HowToExplanation": "With the Player <i class=\"fas fa-play-circle\"></i>, you can quickly play effects on the canvas, and with the Manager <i class=\"fas fa-film\"></i> you can end persisting effects whenever you want.",
-  "SEQUENCER.HowToPermissionsExplanation": "Since you're a GM, you can create effects, and by default, so can your players. You can configure permissions by clicking this button:",
+  "SEQUENCER.HowToPermissionsExplanation": "Since you're a GM, you can create effects, and by default, so can your players. You can configure the settings by clicking this button:",
   "SEQUENCER.HowToPlayerExplanation": "When using the Player <i class=\"fas fa-play-circle\"></i>, you need to set what effect to play. Click on the <strong>file input</strong> to see what database paths you have or just start typing to search. You can press the <i class=\"fas fa-file-import\"></i> button next to it to search for a file directly.",
   "SEQUENCER.HowToLayerExplanation": "Once you've picked a file, you can do any of the following actions while on the <i class=\"fas fa-list-ol\"></i> Sequencer Layer.",
 
@@ -70,15 +70,15 @@
   "SEQUENCER.DatabaseButton": "Database",
 
   "SEQUENCER.PermissionEffectCreate": "Sequencer: Play Effects",
-  "SEQUENCER.PermissionEffectCreateHint": "Allow players with this role to play effects through Macros and the Sequencer Effect Player.",
+  "SEQUENCER.PermissionEffectCreateHint": "Allow players with the selected role and above to play effects through Macros and the Sequencer Effect Player.",
   "SEQUENCER.PermissionEffectDelete": "Sequencer: Remove All Effects",
-  "SEQUENCER.PermissionEffectDeleteHint": "Allow players with this role to remove any effects through the Sequencer Effect Manager.",
+  "SEQUENCER.PermissionEffectDeleteHint": "Allow players with the selected role and above to remove any effects through the Sequencer Effect Manager.",
   "SEQUENCER.PermissionSoundCreate": "Sequencer: Play Sounds",
-  "SEQUENCER.PermissionSoundCreateHint": "Allow players with this role to play sounds through Sequencer.",
+  "SEQUENCER.PermissionSoundCreateHint": "Allow players with the selected role and above to play sounds through Sequencer.",
   "SEQUENCER.PermissionPreloadClients": "Sequencer: Preloading for others",
-  "SEQUENCER.PermissionPreloadClientsHint": "Allow players with this role to be able to preload effects and sounds for other players.",
+  "SEQUENCER.PermissionPreloadClientsHint": "Allow players with the selected role and above to be able to preload effects and sounds for other players.",
   "SEQUENCER.PermissionUseSidebarTools": "Sequencer: Use sidebar tools",
-  "SEQUENCER.PermissionUseSidebarToolsHint": "Allow players with this role to use the sidebar tools (they also need to be able to play effects).",
+  "SEQUENCER.PermissionUseSidebarToolsHint": "Allow players with the selected role and above to use the sidebar tools (they also need to be able to play effects).",
 
   "SEQUENCER.ErrorCouldNotPlay": "Could not play",
 

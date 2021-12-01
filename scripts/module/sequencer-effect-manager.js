@@ -34,7 +34,7 @@ export default class SequencerEffectManager {
      * @returns {CanvasEffect} A CanvasEffect object
      */
     static async play(data, push = true) {
-        if(!game.user.can("SEQUENCER_EFFECT_CREATE")) return;
+        if(!lib.userCanDo("permissions-effect-create")) return;
         if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, data);
         return this._playEffect(data);
     }

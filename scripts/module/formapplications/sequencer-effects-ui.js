@@ -25,7 +25,7 @@ export default class SequencerEffectsUI extends FormApplication {
             template: `modules/sequencer/templates/sequencer-effects-template.html`,
             classes: ["dialog"],
             width: "auto",
-            height: 635,
+            height: 640,
             top: 65,
             left: 120,
             resizable: true,
@@ -89,7 +89,7 @@ export default class SequencerEffectsUI extends FormApplication {
     getData() {
         let data = super.getData()
         data.userIsGM = game.user.isGM;
-        data.canCreateEffects = game.user.can("SEQUENCER_EFFECT_CREATE");
+        data.canCreateEffects = lib.userCanDo("permissions-effect-create");
         data = this.getPlayerData(data);
         return data;
     }
@@ -289,7 +289,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     activatePlayerListeners(html) {
 
-        if(!game.user.can("SEQUENCER_EFFECT_CREATE")) return;
+        if(!lib.userCanDo("permissions-effect-create")) return;
 
         html.find('.activate-layer').click(() => {
             canvas.sequencerEffectsAboveTokens.activate();
@@ -402,28 +402,28 @@ export default class SequencerEffectsUI extends FormApplication {
             _this.deletePreset(_this.presetSelect.val());
         });
 
-        html.find('.open-permissions').click(function(){
+        html.find('.open-module-settings').click(function(){
             _this.renderPermissionsConfig();
         });
 
     }
 
     promptPermissionsWarning() {
-        if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "effect-tools-permissions-warning")) return;
+        if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning")) return;
 
-        const content = `<p>${ game.i18n.localize("SEQUENCER.PlayerPermissionsWarning") }</p><p><button type="button" class="w-100 open-permissions"><i class="fas fa-user-lock"></i> Open Permission Configuration</button></p>`
+        const content = `<p>${ game.i18n.localize("SEQUENCER.PlayerPermissionsWarning") }</p><p><button type="button" class="w-100 open-module-settings"><i class="fas fa-plug"></i> Open Module Settings</button></p>`
         Dialog.prompt({
             title: "Sequencer Permissions",
             content: content,
             rejectClose: false,
             label: game.i18n.localize('SEQUENCER.OK'),
             callback: () => {
-                game.settings.set(CONSTANTS.MODULE_NAME, "effect-tools-permissions-warning", true)
+                game.settings.set(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning", true)
             },
             render: (html) => {
                 const thisDialog = html.closest('.app.window-app.dialog').attr('id').split("-")[1];
                 const _this = this;
-                html.find('.open-permissions').click(function(){
+                html.find('.open-module-settings').click(function(){
                     _this.renderPermissionsConfig();
                     ui.windows[thisDialog].close();
                 });
@@ -432,16 +432,20 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     async renderPermissionsConfig() {
-        const permissions = new PermissionConfig().render(true);
+
+        game.settings.set(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning", true);
+
+        const settings = new SettingsConfig().render(true);
+
+        settings._tabs[0].active = "modules";
 
         await lib.wait(250);
 
-        const permissionsList = $(permissions.element).find(".permissions-list");
-        const permissionToScrollTo = permissionsList.find('input[name="SEQUENCER_SOUND_CREATE.1"]');
-        await lib.scrollToElement(permissionsList, permissionToScrollTo);
+        const settingsList = $(settings.element).find(".settings-list");
+        const settingToScrollTo = settingsList.find('select[name="sequencer.permissions-sidebar-tools"]').parent().parent();
+        await lib.scrollToElement(settingsList, settingToScrollTo);
+        await lib.highlightElement(settingToScrollTo, { duration: 2500 });
 
-        const corePermission = $(permissions.element).find('input[name="SEQUENCER_USE_SIDEBAR_TOOLS.1"]').parent().parent();
-        await lib.highlightElement(corePermission);
     }
 
     async updateFile(inPath){

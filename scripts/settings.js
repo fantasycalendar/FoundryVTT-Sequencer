@@ -1,5 +1,6 @@
 import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./module/constants.js";
+import { userCanDo } from "./module/lib/lib.js";
 
 export default function registerSettings() {
 
@@ -55,6 +56,81 @@ export default function registerSettings() {
         }
     });
 
+    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-create", {
+        name: game.i18n.localize("SEQUENCER.PermissionEffectCreate"),
+        hint: game.i18n.localize("SEQUENCER.PermissionEffectCreateHint"),
+        scope: "world",
+        config: true,
+        default: 0,
+        type: Number,
+        choices: [
+            "Players and above",
+            "Trusted Players and above",
+            "Assistant GMs",
+        ],
+        onChange: debouncedReload
+    });
+
+    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-delete", {
+        name: game.i18n.localize("SEQUENCER.PermissionEffectDelete"),
+        hint: game.i18n.localize("SEQUENCER.PermissionEffectDeleteHint"),
+        scope: "world",
+        config: true,
+        default: 2,
+        type: Number,
+        choices: [
+            "Players and above",
+            "Trusted Players and above",
+            "Assistant GMs",
+        ],
+        onChange: debouncedReload
+    });
+
+    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sound-create", {
+        name: game.i18n.localize("SEQUENCER.PermissionSoundCreate"),
+        hint: game.i18n.localize("SEQUENCER.PermissionSoundCreateHint"),
+        scope: "world",
+        config: true,
+        default: 0,
+        type: Number,
+        choices: [
+            "Players and above",
+            "Trusted Players and above",
+            "Assistant GMs",
+        ],
+        onChange: debouncedReload
+    });
+
+    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-preload", {
+        name: game.i18n.localize("SEQUENCER.PermissionPreloadClients"),
+        hint: game.i18n.localize("SEQUENCER.PermissionPreloadClientsHint"),
+        scope: "world",
+        config: true,
+        default: 1,
+        type: Number,
+        choices: [
+            "Players and above",
+            "Trusted Players and above",
+            "Assistant GMs",
+        ],
+        onChange: debouncedReload
+    });
+
+    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sidebar-tools", {
+        name: game.i18n.localize("SEQUENCER.PermissionUseSidebarTools"),
+        hint: game.i18n.localize("SEQUENCER.PermissionUseSidebarToolsHint"),
+        scope: "world",
+        config: true,
+        default: 0,
+        type: Number,
+        choices: [
+            "Players and above",
+            "Trusted Players and above",
+            "Assistant GMs",
+        ],
+        onChange: debouncedReload
+    });
+
     game.settings.register(CONSTANTS.MODULE_NAME, "hyperspace-deprecation-warning", {
         scope: "world",
         config: false,
@@ -62,7 +138,7 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register(CONSTANTS.MODULE_NAME, "effect-tools-permissions-warning", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning", {
         scope: "client",
         config: false,
         default: false,
@@ -81,7 +157,7 @@ export default function registerSettings() {
             icon: "fas fa-play",
             name: "play-effect",
             title: "Play Effect",
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.user.can('SEQUENCER_USE_SIDEBAR_TOOLS'),
+            visible: userCanDo("permissions-effect-create") && userCanDo('permissions-sidebar-tools'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "player" });
             }
@@ -92,7 +168,7 @@ export default function registerSettings() {
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.user.can('SEQUENCER_USE_SIDEBAR_TOOLS'),
+            visible: userCanDo("permissions-effect-create") && userCanDo('permissions-sidebar-tools'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
             }
@@ -103,7 +179,7 @@ export default function registerSettings() {
             name: "effectdatabase",
             title: "Show Sequencer Database",
             button: true,
-            visible: game.user.can('SEQUENCER_USE_SIDEBAR_TOOLS'),
+            visible: userCanDo('permissions-sidebar-tools'),
             onClick: () => {
                 Sequencer.DatabaseViewer.show(true);
             }
@@ -114,7 +190,7 @@ export default function registerSettings() {
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
-            visible: game.user.can("SEQUENCER_EFFECT_CREATE") && game.user.can("SEQUENCER_USE_SIDEBAR_TOOLS"),
+            visible: userCanDo("permissions-effect-create") && userCanDo("permissions-sidebar-tools"),
             activeTool: "play-effect",
             tools: [
                 playTool,

@@ -54,7 +54,7 @@ export default class CanvasEffect {
     }
 
     get userCanDelete(){
-        return this.userCanUpdate || game.user.can("SEQUENCER_EFFECT_DELETE");
+        return this.userCanUpdate || lib.userCanDo("permissions-effect-delete");
     }
 
     get context(){

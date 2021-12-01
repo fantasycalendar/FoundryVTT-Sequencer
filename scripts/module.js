@@ -3,7 +3,6 @@ import registerLayers from "./layers.js";
 import registerLibwrappers from "./libwrapper.js";
 import { registerSocket } from "./sockets.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
-import { registerPermissions, patchPermissions } from "./permissions.js";
 
 import Sequence from "./module/sequencer.js";
 import SequencerPlayer from "./module/sequencer-effect-player.js";
@@ -37,7 +36,6 @@ Hooks.once('init', async function () {
     registerSettings();
     registerSocket();
     registerLibwrappers();
-    registerPermissions();
 
 });
 
@@ -55,7 +53,6 @@ Hooks.once('ready', async function () {
 });
 
 function runReadyMethods(){
-    patchPermissions();
     warnings.check();
 }
 

@@ -48,7 +48,13 @@ const SequencerPreloader = {
 
         inSrcs = this.cleanSrcs(inSrcs);
 
-        if (!game.user.can("SEQUENCER_PRELOAD_CLIENTS")) return;
+        if (!lib.userCanDo("permissions-preload")){
+            return this.preload({
+                inSrcs,
+                local: true,
+                push: false
+            });
+        }
 
         this.expectedClients = new Set(game.users
             .filter(user => user.active)
@@ -68,7 +74,6 @@ const SequencerPreloader = {
         this.preload({
             inSrcs,
             showProgressBar,
-            senderId: this.userId,
             local: true,
             push: false
         });

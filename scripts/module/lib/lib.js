@@ -340,7 +340,6 @@ export function makeArrayUnique(inArray){
     return Array.from(new Set(inArray));
 }
 
-
 export function debug(msg, args = ""){
     if(game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
 }
@@ -363,6 +362,10 @@ export function isResponsibleGM() {
     if (!game.user.isGM) return false;
     const connectedGMs = game.users.filter(user => user.active && user.isGM);
     return !connectedGMs.some(other => other.data._id < game.user.data._id);
+}
+
+export function userCanDo(inSetting) {
+    return game.user.role >= game.settings.get(CONSTANTS.MODULE_NAME, inSetting);
 }
 
 export class SequencerFile {
