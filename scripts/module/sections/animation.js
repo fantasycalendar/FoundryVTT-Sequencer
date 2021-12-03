@@ -344,7 +344,7 @@ class AnimationSection extends Section {
 
             overallDuration = overallDuration > moveDuration ? overallDuration : moveDuration;
 
-            if (!this._duration && this._moveTowards.ease === "linear") {
+            if (!this._duration && !this._moveSpeed && this._moveTowards.ease === "linear") {
                 await this._updateObject(this._originObject, targetLocation, true);
             } else {
                 animData.attributes.push({

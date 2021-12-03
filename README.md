@@ -277,6 +277,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 1.3.6
+- *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
+
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
 - *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Breaking change <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> - Fixed issue where setting the `.size()` of an effect and then scaling it would result in unexpected behavior. As a result, `.scaleIn()` and `.scaleOut()` now function as _multipliers_ to the existing scale on the effect
