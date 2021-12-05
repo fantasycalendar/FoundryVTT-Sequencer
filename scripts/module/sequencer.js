@@ -113,10 +113,10 @@ export default class Sequence {
     /**
      * Creates an animation. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Animation section.
      *
-     * @param {Token|Tile|boolean} [inTarget=false] inTarget
+     * @param {Token|Tile} [inTarget=false] inTarget
      * @returns {AnimationSection}
      */
-    animation(inTarget = false) {
+    animation(inTarget) {
         const animation = lib.sectionProxyWrap(new AnimationSection(this, inTarget));
         this.sections.push(animation);
         return animation;
