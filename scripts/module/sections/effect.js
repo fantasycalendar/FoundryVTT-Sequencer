@@ -666,12 +666,17 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid
+     *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
+     *  The method accepts a string or a Document that has an UUID.
      *
-     * @param {string} inOrigin
+     * @param {string|document} inOrigin
      * @returns {Section}
      */
     origin(inOrigin){
+        if (inOrigin instanceof Document){
+            inOrigin = inOrigin?.uuid;
+            if(!inOrigin) throw this.sequence._throwError(this, "origin", "could not find the UUID for the given Document")
+        }
         if (typeof inOrigin !== "string") throw this.sequence._throwError(this, "origin", "inOrigin must be of type string");
         this._origin = inOrigin;
         return this;

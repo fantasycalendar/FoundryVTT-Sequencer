@@ -279,6 +279,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 1.3.6
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
+- *Effects* - Adjusted `.origin()` to be able to accept a Document to infer the UUID from
 
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
