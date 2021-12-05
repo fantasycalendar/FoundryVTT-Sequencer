@@ -365,7 +365,7 @@ export function isResponsibleGM() {
 }
 
 export function userCanDo(inSetting) {
-    return game.user.role >= game.settings.get(CONSTANTS.MODULE_NAME, inSetting);
+    return game.user.role > game.settings.get(CONSTANTS.MODULE_NAME, inSetting);
 }
 
 export class SequencerFile {

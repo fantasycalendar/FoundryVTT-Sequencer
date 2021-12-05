@@ -50,7 +50,9 @@ export default class CanvasEffect {
     }
 
     get userCanUpdate(){
-        return game.user.isGM || this.data.creatorUserId === game.user.id;
+        return game.user.isGM
+            || this.data.creatorUserId === game.user.id
+            || (this.contextDocument && this.contextDocument.canUserModify(game.user, "update"));
     }
 
     get userCanDelete(){

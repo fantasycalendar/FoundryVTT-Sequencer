@@ -278,8 +278,11 @@ Click the link above to go to the documentation where each feature is listed.
 ## Changelog
 
 ### Version 1.3.6
+- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Bumped minimum version to 0.8.9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Sequencer* - Fixed module permissions settings being slightly wonky
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
 - *Effects* - Adjusted `.origin()` to be able to accept a Document to infer the UUID from
+- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
 
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
