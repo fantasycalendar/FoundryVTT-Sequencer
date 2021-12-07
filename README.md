@@ -284,7 +284,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Fixed module permissions settings being slightly wonky
 - *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
-- *Animations* - Fixed other users not being able to teleport or move other tokens
+- *Animations* - Fixed users not being able to teleport or move tokens they do not own
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
 - *Effects* - Adjusted `.origin()` to be able to accept a Document to infer the UUID from
 - *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
