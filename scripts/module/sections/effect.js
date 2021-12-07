@@ -17,14 +17,12 @@ export default class EffectSection extends Section {
         this._spriteAnchor = false;
         this._randomOffset = false;
         this._missed = false;
-        this._JB2A = false;
         this._randomMirrorX = false;
         this._randomMirrorY = false;
         this._mirrorX = false;
         this._mirrorY = false;
         this._playbackRate = 1.0;
         this._gridSize = 100;
-        this._customTemplate = false;
         this._startPoint = 0;
         this._endPoint = 0;
         this._overrides = [];
@@ -333,7 +331,6 @@ export default class EffectSection extends Section {
     gridSize(inGridSize) {
         if (!lib.is_real_number(inGridSize)) throw this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
         this._gridSize = inGridSize;
-        this._customTemplate = true;
         return this;
     }
 
@@ -348,7 +345,6 @@ export default class EffectSection extends Section {
     startPoint(inStartPoint) {
         if (!lib.is_real_number(inStartPoint)) throw this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
-        this._customTemplate = true;
         return this;
     }
 
@@ -361,7 +357,6 @@ export default class EffectSection extends Section {
     endPoint(inEndPoint) {
         if (!lib.is_real_number(inEndPoint)) throw this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
-        this._customTemplate = true;
         return this;
     }
 
@@ -794,12 +789,14 @@ export default class EffectSection extends Section {
                 data.file = file;
             }
 
-            template = this._customTemplate ? this._determineTemplate(data.file) : (template ?? this._determineTemplate(data.file));
-
-            this._gridSize = template[0];
-            this._startPoint = template[1];
-            this._endPoint = template[2];
-            data.template = template;
+            this._gridSize = template?.[0] ?? this._gridSize;
+            this._startPoint = template?.[1] ?? this._startPoint;
+            this._endPoint = template?.[2] ?? this._endPoint;
+            data.template = [
+                this._gridSize,
+                this._startPoint,
+                this._endPoint
+            ];
         }
 
         if(this._startTime || this._endTime) {
@@ -936,6 +933,10 @@ export default class EffectSection extends Section {
         }
     }
 
+    get _defaultTemplate(){
+        return [this._gridSize, this._startPoint, this._endPoint];
+    }
+
     _rangeFind(inFile) {
 
         let distances = Object.keys(inFile.file)
@@ -943,7 +944,7 @@ export default class EffectSection extends Section {
             .map(entry => {
                 let file = inFile.getFile(entry);
                 if (!file) throw this.sequence._throwError(this, "play", `Could not find index ${inFile.fileIndex} in database entry ${this._file}!`)
-                let template = inFile.template ?? this._determineTemplate(file);
+                let template = inFile.template ?? this._defaultTemplate;
                 let gridSizeDiff = this._gridSizeDifference(template[0]);
                 return {
                     file: file,
@@ -992,23 +993,6 @@ export default class EffectSection extends Section {
 
     _gridSizeDifference(inGridSize) {
         return canvas.grid.size / inGridSize;
-    }
-
-    _determineTemplate(inFile) {
-
-        if (!this._JB2A) return [this._gridSize, this._startPoint, this._endPoint];
-
-        let type = "ranged";
-        if (inFile.toLowerCase().includes("/melee/") || inFile.toLowerCase().includes("/unarmed_attacks/")) {
-            type = "melee";
-        } else if (inFile.toLowerCase().includes("/cone/") || inFile.toLowerCase().includes("_cone_")) {
-            type = "cone";
-        }
-        return {
-            "ranged": [200, 200, 200],
-            "melee": [200, 300, 300],
-            "cone": [200, 0, 0]
-        }[type];
     }
 
     async _getFileDimensions(inFile) {

@@ -57,6 +57,7 @@
       "name": "socketlib"
     }
   ],
+  "socket": true,
   "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
   "manifest": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/manifest.json",
   "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.zip",
