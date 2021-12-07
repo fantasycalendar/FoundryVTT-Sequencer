@@ -21,7 +21,6 @@ if(!game.modules.get("midi-qol")?.active){
     error = `You need to have MidiQOL ${installed} to run this macro!`;
 }
 
-const actorD = game.actors.get(args[0].actor._id);
 const tokenD = canvas.tokens.get(args[0].tokenId);
 
 if(error){
@@ -36,7 +35,7 @@ if(game.modules.get("tagger")?.active){
 	let magicalSchools = ["abjuration", "conjuration", "divination", "enchantment", "evocation", "illusion", "necromancy", "transmutation"];
 	let magicalColors = ["blue", "green", "pink", "purple", "red", "yellow"];
 
-	let objects = await Tagger.getByTag("magical", { ignore: [tokenD] });
+	let objects = Tagger.getByTag("magical", { ignore: [tokenD] });
 
 	magicalObjects = objects.map(o => {
 			let distance = canvas.grid.measureDistance(tokenD, o);

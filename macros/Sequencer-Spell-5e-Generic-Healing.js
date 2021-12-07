@@ -33,8 +33,6 @@ let sequence = new Sequence()
 for(let target of targets){
     sequence.effect()
         .atLocation(target)
-        .JB2A()
-        .baseFolder("modules/jb2a_patreon/Library/Generic/Healing")
-        .file("HealingAbility_01_Green_200x200.webm")
+        .file("jb2a.healing_generic.200px.green")
 }
 sequence.play();

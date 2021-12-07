@@ -32,16 +32,9 @@ if(typeof args !== "undefined" && args.length !== 0){
 let sequence = new Sequence()
 for(let target of targets){
     sequence.effect()
-        .baseFolder("modules/jb2a_patreon/Library/Generic/Template/Circle/OutPulse")
-        .file("OutPulse_02_Regular_{{color}}_Burst_600x600.webm")
+        .file("jb2a.explosion.05")
         .atLocation(target)
-        .JB2A()
         .scale(0.3)
         .randomRotation()
-        .setMustache({
-            "color": () => {
-                return ['BlueWhite', 'GreenOrange', 'PurplePink', 'TealYellow'][Math.floor(Math.random() * 4)]
-            }
-        })
 }
 sequence.play();

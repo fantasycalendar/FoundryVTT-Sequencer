@@ -154,26 +154,26 @@ async function main(){
 
                     let sequence = new Sequence()
                         .effect()
-                        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
-                        .atLocation(tokenD) // Going from origin
-                        .reachTowards(targetToken) // To the current loop's target
-                        .effect()
-                        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
-                        .atLocation(targetToken) // Static on the target
-                        .gridSize(100)
-                        .scale(0.5)
+                            .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
+                            .atLocation(tokenD) // Going from origin
+                            .reachTowards(targetToken) // To the current loop's target
+                            .effect()
+                            .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
+                            .atLocation(targetToken) // Static on the target
+                            .gridSize(100)
+                            .scale(0.5)
                         .wait(150) // Slight delay between each arc
 
                     for(let target of targetTokens){
                         sequence
                             .effect()
-                            .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
-                            .atLocation(targetToken) // Going from origin
-                            .reachTowards(target) // To the current loop's target
-                            .effect()
-                            .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
-                            .atLocation(target) // Static on the target
-                            .gridSize(100)
+                                .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
+                                .atLocation(targetToken) // Going from origin
+                                .reachTowards(target) // To the current loop's target
+                                .effect()
+                                .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
+                                .atLocation(target) // Static on the target
+                                .gridSize(100)
                             .scale(0.5)
                     }
 
