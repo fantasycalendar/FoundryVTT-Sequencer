@@ -1,3 +1,5 @@
+import { is_real_number } from "../../lib/lib.js";
+
 export default {
 
     /**
@@ -28,7 +30,7 @@ export default {
      * @returns this
      */
     rotate(inRotation) {
-        if (typeof inRotation !== "number") throw this.sequence._throwError(this, "opacity", "inRotation must be of type number");
+        if (!is_real_number(inRotation)) throw this.sequence._throwError(this, "opacity", "inRotation must be of type number");
         this._angle = inRotation;
         return this;
     },
@@ -49,10 +51,10 @@ export default {
             towardsCenter: true,
             cacheLocation: false
         }, options);
-        if (typeof options.duration !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
+        if (!is_real_number(options.duration)) throw this.sequence._throwError(this, "rotateTowards", "options.duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateTowards", "options.ease must be of type string");
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
-        if (typeof options.offset !== "number") throw this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
+        if (!is_real_number(options.delay)) throw this.sequence._throwError(this, "rotateTowards", "options.delay must be of type number");
+        if (!is_real_number(options.offset)) throw this.sequence._throwError(this, "rotateTowards", "options.offset must be of type number");
         if (typeof options.towardsCenter !== "boolean") throw this.sequence._throwError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
         if (typeof options.cacheLocation !== "boolean") throw this.sequence._throwError(this, "rotateTowards", "options.cacheLocation must be of type boolean");
         options.target = this._validateLocation(inLocation);
@@ -76,10 +78,10 @@ export default {
             ease: "linear",
             delay: 0
         }, options);
-        if (typeof degrees !== "number") throw this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
-        if (typeof duration !== "number") throw this.sequence._throwError(this, "rotateOut", "duration must be of type number");
+        if (!is_real_number(degrees)) throw this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
+        if (!is_real_number(duration)) throw this.sequence._throwError(this, "rotateOut", "duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateIn", "options.ease must be of type string");
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateIn", "options.delay must be of type number");
+        if (!is_real_number(options.delay)) throw this.sequence._throwError(this, "rotateIn", "options.delay must be of type number");
         this._rotateIn = {
             value: degrees,
             duration: duration,
@@ -103,10 +105,10 @@ export default {
             ease: "linear",
             delay: 0
         }, options);
-        if (typeof degrees !== "number") throw this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
-        if (typeof duration !== "number") throw this.sequence._throwError(this, "rotateOut", "duration must be of type number");
+        if (!is_real_number(degrees)) throw this.sequence._throwError(this, "rotateOut", "degrees must be of type number");
+        if (!is_real_number(duration)) throw this.sequence._throwError(this, "rotateOut", "duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "rotateOut", "options.ease must be of type string");
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "rotateOut", "options.delay must be of type number");
+        if (!is_real_number(options.delay)) throw this.sequence._throwError(this, "rotateOut", "options.delay must be of type number");
         this._rotateOut = {
             value: degrees,
             duration: duration,

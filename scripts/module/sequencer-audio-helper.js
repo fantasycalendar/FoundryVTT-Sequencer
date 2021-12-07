@@ -1,4 +1,4 @@
-import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerAnimationEngine from "./sequencer-animation-engine.js";
 import * as lib from './lib/lib.js';
 
@@ -11,7 +11,7 @@ export default class SequencerAudioHelper {
      * @returns {Promise<Sound>} A promise that resolves when the audio file has finished playing.
      */
     static async play(data, push = false) {
-        if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_SOUND, data);
+        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, data);
         data.volume = (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume");
         return this._play(data);
     }

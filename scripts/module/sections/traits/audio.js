@@ -1,3 +1,5 @@
+import { is_real_number } from "../../lib/lib.js";
+
 export default {
 
     /**
@@ -14,7 +16,7 @@ export default {
      * @returns this
      */
     volume(inVolume) {
-        if (typeof inVolume !== "number") throw this.sequence._throwError(this, "volume", "inVolume must be of type number");
+        if (!is_real_number(inVolume)) throw this.sequence._throwError(this, "volume", "inVolume must be of type number");
         this._volume = Math.max(0, Math.min(1.0, inVolume));
         return this;
     },
@@ -32,9 +34,9 @@ export default {
             ease: "linear",
             delay: 0
         }, options);
-        if (typeof duration !== "number") throw this.sequence._throwError(this, "fadeInAudio", "duration must be of type number");
+        if (!is_real_number(duration)) throw this.sequence._throwError(this, "fadeInAudio", "duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "fadeInAudio", "options.ease must be of type string");
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "fadeInAudio", "options.delay must be of type number");
+        if (!is_real_number(options.delay)) throw this.sequence._throwError(this, "fadeInAudio", "options.delay must be of type number");
         this._fadeInAudio = {
             duration: duration,
             ease: options.ease,
@@ -56,9 +58,9 @@ export default {
             ease: "linear",
             delay: 0
         }, options);
-        if (typeof duration !== "number") throw this.sequence._throwError(this, "fadeOutAudio", "duration must be of type number");
+        if (!is_real_number(duration)) throw this.sequence._throwError(this, "fadeOutAudio", "duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "fadeOutAudio", "ease must be of type string");
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "fadeOutAudio", "delay must be of type number");
+        if (!is_real_number(options.delay)) throw this.sequence._throwError(this, "fadeOutAudio", "delay must be of type number");
         this._fadeOutAudio = {
             duration: duration,
             ease: options.ease,

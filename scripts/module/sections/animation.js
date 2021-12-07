@@ -1,7 +1,7 @@
-import { easeFunctions } from "../canvas-effects/ease.js";
 import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 
 class AnimationSection extends Section {
 
@@ -43,7 +43,7 @@ class AnimationSection extends Section {
             target: { x: 0, y: 0 },
             relativeToCenter: false
         }, options);
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
+        if (!lib.is_real_number(options.delay)) throw this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
         if (!inTarget) throw this.sequence._throwError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
@@ -99,8 +99,8 @@ class AnimationSection extends Section {
         Object.assign(this.constructor.prototype, traits.tint);
     }
 
-    async _updateObject(obj, attributes, animate = false, animation = {}) {
-        await obj.document.update(attributes, { animate: animate, animation: animation });
+    async _updateObject(obj, updates, animate = false, animation = {}) {
+        await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_DOCUMENT, obj.document.uuid, updates, { animate, animation });
     }
 
     async _execute() {
@@ -226,7 +226,7 @@ class AnimationSection extends Section {
                 duration: this._rotateTowards.duration,
                 durationDone: 0,
                 delay: this._rotateTowards.delay,
-                ease: easeFunctions[this._rotateTowards.ease]
+                ease: this._rotateTowards.ease
             })
 
             let rotateDuration = this._rotateTowards.duration + this._rotateTowards.delay;
@@ -237,7 +237,7 @@ class AnimationSection extends Section {
 
         if (this._fadeIn) {
 
-            let to = typeof this._opacity === "number" ? this._opacity : 1.0;
+            let to = lib.is_real_number(this._opacity) ? this._opacity : 1.0;
 
             animData.attributes.push({
                 name: "alpha",
@@ -248,7 +248,7 @@ class AnimationSection extends Section {
                 duration: this._fadeIn.duration,
                 durationDone: 0,
                 delay: this._fadeIn.delay,
-                ease: easeFunctions[this._fadeIn.ease]
+                ease: this._fadeIn.ease
             })
 
             let fadeDuration = this._fadeIn.duration + this._fadeIn.delay;
@@ -259,7 +259,7 @@ class AnimationSection extends Section {
 
         if (this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined) {
 
-            let to = typeof this._volume === "number" ? this._volume : 1.0;
+            let to = lib.is_real_number(this._volume) ? this._volume : 1.0;
 
             animData.attributes.push({
                 name: "video.volume",
@@ -270,7 +270,7 @@ class AnimationSection extends Section {
                 duration: this._fadeInAudio.duration,
                 durationDone: 0,
                 delay: this._fadeInAudio.delay,
-                ease: easeFunctions[this._fadeInAudio.ease]
+                ease: this._fadeInAudio.ease
             })
 
             let fadeDuration = this._fadeInAudio.duration + this._fadeInAudio.delay;
@@ -301,7 +301,7 @@ class AnimationSection extends Section {
                 duration: this._rotateIn.duration,
                 durationDone: 0,
                 delay: this._rotateIn.delay,
-                ease: easeFunctions[this._rotateIn.ease]
+                ease: this._rotateIn.ease
             })
 
             let rotateDuration = this._rotateIn.duration + this._rotateIn.delay;
@@ -357,7 +357,7 @@ class AnimationSection extends Section {
                     speed: 0,
                     duration: duration,
                     done: false,
-                    ease: easeFunctions[this._moveTowards.ease],
+                    ease: this._moveTowards.ease,
                     delay: this._moveTowards.delay
                 })
             }
@@ -365,7 +365,7 @@ class AnimationSection extends Section {
 
         if (this._fadeOut) {
 
-            let from = typeof this._opacity === "number" ? this._opacity : this._originObject.alpha;
+            let from = lib.is_real_number(this._opacity) ? this._opacity : this._originObject.alpha;
 
             animData.attributes.push({
                 name: "alpha",
@@ -376,7 +376,7 @@ class AnimationSection extends Section {
                 duration: this._fadeOut.duration,
                 durationDone: 0,
                 delay: overallDuration - this._fadeOut.duration,
-                ease: easeFunctions[this._fadeOut.ease]
+                ease: this._fadeOut.ease
             })
 
             let fadeOutDuration = this._fadeOut.duration + this._fadeOut.delay;
@@ -386,7 +386,7 @@ class AnimationSection extends Section {
 
         if (this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
 
-            let from = typeof this._volume === "number" ? this._volume : this._originObject.data.video.volume;
+            let from = lib.is_real_number(this._volume) ? this._volume : this._originObject.data.video.volume;
 
             animData.attributes.push({
                 name: "video.volume",
@@ -397,7 +397,7 @@ class AnimationSection extends Section {
                 duration: this._fadeOutAudio.duration,
                 durationDone: 0,
                 delay: overallDuration - this._fadeOutAudio.duration,
-                ease: easeFunctions[this._fadeOutAudio.ease]
+                ease: this._fadeOutAudio.ease
             })
 
             let fadeOutAudioDuration = this._fadeOutAudio.duration + this._fadeOutAudio.delay;
@@ -429,7 +429,7 @@ class AnimationSection extends Section {
                 duration: this._rotateOut.duration,
                 durationDone: 0,
                 delay: overallDuration - this._rotateOut.duration,
-                ease: easeFunctions[this._rotateOut.ease]
+                ease: this._rotateOut.ease
             });
 
             let rotateOutDuration = this._rotateOut.duration + this._rotateOut.delay;
@@ -464,15 +464,15 @@ class AnimationSection extends Section {
         }
 
         let updateAttributes = {};
-        if (typeof this._angle === "number" && !this._rotateIn && !this._rotateOut) {
+        if (lib.is_real_number(this._angle) && !this._rotateIn && !this._rotateOut) {
             updateAttributes["rotation"] = this._angle;
         }
 
-        if (typeof this._opacity === "number" && !this._fadeIn && !this._fadeOut) {
+        if (lib.is_real_number(this._opacity) && !this._fadeIn && !this._fadeOut) {
             updateAttributes["alpha"] = this._opacity;
         }
 
-        if (typeof this._volume === "number" && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (lib.is_real_number(this._volume) && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
             updateAttributes["video.volume"] = this._volume;
         }
 
@@ -521,8 +521,8 @@ class AnimationSection extends Section {
 
                         attribute.progress = attribute.currentDistance / attribute.originalDistance;
 
-                        let x = lib.lerp(attribute.origin.x, attribute.target.x, attribute.ease(attribute.progress));
-                        let y = lib.lerp(attribute.origin.y, attribute.target.y, attribute.ease(attribute.progress));
+                        let x = lib.interpolate(attribute.origin.x, attribute.target.x, attribute.progress, attribute.ease);
+                        let y = lib.interpolate(attribute.origin.y, attribute.target.y, attribute.progress, attribute.ease);
 
                         if (attribute.currentDistance >= attribute.originalDistance) {
                             x = attribute.target.x;
@@ -558,7 +558,7 @@ class AnimationSection extends Section {
 
                         attribute.progress = attribute.durationDone / attribute.duration;
 
-                        let val = lib.lerp(attribute.from, attribute.to, attribute.ease(attribute.progress));
+                        let val = lib.interpolate(attribute.from, attribute.to, attribute.progress, attribute.ease);
 
                         if (attribute.progress >= 1.0) {
                             val = attribute.to;

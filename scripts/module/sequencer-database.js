@@ -15,7 +15,7 @@ const SequencerDatabase = {
      */
     registerEntries(inModuleName, inEntries) {
         if(inModuleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
-        if(this.entries[inModuleName]) lib.showWarning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
+        if(this.entries[inModuleName]) lib.customWarning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
         this._flatten(inEntries, inModuleName);
         const processedEntries = this._processEntries(inModuleName, inEntries);
         this.entries = foundry.utils.mergeObject(this.entries,
@@ -114,7 +114,7 @@ const SequencerDatabase = {
         if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
         if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
         const entries = this._recurseEntriesUnder(inDBPath);
-        return lib.makeArrayUnique(entries.flat());
+        return lib.make_array_unique(entries.flat());
     },
 
     /**
@@ -129,7 +129,7 @@ const SequencerDatabase = {
         if (!this.entryExists(inPath)) return this._throwError("getPathsUnder", `Could not find ${inPath} in database`);
         let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
         if(entries.length === 0) return [];
-        return lib.makeArrayUnique(entries.map(e => e.split(inPath)[1].split('.')[1]));
+        return lib.make_array_unique(entries.map(e => e.split(inPath)[1].split('.')[1]));
     },
 
     /**
@@ -172,7 +172,7 @@ const SequencerDatabase = {
             });
         }
 
-        return lib.makeArrayUnique(foundEntries);
+        return lib.make_array_unique(foundEntries);
     },
 
     _throwError(inFunctionName, inError) {
@@ -193,7 +193,7 @@ const SequencerDatabase = {
 
     _flatten(entries, inModule) {
         let flattened = lib.flattenObject(foundry.utils.duplicate({ [inModule]: entries }));
-        this.flattenedEntries = lib.makeArrayUnique(this.flattenedEntries.concat(Object.keys(flattened)));
+        this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened)));
     },
 
     _processEntries(moduleName, entries) {

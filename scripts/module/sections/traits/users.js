@@ -5,7 +5,14 @@ export default {
     _addUser(inUser) {
         if(!this._users) this._users = [];
         if (typeof inUser !== "string") throw this.sequence._throwError(this, "_addUser", "inUser must be of type string");
-        if (!game.users.has(inUser)) throw this.sequence._throwError(this, "_addUser", `user with id "${inUser}" does not exist!`);
+        if (!game.users.has(inUser)){
+            if(game.users.getName(inUser)){
+                inUser = game.users.getName(inUser).id;
+            }else {
+                throw this.sequence._throwError(this, "_addUser", `user with id or name "${inUser}" does not exist!`);
+            }
+        }
+
         if (!this._users.includes(inUser)) this._users.push(inUser);
     },
 

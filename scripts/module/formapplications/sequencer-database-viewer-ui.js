@@ -157,6 +157,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
             const scrolledIndex = Math.floor(scroller.scrollTop / 20) - 5;
             const startIndex = clamp(
                 scrolledIndex,
+                0,
                 Math.max(entries.length - MAX_NODES, 0)
             );
 

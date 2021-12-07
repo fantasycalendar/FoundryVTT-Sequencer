@@ -21,7 +21,7 @@ export default class Section {
     }
 
     /**
-     * Main method that runs when the section is executed by the Sequence
+     * Method overwritten by inheriting classes, which runs when the section is executed by the Sequence
      *
      * @returns {Promise<void>}
      * @private
@@ -29,24 +29,23 @@ export default class Section {
     async run() {}
 
     /**
-     * Method overwritten by inheriting classes to store data or prepare before the Sequence executes it (see EffectsSection)
+     * Method overwritten by inheriting classes, which stores data or prepares data before the Sequence executes it (see EffectsSection)
      *
      * @private
      */
     async _initialize() {}
 
     /**
-     * Overridden method for all inherited classes. Use:
+     * Method overwritten by inheriting classes. Inheriting classes uses the following to apply traits to themselves:
      * - Object.assign(this.constructor.prototype, trait)
-     * to assign traits to this section
+     *
+     * @private
      */
     _applyTraits() {}
-
 
     /** ------------------------------------------------------------------------------------------------------------------------------ *
      * Methods below this point should NOT be overridden by child instances of the class, they are integral to the sequence functioning
      * ------------------------------------------------------------------------------------------------------------------------------- */
-
 
     /**
      * Causes the section to be repeated n amount of times, with an optional delay. If given inRepeatDelayMin
@@ -58,9 +57,9 @@ export default class Section {
      * @returns {Section} this
      */
     repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax) {
-        if (typeof inRepetitions !== "number") throw this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
-        if (typeof inRepeatDelayMin !== "number") throw this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
-        if (inRepeatDelayMax && typeof inRepeatDelayMax !== "number") {
+        if (!lib.is_real_number(inRepetitions)) throw this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
+        if (!lib.is_real_number(inRepeatDelayMin)) throw this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
+        if (inRepeatDelayMax && !lib.is_real_number(inRepeatDelayMax)) {
             throw this.sequence._throwError(this, "repeats", "repeatDelayMax must be of type number");
         }
         this._repetitions = inRepetitions;
@@ -88,7 +87,7 @@ export default class Section {
      * @returns {Section} this
      */
     waitUntilFinished(inDelay = 0) {
-        if (typeof inDelay !== "number") throw this.sequence._throwError(this, "waitUntilFinished", "inDelay must be of type number");
+        if (!lib.is_real_number(inDelay)) throw this.sequence._throwError(this, "waitUntilFinished", "inDelay must be of type number");
         this._waitUntilFinished = true;
         this._waitUntilFinishedDelay = inDelay;
         return this;
@@ -115,8 +114,8 @@ export default class Section {
      * @returns {Section} this
      */
     delay(msMin, msMax) {
-        if (typeof msMin !== "number") throw this.sequence._throwError(this, "delay", "msMin must be of type number");
-        if (msMax && typeof msMax !== "number") throw this.sequence._throwError(this, "delay", "msMax must be of type number");
+        if (!lib.is_real_number(msMin)) throw this.sequence._throwError(this, "delay", "msMin must be of type number");
+        if (msMax && !lib.is_real_number(msMax)) throw this.sequence._throwError(this, "delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
         return this;
@@ -129,18 +128,21 @@ export default class Section {
      * @returns {Section} this
      */
     duration(inDuration) {
-        if (typeof inDuration !== "number") throw this.sequence._throwError(this, "duration", "inDuration must be of type number");
+        if (!lib.is_real_number(inDuration)) throw this.sequence._throwError(this, "duration", "inDuration must be of type number");
         this._duration = inDuration;
         return this;
     }
 
     /**
-     * Private methods - do not touch!
+     * @private
      */
     async _shouldPlay() {
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
 
+    /**
+     * @private
+     */
     _validateLocation(inLocation) {
         if (typeof inLocation === "string") {
             inLocation = lib.getObjectFromScene(inLocation) ?? inLocation;
@@ -155,6 +157,9 @@ export default class Section {
         return inLocation;
     }
 
+    /**
+     * @private
+     */
     async _execute() {
         if (!await this._shouldPlay()) return;
         let self = this;
@@ -178,6 +183,9 @@ export default class Section {
         });
     }
 
+    /**
+     * @private
+     */
     async _delayBetweenRepetitions() {
         let self = this;
         return new Promise((resolve) => {
@@ -185,27 +193,45 @@ export default class Section {
         });
     }
 
+    /**
+     * @private
+     */
     get _shouldAsync() {
         return this._async || this._waitAnyway
     }
 
+    /**
+     * @private
+     */
     get shouldWaitUntilFinished() {
         return this._waitUntilFinished || this._waitAnyway
     }
 
+    /**
+     * @private
+     */
     get _waitAnyway() {
         return ((this._async || this._waitUntilFinished) && this._isLastRepetition)
             || (this._isLastRepetition && this._isLastSection);
     }
 
+    /**
+     * @private
+     */
     get _isLastSection() {
         return (this.sequence.sections.length - 1) === this.sequence.sections.indexOf(this);
     }
 
+    /**
+     * @private
+     */
     get _isLastRepetition() {
         return (this._repetitions === 1 || this._repetitions === this._currentRepetition + 1);
     }
 
+    /**
+     * @private
+     */
     get _currentWaitTime() {
         let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
         return waitUntilFinishedDelay + this._repeatDelay;

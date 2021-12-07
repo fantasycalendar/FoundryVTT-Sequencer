@@ -19,7 +19,7 @@ export default class SequencerSectionManager {
     registerSection(inModuleName, inMethodName, inClass, overwrite = false){
 
         if(!(inClass.prototype instanceof Section)) {
-            throw lib.throwError(inModuleName, `inClass must be instance of Sequencer.BaseSection`);
+            throw lib.customError(inModuleName, `inClass must be instance of Sequencer.BaseSection`);
         }
 
         let coreMethods = Object.getOwnPropertyNames(Sequence.prototype)
@@ -28,11 +28,11 @@ export default class SequencerSectionManager {
             });
 
         if(coreMethods.includes(inMethodName)){
-            throw lib.throwError(inModuleName, `${inMethodName} is an existing protected method of the Sequence class - please register with another method name!`);
+            throw lib.customError(inModuleName, `${inMethodName} is an existing protected method of the Sequence class - please register with another method name!`);
         }
 
         if(this.externalSections[inMethodName] && !overwrite){
-            throw lib.throwError(inModuleName, `${inMethodName} is already a registered Section with the class ${this.externalSections[inMethodName].constructor.name}`);
+            throw lib.customError(inModuleName, `${inMethodName} is already a registered Section with the class ${this.externalSections[inMethodName].constructor.name}`);
         }
 
         coreMethods = coreMethods.concat(Object.keys(this.externalSections));
@@ -41,7 +41,7 @@ export default class SequencerSectionManager {
 
         if(clashingMethods.length){
             let errors = clashingMethods.join(", ");
-            throw lib.throwError(inModuleName, `${inMethodName} cannot contain the following methods: ${errors}<br>These methods are existing methods on the Sequence or from already registered Sections. Please rename these methods to avoid conflicts.`);
+            throw lib.customError(inModuleName, `${inMethodName} cannot contain the following methods: ${errors}<br>These methods are existing methods on the Sequence or from already registered Sections. Please rename these methods to avoid conflicts.`);
         }
 
         lib.debug(`SectionManager | Successfully registered ${inMethodName} with Sequencer!`)

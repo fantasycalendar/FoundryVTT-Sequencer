@@ -277,12 +277,20 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
-### Version 1.3.6
+### Version 1.4.0
+- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Reworked Sequencer to require the `socketlib` module <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 - *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Bumped minimum version to 0.8.9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Sequencer* - Fixed module permissions settings being slightly wonky
+- *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
+- *Animations* - Fixed other users not being able to teleport or move other tokens
+- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
 - *Effects* - Adjusted `.origin()` to be able to accept a Document to infer the UUID from
 - *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
+- *Effects* - Removed `.JB2A()` as it was deprecated
+- *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
+- *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
 
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead

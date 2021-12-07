@@ -1,3 +1,5 @@
+import { is_real_number } from "../../lib/lib.js";
+
 export default {
 
     _hasTime: true,
@@ -15,8 +17,8 @@ export default {
      * @returns this
      */
     timeRange(inMsStart, inMsEnd) {
-        if (typeof inMsStart !== "number") throw this.sequence._throwError(this, "timeRange", "inMsStart must be of type number");
-        if (typeof inMsEnd !== "number") throw this.sequence._throwError(this, "timeRange", "inMsEnd must be of type number");
+        if (!is_real_number(inMsStart)) throw this.sequence._throwError(this, "timeRange", "inMsStart must be of type number");
+        if (!is_real_number(inMsEnd)) throw this.sequence._throwError(this, "timeRange", "inMsEnd must be of type number");
         this._startTime = inMsStart;
         this._endTime = inMsEnd;
         this._isRange = true;
@@ -30,7 +32,7 @@ export default {
      * @returns this
      */
     startTime(inMs) {
-        if (typeof inMs !== "number") throw this.sequence._throwError(this, "startTime", "inMs must be of type number");
+        if (!is_real_number(inMs)) throw this.sequence._throwError(this, "startTime", "inMs must be of type number");
         this._startTime = inMs;
         this._startPerc = false;
         this._isRange = false;
@@ -44,7 +46,7 @@ export default {
      * @returns this
      */
     startTimePerc(inPercentage) {
-        if (typeof inPercentage !== "number") throw this.sequence._throwError(this, "startTimePerc", "inPercentage must be of type number");
+        if (!is_real_number(inPercentage)) throw this.sequence._throwError(this, "startTimePerc", "inPercentage must be of type number");
         this._startTime = inPercentage;
         this._startPerc = true;
         this._isRange = false;
@@ -58,7 +60,7 @@ export default {
      * @returns this
      */
     endTime(inMs) {
-        if (typeof inMs !== "number") throw this.sequence._throwError(this, "endTime", "inMs must be of type number");
+        if (!is_real_number(inMs)) throw this.sequence._throwError(this, "endTime", "inMs must be of type number");
         this._endTime = inMs;
         this._endPerc = false;
         this._isRange = false;
@@ -72,7 +74,7 @@ export default {
      * @returns this
      */
     endTimePerc(inPercentage) {
-        if (typeof inPercentage !== "number") throw this.sequence._throwError(this, "endTimePerc", "inPercentage must be of type number");
+        if (!is_real_number(inPercentage)) throw this.sequence._throwError(this, "endTimePerc", "inPercentage must be of type number");
         this._endTime = inPercentage;
         this._endPerc = true;
         this._isRange = false;

@@ -152,7 +152,7 @@ class SequencerEffectPlayer {
         if(settings.file === "") return;
 
         if(!(Sequencer.Database.entryExists(settings.file) || (await srcExists(settings.file)))){
-            throw lib.throwError("Sequencer", `Sequencer Player | Could not find file or database entry: ${settings.file}`);
+            throw lib.customError("Sequencer", `Sequencer Player | Could not find file or database entry: ${settings.file}`);
         }
 
         if(settings.preload){

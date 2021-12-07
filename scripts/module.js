@@ -14,6 +14,7 @@ import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import Section from "./module/sections/section.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import * as warnings from "./warnings.js";
+import * as lib from "./module/lib/lib.js";
 
 Hooks.once('init', async function () {
 
@@ -27,17 +28,31 @@ Hooks.once('init', async function () {
         SectionManager: new SequencerSectionManager(),
         registerEase: registerEase,
         BaseSection: Section,
-        UILayer: new SequencerUILayer()
+        UILayer: new SequencerUILayer(),
+        Helpers: {
+            wait: lib.wait,
+            clamp: lib.clamp,
+            interpolate: lib.interpolate,
+            random_float_between: lib.random_float_between,
+            random_int_between: lib.random_int_between,
+            shuffle_array: lib.shuffle_array,
+            random_array_element: lib.random_array_element,
+            random_object_element: lib.random_object_element,
+            make_array_unique: lib.make_array_unique
+        }
     }
 
     window.SequencerDatabase = Sequencer.Database;
 
     registerLayers();
     registerSettings();
-    registerSocket();
     registerLibwrappers();
 
 });
+
+Hooks.once("socketlib.ready", () => {
+    registerSocket();
+})
 
 Hooks.on("canvasReady", () => {
     Sequencer.EffectManager._setUpPersists();

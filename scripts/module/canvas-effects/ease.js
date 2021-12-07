@@ -1,8 +1,8 @@
 import * as lib from "../lib/lib.js";
 
 export function registerEase(easeName, easeFunction, overwrite = false){
-    if(typeof easeName !== "string") lib.throwError("registerEase", "easeName must be of type string")
-    if(!lib.is_function(easeFunction)) lib.throwError("registerEase", "easeFunction must be of type function")
+    if(typeof easeName !== "string") throw lib.customError("registerEase", "easeName must be of type string")
+    if(!lib.is_function(easeFunction)) throw lib.customError("registerEase", "easeFunction must be of type function")
     if(easeFunctions[easeName] !== undefined && !overwrite) return;
     lib.debug(`registerEase | Registered ease function: ${easeName}`);
     easeFunctions[easeName] = easeFunction;

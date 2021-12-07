@@ -83,7 +83,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     playbackRate(inNumber = 1.0) {
-        if (typeof inNumber !== "number") throw this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
+        if (!lib.is_real_number(inNumber)) throw this.sequence._throwError(this, "playbackRate", "inNumber must be of type number");
         this._playbackRate = inNumber;
         return this;
     }
@@ -97,18 +97,6 @@ export default class EffectSection extends Section {
     missed(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "missed", "inBool must be of type boolean");
         this._missed = inBool;
-        return this;
-    }
-
-    /**
-     * Sets the start point and end point to best work JB2A's effect sprites. This depends on the type of the effect, which
-     * the Sequencer figures out from the path.
-     *
-     * @returns {EffectSection}
-     */
-    JB2A() {
-        this.sequence._showWarning(this, "JB2A", "This method has been deprecated, and will be removed in 1.4.0");
-        this._JB2A = true;
         return this;
     }
 
@@ -252,8 +240,8 @@ export default class EffectSection extends Section {
         }, inOffset);
         inOffset = foundry.utils.mergeObject(inOffset, options);
         if (typeof inOffset.local !== "boolean") throw this.sequence._throwError(this, "offset", "options.local must be of type boolean");
-        if (typeof inOffset.x !== "number") throw this.sequence._throwError(this, "offset", `inOffset.x must be of type number!`);
-        if (typeof inOffset.y !== "number") throw this.sequence._throwError(this, "offset", `inOffset.y must be of type number!`);
+        if (!lib.is_real_number(inOffset.x)) throw this.sequence._throwError(this, "offset", `inOffset.x must be of type number!`);
+        if (!lib.is_real_number(inOffset.y)) throw this.sequence._throwError(this, "offset", `inOffset.y must be of type number!`);
         this._offset = inOffset;
         return this;
     }
@@ -270,8 +258,8 @@ export default class EffectSection extends Section {
             x: 0,
             y: 0
         }, inOffset);
-        if (typeof inOffset.x !== "number") throw this.sequence._throwError(this, "spriteOffset", `inOffset.x must be of type number!`);
-        if (typeof inOffset.y !== "number") throw this.sequence._throwError(this, "spriteOffset", `inOffset.y must be of type number!`);
+        if (!lib.is_real_number(inOffset.x)) throw this.sequence._throwError(this, "spriteOffset", `inOffset.x must be of type number!`);
+        if (!lib.is_real_number(inOffset.y)) throw this.sequence._throwError(this, "spriteOffset", `inOffset.y must be of type number!`);
         this._spriteOffset = inOffset;
         return this;
     }
@@ -295,7 +283,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     scaleToObject(inScale = 1.0){
-        if (typeof inScale !== "number") throw this.sequence._throwError(this, "scaleToObject", `inScale must be of type number!`);
+        if (!lib.is_real_number(inScale)) throw this.sequence._throwError(this, "scaleToObject", `inScale must be of type number!`);
         this._scaleToObject = true;
         return this.scale(inScale);
     }
@@ -307,8 +295,8 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     size(inSize) {
-        if (!(typeof inSize === "number" || typeof inSize === "object")) throw this.sequence._throwError(this, "size", "inSize be of type number or object");
-        if (typeof inSize === "number") {
+        if (!lib.is_real_number(inSize) && typeof inSize !== "object") throw this.sequence._throwError(this, "size", "inSize must be of type number or object");
+        if (lib.is_real_number(inSize)) {
             inSize = {
                 width: inSize,
                 height: inSize
@@ -317,16 +305,16 @@ export default class EffectSection extends Section {
 
         if((inSize?.width === undefined) ^ (inSize?.height === undefined)){
             if(inSize?.width){
-                if (typeof inSize?.width !== "number") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
+                if (!lib.is_real_number(inSize?.width)) throw this.sequence._throwError(this, "size", "inSize.width must be of type number or string 'auto'");
                 inSize['height'] = "auto"
             }else{
-                if (typeof inSize?.height !== "number") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
+                if (!lib.is_real_number(inSize?.height)) throw this.sequence._throwError(this, "size", "inSize.height must be of type number or string 'auto'");
                 inSize['width'] = "auto"
             }
         }
 
-        if (typeof inSize?.width !== "number" && inSize?.width !== "auto") throw this.sequence._throwError(this, "size", "inSize.width be of type number");
-        if (typeof inSize?.height !== "number" && inSize?.height !== "auto") throw this.sequence._throwError(this, "size", "inSize.height be of type number");
+        if (!lib.is_real_number(inSize?.width) && inSize?.width !== "auto") throw this.sequence._throwError(this, "size", "inSize.width must be of type number or string 'auto'");
+        if (!lib.is_real_number(inSize?.height) && inSize?.height !== "auto") throw this.sequence._throwError(this, "size", "inSize.height must be of type number or string 'auto'");
         inSize = {
             width: inSize?.width ?? canvas.grid.size,
             height: inSize?.height ?? canvas.grid.size
@@ -343,7 +331,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     gridSize(inGridSize) {
-        if (typeof inGridSize !== "number") throw this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
+        if (!lib.is_real_number(inGridSize)) throw this.sequence._throwError(this, "gridSize", "inGridSize must be of type number");
         this._gridSize = inGridSize;
         this._customTemplate = true;
         return this;
@@ -358,7 +346,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
-        if (typeof inStartPoint !== "number") throw this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
+        if (!lib.is_real_number(inStartPoint)) throw this.sequence._throwError(this, "startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
         this._customTemplate = true;
         return this;
@@ -371,7 +359,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
-        if (typeof inEndPoint !== "number") throw this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
+        if (!lib.is_real_number(inEndPoint)) throw this.sequence._throwError(this, "endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
         this._customTemplate = true;
         return this;
@@ -384,7 +372,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     anchor(inAnchor) {
-        if (typeof inAnchor === "number") {
+        if (lib.is_real_number(inAnchor)) {
             inAnchor = {
                 x: inAnchor,
                 y: inAnchor
@@ -396,8 +384,8 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
-        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.x must be of type number!`);
-        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.y must be of type number!`);
+        if (!lib.is_real_number(inAnchor.x)) throw this.sequence._throwError(this, "anchor", `inAnchor.x must be of type number!`);
+        if (!lib.is_real_number(inAnchor.y)) throw this.sequence._throwError(this, "anchor", `inAnchor.y must be of type number!`);
 
         this._anchor = inAnchor;
         return this;
@@ -410,7 +398,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     spriteAnchor(inAnchor) {
-        if (typeof inAnchor === "number") {
+        if (lib.is_real_number(inAnchor)) {
             inAnchor = {
                 x: inAnchor,
                 y: inAnchor
@@ -422,8 +410,8 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
-        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.x must be of type number!`);
-        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(this, "anchor", `inAnchor.y must be of type number!`);
+        if (!lib.is_real_number(inAnchor.x)) throw this.sequence._throwError(this, "anchor", `inAnchor.x must be of type number!`);
+        if (!lib.is_real_number(inAnchor.y)) throw this.sequence._throwError(this, "anchor", `inAnchor.y must be of type number!`);
 
         this._spriteAnchor = inAnchor;
         return this;
@@ -450,7 +438,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
-        if (typeof inOffsetScale !== "number") throw this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
+        if (!lib.is_real_number(inOffsetScale)) throw this.sequence._throwError(this, "randomOffset", "inBool must be of type number");
         this._randomOffset = inOffsetScale;
         return this;
     }
@@ -538,7 +526,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     zIndex(inZIndex) {
-        if (typeof inZIndex !== "number") throw this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
+        if (!lib.is_real_number(inZIndex)) throw this.sequence._throwError(this, "zIndex", "inZIndex must be of type number");
         this._zIndex = inZIndex;
         return this;
     }
@@ -550,7 +538,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     extraEndDuration(inExtraDuration) {
-        if (typeof inExtraDuration !== "number") throw this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
+        if (!lib.is_real_number(inExtraDuration)) throw this.sequence._throwError(this, "extraEndDuration", "inExtraDuration must be of type number");
         this._extraEndDuration = inExtraDuration;
         return this;
     }
@@ -602,8 +590,8 @@ export default class EffectSection extends Section {
             x: inPosition?.x ?? 0,
             y: inPosition?.y ?? 0
         }
-        if (typeof inPosition.x !== "number") throw this.sequence._throwError(this, "screenSpacePosition", `inPosition.x must be of type number!`);
-        if (typeof inPosition.y !== "number") throw this.sequence._throwError(this, "screenSpacePosition", `inPosition.y must be of type number!`);
+        if (!lib.is_real_number(inPosition.x)) throw this.sequence._throwError(this, "screenSpacePosition", `inPosition.x must be of type number!`);
+        if (!lib.is_real_number(inPosition.y)) throw this.sequence._throwError(this, "screenSpacePosition", `inPosition.y must be of type number!`);
         this._screenSpacePosition = inPosition;
         return this;
     }
@@ -615,7 +603,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     screenSpaceAnchor(inAnchor) {
-        if (typeof inAnchor === "number") {
+        if (lib.is_real_number(inAnchor)) {
             inAnchor = {
                 x: inAnchor,
                 y: inAnchor
@@ -627,8 +615,8 @@ export default class EffectSection extends Section {
             y: inAnchor?.y ?? 0.5
         }
 
-        if (typeof inAnchor.x !== "number") throw this.sequence._throwError(this, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
-        if (typeof inAnchor.y !== "number") throw this.sequence._throwError(this, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
+        if (!lib.is_real_number(inAnchor.x)) throw this.sequence._throwError(this, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
+        if (!lib.is_real_number(inAnchor.y)) throw this.sequence._throwError(this, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
 
         this._screenSpaceAnchor = inAnchor;
         return this;
@@ -651,8 +639,8 @@ export default class EffectSection extends Section {
             ratioY: false
         }, inOptions)
 
-        if (typeof inOptions.x !== "number") throw this.sequence._throwError(this, "screenSpaceScale", `inOptions.x must be of type number!`);
-        if (typeof inOptions.y !== "number") throw this.sequence._throwError(this, "screenSpaceScale", `inOptions.y must be of type number!`);
+        if (!lib.is_real_number(inOptions.x)) throw this.sequence._throwError(this, "screenSpaceScale", `inOptions.x must be of type number!`);
+        if (!lib.is_real_number(inOptions.y)) throw this.sequence._throwError(this, "screenSpaceScale", `inOptions.y must be of type number!`);
         if (typeof inOptions.fitX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitX must be of type boolean");
         if (typeof inOptions.fitY !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.fitY must be of type boolean");
         if (typeof inOptions.ratioX !== "boolean") throw this.sequence._throwError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
@@ -758,7 +746,7 @@ export default class EffectSection extends Section {
             layer: this._layer,
             index: this.sequence.effectIndex,
             zIndex: this._zIndex,
-            opacity: typeof this._opacity === "number" ? this._opacity : 1.0,
+            opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
             audioVolume: this._volume,
             time: false,
             noLoop: this._noLoop,
@@ -816,11 +804,11 @@ export default class EffectSection extends Section {
 
         if(this._startTime || this._endTime) {
             data.time = {
-                start: typeof this._startTime === "number" ? {
+                start: lib.is_real_number(this._startTime) ? {
                     value: this._startTime,
                     isPerc: this._startPerc
                 } : false,
-                end: typeof this._endTime === "number" ? {
+                end: lib.is_real_number(this._endTime) ? {
                     value: this._endTime,
                     isPerc: this._endPerc
                 } : false,
@@ -839,7 +827,7 @@ export default class EffectSection extends Section {
 
         if (this._reachTowards) {
             data = await this._calculateHitVector(data);
-        } else {
+        } else if(!this._screenSpace){
             data.gridSizeDifference = this._size ? 1.0 : this._gridSizeDifference(this._gridSize);
         }
 
@@ -987,8 +975,8 @@ export default class EffectSection extends Section {
 
     _getCalculatedScale(){
         let scale = this._scaleMin;
-        if (typeof this._scaleMin === "number") {
-            if (this._scaleMax && typeof this._scaleMax === "number") {
+        if (lib.is_real_number(this._scaleMin)) {
+            if (this._scaleMax && lib.is_real_number(this._scaleMax)) {
                 scale = lib.random_float_between(this._scaleMin, this._scaleMax);
             }
             scale = {
@@ -1087,7 +1075,7 @@ export default class EffectSection extends Section {
             y: pos?.y ?? obj?.y ?? obj?.data?.y,
         };
 
-        if (typeof pos.x !== "number" || typeof pos.y !== "number") throw this.sequence._throwError(this, "getCleanPosition", `Could not get position from: ${obj}`);
+        if (!lib.is_real_number(pos.x) || !lib.is_real_number(pos.y)) throw this.sequence._throwError(this, "getCleanPosition", `Could not get position from: ${obj}`);
 
         return pos;
 
@@ -1269,7 +1257,7 @@ export default class EffectSection extends Section {
         let startRadians = ray.angle - (Math.PI/2);
         let endRadians = startRadians + (Math.PI);
 
-        const radius = lib.lerp(halfHeight, halfHeight, 0.5);
+        const radius = lib.interpolate(halfHeight, halfHeight, 0.5);
 
         let distance = (ray.distance / canvas.grid.size) - 1;
 
@@ -1292,7 +1280,7 @@ export default class EffectSection extends Section {
         endRadians += (Math.PI / distance);
         startRadians -= (Math.PI / distance);
 
-        const randomAngle = lib.lerp(startRadians, endRadians, Math.random());
+        const randomAngle = lib.interpolate(startRadians, endRadians, Math.random());
 
         const x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
         const y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));

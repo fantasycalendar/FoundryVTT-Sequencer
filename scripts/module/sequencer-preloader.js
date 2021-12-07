@@ -1,4 +1,4 @@
-import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
 import LoadingBar from "./lib/loadingBar.js";
 import * as lib from './lib/lib.js';
@@ -28,7 +28,7 @@ const SequencerPreloader = {
     },
 
     cleanSrcs(inSrcs) {
-        return lib.makeArrayUnique(inSrcs.map(src => {
+        return lib.make_array_unique(inSrcs.map(src => {
             if (window.Sequencer.Database.entryExists(src)) {
                 return window.Sequencer.Database.getAllFileEntries(src);
             }
@@ -64,7 +64,7 @@ const SequencerPreloader = {
             this.responseResolve = resolve;
         });
 
-        emitSocketEvent(SOCKET_HANDLERS.PRELOAD, {
+        sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD, {
             inSrcs,
             showProgressBar,
             senderId: this.userId,
@@ -124,7 +124,7 @@ const SequencerPreloader = {
 
         inSrcs = this.cleanSrcs(inSrcs);
 
-        if (push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_RESPONSE, this.userId, senderId);
+        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD_RESPONSE, this.userId, senderId);
         if (local) this.handleResponse(this.userId);
 
         let startTime = performance.now()
@@ -145,7 +145,7 @@ const SequencerPreloader = {
             }
             resolve();
         }).then(() => {
-            if (push) emitSocketEvent(SOCKET_HANDLERS.PRELOAD_DONE, this.userId, senderId, numFilesToLoad - filesSucceeded);
+            if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD_DONE, this.userId, senderId, numFilesToLoad - filesSucceeded);
             if (local) this.handleDone(this.userId, this.userId, numFilesToLoad - filesSucceeded);
             lib.debug(`Preloading ${numFilesToLoad - filesSucceeded} files took ${(performance.now() - startTime) / 1000}s`);
         });

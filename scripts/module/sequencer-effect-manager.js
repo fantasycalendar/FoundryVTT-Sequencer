@@ -1,5 +1,5 @@
 import CanvasEffect from "./canvas-effects/canvas-effect.js";
-import { emitSocketEvent, SOCKET_HANDLERS } from "../sockets.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import flagManager from "./flag-manager.js";
@@ -35,7 +35,7 @@ export default class SequencerEffectManager {
      */
     static async play(data, push = true) {
         if(!lib.userCanDo("permissions-effect-create")) return;
-        if (push) emitSocketEvent(SOCKET_HANDLERS.PLAY_EFFECT, data);
+        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
         return this._playEffect(data);
     }
 
@@ -67,10 +67,10 @@ export default class SequencerEffectManager {
      */
     static async endEffects(inData = {}, push = true) {
         inData = this._validateFilters(inData);
-        if (!inData) throw lib.throwError("SequencerEffectManager", "endEffects | Incorrect or incomplete parameters provided")
+        if (!inData) throw lib.customError("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided")
         const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
         if (!effectsToEnd.length) return;
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
+        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
     }
 
@@ -85,7 +85,7 @@ export default class SequencerEffectManager {
         const inData = this._validateFilters({ sceneId: inSceneId });
         const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
         if (!effectsToEnd.length) return;
-        if (push) emitSocketEvent(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
+        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
     }
 
@@ -102,29 +102,29 @@ export default class SequencerEffectManager {
 
         if (inData?.object) {
             if (!(inData.object instanceof PlaceableObject || typeof inData.object === "string")) {
-                throw lib.throwError("SequencerEffectManager", "inData.object must be instance of PlaceableObject or of type string")
+                throw lib.customError("Sequencer", "EffectManager | inData.object must be instance of PlaceableObject or of type string")
             } else if (inData.object instanceof PlaceableObject) {
                 inData.attachTo = lib.getObjectIdentifier(inData.object);
             } else if (typeof inData.object === "string") {
                 if (!lib.getObjectFromScene(inData.object)) {
-                    throw lib.throwError("SequencerEffectManager", `could not find object with ID: ${inData.object}`)
+                    throw lib.customError("Sequencer", `EffectManager | could not find object with ID: ${inData.object}`)
                 }
                 inData.attachTo = inData.object;
             }
             delete inData.object;
         }
 
-        if (inData?.name && typeof inData?.name !== "string") throw lib.throwError("SequencerEffectManager", "inData.name must be of type string")
-        if (inData?.origin && typeof inData?.origin !== "string") throw lib.throwError("SequencerEffectManager", "inData.origin must be of type string")
+        if (inData?.name && typeof inData?.name !== "string") throw lib.customError("Sequencer", "EffectManager | inData.name must be of type string")
+        if (inData?.origin && typeof inData?.origin !== "string") throw lib.customError("Sequencer", "EffectManager | inData.origin must be of type string")
         if (inData?.sceneId) {
-            if (typeof inData.sceneId !== "string") throw lib.throwError("SequencerEffectManager", "inData.sceneId must be of type string")
-            if (!game.scenes.get(inData.sceneId)) throw lib.throwError("SequencerEffectManager", "inData.sceneId must be a valid scene id (could not find scene)")
+            if (typeof inData.sceneId !== "string") throw lib.customError("Sequencer", "EffectManager | inData.sceneId must be of type string")
+            if (!game.scenes.get(inData.sceneId)) throw lib.customError("Sequencer", "EffectManager | inData.sceneId must be a valid scene id (could not find scene)")
         }
 
         if(inData?.effects){
             if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
             inData.effects = inData.effects.map(effect => {
-                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.throwError("SequencerEffectManager", "entries in inData.effects must be of type string or CanvasEffect")
+                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.customError("Sequencer", "EffectManager | entries in inData.effects must be of type string or CanvasEffect")
                 if(effect instanceof CanvasEffect) return effect.data.id;
                 return effect;
             })
@@ -236,13 +236,9 @@ export default class SequencerEffectManager {
     }
 
     static _endEffects(inEffectIds) {
-
-        let effects = inEffectIds.map(id => EffectsContainer.get(id));
-
+        const effects = inEffectIds.map(id => EffectsContainer.get(id));
         if (!effects.length) return;
-
         return this._endManyEffects(effects);
-
     }
 
     static async _endManyEffects(inEffects = false) {

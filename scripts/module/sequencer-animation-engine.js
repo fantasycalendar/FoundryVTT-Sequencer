@@ -1,5 +1,4 @@
 import * as lib from "./lib/lib.js";
-import { easeFunctions } from "./canvas-effects/ease.js";
 
 const SequencerAnimationEngine = {
 
@@ -26,7 +25,6 @@ const SequencerAnimationEngine = {
         return new Promise((resolve) => {
             this._animations.push({
                 attributes: attributes.map(attribute => {
-                    attribute.easeFunction = easeFunctions[attribute.ease] ?? easeFunctions["linear"];
                     attribute.started = false;
                     attribute.complete = false;
                     attribute.initialized = false;
@@ -185,10 +183,11 @@ const SequencerAnimationEngine = {
         attribute.loopDurationDone += this.dt;
         attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
 
-        attribute.value = lib.lerp(
+        attribute.value = lib.interpolate(
             attribute.values[attribute.index],
             attribute.values[attribute.nextIndex],
-            attribute.easeFunction(attribute.progress)
+            attribute.progress,
+            attribute.ease
         );
 
         if (attribute.progress >= 1.0) {
@@ -205,10 +204,11 @@ const SequencerAnimationEngine = {
 
             attribute.loopsDone++;
 
-            attribute.value = lib.lerp(
+            attribute.value = lib.interpolate(
                 attribute.values[attribute.index],
                 attribute.values[attribute.nextIndex],
-                attribute.easeFunction(attribute.progress - 1.0)
+                attribute.progress - 1.0,
+                attribute.ease
             );
 
         }
@@ -251,10 +251,11 @@ const SequencerAnimationEngine = {
         attribute.durationDone += this.dt;
         attribute.progress = attribute.durationDone / attribute.duration;
 
-        attribute.value = lib.lerp(
+        attribute.value = lib.interpolate(
             attribute.from,
             attribute.to,
-            attribute.easeFunction(attribute.progress)
+            attribute.progress,
+            attribute.ease
         );
 
         if (attribute.progress >= 1.0) {

@@ -1,44 +1,31 @@
 import SequencerAudioHelper from "./module/sequencer-audio-helper.js";
-import { debug } from "./module/lib/lib.js";
-
-const sequencerSocketEvent = "module.sequencer";
+import CONSTANTS from "./module/constants.js";
 
 export const SOCKET_HANDLERS = {
     PLAY_EFFECT: "playEffect",
     END_EFFECTS: "endEffect",
     PLAY_SOUND: "playSound",
     PRELOAD: "preload",
-    PRELOAD_RESPONSE: "preload_response",
-    PRELOAD_DONE: "preload_done"
+    PRELOAD_RESPONSE: "preloadResponse",
+    PRELOAD_DONE: "preloadDone",
+    UPDATE_DOCUMENT: "updateDocument"
 };
 
-export function emitSocketEvent(handler, ...args) {
-    debug(`Emitted socket message: ${handler}`, ...args)
-    game.socket.emit(sequencerSocketEvent, { args, handler });
-}
-
-function onSocketEvent(socketData) {
-    const { handler, args } = socketData;
-    debug(`Received socket message: ${handler}`, args);
-    switch (handler) {
-        case SOCKET_HANDLERS.PLAY_EFFECT:
-            return Sequencer.EffectManager._playEffect(...args);
-        case SOCKET_HANDLERS.END_EFFECTS:
-            return Sequencer.EffectManager._endEffects(...args);
-        case SOCKET_HANDLERS.PLAY_SOUND:
-            return SequencerAudioHelper.play(...args);
-        case SOCKET_HANDLERS.PRELOAD:
-            return Sequencer.Preloader.preload(...args);
-        case SOCKET_HANDLERS.PRELOAD_RESPONSE:
-            return Sequencer.Preloader.handleResponse(...args);
-        case SOCKET_HANDLERS.PRELOAD_DONE:
-            return Sequencer.Preloader.handleDone(...args);
-        default:
-            console.warn(`Sequencer | Received socket event for unknown handler '${handler}'`);
-    }
-}
+export let sequencerSocket;
 
 export function registerSocket() {
-    game.socket.on(sequencerSocketEvent, onSocketEvent);
-    console.log("Sequencer | Registered socket");
+    console.log("Sequencer | Registered sequencerSocket");
+    sequencerSocket = socketlib.registerModule(CONSTANTS.MODULE_NAME);
+    sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) => Sequencer.EffectManager._playEffect(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.END_EFFECTS, (...args) => Sequencer.EffectManager._endEffects(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) => SequencerAudioHelper.play(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) => Sequencer.Preloader.preload(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) => Sequencer.Preloader.handleResponse(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_DONE, (...args) => Sequencer.Preloader.handleDone(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.UPDATE_DOCUMENT, (...args) => updateDocument(...args))
+}
+
+async function updateDocument(documentUuid, updates, animate){
+    const document = await fromUuid(documentUuid);
+    return document.update(updates, animate);
 }

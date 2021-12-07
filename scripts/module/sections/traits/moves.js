@@ -1,3 +1,5 @@
+import { is_real_number } from "../../lib/lib.js";
+
 export default {
 
     /**
@@ -21,7 +23,7 @@ export default {
             cacheLocation: false
         }, options);
         if (typeof options.ease !== "string") throw this.sequence._throwError(this, "moveTowards", "options.ease must be of type string");
-        if (typeof options.delay !== "number") throw this.sequence._throwError(this, "moveTowards", "options.delay must be of type number");
+        if (!is_real_number(options.delay)) throw this.sequence._throwError(this, "moveTowards", "options.delay must be of type number");
         if (typeof options.rotate !== "boolean") throw this.sequence._throwError(this, "moveTowards", "options.rotate must be of type boolean");
         if (typeof options.cacheLocation !== "boolean") throw this.sequence._throwError(this, "moveTowards", "options.cacheLocation must be of type boolean");
         options.target = this._validateLocation(inTarget);
@@ -38,7 +40,7 @@ export default {
      * @returns this
      */
     moveSpeed(inSpeed) {
-        if (typeof inSpeed !== "number") throw this.sequence._throwError(this, "moveSpeed", "inSpeed must be of type number");
+        if (!is_real_number(inSpeed)) throw this.sequence._throwError(this, "moveSpeed", "inSpeed must be of type number");
         this._moveSpeed = inSpeed;
         return this;
     }

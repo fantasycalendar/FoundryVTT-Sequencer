@@ -1,9 +1,10 @@
 import SequencerFileCache from "../sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
+import { easeFunctions } from "../canvas-effects/ease.js";
 
 /**
- * This function is a backwards compatible method for both 0.8.9 and 9.224 that returns a boolean whether
- * you're on version 8 or 9
+ *  This function is a backwards compatible method for both 0.8.9 and 9.224 that returns a boolean whether
+ *  you're on version 8 or 9
  *
  * @return {boolean}                    If the user is on version 9
  */
@@ -12,7 +13,7 @@ export function isVersion9(){
 }
 
 /**
- * This function linearly interpolates between p1 and p2 based on a normalized value of t
+ *  This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
  * @param  {string}         inFile      The start value
  * @param  {object}         inOptions   The end value
@@ -36,25 +37,27 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
         return (await FilePicker.browse(source, inFile, browseOptions)).files;
     } catch (err) {
         if(softFail) return false;
-        throw throwError("Sequencer", `getFiles | ${err}`);
+        throw customError("Sequencer", `getFiles | ${err}`);
     }
 }
 
 
 /**
- * This function linearly interpolates between p1 and p2 based on a normalized value of t
+ *  This function interpolates between p1 and p2 based on a normalized value of t, determined by the ease provided (string or function)
  *
- * @param  {number}     p1     The start value
- * @param  {number}     p2     The end value
- * @param  {number}     t      The normalized percentage
- * @return {number}            Interpolated value
+ * @param  {number}             p1      The start value
+ * @param  {number}             p2      The end value
+ * @param  {number}             t       The normalized percentage
+ * @param  {string|function}    ease    Type of ease to interpolate
+ * @return {number}                     Interpolated value
  */
-export function lerp(p1, p2, t) {
-    return p1 + (p2 - p1) * t;
+export function interpolate(p1, p2, t, ease = "linear") {
+    const easeFunction = is_function(ease) ? ease : easeFunctions[ease];
+    return p1 + (p2 - p1) * easeFunction(t);
 }
 
 /**
- * This function returns an float between a minimum and maximum value
+ *  Returns a floating point number between a minimum and maximum value
  *
  * @param  {number}     min    The minimum value
  * @param  {number}     max    The maximum value
@@ -65,7 +68,7 @@ export function random_float_between(min, max) {
 }
 
 /**
- * This function returns an integer between a minimum and maximum value
+ *  Returns an integer between a minimum and maximum value
  *
  * @param  {number}     min    The minimum value
  * @param  {number}     max    The maximum value
@@ -76,7 +79,24 @@ export function random_int_between(min, max) {
 }
 
 /**
- * This function determines if the given parameter is a callable function
+ *  Returns a shuffled copy of the original array.
+ *
+ * @param  {array}   inArray
+ * @return {array}
+ */
+export function shuffle_array(inArray) {
+    let shuffled = foundry.utils.duplicate(inArray);
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        let temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+    }
+    return shuffled;
+}
+
+/**
+ *  This function determines if the given parameter is a callable function
  *
  * @param  {function}   inFunc    The function object to be tested
  * @return {boolean}              A boolean whether the function is actually a function
@@ -90,7 +110,7 @@ export function is_function(inFunc) {
 }
 
 /**
- * This function returns a random element in the given array
+ *  Returns a random element in the given array
  *
  * @param  {array}   inArray    An array
  * @param  {boolean} recurse    Whether to recurse if the randomly chosen element is also an array
@@ -105,7 +125,7 @@ export function random_array_element(inArray, recurse = false) {
 }
 
 /**
- * This function returns a random element in the given array
+ *  Returns a random element in the given array
  *
  * @param  {object}   inObject   An object
  * @param  {boolean}  recurse    Whether to recurse if the randomly chosen element is also an object
@@ -120,9 +140,20 @@ export function random_object_element(inObject, recurse = false) {
     return choice;
 }
 
+/**
+ *  Tests a parameter whether it is a real number
+ *
+ * @param  {any}        inNumber    The parameter to test
+ * @return {boolean}                Whether it is of type number, not infinite, and not NaN
+ */
+export function is_real_number(inNumber){
+    return !isNaN(inNumber)
+        && typeof inNumber === "number"
+        && isFinite(inNumber);
+}
 
 /**
- * Determines the dimensions of a given image file
+ *  Determines the dimensions of a given image file
  *
  * @param  {string}     inFile    The file to be loaded
  * @return {Promise}              A promise that will return the dimensions of the file
@@ -219,8 +250,28 @@ export function flattenObject(obj) {
     return toReturn;
 }
 
+/**
+ *  Wait for a duration.
+ *
+ * @param  {number}     ms      Milliseconds to wait
+ * @return {Promise}            A promise that resolves after a given amount of milliseconds
+ */
 export function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ *  Clamps a value between two numbers
+ *
+ * @param  {number}     num     Number to clamp
+ * @param  {number}     min     The minimum the number can be
+ * @param  {number}     max     The maximum the number can be
+ * @return {number}             The clamped number
+ */
+export function clamp(num, min, max) {
+    const _max = Math.max(min, max);
+    const _min = Math.min(min, max);
+    return Math.max(_min, Math.min(_max, num));
 }
 
 /**
@@ -336,7 +387,7 @@ function checkObjectByIdentifier(inObject, inIdentifier) {
  * @param  {Array}     inArray     An array of multiple duplicate entries to be made unique
  * @return {Array}                 An array containing only unique objects
  */
-export function makeArrayUnique(inArray){
+export function make_array_unique(inArray){
     return Array.from(new Set(inArray));
 }
 
@@ -344,24 +395,18 @@ export function debug(msg, args = ""){
     if(game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
 }
 
-export function showWarning(inClassName, warning, notify = false) {
+export function customWarning(inClassName, warning, notify = false) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     warning = `${inClassName} | ${warning}`;
     if(notify) ui.notifications.warn(warning);
     console.warn(warning.replace("<br>", "\n"));
 }
 
-export function throwError(inClassName, error, notify = true) {
+export function customError(inClassName, error, notify = true) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
     if(notify) ui.notifications.error(error);
     return new Error(error.replace("<br>", "\n"));
-}
-
-export function isResponsibleGM() {
-    if (!game.user.isGM) return false;
-    const connectedGMs = game.users.filter(user => user.active && user.isGM);
-    return !connectedGMs.some(other => other.data._id < game.user.data._id);
 }
 
 export function userCanDo(inSetting) {
@@ -423,13 +468,13 @@ export class SequencerFile {
     getFile(inFt) {
         if (this.hasRangeFind(inFt)) {
             if (Array.isArray(this.file[inFt])) {
-                return typeof this.fileIndex === "number"
+                return lib.is_real_number(this.fileIndex)
                     ? this.file[inFt][this.fileIndex]
                     : random_array_element(this.file[inFt]);
             }
             return this.file[inFt];
         } else if (Array.isArray(this.file)) {
-            return typeof this.fileIndex === "number"
+            return lib.is_real_number(this.fileIndex)
                 ? this.file[this.fileIndex]
                 : random_array_element(this.file);
         }
@@ -533,12 +578,6 @@ export function getObjectDimensions(inObj, half = false){
         width,
         height
     }
-}
-
-export function clamp(num, max, min = 0) {
-    const _max = Math.max(min, max);
-    const _min = Math.min(min, max);
-    return Math.max(_min, Math.min(_max, num));
 }
 
 export function strToSearchRegexStr(str) {

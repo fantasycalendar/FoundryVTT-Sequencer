@@ -132,7 +132,7 @@ export default class CanvasEffect {
 
         container.effect = this;
 
-        container.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        container.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
 
         Sequencer.UILayer.container.addChild(container);
 
@@ -300,7 +300,7 @@ export default class CanvasEffect {
         if(this.shouldShowFadedVersion){
             this.spriteContainer.filters = [
                 new PIXI.filters.ColorMatrixFilter({ saturation: -1 }),
-                new PIXI.filters.AlphaFilter({ alpha: game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100 })
+                new PIXI.filters.AlphaFilter(game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100)
             ];
         }
 
@@ -362,8 +362,8 @@ export default class CanvasEffect {
         }
 
         this.spriteContainer.pivot.set(
-            lib.lerp(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
-            lib.lerp(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
+            lib.interpolate(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
+            lib.interpolate(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
         );
 
         if(this.source && (this.startTime || this.loopOffset > 0) && this.source?.currentTime !== undefined) {
@@ -378,7 +378,7 @@ export default class CanvasEffect {
     }
 
     get sourceIsPlaying(){
-        return this.source && this.source.currentTime > 0 && !this.source.paused && !this.source.ended;
+        return (this.source && this.source.currentTime > 0 && !this.source.paused && !this.source.ended) || this.text;
     }
 
     tryPlay(){
@@ -516,7 +516,7 @@ export default class CanvasEffect {
 
         let fadeOut = this.data.animatedProperties.fadeOut;
 
-        fadeOut.delay = typeof immediate !== "number"
+        fadeOut.delay = !lib.is_real_number(immediate)
             ? Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0)
             : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
 
@@ -539,7 +539,7 @@ export default class CanvasEffect {
             y: this.sprite.scale.y
         };
 
-        if(typeof property.value === "number"){
+        if(lib.is_real_number(property.value)){
             scale.x *= property.value * this.data.gridSizeDifference;
             scale.y *= property.value * this.data.gridSizeDifference;
         }else{
@@ -595,7 +595,7 @@ export default class CanvasEffect {
         let scaleOut = this.data.animatedProperties.scaleOut;
         let scale = this._determineScale(scaleOut)
 
-        scaleOut.delay = typeof immediate !== "number"
+        scaleOut.delay = !lib.is_real_number(immediate)
             ? Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0)
             : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
 
@@ -648,7 +648,7 @@ export default class CanvasEffect {
 
         let rotateOut = this.data.animatedProperties.rotateOut;
 
-        rotateOut.delay = typeof immediate !== "number"
+        rotateOut.delay = !lib.is_real_number(immediate)
             ? Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0)
             : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
 
@@ -692,7 +692,7 @@ export default class CanvasEffect {
 
         const fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
 
-        fadeOutAudio.delay = typeof immediate !== "number"
+        fadeOutAudio.delay = !lib.is_real_number(immediate)
             ? Math.max(this.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
             : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
 
@@ -806,7 +806,7 @@ export default class CanvasEffect {
             video.muted = true;
             video.src = URL.createObjectURL(blob);
 
-            if(this.data.audioVolume === false && typeof this.data.audioVolume !== "number" && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
+            if(this.data.audioVolume === false && !lib.is_real_number(this.data.audioVolume) && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
                 this.data.audioVolume = 1.0;
                 video.muted = false;
             }
@@ -865,7 +865,9 @@ export default class CanvasEffect {
         }
 
         if(this.data.text){
-            this.text = new PIXI.Text(this.data.text.text, this.data.text)
+            //this.data.text.fontSize = (this.data.text?.fontSize ?? 26) * (150 / canvas.grid.size);
+            this.text = new PIXI.Text(this.data.text.text, this.data.text);
+            this.text.resolution = 10;
         }
 
         this.sprite = new PIXI.Sprite();
@@ -899,7 +901,7 @@ export default class CanvasEffect {
             );
         }
 
-        this.spriteContainer.zIndex = typeof this.data.zIndex !== "number" ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.spriteContainer.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
         this.spriteContainer.sortChildren();
 
     }

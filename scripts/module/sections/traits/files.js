@@ -1,4 +1,5 @@
 import * as lib from "../../lib/lib.js";
+import { is_real_number } from "../../lib/lib.js";
 
 export default {
 
@@ -92,10 +93,10 @@ export default {
         inFile = this._recurseFileObject(inFile);
 
         if (Array.isArray(inFile)) {
-            inFile = typeof forcedIndex !== "number" ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];
+            inFile = !is_real_number(forcedIndex) ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];
         }
 
-        if (typeof forcedIndex === "number" && inFile instanceof lib.SequencerFile) {
+        if (is_real_number(forcedIndex) && inFile instanceof lib.SequencerFile) {
             inFile.fileIndex = forcedIndex;
         }
 
