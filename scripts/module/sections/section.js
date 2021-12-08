@@ -57,10 +57,10 @@ export default class Section {
      * @returns {Section} this
      */
     repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax) {
-        if (!lib.is_real_number(inRepetitions)) throw this.sequence._throwError(this, "repeats", "inRepetitions must be of type number");
-        if (!lib.is_real_number(inRepeatDelayMin)) throw this.sequence._throwError(this, "repeats", "repeatDelayMin must be of type number");
+        if (!lib.is_real_number(inRepetitions)) throw this.sequence._customError(this, "repeats", "inRepetitions must be of type number");
+        if (!lib.is_real_number(inRepeatDelayMin)) throw this.sequence._customError(this, "repeats", "repeatDelayMin must be of type number");
         if (inRepeatDelayMax && !lib.is_real_number(inRepeatDelayMax)) {
-            throw this.sequence._throwError(this, "repeats", "repeatDelayMax must be of type number");
+            throw this.sequence._customError(this, "repeats", "repeatDelayMax must be of type number");
         }
         this._repetitions = inRepetitions;
         this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
@@ -87,7 +87,7 @@ export default class Section {
      * @returns {Section} this
      */
     waitUntilFinished(inDelay = 0) {
-        if (!lib.is_real_number(inDelay)) throw this.sequence._throwError(this, "waitUntilFinished", "inDelay must be of type number");
+        if (!lib.is_real_number(inDelay)) throw this.sequence._customError(this, "waitUntilFinished", "inDelay must be of type number");
         this._waitUntilFinished = true;
         this._waitUntilFinishedDelay = inDelay;
         return this;
@@ -114,8 +114,8 @@ export default class Section {
      * @returns {Section} this
      */
     delay(msMin, msMax) {
-        if (!lib.is_real_number(msMin)) throw this.sequence._throwError(this, "delay", "msMin must be of type number");
-        if (msMax && !lib.is_real_number(msMax)) throw this.sequence._throwError(this, "delay", "msMax must be of type number");
+        if (!lib.is_real_number(msMin)) throw this.sequence._customError(this, "delay", "msMin must be of type number");
+        if (msMax && !lib.is_real_number(msMax)) throw this.sequence._customError(this, "delay", "msMax must be of type number");
         this._delayMin = Math.min(msMin, msMax ?? msMin);
         this._delayMax = Math.max(msMin, msMax ?? msMin)
         return this;
@@ -128,7 +128,7 @@ export default class Section {
      * @returns {Section} this
      */
     duration(inDuration) {
-        if (!lib.is_real_number(inDuration)) throw this.sequence._throwError(this, "duration", "inDuration must be of type number");
+        if (!lib.is_real_number(inDuration)) throw this.sequence._customError(this, "duration", "inDuration must be of type number");
         this._duration = inDuration;
         return this;
     }
@@ -150,8 +150,8 @@ export default class Section {
         if (inLocation instanceof foundry.abstract.Document) {
             let object = inLocation?.object;
             if (!object) object = lib.getObjectFromScene(inLocation.id);
-            if (!object) throw this.sequence._throwError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
-            if (!(object instanceof PlaceableObject)) throw this.sequence._throwError(this, "_validateLocation", `Object provided must be instance of PlaceableObject!`);
+            if (!object) throw this.sequence._customError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
+            if (!(object instanceof PlaceableObject)) throw this.sequence._customError(this, "_validateLocation", `Object provided must be instance of PlaceableObject!`);
             return object;
         }
         return inLocation;

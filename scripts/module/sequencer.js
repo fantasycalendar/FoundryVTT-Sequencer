@@ -71,12 +71,12 @@ export default class Sequence {
         if (typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
             if (!macro) {
-                throw this._throwError(this, "macro", `Macro '${inMacro}' was not found`);
+                throw this._customError(this, "macro", `Macro '${inMacro}' was not found`);
             }
         } else if (inMacro instanceof Macro) {
             macro = inMacro;
         } else {
-            throw this._throwError(this, "macro", `inMacro must be of instance string or Macro`);
+            throw this._customError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
         const func = lib.sectionProxyWrap(new FunctionSection(this, async () => {
@@ -131,8 +131,8 @@ export default class Sequence {
      * @returns {Sequence} this
      */
     wait(msMin = 1, msMax = 1) {
-        if (msMin < 1) throw this._throwError(this, "wait", 'Wait ms cannot be less than 1')
-        if (msMax < 1) throw this._throwError(this, "wait", 'Max wait ms cannot be less than 1')
+        if (msMin < 1) throw this._customError(this, "wait", 'Wait ms cannot be less than 1')
+        if (msMax < 1) throw this._customError(this, "wait", 'Max wait ms cannot be less than 1')
         const wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         const section = lib.sectionProxyWrap(this._createWaitSection(wait));
         this.sections.push(section);
@@ -147,7 +147,7 @@ export default class Sequence {
      */
     addSequence(inSequence) {
         if (inSequence instanceof Section) inSequence = inSequence.sequence;
-        if (!(inSequence instanceof Sequence)) throw this._throwError(this, "addSequence", `could not find the sequence from the given parameter`);
+        if (!(inSequence instanceof Sequence)) throw this._customError(this, "addSequence", `could not find the sequence from the given parameter`);
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
@@ -171,7 +171,7 @@ export default class Sequence {
         lib.customWarning(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`, notify);
     }
 
-    _throwError(self, func, error) {
+    _customError(self, func, error) {
         return lib.customError(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${error}`);
     }
 

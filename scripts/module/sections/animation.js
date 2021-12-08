@@ -14,6 +14,7 @@ class AnimationSection extends Section {
         this._offset = { x: 0, y: 0 };
         this._closestSquare = false;
         this._snapToGrid = false;
+        this._hide = undefined;
         if (inTarget) this.on(inTarget);
     }
 
@@ -25,7 +26,7 @@ class AnimationSection extends Section {
      */
     on(inTarget) {
         inTarget = this._validateLocation(inTarget);
-        if (!inTarget) throw this.sequence._throwError(this, "on", "could not find position of given object");
+        if (!inTarget) throw this.sequence._customError(this, "on", "could not find position of given object");
         this._originObject = this._validateLocation(inTarget);
         return this;
     }
@@ -43,9 +44,9 @@ class AnimationSection extends Section {
             target: { x: 0, y: 0 },
             relativeToCenter: false
         }, options);
-        if (!lib.is_real_number(options.delay)) throw this.sequence._throwError(this, "teleportTo", "options.delay must be of type number");
+        if (!lib.is_real_number(options.delay)) throw this.sequence._customError(this, "teleportTo", "options.delay must be of type number");
         inTarget = this._validateLocation(inTarget);
-        if (!inTarget) throw this.sequence._throwError(this, "teleportTo", "could not find position of given object");
+        if (!inTarget) throw this.sequence._customError(this, "teleportTo", "could not find position of given object");
         options.target = this._validateLocation(inTarget);
         this._teleportTo = options;
         return this;
@@ -70,7 +71,7 @@ class AnimationSection extends Section {
      * @returns {AnimationSection}
      */
     closestSquare(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "closestSquare", "inBool must be of type boolean");
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "closestSquare", "inBool must be of type boolean");
         this._closestSquare = inBool;
         return this;
     }
@@ -82,8 +83,20 @@ class AnimationSection extends Section {
      * @returns {AnimationSection}
      */
     snapToGrid(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._throwError(this, "snapToGrid", "inBool must be of type boolean");
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "snapToGrid", "inBool must be of type boolean");
         this._snapToGrid = inBool;
+        return this;
+    }
+
+    /**
+     * Causes the object to become hidden
+     *
+     * @param {boolean} inBool
+     * @returns {AnimationSection}
+     */
+    hide(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "hide", "inBool must be of type boolean");
+        this._hide = inBool;
         return this;
     }
 
@@ -478,6 +491,10 @@ class AnimationSection extends Section {
 
         if(this._tint){
             updateAttributes['tint'] = this._tint.hexadecimal;
+        }
+
+        if(this._hide !== undefined){
+            updateAttributes['hidden'] = this._hide;
         }
 
         if (Object.keys(updateAttributes).length) {

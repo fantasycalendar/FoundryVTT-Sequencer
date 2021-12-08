@@ -4,12 +4,12 @@ export default {
 
     _addUser(inUser) {
         if(!this._users) this._users = [];
-        if (typeof inUser !== "string") throw this.sequence._throwError(this, "_addUser", "inUser must be of type string");
+        if (typeof inUser !== "string") throw this.sequence._customError(this, "_addUser", "inUser must be of type string");
         if (!game.users.has(inUser)){
             if(game.users.getName(inUser)){
                 inUser = game.users.getName(inUser).id;
             }else {
-                throw this.sequence._throwError(this, "_addUser", `user with id or name "${inUser}" does not exist!`);
+                throw this.sequence._customError(this, "_addUser", `user with id or name "${inUser}" does not exist!`);
             }
         }
 
@@ -44,7 +44,7 @@ export default {
      */
     forUsers(inUsers) {
         if (!Array.isArray(inUsers)) {
-            if (typeof inUsers !== "string") throw this.sequence._throwError(this, "forUsers", "inUser must be of type string");
+            if (typeof inUsers !== "string") throw this.sequence._customError(this, "forUsers", "inUser must be of type string");
             inUsers = [inUsers];
         }
         inUsers.forEach(u => this._addUser(u));

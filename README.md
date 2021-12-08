@@ -278,17 +278,24 @@ Click the link above to go to the documentation where each feature is listed.
 ## Changelog
 
 ### Version 1.4.0
+**Breaking changes:**
 - *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Reworked Sequencer to require the `socketlib` module <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 - *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Bumped minimum version to 0.8.9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Effects* - Removed `.JB2A()` as it was deprecated
+
+**Additions:**
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
+- *Animations* - Added `.hide()` to hide or show objects
+- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
+- *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
+
+**Fixes:**
 - *Sequencer* - Fixed module permissions settings being slightly wonky
 - *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
 - *Animations* - Fixed users not being able to teleport or move tokens they do not own
-- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
 - *Effects* - Adjusted `.origin()` to be able to accept a Document to infer the UUID from
 - *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
-- *Effects* - Removed `.JB2A()` as it was deprecated
 - *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
 - *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
 

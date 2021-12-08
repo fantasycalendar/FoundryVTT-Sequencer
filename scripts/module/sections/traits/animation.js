@@ -26,13 +26,13 @@ export default {
 
         is_real_number
 
-        if (typeof inPropertyName !== "string") throw this.sequence._throwError(this, "animateProperty", `inPropertyName must be of type string`);
-        if (typeof inTarget !== "string") throw this.sequence._throwError(this, "animateProperty", `inTarget must be of type string`);
-        if (!is_real_number(inOptions.from)) throw this.sequence._throwError(this, "animateProperty", `inOptions.from must be of type number`);
-        if (!is_real_number(inOptions.to)) throw this.sequence._throwError(this, "animateProperty", `inOptions.to must be of type number`);
-        if (!is_real_number(inOptions.duration)) throw this.sequence._throwError(this, "animateProperty", `inOptions.duration must be of type number`);
-        if (inOptions?.delay && !is_real_number(inOptions.delay)) throw this.sequence._throwError(this, "animateProperty", `inOptions.delay must be of type number`);
-        if (inOptions?.ease && typeof inOptions.ease !== "string") throw this.sequence._throwError(this, "animateProperty", `inOptions.ease must be of type string`);
+        if (typeof inPropertyName !== "string") throw this.sequence._customError(this, "animateProperty", `inPropertyName must be of type string`);
+        if (typeof inTarget !== "string") throw this.sequence._customError(this, "animateProperty", `inTarget must be of type string`);
+        if (!is_real_number(inOptions.from)) throw this.sequence._customError(this, "animateProperty", `inOptions.from must be of type number`);
+        if (!is_real_number(inOptions.to)) throw this.sequence._customError(this, "animateProperty", `inOptions.to must be of type number`);
+        if (!is_real_number(inOptions.duration)) throw this.sequence._customError(this, "animateProperty", `inOptions.duration must be of type number`);
+        if (inOptions?.delay && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateProperty", `inOptions.delay must be of type number`);
+        if (inOptions?.ease && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateProperty", `inOptions.ease must be of type string`);
 
         this._animations.push({
             target: inTarget,
@@ -69,29 +69,29 @@ export default {
     loopProperty(inTarget, inPropertyName, inOptions = {}) {
         if (!this._animations) this._animations = [];
 
-        if (typeof inPropertyName !== "string") throw this.sequence._throwError(this, "animateLoop", `inPropertyName must be of type string`);
-        if (typeof inTarget !== "string") throw this.sequence._throwError(this, "animateLoop", `inTarget must be of type string`);
+        if (typeof inPropertyName !== "string") throw this.sequence._customError(this, "animateLoop", `inPropertyName must be of type string`);
+        if (typeof inTarget !== "string") throw this.sequence._customError(this, "animateLoop", `inTarget must be of type string`);
 
         if (!inOptions?.values) {
-            if (!inOptions?.from === undefined || !inOptions?.to === undefined) throw this.sequence._throwError(this, "animateLoop", `if inOptions.values is not set, you must provide inOptions.from and inOptions.to`);
-            if (!is_real_number(inOptions.from)) throw this.sequence._throwError(this, "animateLoop", `inOptions.from must be of type number`);
-            if (!is_real_number(inOptions.to)) throw this.sequence._throwError(this, "animateLoop", `inOptions.to must be of type number`);
+            if (!inOptions?.from === undefined || !inOptions?.to === undefined) throw this.sequence._customError(this, "animateLoop", `if inOptions.values is not set, you must provide inOptions.from and inOptions.to`);
+            if (!is_real_number(inOptions.from)) throw this.sequence._customError(this, "animateLoop", `inOptions.from must be of type number`);
+            if (!is_real_number(inOptions.to)) throw this.sequence._customError(this, "animateLoop", `inOptions.to must be of type number`);
             inOptions.values = [inOptions?.from, inOptions?.to];
             delete inOptions.from;
             delete inOptions.to;
         } else {
-            if (!Array.isArray(inOptions.values)) throw this.sequence._throwError(this, "animateLoop", `inOptions.values must be of type array`);
+            if (!Array.isArray(inOptions.values)) throw this.sequence._customError(this, "animateLoop", `inOptions.values must be of type array`);
             inOptions.values.forEach(value => {
-                if (!is_real_number(value)) throw this.sequence._throwError(this, "animateLoop", `values in inOptions.keys must be of type number`);
+                if (!is_real_number(value)) throw this.sequence._customError(this, "animateLoop", `values in inOptions.keys must be of type number`);
             });
         }
 
-        if (!is_real_number(inOptions.duration)) throw this.sequence._throwError(this, "animateLoop", `inOptions.duration must be of type number`);
+        if (!is_real_number(inOptions.duration)) throw this.sequence._customError(this, "animateLoop", `inOptions.duration must be of type number`);
 
-        if (inOptions?.delay !== undefined && !is_real_number(inOptions.delay)) throw this.sequence._throwError(this, "animateLoop", `inOptions.delay must be of type number`);
-        if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._throwError(this, "animateLoop", `inOptions.ease must be of type string`);
-        if (inOptions?.loops !== undefined && !is_real_number(inOptions.loops)) throw this.sequence._throwError(this, "animateLoop", `inOptions.loops must be of type number`);
-        if (inOptions?.pingPong !== undefined && typeof inOptions.pingPong !== "boolean") throw this.sequence._throwError(this, "animateLoop", `inOptions.loops must be of type boolean`);
+        if (inOptions?.delay !== undefined && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateLoop", `inOptions.delay must be of type number`);
+        if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateLoop", `inOptions.ease must be of type string`);
+        if (inOptions?.loops !== undefined && !is_real_number(inOptions.loops)) throw this.sequence._customError(this, "animateLoop", `inOptions.loops must be of type number`);
+        if (inOptions?.pingPong !== undefined && typeof inOptions.pingPong !== "boolean") throw this.sequence._customError(this, "animateLoop", `inOptions.loops must be of type boolean`);
 
         this._animations.push({
             target: inTarget,

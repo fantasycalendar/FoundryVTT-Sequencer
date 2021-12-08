@@ -62,7 +62,7 @@ export default class CanvasEffect {
     get context(){
         if(!this._context){
             this._context = this.data.attachTo
-                ? lib.getObjectFromScene(this.data.attachTo, this.data.sceneId)
+                ? lib.getObjectFromScene(this.data.attachTo.id, this.data.sceneId)
                 : game.scenes.get(this.data.sceneId);
         }
         return this._context;
@@ -151,7 +151,7 @@ export default class CanvasEffect {
     highlight(show){
         if(!this.highlightBox && this.sprite){
             this.highlightBox = this.createBox("0xFFFFFF", 1, 9);
-            this.spriteContainer.addChild(this.highlightBox);
+            this.sprite.parent.addChild(this.highlightBox);
         }
         this.highlightBox.visible = show;
         return this;
@@ -274,7 +274,7 @@ export default class CanvasEffect {
 	}
 
 	timeoutRemove(){
-        if(!lib.getObjectFromScene(this.data.attachTo)){
+        if(!lib.getObjectFromScene(this.data.attachTo.id)){
             Sequencer.EffectManager.endEffects({ effects: this });
             return;
         }
@@ -341,7 +341,43 @@ export default class CanvasEffect {
             );
         }
 
-        this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
+        if(this.data.attachTo){
+
+            this.spriteContainer.position.set(
+                this.context.icon.width*0.5,
+                this.context.icon.height*0.5
+            );
+
+            let align_container = new PIXI.Container();
+            this.spriteContainer.addChild(align_container);
+            this.spriteContainer.removeChild(this.sprite);
+            align_container.addChild(this.sprite);
+
+            let widthRatio = (this.context.icon.width - (this.sprite.width * 0.5)) / this.context.icon.width;
+            let heightRatio = (this.context.icon.height - (this.sprite.height * 0.5)) / this.context.icon.height;
+
+            const align = {
+                "top-left":     { x: widthRatio,    y: heightRatio },
+                "top":          { x: 0.5,           y: heightRatio },
+                "top-right":    { x: 1-widthRatio,  y: heightRatio },
+                "left":         { x: widthRatio,    y: 0.5 },
+                "center":       { x: 0.5,           y: 0.5 },
+                "right":        { x: 1-widthRatio,  y: 0.5 },
+                "bottom-left":  { x: widthRatio,    y: 1-heightRatio },
+                "bottom":       { x: 0.5,           y: 1-heightRatio },
+                "bottom-right": { x: 1-widthRatio,  y: 1-heightRatio }
+            }[this.data.attachTo.align];
+
+            align_container.pivot.set(
+                lib.interpolate(this.context.icon.width*-0.5,this.context.icon.width*0.5, align.x),
+                lib.interpolate(this.context.icon.height*-0.5,this.context.icon.height*0.5, align.y)
+            );
+
+        }else{
+
+            this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
+
+        }
 
         this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
 

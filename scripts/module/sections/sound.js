@@ -22,7 +22,7 @@ class SoundSection extends Section {
      * @returns {SoundSection}
      */
     addOverride(inFunc) {
-        if (!lib.is_function(inFunc)) throw this.sequence._throwError(this, "addOverride", "The given function needs to be an actual function.");
+        if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
     }

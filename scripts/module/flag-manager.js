@@ -1,5 +1,6 @@
 import * as lib from "./lib/lib.js";
 import CONSTANTS from "./constants.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 
 const flagManager = {
 
@@ -14,18 +15,22 @@ const flagManager = {
         if(!flags) return [];
 
         let update = false;
-        for(let [id, effect] of flags){
+        flags = flags.map(entries => {
+            let [id, effect] = entries;
             for(let [version, migration] of Object.entries(flagManager.migrations)){
                 version = Number(version);
                 if((effect?.flagVersion ?? 0.0) >= version) continue;
                 lib.debug(`Patching flags on ${inObject.id} to version ${version}`);
                 update = true;
-                effect = migration(inObject, effect)
-                effect.flagVersion = version;
+                effect = migration(effect)
             }
-        }
+            effect.flagVersion = flagManager.latestFlagVersion;
+            return [id, effect];
+        })
 
-        if(update) inObject.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flags);
+        if(update){
+            sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, inObject.uuid, flags);
+        }
 
         return flags;
 
@@ -33,10 +38,23 @@ const flagManager = {
 
     migrations: {
 
+        /**
+         * Basic version, nothing happens here
+         */
         "1.0": (data) => {
-            // Base version, nothing happens here
             return data;
         },
+
+        /**
+         * Add support for align on attachTo
+         */
+        "1.1": (data) => {
+            data.attachTo = {
+                id: data.attachTo,
+                align: "center"
+            }
+            return data;
+        }
 
     },
 
@@ -50,8 +68,6 @@ const flagManager = {
     },
 
     addFlags: (inObject, inEffects) => {
-
-        if (!lib.isResponsibleGM()) return;
 
         if(!inObject?.id) return;
 
@@ -68,8 +84,6 @@ const flagManager = {
     },
 
     removeFlags: (inObject, inEffects, removeAll) => {
-
-        if (!lib.isResponsibleGM()) return;
 
         if(!inObject?.id) return;
 
@@ -123,7 +137,7 @@ const flagManager = {
             
             flagsToSet = Array.from(flagsToSet)
 
-            await obj.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flagsToSet);
+            await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, obj.uuid, flagsToSet);
 
             lib.debug(`Flags set for object with ID "${obj.id}":\n`, flagsToSet)
 

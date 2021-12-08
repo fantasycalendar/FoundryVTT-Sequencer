@@ -93,7 +93,7 @@ export default class SequencerEffectManager {
         return this.effects
             .filter(effect => !inData.effects || inData.effects.includes(effect.data.id))
             .filter(effect => !inData.name || inData.name === effect.data.name)
-            .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo)
+            .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo.id)
             .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId)
             .filter(effect => !inData.origin || inData.origin === effect.data.origin);
     }
@@ -174,14 +174,9 @@ export default class SequencerEffectManager {
         const allObjects = lib.getAllObjects();
         allObjects.push(canvas.scene);
         let promises = allObjects.map(obj => {
-            const doc = obj?.document ?? obj;
-            let objEffects = flagManager.getFlag(doc);
-            objEffects = objEffects.map(effect => {
-                if(effect[1].attachTo) effect[1].attachTo = lib.getObjectIdentifier(doc.object);
-                effect[1].sceneId = canvas.scene.id;
-                return effect;
-            });
-            return this._playEffectMap(objEffects, doc);
+            const document = obj?.document ?? obj;
+            let objEffects = flagManager.getFlag(document);
+            return this._playEffectMap(objEffects, document);
         }).flat();
         debounceUpdateEffectViewer();
         return Promise.all(promises).then(() => {
@@ -200,10 +195,10 @@ export default class SequencerEffectManager {
 
     static _patchCreationData(inDocument){
 
-        let effects = inDocument.data.flags.sequencer.effects ?? [];
+        let effects = inDocument.data.flags.sequencer.effects;
 
         effects = effects.map(effect => {
-            if(effect[1].attachTo) effect[1].attachTo = lib.getObjectIdentifier(inDocument.object);
+            if(effect[1].attachTo) effect[1].attachTo.id = lib.getObjectIdentifier(inDocument.object);
             effect[1].sceneId = canvas.scene.id;
             return effect;
         });

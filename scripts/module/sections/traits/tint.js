@@ -11,7 +11,7 @@ export default {
 
         if(inColor){
 
-            if (!is_real_number(inColor) && typeof inColor !== "string") throw this.sequence._throwError(this, "tint", `inColor must be of type string (hexadecimal) or number (decimal)!`);
+            if (!is_real_number(inColor) && typeof inColor !== "string") throw this.sequence._customError(this, "tint", `inColor must be of type string (hexadecimal) or number (decimal)!`);
 
             hexadecimal = is_real_number(inColor)
                 ? inColor.toString(16)

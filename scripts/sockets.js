@@ -8,7 +8,8 @@ export const SOCKET_HANDLERS = {
     PRELOAD: "preload",
     PRELOAD_RESPONSE: "preloadResponse",
     PRELOAD_DONE: "preloadDone",
-    UPDATE_DOCUMENT: "updateDocument"
+    UPDATE_DOCUMENT: "updateDocument",
+    UPDATE_FLAGS: "updateFlags"
 };
 
 export let sequencerSocket;
@@ -23,9 +24,16 @@ export function registerSocket() {
     sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) => Sequencer.Preloader.handleResponse(...args))
     sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_DONE, (...args) => Sequencer.Preloader.handleDone(...args))
     sequencerSocket.register(SOCKET_HANDLERS.UPDATE_DOCUMENT, (...args) => updateDocument(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.UPDATE_FLAGS, (...args) => updateFlags(...args))
 }
 
 async function updateDocument(documentUuid, updates, animate){
     const document = await fromUuid(documentUuid);
     return document.update(updates, animate);
 }
+
+async function updateFlags(documentUuid, flags){
+    const document = await fromUuid(documentUuid);
+    return document.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flags);
+}
+
