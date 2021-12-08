@@ -100,6 +100,18 @@ class AnimationSection extends Section {
         return this;
     }
 
+    /**
+     * Causes the object to become visible
+     *
+     * @param {boolean} inBool
+     * @returns {AnimationSection}
+     */
+    show(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "show", "inBool must be of type boolean");
+        this._hide = !inBool;
+        return this;
+    }
+
     async run() {
         return this._runAnimate();
     }

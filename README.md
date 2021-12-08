@@ -285,7 +285,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 **Additions:**
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
-- *Animations* - Added `.hide()` to hide or show objects
+- *Animations* - Added `.hide()` and `.show()` to hide or show objects
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
 - *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
 
