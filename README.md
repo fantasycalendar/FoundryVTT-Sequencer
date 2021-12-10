@@ -277,28 +277,6 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
-### Version 1.4.0
-**Breaking changes:**
-- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Reworked Sequencer to require the `socketlib` module <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
-- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Bumped minimum version to 0.8.9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
-- *Effects* - Removed `.JB2A()` as it was deprecated
-
-**Additions:**
-- *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
-- *Animations* - Added `.hide()` and `.show()` to hide or show objects
-- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
-- *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
-
-**Fixes:**
-- *Sequencer* - Fixed module permissions settings being slightly wonky
-- *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
-- *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
-- *Animations* - Fixed users not being able to teleport or move tokens they do not own
-- *Effects* - Adjusted `.origin()` to be able to accept a Document to infer the UUID from
-- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
-- *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
-- *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
-
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
 - *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Breaking change <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> - Fixed issue where setting the `.size()` of an effect and then scaling it would result in unexpected behavior. As a result, `.scaleIn()` and `.scaleOut()` now function as _multipliers_ to the existing scale on the effect
@@ -397,8 +375,8 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 1.1.3
 - *Sequencer* - Added `sequencerEffectManagerReady` hook which is called when every effect has been set up on the scene that's currently loaded
-- *Sequencer* - Added `validateEntries` method to the Sequencer Database, which is helpful for module creators to validate their asset entries to the database
-- *Sequencer* - Added `getPathsUnder` method to the Sequencer Database, which retrieves valid entries under a certain database path
+- *Sequencer* - Added `validateEntries` method to the Sequencer Database, which is helpful for module creators to validate their asset collections to the database
+- *Sequencer* - Added `getPathsUnder` method to the Sequencer Database, which retrieves valid collections under a certain database path
 - *Sequencer* - Minor speed improvements to how the database retrieves files
 - *Sequencer* - Removed the requirement for a user to be trusted to use the Database Viewer
 - *Sequencer* - Fixed `Sequencer.EffectManager.endEffects` not throwing error when incorrect or incomplete parameters were given, and instead ended all effects (whoops)
@@ -408,7 +386,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 1.1.2
 - *Sequencer* - Removed compatibility warning regarding Perfect Vision as the module was updated to support Sequencer
-- *Sequencer* - Added warning when trying to register database entries under a module name containing dots (as it uses dot-notated paths)
+- *Sequencer* - Added warning when trying to register database collections under a module name containing dots (as it uses dot-notated paths)
 
 ### Version 1.1.1
 - *Sequencer* - Removed Hyperspace sample from compendiums, as it was getting too big
@@ -601,7 +579,7 @@ Click the link above to go to the documentation where each feature is listed.
 ### Version 0.5.0
 - *Sequencer* - Module now depends on [Token Ease](https://github.com/fantasycalendar/FoundryVTT-TokenEase)
 - *Sequencer* - Added the Sequencer Database to help content creators! Read more on the [database documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Database) how to use it!
-- *Effects & Sounds* - Added support for database entries to the `.file()` method - more info can be found in the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file)
+- *Effects & Sounds* - Added support for database collections to the `.file()` method - more info can be found in the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file)
 - *Animations, Effects & Sounds* - Added the following functions:
   - `.audioVolume()`
   - `.fadeInAudio()`
@@ -612,7 +590,7 @@ Click the link above to go to the documentation where each feature is listed.
   - `.scaleOut()`
   - `.fadeOutAudio()`
 - *Animations* - Fixed `.rotateTowards()` to properly rotate towards the target without having to add an offset to properly line them up
-- *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` entries
+- *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` collections
 - *Effects* - Fixed issues surrounding delays and fades
 - *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.fadeIn()` and `.fadeOut()` will become deprecated in a future version, please switch to `.fadeInAudio()` and `.fadeOutAudio()` <img src="images/siren.gif" width="12px" height="12px" alt="Siren">   
 
