@@ -152,7 +152,7 @@ class SequencerEffectPlayer {
         if(settings.file === "") return;
 
         if(!(Sequencer.Database.entryExists(settings.file) || (await srcExists(settings.file)))){
-            throw lib.customError("Sequencer", `Sequencer Player | Could not find file or database entry: ${settings.file}`);
+            throw lib.custom_error("Sequencer", `Sequencer Player | Could not find file or database entry: ${settings.file}`);
         }
 
         if(settings.preload){
@@ -175,7 +175,7 @@ class SequencerEffectPlayer {
             )
             .randomizeMirrorY(settings.randomMirrorY)
 
-        if(settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new"){
+        if(settings.persist && settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new"){
             effect.name("Preset: " + settings.name)
         }
 

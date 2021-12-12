@@ -89,7 +89,7 @@ export default class SequencerEffectsUI extends FormApplication {
     getData() {
         let data = super.getData()
         data.userIsGM = game.user.isGM;
-        data.canCreateEffects = lib.userCanDo("permissions-effect-create");
+        data.canCreateEffects = lib.user_can_do("permissions-effect-create");
         data = this.getPlayerData(data);
         return data;
     }
@@ -289,7 +289,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     activatePlayerListeners(html) {
 
-        if(!lib.userCanDo("permissions-effect-create")) return;
+        if(!lib.user_can_do("permissions-effect-create")) return;
 
         html.find('.activate-layer').click(() => {
             canvas.sequencerEffectsAboveTokens.activate();
@@ -443,8 +443,8 @@ export default class SequencerEffectsUI extends FormApplication {
 
         const settingsList = $(settings.element).find(".settings-list");
         const settingToScrollTo = settingsList.find('select[name="sequencer.permissions-sidebar-tools"]').parent().parent();
-        await lib.scrollToElement(settingsList, settingToScrollTo);
-        await lib.highlightElement(settingToScrollTo, { duration: 2500 });
+        await lib.scroll_to_element(settingsList, settingToScrollTo);
+        await lib.highlight_element(settingToScrollTo, { duration: 2500 });
 
     }
 

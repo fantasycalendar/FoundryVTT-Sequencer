@@ -1,6 +1,6 @@
 import { cache } from "../lib/cache.js";
 import { reactiveEl as html } from "../lib/html.js";
-import { clamp, strToSearchRegexStr } from "../lib/lib.js";
+import { clamp, str_to_search_regex_str } from "../lib/lib.js";
 
 const MAX_NODES = 24;
 
@@ -180,7 +180,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
         this.image = html.querySelector(".database-image");
 
         const filterDebounce = debounce(() => {
-            this.search = strToSearchRegexStr(input.value);
+            this.search = str_to_search_regex_str(input.value);
             this.filter = filter.value;
             scroller.scrollTop = 0;
             rerenderList();

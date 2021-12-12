@@ -71,6 +71,8 @@ const flagManager = {
 
         if(!inObject?.id) return;
 
+        inObject = inObject?.document ?? inObject;
+
         if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
         let flagsToSet = flagManager.flagAddBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
@@ -86,6 +88,8 @@ const flagManager = {
     removeFlags: (inObject, inEffects, removeAll) => {
 
         if(!inObject?.id) return;
+
+        inObject = inObject?.document ?? inObject;
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 

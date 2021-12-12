@@ -37,7 +37,7 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
         return (await FilePicker.browse(source, inFile, browseOptions)).files;
     } catch (err) {
         if(softFail) return false;
-        throw customError("Sequencer", `getFiles | ${err}`);
+        throw custom_error("Sequencer", `getFiles | ${err}`);
     }
 }
 
@@ -59,35 +59,42 @@ export function interpolate(p1, p2, t, ease = "linear") {
 /**
  *  Returns a floating point number between a minimum and maximum value
  *
- * @param  {number}     min    The minimum value
- * @param  {number}     max    The maximum value
- * @return {number}            A random value between the range given
+ * @param  {number}     min                     The minimum value
+ * @param  {number}     max                     The maximum value
+ * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
+ * @return {number}                             A random value between the range given
  */
-export function random_float_between(min, max) {
-    return Math.random() * (max - min) + min;
+export function random_float_between(min, max, twister = false) {
+    const random = twister ? twister.random() : Math.random();
+    const _max = Math.max(max, min);
+    const _min = Math.min(max, min);
+    return random * (_max - _min) + _min;
 }
 
 /**
  *  Returns an integer between a minimum and maximum value
  *
- * @param  {number}     min    The minimum value
- * @param  {number}     max    The maximum value
- * @return {int}               A random integer between the range given
+ * @param  {number}     min                     The minimum value
+ * @param  {number}     max                     The maximum value
+ * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
+ * @return {int}                                A random integer between the range given
  */
-export function random_int_between(min, max) {
-    return Math.floor(random_float_between(min, max));
+export function random_int_between(min, max, twister = false) {
+    return Math.floor(random_float_between(min, max, twister));
 }
 
 /**
  *  Returns a shuffled copy of the original array.
  *
  * @param  {array}   inArray
+ * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
  * @return {array}
  */
-export function shuffle_array(inArray) {
+export function shuffle_array(inArray, twister = false) {
     let shuffled = foundry.utils.duplicate(inArray);
+    const randomMethod = twister?.random ?? Math.random;
     for (let i = shuffled.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
+        let j = Math.floor(randomMethod() * (i + 1));
         let temp = shuffled[i];
         shuffled[i] = shuffled[j];
         shuffled[j] = temp;
@@ -112,14 +119,15 @@ export function is_function(inFunc) {
 /**
  *  Returns a random element in the given array
  *
- * @param  {array}   inArray    An array
- * @param  {boolean} recurse    Whether to recurse if the randomly chosen element is also an array
- * @return {object}             A random element from the array
+ * @param  {array}   inArray                    An array
+ * @param  {boolean} recurse                    Whether to recurse if the randomly chosen element is also an array
+ * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
+ * @return {object}                             A random element from the array
  */
-export function random_array_element(inArray, recurse = false) {
-    let choice = inArray[Math.floor(random_float_between(0, inArray.length))];
+export function random_array_element(inArray, { recurse = false, twister = false }={}) {
+    let choice = inArray[random_int_between(0, inArray.length, twister)];
     if (recurse && Array.isArray(choice)) {
-        return random_array_element(choice, true);
+        return random_array_element(choice, { recurse: true });
     }
     return choice;
 }
@@ -127,15 +135,16 @@ export function random_array_element(inArray, recurse = false) {
 /**
  *  Returns a random element in the given array
  *
- * @param  {object}   inObject   An object
- * @param  {boolean}  recurse    Whether to recurse if the randomly chosen element is also an object
- * @return {object}              A random element from the object
+ * @param  {object}   inObject                  An object
+ * @param  {boolean}  recurse                   Whether to recurse if the randomly chosen element is also an object
+ * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
+ * @return {object}                             A random element from the object
  */
-export function random_object_element(inObject, recurse = false) {
+export function random_object_element(inObject, { recurse = false, twister = false }={}) {
     let keys = Object.keys(inObject).filter((k) => !k.startsWith("_"));
-    let choice = inObject[random_array_element(keys)];
+    let choice = inObject[random_array_element(keys, { twister })];
     if (typeof choice === "object" && recurse) {
-        return random_object_element(choice, true);
+        return random_object_element(choice, { recurse: true });
     }
     return choice;
 }
@@ -153,41 +162,13 @@ export function is_real_number(inNumber){
 }
 
 /**
- *  Determines the dimensions of a given image file
- *
- * @param  {string}     inFile    The file to be loaded
- * @return {Promise}              A promise that will return the dimensions of the file
- */
-export async function getDimensions(inFile) {
-    return new Promise(async (resolve) => {
-        let blob = await SequencerFileCache.loadFile(inFile);
-        let video = document.createElement("video");
-        video.crossOrigin = "anonymous";
-        video.src = URL.createObjectURL(blob);
-        video.onloadedmetadata = () => {
-            let dimensions = {
-                x: video.videoWidth,
-                y: video.videoHeight,
-            };
-            video.pause();
-            video.removeAttribute("src");
-            resolve(dimensions);
-        };
-        video.onerror = () => {
-            console.error(`File not found: ${inFile}`);
-            resolve({ x: 0, y: 0 });
-        };
-    });
-}
-
-/**
  *  Gets a property in an object based on a path in dot-notated string
  *
  * @param   {object}         obj       The object to be queried
  * @param   {array|string}   path      The path in the object to the property in a dot-notated string
  * @returns {any}                      Property value, if found
  */
-export function deepGet(obj, path) {
+export function deep_get(obj, path) {
     if (!Array.isArray(path)) path = path.split(".");
     try {
         let i;
@@ -201,14 +182,14 @@ export function deepGet(obj, path) {
 /**
  *  Sets a property in an object based on a path in dot-notated string, example:
  *  let obj = { first: { second: { third: "value" } } }
- *  deepSet(obj, "newValue", "first.second.third")
+ *  deep_set(obj, "newValue", "first.second.third")
  *  let obj = { first: { second: { third: "newValue" } } }
  *
  * @param  {object}         obj       The object to be modified
  * @param  {array|string}   path      The path in the object to the property in a dot-notated string
  * @param  {any}            value     The value to set
  */
-export function deepSet(obj, path, value) {
+export function deep_set(obj, path, value) {
     if (!Array.isArray(path)) path = path.split(".");
     try {
         let i;
@@ -232,13 +213,13 @@ export function deepSet(obj, path, value) {
  * @param  {object}     obj       The object to be flattened
  * @return {object}               The flattened object
  */
-export function flattenObject(obj) {
+export function flatten_object(obj) {
     let toReturn = [];
     for (let i in obj) {
         if (i.startsWith("_")) continue;
         if (!obj.hasOwnProperty(i)) continue;
         if (typeof obj[i] == "object") {
-            let flatObject = flattenObject(obj[i]);
+            let flatObject = flatten_object(obj[i]);
             for (let x in flatObject) {
                 if (!flatObject.hasOwnProperty(x)) continue;
                 toReturn[i + "." + x] = flatObject[x];
@@ -275,81 +256,30 @@ export function clamp(num, min, max) {
 }
 
 /**
- *  Rotates a vector by a given number of degrees
- *
- * @param  {object}     vector    The vector to be rotated
- * @param  {number}     degrees   Number of degrees of which to rotate the vector
- * @return {object}               The rotated vector
- */
-export function rotateVector(vector, degrees) {
-    if ((vector.x === 0 && vector.y === 0) || degrees === 0) return vector;
-
-    let distance = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-    let radians = degrees * (Math.PI / 180);
-
-    let cos1 = vector.x / distance;
-    let sin1 = vector.y / distance;
-    let cos2 = Math.cos(radians);
-    let sin2 = Math.sin(radians);
-    let cos3 = cos1 * cos2 - sin1 * sin2;
-    let sin3 = sin1 * cos2 + cos1 * sin2;
-
-    vector.x = distance * cos3;
-    vector.y = distance * sin3;
-
-    return vector;
-}
-
-/**
- *  Scales and positions a vector based on the world transform of a context. This has been used to transform the space
- *  in which a filter exists in, as a PIXI filter exists in screen space position, rotation, and scale, and this could
- *  transform that filter to another context, such as a token on a canvas, so that the filter would react properly to
- *  the token moving, and the canvas scaling (zooming)
- *
- * @param  {object}     inVector    The vector to be transformed
- * @param  {object}     context     The context of which to transform the vector against
- * @return {object}                 The transformed vector
- */
-export function transformVector(inVector, context = false) {
-    let zoomLevel = canvas.background.worldTransform.a;
-    let worldTransform = canvas.background.worldTransform;
-    let localX = 0;
-    let localY = 0;
-    if (context) {
-        localX = context.localTransform.tx;
-        localY = context.localTransform.ty;
-    }
-
-    if (Array.isArray(inVector)) {
-        return [
-            (inVector[0] + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
-            (inVector[1] + localY) * zoomLevel + Math.min(worldTransform.ty, 0),
-        ];
-    }
-
-    return {
-        x: (inVector.x + localX) * zoomLevel + Math.min(worldTransform.tx, 0),
-        y: (inVector.y + localY) * zoomLevel + Math.min(worldTransform.ty, 0),
-    };
-}
-
-/**
  *  Gets all objects from a scene
  *
  * @param  {String}     inSceneId   The scene ID to get all valid objects from
  * @return {Array}                  Array containing all objects
  */
-export function getAllObjects(inSceneId) {
+export function get_all_objects(inSceneId) {
     const scene = inSceneId
         ? game.scenes.get(inSceneId)
         : game.scenes.get(game.canvas.id);
     return [
-        ...Array.from(scene.tokens).map(obj => obj?.object),
-        ...Array.from(scene.templates).map(obj => obj?.object),
-        ...Array.from(scene.tiles).map(obj => obj?.object),
-        ...Array.from(scene.drawings).map(obj => obj?.object),
-        ...canvas.templates.preview.children
+        ...Array.from(scene.tokens),
+        ...Array.from(scene.templates),
+        ...Array.from(scene.tiles),
+        ...Array.from(scene.drawings),
+        ...canvas.templates.preview.children,
+        ...Sequencer.EffectManager.effects
     ].deepFlatten().filter(Boolean);
+}
+
+export function is_UUID(inId){
+    return typeof inId === "string"
+        && inId.startsWith("Scene")
+        && (inId.match(/\./g) || []).length === 3
+        && !inId.endsWith(".");
 }
 
 /**
@@ -359,8 +289,29 @@ export function getAllObjects(inSceneId) {
  * @param  {String}     inSceneId   The scene ID to search within
  * @return {any}                    Object if found, else undefined
  */
-export function getObjectFromScene(inObjectId, inSceneId) {
-    return getAllObjects(inSceneId).find(obj => checkObjectByIdentifier(obj, inObjectId));
+export function get_object_from_scene(inObjectId, inSceneId) {
+    if(is_UUID(inObjectId)){
+        return from_uuid_fast(inObjectId);
+    }
+    return get_all_objects(inSceneId).find(obj => check_object_by_identifier(obj, inObjectId));
+}
+
+function from_uuid_fast(uuid) {
+    let parts = uuid.split(".");
+    let doc;
+
+    const [docName, docId] = parts.slice(0, 2);
+    parts = parts.slice(2);
+    const collection = CONFIG[docName].collection.instance;
+    doc = collection.get(docId);
+
+    // Embedded Documents
+    while ( doc && (parts.length > 1) ) {
+        const [embeddedName, embeddedId] = parts.slice(0, 2);
+        doc = doc.getEmbeddedDocument(embeddedName, embeddedId);
+        parts = parts.slice(2);
+    }
+    return doc || null;
 }
 
 /**
@@ -369,22 +320,23 @@ export function getObjectFromScene(inObjectId, inSceneId) {
  * @param  {Object}     inObject    The object to get the unique identifier from
  * @return {String}                 The identifier
  */
-export function getObjectIdentifier(inObject){
-    return inObject?.id
+export function get_object_identifier(inObject){
+    return inObject?.uuid
+        ?? inObject?.id
         ?? inObject?.document?.name
         ?? inObject?.name
         ?? (inObject?.tag !== "" ? inObject?.tag : undefined)
         ?? (inObject?.label !== "" ? inObject?.label : undefined);
 }
 
-function checkObjectByIdentifier(inObject, inIdentifier) {
-    return getObjectIdentifier(inObject) === inIdentifier;
+function check_object_by_identifier(inObject, inIdentifier) {
+    return get_object_identifier(inObject) === inIdentifier;
 }
 
 /**
  *  Turns an array containing multiples of the same string, objects, etc, and removes duplications, and returns a fresh array
  *
- * @param  {Array}     inArray     An array of multiple duplicate entries to be made unique
+ * @param  {Array}     inArray     An array of multiple duplicate collections to be made unique
  * @return {Array}                 An array containing only unique objects
  */
 export function make_array_unique(inArray){
@@ -395,133 +347,25 @@ export function debug(msg, args = ""){
     if(game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
 }
 
-export function customWarning(inClassName, warning, notify = false) {
+export function custom_warning(inClassName, warning, notify = false) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     warning = `${inClassName} | ${warning}`;
     if(notify) ui.notifications.warn(warning);
     console.warn(warning.replace("<br>", "\n"));
 }
 
-export function customError(inClassName, error, notify = true) {
+export function custom_error(inClassName, error, notify = true) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
     if(notify) ui.notifications.error(error);
     return new Error(error.replace("<br>", "\n"));
 }
 
-export function userCanDo(inSetting) {
+export function user_can_do(inSetting) {
     return game.user.role > game.settings.get(CONSTANTS.MODULE_NAME, inSetting);
 }
 
-export class SequencerFile {
-    constructor(inData, inTemplate, inDBPath) {
-        inData = foundry.utils.duplicate(inData);
-        this.template = inTemplate;
-        this.dbPath = inDBPath;
-        this.moduleName = inDBPath.split('.')[0];
-        this.timeRange = inData?._timeRange;
-        this.originalFile = inData?.file ?? inData;
-        delete this.originalFile["_template"];
-        delete this.originalFile["_timeRange"];
-        this.file = foundry.utils.duplicate(this.originalFile);
-        this.fileIndex = false;
-        this.rangeFind =
-            typeof this.file !== "string" && !Array.isArray(this.originalFile)
-                ? Object.keys(this.originalFile).filter((key) =>
-                      key.endsWith("ft")
-                  ).length > 0
-                : false;
-    }
-
-    async validate(){
-        let isValid = true;
-        const directories = {};
-        const allFiles = this.getAllFiles();
-        for(const file of allFiles) {
-            let directory = file.split("/")
-            directory.pop()
-            directory = directory.join('/')
-            if(directories[directory] === undefined){
-                directories[directory] = await getFiles(directory);
-            }
-        }
-        for(const file of allFiles) {
-            let directory = file.split("/")
-            directory.pop()
-            directory = directory.join('/')
-
-            if(directories[directory].indexOf(file) === -1) {
-                console.warn(`"${this.dbPath}" has an incorrect file path, could not find file. Points to:\n${file}`)
-                isValid = false;
-            }
-        }
-        return isValid;
-    }
-
-    getAllFiles() {
-        if (this.rangeFind) {
-            return Object.values(this.file).deepFlatten();
-        }
-        return [this.file].deepFlatten();
-    }
-
-    getFile(inFt) {
-        if (this.hasRangeFind(inFt)) {
-            if (Array.isArray(this.file[inFt])) {
-                return lib.is_real_number(this.fileIndex)
-                    ? this.file[inFt][this.fileIndex]
-                    : random_array_element(this.file[inFt]);
-            }
-            return this.file[inFt];
-        } else if (Array.isArray(this.file)) {
-            return lib.is_real_number(this.fileIndex)
-                ? this.file[this.fileIndex]
-                : random_array_element(this.file);
-        }
-        return this.file;
-    }
-
-    hasRangeFind(inFt){
-        return inFt && this.rangeFind && this.file[inFt];
-    }
-
-    applyBaseFolder(baseFolder) {
-        return this._applyFunctionToFiles(this._applyBaseFolder, baseFolder);
-    }
-
-    applyMustache(inMustache) {
-        return this._applyFunctionToFiles(this._applyMustache, inMustache);
-    }
-
-    _applyFunctionToFiles(inFunction, inData) {
-        if (this.rangeFind) {
-            for (let key of Object.keys(this.originalFile)) {
-                if (Array.isArray(this.originalFile[key])) {
-                    this.file[key] = this.originalFile[key].map((file) =>
-                        inFunction(inData, file)
-                    );
-                    continue;
-                }
-                this.file[key] = inFunction(inData, this.originalFile[key]);
-            }
-        } else {
-            this.file = inFunction(inData, this.originalFile);
-        }
-
-        return this;
-    }
-
-    _applyBaseFolder(baseFolder, file) {
-        return file.startsWith(baseFolder) ? file : baseFolder + file;
-    }
-
-    _applyMustache(inMustache, file) {
-        let template = Handlebars.compile(file);
-        return template(inMustache);
-    }
-}
-
-export function groupBy(xs, key) {
+export function group_by(xs, key) {
     return xs.reduce(function (acc, obj) {
         let property = getProperty(obj, key);
         acc[property] = acc[property] || [];
@@ -530,7 +374,7 @@ export function groupBy(xs, key) {
     }, {});
 }
 
-export function sequenceProxyWrap(inSequence) {
+export function sequence_proxy_wrap(inSequence) {
     return new Proxy(inSequence, {
         get: function (target, prop) {
             if(target[prop] === undefined){
@@ -543,7 +387,7 @@ export function sequenceProxyWrap(inSequence) {
     });
 }
 
-export function sectionProxyWrap(inClass) {
+export function section_proxy_wrap(inClass) {
     return new Proxy(inClass, {
         get: function (target, prop) {
             if (target[prop] === undefined) {
@@ -557,30 +401,7 @@ export function sectionProxyWrap(inClass) {
     });
 }
 
-export function getObjectDimensions(inObj, half = false){
-    const width =
-        (inObj?.hitArea?.width
-        ?? inObj?.w
-        ?? inObj?.shape?.width
-        ?? (inObj?.shape?.radius
-        ? inObj?.shape?.radius*2
-        : canvas.grid.size)) / (half ? 2 : 1);
-
-    const height =
-        (inObj?.hitArea?.height
-        ?? inObj?.h
-        ?? inObj?.shape?.height
-        ?? (inObj?.shape?.radius
-        ? inObj?.shape?.radius*2
-        : canvas.grid.size)) / (half ? 2 : 1)
-
-    return {
-        width,
-        height
-    }
-}
-
-export function strToSearchRegexStr(str) {
+export function str_to_search_regex_str(str) {
     return str
         .trim()
         .replace(/[^A-Za-z0-9 .*_-]/g, "")
@@ -588,7 +409,7 @@ export function strToSearchRegexStr(str) {
         .replace(/\s+/g, "|");
 }
 
-export function scrollToElement(scrollElement, scrollToElement, duration = 500){
+export function scroll_to_element(scrollElement, scrollToElement, duration = 500){
     if(!duration){
         scrollElement.scrollTop(scrollElement.scrollTop() - scrollElement.offset().top + scrollToElement.offset().top);
         return;
@@ -601,7 +422,7 @@ export function scrollToElement(scrollElement, scrollToElement, duration = 500){
     return wait(duration);
 }
 
-export async function highlightElement(element, { duration = false, color = "#FF0000", size="3px" }={}){
+export async function highlight_element(element, { duration = false, color = "#FF0000", size="3px" }={}){
     element.prop("style", `-webkit-box-shadow: inset 0px 0px ${size} ${size} ${color}; box-shadow: inset 0px 0px ${size} ${size} ${color};`);
     if(!duration) return;
     await wait(duration);

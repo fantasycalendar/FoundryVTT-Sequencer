@@ -4,31 +4,41 @@ import * as lib from "../lib/lib.js";
 import filters from "../lib/filters.js";
 import flagManager from "../flag-manager.js";
 import CONSTANTS from "../constants.js";
+import * as canvaslib from "../lib/canvas-utils.js";
 
-export default class CanvasEffect {
-
-    static make(inData){
-        return inData.persist
-            ? new PersistentCanvasEffect(inData)
-            : new CanvasEffect(inData);
-    }
+export default class CanvasEffect extends PIXI.Container {
 
     constructor(inData) {
+        super();
 
-        this.ended = false;
-        this.text = false;
-        this.texture = false;
-		this.source = false;
-		this.loader = SequencerFileCache;
-        this.resolve = false;
-        this._context = false;
-        this.highlightBox = false;
+        this.ended = null;
+
+        this.file = null;
+
+        this.spriteContainer = null;
+
+        this.sprite = null;
+
+        this.text = null;
+
+        this.resolve = null;
+
         this.loopOffset = 0;
-        this.filters = {};
-        this.originalSpriteDimensions = {};
 
-		this.actualCreationTime = (+new Date())
+        this.filters = {};
+
+        this.animationDuration = 0;
+
+        this.distance = false;
+
+        this.ticker = new PIXI.Ticker;
+
+        this.ticker.start();
+
+        this._video = false;
+
         // Set default values
+        this.actualCreationTime = (+new Date())
         this.data = foundry.utils.mergeObject({
             flagVersion: flagManager.latestFlagVersion,
             timestamp: (+new Date()),
@@ -39,78 +49,366 @@ export default class CanvasEffect {
             playbackRate: 1.0
         }, inData);
 
+        this.twister = new MersenneTwister(this.data.creationTime);
+
+        this.scene = game.scenes.get(this.data.sceneId);
+
+        this.isRangeFind = false;
+
+        this._source = false;
+        this._sourceOffset = false;
+
+        this._target = false;
+        this._targetOffset = false;
+
+        this.context = this.data.attachTo && this.source?.document ? this.source.document : this.scene;
+
+        this.nameOffsetMap = Object.fromEntries(Object.entries(foundry.utils.duplicate(this.data.nameOffsetMap)).map(entry => {
+            return [entry[0], this.setupOffsetMap(entry[1])];
+        }));
+
     }
 
-    get layer(){
-        return this.data.layer ?? 2;
+    get source() {
+        if (!this._source && this.data.source) {
+
+            let source = this.data.source;
+            let offsetMap = this.nameOffsetMap?.[this.data.source];
+            if (offsetMap) {
+                source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
+            } else if (!canvaslib.is_coordinate(source)) {
+                source = lib.get_object_from_scene(source, this.data.sceneId);
+                source = source?._object ?? source;
+            }
+
+            this._source = source;
+
+        }
+
+        return this._source;
     }
 
-    get contextDocument(){
-        return this.context?.document ?? this.context;
+    get originalSourcePosition() {
+        if (!this._sourcePosition && this.source) {
+            if (this.data.attachTo) {
+                this._sourcePosition = this.source;
+            } else {
+                this._sourcePosition = canvaslib.get_object_position(this.source);
+            }
+        }
+        return this._sourcePosition?.worldPosition || this._sourcePosition?.center || this._sourcePosition || this.source;
     }
 
-    get userCanUpdate(){
+    get sourcePosition() {
+
+        const position = this.originalSourcePosition;
+        const offset = this.sourceOffset;
+
+        return {
+            x: position.x - offset.x,
+            y: position.y - offset.y
+        };
+
+    }
+
+    get sourceOffset() {
+
+        if (this._sourceOffset) {
+            return this._sourceOffset;
+        }
+
+        const sourceOffset = {
+            x: 0,
+            y: 0
+        }
+
+        let twister = this.twister;
+
+        let nameOffsetMap = this.nameOffsetMap?.[this.data.name];
+
+        if (nameOffsetMap) {
+            twister = nameOffsetMap.twister;
+        }
+
+        if (!this.target) {
+
+            if (this.data.missed) {
+                let _offset = canvaslib.calculate_missed_position(this.source, this.target, twister);
+                sourceOffset.x -= _offset.x;
+                sourceOffset.y -= _offset.y;
+            }
+
+            if (this.data.randomOffset) {
+                let _offset = canvaslib.get_random_offset(this.source, this.data.randomOffset, twister);
+                sourceOffset.x -= _offset.x;
+                sourceOffset.y -= _offset.y;
+            }
+
+            if (this.data.offset) {
+                sourceOffset.x -= this.data.offset.x;
+                sourceOffset.y -= this.data.offset.y;
+            }
+
+        }
+
+        let sourceOffsetMap = this.nameOffsetMap?.[this.data.source];
+
+        if (sourceOffsetMap) {
+
+            if (sourceOffsetMap.missed) {
+                let _offset = canvaslib.calculate_missed_position(sourceOffsetMap.sourceObj, sourceOffsetMap.targetObj, sourceOffsetMap.twister);
+                sourceOffset.x -= _offset.x;
+                sourceOffset.y -= _offset.y;
+            }
+
+            if (sourceOffsetMap.randomOffset) {
+                let _offset = canvaslib.get_random_offset(sourceOffsetMap.actualTarget, sourceOffsetMap.randomOffset, sourceOffsetMap.twister);
+                sourceOffset.x -= _offset.x;
+                sourceOffset.y -= _offset.y;
+            }
+
+            if (sourceOffsetMap.offset) {
+                sourceOffset.x -= sourceOffsetMap.offset.x;
+                sourceOffset.y -= sourceOffsetMap.offset.y;
+            }
+
+        }
+
+        this._sourceOffset = sourceOffset;
+
+        return this._sourceOffset;
+
+    }
+
+    get target() {
+        if (!this._target && this.data.target) {
+
+            let target = this.data.target;
+            let offsetMap = this.nameOffsetMap?.[this.data.target];
+            if (offsetMap) {
+                target = offsetMap?.targetObj || offsetMap?.sourceObj || target;
+            } else if (!canvaslib.is_coordinate(target)) {
+                target = lib.get_object_from_scene(target, this.data.sceneId);
+                target = target?._object ?? target;
+            }
+
+            this._target = target;
+        }
+        return this._target;
+    }
+
+    get originalTargetPosition() {
+        if (!this._targetPosition && this.target) {
+            if (this.data.reachTowards?.attachTo) {
+                this._targetPosition = this.target;
+            } else {
+                this._targetPosition = canvaslib.get_object_position(this.target, true);
+            }
+        }
+
+        return this._targetPosition?.worldPosition || this._targetPosition?.center || this._targetPosition || this.target;
+    }
+
+    get targetPosition() {
+
+        const position = this.originalTargetPosition;
+        const offset = this.targetOffset;
+
+        return {
+            x: position.x - offset.x,
+            y: position.y - offset.y
+        };
+
+    }
+
+    get targetOffset() {
+
+        if (this._targetOffset) {
+            return this._targetOffset;
+        }
+
+        const targetOffset = {
+            x: 0,
+            y: 0
+        }
+
+        let twister = this.twister;
+
+        let nameOffsetMap = this.nameOffsetMap?.[this.data.name];
+
+        if (nameOffsetMap) {
+            twister = nameOffsetMap.twister;
+        }
+
+        if (this.data.missed) {
+            let _offset = canvaslib.calculate_missed_position(this.source, this.target, twister);
+            targetOffset.x -= _offset.x;
+            targetOffset.y -= _offset.y;
+        }
+
+        if (this.data.randomOffset) {
+            let _offset = canvaslib.get_random_offset(this.target, this.data.randomOffset, twister);
+            targetOffset.x -= _offset.x;
+            targetOffset.y -= _offset.y;
+        }
+
+        if (this.data.offset) {
+            targetOffset.x -= this.data.offset.x;
+            targetOffset.y -= this.data.offset.y;
+        }
+
+        let targetOffsetMap = this.nameOffsetMap?.[this.data.target];
+
+        if (targetOffsetMap) {
+
+            if (targetOffsetMap.missed) {
+                let _offset = canvaslib.calculate_missed_position(targetOffsetMap.sourceObj, targetOffsetMap.targetObj, targetOffsetMap.twister);
+                targetOffset.x -= _offset.x;
+                targetOffset.y -= _offset.y;
+            }
+
+            if (targetOffsetMap.randomOffset) {
+                let _offset = canvaslib.get_random_offset(targetOffsetMap.actualTarget, targetOffsetMap.randomOffset, targetOffsetMap.twister);
+                targetOffset.x -= _offset.x;
+                targetOffset.y -= _offset.y;
+            }
+
+            if (targetOffsetMap.offset) {
+                targetOffset.x -= targetOffsetMap.offset.x;
+                targetOffset.y -= targetOffsetMap.offset.y;
+            }
+
+        }
+
+        this._targetOffset = targetOffset;
+
+        return this._targetOffset;
+
+    }
+
+    get worldPosition() {
+        const t = canvas.stage.worldTransform;
+        return {
+            x: (this.sprite.worldTransform.tx - t.tx) / canvas.stage.scale.x,
+            y: (this.sprite.worldTransform.ty - t.ty) / canvas.stage.scale.y
+        }
+    }
+
+    get id() {
+        return this.data.id;
+    }
+
+    get userCanUpdate() {
         return game.user.isGM
             || this.data.creatorUserId === game.user.id
-            || (this.contextDocument && this.contextDocument.canUserModify(game.user, "update"));
+            || (this.data.attachTo && this.source.document.canUserModify(game.user, "update"));
     }
 
-    get userCanDelete(){
-        return this.userCanUpdate || lib.userCanDo("permissions-effect-delete");
+    get userCanDelete() {
+        return this.userCanUpdate || lib.user_can_do("permissions-effect-delete");
     }
 
-    get context(){
-        if(!this._context){
-            this._context = this.data.attachTo
-                ? lib.getObjectFromScene(this.data.attachTo.id, this.data.sceneId)
-                : game.scenes.get(this.data.sceneId);
-        }
-        return this._context;
-    }
-
-    get onCurrentScene(){
+    get onCurrentScene() {
         return this.data.sceneId === game.user.viewedScene;
     }
 
-    _getPlaceableObjectContainer(){
-
-        let containers = this.context.children.filter(child => child?.parentName === "sequencer");
-
-        if(!containers.length) {
-            let aboveContainer = new PIXI.Container();
-            aboveContainer.sortableChildren = true;
-            aboveContainer.parentName = "sequencer";
-            aboveContainer.below = false;
-            aboveContainer.zIndex = 1000;
-            this.context.addChild(aboveContainer);
-            containers.push(aboveContainer);
-
-            let belowContainer = new PIXI.Container();
-            belowContainer.sortableChildren = true;
-            belowContainer.parentName = "sequencer";
-            belowContainer.below = true;
-            belowContainer.zIndex = -1000;
-            this.context.addChild(belowContainer);
-            containers.push(belowContainer);
-
-            this.context.sortChildren();
-        }
-
-        return containers.find(child => child?.below === (this.layer ?? 2) < 2);
+    get shouldShowFadedVersion() {
+        // If the effect is going to be played for a subset of users
+        // And the users do not contain the GM
+        // And the GM has not set the opacity user-specific effects to 0
+        // And it is not an effect that is only played for the user who created the effect
+        return this.data.users.length
+            && !this.data.users.includes(game.userId)
+            && game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") !== 0
+            && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId));
     }
 
-    _getCanvasContainer(){
+    get isValid() {
+        return this.file || this.data.text;
+    }
+
+    get videoIsPlaying() {
+        return (this.video && this.video.currentTime > 0 && !this.video.paused && !this.video.ended);
+    }
+
+    get video() {
+        return this._video;
+    }
+
+    set video(inVideo) {
+
+        if (!inVideo) return;
+
+        inVideo.playbackRate = this.data.playbackRate ? this.data.playbackRate : 1.0;
+
+        if (!this._video) {
+            this._video = inVideo;
+            return;
+        }
+
+        const currentTime = this._video?.currentTime ?? this.startTime;
+        const isLooping = this._video?.loop;
+
+        this._video = inVideo;
+
+        this._video.currentTime = currentTime;
+        this._video.loop = isLooping;
+
+        this.texture.update();
+
+    }
+
+    get gridSizeDifference() {
+        return canvas.grid.size / this.data.gridSize;
+    }
+
+    static make(inData) {
+        return !inData.persist
+            ? new CanvasEffect(inData)
+            : new PersistentCanvasEffect(inData);
+    }
+
+    setupOffsetMap(inOffsetMap) {
+
+        if (!inOffsetMap.setup) {
+            inOffsetMap.setup = true;
+            inOffsetMap.sourceObj = this.establishTarget(inOffsetMap.source);
+            inOffsetMap.targetObj = this.establishTarget(inOffsetMap.target);
+            inOffsetMap.actualTarget = inOffsetMap.targetObj || inOffsetMap.sourceObj;
+
+            let repetition = this.data.repetition % inOffsetMap.repetitions;
+            const seed = canvaslib.get_hash(`${inOffsetMap.seed}-${repetition}`);
+            inOffsetMap.twister = new MersenneTwister(seed);
+        }
+
+        return inOffsetMap;
+    }
+
+    establishTarget(inTarget) {
+        if (!canvaslib.is_coordinate(inTarget)) {
+            inTarget = lib.get_object_from_scene(inTarget, this.data.sceneId);
+            inTarget = inTarget?._object ?? inTarget;
+        }
+        return inTarget;
+    }
+
+    addToContainer() {
+
+        if (this.data.screenSpace) {
+            Sequencer.UILayer.container.addChild(this);
+            return;
+        }
 
         let layer = [
             canvas.background,
             canvas.sequencerEffectsBelowTokens,
             canvas.sequencerEffectsAboveTokens
-        ][this.layer];
+        ][this.data.layer];
 
         let container = layer.children.find(child => child?.parentName === "sequencer");
 
-        if(!container) {
-            if(layer === canvas.background){
+        if (!container) {
+            if (layer === canvas.background) {
                 layer.sortableChildren = true;
                 layer.children.filter(child => child.sortableChildren).map(child => child.zIndex = 1);
             }
@@ -122,42 +420,477 @@ export default class CanvasEffect {
             layer.sortChildren();
         }
 
-        return container;
+        container.addChild(this);
 
     }
 
-    _getScreenSpaceContainer(){
+    async play() {
 
-        let container = new PIXI.Container();
+        this.file = await this.loadTexture();
 
-        container.effect = this;
+        const shouldPlay = (
+            game.settings.get('sequencer', 'effectsEnabled') &&
+            game.user.viewedScene === this.data.sceneId &&
+            (
+                game.user.isGM ||
+                this.data.users.length === 0 ||
+                this.data.users.includes(game.userId) ||
+                this.data.creatorUserId === game.userId
+            )
+        );
 
-        container.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        let promise = new Promise(async (resolve, reject) => {
+            this.resolve = resolve;
+            if (!this.isValid) {
+                reject();
+            } else {
+                await this.calculateDuration();
+                if (shouldPlay) {
+                    Hooks.call("createSequencerEffect", this);
+                    this.initialize();
+                }
+            }
+        });
 
-        Sequencer.UILayer.container.addChild(container);
-
-        return container;
+        return {
+            duration: this.animationDuration,
+            promise: promise
+        }
 
     }
 
-    _getContainer(){
+    async loadTexture() {
 
-        if(this.data.screenSpace) return this._getScreenSpaceContainer();
+        if (this.data.file === "") {
+            return false;
+        }
 
-        return this.data.attachTo ? this._getPlaceableObjectContainer() : this._getCanvasContainer();
+        if (!(Sequencer.Database.entryExists(this.data.file) || (await srcExists(this.data.file)))) {
+            let error = "Sequencer "
+            if (this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
+            error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.ErrorCouldNotPlay")}:<br>${this.data.file}`;
+            ui.notifications.error(error);
+            console.error(error.replace("<br>", "\n"))
+            return;
+        }
+
+        if (!Sequencer.Database.entryExists(this.data.file)) {
+            let texture = await SequencerFileCache.loadFile(this.data.file);
+            this.video = texture?.baseTexture?.resource?.source ?? false;
+            this.texture = texture;
+            return texture;
+        }
+
+        const sequencerFile = Sequencer.Database.getEntry(this.data.file).copy();
+        sequencerFile.forcedIndex = this.data.forcedIndex;
+        sequencerFile.twister = this.twister;
+
+        this.isRangeFind = sequencerFile.rangeFind && this.source;
+
+        if (this.isRangeFind) {
+            if (!this.target) this._targetPosition = this.sourcePosition;
+            const _ray = new Ray(this.sourcePosition, this.targetPosition);
+            this.texture = await sequencerFile.getTextureForDistance(_ray.distance);
+        } else {
+            this.texture = await sequencerFile.getTexture();
+        }
+
+        this.video = this.texture?.baseTexture?.resource?.source ?? false;
+
+        return sequencerFile;
 
     }
 
-    highlight(show){
-        if(!this.highlightBox && this.sprite){
+    endEffect() {
+
+        if (!this.ended) {
+            this.ended = true;
+
+            this.ticker.destroy();
+            SequencerAnimationEngine.endAnimations(this);
+
+            try {
+                this.video.removeAttribute('src');
+                this.video.pause();
+                this.video.load();
+            } catch (err) {
+            }
+
+            try {
+                if (this.data.screenSpace) {
+                    Sequencer.UILayer.removeContainerByEffect(this);
+                }
+                this.sprite.filters = [];
+                this.spriteContainer.removeChild(this.sprite);
+                this.spriteContainer.destroy();
+                this.sprite.destroy();
+            } catch (err) {
+            }
+
+            this.destroy();
+
+        }
+    }
+
+    destroy(options) {
+        return super.destroy(options);
+    }
+
+    async initialize(play = true) {
+        this.addToContainer();
+        await this.createSprite();
+        await this.transformSprite();
+        this.playCustomAnimations();
+        this.playPresetAnimations();
+        this.setEndTimeout();
+        this.timeoutSpriteVisibility();
+        if (play) this.tryPlay();
+        lib.debug(`Playing effect:`, this.data);
+    }
+
+    playPresetAnimations() {
+        this.moveTowards();
+
+        this.fadeIn();
+        this.scaleIn();
+        this.rotateIn();
+
+        this.fadeOut();
+        this.scaleOut();
+        this.rotateOut();
+    }
+
+    async calculateDuration() {
+
+        this.animationDuration = this.data.duration || (this.video?.duration ?? 1) * 1000;
+
+        if (this.data.speed && this.data.moves) {
+            let durationFromSpeed = (this.data.distance / this.data.speed) * 1000;
+            this.animationDuration = Math.max(durationFromSpeed, this.data.duration);
+        } else if (!this.data.duration && !this.video) {
+            this.determineStaticImageDuration();
+        }
+
+        this.clampAnimationDuration();
+
+        this.animationDuration /= (this.data.playbackRate ?? 1.0);
+
+        if (this.video) {
+            this.video.loop = (this.animationDuration / 1000) > this.video.duration && !this.data.noLoop;
+        }
+
+    }
+
+    determineStaticImageDuration() {
+
+        let fadeDuration = (this.data.fadeIn?.duration ?? 0) + (this.data.fadeOut?.duration ?? 0);
+        let scaleDuration = (this.data.scaleIn?.duration ?? 0) + (this.data.scaleOut?.duration ?? 0);
+        let rotateDuration = (this.data.rotateIn?.duration ?? 0) + (this.data.rotateOut?.duration ?? 0);
+        let moveDuration = 0;
+        if (this.data.moves) {
+            moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + this.data.moves.delay;
+        }
+
+        let animationDurations = this.data.animations ? Math.max(...this.data.animations.map(animation => {
+            if (animation.looping) {
+                if (animation.loops === 0) return 0;
+                return ((animation?.duration ?? 0) * (animation?.loops ?? 0)) + (animation?.delay ?? 0);
+            } else {
+                return (animation?.duration ?? 0) + (animation?.delay ?? 0);
+            }
+        })) : 0;
+
+        this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration, animationDurations);
+
+        this.animationDuration = this.animationDuration || 1000;
+
+    }
+
+    clampAnimationDuration() {
+
+        this.startTime = 0;
+        if (this.data.time?.start && this.video?.currentTime !== undefined) {
+            let currentTime = !this.data.time.start.isPerc
+                ? this.data.time.start.value ?? 0
+                : (this.animationDuration * this.data.time.start.value);
+            this.video.currentTime = currentTime / 1000;
+            this.startTime = this.video.currentTime;
+        }
+
+        if (this.data.time?.end) {
+            this.animationDuration = !this.data.time.end.isPerc
+                ? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.animationDuration - this.data.time.end.value
+                : this.animationDuration * this.data.time.end.value;
+        }
+
+        this.endTime = this.animationDuration / 1000;
+
+    }
+
+    timeoutSpriteVisibility() {
+        setTimeout(() => {
+            this.sprite.visible = true;
+        }, this.data.animations ? 50 : 0);
+    }
+
+    async createSprite() {
+
+        if (this.data.text) {
+            //this.data.text.fontSize = (this.data.text?.fontSize ?? 26) * (150 / canvas.grid.size);
+            this.text = new PIXI.Text(this.data.text.text, this.data.text);
+            this.text.resolution = 10;
+        }
+
+        this.sprite = new PIXI.Sprite();
+        this.sprite.zIndex = 0;
+
+        this.alphaFilter = new PIXI.filters.AlphaFilter(this.data.opacity)
+        this.sprite.filters = [];
+
+        this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
+
+        for (let [filterName, filterData] of Object.entries(this.data.filters ?? {})) {
+            const filter = new filters[filterName](filterData.data);
+            this.sprite.filters.push(filter);
+            const filterKeyName = filterData.name || filterName;
+            this.filters[filterKeyName] = filter;
+        }
+
+        this.sprite.filters.push(this.alphaFilter)
+
+        this.sprite.position.set(
+            this.data.spriteOffset?.x ?? 0,
+            this.data.spriteOffset?.y ?? 0
+        );
+
+        this.sprite.anchor.set(
+            this.data.spriteAnchor?.x ?? 0.5,
+            this.data.spriteAnchor?.y ?? 0.5
+        );
+
+        this.sprite.visible = !this.data.animations;
+
+        this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle));
+
+        this.spriteContainer = new PIXI.Container();
+        this.spriteContainer.sortableChildren = true;
+        this.spriteContainer.addChild(this.sprite);
+
+        if (this.data.tint) {
+            this.sprite.tint = this.data.tint;
+        }
+
+        if (this.text) {
+            this.sprite.addChild(this.text);
+            this.text.anchor.set(
+                this.data.text?.anchor?.x ?? 0.5,
+                this.data.text?.anchor?.y ?? 0.5
+            );
+        }
+
+        if (this.shouldShowFadedVersion) {
+            this.filters = [
+                new PIXI.filters.ColorMatrixFilter({ saturation: -1 }),
+                new PIXI.filters.AlphaFilter(game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100)
+            ];
+        }
+
+        this.zeroRotationContainer = new PIXI.Container();
+        this.zeroRotationContainer.addChild(this.spriteContainer);
+
+        this.addChild(this.zeroRotationContainer);
+
+    }
+
+    async applyDistanceScaling() {
+
+        const ray = new Ray(this.sourcePosition, this.targetPosition);
+
+        if (this.distance === ray.distance) return;
+
+        this.distance = ray.distance;
+
+        const { texture, spriteScale, spriteAnchor } = await this.file.getScalingForDistance(ray.distance);
+
+        if (this.texture !== texture || !this.sprite.texture.valid) {
+            this.sprite.texture = texture;
+        }
+
+        this.sprite.scale.set(
+            spriteScale * this.data.scale.x * this.data.flipX,
+            spriteScale * this.data.scale.y * this.data.flipY
+        )
+
+        this.sprite.anchor.set(
+            this.data.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
+            (this.data?.anchor?.y ?? 0.5)
+        )
+
+        this.rotateTowards(ray);
+
+        if (this.texture === texture) return;
+
+        this.texture = this.sprite.texture;
+
+        this.video = this.texture?.baseTexture?.resource?.source ?? false;
+
+        await this.tryPlay();
+
+    }
+
+    rotateTowards(ray = false) {
+
+        if (!ray) {
+            const sourcePosition = this.data.flipX === 1 ? this.sourcePosition : this.targetPosition;
+            const targetPosition = this.data.flipX === 1 ? this.targetPosition : this.sourcePosition;
+            ray = new Ray(sourcePosition, targetPosition);
+        }
+
+        const angle = Math.normalizeRadians(ray.angle)
+
+        this.rotation = angle;
+
+        if (!this.isRangeFind && this.data.zeroSpriteRotation) {
+
+            this.zeroRotationContainer.rotation = -angle;
+
+        }
+
+    }
+
+    async transformSprite() {
+
+        if (this.data.reachTowards) {
+
+            await this.applyDistanceScaling();
+
+            if (this.data.reachTowards?.attachTo) {
+                this.ticker.add(async () => {
+                    try {
+                        await this.applyDistanceScaling();
+                    } catch (err) {
+                        ticker.destroy();
+                    }
+                });
+            }
+
+        } else if (this.data.rotateTowards) {
+            this.rotateTowards();
+            if (this.data.rotateTowards?.attachTo) {
+                this.ticker.add(async () => {
+                    try {
+                        await this.rotateTowards();
+                    } catch (err) {
+                        ticker.destroy();
+                    }
+                });
+            }
+        }
+
+        if (!this.isRangeFind && !this.data.reachTowards) {
+
+            if (this.data.scaleToObject) {
+
+                let { width, height } = this.target
+                    ? canvaslib.get_object_dimensions(this.target)
+                    : canvaslib.get_object_dimensions(this.source);
+
+                this.sprite.width = width * this.data.scale.x * this.data.flipX;
+                this.sprite.height = height * this.data.scale.y * this.data.flipY;
+
+            } else if (this.data.size) {
+
+                const ratio = this.sprite.height / this.sprite.width;
+
+                let { height, width } = this.data.size;
+
+                if (this.data.size.width === "auto" || this.data.size.height === "auto") {
+
+                    height = this.sprite.height;
+                    width = this.sprite.width;
+
+                    if (this.data.size.width === "auto") {
+                        height = this.data.size.height;
+                        width = height / ratio;
+                    } else if (this.data.size.height === "auto") {
+                        width = this.data.size.width;
+                        height = width * ratio;
+                    }
+
+                }
+
+                this.sprite.width = (width * this.data.scale.x) * this.data.flipX;
+                this.sprite.height = (height * this.data.scale.y) * this.data.flipY;
+
+            } else {
+
+                this.sprite.scale.set(
+                    (this.data.scale?.x ?? 1.0) * this.data.flipX,
+                    (this.data.scale?.y ?? 1.0) * this.data.flipY
+                );
+
+            }
+
+        }
+
+        if (!this.sprite.texture.valid && this.texture?.valid) {
+            this.sprite.texture = this.texture;
+        }
+
+        if (this.video && (this.startTime || this.loopOffset > 0) && this.video?.currentTime !== undefined) {
+            await lib.wait(20)
+            this.sprite.texture.update();
+        }
+
+        if (this.data.attachTo) {
+
+            this.ticker.add(() => {
+
+                let offset = { x: 0, y: 0 };
+
+                if (this.data.align) {
+
+                    offset = canvaslib.align({
+                        context: this.source,
+                        spriteWidth: this.sprite.width,
+                        spriteHeight: this.sprite.height,
+                        align: this.data.align
+                    })
+
+                }
+
+                this.position.set(
+                    this.sourcePosition.x - offset.x,
+                    this.sourcePosition.y - offset.y
+                );
+            });
+
+        } else if (!this.data.screenSpace) {
+
+            this.position.set(
+                this.sourcePosition.x,
+                this.sourcePosition.y
+            );
+
+        }
+
+        this.pivot.set(
+            lib.interpolate(this.sprite.width * -0.5, this.sprite.width * 0.5, this.data?.anchor?.x ?? 0.5),
+            lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data?.anchor?.y ?? 0.5)
+        );
+
+    }
+
+    highlight(show) {
+        if (!this.highlightBox && this.sprite) {
             this.highlightBox = this.createBox("0xFFFFFF", 1, 9);
-            this.sprite.parent.addChild(this.highlightBox);
+            this.spriteContainer.addChild(this.highlightBox);
         }
         this.highlightBox.visible = show;
         return this;
     }
 
-    createBox(color, size, zIndex){
+    createBox(color, size, zIndex) {
 
         const bounds = this.spriteContainer.getLocalBounds();
 
@@ -170,12 +903,12 @@ export default class CanvasEffect {
             color: color,
             alignment: 0
         })
-        box.moveTo(width/-2,height/-2);
-        box.lineTo(width/2,height/-2);
-        box.lineTo(width/2,height/2);
-        box.lineTo(width/-2,height/2);
-        box.lineTo(width/-2,height/-2);
-        box.lineTo(width/2,height/-2);
+        box.moveTo(width / -2, height / -2);
+        box.lineTo(width / 2, height / -2);
+        box.lineTo(width / 2, height / 2);
+        box.lineTo(width / -2, height / 2);
+        box.lineTo(width / -2, height / -2);
+        box.lineTo(width / 2, height / -2);
         box.visible = false;
         box.zIndex = zIndex;
 
@@ -183,246 +916,12 @@ export default class CanvasEffect {
 
     }
 
-    async initialize(){
-        await this.attachSprite();
-        this.playCustomAnimations();
-        this.moveTowards();
-        this.fadeIn();
-        this.fadeOut();
-        this.fadeInAudio();
-        this.fadeOutAudio();
-        this.scaleIn();
-        this.scaleOut();
-        this.rotateIn();
-        this.rotateOut();
-        this.setEndTimeout();
-        this.debug();
-        this.tryPlay();
-        this.timeoutSpriteVisibility();
-    }
-
-    timeoutSpriteVisibility(){
-        setTimeout(() => {
-            this.sprite.visible = true;
-        }, this.data.animatedProperties.animations ? 50 : 0);
-    }
-
-    calculateDuration() {
-
-		this.animationDuration = this.data.duration || (this.source?.duration ?? 1) * 1000;
-
-		let moves = this.data.animatedProperties.moves;
-
-		if(this.data.speed && moves){
-
-			let durationFromSpeed = (this.data.distance / this.data.speed) * 1000;
-
-			this.animationDuration = Math.max(durationFromSpeed, this.data.duration);
-
-		}else{
-
-			if(!this.data.duration && !this.source){
-
-				let animProp = this.data.animatedProperties;
-				let fadeDuration = (animProp.fadeIn?.duration ?? 0) + (animProp.fadeOut?.duration ?? 0) ;
-				let scaleDuration = (animProp.scaleIn?.duration ?? 0) + (animProp.scaleOut?.duration ?? 0) ;
-				let rotateDuration = (animProp.rotateIn?.duration ?? 0) + (animProp.rotateOut?.duration ?? 0) ;
-				let moveDuration = 0;
-				if(moves) {
-					moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + moves.delay;
-				}
-
-                let animationDurations = animProp.animations ? Math.max(...animProp.animations.map(animation => {
-                    if(animation.looping){
-                        if(animation.loops === 0) return 0;
-                        return ((animation?.duration ?? 0) * (animation?.loops ?? 0)) + (animation?.delay ?? 0);
-                    }else{
-                        return (animation?.duration ?? 0) + (animation?.delay ?? 0);
-                    }
-                })) : 0;
-
-				this.animationDuration = Math.max(fadeDuration, scaleDuration, rotateDuration, moveDuration, animationDurations);
-
-				this.animationDuration = this.animationDuration || 1000;
-
-			}
-
-		}
-
-        this.startTime = 0;
-		if(this.data.time?.start && this.source?.currentTime !== undefined) {
-			let currentTime = !this.data.time.start.isPerc
-				? this.data.time.start.value ?? 0
-				: (this.animationDuration * this.data.time.start.value);
-			this.source.currentTime = currentTime / 1000;
-            this.startTime = this.source.currentTime;
-		}
-
-		if(this.data.time?.end){
-			this.animationDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange ? this.data.time.end.value - this.data.time.start.value : this.animationDuration - this.data.time.end.value
-				: this.animationDuration * this.data.time.end.value;
-		}
-        this.endTime = this.animationDuration / 1000;
-
-		this.animationDuration /= (this.data.playbackRate ?? 1.0);
-
-		if(this.source){
-		    this.source.loop = (this.animationDuration / 1000) > this.source.duration && !this.source.loop && !this.data.noLoop;
-        }
-
-	}
-
-	timeoutRemove(){
-        if(!lib.getObjectFromScene(this.data.attachTo.id)){
-            Sequencer.EffectManager.endEffects({ effects: this });
-            return;
-        }
-        setTimeout(this.timeoutRemove.bind(this), 1000);
-    }
-
-    get shouldShowFadedVersion(){
-        // If the effect is going to be played for a subset of users
-        // And the users do not contain the GM
-        // And the GM has not set the opacity user-specific effects to 0
-        // And it is not an effect that is only played for the user who created the effect
-        return this.data.users.length
-            && !this.data.users.includes(game.userId)
-            && game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") !== 0
-            && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId));
-    }
-
-    async attachSprite() {
-
-        this.container = this._getContainer();
-        this.container.addChild(this.spriteContainer);
-
-        if(this.shouldShowFadedVersion){
-            this.spriteContainer.filters = [
-                new PIXI.filters.ColorMatrixFilter({ saturation: -1 }),
-                new PIXI.filters.AlphaFilter(game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100)
-            ];
-        }
-
-        this.applyFilters();
-        this.sprite.visible = this.sourceIsPlaying;
-
-        this.originalSpriteDimensions.width = this.sprite.width;
-        this.originalSpriteDimensions.height = this.sprite.height;
-
-        if(this.data.size){
-
-            const ratio = this.sprite.height / this.sprite.width;
-
-            let { height, width } = this.data.size;
-
-            if(this.data.size.width === "auto" || this.data.size.height === "auto"){
-
-                height = this.sprite.height;
-                width = this.sprite.width;
-
-                if(this.data.size.width === "auto"){
-                    height = this.data.size.height;
-                    width = height / ratio;
-                }else if(this.data.size.height === "auto"){
-                    width = this.data.size.width;
-                    height = width * ratio;
-                }
-
-            }
-
-            this.sprite.width = width * this.data.scale.x;
-            this.sprite.height = height * this.data.scale.y;
-
-        } else {
-            this.sprite.scale.set(
-                this.data.scale.x * this.data.gridSizeDifference,
-                this.data.scale.y * this.data.gridSizeDifference
-            );
-        }
-
-        if(this.data.attachTo){
-
-            this.spriteContainer.position.set(
-                this.context.icon.width*0.5,
-                this.context.icon.height*0.5
-            );
-
-            let align_container = new PIXI.Container();
-            this.spriteContainer.addChild(align_container);
-            this.spriteContainer.removeChild(this.sprite);
-            align_container.addChild(this.sprite);
-
-            let widthRatio = (this.context.icon.width - (this.sprite.width * 0.5)) / this.context.icon.width;
-            let heightRatio = (this.context.icon.height - (this.sprite.height * 0.5)) / this.context.icon.height;
-
-            const align = {
-                "top-left":     { x: widthRatio,    y: heightRatio },
-                "top":          { x: 0.5,           y: heightRatio },
-                "top-right":    { x: 1-widthRatio,  y: heightRatio },
-                "left":         { x: widthRatio,    y: 0.5 },
-                "center":       { x: 0.5,           y: 0.5 },
-                "right":        { x: 1-widthRatio,  y: 0.5 },
-                "bottom-left":  { x: widthRatio,    y: 1-heightRatio },
-                "bottom":       { x: 0.5,           y: 1-heightRatio },
-                "bottom-right": { x: 1-widthRatio,  y: 1-heightRatio }
-            }[this.data.attachTo.align];
-
-            align_container.pivot.set(
-                lib.interpolate(this.context.icon.width*-0.5,this.context.icon.width*0.5, align.x),
-                lib.interpolate(this.context.icon.height*-0.5,this.context.icon.height*0.5, align.y)
-            );
-
-        }else{
-
-            this.spriteContainer.position.set(this.data.position.x, this.data.position.y);
-
-        }
-
-        this.spriteContainer.rotation = Math.normalizeRadians(this.data.rotation - Math.toRadians(this.data.angle));
-
-        if(!this.data.anchor){
-
-            if(!this.data.screenSpaceAnchor){
-                this.data.screenSpaceAnchor = { x: 0.5, y: 0.5 };
-            }
-
-            if(this.data.screenSpace){
-                this.data.anchor = { ...this.data.screenSpaceAnchor };
-            }else{
-                this.data.anchor = { x: 0.5, y: 0.5 };
-            }
-
-        }else if(!this.data.screenSpaceAnchor){
-            this.data.screenSpaceAnchor = { ...this.data.anchor };
-        }
-
-        this.spriteContainer.pivot.set(
-            lib.interpolate(this.sprite.width*-0.5,this.sprite.width*0.5, this.data.anchor.x),
-            lib.interpolate(this.sprite.height*-0.5,this.sprite.height*0.5, this.data.anchor.y)
-        );
-
-        if(this.source && (this.startTime || this.loopOffset > 0) && this.source?.currentTime !== undefined) {
-            await lib.wait(20)
-            this.texture.update();
-        }
-
-        if(this.source?.currentTime !== undefined){
-            this.source.playbackRate = this.data.playbackRate;
-        }
-
-    }
-
-    get sourceIsPlaying(){
-        return (this.source && this.source.currentTime > 0 && !this.source.paused && !this.source.ended) || this.text;
-    }
-
-    tryPlay(){
-        if(this.sourceIsPlaying) return;
+    tryPlay() {
+        if (this.videoIsPlaying) return;
         return new Promise(async (resolve) => {
-            if (this.source && !this.ended) {
+            if (this.video && !this.ended) {
                 try {
-                    await this.source.play();
+                    await this.video.play();
                     resolve();
                 } catch (err) {
                     setTimeout(() => {
@@ -433,38 +932,22 @@ export default class CanvasEffect {
         });
     }
 
-    applyFilters(){
+    counterAnimateRotation(animation) {
 
-        this.alphaFilter = new PIXI.filters.AlphaFilter(this.data.opacity)
-        this.sprite.filters = [];
-
-        for(let [filterName, filterData] of Object.entries(this.data.filters ?? {})){
-             const filter = new filters[filterName](filterData.data);
-             this.sprite.filters.push(filter);
-             const filterKeyName = filterData.name || filterName;
-             this.filters[filterKeyName] = filter;
-        }
-
-        this.sprite.filters.push(this.alphaFilter)
-
-    }
-
-    counterAnimateRotation(animation){
-
-        if(this.data.zeroSpriteRotation && animation.target === this.spriteContainer){
+        if (this.data.zeroSpriteRotation && animation.target === this.spriteContainer) {
             delete animation.target;
             let counterAnimation = foundry.utils.duplicate(animation);
             animation.target = this.spriteContainer;
             counterAnimation.target = this.sprite;
-            if(counterAnimation.values){
-                counterAnimation.values = counterAnimation.values.map(value => value*-1);
-            }else{
+            if (counterAnimation.values) {
+                counterAnimation.values = counterAnimation.values.map(value => value * -1);
+            } else {
                 counterAnimation.from *= -1;
                 counterAnimation.to *= -1;
             }
-            if(!Array.isArray(animation)) {
+            if (!Array.isArray(animation)) {
                 animation = [animation, counterAnimation]
-            }else{
+            } else {
                 animation.push(counterAnimation);
             }
         }
@@ -473,23 +956,23 @@ export default class CanvasEffect {
 
     }
 
-    playCustomAnimations(){
+    playCustomAnimations() {
 
-        if(!this.data.animatedProperties.animations) return 0;
+        if (!this.data.animations) return 0;
 
         let animationsToSend = [];
 
-        const animations = foundry.utils.duplicate(this.data.animatedProperties.animations);
+        const animations = foundry.utils.duplicate(this.data.animations);
 
         const oneShotAnimations = animations.filter(animation => !animation.looping);
 
-        for(let animation of oneShotAnimations){
+        for (let animation of oneShotAnimations) {
 
             animation.target = getProperty(this, animation.target);
 
-            if(!animation.target) continue;
+            if (!animation.target) continue;
 
-            if(animation.propertyName.indexOf("rotation") > -1){
+            if (animation.propertyName.indexOf("rotation") > -1) {
                 animation.from = ((animation.from / 180) * Math.PI);
                 animation.to = ((animation.to / 180) * Math.PI);
             }
@@ -500,13 +983,13 @@ export default class CanvasEffect {
 
         const loopingAnimations = animations.filter(animation => animation.looping);
 
-        for(let animation of loopingAnimations){
+        for (let animation of loopingAnimations) {
 
             animation.target = getProperty(this, animation.target);
 
-            if(!animation.target) continue;
+            if (!animation.target) continue;
 
-            if(animation.propertyName.indexOf("rotation") > -1){
+            if (animation.propertyName.indexOf("rotation") > -1) {
                 animation.values = animation.values.map(value => {
                     return ((value / 180) * Math.PI);
                 });
@@ -516,24 +999,24 @@ export default class CanvasEffect {
 
         }
 
-        SequencerAnimationEngine.addAnimation(
+        SequencerAnimationEngine.addAnimation(this.id,
             animationsToSend,
             this.actualCreationTime - this.data.timestamp
         );
 
     }
 
-    fadeIn(){
+    fadeIn() {
 
-        if(!this.data.animatedProperties.fadeIn || !this.sprite) return 0;
+        if (!this.data.fadeIn || !this.sprite) return 0;
 
-        let fadeIn = this.data.animatedProperties.fadeIn;
+        let fadeIn = this.data.fadeIn;
 
-        if(this.actualCreationTime - (this.data.timestamp + fadeIn.duration + fadeIn.delay) > 0) return;
+        if (this.actualCreationTime - (this.data.timestamp + fadeIn.duration + fadeIn.delay) > 0) return;
 
         this.alphaFilter.alpha = 0.0;
 
-        SequencerAnimationEngine.addAnimation({
+        SequencerAnimationEngine.addAnimation(this.id, {
             target: this.alphaFilter,
             propertyName: "alpha",
             to: this.data.opacity,
@@ -546,17 +1029,17 @@ export default class CanvasEffect {
 
     }
 
-    fadeOut(immediate = false){
+    fadeOut(immediate = false) {
 
-        if(!this.data.animatedProperties.fadeOut || !this.sprite) return 0;
+        if (!this.data.fadeOut || !this.sprite) return 0;
 
-        let fadeOut = this.data.animatedProperties.fadeOut;
+        let fadeOut = this.data.fadeOut;
 
-        fadeOut.delay = !lib.is_real_number(immediate)
-            ? Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0)
-            : Math.max(immediate - fadeOut.duration + fadeOut.delay, 0);
+        fadeOut.delay = lib.is_real_number(immediate)
+            ? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
+            : Math.max(this.animationDuration - fadeOut.duration + fadeOut.delay, 0);
 
-        SequencerAnimationEngine.addAnimation({
+        SequencerAnimationEngine.addAnimation(this.id, {
             target: this.alphaFilter,
             propertyName: "alpha",
             to: 0.0,
@@ -569,31 +1052,31 @@ export default class CanvasEffect {
 
     }
 
-    _determineScale(property){
+    _determineScale(property) {
         let scale = {
-            x: this.sprite.scale.x,
-            y: this.sprite.scale.y
+            x: this.sprite.scale.x * this.data.flipX,
+            y: this.sprite.scale.y * this.data.flipY
         };
 
-        if(lib.is_real_number(property.value)){
-            scale.x *= property.value * this.data.gridSizeDifference;
-            scale.y *= property.value * this.data.gridSizeDifference;
-        }else{
-            scale.x *= property.value.x * this.data.gridSizeDifference;
-            scale.y *= property.value.y * this.data.gridSizeDifference;
+        if (lib.is_real_number(property.value)) {
+            scale.x *= property.value * this.gridSizeDifference * this.data.flipX;
+            scale.y *= property.value * this.gridSizeDifference * this.data.flipY;
+        } else {
+            scale.x *= property.value.x * this.gridSizeDifference * this.data.flipX;
+            scale.y *= property.value.y * this.gridSizeDifference * this.data.flipY;
         }
 
         return scale;
     }
 
-    scaleIn(){
+    scaleIn() {
 
-        if(!this.data.animatedProperties.scaleIn || !this.sprite) return 0;
+        if (!this.data.scaleIn || !this.sprite) return 0;
 
-        let scaleIn = this.data.animatedProperties.scaleIn;
+        let scaleIn = this.data.scaleIn;
         let fromScale = this._determineScale(scaleIn)
 
-        if(this.actualCreationTime - (this.data.timestamp + scaleIn.duration + scaleIn.delay) > 0) return;
+        if (this.actualCreationTime - (this.data.timestamp + scaleIn.duration + scaleIn.delay) > 0) return;
 
         let toScale = {
             x: this.sprite.scale.x,
@@ -602,7 +1085,7 @@ export default class CanvasEffect {
 
         this.sprite.scale.set(fromScale.x, fromScale.y);
 
-        SequencerAnimationEngine.addAnimation([{
+        SequencerAnimationEngine.addAnimation(this.id, [{
             target: this.sprite,
             propertyName: "scale.x",
             from: fromScale.x,
@@ -624,18 +1107,18 @@ export default class CanvasEffect {
 
     }
 
-    scaleOut(immediate = false){
+    scaleOut(immediate = false) {
 
-        if(!this.data.animatedProperties.scaleOut || !this.sprite) return 0;
+        if (!this.data.scaleOut || !this.sprite) return 0;
 
-        let scaleOut = this.data.animatedProperties.scaleOut;
+        let scaleOut = this.data.scaleOut;
         let scale = this._determineScale(scaleOut)
 
-        scaleOut.delay = !lib.is_real_number(immediate)
-            ? Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0)
-            : Math.max(immediate - scaleOut.duration + scaleOut.delay, 0);
+        scaleOut.delay = lib.is_real_number(immediate)
+            ? Math.max(immediate - scaleOut.duration + scaleOut.delay, 0)
+            : Math.max(this.animationDuration - scaleOut.duration + scaleOut.delay, 0);
 
-        SequencerAnimationEngine.addAnimation([{
+        SequencerAnimationEngine.addAnimation(this.id, [{
             target: this.sprite,
             propertyName: "scale.x",
             to: scale.x,
@@ -655,18 +1138,18 @@ export default class CanvasEffect {
 
     }
 
-    rotateIn(){
+    rotateIn() {
 
-        if(!this.data.animatedProperties.rotateIn || !this.sprite) return 0;
+        if (!this.data.rotateIn || !this.sprite) return 0;
 
-        let rotateIn = this.data.animatedProperties.rotateIn;
+        let rotateIn = this.data.rotateIn;
 
-        if(this.actualCreationTime - (this.data.timestamp + rotateIn.duration + rotateIn.delay) > 0) return;
+        if (this.actualCreationTime - (this.data.timestamp + rotateIn.duration + rotateIn.delay) > 0) return;
 
         let original_radians = this.spriteContainer.rotation;
         this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
 
-        SequencerAnimationEngine.addAnimation(this.counterAnimateRotation({
+        SequencerAnimationEngine.addAnimation(this.id, this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: original_radians,
@@ -678,17 +1161,17 @@ export default class CanvasEffect {
         return rotateIn.duration + rotateIn.delay;
     }
 
-    rotateOut(immediate = false){
+    rotateOut(immediate = false) {
 
-        if(!this.data.animatedProperties.rotateOut || !this.sprite) return 0;
+        if (!this.data.rotateOut || !this.sprite) return 0;
 
-        let rotateOut = this.data.animatedProperties.rotateOut;
+        let rotateOut = this.data.rotateOut;
 
-        rotateOut.delay = !lib.is_real_number(immediate)
-            ? Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0)
-            : Math.max(immediate - rotateOut.duration + rotateOut.delay, 0);
+        rotateOut.delay = lib.is_real_number(immediate)
+            ? Math.max(immediate - rotateOut.duration + rotateOut.delay, 0)
+            : Math.max(this.animationDuration - rotateOut.duration + rotateOut.delay, 0);
 
-        SequencerAnimationEngine.addAnimation(this.counterAnimateRotation({
+        SequencerAnimationEngine.addAnimation(this.id, this.counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
             to: (rotateOut.value / 180) * Math.PI,
@@ -701,342 +1184,110 @@ export default class CanvasEffect {
 
     }
 
-    fadeInAudio(){
+    moveTowards() {
 
-        if(!this.data.animatedProperties.fadeInAudio || this.source?.volume === undefined || !this.sprite) return 0;
+        if (!this.data.moves || !this.sprite) return 0;
 
-        let fadeInAudio = this.data.animatedProperties.fadeInAudio;
-        this.source.volume = 0.0;
-
-        if(this.actualCreationTime - (this.data.timestamp + fadeInAudio.duration + fadeInAudio.delay) > 0) return;
-
-        SequencerAnimationEngine.addAnimation({
-            target: this.sprite,
-            propertyName: "volume",
-            to: this.data.audioVolume,
-            duration: fadeInAudio.duration,
-            ease: fadeInAudio.ease,
-            delay: fadeInAudio.delay
-        })
-
-        return fadeInAudio.duration + fadeInAudio.delay;
-    }
-
-    fadeOutAudio(immediate = false){
-
-        if(!this.data.animatedProperties.fadeOutAudio || this.source?.volume === undefined || !this.sprite) return 0;
-
-        const fadeOutAudio = this.data.animatedProperties.fadeOutAudio;
-
-        fadeOutAudio.delay = !lib.is_real_number(immediate)
-            ? Math.max(this.animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0)
-            : Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0);
-
-        SequencerAnimationEngine.addAnimation({
-            target: this.sprite,
-            propertyName: "volume",
-            to: 0.0,
-            duration: fadeInAudio.duration,
-            ease: fadeOutAudio.ease,
-            delay: fadeOutAudio.delay
-        })
-
-        return fadeOutAudio.duration + fadeOutAudio.delay;
-    }
-
-    moveTowards(){
-
-        if (!this.data.animatedProperties.moves || !this.sprite) return 0;
-
-        let moves = this.data.animatedProperties.moves;
+        let moves = this.data.moves;
 
         let movementDuration = this.animationDuration;
-		if(this.data.speed){
-			movementDuration = (this.data.distance / this.data.speed) * 1000;
-		}
+        if (this.data.speed) {
+            movementDuration = (this.data.distance / this.data.speed) * 1000;
+        }
+
+        this.rotateTowards();
 
         const duration = movementDuration - moves.delay;
 
-        if(this.actualCreationTime - (this.data.timestamp + duration + moves.delay) > 0) return;
+        if (this.actualCreationTime - (this.data.timestamp + duration + moves.delay) > 0) return;
 
-        SequencerAnimationEngine.addAnimation([{
-            target: this.spriteContainer,
+        SequencerAnimationEngine.addAnimation(this.id, [{
+            target: this,
             propertyName: "position.x",
-            to: moves.target.x,
+            to: this.targetPosition.x,
             duration: duration,
             ease: moves.ease,
             delay: moves.delay
         }, {
-            target: this.spriteContainer,
+            target: this,
             propertyName: "position.y",
-            to: moves.target.y,
+            to: this.targetPosition.y,
             duration: duration,
             ease: moves.ease,
             delay: moves.delay
         }], this.data.timestamp - this.actualCreationTime);
 
         return duration + moves.delay;
+
     }
 
-    setEndTimeout(){
+    setEndTimeout() {
         setTimeout(() => {
             this.endEffect();
             this.resolve(this.data);
-        }, this.animationDuration)
+        }, this.animationDuration);
     }
-
-	endEffect(){
-		if(!this.ended) {
-            Hooks.call("endedSequencerEffect", this);
-			this.ended = true;
-			try {
-				this.source.removeAttribute('src');
-				this.source.pause();
-				this.source.load();
-			} catch (err) { }
-
-            try {
-			    SequencerAnimationEngine.endAnimations(this.sprite);
-			    SequencerAnimationEngine.endAnimations(this.spriteContainer);
-            }catch(err) { }
-
-			try {
-			    if(this.data.screenSpace){
-			        Sequencer.UILayer.removeContainerByEffect(this);
-                }
-                this.sprite.filters = [];
-                this.spriteContainer.removeChild(this.sprite);
-				this.container.removeChild(this.spriteContainer);
-                this.spriteContainer.destroy();
-                if(this.highlightBox) this.highlightBox.destroy()
-				this.sprite.destroy();
-			} catch (err) { }
-		}
-    }
-
-    debug(){
-        lib.debug(`Playing effect:`, this.data);
-    }
-
-    async loadVideo(){
-
-        return new Promise(async (resolve, reject) => {
-
-        	const blob = await this.loader.loadVideo(this.data.file);
-
-        	if(!blob){
-        	    let error = "Sequencer "
-                if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
-				error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.ErrorCouldNotPlay")}:<br>${this.data.file}`;
-				ui.notifications.error(error);
-				console.error(error.replace("<br>", "\n"))
-        		reject();
-        		return;
-			}
-
-            let video = document.createElement("video");
-            video.preload = "auto";
-            video.crossOrigin = "anonymous";
-            video.playbackRate = this.data.playbackRate;
-            video.autoplay = false;
-            video.muted = true;
-            video.src = URL.createObjectURL(blob);
-
-            if(this.data.audioVolume === false && !lib.is_real_number(this.data.audioVolume) && (this.data.animatedProperties.fadeInAudio || this.data.animatedProperties.fadeOutAudio)){
-                this.data.audioVolume = 1.0;
-                video.muted = false;
-            }
-
-            video.volume = this.data.audioVolume ? this.data.audioVolume : 0.0;
-            video.volume *= game.settings.get("core", "globalInterfaceVolume");
-
-            let canplay = true;
-            video.oncanplay = async () => {
-                if(!canplay) return;
-                canplay = false;
-                this.source = video;
-                video.height = video.videoHeight;
-                video.width = video.videoWidth;
-                const baseTexture = PIXI.BaseTexture.from(video, { resourceOptions: { autoPlay: false } });
-                baseTexture.alphaMode = this.data.file.toLowerCase().endsWith('.webm')
-                    ? PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA
-                    : baseTexture.alphaMode;
-                const texture = new PIXI.Texture(baseTexture);
-                resolve(texture);
-            };
-
-        });
-    }
-
-    async loadImage(){
-        return new Promise(async (resolve, reject) => {
-
-			const texture = await loadTexture(this.data.file);
-
-			if(!texture){
-                let error = "Sequencer "
-                if(this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
-                error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.ErrorCouldNotPlay")}:<br>${this.data.file}`;
-                ui.notifications.error(error);
-                console.error(error.replace("<br>", "\n"))
-                reject();
-                return;
-			}
-
-			resolve(texture);
-        })
-    }
-
-    async prepareSprite() {
-
-        if(this.data.file !== ""){
-            let fileExt = this.data.file.match(/(?:\.([^.]+))?$/)[1].toLowerCase();
-
-            if(fileExt === "webm"){
-                this.texture = await this.loadVideo();
-            }else{
-                this.texture = await this.loadImage();
-            }
-            if(!this.texture) return;
-        }
-
-        if(this.data.text){
-            //this.data.text.fontSize = (this.data.text?.fontSize ?? 26) * (150 / canvas.grid.size);
-            this.text = new PIXI.Text(this.data.text.text, this.data.text);
-            this.text.resolution = 10;
-        }
-
-        this.sprite = new PIXI.Sprite();
-
-        this.sprite.position.set(
-            this.data.spriteOffset?.x ?? 0,
-            this.data.spriteOffset?.y ?? 0
-        );
-
-        this.sprite.anchor.set(
-            this.data.spriteAnchor?.x ?? 0.5,
-            this.data.spriteAnchor?.y ?? 0.5
-        );
-
-        if(this.data.tint) this.sprite.tint = this.data.tint;
-
-        this.spriteContainer = new PIXI.Container();
-        this.spriteContainer.sortableChildren = true;
-        this.spriteContainer.addChild(this.sprite);
-
-        if(this.texture){
-            this.sprite.texture = this.texture;
-            this.sprite.zIndex = 0;
-        }
-
-        if(this.text){
-            this.sprite.addChild(this.text);
-            this.text.anchor.set(
-                this.data.text?.anchor?.x ?? 0.5,
-                this.data.text?.anchor?.y ?? 0.5
-            );
-        }
-
-        this.spriteContainer.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
-        this.spriteContainer.sortChildren();
-
-    }
-
-    async play() {
-
-        await this.prepareSprite();
-
-        const shouldPlay = (
-            game.settings.get('sequencer', 'effectsEnabled') &&
-            game.user.viewedScene === this.data.sceneId &&
-            (
-                game.user.isGM ||
-                this.data.users.length === 0 ||
-                this.data.users.includes(game.userId) ||
-                this.data.creatorUserId === game.userId
-            )
-        );
-
-        let promise = new Promise(async (resolve, reject) => {
-            this.resolve = resolve;
-            if(!this.sprite){
-            	reject();
-			}else {
-				this.calculateDuration();
-				if(shouldPlay){
-                    Hooks.call("createSequencerEffect", this);
-				    this.initialize();
-                }
-			}
-        });
-
-        return {
-            duration: this.animationDuration,
-            promise: promise
-        }
-    };
-
 }
 
-class PersistentCanvasEffect extends CanvasEffect{
+class PersistentCanvasEffect extends CanvasEffect {
 
-    async initialize(){
+    async initialize() {
+        await super.initialize(false);
         this.startEffect();
-        await this.attachSprite();
-        this.playCustomAnimations();
+    }
+
+    playPresetAnimations() {
         this.moveTowards();
         this.fadeIn();
-        this.fadeInAudio();
         this.scaleIn();
         this.rotateIn();
-        this.debug();
-        this.timeoutSpriteVisibility();
-        this.setEndTimeout();
     }
 
     async startEffect() {
-        if (!this.source || this.sourceIsPlaying) return;
+        if (!this.video || this.videoIsPlaying) return;
 
         let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
 
-        if(!this.data.noLoop) return this.startLoop(creationTimeDifference);
+        if (!this.data.noLoop) {
+            return this.startLoop(creationTimeDifference);
+        }
 
-        this.tryPlay();
+        await this.tryPlay();
 
-        if(creationTimeDifference < this.animationDuration){
-            this.source.currentTime = creationTimeDifference / 1000;
+        if (creationTimeDifference < this.animationDuration) {
+            this.video.currentTime = creationTimeDifference / 1000;
             return;
         }
 
-        this.source.pause();
-        this.source.currentTime = this.endTime;
-        if(this.texture) {
+        this.video.pause();
+        this.video.currentTime = this.endTime;
+        if (this.sprite.texture) {
             setTimeout(() => {
-                this.texture.update();
+                this.sprite.texture.update();
             }, 350);
         }
     }
 
     async startLoop(creationTimeDifference) {
-        this.source.loop = this.startTime === 0 && this.endTime === this.source.duration;
+        this.video.loop = (!this.startTime && !this.endTime) || this.startTime === 0 && this.endTime === this.video.duration;
         this.loopOffset = (creationTimeDifference % this.animationDuration) / 1000;
         this.resetLoop();
     }
 
-    async resetLoop(){
-        this.source.currentTime = this.startTime + this.loopOffset;
-        if(this.ended) return;
+    async resetLoop() {
+        this.video.currentTime = this.startTime + this.loopOffset;
+        if (this.ended) return;
         await this.tryPlay();
-        if(this.source.loop) return;
+        if (this.video.loop) return;
         setTimeout(() => {
             this.loopOffset = 0;
             this.resetLoop();
-        }, this.animationDuration - (this.loopOffset*1000));
+        }, this.animationDuration - (this.loopOffset * 1000));
     }
 
-    timeoutSpriteVisibility(){
+    timeoutSpriteVisibility() {
         let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
-        if(creationTimeDifference === 0){
+        if (creationTimeDifference === 0 && !this.data.animations) {
             this.sprite.visible = true;
             return;
         }
@@ -1045,18 +1296,17 @@ class PersistentCanvasEffect extends CanvasEffect{
         }, 50);
     }
 
-    setEndTimeout(){
+    setEndTimeout() {
         let creationTimeDifference = this.actualCreationTime - this.data.timestamp;
-        if(!this.data.noLoop || creationTimeDifference >= this.animationDuration || !this.source) return;
+        if (!this.data.noLoop || creationTimeDifference >= this.animationDuration || !this.video) return;
         setTimeout(() => {
-            this.source.pause();
+            this.video.pause();
         }, this.animationDuration)
     }
 
-    async endEffect(){
+    async endEffect() {
         const durations = [
             this.fadeOut(this.data.extraEndDuration),
-            this.fadeOutAudio(this.data.extraEndDuration),
             this.scaleOut(this.data.extraEndDuration),
             this.rotateOut(this.data.extraEndDuration),
         ].filter(Boolean);
@@ -1066,7 +1316,6 @@ class PersistentCanvasEffect extends CanvasEffect{
             super.endEffect()
             resolve(this.data);
         }, waitDuration));
-
     }
 
 }

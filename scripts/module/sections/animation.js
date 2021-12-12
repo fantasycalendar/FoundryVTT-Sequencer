@@ -130,13 +130,17 @@ class AnimationSection extends Section {
 
     async _execute() {
         if (!(await this._shouldPlay())) return;
+        let self = this;
+        this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
-            if (this._shouldAsync) {
-                await this.run();
-            } else {
-                this.run();
-            }
-            resolve();
+            setTimeout(async () => {
+                if (this._shouldAsync) {
+                    await self.run();
+                } else {
+                    self.run();
+                }
+                resolve();
+            }, this._basicDelay);
         });
     }
 

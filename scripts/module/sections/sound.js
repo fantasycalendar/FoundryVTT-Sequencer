@@ -2,6 +2,7 @@ import * as lib from "../lib/lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
+import { SequencerFile } from "../sequencer-file.js";
 
 class SoundSection extends Section {
 
@@ -52,7 +53,7 @@ class SoundSection extends Section {
 
         let file = await this._determineFile(this._file)
 
-        if (file instanceof lib.SequencerFile) {
+        if (file instanceof SequencerFile) {
             if (file.timeRange) {
                 [this._startTime, this._endTime] = file.timeRange;
                 this._isRange = true;

@@ -8,12 +8,13 @@ import Section from "./sections/section.js";
 export default class Sequence {
 
     constructor(moduleName="Sequencer") {
+        this.id = randomID();
         this.moduleName = moduleName;
         this.sections = [];
+        this.nameOffsetMap = {};
         this.effectIndex = 0;
-        this._cachedOffsets = {};
         this.sectionToCreate = undefined;
-        return lib.sequenceProxyWrap(this);
+        return lib.sequence_proxy_wrap(this);
     }
 
     /**
@@ -54,7 +55,7 @@ export default class Sequence {
      * @returns {Sequence} this
      */
     thenDo(inFunc) {
-        const func = lib.sectionProxyWrap(new FunctionSection(this, inFunc));
+        const func = lib.section_proxy_wrap(new FunctionSection(this, inFunc));
         this.sections.push(func)
         return func;
     }
@@ -79,7 +80,7 @@ export default class Sequence {
             throw this._customError(this, "macro", `inMacro must be of instance string or Macro`);
         }
 
-        const func = lib.sectionProxyWrap(new FunctionSection(this, async () => {
+        const func = lib.section_proxy_wrap(new FunctionSection(this, async () => {
             await macro.execute();
         }, inWaitUntilFinished));
         this.sections.push(func)
@@ -93,7 +94,7 @@ export default class Sequence {
      * @returns {Section}
      */
     effect(inFile = "") {
-        const effect = lib.sectionProxyWrap(new EffectSection(this, inFile));
+        const effect = lib.section_proxy_wrap(new EffectSection(this, inFile));
         this.sections.push(effect);
         return effect;
     }
@@ -105,7 +106,7 @@ export default class Sequence {
      * @returns {Section}
      */
     sound(inFile = "") {
-        const sound = lib.sectionProxyWrap(new SoundSection(this, inFile));
+        const sound = lib.section_proxy_wrap(new SoundSection(this, inFile));
         this.sections.push(sound);
         return sound;
     }
@@ -117,7 +118,7 @@ export default class Sequence {
      * @returns {AnimationSection}
      */
     animation(inTarget) {
-        const animation = lib.sectionProxyWrap(new AnimationSection(this, inTarget));
+        const animation = lib.section_proxy_wrap(new AnimationSection(this, inTarget));
         this.sections.push(animation);
         return animation;
     }
@@ -134,7 +135,7 @@ export default class Sequence {
         if (msMin < 1) throw this._customError(this, "wait", 'Wait ms cannot be less than 1')
         if (msMax < 1) throw this._customError(this, "wait", 'Max wait ms cannot be less than 1')
         const wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
-        const section = lib.sectionProxyWrap(this._createWaitSection(wait));
+        const section = lib.section_proxy_wrap(this._createWaitSection(wait));
         this.sections.push(section);
         return this;
     }
@@ -153,7 +154,7 @@ export default class Sequence {
     }
 
     _createCustomSection(...args){
-        const func = lib.sectionProxyWrap(new this.sectionToCreate(this, ...args));
+        const func = lib.section_proxy_wrap(new this.sectionToCreate(this, ...args));
         this.sectionToCreate = undefined;
         this.sections.push(func)
         return func;
@@ -168,11 +169,11 @@ export default class Sequence {
     }
 
     _showWarning(self, func, warning, notify) {
-        lib.customWarning(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`, notify);
+        lib.custom_warning(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`, notify);
     }
 
     _customError(self, func, error) {
-        return lib.customError(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${error}`);
+        return lib.custom_error(this.moduleName, `${self.constructor.name.replace("Section", "")} | ${func} - ${error}`);
     }
 
 }

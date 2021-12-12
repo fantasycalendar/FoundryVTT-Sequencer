@@ -1,6 +1,6 @@
 import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./module/constants.js";
-import { userCanDo } from "./module/lib/lib.js";
+import { user_can_do } from "./module/lib/lib.js";
 
 export default function registerSettings() {
 
@@ -157,7 +157,7 @@ export default function registerSettings() {
             icon: "fas fa-play",
             name: "play-effect",
             title: "Play Effect",
-            visible: userCanDo("permissions-effect-create") && userCanDo('permissions-sidebar-tools'),
+            visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "player" });
             }
@@ -168,7 +168,7 @@ export default function registerSettings() {
             name: "effectviewer",
             title: "Show Sequencer Effects Viewer",
             button: true,
-            visible: userCanDo("permissions-effect-create") && userCanDo('permissions-sidebar-tools'),
+            visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
             onClick: () => {
                 SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
             }
@@ -179,7 +179,7 @@ export default function registerSettings() {
             name: "effectdatabase",
             title: "Show Sequencer Database",
             button: true,
-            visible: userCanDo('permissions-sidebar-tools'),
+            visible: user_can_do('permissions-sidebar-tools'),
             onClick: () => {
                 Sequencer.DatabaseViewer.show(true);
             }
@@ -190,7 +190,7 @@ export default function registerSettings() {
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
-            visible: userCanDo("permissions-effect-create") && userCanDo("permissions-sidebar-tools"),
+            visible: user_can_do("permissions-effect-create") && user_can_do("permissions-sidebar-tools"),
             activeTool: "play-effect",
             tools: [
                 playTool,

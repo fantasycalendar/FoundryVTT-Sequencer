@@ -1,5 +1,6 @@
 import * as lib from "../../lib/lib.js";
 import { is_real_number } from "../../lib/lib.js";
+import { SequencerFile } from "../../sequencer-file.js";
 
 export default {
 
@@ -31,11 +32,7 @@ export default {
      */
     baseFolder(inBaseFolder) {
         if (typeof inBaseFolder !== "string") throw this.sequence._customError(this, "baseFolder", "inBaseFolder must be of type string");
-        inBaseFolder = inBaseFolder.replace("\\", "/");
-        if (!inBaseFolder.endsWith("/")) {
-            inBaseFolder += "/";
-        }
-        this._baseFolder = inBaseFolder;
+        this._baseFolder = inBaseFolder + (inBaseFolder.endsWith("/") ? "" : "/");
         return this;
     },
 
@@ -51,95 +48,46 @@ export default {
         return this;
     },
 
-    _recurseFileObject(inFile) {
-
-        if (inFile instanceof lib.SequencerFile || typeof inFile === "string" || typeof inFile.file === "string") {
-            return inFile;
-        }
-
-        if (Array.isArray(inFile)) {
-            inFile = lib.random_array_element(inFile);
-        } else {
-            inFile = lib.random_object_element(inFile);
-        }
-
-        return this._recurseFileObject(inFile);
-
-    },
-
     async _determineFile(inFile) {
 
         if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
 
         inFile = this._applyMustache(inFile);
 
-        let forcedIndex = false;
-        if (typeof inFile === "string") {
-            let databaseEntry = window.Sequencer.Database.entryExists(inFile);
-            if (databaseEntry) {
-                let match = inFile.match(/\[([0-9]+)]$/)
-                if (match) {
-                    forcedIndex = Number(match[1]);
-                }
-                let dbEntry = window.Sequencer.Database.getEntry(inFile);
-                if (dbEntry) {
-                    inFile = dbEntry;
-                }
-            } else {
-                inFile = await this._applyWildcard(inFile);
-            }
+        if (Sequencer.Database.entryExists(inFile)) {
+            return this._determineDatabaseFile(inFile);
         }
 
-        inFile = this._recurseFileObject(inFile);
-
-        if (Array.isArray(inFile)) {
-            inFile = !is_real_number(forcedIndex) ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];
-        }
-
-        if (is_real_number(forcedIndex) && inFile instanceof lib.SequencerFile) {
-            inFile.fileIndex = forcedIndex;
-        }
-
+        inFile = await this._applyWildcard(inFile);
         inFile = this._applyBaseFolder(inFile);
-
         inFile = this._applyMustache(inFile);
 
-        return inFile;
+        return { file: inFile, forcedIndex: false };
 
     },
 
+    _determineDatabaseFile(inFile){
+        const entries = Sequencer.Database.getEntry(inFile);
+        const entry = Array.isArray(entries) ? lib.random_array_element(entries) : entries;
+        const match = inFile.match(/\[([0-9]+)]$/);
+        return { file: entry, forcedIndex: match ? Number(match[1]) : false };
+    },
+
     _applyBaseFolder(inFile) {
-
-        if (inFile instanceof lib.SequencerFile) {
-            return inFile.applyBaseFolder(this._baseFolder);
-        }
-
         return inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
-
     },
 
     _applyMustache(inFile) {
         if (!this._mustache) return inFile;
-
-        if (inFile instanceof lib.SequencerFile) {
-            inFile = inFile.applyMustache(this._mustache);
-        } else if (typeof inFile === "string") {
-            let template = Handlebars.compile(inFile);
-            inFile = template(this._mustache);
-        }
-        return inFile;
+        let template = Handlebars.compile(inFile);
+        return template(this._mustache);
     },
 
     async _applyWildcard(inFile) {
-
         if (!inFile.includes("*")) return inFile;
-
         if (Array.isArray(inFile)) return inFile.map(async (file) => await this._applyWildcard(file));
-
         inFile = this._applyBaseFolder(inFile);
-
         return lib.getFiles(inFile, { applyWildCard: true });
-
     }
 
 }

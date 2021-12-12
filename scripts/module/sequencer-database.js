@@ -1,5 +1,6 @@
 import * as lib from './lib/lib.js';
 import LoadingBar from "./lib/loadingBar.js";
+import { SequencerFile } from "./sequencer-file.js";
 
 const SequencerDatabase = {
 
@@ -15,7 +16,7 @@ const SequencerDatabase = {
      */
     registerEntries(inModuleName, inEntries) {
         if(inModuleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
-        if(this.entries[inModuleName]) lib.customWarning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
+        if(this.entries[inModuleName]) lib.custom_warning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
         this._flatten(inEntries, inModuleName);
         const processedEntries = this._processEntries(inModuleName, inEntries);
         this.entries = foundry.utils.mergeObject(this.entries,
@@ -63,8 +64,8 @@ const SequencerDatabase = {
     /**
      *  Gets the entry in the database by a dot-notated string
      *
-     * @param  {string}             inString        The entry to find in the database
-     * @return {array|lib.SequencerFile|boolean}    The found entry in the database, or false if not found (with warning)
+     * @param  {string}                     inString        The entry to find in the database
+     * @return {array|SequencerFile|boolean}                The found entry in the database, or false if not found (with warning)
      */
     getEntry(inString) {
         if (typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
@@ -86,10 +87,10 @@ const SequencerDatabase = {
 
         const module = inString.split('.')[0];
         const exactEntries = this.entries[module].filter(entry => {
-                return entry.dbPath === inString;
-            });
+            return entry.dbPath === inString;
+        });
 
-        const filteredEntries = (exactEntries.length
+        let filteredEntries = (exactEntries.length
             ? exactEntries
             : this.entries[module].filter(entry => {
                 return entry.dbPath.startsWith(inString);
@@ -162,7 +163,7 @@ const SequencerDatabase = {
         });
 
         if(foundEntries.length === 0){
-            const regexString = lib.strToSearchRegexStr(inPath);
+            const regexString = lib.str_to_search_regex_str(inPath);
             const searchParts = regexString.split('|').length;
             const regexSearch = new RegExp(regexString, "gu");
             foundEntries = this.flattenedEntries.filter(e => {
@@ -192,7 +193,7 @@ const SequencerDatabase = {
     },
 
     _flatten(entries, inModule) {
-        let flattened = lib.flattenObject(foundry.utils.duplicate({ [inModule]: entries }));
+        let flattened = lib.flatten_object(foundry.utils.duplicate({ [inModule]: entries }));
         this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened)));
     },
 
@@ -212,7 +213,7 @@ const SequencerDatabase = {
 
         if (typeof entries === "string" || typeof entries?.file === "string") {
 
-            entryCache.push(new lib.SequencerFile(entries, template, dbPath));
+            entryCache.push(new SequencerFile(entries, template, dbPath));
 
         } else if (Array.isArray(entries)) {
 
@@ -228,7 +229,7 @@ const SequencerDatabase = {
             let foundDistances = Object.keys(entries).filter(entry => feetTest.test(entry)).length !== 0;
 
             if (foundDistances) {
-                entryCache.push(new lib.SequencerFile(entries, template, dbPath));
+                entryCache.push(new SequencerFile(entries, template, dbPath));
             } else {
                 for (let entry of Object.keys(entries)) {
                     if (entry.startsWith('_')) continue;

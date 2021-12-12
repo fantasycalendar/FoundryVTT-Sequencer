@@ -15,6 +15,7 @@ import Section from "./module/sections/section.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import * as warnings from "./warnings.js";
 import * as lib from "./module/lib/lib.js";
+import { SequencerFile } from "./module/sequencer-file.js";
 
 Hooks.once('init', async function () {
 
@@ -54,21 +55,25 @@ Hooks.once("socketlib.ready", () => {
     registerSocket();
 })
 
-Hooks.on("canvasReady", () => {
-    Sequencer.EffectManager._setUpPersists();
-});
+
 
 Hooks.once('ready', async function () {
     setTimeout(() => {
-        runReadyMethods();
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
+        runReadyMethods();
     }, 100);
 });
 
 function runReadyMethods(){
     warnings.check();
+
+    Sequencer.EffectManager._setUpPersists();
+
+    Hooks.on("canvasReady", () => {
+        Sequencer.EffectManager._setUpPersists();
+    });
 }
 
 /**

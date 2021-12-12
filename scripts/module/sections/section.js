@@ -1,4 +1,6 @@
 import * as lib from "../lib/lib.js";
+import { get_object_identifier } from "../lib/lib.js";
+import CanvasEffect from "../canvas-effects/canvas-effect.js";
 
 export default class Section {
 
@@ -24,14 +26,14 @@ export default class Section {
      * Method overwritten by inheriting classes, which runs when the section is executed by the Sequence
      *
      * @returns {Promise<void>}
-     * @private
+     * @protected
      */
     async run() {}
 
     /**
      * Method overwritten by inheriting classes, which stores data or prepares data before the Sequence executes it (see EffectsSection)
      *
-     * @private
+     * @protected
      */
     async _initialize() {}
 
@@ -39,7 +41,7 @@ export default class Section {
      * Method overwritten by inheriting classes. Inheriting classes uses the following to apply traits to themselves:
      * - Object.assign(this.constructor.prototype, trait)
      *
-     * @private
+     * @protected
      */
     _applyTraits() {}
 
@@ -134,31 +136,25 @@ export default class Section {
     }
 
     /**
-     * @private
+     * @protected
      */
     async _shouldPlay() {
         return lib.is_function(this._playIf) ? await this._playIf() : this._playIf;
     }
 
     /**
-     * @private
+     * @protected
      */
     _validateLocation(inLocation) {
+        inLocation = inLocation?.document ?? inLocation;
         if (typeof inLocation === "string") {
-            inLocation = lib.getObjectFromScene(inLocation) ?? inLocation;
-        }
-        if (inLocation instanceof foundry.abstract.Document) {
-            let object = inLocation?.object;
-            if (!object) object = lib.getObjectFromScene(inLocation.id);
-            if (!object) throw this.sequence._customError(this, "_validateLocation", `Could not find object for document with ID: ${inLocation.id})`);
-            if (!(object instanceof PlaceableObject)) throw this.sequence._customError(this, "_validateLocation", `Object provided must be instance of PlaceableObject!`);
-            return object;
+            inLocation = lib.get_object_from_scene(inLocation) ?? inLocation;
         }
         return inLocation;
     }
 
     /**
-     * @private
+     * @protected
      */
     async _execute() {
         if (!await this._shouldPlay()) return;
@@ -184,7 +180,7 @@ export default class Section {
     }
 
     /**
-     * @private
+     * @protected
      */
     async _delayBetweenRepetitions() {
         let self = this;
@@ -194,21 +190,21 @@ export default class Section {
     }
 
     /**
-     * @private
+     * @protected
      */
     get _shouldAsync() {
         return this._async || this._waitAnyway
     }
 
     /**
-     * @private
+     * @protected
      */
     get shouldWaitUntilFinished() {
         return this._waitUntilFinished || this._waitAnyway
     }
 
     /**
-     * @private
+     * @protected
      */
     get _waitAnyway() {
         return ((this._async || this._waitUntilFinished) && this._isLastRepetition)
@@ -216,21 +212,21 @@ export default class Section {
     }
 
     /**
-     * @private
+     * @protected
      */
     get _isLastSection() {
         return (this.sequence.sections.length - 1) === this.sequence.sections.indexOf(this);
     }
 
     /**
-     * @private
+     * @protected
      */
     get _isLastRepetition() {
         return (this._repetitions === 1 || this._repetitions === this._currentRepetition + 1);
     }
 
     /**
-     * @private
+     * @protected
      */
     get _currentWaitTime() {
         let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;

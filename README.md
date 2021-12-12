@@ -277,6 +277,31 @@ Click the link above to go to the documentation where each feature is listed.
 
 ## Changelog
 
+### Version 2.0.0
+**Breaking changes:**
+- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Reworked Sequencer to require the `socketlib` module <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Bumped minimum version to 0.8.9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Effects* - Removed `.JB2A()` as it was deprecated
+- *Effects* - Removed support for audio methods on effects
+
+**Additions:**
+- *Sequencer* - Added flag to `Sequencer.Database.registerEntries()` 
+- *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
+- *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
+- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
+- *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
+
+**Fixes:**
+- *Sequencer* - Fixed module permissions settings being slightly wonky
+- *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
+- *Animations* - Fixed users not being able to teleport or move tokens they do not own
+- *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
+- *Animations* - Fixed `.delay()` not being respected
+- *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
+- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
+- *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
+- *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
+
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
 - *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Breaking change <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> - Fixed issue where setting the `.size()` of an effect and then scaling it would result in unexpected behavior. As a result, `.scaleIn()` and `.scaleOut()` now function as _multipliers_ to the existing scale on the effect

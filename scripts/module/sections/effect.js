@@ -1,7 +1,9 @@
 import * as lib from "../lib/lib.js";
+import * as canvaslib from "../lib/canvas-utils.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { getObjectDimensions } from "../lib/lib.js";
+import CanvasEffect from "../canvas-effects/canvas-effect.js";
+import { calculate_missed_position, is_coordinate } from "../lib/canvas-utils.js";
 
 export default class EffectSection extends Section {
 
@@ -12,6 +14,8 @@ export default class EffectSection extends Section {
         this._text = false;
         this._source = false;
         this._reachTowards = false;
+        this._attachTo = false;
+        this._align = false;
         this._origin = false;
         this._anchor = false;
         this._spriteAnchor = false;
@@ -35,7 +39,6 @@ export default class EffectSection extends Section {
         this._size = false;
         this._persist = false;
         this._zeroSpriteRotation = false;
-        this._distance = 0;
         this._extraEndDuration = 0;
         this._noLoop = false;
         this._snapToGrid = false;
@@ -44,7 +47,6 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = false;
         this._screenSpacePosition = { x: 0, y: 0 };
         this._screenSpaceScale = false;
-        this._offsets = [];
     }
 
     /**
@@ -157,19 +159,27 @@ export default class EffectSection extends Section {
         inOptions = foundry.utils.mergeObject({
             align: "center"
         }, inOptions);
-        inObject = this._validateLocation(inObject);
-        if (inObject === undefined) throw this.sequence._customError(this, "attachTo", "could not find given object");
-        const isValidObject = inObject instanceof Token || inObject instanceof Tile || inObject instanceof Drawing || inObject instanceof MeasuredTemplate;
-        if (!isValidObject){
-            this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
+
+        let validatedObject = this._validateLocation(inObject);
+        if (validatedObject === undefined) throw this.sequence._customError(this, "attachTo", "could not find given object");
+
+        let isValidObject = true;
+        if(typeof inObject === "string"){
+            isValidObject = validatedObject instanceof Token || validatedObject instanceof Tile || validatedObject instanceof Drawing || validatedObject instanceof MeasuredTemplate || validatedObject instanceof CanvasEffect;
+            if (!isValidObject){
+                this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
+            }
         }
+
         const aligns = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'];
         if(typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)){
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
-        this._source = inObject;
-        this._attachTo = isValidObject ? inOptions : false;
-        if(!inObject?.id) this.locally();
+
+        this._source = lib.get_object_identifier(validatedObject);
+        this._attachTo = isValidObject;
+        this._align = inOptions.align;
+        if(!validatedObject?.id) this.locally();
         return this;
     }
 
@@ -183,12 +193,19 @@ export default class EffectSection extends Section {
      */
     reachTowards(inLocation, inOptions = {}) {
         inOptions = foundry.utils.mergeObject({
-            cacheLocation: false
+            cacheLocation: false,
+            attachTo: false,
+            keepRatio: true
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "reachTowards", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
-        this._reachTowards = inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation;
+        if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "reachTowards", "inOptions.attachTo must be of type boolean");
+        this._reachTowards = {
+            target: inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation,
+            attachTo: inOptions.attachTo,
+            keepRatio: inOptions.keepRatio
+        };
         return this;
     }
 
@@ -683,6 +700,20 @@ export default class EffectSection extends Section {
         if(this._reachTowards && this._randomRotation){
             throw this.sequence._customError(this, "reachTowards", "You're trying to reach towards an object, while trying to randomly rotate the effect? What?");
         }
+        if(this._reachTowards && this._moveTowards){
+            throw this.sequence._customError(this, "reachTowards", "You're trying to reach towards an object, while moving towards it? You're insane.");
+        }
+        if(this._reachTowards && this._size){
+            throw this.sequence._customError(this, "reachTowards", ".reachTowards() will scale the effect towards the target, so you cannot set the .size() of the effect as well.");
+        }
+
+        const source = this._sanitizeObject(this._source);
+        const target = this._sanitizeObject(this._target);
+
+        if(!source && !target && !this._screenSpace){
+
+            throw this.sequence._customError(this, "play", "Could not determine where to play the effect!");
+        }
     }
 
     async run() {
@@ -714,104 +745,110 @@ export default class EffectSection extends Section {
         Object.assign(this.constructor.prototype, traits.tint);
     }
 
+    async _initialize() {
+        if(this._name && !this.sequence.nameOffsetMap[this._name]){
+            this.sequence.nameOffsetMap[this._name] = {
+                seed: `${this._name}-${randomID()}`,
+                source: this._sanitizeObject(this._source),
+                target: this._sanitizeObject(this._target),
+                randomOffset: this._randomOffset,
+                missed: this._missed,
+                offset: this._offset,
+                repetitions: this._repetitions,
+                twister: {}
+            };
+        }
+    }
+
+    _sanitizeObject(inObj){
+        if(inObj && typeof inObj === "object" && !canvaslib.is_coordinate(inObj)){
+            inObj = lib.get_object_identifier(inObj);
+        }
+        return inObj;
+    }
+
     async _sanitizeEffectData() {
 
-        let data = {
+        const { file, forcedIndex } = this._file
+            ? await this._determineFile(this._file)
+            : { file: this._file, forcedIndex: false };
+
+        let data = foundry.utils.duplicate({
+            /**
+             * Core properties
+             */
             id: randomID(),
+            sequenceId: this.sequence.id,
+            creationTime: (+new Date()),
             sceneId: game.user.viewedScene,
             creatorUserId: game.userId,
-            origin: this._origin,
             moduleName: this.sequence.moduleName,
-            file: this._file,
+            users: Array.from(this._users),
+            name: this._name,
+            origin: this._origin,
+            index: this.sequence.effectIndex,
+            repetition: this._currentRepetition,
+
+            /**
+             * Source/target properties
+             */
+            source: this._sanitizeObject(this._source),
+            target: this._sanitizeObject(this._target),
+            rotateTowards: this._rotateTowards !== false,
+            reachTowards: this._reachTowards ? {
+                keepRatio: this._reachTowards.keepRatio,
+                attachTo: this._reachTowards.attachTo
+            } : false,
+            moveTowards: this._moveTowards ? {
+                ease: this._moveTowards.ease,
+                rotate: this._moveTowards.rotate
+            } : false,
+
+            attachTo: this._attachTo,
+            missed: this._missed,
+
+            /**
+             * Sprite properties
+             */
+            file: file.dbPath ?? file,
+            forcedIndex,
             text: this._text,
-            position: {
-                x: 0,
-                y: 0,
-            },
+
+            // Transforms
+            align: this._align,
+            scale: this._getCalculatedScale(),
+            angle: this._angle,
+            size: this._size,
+            offset: this._offset,
             anchor: this._anchor,
             spriteOffset: this._spriteOffset,
             spriteAnchor: this._spriteAnchor,
-            scale: {
-                x: 1.0,
-                y: 1.0
-            },
-            name: this._name,
-            persist: this._persist,
-            attachTo: this._attachTo ? {
-                id: lib.getObjectIdentifier(this._source),
-                ...this._attachTo
-            } : false,
-            gridSizeDifference: 1.0,
-            angle: this._angle,
-            rotation: 0,
-            speed: 0,
-            playbackRate: this._playbackRate,
-            distance: 0,
-            duration: this._duration,
-            extraEndDuration: this._extraEndDuration,
-            layer: this._layer,
-            index: this.sequence.effectIndex,
+            gridSize: this._gridSize,
+            startPoint: this._startPoint,
+            endPoint: this._endPoint,
+            zeroSpriteRotation: this._zeroSpriteRotation,
+            randomOffset: this._randomOffset,
+            randomRotation: this._randomRotation,
+            scaleToObject: this._scaleToObject,
+
+            // Appearance
             zIndex: this._zIndex,
             opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
-            audioVolume: this._volume,
-            time: false,
-            noLoop: this._noLoop,
             filters: this._filters,
+            layer: this._layer,
+            noLoop: this._noLoop,
             tint: this._tint?.decimal,
-            animatedProperties: {
-                moves: this._moveTowards,
-                fadeIn: this._fadeIn,
-                fadeOut: this._fadeOut,
-                scaleIn: this._scaleIn,
-                scaleOut: this._scaleOut,
-                rotateIn: this._rotateIn,
-                rotateOut: this._rotateOut,
-                fadeInAudio: this._fadeInAudio,
-                fadeOutAudio: this._fadeOutAudio,
-                animations: this._animations
-            },
-            zeroSpriteRotation: this._zeroSpriteRotation,
-            screenSpace: this._screenSpace,
-            screenSpaceAnchor: this._screenSpaceAnchor,
-            screenSpacePosition: this._screenSpacePosition,
-            screenSpaceScale: this._screenSpaceScale,
-            users: Array.from(this._users)
-        };
+            flipX: this._mirrorX || (this._randomMirrorX && Math.random() < 0.5) ? -1 : 1,
+            flipY: this._mirrorY || (this._randomMirrorY && Math.random() < 0.5) ? -1 : 1,
 
-        data = this._determineTargets(data);
-
-        data.rotation += this._randomRotation ? Math.random() * Math.PI : 0;
-
-        for (let override of this._overrides) {
-            data = await override(this, data);
-        }
-
-        if(data.file !== ""){
-            let file = await this._determineFile(data.file);
-            let template;
-            if (file instanceof lib.SequencerFile) {
-                data.file = file.rangeFind ? this._rangeFind(file) : file.getFile();
-                template = file.template;
-                if (file.timeRange) {
-                    [this._startTime, this._endTime] = file.timeRange;
-                    this._isRange = true;
-                }
-            } else {
-                data.file = file;
-            }
-
-            this._gridSize = template?.[0] ?? this._gridSize;
-            this._startPoint = template?.[1] ?? this._startPoint;
-            this._endPoint = template?.[2] ?? this._endPoint;
-            data.template = [
-                this._gridSize,
-                this._startPoint,
-                this._endPoint
-            ];
-        }
-
-        if(this._startTime || this._endTime) {
-            data.time = {
+            /**
+             * Time properties
+             */
+            duration: this._duration,
+            persist: this._persist,
+            playbackRate: this._playbackRate,
+            extraEndDuration: this._extraEndDuration,
+            time: (this._startTime || this._endTime) ? {
                 start: lib.is_real_number(this._startTime) ? {
                     value: this._startTime,
                     isPerc: this._startPerc
@@ -821,31 +858,34 @@ export default class EffectSection extends Section {
                     isPerc: this._endPerc
                 } : false,
                 isRange: this._isRange
-            };
-        }
+            } : false,
 
-        data.scale = this._getCalculatedScale();
+            /**
+             * Animation properties
+             */
+            moves: this._moveTowards,
+            fadeIn: this._fadeIn,
+            fadeOut: this._fadeOut,
+            scaleIn: this._scaleIn,
+            scaleOut: this._scaleOut,
+            rotateIn: this._rotateIn,
+            rotateOut: this._rotateOut,
+            fadeInAudio: this._fadeInAudio,
+            fadeOutAudio: this._fadeOutAudio,
+            animations: this._animations,
 
-        if(this._scaleToObject){
-            const object = this._getCachedObject(this._source, this._target);
-            data.size = lib.getObjectDimensions(object);
-        }else{
-            data.size = this._size;
-        }
+            /**
+             * Screenspace properties
+             */
+            screenSpace: this._screenSpace,
+            screenSpaceAnchor: this._screenSpaceAnchor,
+            screenSpacePosition: this._screenSpacePosition,
+            screenSpaceScale: this._screenSpaceScale,
 
-        if (this._reachTowards) {
-            data = await this._calculateHitVector(data);
-        } else if(!this._screenSpace){
-            data.gridSizeDifference = this._size ? 1.0 : this._gridSizeDifference(this._gridSize);
-        }
+            nameOffsetMap: this.sequence.nameOffsetMap
+        });
 
-        let flipX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5) ? -1 : 1;
-        data.scale.x = data.scale.x * flipX;
-
-        let flipY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5) ? -1 : 1;
-        data.scale.y = data.scale.y * flipY;
-
-        for (let override of this._postOverrides) {
+        for (let override of this._overrides) {
             data = await override(this, data);
         }
 
@@ -853,135 +893,9 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "file", "an effect must have text or  must be of type string or array");
         }
 
-        return data;
-
-    }
-
-    get _target() {
-        return this._reachTowards || this._rotateTowards?.target || this._moveTowards?.target || false;
-    }
-
-    _determineTargets(data) {
-
-        if (this._source) {
-
-            let [from, to, origin, target] = this._getPositions(this._source, this._target);
-
-            if (this._attachTo){
-                const size = lib.getObjectDimensions(this._source, true);
-                if(this._source?.data?.t === "circle"){
-                    size.width = 0;
-                    size.height = 0;
-                }
-                origin = {
-                    x: size.width,
-                    y: size.height
-                };
-            }
-
-            if (this._offset) {
-                let offset = this._offset;
-                if (this._offset.local) {
-                    let target = to || from;
-                    if (target?.data?.rotation) offset = lib.rotateVector(offset, target.data.rotation);
-                }
-                if (to) {
-                    target.x -= offset.x;
-                    target.y -= offset.y;
-                } else {
-                    origin.x -= offset.x;
-                    origin.y -= offset.y;
-                }
-            }
-
-            if (this._target) {
-                target = this._snapToGrid
-                    ? this._applyOffsets(this._snapLocationToGrid(target))
-                    : this._applyOffsets(target);
-            } else {
-                origin = this._snapToGrid
-                    ? this._applyOffsets(this._snapLocationToGrid(origin))
-                    : this._applyOffsets(origin);
-            }
-
-            data.position = origin;
-
-            if (this._target) {
-
-                let ray = new Ray(origin, target);
-
-                this._distance = ray.distance;
-                data.distance = this._distance;
-                data._distance = this._distance;
-
-                data.rotation = ray.angle;
-
-                if (this._moveTowards) {
-
-                    data.rotation = this._moveTowards.rotate ? data.rotation : 0;
-
-                    data.animatedProperties.moves.target = target;
-
-                    data.speed = this._moveSpeed;
-
-                }
-
-            }
-
-        }
+        console.log(data);
 
         return data;
-    }
-
-    get _distanceMatching() {
-        let distanceScale = this._getCalculatedScale();
-        return {
-            "90ft": canvas.grid.size * 15 * distanceScale.x,
-            "60ft": canvas.grid.size * 9 * distanceScale.x,
-            "30ft": canvas.grid.size * 5 * distanceScale.x,
-            "15ft": canvas.grid.size * 2 * distanceScale.x,
-            "05ft": 0
-        }
-    }
-
-    get _defaultTemplate(){
-        return [this._gridSize, this._startPoint, this._endPoint];
-    }
-
-    _rangeFind(inFile) {
-
-        let distances = Object.keys(inFile.file)
-            .filter(entry => Object.keys(this._distanceMatching).indexOf(entry) > -1)
-            .map(entry => {
-                let file = inFile.getFile(entry);
-                if (!file) throw this.sequence._customError(this, "play", `Could not find index ${inFile.fileIndex} in database entry ${this._file}!`)
-                let template = inFile.template ?? this._defaultTemplate;
-                let gridSizeDiff = this._gridSizeDifference(template[0]);
-                return {
-                    file: file,
-                    gridSizeDiff: gridSizeDiff,
-                    minDistance: this._distanceMatching[entry] / gridSizeDiff
-                }
-            });
-
-        let uniqueDistances = [...new Set(distances.map(item => item.minDistance))];
-        uniqueDistances.sort((a, b) => a - b);
-
-        let max = Math.max(...uniqueDistances);
-        let min = Math.min(...uniqueDistances);
-
-        let possibleFiles = distances
-            .map(entry => {
-                entry.distances = {
-                    min: entry.minDistance === min ? 0 : entry.minDistance,
-                    max: entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1]
-                };
-                entry.relativeDistance = this._distance / entry.gridSizeDiff;
-                return entry;
-            })
-            .filter(e => e.relativeDistance >= e.distances.min && e.relativeDistance < e.distances.max);
-
-        return lib.random_array_element(possibleFiles).file;
 
     }
 
@@ -1002,310 +916,8 @@ export default class EffectSection extends Section {
         }
     }
 
-    _gridSizeDifference(inGridSize) {
-        return canvas.grid.size / inGridSize;
-    }
-
-    async _getFileDimensions(inFile) {
-        let filePath = inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
-        return await lib.getDimensions(filePath);
-    }
-
-    _getTrueLength(inDimensions) {
-        return inDimensions.x - this._startPoint - this._endPoint;
-    }
-
-    async _calculateHitVector(data) {
-
-        if (data.distance === 0) return data;
-
-        let dimensions = await this._getFileDimensions(data.file);
-        let trueDistanceAfterPadding = this._getTrueLength(dimensions);
-
-        data.scale.x = data.distance / trueDistanceAfterPadding;
-        data.scale.y = data.distance / trueDistanceAfterPadding;
-
-        data.anchor = {
-            x: this._startPoint / dimensions.x,
-            y: data.anchor.y ?? 0.5
-        }
-
-        return data;
-    }
-
-    _getCleanPosition(obj, measure = false) {
-
-        let pos = {};
-        if (obj instanceof MeasuredTemplate) {
-            if (measure) {
-                if (obj.data.t === "cone" || obj.data.t === "ray") {
-                    pos.x = obj.ray.B.x;
-                    pos.y = obj.ray.B.y;
-                }
-            }
-            if (obj.data.t === "rect") {
-                pos.x = obj.x + (obj.shape.width / 2)
-                pos.y = obj.y + (obj.shape.height / 2)
-            }
-        } else if (obj instanceof Tile || obj instanceof TileDocument) {
-            pos = {
-                x: obj.data.x + (obj.data.width / 2),
-                y: obj.data.y + (obj.data.height / 2)
-            }
-        } else {
-            pos = {
-                x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.data?.x ?? obj?.data?.position?.x ?? 0,
-                y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0
-            }
-
-            if (obj instanceof Token) {
-                const halfSize = lib.getObjectDimensions(obj, true);
-                pos.x += halfSize.width;
-                pos.y += halfSize.height;
-            }
-        }
-
-        pos = {
-            x: pos?.x ?? obj?.x ?? obj?.data?.x,
-            y: pos?.y ?? obj?.y ?? obj?.data?.y,
-        };
-
-        if (!lib.is_real_number(pos.x) || !lib.is_real_number(pos.y)) throw this.sequence._customError(this, "getCleanPosition", `Could not get position from: ${obj}`);
-
-        return pos;
-
-    }
-
-    _getIconSize(inObj){
-        if(inObj.icon){
-            return {
-                width: inObj.icon.width,
-                height: inObj.icon.height
-            }
-        }
-        return lib.getObjectDimensions(inObj);
-    }
-
-    _getPositions(from, to, applyOffsets = true) {
-
-        let from_offset = { x: 0, y: 0 };
-        if (typeof from === "string") {
-            let cachedFrom = this._getCachedOffset(from, this._currentRepetition);
-            from = cachedFrom.object;
-            from_offset = cachedFrom.offset;
-            if (cachedFrom.extraOffset && applyOffsets) {
-                from_offset.x += cachedFrom.extraOffset.x;
-                from_offset.y += cachedFrom.extraOffset.y;
-            }
-        }
-
-        let to_offset = { x: 0, y: 0 };
-        if (typeof to === "string") {
-            let cachedTo = this._getCachedOffset(to, this._currentRepetition);
-            to = cachedTo.object;
-            to_offset = cachedTo.offset;
-            if (cachedTo.extraOffset && applyOffsets) {
-                to_offset.x += cachedTo.extraOffset.x;
-                to_offset.y += cachedTo.extraOffset.y;
-            }
-        }
-
-        let from_position = this._getCleanPosition(from);
-        let to_position = this._getCleanPosition(to, true);
-
-        from_position.x -= from_offset.x;
-        from_position.y -= from_offset.y;
-
-        if (to) {
-            to_position.x -= to_offset.x;
-            to_position.y -= to_offset.y;
-        }
-
-        return [from, to, from_position, to_position];
-
-    }
-
-    _getCachedObject(from, to){
-
-        if (typeof to === "string") {
-            return this._getCachedOffset(to, this._currentRepetition).object;
-        }else if(to){
-            return to;
-        }
-
-        if (typeof from === "string") {
-            return this._getCachedOffset(from, this._currentRepetition).object;
-        }else{
-            return from;
-        }
-
-    }
-
-    _applyOffsets(inPosition) {
-        let offset = this._offsets[this._currentRepetition] ?? { x: 0, y: 0 };
-        inPosition.x -= offset.x;
-        inPosition.y -= offset.y;
-        return inPosition;
-    }
-
-    async _initialize() {
-        this._offsets = [];
-        for (let index = 0; index < this._repetitions; index++) {
-            await this._cacheOffsets();
-        }
-    }
-
-    async _cacheOffsets() {
-
-        let [from, to, from_target, to_target] = this._getPositions(this._source, this._target, false);
-
-        from_target = this._calculateMissedPosition(from, from_target, !this._target && this._missed);
-        to_target = to ? this._calculateMissedPosition(to, to_target, this._missed, from_target) : false;
-
-        const from_source = this._getCleanPosition(from);
-        const to_source = this._getCleanPosition(to, true);
-
-        const origin_object = to || from;
-        const origin_position = to ? to_source : from_source;
-        const target_position = to ? to_target : from_target;
-
-        let offset = {
-            x: this._missed ? origin_position.x - target_position.x : 0,
-            y: this._missed ? origin_position.y - target_position.y : 0
-        }
-
-        if (this._randomOffset) offset = this._getRandomOffset(to || from, offset)
-
-        this._offsets.push(offset);
-
-        if (this._name) {
-            this._insertCachedOffset(
-                this._name,
-                origin_object,
-                offset,
-                this._offset
-            );
-        }
-
-    }
-
-    _insertCachedOffset(inName, inObject, inOffset, inExtraOffset) {
-        if (this.sequence._cachedOffsets === undefined) {
-            this.sequence._cachedOffsets = {};
-        }
-        if (this.sequence._cachedOffsets[inName] === undefined) {
-            this.sequence._cachedOffsets[inName] = [];
-        }
-        this.sequence._cachedOffsets[inName].push({
-            "object": inObject,
-            "offset": inOffset,
-            "extraOffset": inExtraOffset
-        });
-    }
-
-    _cachedOffsetExists(inName) {
-        return typeof inName === "string" && this.sequence._cachedOffsets[inName] !== undefined;
-    }
-
-    _getCachedOffset(inName, inIndex) {
-        if (!this.sequence._cachedOffsets.hasOwnProperty(inName)) console.error(`${inName} could not be found in previous positions!`);
-        let normalizedIndex = inIndex % this.sequence._cachedOffsets[inName].length;
-        return this.sequence._cachedOffsets?.[inName]?.[normalizedIndex];
-    }
-
-    _validateLocation(inLocation) {
-        if(this._cachedOffsetExists(inLocation)) return inLocation;
-        return super._validateLocation(inLocation);
-    }
-
-    _calculateMissedPosition(target, position, missed, origin_position) {
-
-        if (!missed) return position;
-
-        const size = lib.getObjectDimensions(target, true);
-        const halfWidth = size.width;
-        const halfHeight = size.height;
-
-        const XorY = Math.random() < 0.5;
-        const flipX = Math.random() > 0.5 ? -1 : 1;
-        const flipY = Math.random() > 0.5 ? -1 : 1;
-
-        const tokenOffset = canvas.grid.size / 5;
-
-        if(!origin_position){
-
-            // If it's X, random position in Y axis
-            if (XorY) {
-                position.x += (halfWidth + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipX;
-                position.y += lib.random_float_between(tokenOffset, halfHeight + canvas.grid.size / 2) * flipY;
-            } else {
-                position.x += lib.random_float_between(tokenOffset, halfWidth + canvas.grid.size / 2) * flipX;
-                position.y += (halfHeight + lib.random_float_between(tokenOffset, canvas.grid.size / 2)) * flipY;
-            }
-
-            return position;
-
-        }
-
-        const ray = new Ray(position, origin_position);
-
-        let startRadians = ray.angle - (Math.PI/2);
-        let endRadians = startRadians + (Math.PI);
-
-        const radius = lib.interpolate(halfHeight, halfHeight, 0.5);
-
-        let distance = (ray.distance / canvas.grid.size) - 1;
-
-        if(distance <= 1.25){
-
-            const randomAngle = XorY ? startRadians : endRadians;
-
-            let x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-            let y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-
-            if(x === position.x) x += lib.random_float_between(tokenOffset*-1, tokenOffset);
-            if(y === position.y) y += lib.random_float_between(tokenOffset*-1, tokenOffset);
-
-            return { x, y };
-
-        }
-
-        distance = Math.max(Math.abs(distance - 15), 6);
-
-        endRadians += (Math.PI / distance);
-        startRadians -= (Math.PI / distance);
-
-        const randomAngle = lib.interpolate(startRadians, endRadians, Math.random());
-
-        const x = position.x + Math.cos(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-        const y = position.y + Math.sin(randomAngle) * (radius * lib.random_float_between(1.5, 2.5));
-
-        return { x, y };
-
-    }
-
-    _snapLocationToGrid(inLocation) {
-        const coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
-        return {
-            x: coords[1] * canvas.grid.size,
-            y: coords[0] * canvas.grid.size
-        }
-    }
-
-    _getRandomOffset(target, position) {
-
-        let width = ((target?.data?.width ?? 1) * canvas.grid.size) * this._randomOffset;
-        let height = ((target?.data?.height ?? 1) * canvas.grid.size) * this._randomOffset;
-        if(target instanceof Tile){
-            width = (target?.data?.width ?? canvas.grid.size) * this._randomOffset;
-            height = (target?.data?.height ?? canvas.grid.size) * this._randomOffset;
-        }
-
-        position.x += lib.random_float_between((width / 2) * -1, width / 2);
-        position.y += lib.random_float_between((height / 2) * -1, height / 2);
-
-        return position;
-
+    get _target() {
+        return this._reachTowards?.target || this._rotateTowards?.target || this._moveTowards?.target || false;
     }
 
 }

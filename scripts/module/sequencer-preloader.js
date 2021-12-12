@@ -48,7 +48,7 @@ const SequencerPreloader = {
 
         inSrcs = this.cleanSrcs(inSrcs);
 
-        if (!lib.userCanDo("permissions-preload")){
+        if (!lib.user_can_do("permissions-preload")){
             return this.preload({
                 inSrcs,
                 local: true,
