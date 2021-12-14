@@ -181,8 +181,8 @@ export class SequencerFile {
     async getTexture(distance){
 
         const texture = this.isRangeFind
-            ? (await this._getTextureForDistance(distance))
-            : (await this._getTexture(this.getFile()))
+            ? await this._getTextureForDistance(distance)
+            : await this._getTexture(this.getFile());
 
         return {
             texture,

@@ -69,7 +69,7 @@ const flagManager = {
                 continue;
             }
 
-            const existingFlags = new Map(inObject.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
+            const existingFlags = new Map(obj.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
 
             for (const effect of toAdd.effects) {
                 existingFlags.set(effect?.data?.id ?? effect.id, effect?.data ?? effect);

@@ -12,7 +12,7 @@ export default {
     _rotateTowards: false,
 
     /**
-     * The object gets a random rotation, which means it should not be used with .reachTowards()
+     * The object gets a random rotation, which means it should not be used with .stretchTo()
      *
      * @param {boolean} [inBool=true] inBool
      * @returns this

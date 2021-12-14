@@ -86,7 +86,7 @@ for(let magical of magicalObjects){
 	new Sequence()
 		.effect("jb2a.detect_magic.cone.blue")
 			.atLocation(magical.obj)
-			.reachTowards(tokenD)
+			.stretchTo(tokenD)
 			.delay(magical.delay)
 		.play()
 

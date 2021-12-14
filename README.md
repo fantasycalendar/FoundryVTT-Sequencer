@@ -279,8 +279,9 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 2.0.0
 **Breaking changes:**
-- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Reworked Sequencer to require the `socketlib` module <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
-- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Bumped minimum version to 0.8.9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Sequencer* - Reworked Sequencer to require the `socketlib` module
+- *Sequencer* - Bumped minimum version to 0.8.9
+- *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 - *Effects* - Removed `.JB2A()` as it was deprecated
 - *Effects* - Removed support for audio methods on effects
 

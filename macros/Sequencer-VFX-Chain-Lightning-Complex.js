@@ -33,7 +33,7 @@ for(let target of tokenOrder){
     sequence.effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
         .atLocation(origin) // Going from origin
-        .reachTowards(target) // To the current loop's target
+        .stretchTo(target) // To the current loop's target
     sequence.effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
         .atLocation(target) // Static on the target

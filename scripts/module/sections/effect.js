@@ -13,7 +13,7 @@ export default class EffectSection extends Section {
         this._file = inFile;
         this._text = false;
         this._source = false;
-        this._reachTowards = false;
+        this._stretchTo = false;
         this._attachTo = false;
         this._align = false;
         this._origin = false;
@@ -50,7 +50,7 @@ export default class EffectSection extends Section {
     }
 
     /**
-     * Causes the effect's position to be stored and can then be used  with .atLocation(), .reachTowards(),
+     * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
      * and .rotateTowards() to refer to previous effects' locations
      *
      * @param {string} inName
@@ -89,7 +89,7 @@ export default class EffectSection extends Section {
     }
 
     /**
-     * Causes the effect to target a location close to the .reachTowards() location, but not on it.
+     * Causes the effect to target a location close to the .stretchTowards() location, but not on it.
      *
      * @param {boolean} [inBool=true] inBool
      * @returns {EffectSection}
@@ -142,7 +142,7 @@ export default class EffectSection extends Section {
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
-        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
         this._source = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
         return this;
     }
@@ -184,6 +184,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     *  DEPRECATED IN FAVOR OF .stretchTo()
+     *
+     * @param {object|string} inLocation
+     * @param {object} inOptions
+     * @returns {EffectSection}
+     */
+    reachTowards(inLocation, inOptions = {}) {
+        this.sequence._showWarning(self, "reachTowards", "reachTowards has been deprecated, please use stretchTo instead", true);
+        return this.stretchTo(inLocation, inOptions);
+    }
+
+    /**
      *  Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
@@ -191,20 +203,18 @@ export default class EffectSection extends Section {
      * @param {object} inOptions
      * @returns {EffectSection}
      */
-    reachTowards(inLocation, inOptions = {}) {
+    stretchTo(inLocation, inOptions) {
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
-            attachTo: false,
-            keepRatio: true
+            attachTo: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
-        if (inLocation === undefined) throw this.sequence._customError(this, "reachTowards", "could not find position of given object");
-        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "reachTowards", "inOptions.cacheLocation must be of type boolean");
-        if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "reachTowards", "inOptions.attachTo must be of type boolean");
-        this._reachTowards = {
+        if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
+        if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
+        this._stretchTo = {
             target: inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation,
-            attachTo: inOptions.attachTo,
-            keepRatio: inOptions.keepRatio
+            attachTo: inOptions.attachTo
         };
         return this;
     }
@@ -691,17 +701,17 @@ export default class EffectSection extends Section {
     }
 
     _expressWarnings(){
-        if(this._reachTowards && this._anchor){
-            this.sequence._showWarning(this, "reachTowards", "you have called .reachTowards() and .anchor() - reachTowards will manually set the X axis of the anchor and may not behave like you expect.", true);
+        if(this._stretchTo && this._anchor){
+            this.sequence._showWarning(this, "stretchTo", "you have called .stretchTowards() and .anchor() - stretchTo will manually set the X axis of the anchor and may not behave like you expect.", true);
         }
-        if(this._reachTowards && this._scaleToObject){
-            throw this.sequence._customError(this, "reachTowards", "You're trying to reach towards an object, while scaling to fit another??? Make up your mind!");
+        if(this._stretchTo && this._scaleToObject){
+            throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while scaling to fit another??? Make up your mind!");
         }
-        if(this._reachTowards && this._randomRotation){
-            throw this.sequence._customError(this, "reachTowards", "You're trying to reach towards an object, while trying to randomly rotate the effect? What?");
+        if(this._stretchTo && this._randomRotation){
+            throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while trying to randomly rotate the effect? What?");
         }
-        if(this._reachTowards && this._moveTowards){
-            throw this.sequence._customError(this, "reachTowards", "You're trying to reach towards an object, while moving towards it? You're insane.");
+        if(this._stretchTo && this._moveTowards){
+            throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while moving towards it? You're insane.");
         }
 
         const source = this._sanitizeObject(this._source);
@@ -779,7 +789,7 @@ export default class EffectSection extends Section {
     }
 
     get _target() {
-        return this._reachTowards || this._rotateTowards || this._moveTowards || false;
+        return this._stretchTo || this._rotateTowards || this._moveTowards || false;
     }
 
     async _sanitizeEffectData() {
@@ -810,9 +820,8 @@ export default class EffectSection extends Section {
             source: this._getSourceObject(),
             target: this._getTargetObject(),
             rotateTowards: this._rotateTowards !== false,
-            reachTowards: this._reachTowards ? {
-                keepRatio: this._reachTowards.keepRatio,
-                attachTo: this._reachTowards.attachTo
+            stretchTo: this._stretchTo ? {
+                attachTo: this._stretchTo.attachTo
             } : false,
             moveTowards: this._moveTowards ? {
                 ease: this._moveTowards.ease,

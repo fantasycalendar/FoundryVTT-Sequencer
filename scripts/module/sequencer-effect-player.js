@@ -190,7 +190,7 @@ class SequencerEffectPlayer {
                     effect.moveSpeed(settings.moveSpeed)
                 }
             }else{
-                effect.reachTowards(settings.endPos)
+                effect.stretchTo(settings.endPos)
             }
         }else{
             effect.scale(settings.scale)

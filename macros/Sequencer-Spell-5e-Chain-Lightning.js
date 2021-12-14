@@ -156,7 +156,7 @@ async function main(){
                         .effect()
                             .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
                             .atLocation(tokenD) // Going from origin
-                            .reachTowards(targetToken) // To the current loop's target
+                            .stretchTo(targetToken) // To the current loop's target
                             .effect()
                             .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
                             .atLocation(targetToken) // Static on the target
@@ -169,7 +169,7 @@ async function main(){
                             .effect()
                                 .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_03.webm")
                                 .atLocation(targetToken) // Going from origin
-                                .reachTowards(target) // To the current loop's target
+                                .stretchTo(target) // To the current loop's target
                                 .effect()
                                 .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
                                 .atLocation(target) // Static on the target

@@ -192,7 +192,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     get originalTargetPosition() {
         if (!this._targetPosition && this.target) {
-            if (this.data.reachTowards?.attachTo) {
+            if (this.data.stretchTo?.attachTo) {
                 this._targetPosition = this.target;
             } else {
                 this._targetPosition = canvaslib.get_object_position(this.target, true);
@@ -436,7 +436,7 @@ export default class CanvasEffect extends PIXI.Container {
             this._resolve = resolve;
             this._reject = reject;
             Hooks.call("createSequencerEffect", this);
-            this.initialize();
+            this._initialize();
         });
 
         return {
@@ -520,7 +520,7 @@ export default class CanvasEffect extends PIXI.Container {
         return super.destroy(options);
     }
 
-    async initialize(play = true) {
+    async _initialize(play = true) {
         this._file = await this._loadTexture();
         this._addToContainer();
         await this._createSprite();
@@ -739,7 +739,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._rotateTowards(ray);
 
-        if (this.sprite.texture === texture && this.sprite.texture?.isValid) return;
+        if (this.sprite.texture === texture && texture) return;
 
         this.sprite.texture = texture;
         this._texture = texture;
@@ -760,12 +760,8 @@ export default class CanvasEffect extends PIXI.Container {
                     console.log(err)
                 }
             }
-            if(this._videoIsPlaying) {
-                this.tryingToPlay = false;
-                resolve();
-            }else{
-                resolve(this._tryPlay());
-            }
+            this.tryingToPlay = false;
+            resolve();
         });
     }
 
@@ -795,11 +791,11 @@ export default class CanvasEffect extends PIXI.Container {
 
     async _transformSprite() {
 
-        if (this.data.reachTowards) {
+        if (this.data.stretchTo) {
 
             await this._applyDistanceScaling();
 
-            if (this.data.reachTowards?.attachTo) {
+            if (this.data.stretchTo?.attachTo) {
                 this._ticker.add(async () => {
                     try {
                         await this._applyDistanceScaling();
@@ -822,7 +818,7 @@ export default class CanvasEffect extends PIXI.Container {
             }
         }
 
-        if (!this._isRangeFind && !this.data.reachTowards) {
+        if (!this._isRangeFind && !this.data.stretchTo) {
 
             if (this.data.scaleToObject) {
 
@@ -1250,25 +1246,25 @@ export default class CanvasEffect extends PIXI.Container {
 
 class PersistentCanvasEffect extends CanvasEffect {
 
-    async initialize() {
-        await super.initialize(false);
-        this.startEffect();
+    async _initialize() {
+        await super._initialize(false);
+        await this._startEffect();
     }
 
-    playPresetAnimations() {
+    _playPresetAnimations() {
         this._moveTowards();
         this._fadeIn();
         this._scaleIn();
         this._rotateIn();
     }
 
-    async startEffect() {
+    async _startEffect() {
         if (!this.video || this._videoIsPlaying) return;
 
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
 
         if (!this.data.noLoop) {
-            return this.startLoop(creationTimeDifference);
+            return this._startLoop(creationTimeDifference);
         }
 
         await this._tryPlay();
@@ -1287,24 +1283,24 @@ class PersistentCanvasEffect extends CanvasEffect {
         }
     }
 
-    async startLoop(creationTimeDifference) {
+    async _startLoop(creationTimeDifference) {
         this.video.loop = (!this._startTime && !this.endTime) || this._startTime === 0 && this.endTime === this.video.duration;
         this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
-        this.resetLoop();
+        this._resetLoop();
     }
 
-    async resetLoop() {
+    async _resetLoop() {
         this.video.currentTime = this._startTime + this._loopOffset;
         if (this.ended) return;
         await this._tryPlay();
         if (this.video.loop) return;
         setTimeout(() => {
             this._loopOffset = 0;
-            this.resetLoop();
+            this._resetLoop();
         }, this._animationDuration - (this._loopOffset * 1000));
     }
 
-    timeoutSpriteVisibility() {
+    _timeoutSpriteVisibility() {
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
         if (creationTimeDifference === 0 && !this.data.animations) {
             this.sprite.visible = true;
@@ -1315,7 +1311,7 @@ class PersistentCanvasEffect extends CanvasEffect {
         }, 50);
     }
 
-    setEndTimeout() {
+    _setEndTimeout() {
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
         if (!this.data.noLoop || creationTimeDifference >= this._animationDuration || !this.video) return;
         setTimeout(() => {

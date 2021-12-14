@@ -208,7 +208,11 @@ const SequencerDatabase = {
     _recurseEntries(entryCache, dbPath, entries, globalTemplate, template) {
 
         if (entries?._template) {
-            template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
+            if(Array.isArray(entries?._template) && entries?._template.length === 3){
+                template = entries?._template;
+            }else {
+                template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
+            }
         }
 
         if (typeof entries === "string" || typeof entries?.file === "string") {

@@ -50,6 +50,7 @@ async function get_video_texture(inBlob){
         video.preload = "auto";
         video.crossOrigin = "anonymous";
         video.autoplay = false;
+        video.autoload = true;
         video.muted = true;
         video.src = URL.createObjectURL(inBlob);
 
