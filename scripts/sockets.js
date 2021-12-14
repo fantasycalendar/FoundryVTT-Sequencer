@@ -20,9 +20,9 @@ export function registerSocket() {
     sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) => Sequencer.EffectManager._playEffect(...args))
     sequencerSocket.register(SOCKET_HANDLERS.END_EFFECTS, (...args) => Sequencer.EffectManager._endEffects(...args))
     sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) => SequencerAudioHelper.play(...args))
-    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) => Sequencer.Preloader.preload(...args))
-    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) => Sequencer.Preloader.handleResponse(...args))
-    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_DONE, (...args) => Sequencer.Preloader.handleDone(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) => Sequencer.Preloader._preloadRemote(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) => Sequencer.Preloader._handleResponse(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_DONE, (...args) => Sequencer.Preloader._handleDone(...args))
     sequencerSocket.register(SOCKET_HANDLERS.UPDATE_DOCUMENT, (...args) => updateDocument(...args))
     sequencerSocket.register(SOCKET_HANDLERS.UPDATE_FLAGS, (...args) => updateFlags(...args))
 }

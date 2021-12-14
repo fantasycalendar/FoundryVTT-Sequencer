@@ -3,7 +3,7 @@ import * as canvaslib from "../lib/canvas-utils.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
-import { calculate_missed_position, is_coordinate } from "../lib/canvas-utils.js";
+import { calculate_missed_position, is_object_canvas_data } from "../lib/canvas-utils.js";
 
 export default class EffectSection extends Section {
 
@@ -703,15 +703,11 @@ export default class EffectSection extends Section {
         if(this._reachTowards && this._moveTowards){
             throw this.sequence._customError(this, "reachTowards", "You're trying to reach towards an object, while moving towards it? You're insane.");
         }
-        if(this._reachTowards && this._size){
-            throw this.sequence._customError(this, "reachTowards", ".reachTowards() will scale the effect towards the target, so you cannot set the .size() of the effect as well.");
-        }
 
         const source = this._sanitizeObject(this._source);
         const target = this._sanitizeObject(this._target);
 
         if(!source && !target && !this._screenSpace){
-
             throw this.sequence._customError(this, "play", "Could not determine where to play the effect!");
         }
     }
@@ -720,13 +716,13 @@ export default class EffectSection extends Section {
         this._expressWarnings();
         const data = await this._sanitizeEffectData();
         Hooks.call("preCreateSequencerEffect", data);
-        let push = !(data.users.length === 1 && data.users.includes(game.userId));
+        let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
         let canvasEffectData = await Sequencer.EffectManager.play(data, push);
         let totalDuration = this._currentWaitTime;
         if (this._persist) {
             totalDuration += await canvasEffectData.promise;
         } else {
-            totalDuration += canvasEffectData.duration;
+            totalDuration += await canvasEffectData.duration;
         }
         await new Promise(resolve => setTimeout(resolve, totalDuration))
     }
@@ -749,8 +745,8 @@ export default class EffectSection extends Section {
         if(this._name && !this.sequence.nameOffsetMap[this._name]){
             this.sequence.nameOffsetMap[this._name] = {
                 seed: `${this._name}-${randomID()}`,
-                source: this._sanitizeObject(this._source),
-                target: this._sanitizeObject(this._target),
+                source: this._getSourceObject(),
+                target: this._getTargetObject(),
                 randomOffset: this._randomOffset,
                 missed: this._missed,
                 offset: this._offset,
@@ -761,10 +757,29 @@ export default class EffectSection extends Section {
     }
 
     _sanitizeObject(inObj){
-        if(inObj && typeof inObj === "object" && !canvaslib.is_coordinate(inObj)){
+        if(inObj && typeof inObj === "object" && !canvaslib.is_object_canvas_data(inObj)){
             inObj = lib.get_object_identifier(inObj);
         }
         return inObj;
+    }
+
+    _getSourceObject(){
+        if(typeof this._source !== "object") return this._source;
+        return this._attachTo
+            ? this._sanitizeObject(this._source)
+            : canvaslib.get_object_canvas_data(this._source);
+    }
+
+    _getTargetObject(){
+        if(!this._target?.target) return this._target;
+        if(typeof this._target.target !== "object") return this._target.target;
+        return this._target?.attachTo
+            ? this._sanitizeObject(this._target.target)
+            : canvaslib.get_object_canvas_data(this._target.target, true);
+    }
+
+    get _target() {
+        return this._reachTowards || this._rotateTowards || this._moveTowards || false;
     }
 
     async _sanitizeEffectData() {
@@ -779,11 +794,11 @@ export default class EffectSection extends Section {
              */
             id: randomID(),
             sequenceId: this.sequence.id,
-            creationTime: (+new Date()),
+            creationTimestamp: (+new Date()),
             sceneId: game.user.viewedScene,
             creatorUserId: game.userId,
             moduleName: this.sequence.moduleName,
-            users: Array.from(this._users),
+            users: this._users ? Array.from(this._users) : false,
             name: this._name,
             origin: this._origin,
             index: this.sequence.effectIndex,
@@ -792,8 +807,8 @@ export default class EffectSection extends Section {
             /**
              * Source/target properties
              */
-            source: this._sanitizeObject(this._source),
-            target: this._sanitizeObject(this._target),
+            source: this._getSourceObject(),
+            target: this._getTargetObject(),
             rotateTowards: this._rotateTowards !== false,
             reachTowards: this._reachTowards ? {
                 keepRatio: this._reachTowards.keepRatio,
@@ -893,8 +908,6 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "file", "an effect must have text or  must be of type string or array");
         }
 
-        console.log(data);
-
         return data;
 
     }
@@ -914,10 +927,6 @@ export default class EffectSection extends Section {
             x: (scale?.x ?? 1.0),
             y: (scale?.y ?? 1.0)
         }
-    }
-
-    get _target() {
-        return this._reachTowards?.target || this._rotateTowards?.target || this._moveTowards?.target || false;
     }
 
 }

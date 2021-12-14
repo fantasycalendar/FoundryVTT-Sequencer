@@ -5,11 +5,12 @@ export default {
     _filters: false,
 
     _addFilter(inFilterName, inData, inName = false) {
-        if (!this._filters) this._filters = {};
-        this._filters[inFilterName] = {
+        if (!this._filters) this._filters = [];
+        this._filters.push({
+            className: inFilterName,
             name: inName,
             data: inData
-        };
+        });
     },
 
     _testFilter(inFilterName, inData) {

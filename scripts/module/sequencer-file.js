@@ -15,7 +15,7 @@ export class SequencerFile {
         delete this.originalFile["_timeRange"];
         this.file = foundry.utils.duplicate(this.originalFile);
         this.fileIndex = false;
-        this.rangeFind =
+        this.isRangeFind =
             typeof this.file !== "string" && !Array.isArray(this.originalFile)
                 ? Object.keys(this.originalFile).filter((key) =>
                 key.endsWith("ft")
@@ -60,7 +60,7 @@ export class SequencerFile {
     }
 
     getAllFiles() {
-        if (this.rangeFind) {
+        if (this.isRangeFind) {
             return Object.values(this.file).deepFlatten();
         }
         return [this.file].deepFlatten();
@@ -85,7 +85,7 @@ export class SequencerFile {
     }
 
     hasRangeFind(inFt) {
-        return inFt && this.rangeFind && this.file[inFt];
+        return inFt && this.isRangeFind && this.file[inFt];
     }
 
     static get ftToDistanceMap(){
@@ -147,8 +147,16 @@ export class SequencerFile {
             : possibleFiles[0];
     }
 
-    _adjustDimensionsForPadding(texture) {
-        return texture.width - this.template[1] - this.template[2];
+    destroy(){
+        for(let texture of Object.values(this.fileTextureMap)){
+            if(!texture) continue;
+            try{
+                texture.baseTexture.resource.source.removeAttribute('src');
+                texture.baseTexture.resource.source.pause();
+                texture.baseTexture.resource.source.load();
+            }catch(err){ }
+            texture.destroy();
+        }
     }
 
     async _getTexture(file){
@@ -157,20 +165,30 @@ export class SequencerFile {
         return this.fileTextureMap[file];
     }
 
-    async getTextureForDistance(distance) {
+    async _getTextureForDistance(distance) {
         const file = this._rangeFind(distance);
         return await this._getTexture(file);
     }
 
-    async getScalingForDistance(distance){
-        const texture = this.rangeFind ? await this.getTextureForDistance(distance) : await this.getTexture();
-        const spriteScale = distance / this._adjustDimensionsForPadding(texture);
-        const spriteAnchor = this.template[1] / texture.width;
-        return { texture, spriteScale, spriteAnchor};
+    _adjustScaleForPadding(distance, width) {
+        return distance / (width - (this.template ? this.template[1] + this.template[2] : 0));
     }
 
-    async getTexture(){
-        return this._getTexture(this.getFile());
+    _adjustAnchorForPadding(width){
+        return this.template ? this.template[1] / width : undefined
+    }
+
+    async getTexture(distance){
+
+        const texture = this.isRangeFind
+            ? (await this._getTextureForDistance(distance))
+            : (await this._getTexture(this.getFile()))
+
+        return {
+            texture,
+            spriteScale: this._adjustScaleForPadding(distance, texture.width),
+            spriteAnchor: this._adjustAnchorForPadding(texture.width)
+        };
     }
 
 }

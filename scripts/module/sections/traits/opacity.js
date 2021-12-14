@@ -10,7 +10,7 @@ export default {
     _fadeOut: false,
 
     /**
-     * Sets the opacity of the effect. If used with .fadeIn() and/or .fadeOut(), this defines what the effect will fade to/from
+     * Sets the opacity of the effect. If used with ._fadeIn() and/or ._fadeOut(), this defines what the effect will fade to/from
      *
      * @param {number} inOpacity
      * @returns this

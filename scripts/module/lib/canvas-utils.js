@@ -8,6 +8,7 @@ export function calculate_missed_position(source, target, twister) {
     if(!target){
 
         const sourceDimensions = get_object_dimensions(source, true);
+
         const angle = twister.random() * Math.PI * 2;
         let x = Math.cos(angle) * sourceDimensions.width;
         let y = Math.sin(angle) * sourceDimensions.height;
@@ -19,8 +20,8 @@ export function calculate_missed_position(source, target, twister) {
 
     }
 
-    let targetDimensions = get_object_dimensions(target, true);
-    let targetPosition = get_object_position(target);
+    const targetDimensions = get_object_dimensions(target, true);
+    const targetPosition = get_object_position(target);
 
     const ray = new Ray(targetPosition, sourcePosition);
 
@@ -126,39 +127,25 @@ export function get_random_offset(target, randomOffset, twister = false) {
 }
 
 export function get_object_dimensions(inObj, half = false){
-    const width =
-        (inObj?.hitArea?.width
-            ?? inObj?.w
-            ?? inObj?.shape?.width
-            ?? (inObj?.shape?.radius
-                ? inObj?.shape?.radius*2
-                : canvas.grid.size)) / (half ? 2 : 1);
 
-    const height =
-        (inObj?.hitArea?.height
-            ?? inObj?.h
-            ?? inObj?.shape?.height
-            ?? (inObj?.shape?.radius
-                ? inObj?.shape?.radius*2
-                : canvas.grid.size)) / (half ? 2 : 1)
+    const width = inObj?.hitArea?.width
+        ?? inObj?.w
+        ?? inObj?.shape?.width
+        ?? (inObj?.shape?.radius ? inObj?.shape?.radius * 2 : undefined)
+        ?? inObj?.width
+        ?? canvas.grid.size;
+
+    const height = inObj?.hitArea?.height
+        ?? inObj?.h
+        ?? inObj?.shape?.height
+        ?? (inObj?.shape?.radius ? inObj?.shape?.radius * 2 : undefined)
+        ?? inObj?.height
+        ?? canvas.grid.size;
 
     return {
-        width,
-        height
+        width: width / (half ? 2 : 1),
+        height: height / (half ? 2 : 1)
     }
-}
-
-export function is_coordinate(inObj) {
-    if(typeof inObj !== "object") return false;
-    const keys = Object.keys(inObj);
-    const values = Object.values(inObj);
-    keys.sort();
-    return keys.length === 2
-        && keys[0] === "x"
-        && keys[1] === "y"
-        && lib.is_real_number(values[0])
-        && lib.is_real_number(values[1]);
-
 }
 
 
@@ -197,4 +184,19 @@ export function align({context, spriteWidth, spriteHeight, align}={}){
         y: lib.interpolate(height*-0.5,height*0.5, alignRatio.y)
     }
 
+}
+
+export function is_object_canvas_data(inObj) {
+    if(typeof inObj !== "object") return false;
+    const keys = Object.keys(inObj);
+    keys.sort();
+    return (keys.length === 2 && keys[0] === "x" && keys[1] === "y")
+        || (keys.length === 4 && keys[0] === "height" && keys[1] === "width" && keys[2] === "x" && keys[3] === "y")
+}
+
+export function get_object_canvas_data(inObject, measure = false){
+    return {
+        ...get_object_position(inObject, measure),
+        ...get_object_dimensions(inObject)
+    }
 }

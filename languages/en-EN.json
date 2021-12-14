@@ -5,7 +5,7 @@
   "SEQUENCER.Effects": "Sequencer Effects",
 
   "SEQUENCER.Player": "Player",
-  "SEQUENCER.PlayerActivateLayer": "Activate Layer",
+  "SEQUENCER.PlayerSwitchToLayer": "Switch to Layer",
   "SEQUENCER.PlayerPathInput": "Enter DB path or filepath",
   "SEQUENCER.PlayerAllUsers": "All Users",
   "SEQUENCER.PlayerPresets": "Presets:",

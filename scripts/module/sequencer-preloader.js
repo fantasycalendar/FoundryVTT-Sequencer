@@ -6,36 +6,43 @@ import * as lib from './lib/lib.js';
 const SequencerPreloader = {
 
     _userId: undefined,
-    responseResolve: false,
-    doneResolve: false,
-    clientsDone: new Set(),
-    expectedClients: new Set(),
-    clientsResponded: new Set(),
+    _responseResolve: false,
+    _doneResolve: false,
+    _clientsDone: new Set(),
+    _expectedClients: new Set(),
+    _clientsResponded: new Set(),
 
-    get userId() {
-        if (this._userId === undefined) {
-            this._userId = game.user.id;
+    /**
+     *  Caches provided file(s) locally, vastly improving loading speed of those files.
+     *
+     * @param {Array|String}        inSrcs
+     * @param {Boolean}             showProgressBar
+     * @returns {Promise<void>}
+     */
+    preload(inSrcs, showProgressBar = false){
+
+        this._reset();
+
+        if (!Array.isArray(inSrcs)) {
+            inSrcs = [inSrcs];
         }
-        return this._userId;
+
+        inSrcs = this._cleanSrcs(inSrcs);
+
+        if (inSrcs.length === 0) throw lib.custom_error("Sequencer", "preloadForClients - You need to provide files to preload");
+
+        return this._preloadLocal(inSrcs, showProgressBar);
+
     },
 
-    _reset() {
-        this.doneResolve = false;
-        this.responseResolve = false;
-        this.clientsDone = new Set();
-        this.expectedClients = new Set();
-        this.clientsResponded = new Set();
-    },
-
-    cleanSrcs(inSrcs) {
-        return lib.make_array_unique(inSrcs.map(src => {
-            if (window.Sequencer.Database.entryExists(src)) {
-                return window.Sequencer.Database.getAllFileEntries(src);
-            }
-            return src;
-        })).deepFlatten();
-    },
-
+    /**
+     *  Causes each connected client (including the caller) to fetch and cache the provided file(s) locally, vastly
+     *  improving loading speed of those files.
+     *
+     * @param {Array|String}        inSrcs
+     * @param {Boolean}             showProgressBar
+     * @returns {Promise<void>}
+     */
     async preloadForClients(inSrcs, showProgressBar = false) {
 
         this._reset();
@@ -44,34 +51,36 @@ const SequencerPreloader = {
             inSrcs = [inSrcs];
         }
 
-        if (inSrcs.length === 0) return;
+        inSrcs = this._cleanSrcs(inSrcs);
 
-        inSrcs = this.cleanSrcs(inSrcs);
+        if (inSrcs.length === 0) throw lib.custom_error("Sequencer", "preloadForClients - You need to provide files to preload");
 
-        if (!lib.user_can_do("permissions-preload")){
-            return this.preload({
+        console.log(inSrcs);
+
+        if (!lib.user_can_do("permissions-_preload")){
+            return this._preload({
                 inSrcs,
                 local: true,
                 push: false
             });
         }
 
-        this.expectedClients = new Set(game.users
+        this._expectedClients = new Set(game.users
             .filter(user => user.active)
             .map(user => user.id));
 
         let responses = new Promise(resolve => {
-            this.responseResolve = resolve;
+            this._responseResolve = resolve;
         });
 
         sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD, {
             inSrcs,
             showProgressBar,
-            senderId: this.userId,
+            senderId: game.user.id,
             push: true
         });
 
-        this.preload({
+        this._preloadRemote({
             inSrcs,
             showProgressBar,
             local: true,
@@ -81,31 +90,60 @@ const SequencerPreloader = {
         await responses;
 
         return new Promise((resolve) => {
-            this.doneResolve = resolve;
+            this._doneResolve = resolve;
         });
 
     },
 
-    handleResponse(userId, senderId) {
-        if (senderId === undefined) senderId = this.userId;
-        if (this.userId !== senderId) return;
-        this.clientsResponded.add(userId);
-        if (this.expectedClients.size !== this.clientsResponded.size) return;
-        this.responseResolve();
+    /**
+     * @private
+     */
+    _reset() {
+        this._doneResolve = false;
+        this._responseResolve = false;
+        this._clientsDone = new Set();
+        this._expectedClients = new Set();
+        this._clientsResponded = new Set();
     },
 
-    handleDone(userId, senderId, filesFailedToLoad) {
+    /**
+     * @private
+     */
+    _cleanSrcs(inSrcs) {
+        return lib.make_array_unique(inSrcs.filter(Boolean).map(src => {
+            if (window.Sequencer.Database.entryExists(src)) {
+                return window.Sequencer.Database.getAllFileEntries(src);
+            }
+            return src;
+        })).deepFlatten();
+    },
 
-        if (senderId === undefined) senderId = this.userId;
+    /**
+     * @private
+     */
+    _handleResponse(userId, senderId) {
+        if (senderId === undefined) senderId = game.user.id;
+        if (game.user.id !== senderId) return;
+        this._clientsResponded.add(userId);
+        if (this._expectedClients.size !== this._clientsResponded.size) return;
+        this._responseResolve();
+    },
 
-        if (this.userId !== senderId) return;
+    /**
+     * @private
+     */
+    _handleDone(userId, senderId, filesFailedToLoad) {
 
-        this.clientsDone.add({ userId, filesFailedToLoad });
+        if (senderId === undefined) senderId = game.user.id;
 
-        if (this.expectedClients.size !== this.clientsResponded.size) return;
-        if (this.clientsDone.size !== this.clientsResponded.size) return;
+        if (game.user.id !== senderId) return;
 
-        this.clientsDone.forEach(user => {
+        this._clientsDone.add({ userId, filesFailedToLoad });
+
+        if (this._expectedClients.size !== this._clientsResponded.size) return;
+        if (this._clientsDone.size !== this._clientsResponded.size) return;
+
+        this._clientsDone.forEach(user => {
             if (filesFailedToLoad > 0) {
                 lib.debug(`${game.users.get(user.userId).name} preloaded files, failed to preload ${filesFailedToLoad} files`);
             } else {
@@ -114,42 +152,56 @@ const SequencerPreloader = {
         });
         lib.debug(`All clients responded to file preloads`);
 
-        this.doneResolve();
+        this._doneResolve();
 
         this._reset();
 
     },
 
-    preload({ inSrcs, showProgressBar = false, senderId, local = false, push = false } = {}) {
+    /**
+     * @private
+     */
+    _preloadRemote({ inSrcs, showProgressBar = false, senderId, local = false, push = false } = {}) {
 
-        inSrcs = this.cleanSrcs(inSrcs);
+        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD_RESPONSE, game.user.id, senderId);
+        if (local) this._handleResponse(game.user.id);
 
-        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD_RESPONSE, this.userId, senderId);
-        if (local) this.handleResponse(this.userId);
+        return this._preloadLocal(inSrcs, showProgressBar)
+            .then(({ numFilesFailedToLoad }={}) => {
+                if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD_DONE, game.user.id, senderId, numFilesFailedToLoad);
+                if (local) this._handleDone(game.user.id, game.user.id, numFilesFailedToLoad);
+            });
+    },
+
+    /**
+     * @private
+     */
+    _preloadLocal(inSrcs, showProgressBar){
 
         let startTime = performance.now()
-        lib.debug(`Preloading ${inSrcs.length} files...`);
         let numFilesToLoad = inSrcs.length;
 
-        if (showProgressBar) LoadingBar.init("Sequencer - Preloading files", numFilesToLoad);
+        lib.debug(`Preloading ${numFilesToLoad} files...`);
+        if (showProgressBar) LoadingBar.init(`Sequencer - Preloading ${numFilesToLoad} files`, numFilesToLoad);
 
-        let filesSucceeded = 0;
-        new Promise(async (resolve) => {
+        return new Promise(async (resolve) => {
+            let numFilesFailedToLoad = 0;
             for(let src of inSrcs){
                 await SequencerFileCache.loadFile(src).then(() => {
                     if (showProgressBar) LoadingBar.incrementProgress();
-                    filesSucceeded++;
                 }).catch(() => {
                     if (showProgressBar) LoadingBar.incrementProgress();
+                    numFilesFailedToLoad++;
                 });
             }
-            resolve();
-        }).then(() => {
-            if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PRELOAD_DONE, this.userId, senderId, numFilesToLoad - filesSucceeded);
-            if (local) this.handleDone(this.userId, this.userId, numFilesToLoad - filesSucceeded);
-            lib.debug(`Preloading ${numFilesToLoad - filesSucceeded} files took ${(performance.now() - startTime) / 1000}s`);
-        });
-    },
+            const timeTaken = (performance.now() - startTime) / 1000;
+            resolve({ numFilesFailedToLoad, timeTaken });
+        }).then(({ numFilesFailedToLoad, timeTaken }={}) => {
+            let failedToLoad = ` (${numFilesFailedToLoad} failed to load)`;
+            lib.debug(`Preloading ${numFilesToLoad} files took ${timeTaken}s` + failedToLoad);
+        })
+
+    }
 
 }
 

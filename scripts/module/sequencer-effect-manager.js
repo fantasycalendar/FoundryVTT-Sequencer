@@ -3,6 +3,7 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import flagManager from "./flag-manager.js";
+import CONSTANTS from "./constants.js";
 
 const EffectsContainer = new Map();
 
@@ -169,7 +170,7 @@ export default class SequencerEffectManager {
         allObjects.push(canvas.scene);
         let promises = allObjects.map(obj => {
             const document = obj?.document ?? obj;
-            let objEffects = flagManager.getFlag(document);
+            let objEffects = document.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? [];
             return this._playEffectMap(objEffects, document);
         }).flat();
         debounceUpdateEffectViewer();
@@ -192,8 +193,15 @@ export default class SequencerEffectManager {
         let effects = inDocument.data.flags.sequencer.effects;
 
         effects = effects.map(effect => {
-            if(effect[1].attachTo) effect[1].attachTo.id = lib.get_object_identifier(inDocument.object);
-            effect[1].sceneId = canvas.scene.id;
+            let effectData = effect[1].data;
+
+            if(effectData.attachTo || lib.is_UUID(effectData.source)){
+                effectData.source = lib.get_object_identifier(inDocument);
+            }
+
+            effectData.sceneId = canvas.scene.id;
+
+            effect[1].data = effectData;
             return effect;
         });
 

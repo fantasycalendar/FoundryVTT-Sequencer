@@ -1,71 +1,11 @@
 import * as lib from "./lib/lib.js";
-import CONSTANTS from "./constants.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import CONSTANTS from "./constants.js";
 
 const flagManager = {
 
     flagAddBuffer: new Map(),
     flagRemoveBuffer: new Map(),
-    _latestFlagVersion: false,
-
-    getFlag: (inObject) => {
-
-        let flags = inObject.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
-
-        if(!flags) return [];
-
-        let update = false;
-        flags = flags.map(entries => {
-            let [id, effect] = entries;
-            for(let [version, migration] of Object.entries(flagManager.migrations)){
-                version = Number(version);
-                if((effect?.flagVersion ?? 0.0) >= version) continue;
-                lib.debug(`Patching flags on ${inObject.id} to version ${version}`);
-                update = true;
-                effect = migration(effect)
-            }
-            effect.flagVersion = flagManager.latestFlagVersion;
-            return [id, effect];
-        })
-
-        if(update){
-            sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, inObject.uuid, flags);
-        }
-
-        return flags;
-
-    },
-
-    migrations: {
-
-        /**
-         * Basic version, nothing happens here
-         */
-        "1.0": (data) => {
-            return data;
-        },
-
-        /**
-         * Add support for align on attachTo
-         */
-        "1.1": (data) => {
-            data.attachTo = {
-                id: data.attachTo,
-                align: "center"
-            }
-            return data;
-        }
-
-    },
-
-    get latestFlagVersion(){
-        if(!flagManager._latestFlagVersion) {
-            const versions = Object.keys(this.migrations).map(version => Number(version));
-            versions.sort();
-            flagManager._latestFlagVersion = versions.pop();
-        }
-        return flagManager._latestFlagVersion;
-    },
 
     addFlags: (inObject, inEffects) => {
 
@@ -124,22 +64,22 @@ const flagManager = {
             let obj = toAdd.obj ?? toRemove.obj;
 
             if (toRemove?.removeAll) {
-                await obj.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, []);
+                await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, obj.uuid, []);
                 lib.debug(`All flags removed for object with ID "${obj.id}"`);
                 continue;
             }
 
-            let flagsToSet = new Map(await flagManager.getFlag(obj));
+            const existingFlags = new Map(inObject.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
 
             for (const effect of toAdd.effects) {
-                flagsToSet.set(effect?.data?.id ?? effect.id, effect?.data ?? effect);
+                existingFlags.set(effect?.data?.id ?? effect.id, effect?.data ?? effect);
             }
 
             for (const effect of toRemove.effects) {
-                flagsToSet.delete(effect?.data?.id ?? effect.id);
+                existingFlags.delete(effect?.data?.id ?? effect.id);
             }
             
-            flagsToSet = Array.from(flagsToSet)
+            const flagsToSet = Array.from(existingFlags);
 
             await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, obj.uuid, flagsToSet);
 
