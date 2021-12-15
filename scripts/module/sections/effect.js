@@ -699,6 +699,7 @@ export default class EffectSection extends Section {
      * @returns {Section}
      */
     origin(inOrigin){
+        inOrigin = lib.validate_document(inOrigin);
         if (inOrigin instanceof Document){
             inOrigin = inOrigin?.uuid;
             if(!inOrigin) throw this.sequence._customError(this, "origin", "could not find the UUID for the given Document")

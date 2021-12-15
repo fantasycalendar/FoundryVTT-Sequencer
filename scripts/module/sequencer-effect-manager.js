@@ -226,7 +226,7 @@ export default class SequencerEffectManager {
         const allObjects = lib.get_all_objects();
         allObjects.push(canvas.scene);
         let promises = allObjects.map(obj => {
-            const document = obj?.document ?? obj;
+            const document = lib.validate_document(obj);
             let objEffects = document.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? [];
             return this._playEffectMap(objEffects, document);
         }).flat();

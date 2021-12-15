@@ -1,6 +1,4 @@
 import * as lib from "../lib/lib.js";
-import { get_object_identifier } from "../lib/lib.js";
-import CanvasEffect from "../canvas-effects/canvas-effect.js";
 
 export default class Section {
 
@@ -146,7 +144,7 @@ export default class Section {
      * @protected
      */
     _validateLocation(inLocation) {
-        inLocation = inLocation?.document ?? inLocation;
+        inLocation = lib.validate_document(inLocation);
         if (typeof inLocation === "string") {
             inLocation = lib.get_object_from_scene(inLocation) ?? inLocation;
         }

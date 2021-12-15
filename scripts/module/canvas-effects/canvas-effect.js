@@ -64,20 +64,21 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
+    _getObjectByID(inIdentifier){
+        let source = inIdentifier;
+        let offsetMap = this._nameOffsetMap?.[inIdentifier];
+        if (offsetMap) {
+            source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
+        } else if (!canvaslib.is_object_canvas_data(source)) {
+            source = lib.get_object_from_scene(source, this.data.sceneId);
+            source = source?._object ?? source;
+        }
+        return source;
+    }
+
     get source() {
         if (!this._source && this.data.source) {
-
-            let source = this.data.source;
-            let offsetMap = this._nameOffsetMap?.[this.data.source];
-            if (offsetMap) {
-                source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
-            } else if (!canvaslib.is_object_canvas_data(source)) {
-                source = lib.get_object_from_scene(source, this.data.sceneId);
-                source = source?._object ?? source;
-            }
-
-            this._source = source;
-
+            this._source = this._getObjectByID(this.data.source);
         }
 
         return this._source;
@@ -177,17 +178,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     get target() {
         if (!this._target && this.data.target) {
-
-            let target = this.data.target;
-            let offsetMap = this._nameOffsetMap?.[this.data.target];
-            if (offsetMap) {
-                target = offsetMap?.targetObj || offsetMap?.sourceObj || target;
-            } else if (!canvaslib.is_object_canvas_data(target)) {
-                target = lib.get_object_from_scene(target, this.data.sceneId);
-                target = target?._object ?? target;
-            }
-
-            this._target = target;
+            this._target = this._getObjectByID(this.data.target);
         }
         return this._target;
     }
@@ -522,6 +513,7 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     destroy(options) {
+        Hooks.call("endedSequencerEffect", this.data);
         return super.destroy(options);
     }
 
@@ -536,6 +528,9 @@ export default class CanvasEffect extends PIXI.Container {
         this._setEndTimeout();
         this._timeoutSpriteVisibility();
         if (play) this._tryPlay();
+        if(this.data.attachTo){
+            this._timeoutRemove();
+        }
         lib.debug(`Playing effect:`, this.data);
     }
 
@@ -624,6 +619,14 @@ export default class CanvasEffect extends PIXI.Container {
         setTimeout(() => {
             this.sprite.visible = true;
         }, this.data.animations ? 50 : 0);
+    }
+
+    _timeoutRemove(){
+        if(!lib.get_object_from_scene(this.data.source)){
+            Sequencer.EffectManager.endEffects({ effects: this });
+            return;
+        }
+        setTimeout(this._timeoutRemove.bind(this), 500);
     }
 
     async _createSprite() {

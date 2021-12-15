@@ -315,14 +315,27 @@ function from_uuid_fast(uuid) {
 }
 
 /**
+ * Gets the document from an object, if it has one
+ *
+ * @param inObject
+ * @returns {Document|{document}|*}
+ */
+export function validate_document(inObject){
+    const document = inObject?.document ?? inObject;
+    return is_UUID(inObject?.uuid)
+        ? document
+        : inObject;
+}
+
+/**
  *  Get the unique identifier from an object
  *
  * @param  {Object}     inObject    The object to get the unique identifier from
  * @return {String}                 The identifier
  */
 export function get_object_identifier(inObject){
-    inObject = inObject?.document ?? inObject;
-    return inObject?.uuid
+    const uuid = is_UUID(inObject?.uuid) ? inObject?.uuid : undefined;
+    return uuid
         ?? inObject?.id
         ?? inObject?.document?.name
         ?? inObject?.name

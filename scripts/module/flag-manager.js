@@ -11,7 +11,7 @@ const flagManager = {
 
         if(!inObject?.id) return;
 
-        inObject = inObject?.document ?? inObject;
+        inObject = lib.validate_document(inObject);
 
         if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
@@ -29,7 +29,7 @@ const flagManager = {
 
         if(!inObject?.id) return;
 
-        inObject = inObject?.document ?? inObject;
+        inObject = lib.validate_document(inObject);
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 

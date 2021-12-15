@@ -190,8 +190,8 @@ export function is_object_canvas_data(inObj) {
     if(typeof inObj !== "object") return false;
     const keys = Object.keys(inObj);
     keys.sort();
-    return (keys.length === 2 && keys[0] === "x" && keys[1] === "y")
-        || (keys.length === 4 && keys[0] === "height" && keys[1] === "width" && keys[2] === "x" && keys[3] === "y")
+    return (keys.includes("x") && keys.includes("y"))
+        || (keys.includes("height") && keys.includes("width") && keys.includes("x") && keys.includes("y"))
 }
 
 export function get_object_canvas_data(inObject, measure = false){
