@@ -321,7 +321,7 @@ export default class SequencerEffectManager {
      * Ends multiple effects by ID
      *
      * @param inEffectIds
-     * @returns {Promise<boolean|*>}
+     * @returns {Promise<boolean|any>}
      * @private
      */
     static _endEffects(inEffectIds) {
@@ -334,7 +334,7 @@ export default class SequencerEffectManager {
      * Ends one or many effects at the same time
      *
      * @param inEffects
-     * @returns {Promise<{[string]: PromiseSettledResult<*>}|boolean>}
+     * @returns {Promise}
      * @private
      */
     static async _endManyEffects(inEffects = false) {

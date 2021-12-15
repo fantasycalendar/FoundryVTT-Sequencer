@@ -258,7 +258,7 @@ export function clamp(num, min, max) {
 /**
  *  Gets all objects from a scene
  *
- * @param  {String}     inSceneId   The scene ID to get all valid objects from
+ * @param  {String}     [inSceneId]   The scene ID to get all valid objects from
  * @return {Array}                  Array containing all objects
  */
 export function get_all_objects(inSceneId) {
