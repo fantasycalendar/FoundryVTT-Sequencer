@@ -91,36 +91,56 @@ export default class SequencerEffectManager {
     }
 
     static _filterEffects(inData){
+        if(inData.name){
+            inData.name = new RegExp(lib.str_to_search_regex_str(inData.name), "gu");
+        }
         return this.effects
             .filter(effect => !inData.effects || inData.effects.includes(effect.id))
-            .filter(effect => !inData.name || inData.name === effect.data.name)
-            .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo.id)
+            .filter(effect => !inData.name || effect.entry.match(inData.name)?.length)
+            .filter(effect => !inData.source || inData.source === effect.data.source)
+            .filter(effect => !inData.target || inData.target === effect.data.target)
             .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId)
             .filter(effect => !inData.origin || inData.origin === effect.data.origin);
     }
 
-    static _validateFilters(inData){
+    static _validateObject(object, sceneId){
 
-        if (inData?.object) {
-            if (!(inData.object instanceof PlaceableObject || typeof inData.object === "string")) {
-                throw lib.custom_error("Sequencer", "EffectManager | inData.object must be instance of PlaceableObject or of type string")
-            } else if (inData.object instanceof PlaceableObject) {
-                inData.attachTo = lib.get_object_identifier(inData.object);
-            } else if (typeof inData.object === "string") {
-                if (!lib.get_object_from_scene(inData.object)) {
-                    throw lib.custom_error("Sequencer", `EffectManager | could not find object with ID: ${inData.object}`)
-                }
-                inData.attachTo = inData.object;
+        if (!(object instanceof PlaceableObject || typeof object === "string")) {
+            throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
+        } else if (object instanceof PlaceableObject) {
+            object = lib.get_object_identifier(object);
+        } else if (typeof object === "string") {
+            if (!lib.get_object_from_scene(object, sceneId)) {
+                throw lib.custom_error("Sequencer", `EffectManager | could not find object with ID: ${object}`)
             }
-            delete inData.object;
         }
 
-        if (inData?.name && typeof inData?.name !== "string") throw lib.custom_error("Sequencer", "EffectManager | inData.name must be of type string")
-        if (inData?.origin && typeof inData?.origin !== "string") throw lib.custom_error("Sequencer", "EffectManager | inData.origin must be of type string")
+        return object;
+    }
+
+    static _validateFilters(inData){
+
         if (inData?.sceneId) {
             if (typeof inData.sceneId !== "string") throw lib.custom_error("Sequencer", "EffectManager | inData.sceneId must be of type string")
             if (!game.scenes.get(inData.sceneId)) throw lib.custom_error("Sequencer", "EffectManager | inData.sceneId must be a valid scene id (could not find scene)")
         }
+
+        if (inData?.object) {
+            inData.source = this._validateObject(inData.object, inData.sceneId);
+            inData.target = inData.source;
+            delete inData.object;
+        }
+
+        if (inData?.source) {
+            inData.source = this._validateObject(inData.source, inData.sceneId);
+        }
+
+        if (inData?.target) {
+            inData.target = this._validateObject(inData.target, inData.sceneId);
+        }
+
+        if (inData?.name && typeof inData?.name !== "string") throw lib.custom_error("Sequencer", "EffectManager | inData.name must be of type string")
+        if (inData?.origin && typeof inData?.origin !== "string") throw lib.custom_error("Sequencer", "EffectManager | inData.origin must be of type string")
 
         if(inData?.effects){
             if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
@@ -131,12 +151,13 @@ export default class SequencerEffectManager {
             })
         }
 
-        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects && !inData.origin) return false;
+        if (!inData.name && !inData.origin && !inData.target && !inData.sceneId && !inData.effects && !inData.origin) return false;
 
         return foundry.utils.mergeObject({
             effects: false,
             name: false,
-            attachTo: false,
+            source: false,
+            target: false,
             sceneId: game.user.viewedScene,
             origin: false
         }, inData);
@@ -181,7 +202,7 @@ export default class SequencerEffectManager {
 
     static _tearDownPersists(inId) {
         this.effects
-            .filter(effect => !inId || effect.data?.attachTo === inId)
+            .filter(effect => !inId || effect.data?.source === inId || effect.data?.target === inId)
             .forEach(effect => {
                 EffectsContainer.delete(effect.id);
                 debounceUpdateEffectViewer();

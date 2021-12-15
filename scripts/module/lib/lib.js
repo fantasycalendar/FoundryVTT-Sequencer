@@ -264,7 +264,7 @@ export function clamp(num, min, max) {
 export function get_all_objects(inSceneId) {
     const scene = inSceneId
         ? game.scenes.get(inSceneId)
-        : game.scenes.get(game.canvas.id);
+        : game.scenes.get(game.user.viewedScene);
     return [
         ...Array.from(scene.tokens),
         ...Array.from(scene.templates),
@@ -289,7 +289,7 @@ export function is_UUID(inId){
  * @param  {String}     inSceneId   The scene ID to search within
  * @return {any}                    Object if found, else undefined
  */
-export function get_object_from_scene(inObjectId, inSceneId) {
+export function get_object_from_scene(inObjectId, inSceneId = game.user.viewedScene) {
     if(is_UUID(inObjectId)){
         return from_uuid_fast(inObjectId);
     }
@@ -321,6 +321,7 @@ function from_uuid_fast(uuid) {
  * @return {String}                 The identifier
  */
 export function get_object_identifier(inObject){
+    inObject = inObject?.document ?? inObject;
     return inObject?.uuid
         ?? inObject?.id
         ?? inObject?.document?.name

@@ -283,10 +283,12 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Bumped minimum version to 0.8.9
 - *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 - *Effects* - Removed `.JB2A()` as it was deprecated
-- *Effects* - Removed support for audio methods on effects
+- *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)
 
 **Additions:**
-- *Sequencer* - Added flag to `Sequencer.Database.registerEntries()` 
+- *Sequencer* - Added wildcard support when filtering for named effects in the Effect Manager's methods (such as `getEffects`, `endEffects`, etc)
+- *Sequencer* - Added support to filter for `source` and `target` in the Effect Manager's methods (such as `getEffects`, `endEffects`, etc)
+- *Sequencer* - Added flag to `Sequencer.Database.registerEntries()` which causes the entries to not be visible in the Database Viewer 
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
