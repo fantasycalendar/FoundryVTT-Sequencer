@@ -235,10 +235,15 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
-        this.size(canvaslib.get_object_dimensions(inObject));
+        const size = canvaslib.get_object_dimensions(inObject);
+        size.width *= inObject?.data?.scale ?? 1.0;
+        size.height *= inObject?.data?.scale ?? 1.0;
+        this.size(size);
         this.mirrorX(inObject.data.mirrorX);
         this.mirrorY(inObject.data.mirrorY);
-        if(inObject?.data?.rotation) this.rotate(inObject?.data?.rotation + 90);
+        if(inObject?.data?.rotation){
+            this.rotate(inObject.data.rotation);
+        }
         return this;
     }
 
@@ -702,6 +707,9 @@ export default class EffectSection extends Section {
         return this;
     }
 
+    /**
+     * @private
+     */
     _expressWarnings(){
         if(this._stretchTo && this._anchor){
             this.sequence._showWarning(this, "stretchTo", "you have called .stretchTowards() and .anchor() - stretchTo will manually set the X axis of the anchor and may not behave like you expect.", true);
@@ -724,6 +732,9 @@ export default class EffectSection extends Section {
         }
     }
 
+    /**
+     * @returns {Promise<void>}
+     */
     async run() {
         this._expressWarnings();
         const data = await this._sanitizeEffectData();
@@ -739,6 +750,9 @@ export default class EffectSection extends Section {
         await new Promise(resolve => setTimeout(resolve, totalDuration))
     }
 
+    /**
+     * @private
+     */
     _applyTraits() {
         Object.assign(this.constructor.prototype, traits.files);
         Object.assign(this.constructor.prototype, traits.audio);
@@ -753,6 +767,9 @@ export default class EffectSection extends Section {
         Object.assign(this.constructor.prototype, traits.tint);
     }
 
+    /**
+     * @private
+     */
     async _initialize() {
         if(this._name && !this.sequence.nameOffsetMap[this._name]){
             this.sequence.nameOffsetMap[this._name] = {
@@ -768,6 +785,9 @@ export default class EffectSection extends Section {
         }
     }
 
+    /**
+     * @private
+     */
     _sanitizeObject(inObj){
         if(inObj && typeof inObj === "object" && !canvaslib.is_object_canvas_data(inObj)){
             inObj = lib.get_object_identifier(inObj);
@@ -775,6 +795,9 @@ export default class EffectSection extends Section {
         return inObj;
     }
 
+    /**
+     * @private
+     */
     _getSourceObject(){
         if(typeof this._source !== "object") return this._source;
         return this._attachTo
@@ -782,6 +805,9 @@ export default class EffectSection extends Section {
             : canvaslib.get_object_canvas_data(this._source);
     }
 
+    /**
+     * @private
+     */
     _getTargetObject(){
         if(!this._target?.target) return this._target;
         if(typeof this._target.target !== "object") return this._target.target;
@@ -790,10 +816,16 @@ export default class EffectSection extends Section {
             : canvaslib.get_object_canvas_data(this._target.target, true);
     }
 
+    /**
+     * @private
+     */
     get _target() {
         return this._stretchTo || this._rotateTowards || this._moveTowards || false;
     }
 
+    /**
+     * @private
+     */
     async _sanitizeEffectData() {
 
         const { file, forcedIndex } = this._file
@@ -923,6 +955,9 @@ export default class EffectSection extends Section {
 
     }
 
+    /**
+     * @private
+     */
     _getCalculatedScale(){
         let scale = this._scaleMin;
         if (lib.is_real_number(this._scaleMin)) {
