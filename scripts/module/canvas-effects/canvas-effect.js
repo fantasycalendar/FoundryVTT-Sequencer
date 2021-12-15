@@ -699,6 +699,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         const ray = new Ray(this.sourcePosition, this.targetPosition);
 
+        this._rotateTowards(ray);
+
         let scaleX = 1.0;
         let scaleY = 1.0;
         let texture;
@@ -737,9 +739,7 @@ export default class CanvasEffect extends PIXI.Container {
             (this.data.anchor?.y ?? 0.5)
         )
 
-        this._rotateTowards(ray);
-
-        if (this.sprite.texture === texture && texture) return;
+        if (this.sprite.texture === texture) return;
 
         this.sprite.texture = texture;
         this._texture = texture;
