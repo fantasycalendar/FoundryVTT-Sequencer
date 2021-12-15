@@ -112,10 +112,16 @@ class AnimationSection extends Section {
         return this;
     }
 
+    /**
+     * @private
+     */
     async run() {
         return this._runAnimate();
     }
 
+    /**
+     * @private
+     */
     _applyTraits() {
         Object.assign(this.constructor.prototype, traits.moves);
         Object.assign(this.constructor.prototype, traits.opacity);
@@ -124,10 +130,16 @@ class AnimationSection extends Section {
         Object.assign(this.constructor.prototype, traits.tint);
     }
 
+    /**
+     * @private
+     */
     async _updateObject(obj, updates, animate = false, animation = {}) {
         await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_DOCUMENT, obj.document.uuid, updates, { animate, animation });
     }
 
+    /**
+     * @private
+     */
     async _execute() {
         if (!(await this._shouldPlay())) return;
         let self = this;
@@ -144,6 +156,9 @@ class AnimationSection extends Section {
         });
     }
 
+    /**
+     * @private
+     */
     _getClosestSquare(origin, target) {
 
         let originLoc = this._getCleanPosition(origin);
@@ -185,6 +200,9 @@ class AnimationSection extends Section {
 
     }
 
+    /**
+     * @private
+     */
     _getCleanPosition(obj, measure = false) {
 
         let pos = {
@@ -204,6 +222,9 @@ class AnimationSection extends Section {
         return pos;
     }
 
+    /**
+     * @private
+     */
     _snapLocationToGrid(inLocation) {
         let coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
         return {
@@ -526,6 +547,9 @@ class AnimationSection extends Section {
 
     }
 
+    /**
+     * @private
+     */
     async _animate(animData, resolve, timespan) {
 
         // If it's not the first tick
