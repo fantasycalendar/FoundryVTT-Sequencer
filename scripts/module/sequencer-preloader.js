@@ -96,6 +96,8 @@ const SequencerPreloader = {
     },
 
     /**
+     * Resets local variables to a base set
+     *
      * @private
      */
     _reset() {
@@ -107,6 +109,8 @@ const SequencerPreloader = {
     },
 
     /**
+     * Filters and cleans up file paths given to the preload methods
+     *
      * @private
      */
     _cleanSrcs(inSrcs) {
@@ -119,6 +123,8 @@ const SequencerPreloader = {
     },
 
     /**
+     * Handle response from a client, resolving once every client has responded
+     *
      * @private
      */
     _handleResponse(userId, senderId) {
@@ -130,6 +136,8 @@ const SequencerPreloader = {
     },
 
     /**
+     * Handle the final response and resolve the main promise
+     *
      * @private
      */
     _handleDone(userId, senderId, filesFailedToLoad) {
@@ -159,6 +167,8 @@ const SequencerPreloader = {
     },
 
     /**
+     * The method that is called when preloading files for clients, ensuring each one responds eventually
+     *
      * @private
      */
     _preloadRemote({ inSrcs, showProgressBar = false, senderId, local = false, push = false } = {}) {
@@ -174,6 +184,8 @@ const SequencerPreloader = {
     },
 
     /**
+     * The method that actually preloads files locally, with an optional progress bar
+     *
      * @private
      */
     _preloadLocal(inSrcs, showProgressBar){
