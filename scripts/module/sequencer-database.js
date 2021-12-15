@@ -6,15 +6,25 @@ const SequencerDatabase = {
 
     entries: {},
     flattenedEntries: [],
+    privateModules: [],
+
+    get publicModules(){
+        return Object.keys(this.entries).filter(module => !this.privateModules.includes(module));
+    },
+
+    get publicFlattenedEntries(){
+        return this.flattenedEntries.filter(entry => !this.privateModules.includes(entry.split('.')[0]));
+    },
 
     /**
      *  Registers a set of entries to the database on the given module name
      *
      * @param  {string}      inModuleName  The namespace to assign to the inserted entries
      * @param  {object}      inEntries     The entries to merge into the database
+     * @param  {boolean}     isPrivate     Whether to mark these entries as private and not show in Effect Player or Database Viewer
      * @return {boolean}
      */
-    registerEntries(inModuleName, inEntries) {
+    registerEntries(inModuleName, inEntries, isPrivate = false) {
         if(inModuleName.includes(".")) return this._throwError("registerEntries", "module name must not contain periods");
         if(this.entries[inModuleName]) lib.custom_warning("Sequencer", `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`, true)
         this._flatten(inEntries, inModuleName);
@@ -22,6 +32,7 @@ const SequencerDatabase = {
         this.entries = foundry.utils.mergeObject(this.entries,
             { [inModuleName]: processedEntries }
         );
+        if(isPrivate) this.privateModules.push(inModuleName);
         console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
         return true;
     },
@@ -114,7 +125,7 @@ const SequencerDatabase = {
     getAllFileEntries(inDBPath) {
         if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
         if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
-        const entries = this._recurseEntriesUnder(inDBPath);
+        const entries = this._recurseGetFilePaths(inDBPath);
         return lib.make_array_unique(entries.flat());
     },
 
@@ -136,12 +147,14 @@ const SequencerDatabase = {
     /**
      *  Get all valid entries under a certain path
      *
-     * @param  {string}             inPath      The database path to search for
-     * @return {array|boolean}                  An array containing potential database paths
+     * @param  {string}             inPath          The database path to search for
+     * @param  {boolean}            publicOnly      Whether to only search for public modules
+     * @return {array|boolean}                      An array containing potential database paths
      */
-    searchFor(inPath){
+    searchFor(inPath, publicOnly = true){
 
-        const modules = Object.keys(this.entries);
+        const modules = publicOnly ? this.publicModules : Object.keys(this.entries);
+        let entries = publicOnly ? this.publicFlattenedEntries : this.flattenedEntries;
 
         if((!inPath || inPath === "") && !modules.includes(inPath)) return modules;
 
@@ -152,7 +165,7 @@ const SequencerDatabase = {
         inPath = inPath.replace(/\[[0-9]+]$/, "");
         inPath = inPath.trim()
 
-        let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
+        entries = entries.filter(e => e.startsWith(inPath) && e !== inPath);
 
         let feetTest = new RegExp(/.[0-9]+ft/g);
         if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
@@ -176,6 +189,14 @@ const SequencerDatabase = {
         return lib.make_array_unique(foundEntries);
     },
 
+    /**
+     * Throws an error without THROWING one. Duh.
+     *
+     * @param inFunctionName
+     * @param inError
+     * @returns {boolean}
+     * @private
+     */
     _throwError(inFunctionName, inError) {
         let error = `Sequencer | Database | ${inFunctionName} - ${inError}`;
         ui.notifications.error(error);
@@ -183,7 +204,14 @@ const SequencerDatabase = {
         return false;
     },
 
-    _recurseEntriesUnder(inDBPath) {
+    /**
+     * Gets all file paths from the entirety of
+     *
+     * @param inDBPath
+     * @returns {Array}
+     * @private
+     */
+    _recurseGetFilePaths(inDBPath) {
         const module = inDBPath.split('.')[0];
         return this.entries[module]
             .filter(entry => entry.dbPath.startsWith(inDBPath))
@@ -192,11 +220,26 @@ const SequencerDatabase = {
             }).flat();
     },
 
+    /**
+     * Flattens a given object to just their db path and file path
+     *
+     * @param entries
+     * @param inModule
+     * @private
+     */
     _flatten(entries, inModule) {
         let flattened = lib.flatten_object(foundry.utils.duplicate({ [inModule]: entries }));
         this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened)));
     },
 
+    /**
+     * Processes and recurse into a large object containing file paths at any given depth
+     *
+     * @param moduleName
+     * @param entries
+     * @returns {object}
+     * @private
+     */
     _processEntries(moduleName, entries) {
         entries = foundry.utils.duplicate(entries);
         let globalTemplate = entries?._templates ?? false;
@@ -205,6 +248,17 @@ const SequencerDatabase = {
         return entryCache;
     },
 
+    /**
+     * The main meat of the previous method, which handles individual types of entries within the object itself
+     *
+     * @param entryCache
+     * @param dbPath
+     * @param entries
+     * @param globalTemplate
+     * @param template
+     * @returns {object}
+     * @private
+     */
     _recurseEntries(entryCache, dbPath, entries, globalTemplate, template) {
 
         if (entries?._template) {

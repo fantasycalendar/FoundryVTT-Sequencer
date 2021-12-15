@@ -10,12 +10,12 @@ export default class SequencerDatabaseViewer extends FormApplication {
         this.filter = "all";
         this.search = "";
         this.autoplay = true;
-        this.packs = Object.keys(window.Sequencer.Database.entries);
+        this.packs = Sequencer.Database.publicModules;
 
         let localizedFilepathButton = game.i18n.localize("SEQUENCER.DatabaseFilepathButton");
         let localizedDatabaseButton = game.i18n.localize("SEQUENCER.DatabaseButton");
 
-        this.entries = window.Sequencer.Database.flattenedEntries.map(
+        this.entries = Sequencer.Database.publicFlattenedEntries.map(
             (entry) => {
                 return {
                     pack: entry.split(".")[0],
@@ -194,7 +194,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
         if (!this.autoplay) return;
         const { player, image } = this;
 
-        let entry = window.Sequencer.Database.getEntry(entryText);
+        let entry = Sequencer.Database.getEntry(entryText);
 
         entry = entry?.file ?? entry;
 
@@ -223,7 +223,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     copyText(button, entry, getFilepath) {
         if (getFilepath) {
-            entry = window.Sequencer.Database.getEntry(entry);
+            entry = Sequencer.Database.getEntry(entry);
             entry = entry?.file ?? entry;
         }
 
