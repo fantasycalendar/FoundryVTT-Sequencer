@@ -288,11 +288,13 @@ Click the link above to go to the documentation where each feature is listed.
 **Additions:**
 - *Sequencer* - Added wildcard support when filtering for named effects in the Effect Manager's methods (such as `getEffects`, `endEffects`, etc)
 - *Sequencer* - Added support to filter for `source` and `target` in the Effect Manager's methods (such as `getEffects`, `endEffects`, etc)
-- *Sequencer* - Added flag to `Sequencer.Database.registerEntries()` which causes the entries to not be visible in the Database Viewer 
+- *Sequencer* - Added flag to `Sequencer.Database.registerEntries()` which causes the entries to not be visible in the Database Viewer and Effect Player
+- *Sequencer* - Added checkbox to Database Viewer to show all ranges of a single effect, which is by default set to false
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
 - *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
+- *Effects* - At long last, `.reachTowards()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
 
 **Fixes:**
 - *Sequencer* - Fixed module permissions settings being slightly wonky
@@ -300,7 +302,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Animations* - Fixed users not being able to teleport or move tokens they do not own
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
 - *Animations* - Fixed `.delay()` not being respected
-- *Effects* - Fixed major memory leak where effect textures were not properly destroyed afer being used
+- *Effects* - Fixed memory leak where effect textures were not properly destroyed
 - *Effects* - Tweaked `.filter()` to allow being called multiple times (layered filters!)  
 - *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
 - *Effects* - Fixed `.from()` not taking mirror x/y into account on tokens
