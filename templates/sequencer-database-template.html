@@ -91,6 +91,16 @@
             display:none;
         }
 
+        .ml-2{
+            margin-left: 1rem;
+        }
+
+        .all-ranges-label{
+            flex: 1 0 auto;
+            margin-right: 0.5rem;
+            line-height: 2;
+        }
+
     </style>
 
     <div class="top-row flex mb-2">
@@ -101,6 +111,8 @@
             {{/each}}
         </select>
         <input placeholder='{{ localize "SEQUENCER.DatabaseSearch" }}' name="search-field" type="text" class="ml-2" onsubmit="event.preventDefault();">
+        <input type="checkbox" id="database-all-ranges" class="ml-2">
+        <label for="database-all-ranges" class="all-ranges-label">{{ localize "SEQUENCER.DatabaseShowAllRanges" }}</label>
     </div>
 
     <div class="database-entries-container">

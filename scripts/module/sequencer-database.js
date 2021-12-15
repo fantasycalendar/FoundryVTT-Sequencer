@@ -16,6 +16,13 @@ const SequencerDatabase = {
         return this.flattenedEntries.filter(entry => !this.privateModules.includes(entry.split('.')[0]));
     },
 
+    get publicFlattenedSimpleEntries(){
+        const feetTest = new RegExp(/\.[0-9]+ft/g);
+        return lib.make_array_unique(this.publicFlattenedEntries.map(entry => {
+            return entry.split(feetTest)[0];
+        }));
+    },
+
     /**
      *  Registers a set of entries to the database on the given module name
      *
