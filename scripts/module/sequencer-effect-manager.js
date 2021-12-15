@@ -90,6 +90,13 @@ export default class SequencerEffectManager {
         return this._endEffects(effectsToEnd);
     }
 
+    /**
+     * Filters the existing effects based on the given filter
+     *
+     * @param inData
+     * @returns {array}
+     * @private
+     */
     static _filterEffects(inData){
         if(inData.name){
             inData.name = new RegExp(lib.str_to_search_regex_str(inData.name), "gu");
@@ -103,6 +110,14 @@ export default class SequencerEffectManager {
             .filter(effect => !inData.origin || inData.origin === effect.data.origin);
     }
 
+    /**
+     * Validates an object actually exists, and gets its UUID
+     *
+     * @param object
+     * @param sceneId
+     * @returns {string}
+     * @private
+     */
     static _validateObject(object, sceneId){
 
         if (!(object instanceof PlaceableObject || typeof object === "string")) {
@@ -118,6 +133,13 @@ export default class SequencerEffectManager {
         return object;
     }
 
+    /**
+     * Validates the filter given to any of the above public methods
+     *
+     * @param inData
+     * @returns {boolean}
+     * @private
+     */
     static _validateFilters(inData){
 
         if (inData?.sceneId) {
@@ -164,6 +186,14 @@ export default class SequencerEffectManager {
 
     }
 
+    /**
+     * Actually plays the effect on the canvas
+     *
+     * @param data
+     * @param setFlags
+     * @returns {Promise<{duration: Promise<number>, promise: Promise<void>}>}
+     * @private
+     */
     static async _playEffect(data, setFlags = true) {
 
         const effect = CanvasEffect.make(data);
@@ -185,6 +215,12 @@ export default class SequencerEffectManager {
         return playData;
     }
 
+    /**
+     * Sets up persisting effects when the scene is first loaded
+     *
+     * @returns {Promise}
+     * @private
+     */
     static _setUpPersists() {
         this._tearDownPersists();
         const allObjects = lib.get_all_objects();
@@ -200,6 +236,12 @@ export default class SequencerEffectManager {
         });
     }
 
+    /**
+     * Tears down persisting effects when the scene is unloaded
+     *
+     * @param inId
+     * @private
+     */
     static _tearDownPersists(inId) {
         this.effects
             .filter(effect => !inId || effect.data?.source === inId || effect.data?.target === inId)
@@ -209,6 +251,13 @@ export default class SequencerEffectManager {
             })
     }
 
+    /**
+     * Patches an object's creation data before it's created so that the effect plays on it correctly
+     *
+     * @param inDocument
+     * @returns {*}
+     * @private
+     */
     static _patchCreationData(inDocument){
 
         let effects = inDocument.data.flags.sequencer.effects;
@@ -234,6 +283,14 @@ export default class SequencerEffectManager {
 
     }
 
+    /**
+     * Plays multiple effects at the same time
+     *
+     * @param inEffects
+     * @param inDocument
+     * @returns {Promise<{duration: Promise<number>, promise: Promise<void>}[]>}
+     * @private
+     */
     static _playEffectMap(inEffects, inDocument){
         if(inEffects instanceof Map) inEffects = Array.from(inEffects);
         return Promise.all(inEffects.map(effect => {
@@ -247,18 +304,39 @@ export default class SequencerEffectManager {
         }));
     }
 
+    /**
+     * Removes the effect from the manager and ends it
+     *
+     * @param effect
+     * @returns {void|*}
+     * @private
+     */
     static _removeEffect(effect) {
         EffectsContainer.delete(effect.id);
         debounceUpdateEffectViewer();
         return effect.endEffect();
     }
 
+    /**
+     * Ends multiple effects by ID
+     *
+     * @param inEffectIds
+     * @returns {Promise<boolean|*>}
+     * @private
+     */
     static _endEffects(inEffectIds) {
         const effects = inEffectIds.map(id => EffectsContainer.get(id));
         if (!effects.length) return;
         return this._endManyEffects(effects);
     }
 
+    /**
+     * Ends one or many effects at the same time
+     *
+     * @param inEffects
+     * @returns {Promise<{[string]: PromiseSettledResult<*>}|boolean>}
+     * @private
+     */
     static async _endManyEffects(inEffects = false) {
 
         const effectsToEnd = (inEffects || this.effects);
