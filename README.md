@@ -303,6 +303,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Fixed major memory leak where effect textures were not properly destroyed afer being used
 - *Effects* - Tweaked `.filter()` to allow being called multiple times (layered filters!)  
 - *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
+- *Effects* - Fixed `.from()` not taking mirror x/y into account on tokens
 - *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
 - *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
 - *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
