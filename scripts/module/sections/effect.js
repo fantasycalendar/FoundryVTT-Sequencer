@@ -227,6 +227,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     from(inObject, inOptions = {}){
+        inObject = inObject instanceof foundry.abstract.Document ? inObject.object : inObject;
         if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._customError(this, "from", "inObject must be of type Token or Tile");
         if(!inObject?.data?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({

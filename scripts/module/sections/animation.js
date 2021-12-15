@@ -134,7 +134,8 @@ class AnimationSection extends Section {
      * @private
      */
     async _updateObject(obj, updates, animate = false, animation = {}) {
-        await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_DOCUMENT, obj.document.uuid, updates, { animate, animation });
+        const uuid = obj?.uuid ?? obj?.document?.uuid;
+        await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_DOCUMENT, uuid, updates, { animate, animation });
     }
 
     /**
