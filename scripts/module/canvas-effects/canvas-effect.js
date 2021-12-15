@@ -16,6 +16,8 @@ export default class CanvasEffect extends PIXI.Container {
         this.actualCreationTime = (+new Date())
         this.data = inData;
 
+        this._gridSize = this.data.gridSize;
+
         this.ended = null;
 
         this.spriteContainer = null;
@@ -347,8 +349,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
-    get gridSizeDifference() {
-        return canvas.grid.size / this.data.gridSize;
+    get _gridSizeDifference() {
+        return canvas.grid.size / this._gridSize;
     }
 
     static make(inData) {
@@ -479,8 +481,10 @@ export default class CanvasEffect extends PIXI.Container {
         this._isRangeFind = sequencerFile.isRangeFind;
 
         if (!this._isRangeFind) {
-            this._texture = await sequencerFile.getTexture();
-            this.video = this._texture?.baseTexture?.resource?.source ?? false;
+            const { texture } = await sequencerFile.getTexture();
+            this._texture = texture;
+            this._gridSize = sequencerFile.template?.[0] ?? this._gridSize;
+            this.video = texture?.baseTexture?.resource?.source ?? false;
         }
 
         return sequencerFile;
@@ -794,6 +798,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
+
+
     async _transformSprite() {
 
         if (this.data.stretchTo) {
@@ -823,7 +829,7 @@ export default class CanvasEffect extends PIXI.Container {
             }
         }
 
-        if (!this._isRangeFind && !this.data.stretchTo) {
+        if (!this.data.stretchTo) {
 
             if (this.data.scaleToObject) {
 
@@ -871,6 +877,11 @@ export default class CanvasEffect extends PIXI.Container {
                     (this.data.scale?.y ?? 1.0) * this.data.flipY
                 );
 
+            }
+
+            if(!this.data.screenSpace){
+                this.sprite.scale.x *= this._gridSizeDifference;
+                this.sprite.scale.y *= this._gridSizeDifference;
             }
 
         }
@@ -1085,11 +1096,11 @@ export default class CanvasEffect extends PIXI.Container {
         };
 
         if (lib.is_real_number(property.value)) {
-            scale.x *= property.value * this.gridSizeDifference * this.data.flipX;
-            scale.y *= property.value * this.gridSizeDifference * this.data.flipY;
+            scale.x *= property.value * this._gridSizeDifference * this.data.flipX;
+            scale.y *= property.value * this._gridSizeDifference * this.data.flipY;
         } else {
-            scale.x *= property.value.x * this.gridSizeDifference * this.data.flipX;
-            scale.y *= property.value.y * this.gridSizeDifference * this.data.flipY;
+            scale.x *= property.value.x * this._gridSizeDifference * this.data.flipX;
+            scale.y *= property.value.y * this._gridSizeDifference * this.data.flipY;
         }
 
         return scale;
