@@ -9,7 +9,7 @@ export default {
      */
     _file: "",
     _baseFolder: "",
-    _mustache: false,
+    _mustache: null,
 
     /**
      * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each

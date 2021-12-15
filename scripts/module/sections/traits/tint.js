@@ -2,7 +2,7 @@ import { is_real_number } from "../../lib/lib.js";
 
 export default {
 
-    _tint: false,
+    _tint: null,
 
     tint(inColor){
 

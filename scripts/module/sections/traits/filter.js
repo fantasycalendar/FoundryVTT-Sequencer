@@ -2,7 +2,7 @@ import filters from "../../lib/filters.js";
 
 export default {
 
-    _filters: false,
+    _filters: null,
 
     _addFilter(inFilterName, inData, inName = false) {
         if (!this._filters) this._filters = [];

@@ -5,8 +5,8 @@ export default {
     /**
      * Base properties
      */
-    _moveTowards: false,
-    _moveSpeed: false,
+    _moveTowards: null,
+    _moveSpeed: null,
 
     /**
      * Sets the location to move the target object to

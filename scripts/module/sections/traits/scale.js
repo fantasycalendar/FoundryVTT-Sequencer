@@ -2,10 +2,10 @@ import { is_real_number } from "../../lib/lib.js";
 
 export default {
 
-    _scaleMin: false,
-    _scaleMax: false,
-    _scaleIn: false,
-    _scaleOut: false,
+    _scaleMin: null,
+    _scaleMax: null,
+    _scaleIn: null,
+    _scaleOut: null,
 
     /**
      *  A method that can take the following:

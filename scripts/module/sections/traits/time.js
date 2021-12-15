@@ -4,10 +4,10 @@ export default {
 
     _hasTime: true,
     _isRange: false,
-    _startTime: false,
-    _startPerc: false,
-    _endTime: false,
-    _endPerc: false,
+    _startTime: null,
+    _startPerc: null,
+    _endTime: null,
+    _endPerc: null,
 
     /**
      * Sets the start and end time of the section, playing only that range

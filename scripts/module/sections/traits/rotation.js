@@ -5,11 +5,11 @@ export default {
     /**
      * Base properties
      */
-    _angle: false,
-    _rotateIn: false,
-    _rotateOut: false,
-    _randomRotation: false,
-    _rotateTowards: false,
+    _angle: null,
+    _rotateIn: null,
+    _rotateOut: null,
+    _randomRotation: null,
+    _rotateTowards: null,
 
     /**
      * The object gets a random rotation, which means it should not be used with .stretchTo()

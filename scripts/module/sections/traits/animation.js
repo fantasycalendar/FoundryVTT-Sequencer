@@ -5,7 +5,7 @@ export default {
     /**
      * Base properties
      */
-    _animations: false,
+    _animations: null,
 
     /**
      * Animates a property on the target of the animation.
@@ -23,8 +23,6 @@ export default {
      */
     animateProperty(inTarget, inPropertyName, inOptions = {}) {
         if (!this._animations) this._animations = [];
-
-        is_real_number
 
         if (typeof inPropertyName !== "string") throw this.sequence._customError(this, "animateProperty", `inPropertyName must be of type string`);
         if (typeof inTarget !== "string") throw this.sequence._customError(this, "animateProperty", `inTarget must be of type string`);

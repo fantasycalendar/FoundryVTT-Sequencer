@@ -6,8 +6,8 @@ export default {
      * Base properties
      */
     _volume: 0.8,
-    _fadeInAudio: false,
-    _fadeOutAudio: false,
+    _fadeInAudio: null,
+    _fadeOutAudio: null,
 
     /**
      * Sets the volume of the sound.
