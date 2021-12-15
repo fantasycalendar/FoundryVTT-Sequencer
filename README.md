@@ -294,7 +294,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
 - *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
-- *Effects* - At long last, `.reachTowards()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
+- *Effects* - At long last, `.stretchTo()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
 
 **Fixes:**
 - *Sequencer* - Fixed module permissions settings being slightly wonky
