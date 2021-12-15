@@ -51,7 +51,7 @@ class SoundSection extends Section {
 
         Hooks.call("preCreateSequencerSound", data);
 
-        let push = !(data.users.length === 1 && data.users.includes(game.userId));
+        let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
         return SequencerAudioHelper.play(data, push);
     }
 
@@ -61,9 +61,10 @@ class SoundSection extends Section {
      */
     async _sanitizeSoundData() {
 
-        let file = await this._determineFile(this._file)
+        let { file, forcedIndex } = await this._determineFile(this._file)
 
         if (file instanceof SequencerFile) {
+            file.forcedIndex = forcedIndex;
             if (file.timeRange) {
                 [this._startTime, this._endTime] = file.timeRange;
                 this._isRange = true;
@@ -100,7 +101,7 @@ class SoundSection extends Section {
             startTime: startTime,
             duration: this._duration || duration,
             sceneId: game.user.viewedScene,
-            users: Array.from(this._users)
+            users: this._users ? Array.from(this._users) : null
         };
     }
 }

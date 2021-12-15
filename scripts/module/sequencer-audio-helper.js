@@ -25,7 +25,7 @@ export default class SequencerAudioHelper {
 
         if (!game.settings.get('sequencer', 'soundsEnabled')
             || game.user.viewedScene !== data.sceneId
-            || (data.users.length && !data.users.includes(game.userId))) {
+            || (data?.users?.length && !data?.users?.includes(game.userId))) {
             return new Promise(resolve => setTimeout(resolve, data.duration));
         }
 
