@@ -28,6 +28,9 @@ class SoundSection extends Section {
         return this;
     }
 
+    /**
+     * @private
+     */
     _applyTraits() {
         Object.assign(this.constructor.prototype, traits.files);
         Object.assign(this.constructor.prototype, traits.audio);
@@ -35,6 +38,9 @@ class SoundSection extends Section {
         Object.assign(this.constructor.prototype, traits.users);
     }
 
+    /**
+     * @returns {Promise}
+     */
     async run() {
         let { play, ...data } = await this._sanitizeSoundData();
 
@@ -49,6 +55,10 @@ class SoundSection extends Section {
         return SequencerAudioHelper.play(data, push);
     }
 
+    /**
+     * @returns {Promise}
+     * @private
+     */
     async _sanitizeSoundData() {
 
         let file = await this._determineFile(this._file)
