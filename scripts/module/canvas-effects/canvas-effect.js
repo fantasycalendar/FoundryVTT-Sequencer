@@ -465,7 +465,9 @@ export default class CanvasEffect extends PIXI.Container {
 
         if (!Sequencer.Database.entryExists(this.data.file)) {
             let texture = await SequencerFileCache.loadFile(this.data.file);
-            this.video = texture?.baseTexture?.resource?.source ?? false;
+            this.video = this.data.file.endsWith(".webm")
+                ? texture?.baseTexture?.resource?.source ?? false
+                : false;
             this._texture = texture;
             return texture;
         }
@@ -499,9 +501,8 @@ export default class CanvasEffect extends PIXI.Container {
                 this.video.load();
             }catch(err){ }
 
-            try {
+            if(this._file instanceof SequencerFile){
                 this._file.destroy();
-            } catch (err) {
             }
 
             try {
@@ -750,13 +751,17 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     _tryPlay() {
-        if (this._videoIsPlaying || this.tryingToPlay) return;
+        if (!this.video || this._videoIsPlaying || this.tryingToPlay) return;
         this.tryingToPlay = true;
         return new Promise(async (resolve) => {
             while(!this._videoIsPlaying){
                 try {
                     await this.video.play();
                 }catch(err){
+                    if(!this.video){
+                        reject();
+                        return;
+                    }
                     console.log(err)
                 }
             }
@@ -826,8 +831,11 @@ export default class CanvasEffect extends PIXI.Container {
                     ? canvaslib.get_object_dimensions(this.target)
                     : canvaslib.get_object_dimensions(this.source);
 
-                this.sprite.width = width * this.data.scale.x * this.data.flipX;
-                this.sprite.height = height * this.data.scale.y * this.data.flipY;
+                this.sprite.width = width * this.data.scale.x;
+                this.sprite.height = height * this.data.scale.y;
+
+                this.sprite.scale.x *= this.data.flipX;
+                this.sprite.scale.y *= this.data.flipY;
 
             } else if (this.data.size) {
 
@@ -850,8 +858,11 @@ export default class CanvasEffect extends PIXI.Container {
 
                 }
 
-                this.sprite.width = (width * this.data.scale.x) * this.data.flipX;
-                this.sprite.height = (height * this.data.scale.y) * this.data.flipY;
+                this.sprite.width = (width * this.data.scale.x);
+                this.sprite.height = (height * this.data.scale.y);
+
+                this.sprite.scale.x *= this.data.flipX;
+                this.sprite.scale.y *= this.data.flipY;
 
             } else {
 
