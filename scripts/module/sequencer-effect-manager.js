@@ -293,6 +293,7 @@ export default class SequencerEffectManager {
      */
     static _playEffectMap(inEffects, inDocument){
         if(inEffects instanceof Map) inEffects = Array.from(inEffects);
+        inEffects = inEffects.filter(effect => effect.shouldPlay);
         return Promise.all(inEffects.map(effect => {
             return this._playEffect(effect[1], false)
                 .then((result) => {
@@ -302,19 +303,6 @@ export default class SequencerEffectManager {
                     flagManager.removeFlags(inDocument, effect)
                 });
         }));
-    }
-
-    /**
-     * Removes the effect from the manager and ends it
-     *
-     * @param effect
-     * @returns {void|*}
-     * @private
-     */
-    static _removeEffect(effect) {
-        EffectsContainer.delete(effect.id);
-        debounceUpdateEffectViewer();
-        return effect.endEffect();
     }
 
     /**
@@ -331,7 +319,7 @@ export default class SequencerEffectManager {
     }
 
     /**
-     * Ends one or many effects at the same time
+     * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully ended
      *
      * @param inEffects
      * @returns {Promise}
@@ -354,6 +342,19 @@ export default class SequencerEffectManager {
             effects => effects.map(effect => this._removeEffect(effect))
         ));
 
+    }
+
+    /**
+     * Removes the effect from the manager and ends it, returning a promise that resolves once the effect has fully ended
+     *
+     * @param effect
+     * @returns {Promise}
+     * @private
+     */
+    static _removeEffect(effect) {
+        EffectsContainer.delete(effect.id);
+        debounceUpdateEffectViewer();
+        return effect.endEffect();
     }
 }
 

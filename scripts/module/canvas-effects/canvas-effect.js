@@ -300,8 +300,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     get shouldShowFadedVersion() {
         // If the effect is going to be played for a subset of users
-        // And the users do not contain the GM
-        // And the GM has not set the opacity user-specific effects to 0
+        // And the users does not contain this user
+        // And the user has not set the opacity user-specific effects to 0
         // And it is not an effect that is only played for the user who created the effect
         return this.data.users.length
             && !this.data.users.includes(game.userId)
@@ -374,6 +374,8 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     _addToContainer() {
+
+        if(!this.shouldPlay) return;
 
         if (this.data.screenSpace) {
             Sequencer.UILayer.container.addChild(this);
@@ -529,7 +531,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._timeoutSpriteVisibility();
         if (play) this._tryPlay();
         if(this.data.attachTo){
-            this._timeoutRemove();
+            this._contextLostCallback();
         }
         lib.debug(`Playing effect:`, this.data);
     }
@@ -621,12 +623,12 @@ export default class CanvasEffect extends PIXI.Container {
         }, this.data.animations ? 50 : 0);
     }
 
-    _timeoutRemove(){
-        if(!lib.get_object_from_scene(this.data.source)){
-            Sequencer.EffectManager.endEffects({ effects: this });
-            return;
-        }
-        setTimeout(this._timeoutRemove.bind(this), 500);
+    _contextLostCallback(){
+        this._ticker.add(() => {
+            if (this.source._destroyed) {
+                Sequencer.EffectManager.endEffects({ effects: this });
+            }
+        });
     }
 
     async _createSprite() {
@@ -800,8 +802,6 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
     }
-
-
 
     async _transformSprite() {
 
