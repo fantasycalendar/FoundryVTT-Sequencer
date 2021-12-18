@@ -3,6 +3,19 @@ import SequencerFileCache from "./sequencer-file-cache.js";
 
 export class SequencerFile {
 
+    static make(inData, inTemplate, inDBPath){
+
+        const originalFile = inData?.file ?? inData;
+        const file = foundry.utils.duplicate(originalFile);
+        const isRangeFind = typeof file !== "string" && !Array.isArray(originalFile)
+            ? Object.keys(originalFile).filter(key => key.endsWith("ft")).length > 0
+            : false;
+
+        return isRangeFind
+            ? new SequencerFileRangeFind(inData, inTemplate, inDBPath)
+            : new SequencerFile(inData, inTemplate, inDBPath)
+    }
+
     constructor(inData, inTemplate, inDBPath) {
         inData = foundry.utils.duplicate(inData);
         this.originalData = inData;
@@ -15,23 +28,16 @@ export class SequencerFile {
         delete this.originalFile["_timeRange"];
         this.file = foundry.utils.duplicate(this.originalFile);
         this.fileIndex = false;
-        this.isRangeFind =
-            typeof this.file !== "string" && !Array.isArray(this.originalFile)
-                ? Object.keys(this.originalFile).filter((key) =>
-                key.endsWith("ft")
-            ).length > 0
-                : false;
 
         this.fileTextureMap = Object.fromEntries(this.getAllFiles().map(file => {
             return [file, false];
         }))
 
-        this.fileDistanceMap = false;
         this.twister = false;
     }
 
     copy() {
-        return new SequencerFile(this.originalData, this.template, this.dbPath);
+        return SequencerFile.make(this.originalData, this.template, this.dbPath);
     }
 
     async validate() {
@@ -60,22 +66,12 @@ export class SequencerFile {
     }
 
     getAllFiles() {
-        if (this.isRangeFind) {
-            return Object.values(this.file).deepFlatten();
-        }
         return [this.file].deepFlatten();
     }
 
-    getFile(inFt) {
+    getFile() {
 
-        if (this.hasRangeFind(inFt)) {
-            if (Array.isArray(this.file[inFt])) {
-                return lib.is_real_number(this.fileIndex)
-                    ? this.file[inFt][this.fileIndex]
-                    : lib.random_array_element(this.file[inFt], { twister: this.twister });
-            }
-            return this.file[inFt];
-        } else if (Array.isArray(this.file)) {
+        if (Array.isArray(this.file) ) {
             return lib.is_real_number(this.fileIndex)
                 ? this.file[this.fileIndex]
                 : lib.random_array_element(this.file, { twister: this.twister });
@@ -84,16 +80,86 @@ export class SequencerFile {
         return this.file;
     }
 
-    hasRangeFind(inFt) {
-        return inFt && this.isRangeFind && this.file[inFt];
+    destroy(){
+        for(let texture of Object.values(this.fileTextureMap)){
+            if(!texture) continue;
+            try{
+                texture?.baseTexture?.resource?.source?.removeAttribute('src');
+                texture?.baseTexture?.resource?.source?.pause();
+                texture?.baseTexture?.resource?.source?.load();
+            }catch(err){ }
+            texture.destroy();
+        }
+    }
+
+    async _getTexture(file){
+        if(this.fileTextureMap[file]) return this.fileTextureMap[file];
+        this.fileTextureMap[file] = await SequencerFileCache.loadFile(file);
+        return this.fileTextureMap[file];
+    }
+
+    _adjustScaleForPadding(distance, width) {
+        return distance / (width - (this.template ? this.template[1] + this.template[2] : 0));
+    }
+
+    _adjustAnchorForPadding(width){
+        return this.template ? this.template[1] / width : undefined
+    }
+
+    async getTexture(distance){
+        const texture = await this._getTexture(this.getFile());
+        return {
+            texture,
+            spriteScale: this._adjustScaleForPadding(distance, texture.width),
+            spriteAnchor: this._adjustAnchorForPadding(texture.width)
+        };
+    }
+}
+
+export class SequencerFileRangeFind extends SequencerFile {
+
+    constructor(...args) {
+        super(...args);
+        this._fileDistanceMap = false;
+    }
+
+    getAllFiles() {
+        return Object.values(this.file).deepFlatten();
+    }
+
+    getFile(inFt) {
+
+        if (inFt && this.file[inFt]) {
+            if (Array.isArray(this.file[inFt])) {
+                return lib.is_real_number(this.fileIndex)
+                    ? this.file[inFt][this.fileIndex]
+                    : lib.random_array_element(this.file[inFt], { twister: this.twister });
+            }
+            return this.file[inFt];
+        }
+
+        return this.file;
+    }
+
+    async getTexture(distance){
+        const texture = await this._getTextureForDistance(distance);
+        return {
+            texture,
+            spriteScale: this._adjustScaleForPadding(distance, texture.width),
+            spriteAnchor: this._adjustAnchorForPadding(texture.width)
+        };
     }
 
     static get ftToDistanceMap(){
         return {
             "90ft": canvas.grid.size * 15,
+            "75ft": canvas.grid.size * 12,
             "60ft": canvas.grid.size * 9,
+            "45ft": canvas.grid.size * 7,
             "30ft": canvas.grid.size * 5,
+            "20ft": canvas.grid.size * 3.5,
             "15ft": canvas.grid.size * 2,
+            "10ft": canvas.grid.size * 1,
             "05ft": 0
         }
     }
@@ -103,18 +169,18 @@ export class SequencerFile {
     }
 
     _getMatchingDistance(inEntry) {
-        return SequencerFile.ftToDistanceMap[inEntry] / this._gridSizeDiff;
+        return SequencerFileRangeFind.ftToDistanceMap[inEntry] / this._gridSizeDiff;
     }
 
     _rangeFind(inDistance) {
 
-        if(!this.fileDistanceMap){
+        if(!this._fileDistanceMap){
             let distances = Object.keys(this.file)
                 .filter(entry => Object.keys(SequencerFile.ftToDistanceMap).indexOf(entry) > -1)
-                .map(entry => {
+                .map(ft => {
                     return {
-                        file: this.getFile(entry),
-                        minDistance: this._getMatchingDistance(entry)
+                        file: this.getFile(ft),
+                        minDistance: this._getMatchingDistance(ft)
                     }
                 });
 
@@ -124,7 +190,7 @@ export class SequencerFile {
             let max = Math.max(...uniqueDistances);
             let min = Math.min(...uniqueDistances);
 
-            this.fileDistanceMap = distances
+            this._fileDistanceMap = distances
                 .map(entry => {
                     entry.distances = {
                         min: entry.minDistance === min ? 0 : entry.minDistance,
@@ -134,7 +200,7 @@ export class SequencerFile {
                 })
         }
 
-        const possibleFiles = this.fileDistanceMap
+        const possibleFiles = this._fileDistanceMap
             .filter(entry => {
                 const relativeDistance = inDistance / this._gridSizeDiff;
                 return relativeDistance >= entry.distances.min && relativeDistance < entry.distances.max;
@@ -147,48 +213,8 @@ export class SequencerFile {
             : possibleFiles[0];
     }
 
-    destroy(){
-        for(let texture of Object.values(this.fileTextureMap)){
-            if(!texture) continue;
-            try{
-                texture.baseTexture.resource.source.removeAttribute('src');
-                texture.baseTexture.resource.source.pause();
-                texture.baseTexture.resource.source.load();
-            }catch(err){ }
-            texture.destroy();
-        }
-    }
-
-    async _getTexture(file){
-        if(this.fileTextureMap[file]) return this.fileTextureMap[file];
-        this.fileTextureMap[file] = await SequencerFileCache.loadFile(file);
-        return this.fileTextureMap[file];
-    }
-
     async _getTextureForDistance(distance) {
         const file = this._rangeFind(distance);
         return await this._getTexture(file);
     }
-
-    _adjustScaleForPadding(distance, width) {
-        return distance / (width - (this.template ? this.template[1] + this.template[2] : 0));
-    }
-
-    _adjustAnchorForPadding(width){
-        return this.template ? this.template[1] / width : undefined
-    }
-
-    async getTexture(distance){
-
-        const texture = this.isRangeFind
-            ? await this._getTextureForDistance(distance)
-            : await this._getTexture(this.getFile());
-
-        return {
-            texture,
-            spriteScale: this._adjustScaleForPadding(distance, texture.width),
-            spriteAnchor: this._adjustAnchorForPadding(texture.width)
-        };
-    }
-
 }

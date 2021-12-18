@@ -39,6 +39,7 @@ class SoundSection extends Section {
     }
 
     /**
+     * @OVERRIDE
      * @returns {Promise}
      */
     async run() {
@@ -91,7 +92,7 @@ class SoundSection extends Section {
 
         duration += this._waitUntilFinishedDelay;
 
-        return {
+        let data = {
             play: true,
             src: file,
             loop: this._duration > duration,
@@ -103,6 +104,16 @@ class SoundSection extends Section {
             sceneId: game.user.viewedScene,
             users: this._users ? Array.from(this._users) : null
         };
+
+        for (let override of this._overrides) {
+            data = await override(this, data);
+        }
+
+        if (typeof data.src !== "string" || data.src === "") {
+            throw this.sequence._customError(this, "file", "a sound must have a src of type string!");
+        }
+
+        return data;
     }
 }
 

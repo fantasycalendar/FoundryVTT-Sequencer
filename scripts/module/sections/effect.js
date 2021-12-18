@@ -735,6 +735,7 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * @OVERRIDE
      * @returns {Promise<void>}
      */
     async run() {
@@ -838,7 +839,7 @@ export default class EffectSection extends Section {
             /**
              * Core properties
              */
-            id: randomID(),
+            _id: randomID(),
             sequenceId: this.sequence.id,
             creationTimestamp: (+new Date()),
             sceneId: game.user.viewedScene,
@@ -950,7 +951,7 @@ export default class EffectSection extends Section {
         }
 
         if ((typeof data.file !== "string" || data.file === "") && !this._text) {
-            throw this.sequence._customError(this, "file", "an effect must have text or  must be of type string or array");
+            throw this.sequence._customError(this, "file", "an effect must have a file or have text configured!");
         }
 
         return data;
