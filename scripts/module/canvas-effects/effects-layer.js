@@ -121,7 +121,9 @@ export class BaseEffectsLayer extends CanvasLayer {
     }
 
     _drawHoveredEffectElements() {
-        for (const effect of SelectionManager.hoveredEffects) {
+        const effects = SelectionManager.hoveredEffects;
+        effects.add(SelectionManager.hoveredEffectUI)
+        for (const effect of effects) {
             if (effect._destroyed || !effect.spriteContainer || effect === SelectionManager.selectedEffect) continue;
             this._drawBoxAroundEffect(this.effectHoverBoxes, effect, 0xFFFFFF);
         }

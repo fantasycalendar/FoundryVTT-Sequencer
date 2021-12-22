@@ -499,6 +499,11 @@ export default class CanvasEffect extends PIXI.Container {
         this._distanceCache = null;
         this._isRangeFind = false;
 
+        if(this._resetTimeout){
+            clearTimeout(this._resetTimeout);
+        }
+        this._resetTimeout = null;
+
         this._source = false;
         this._sourcePosition = false;
         this._sourceOffset = false;
@@ -1671,11 +1676,13 @@ class PersistentCanvasEffect extends CanvasEffect {
         if (this.ended) return;
         await canvaslib.try_to_play_video(this.video);
         if (this.video.loop) return;
-        setTimeout(() => {
+        this._resetTimeout = setTimeout(() => {
             this._loopOffset = 0;
             this._resetLoop();
         }, this._animationDuration - (this._loopOffset * 1000));
     }
+
+
 
     /** @OVERRIDE */
     _timeoutSpriteVisibility() {

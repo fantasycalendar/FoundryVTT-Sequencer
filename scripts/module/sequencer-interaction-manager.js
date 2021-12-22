@@ -39,6 +39,8 @@ export const InteractionManager = {
 
         this.interaction = canvas?.app?.renderer?.plugins?.interaction;
 
+        const board = document.getElementById("board");
+
         document.body.addEventListener('keydown', async (event) => {
             const key = event.key;
             if (!Object.keys(this.state).includes(key)) return;
@@ -54,6 +56,7 @@ export const InteractionManager = {
         });
 
         document.body.addEventListener("mousedown", (event) => {
+            if(event.target !== board) return;
             if (!this.isLayerActive) return;
             const button = event.button;
             if (!(button === 0 || button === 2)) return;
@@ -68,6 +71,7 @@ export const InteractionManager = {
         });
 
         document.body.addEventListener("mouseup", (event) => {
+            if(event.target !== board) return;
             if (!this.isLayerActive) return;
             const button = event.button;
             if (!(button === 0 || button === 2)) return;
@@ -85,8 +89,11 @@ export const InteractionManager = {
             }
         });
 
-        this.interaction.on("pointermove", (event) => {
+        document.body.addEventListener("mousemove", (event) => {
             if (!this.isLayerActive) return;
+            let hoverElements = document.querySelectorAll(':hover');
+            let hoverElement = hoverElements[hoverElements.length - 1];
+            if(hoverElement !== board) return;
             this._propagateEvent("mouseMove");
             if (this.state.LeftMouseDown && !this.state.Dragging) {
                 if (!this.startDragPosition) {
@@ -258,6 +265,7 @@ export const SelectionManager = {
     suggestedPosition: false,
     sourceOrTarget: false,
     dragOffset: false,
+    hoveredEffectUI: false,
 
     get effects() {
         return SequencerEffectManager.effects.filter(effect => effect.userCanDelete);

@@ -148,16 +148,16 @@ export default class SequencerEffectsUI extends FormApplication {
         nameInput.innerText = effectName;
 
         endButton.addEventListener("click", function(e) {
-            SelectionManager.hoveredEffects.delete(effect);
+            SelectionManager.hoveredEffectUI = effect;
             Sequencer.EffectManager.endEffects({ effects: effect, sceneId: game.user.viewedScene });
         });
 
         el.addEventListener("mouseover", function() {
-            SelectionManager.hoveredEffects.add(effect);
+            SelectionManager.hoveredEffectUI = effect;
         });
 
         el.addEventListener("mouseleave", function() {
-            SelectionManager.hoveredEffects.delete(effect);
+            SelectionManager.hoveredEffectUI = false;
         });
 
         return el;
