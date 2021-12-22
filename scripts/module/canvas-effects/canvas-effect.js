@@ -1623,7 +1623,7 @@ class PersistentCanvasEffect extends CanvasEffect {
      * @private
      */
     async _startEffect() {
-        if (!this.video || canvaslib.is_video_playing(this.video)) return;
+        if (!this.video) return;
 
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
 
