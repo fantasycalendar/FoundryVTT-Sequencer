@@ -68,7 +68,7 @@
   "SEQUENCER.DatabaseSearch": "Search...",
   "SEQUENCER.DatabaseFilepathButton": "Filepath",
   "SEQUENCER.DatabaseButton": "Database",
-  "SEQUENCER.DatabaseShowAllEntries": "Show all ranges",
+  "SEQUENCER.DatabaseShowAllRanges": "Show all ranges",
 
   "SEQUENCER.PermissionEffectCreate": "Sequencer: Play Effects",
   "SEQUENCER.PermissionEffectCreateHint": "Allow players with the selected role and above to play effects through Macros and the Sequencer Effect Player.",
