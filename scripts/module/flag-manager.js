@@ -7,37 +7,51 @@ const flagManager = {
     flagAddBuffer: new Map(),
     flagRemoveBuffer: new Map(),
 
-    addFlags: (inObject, inEffects) => {
+    /**
+     * Adds effects to a given document
+     *
+     * @param inObjectUUID
+     * @param inEffects
+     */
+    addFlags: (inObjectUUID, inEffects) => {
+        if (!Array.isArray(inEffects)) inEffects = [inEffects];
+        sequencerSocket.executeAsGM(SOCKET_HANDLERS.ADD_FLAGS, inObjectUUID, inEffects);
+    },
 
-        if(!inObject?.id) return;
+    /**
+     * Removes effects from a given document
+     *
+     * @param inObjectUUID
+     * @param inEffects
+     * @param removeAll
+     */
+    removeFlags: (inObjectUUID, inEffects, removeAll) => {
+        sequencerSocket.executeAsGM(SOCKET_HANDLERS.REMOVE_FLAGS, inObjectUUID, inEffects, removeAll);
+    },
 
-        inObject = lib.validate_document(inObject);
+    _addFlags: (inObjectUUID, inEffects) => {
 
         if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
-        let flagsToSet = flagManager.flagAddBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
+        let flagsToSet = flagManager.flagAddBuffer.get(inObjectUUID) ?? { effects: [] };
 
         flagsToSet.effects.push(...inEffects);
 
-        flagManager.flagAddBuffer.set(inObject.id, flagsToSet);
+        flagManager.flagAddBuffer.set(inObjectUUID, flagsToSet);
 
         flagManager.updateFlags();
 
     },
 
-    removeFlags: (inObject, inEffects, removeAll) => {
-
-        if(!inObject?.id) return;
-
-        inObject = lib.validate_document(inObject);
+    _removeFlags: (inObjectUUID, inEffects, removeAll) => {
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 
-        let flagsToSet = flagManager.flagRemoveBuffer.get(inObject.id) ?? { obj: inObject, effects: [], removeAll: removeAll };
+        let flagsToSet = flagManager.flagRemoveBuffer.get(inObjectUUID) ?? { effects: [], removeAll: removeAll };
 
-        if(inEffects) flagsToSet.effects.push(...inEffects);
+        if (inEffects) flagsToSet.effects.push(...inEffects);
 
-        flagManager.flagRemoveBuffer.set(inObject.id, flagsToSet);
+        flagManager.flagRemoveBuffer.set(inObjectUUID, flagsToSet);
 
         flagManager.updateFlags();
 
@@ -56,34 +70,34 @@ const flagManager = {
         flagsToAdd = new Map(flagsToAdd);
         flagsToRemove = new Map(flagsToRemove);
 
-        for(let objectId of objects) {
+        for (let objectUUID of objects) {
 
-            let toAdd = flagsToAdd.get(objectId) ?? { effects: [] };
-            let toRemove = flagsToRemove.get(objectId) ?? { effects: [], removeAll: false };
+            let object = lib.from_uuid_fast(objectUUID);
 
-            let obj = toAdd.obj ?? toRemove.obj;
+            let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
+            let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
 
             if (toRemove?.removeAll) {
-                await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, obj.uuid, []);
-                lib.debug(`All flags removed for object with ID "${obj.id}"`);
+                await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, []);
+                lib.debug(`All flags removed for object with ID "${object.uuid}"`);
                 continue;
             }
 
-            const existingFlags = new Map(obj.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
+            const existingFlags = new Map(object.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
 
             for (const effect of toAdd.effects) {
-                existingFlags.set(effect?.data?.id ?? effect.id, effect?.data ?? effect);
+                existingFlags.set(effect._id, effect);
             }
 
             for (const effect of toRemove.effects) {
-                existingFlags.delete(effect?.data?.id ?? effect.id);
+                existingFlags.delete(effect._id);
             }
-            
+
             const flagsToSet = Array.from(existingFlags);
 
-            await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, obj.uuid, flagsToSet);
+            await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flagsToSet);
 
-            lib.debug(`Flags set for object with ID "${obj.id}":\n`, flagsToSet)
+            lib.debug(`Flags set for object with ID "${object.uuid}":\n`, flagsToSet)
 
         }
 

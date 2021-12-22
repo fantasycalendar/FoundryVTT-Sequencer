@@ -1,6 +1,6 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
-import SequencerPlayer from "../sequencer-effect-player.js";
+import { EffectPlayer, SelectionManager } from "../sequencer-interaction-manager.js";
 import CONSTANTS from "../constants.js";
 
 export default class SequencerEffectsUI extends FormApplication {
@@ -96,7 +96,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     close(options){
         super.close(options)
-        SequencerPlayer.snapLocationToGrid = false;
+        EffectPlayer.snapLocationToGrid = false;
     }
 
     async _onSubmit(event) {
@@ -152,11 +152,11 @@ export default class SequencerEffectsUI extends FormApplication {
         });
 
         el.addEventListener("mouseover", function() {
-            effect.highlight(true);
+            SelectionManager.hoveredEffects.add(effect);
         });
 
         el.addEventListener("mouseleave", function() {
-            effect.highlight(false);
+            SelectionManager.hoveredEffects.delete(effect);
         });
 
         return el;
@@ -229,7 +229,7 @@ export default class SequencerEffectsUI extends FormApplication {
                 default: false,
                 label: game.i18n.localize("SEQUENCER.PlayerOptionSnapToGrid"),
                 callback: (e) => {
-                    SequencerPlayer.snapLocationToGrid = e.target.checked;
+                    EffectPlayer.snapLocationToGrid = e.target.checked;
                 }
             },
             "randomRotation": {

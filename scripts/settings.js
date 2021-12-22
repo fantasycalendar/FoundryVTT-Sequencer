@@ -153,6 +153,13 @@ export default function registerSettings() {
 
     Hooks.on("getSceneControlButtons", (controls) => {
 
+        const selectTool = {
+            icon: "fas fa-expand",
+            name: "select-effect",
+            title: "Select Effect",
+            visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
+        };
+
         const playTool = {
             icon: "fas fa-play",
             name: "play-effect",
@@ -191,8 +198,9 @@ export default function registerSettings() {
             icon: "fas fa-list-ol",
             layer: "sequencerEffectsAboveTokens",
             visible: user_can_do("permissions-effect-create") && user_can_do("permissions-sidebar-tools"),
-            activeTool: "play-effect",
+            activeTool: "select-effect",
             tools: [
+                selectTool,
                 playTool,
                 viewer,
                 database

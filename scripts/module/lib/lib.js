@@ -1,4 +1,3 @@
-import SequencerFileCache from "../sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 
@@ -8,7 +7,7 @@ import { easeFunctions } from "../canvas-effects/ease.js";
  *
  * @return {boolean}                    If the user is on version 9
  */
-export function isVersion9(){
+export function isVersion9() {
     return isNewerVersion((game?.version ?? game.data.version), "9.00");
 }
 
@@ -36,7 +35,7 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
     try {
         return (await FilePicker.browse(source, inFile, browseOptions)).files;
     } catch (err) {
-        if(softFail) return false;
+        if (softFail) return false;
         throw custom_error("Sequencer", `getFiles | ${err}`);
     }
 }
@@ -124,7 +123,7 @@ export function is_function(inFunc) {
  * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
  * @return {object}                             A random element from the array
  */
-export function random_array_element(inArray, { recurse = false, twister = false }={}) {
+export function random_array_element(inArray, { recurse = false, twister = false } = {}) {
     let choice = inArray[random_int_between(0, inArray.length, twister)];
     if (recurse && Array.isArray(choice)) {
         return random_array_element(choice, { recurse: true });
@@ -140,7 +139,7 @@ export function random_array_element(inArray, { recurse = false, twister = false
  * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
  * @return {object}                             A random element from the object
  */
-export function random_object_element(inObject, { recurse = false, twister = false }={}) {
+export function random_object_element(inObject, { recurse = false, twister = false } = {}) {
     let keys = Object.keys(inObject).filter((k) => !k.startsWith("_"));
     let choice = inObject[random_array_element(keys, { twister })];
     if (typeof choice === "object" && recurse) {
@@ -155,7 +154,7 @@ export function random_object_element(inObject, { recurse = false, twister = fal
  * @param  {any}        inNumber    The parameter to test
  * @return {boolean}                Whether it is of type number, not infinite, and not NaN
  */
-export function is_real_number(inNumber){
+export function is_real_number(inNumber) {
     return !isNaN(inNumber)
         && typeof inNumber === "number"
         && isFinite(inNumber);
@@ -176,7 +175,8 @@ export function deep_get(obj, path) {
             obj = obj[path[i]];
         }
         return obj[path[i]];
-    } catch (err) {}
+    } catch (err) {
+    }
 }
 
 /**
@@ -201,7 +201,8 @@ export function deep_set(obj, path, value) {
         } else {
             obj[path[i]] = value;
         }
-    } catch (err) {}
+    } catch (err) {
+    }
 }
 
 /**
@@ -270,15 +271,20 @@ export function get_all_objects(inSceneId) {
         ...Array.from(scene.templates),
         ...Array.from(scene.tiles),
         ...Array.from(scene.drawings),
-        ...canvas.templates.preview.children,
-        ...Sequencer.EffectManager.effects
+        ...canvas.templates.preview.children
     ].deepFlatten().filter(Boolean);
 }
 
-export function is_UUID(inId){
+/**
+ * Checks whether a given string is a valid UUID or not
+ *
+ * @param {string} inId
+ * @returns {boolean}
+ */
+export function is_UUID(inId) {
     return typeof inId === "string"
         && inId.startsWith("Scene")
-        && (inId.match(/\./g) || []).length === 3
+        && (inId.match(/\./g) || []).length
         && !inId.endsWith(".");
 }
 
@@ -290,13 +296,24 @@ export function is_UUID(inId){
  * @return {any}                    Object if found, else undefined
  */
 export function get_object_from_scene(inObjectId, inSceneId = game.user.viewedScene) {
-    if(is_UUID(inObjectId)){
-        return from_uuid_fast(inObjectId);
+    let tryUUID = is_UUID(inObjectId);
+    if (tryUUID) {
+        const obj = from_uuid_fast(inObjectId);
+        if (obj) return obj;
+        tryUUID = false;
     }
-    return get_all_objects(inSceneId).find(obj => check_object_by_identifier(obj, inObjectId));
+    return get_all_objects(inSceneId).find(obj => {
+        return get_object_identifier(obj, tryUUID) === inObjectId;
+    });
 }
 
-function from_uuid_fast(uuid) {
+/**
+ *  Retrieves an object from the scene using its UUID, avoiding compendiums as they would have to be async'd
+ *
+ * @param uuid
+ * @returns {null}
+ */
+export function from_uuid_fast(uuid) {
     let parts = uuid.split(".");
     let doc;
 
@@ -306,7 +323,7 @@ function from_uuid_fast(uuid) {
     doc = collection.get(docId);
 
     // Embedded Documents
-    while ( doc && (parts.length > 1) ) {
+    while (doc && (parts.length > 1)) {
         const [embeddedName, embeddedId] = parts.slice(0, 2);
         doc = doc.getEmbeddedDocument(embeddedName, embeddedId);
         parts = parts.slice(2);
@@ -320,9 +337,9 @@ function from_uuid_fast(uuid) {
  * @param inObject
  * @returns {Document|{document}|*}
  */
-export function validate_document(inObject){
+export function validate_document(inObject) {
     const document = inObject?.document ?? inObject;
-    return is_UUID(inObject?.uuid)
+    return is_UUID(document?.uuid)
         ? document
         : inObject;
 }
@@ -331,10 +348,11 @@ export function validate_document(inObject){
  *  Get the unique identifier from an object
  *
  * @param  {Object}     inObject    The object to get the unique identifier from
+ * @param  {Boolean}    tryUUID     The object to get the unique identifier from
  * @return {String}                 The identifier
  */
-export function get_object_identifier(inObject){
-    const uuid = is_UUID(inObject?.uuid) ? inObject?.uuid : undefined;
+export function get_object_identifier(inObject, tryUUID = true) {
+    const uuid = tryUUID && is_UUID(inObject?.uuid) ? inObject?.uuid : undefined;
     return uuid
         ?? inObject?.id
         ?? inObject?.document?.name
@@ -343,35 +361,31 @@ export function get_object_identifier(inObject){
         ?? (inObject?.label !== "" ? inObject?.label : undefined);
 }
 
-function check_object_by_identifier(inObject, inIdentifier) {
-    return get_object_identifier(inObject) === inIdentifier;
-}
-
 /**
  *  Turns an array containing multiples of the same string, objects, etc, and removes duplications, and returns a fresh array
  *
  * @param  {Array}     inArray     An array of multiple duplicate collections to be made unique
  * @return {Array}                 An array containing only unique objects
  */
-export function make_array_unique(inArray){
+export function make_array_unique(inArray) {
     return Array.from(new Set(inArray));
 }
 
-export function debug(msg, args = ""){
-    if(game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
+export function debug(msg, args = "") {
+    if (game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
 }
 
 export function custom_warning(inClassName, warning, notify = false) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     warning = `${inClassName} | ${warning}`;
-    if(notify) ui.notifications.warn(warning);
+    if (notify) ui.notifications.warn(warning);
     console.warn(warning.replace("<br>", "\n"));
 }
 
 export function custom_error(inClassName, error, notify = true) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     error = `${inClassName} | ${error}`;
-    if(notify) ui.notifications.error(error);
+    if (notify) ui.notifications.error(error);
     return new Error(error.replace("<br>", "\n"));
 }
 
@@ -391,8 +405,8 @@ export function group_by(xs, key) {
 export function sequence_proxy_wrap(inSequence) {
     return new Proxy(inSequence, {
         get: function (target, prop) {
-            if(target[prop] === undefined){
-                if(Sequencer.SectionManager.externalSections[prop] === undefined) return Reflect.get(target, prop);
+            if (target[prop] === undefined) {
+                if (Sequencer.SectionManager.externalSections[prop] === undefined) return Reflect.get(target, prop);
                 target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
                 return Reflect.get(target, "_createCustomSection");
             }
@@ -423,8 +437,8 @@ export function str_to_search_regex_str(str) {
         .replace(/\s+/g, "|");
 }
 
-export function scroll_to_element(scrollElement, scrollToElement, duration = 500){
-    if(!duration){
+export function scroll_to_element(scrollElement, scrollToElement, duration = 500) {
+    if (!duration) {
         scrollElement.scrollTop(scrollElement.scrollTop() - scrollElement.offset().top + scrollToElement.offset().top);
         return;
     }
@@ -436,9 +450,19 @@ export function scroll_to_element(scrollElement, scrollToElement, duration = 500
     return wait(duration);
 }
 
-export async function highlight_element(element, { duration = false, color = "#FF0000", size="3px" }={}){
+export async function highlight_element(element, { duration = false, color = "#FF0000", size = "3px" } = {}) {
     element.prop("style", `-webkit-box-shadow: inset 0px 0px ${size} ${size} ${color}; box-shadow: inset 0px 0px ${size} ${size} ${color};`);
-    if(!duration) return;
+    if (!duration) return;
     await wait(duration);
     element.prop("style", "");
+}
+
+export function get_hash(input) {
+    let hash = 0
+    const len = input.length;
+    for (let i = 0; i < len; i++) {
+        hash = ((hash << 5) - hash) + input.charCodeAt(i);
+        hash |= 0; // to 32bit integer
+    }
+    return hash;
 }

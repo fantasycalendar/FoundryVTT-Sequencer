@@ -1,9 +1,9 @@
 import * as lib from "../lib/lib.js";
-import * as canvaslib from "../lib/canvas-utils.js";
+import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
-import { calculate_missed_position, is_object_canvas_data } from "../lib/canvas-utils.js";
+import { calculate_missed_position, is_object_canvas_data } from "../lib/canvas-lib.js";
 
 export default class EffectSection extends Section {
 
@@ -176,7 +176,7 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
 
-        this._source = lib.get_object_identifier(validatedObject);
+        this._source = validatedObject;
         this._attachTo = isValidObject;
         this._align = inOptions.align;
         if(!validatedObject?.id) this.locally();
