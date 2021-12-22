@@ -148,6 +148,7 @@ export default class SequencerEffectsUI extends FormApplication {
         nameInput.innerText = effectName;
 
         endButton.addEventListener("click", function(e) {
+            SelectionManager.hoveredEffects.delete(effect);
             Sequencer.EffectManager.endEffects({ effects: effect, sceneId: game.user.viewedScene });
         });
 
