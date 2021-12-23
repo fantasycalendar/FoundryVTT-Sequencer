@@ -367,34 +367,8 @@ export const SelectionManager = {
         if (!InteractionManager.state.Dragging) {
             return this._selectEffects();
         }
-        this.layer.selectionBoxDimensions = false;
         if (!InteractionManager.state.Dragging || !this.selectedEffect || !this.suggestedProperties) return;
-
-        const updates = {
-            attachTo: this.selectedEffect.data.attachTo, stretchTo: this.selectedEffect.data.stretchTo
-        }
-
-        if (this.attachToTarget) {
-            const obj = canvaslib.get_closest_object(this.suggestedProperties.position, { minimumDistance: canvas.grid.size });
-            if (obj) {
-                let objUuid = lib.get_object_identifier(obj);
-                if (this.sourceOrTarget === "target") {
-                    updates.target = objUuid;
-                    updates.stretchTo.attachTo = true;
-                } else {
-                    updates.source = objUuid;
-                    updates.attachTo = true;
-                }
-            }
-        } else {
-            updates[this.sourceOrTarget ? this.sourceOrTarget : "source"] = this.suggestedProperties.position;
-        }
-
-        this.selectedEffect.update(updates);
-
-        this.suggestedProperties = false;
-        this.sourceOrTarget = false;
-        this.dragOffset = false;
+        this._updateEffect();
     },
 
     mouseRightUp() {
@@ -483,6 +457,36 @@ export const SelectionManager = {
         this.suggestedProperties = {
             position, showCursor, showPoint, color
         };
+    },
+
+    _updateEffect(){
+
+        const updates = {
+            attachTo: this.selectedEffect.data.attachTo, stretchTo: this.selectedEffect.data.stretchTo
+        }
+
+        if (this.attachToTarget) {
+            const obj = canvaslib.get_closest_object(this.suggestedProperties.position, { minimumDistance: canvas.grid.size });
+            if (obj) {
+                let objUuid = lib.get_object_identifier(obj);
+                if (this.sourceOrTarget === "target") {
+                    updates.target = objUuid;
+                    updates.stretchTo.attachTo = true;
+                } else {
+                    updates.source = objUuid;
+                    updates.attachTo = true;
+                }
+            }
+        } else {
+            updates[this.sourceOrTarget ? this.sourceOrTarget : "source"] = this.suggestedProperties.position;
+        }
+
+        this.selectedEffect.update(updates);
+
+        this.suggestedProperties = false;
+        this.sourceOrTarget = false;
+        this.dragOffset = false;
+
     },
 
     _reset() {
