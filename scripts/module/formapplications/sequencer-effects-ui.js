@@ -96,7 +96,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     close(options){
         super.close(options)
-        EffectPlayer._snapLocationToGrid = false;
+        EffectPlayer.snapLocationToGrid = false;
     }
 
     async _onSubmit(event) {
@@ -230,7 +230,7 @@ export default class SequencerEffectsUI extends FormApplication {
                 default: false,
                 label: game.i18n.localize("SEQUENCER.PlayerOptionSnapToGrid"),
                 callback: (e) => {
-                    EffectPlayer._snapLocationToGrid = e.target.checked;
+                    EffectPlayer.snapLocationToGrid = e.target.checked;
                 }
             },
             "randomRotation": {
@@ -277,6 +277,22 @@ export default class SequencerEffectsUI extends FormApplication {
                 type: "number",
                 default: 0,
                 label: game.i18n.localize("SEQUENCER.PlayerOptionMoveSpeed"),
+            },
+            "attachTo": {
+                type: "checkbox",
+                default: false,
+                label: game.i18n.localize("SEQUENCER.PlayerOptionAttachTo"),
+                callback: (e) => {
+                    EffectPlayer.sourceAttach = e.target.checked;
+                }
+            },
+            "stretchToAttach": {
+                type: "checkbox",
+                default: false,
+                label: game.i18n.localize("SEQUENCER.PlayerOptionStretchToAttach"),
+                callback: (e) => {
+                    EffectPlayer.targetAttach = e.target.checked;
+                }
             }
         }
     }

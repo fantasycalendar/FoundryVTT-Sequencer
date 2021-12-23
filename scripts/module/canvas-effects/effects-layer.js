@@ -121,24 +121,22 @@ export class BaseEffectsLayer extends CanvasLayer {
     }
 
     _drawHoveredEffectElements() {
-        const effects = SelectionManager.hoveredEffects;
-        effects.add(SelectionManager.hoveredEffectUI)
+        const effects = new Set(SelectionManager.hoveredEffects);
+        if(SelectionManager.hoveredEffectUI) effects.add(SelectionManager.hoveredEffectUI)
         for (const effect of effects) {
-            if (effect._destroyed || !effect.spriteContainer || effect === SelectionManager.selectedEffect) continue;
+            if (effect === SelectionManager.selectedEffect) continue;
             this._drawBoxAroundEffect(this.effectHoverBoxes, effect, 0xFFFFFF);
         }
     }
 
     _drawSelectedEffectElements() {
-
-        if (SelectionManager.selectedEffect && SelectionManager.selectedEffect.spriteContainer) {
-            this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, 0xFF0000);
-            this._drawEffectStartEndPoints(SelectionManager.selectedEffect);
-        }
-
+        this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, 0xFF0000);
+        this._drawEffectStartEndPoints(SelectionManager.selectedEffect);
     }
 
     _drawBoxAroundEffect(graphic, effect, color) {
+
+        if (effect._destroyed || !effect.spriteContainer) return;
 
         const boundingBox = effect.spriteContainer.getLocalBounds();
         graphic.lineStyle(3, color, 0.9)
@@ -178,6 +176,9 @@ export class BaseEffectsLayer extends CanvasLayer {
      * @private
      */
     _drawEffectStartEndPoints(effect) {
+
+        if (effect._destroyed || !effect.spriteContainer) return;
+
         if (!effect.data.stretchTo || !effect.sourcePosition || !effect.targetPosition) return;
 
         this.effectSourcePosition.beginFill(0xFFFF00);

@@ -35,6 +35,8 @@
   "SEQUENCER.PlayerOptionPreload": "Preload",
   "SEQUENCER.PlayerOptionDragBehavior":  "Drag Behavior:<br>Stretch or Move",
   "SEQUENCER.PlayerOptionMoveSpeed": "Move speed",
+  "SEQUENCER.PlayerOptionAttachTo": "Attach to start point",
+  "SEQUENCER.PlayerOptionStretchToAttach": "Attach to end point",
 
   "SEQUENCER.PlayerPermissionsWarning": "Hi there! Since you're a GM you can create effects, but by default <strong>so can your players</strong>. If you don't want that, you can configure permissions by clicking this button:",
 

@@ -129,11 +129,9 @@ export const EffectPlayer = {
 
     sequenceBuffer: [],
 
-    _snapLocationToGrid: false,
-
-    get snapLocationToGrid(){
-        return this._snapLocationToGrid || InteractionManager.state.Control;
-    },
+    snapLocationToGrid: false,
+    sourceAttach: true,
+    targetAttach: true,
 
     /**
      * Opens the Sequencer Effects UI with the player tab open
@@ -219,10 +217,17 @@ export const EffectPlayer = {
         const effect = sequence.effect()
             .file(settings.file)
             .forUsers(settings.users)
-            .atLocation(settings.startPos)
             .belowTokens(settings.belowTokens)
             .repeats(settings.repetitions, settings.repeatDelayMin, settings.repeatDelayMax)
             .randomizeMirrorY(settings.randomMirrorY)
+            .persist(settings.persist)
+
+        const attachToObject = settings.attachTo ? canvaslib.get_closest_object(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
+        if(attachToObject){
+            effect.attachTo(attachToObject);
+        }else{
+            effect.atLocation(settings.startPos);
+        }
 
         if (settings.persist && settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new") {
             effect.name("Preset: " + settings.name)
@@ -239,7 +244,8 @@ export const EffectPlayer = {
                     effect.moveSpeed(settings.moveSpeed)
                 }
             } else {
-                effect.stretchTo(settings.endPos)
+                let target = settings.stretchToAttach ? canvaslib.get_closest_object(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
+                effect.stretchTo(target, { attachTo: settings.stretchToAttach })
             }
         } else {
             effect.scale(settings.scale)
