@@ -99,16 +99,18 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         if (game.activeTool !== "play-effect") return;
 
+        const startPos = EffectPlayer.startPos || EffectPlayer.cursorPos;
+
         this.linePoint.beginFill(CONSTANTS.COLOR.PRIMARY);
-        this.linePoint.drawCircle(EffectPlayer.startPos.x, EffectPlayer.startPos.y, 5)
+        this.linePoint.drawCircle(startPos.x, startPos.y, 5)
 
         if(EffectPlayer.sourceAttachFound){
-            this._drawCrossAtLocation(this.linePoint, EffectPlayer.startPos);
+            this._drawCrossAtLocation(this.linePoint, startPos);
         }
 
         if (!EffectPlayer.endPos) return;
 
-        const angle = new Ray(EffectPlayer.startPos, EffectPlayer.endPos).angle;
+        const angle = new Ray(startPos, EffectPlayer.endPos).angle;
 
         this.lineHead.beginFill(CONSTANTS.COLOR.PRIMARY);
         this.lineHead.moveTo(0, -5);

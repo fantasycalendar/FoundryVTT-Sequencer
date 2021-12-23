@@ -1,22 +1,22 @@
 import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./module/constants.js";
 import { user_can_do } from "./module/lib/lib.js";
-import { InteractionManager } from "./module/sequencer-interaction-manager.js";
+import { EffectPlayer, SelectionManager } from "./module/sequencer-interaction-manager.js";
 
 export function registerSettings() {
 
     // Define a settings submenu which handles advanced configuration needs
     game.settings.registerMenu(CONSTANTS.MODULE_NAME, "openSequencerDatabaseViewer", {
-        name: game.i18n.localize("SEQUENCER.SettingsDatabaseViewerTitle"),
-        label: game.i18n.localize("SEQUENCER.SettingsDatabaseViewerLabel"),
+        name: "SEQUENCER.Setting.DatabaseViewer.Title",
+        label: "SEQUENCER.Setting.DatabaseViewer.Label",
         icon: "fas fa-bars",
         type: Sequencer.DatabaseViewer,
         restricted: true
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "debug", {
-        name: game.i18n.localize("SEQUENCER.SettingsDebugTitle"),
-        hint: game.i18n.localize("SEQUENCER.SettingsDebugHint"),
+        name: "SEQUENCER.Setting.Debug.Title",
+        hint: "SEQUENCER.Setting.Debug.Label",
         scope: "client",
         config: true,
         default: false,
@@ -24,8 +24,8 @@ export function registerSettings() {
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "effectsEnabled", {
-        name: game.i18n.localize("SEQUENCER.SettingsEnableEffectsTitle"),
-        hint: game.i18n.localize("SEQUENCER.SettingsEnableEffectsHint"),
+        name: "SEQUENCER.Setting.EnableEffects.Title",
+        hint: "SEQUENCER.Setting.EnableEffects.Label",
         scope: "client",
         config: true,
         default: true,
@@ -34,8 +34,8 @@ export function registerSettings() {
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "soundsEnabled", {
-        name: game.i18n.localize("SEQUENCER.SettingsEnableSoundsTitle"),
-        hint: game.i18n.localize("SEQUENCER.SettingsEnableSoundsHint"),
+        name: "SEQUENCER.Setting.EnableSounds.Title",
+        hint: "SEQUENCER.Setting.EnableSounds.Label",
         scope: "client",
         config: true,
         default: true,
@@ -44,8 +44,8 @@ export function registerSettings() {
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "user-effect-opacity", {
-        name: game.i18n.localize("SEQUENCER.SettingsExternalEffectOpacityTitle"),
-        hint: game.i18n.localize("SEQUENCER.SettingsExternalEffectOpacityHint"),
+        name: "SEQUENCER.Setting.ExternalEffectOpacity.Title",
+        hint: "SEQUENCER.Setting.ExternalEffectOpacity.Label",
         scope: "client",
         config: true,
         default: 50,
@@ -57,78 +57,65 @@ export function registerSettings() {
         }
     });
 
+    const permissionLevels = [
+        game.i18n.localize("SEQUENCER.Permission.Player"),
+        game.i18n.localize("SEQUENCER.Permission.Trusted"),
+        game.i18n.localize("SEQUENCER.Permission.Assistant"),
+        game.i18n.localize("SEQUENCER.Permission.GM")
+    ];
+
     game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-create", {
-        name: game.i18n.localize("SEQUENCER.PermissionEffectCreate"),
-        hint: game.i18n.localize("SEQUENCER.PermissionEffectCreateHint"),
+        name: "SEQUENCER.Setting.Permission.EffectCreate.Title",
+        hint: "SEQUENCER.Setting.Permission.EffectCreate.Label",
         scope: "world",
         config: true,
         default: 0,
         type: Number,
-        choices: [
-            "Players and above",
-            "Trusted Players and above",
-            "Assistant GMs",
-        ],
+        choices: permissionLevels,
         onChange: debouncedReload
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-delete", {
-        name: game.i18n.localize("SEQUENCER.PermissionEffectDelete"),
-        hint: game.i18n.localize("SEQUENCER.PermissionEffectDeleteHint"),
+        name: "SEQUENCER.Setting.Permission.EffectDelete.Title",
+        hint: "SEQUENCER.Setting.Permission.EffectDelete.Label",
         scope: "world",
         config: true,
         default: 2,
         type: Number,
-        choices: [
-            "Players and above",
-            "Trusted Players and above",
-            "Assistant GMs",
-        ],
+        choices: permissionLevels,
         onChange: debouncedReload
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sound-create", {
-        name: game.i18n.localize("SEQUENCER.PermissionSoundCreate"),
-        hint: game.i18n.localize("SEQUENCER.PermissionSoundCreateHint"),
+        name: "SEQUENCER.Setting.Permission.SoundCreate.Title",
+        hint: "SEQUENCER.Setting.Permission.SoundCreate.Label",
         scope: "world",
         config: true,
         default: 0,
         type: Number,
-        choices: [
-            "Players and above",
-            "Trusted Players and above",
-            "Assistant GMs",
-        ],
+        choices: permissionLevels,
         onChange: debouncedReload
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "permissions-_preload", {
-        name: game.i18n.localize("SEQUENCER.PermissionPreloadClients"),
-        hint: game.i18n.localize("SEQUENCER.PermissionPreloadClientsHint"),
+        name: "SEQUENCER.Setting.Permission.PreloadClients.Title",
+        hint: "SEQUENCER.Setting.Permission.PreloadClients.Label",
         scope: "world",
         config: true,
         default: 1,
         type: Number,
-        choices: [
-            "Players and above",
-            "Trusted Players and above",
-            "Assistant GMs",
-        ],
+        choices: permissionLevels,
         onChange: debouncedReload
     });
 
     game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sidebar-tools", {
-        name: game.i18n.localize("SEQUENCER.PermissionUseSidebarTools"),
-        hint: game.i18n.localize("SEQUENCER.PermissionUseSidebarToolsHint"),
+        name: "SEQUENCER.Setting.Permission.UseSidebarTools.Title",
+        hint: "SEQUENCER.Setting.Permission.UseSidebarTools.Label",
         scope: "world",
         config: true,
         default: 0,
         type: Number,
-        choices: [
-            "Players and above",
-            "Trusted Players and above",
-            "Assistant GMs",
-        ],
+        choices: permissionLevels,
         onChange: debouncedReload
     });
 
@@ -218,45 +205,76 @@ export function registerSettings() {
 
 }
 
-export function registerHotkeys(){
+export function registerHotkeys() {
 
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-shift", {
-        name: "LEFT SHIFT",
-        editable: [
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-shift", {
+        name: "SEQUENCER.Hotkeys.PlayTool.Shift",
+        uneditable: [
             { key: "ShiftLeft" },
         ],
-        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
-        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
-        reservedModifiers: [ "CONTROL", "ALT" ]
+        onDown: () => {
+            EffectPlayer.playMany = true;
+        },
+        onUp: () => {
+            EffectPlayer.playMany = false;
+            if(!EffectPlayer.isActive) return;
+            EffectPlayer.shiftUp();
+        },
+        reservedModifiers: ["CONTROL"]
     });
 
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-control", {
-        name: "LEFT CONTROL",
-        editable: [
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-control", {
+        name: "SEQUENCER.Hotkeys.PlayTool.Control",
+        uneditable: [
             { key: "ControlLeft" },
         ],
-        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
-        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
-        reservedModifiers: [ "SHIFT", "ALT" ]
+        onDown: () => {
+            EffectPlayer.playManySequenced = true;
+        },
+        onUp: () => {
+            EffectPlayer.playManySequenced = false;
+        },
+        reservedModifiers: ["SHIFT"]
     });
 
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-alt", {
-        name: "LEFT ALT",
-        editable: [
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-control", {
+        name: "SEQUENCER.Hotkeys.SelectTool.Control",
+        uneditable: [
+            { key: "ControlLeft" },
+        ],
+        onDown: () => {
+            SelectionManager.snapToGrid = true;
+        },
+        onUp: () => {
+            SelectionManager.snapToGrid = false;
+        },
+        reservedModifiers: ["SHIFT", "ALT"]
+    });
+
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-alt", {
+        name: "SEQUENCER.Hotkeys.SelectTool.Alt",
+        uneditable: [
             { key: "AltLeft" },
         ],
-        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
-        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
-        reservedModifiers: [ "CONTROL", "SHIFT" ]
+        onDown: () => {
+            SelectionManager.attachToTarget = true;
+            if(!SelectionManager.isActive) return;
+            SelectionManager.altDown()
+        },
+        onUp: () => {
+            SelectionManager.attachToTarget = false;
+        },
+        reservedModifiers: ["CONTROL", "SHIFT"]
     });
 
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-delete", {
-        name: "Delete Effect",
-        editable: [
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-delete", {
+        name: "SEQUENCER.Hotkeys.SelectTool.Delete",
+        uneditable: [
             { key: "Delete" },
         ],
-        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
-        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
+        onDown: () => {
+            SelectionManager.delete();
+        },
     });
 
 

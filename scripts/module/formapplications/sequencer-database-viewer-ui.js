@@ -94,7 +94,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
     /** @override */
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            title: game.i18n.localize("SEQUENCER.Database"),
+            title: game.i18n.localize("SEQUENCER.Database.Title"),
             template: `modules/sequencer/templates/sequencer-database-template.html`,
             classes: ["dialog"],
             width: 900,
@@ -124,8 +124,8 @@ export default class SequencerDatabaseViewer extends FormApplication {
             ? Sequencer.Database.publicFlattenedEntries
             : Sequencer.Database.publicFlattenedSimpleEntries;
 
-        let localizedFilepathButton = game.i18n.localize("SEQUENCER.DatabaseFilepathButton");
-        let localizedDatabaseButton = game.i18n.localize("SEQUENCER.DatabaseButton");
+        let localizedFilepathButton = game.i18n.localize("SEQUENCER.Database.ButtonFilepath");
+        let localizedDatabaseButton = game.i18n.localize("SEQUENCER.Database.ButtonDatabasePath");
 
         return entries.map(
             (entry) => {

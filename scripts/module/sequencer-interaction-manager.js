@@ -18,22 +18,14 @@ export const InteractionManager = {
         LeftMouseDown: false,
         RightMouseDown: false,
         Dragging: false,
-        Shift: false,
         Alt: false,
         Control: false,
+        Shift: false,
         Delete: false
     },
 
     get isLayerActive() {
         return canvas.sequencerEffectsAboveTokens.active;
-    },
-
-    get playActive() {
-        return game.activeTool === "play-effect";
-    },
-
-    get selectActive() {
-        return game.activeTool === "select-effect";
     },
 
     initialize() {
@@ -82,10 +74,10 @@ export const InteractionManager = {
             let hoverElement = hoverElements[hoverElements.length - 1];
             if(hoverElement !== board) return;
             this._propagateEvent("mouseMove");
+            if (this.state.LeftMouseDown && !this.startDragPosition) {
+                this.startDragPosition = canvaslib.get_mouse_position();
+            }
             if (this.state.LeftMouseDown && !this.state.Dragging) {
-                if (!this.startDragPosition) {
-                    this.startDragPosition = canvaslib.get_mouse_position();
-                }
                 const distance = canvaslib.distance_between(this.startDragPosition, canvaslib.get_mouse_position())
                 this.state.Dragging = distance > 20;
             }
@@ -101,18 +93,11 @@ export const InteractionManager = {
         SelectionManager.tearDown();
     },
 
-    hotkeyDown(event){
-        if(!this.isLayerActive) return;
-        const key = event.key.replace("Left", "");
-        this.state[key] = !event.up;
-        this._propagateEvent(`${key.toLowerCase()}${event.up ? "Up" : "Down"}`)
-    },
-
     _propagateEvent(eventName) {
-        if (this.playActive && EffectPlayer[eventName]) {
+        if (EffectPlayer.isActive && EffectPlayer[eventName]) {
             EffectPlayer[eventName]();
         }
-        if (this.selectActive && SelectionManager[eventName]) {
+        if (SelectionManager.isActive && SelectionManager[eventName]) {
             SelectionManager[eventName]();
         }
     }
@@ -123,15 +108,23 @@ export const EffectPlayer = {
 
     sequenceBuffer: [],
 
+    playMany: false,
+    playManySequenced: false,
+
+    cursorPos: false,
     startPos: false,
     endPos: false,
 
     snapLocationToGrid: false,
 
-    sourceAttach: false,
+    sourceAttach: true,
     sourceAttachFound: false,
-    targetAttach: false,
+    targetAttach: true,
     targetAttachFound: false,
+
+    get isActive() {
+        return InteractionManager.isLayerActive && game.activeTool === "play-effect";
+    },
 
     /**
      * Opens the Sequencer Effects UI with the player tab open
@@ -159,8 +152,10 @@ export const EffectPlayer = {
 
     mouseLeftUp() {
         this._playEffect();
+        this.startPos = false;
         this.endPos = false;
-        this._evaluateStartPosition();
+        this.sourceAttachFound = false;
+        this.targetAttachFound = false;
     },
 
     mouseRightUp() {
@@ -169,12 +164,11 @@ export const EffectPlayer = {
 
     mouseMove() {
 
-        if(!InteractionManager.state.Dragging){
-            this._evaluateStartPosition();
-            return;
-        }
+        this._evaluateCursorPosition();
 
-        this._evaluateEndPosition()
+        if(InteractionManager.state.Dragging){
+            this._evaluateEndPosition();
+        }
     },
 
     /**
@@ -188,50 +182,63 @@ export const EffectPlayer = {
     /**
      * Private methods
      */
-    _evaluateStartPosition(){
+    _evaluatePosition(attach = false){
 
         let position = canvaslib.get_mouse_position(this.snapLocationToGrid)
 
-        const attachToObject = this.sourceAttach ? canvaslib.get_closest_object(position, { minimumDistance: canvas.grid.size }) : false;
+        const attachToObject = attach ? canvaslib.get_closest_object(position, { minimumDistance: canvas.grid.size }) : false;
 
-        this.sourceAttachFound = false;
+        let attachFound = false;
         if(attachToObject){
-            this.sourceAttachFound = true;
+            attachFound = true;
             position = canvaslib.get_object_position(attachToObject);
         }
 
-        this.startPos = position;
+        return [ position, attachFound ];
+
+    },
+
+    _evaluateCursorPosition(){
+
+        const attach = InteractionManager.state.Dragging
+            ? this.targetAttach
+            : this.sourceAttach;
+
+        [ this.cursorPos ] = this._evaluatePosition(attach);
+
+    },
+
+    _evaluateStartPosition(){
+
+        if(this.startPos) return;
+
+        [ this.startPos, this.sourceAttachFound ] = this._evaluatePosition(this.sourceAttach);
 
     },
 
     _evaluateEndPosition(){
 
-        let position = canvaslib.get_mouse_position(this.snapLocationToGrid)
-
-        const attachToObject = this.sourceAttach ? canvaslib.get_closest_object(position, { minimumDistance: canvas.grid.size }) : false;
-
-        this.targetAttachFound = false;
-        if(attachToObject){
-            this.targetAttachFound = true;
-            position = canvaslib.get_object_position(attachToObject);
-        }
-
-        this.endPos = position;
+        [ this.endPos, this.targetAttachFound ] = this._evaluatePosition(this.targetAttach);
 
     },
 
 
     _reset() {
         if (!this.layer) return;
+        this.startPos = false;
         this.endPos = false;
+        this.sourceAttachFound = false;
+        this.targetAttachFound = false;
         this.sequenceBuffer = [];
-        this._evaluateStartPosition();
+        this._evaluateCursorPosition();
     },
 
     async _playEffect() {
 
         const settings = foundry.utils.mergeObject(SequencerEffectsUI.activeSettings, {
-            ...InteractionManager.state, startPos: this.startPos, endPos: this.endPos
+            ...InteractionManager.state,
+            startPos: this.startPos,
+            endPos: this.endPos
         });
 
         if (settings.users[0] === "all") settings.users = [];
@@ -246,7 +253,7 @@ export const EffectPlayer = {
             await Sequencer.Preloader.preloadForClients(settings.file)
         }
 
-        const sequence = this.sequenceBuffer.length > 0 && settings.Control ? this.sequenceBuffer[this.sequenceBuffer.length - 1] : new Sequence();
+        const sequence = this.sequenceBuffer.length > 0 && this.playManySequenced ? this.sequenceBuffer[this.sequenceBuffer.length - 1] : new Sequence();
 
         const effect = sequence.effect()
             .file(settings.file)
@@ -286,15 +293,15 @@ export const EffectPlayer = {
             effect.randomRotation(settings.randomRotation)
         }
 
-        if (settings.Control) {
+        if (this.playManySequenced) {
             effect.waitUntilFinished();
         }
 
-        if (!settings.Control || this.sequenceBuffer.length === 0) {
+        if (!this.playManySequenced || this.sequenceBuffer.length === 0) {
             this.sequenceBuffer.push(sequence);
         }
 
-        if (!settings.Shift) this._playEffects();
+        if (!this.playMany) this._playEffects();
 
     },
 
@@ -312,6 +319,13 @@ export const SelectionManager = {
     sourceOrTarget: false,
     dragOffset: false,
     hoveredEffectUI: false,
+
+    snapToGrid: false,
+    attachToTarget: false,
+
+    get isActive() {
+        return InteractionManager.isLayerActive && game.activeTool === "select-effect";
+    },
 
     get effects() {
         return SequencerEffectManager.effects.filter(effect => effect.userCanDelete);
@@ -360,7 +374,7 @@ export const SelectionManager = {
             attachTo: this.selectedEffect.data.attachTo, stretchTo: this.selectedEffect.data.stretchTo
         }
 
-        if (InteractionManager.state.Alt) {
+        if (this.attachToTarget) {
             const obj = canvaslib.get_closest_object(this.suggestedProperties.position, { minimumDistance: canvas.grid.size });
             if (obj) {
                 let objUuid = lib.get_object_identifier(obj);
@@ -400,7 +414,8 @@ export const SelectionManager = {
     /**
      * Hotkeys
      */
-    deleteDown() {
+    delete() {
+        if(!this.selectedEffect) return;
         SequencerEffectManager.endEffects({ effects: this.selectedEffect });
         this.selectedEffect = false;
     },
@@ -439,9 +454,9 @@ export const SelectionManager = {
         if (!this.selectedEffect) return;
 
         let showCursor = false;
-        let showPoint = InteractionManager.state.Control;
+        let showPoint = this.snapToGrid;
 
-        let position = canvaslib.get_mouse_position(InteractionManager.state.Control);
+        let position = canvaslib.get_mouse_position(this.snapToGrid);
 
         if (!this.selectedEffect.data.stretchTo && !this.dragOffset) {
             this.dragOffset = {
@@ -449,7 +464,7 @@ export const SelectionManager = {
             }
         }
 
-        if (InteractionManager.state.Alt) {
+        if (this.attachToTarget) {
             const obj = canvaslib.get_closest_object(position, { minimumDistance: canvas.grid.size })
             if (obj) {
                 position = canvaslib.get_object_position(obj);
@@ -458,7 +473,7 @@ export const SelectionManager = {
             }
         }
 
-        if (this.dragOffset && !showCursor && !InteractionManager.state.Control) {
+        if (this.dragOffset && !showCursor && !this.snapToGrid) {
             position.x -= this.dragOffset.x;
             position.y -= this.dragOffset.y;
         }

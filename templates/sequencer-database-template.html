@@ -105,14 +105,14 @@
 
     <div class="top-row flex mb-2">
         <select name="pack-select" class="w-15" onsubmit="event.preventDefault();">
-            <option value="all">{{ localize "SEQUENCER.DatabaseAll" }}</option>
+            <option value="all">{{ localize "SEQUENCER.Database.AllPacks" }}</option>
             {{#each packs as |pack index|}}
                 <option>{{ pack }}</option>
             {{/each}}
         </select>
-        <input placeholder='{{ localize "SEQUENCER.DatabaseSearch" }}' name="search-field" type="text" class="ml-2" onsubmit="event.preventDefault();">
+        <input placeholder='{{ localize "SEQUENCER.Database.Search" }}' name="search-field" type="text" class="ml-2" onsubmit="event.preventDefault();">
         <input type="checkbox" id="database-all-ranges" class="ml-2">
-        <label for="database-all-ranges" class="all-ranges-label">{{ localize "SEQUENCER.DatabaseShowAllRanges" }}</label>
+        <label for="database-all-ranges" class="all-ranges-label">{{ localize "SEQUENCER.Database.ShowAllRanges" }}</label>
     </div>
 
     <div class="database-entries-container">
