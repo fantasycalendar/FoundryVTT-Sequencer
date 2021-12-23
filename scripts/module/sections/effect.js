@@ -3,7 +3,6 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
-import { calculate_missed_position, is_object_canvas_data } from "../lib/canvas-lib.js";
 
 export default class EffectSection extends Section {
 
@@ -191,7 +190,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
-        this.sequence._showWarning(self, "reachTowards", "reachTowards has been deprecated, please use stretchTo instead", true);
+        this.sequence._showWarning(self, "reachTowards", "reachTowards has been deprecated, please use stretchTo instead", false);
         return this.stretchTo(inLocation, inOptions);
     }
 
@@ -212,6 +211,11 @@ export default class EffectSection extends Section {
         if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
+
+        if (inOptions.cacheLocation && inOptions.attachTo){
+            throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
+        }
+
         this._stretchTo = {
             target: inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation,
             attachTo: inOptions.attachTo
@@ -700,7 +704,7 @@ export default class EffectSection extends Section {
      */
     origin(inOrigin){
         inOrigin = lib.validate_document(inOrigin);
-        if (inOrigin instanceof Document){
+        if (inOrigin instanceof foundry.abstract.Document){
             inOrigin = inOrigin?.uuid;
             if(!inOrigin) throw this.sequence._customError(this, "origin", "could not find the UUID for the given Document")
         }

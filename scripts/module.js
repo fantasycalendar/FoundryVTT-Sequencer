@@ -38,7 +38,8 @@ Hooks.once('init', async function () {
             shuffle_array: lib.shuffle_array,
             random_array_element: lib.random_array_element,
             random_object_element: lib.random_object_element,
-            make_array_unique: lib.make_array_unique
+            make_array_unique: lib.make_array_unique,
+            from_uuid: lib.from_uuid_fast
         }
     }
 

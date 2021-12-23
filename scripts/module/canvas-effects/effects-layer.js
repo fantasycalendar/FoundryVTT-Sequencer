@@ -1,4 +1,4 @@
-import { InteractionManager, SelectionManager } from "../sequencer-interaction-manager.js";
+import { EffectPlayer, InteractionManager, SelectionManager } from "../sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 
 export class BaseEffectsLayer extends CanvasLayer {
@@ -101,7 +101,7 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         if (game.activeTool !== "play-effect") return;
 
-        const position = this.startPos || canvaslib.get_mouse_position(this.snapToGrid);
+        const position = this.startPos || canvaslib.get_mouse_position(EffectPlayer.snapLocationToGrid);
 
         this.linePoint.beginFill(0xFF2937);
         this.linePoint.drawCircle(position.x, position.y, 5)

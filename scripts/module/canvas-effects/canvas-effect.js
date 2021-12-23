@@ -51,6 +51,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * The ID of the effect
+     *
      * @returns {string}
      */
     get id() {
@@ -58,7 +59,17 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     /**
+     * The UUID of the effect
+     *
+     * @returns {string}
+     */
+    get uuid() {
+        return this.context.uuid + ".SequencerEffect." + this.id;
+    }
+
+    /**
      * The source object (or source location) of the effect
+     *
      * @returns {boolean|object}
      */
     get source() {
@@ -71,6 +82,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * The source object's current position, or its current position
+     *
      * @returns {boolean|object}
      */
     get originalSourcePosition() {
@@ -86,6 +98,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * The source position with the relevant offsets calculated
+     *
      * @returns {{x: number, y: number}}
      */
     get sourcePosition() {
@@ -102,6 +115,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * The target object (or target location) of the effect
+     *
      * @returns {boolean|object}
      */
     get target() {
@@ -113,6 +127,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * The target object's current position, or its current position
+     *
      * @returns {boolean|object}
      */
     get originalTargetPosition() {
@@ -129,6 +144,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * The target position with the relevant offsets calculated
+     *
      * @returns {{x: number, y: number}}
      */
     get targetPosition() {
@@ -279,7 +295,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get playNaturally() {
-        return (!this._startTime && !this.endTime) || this._startTime === 0 && this.endTime === this.video.duration;
+        return !this.data.time || (this._startTime === 0 && this._endTime === this.video.duration);
     }
 
     static make(inData) {
@@ -742,13 +758,12 @@ export default class CanvasEffect extends PIXI.Container {
     /**
      * Loads the texture for this effect, handling cases where it's a simple path or a database path
      *
-     * @returns {Promise<boolean>}
      * @private
      */
     async _loadTexture() {
 
         if (this.data.file === "") {
-            return false;
+            return;
         }
 
         if (!(Sequencer.Database.entryExists(this.data.file) || (await srcExists(this.data.file)))) {
@@ -773,6 +788,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         this._file = Sequencer.Database.getEntry(this.data.file).copy();
+
         this._file.forcedIndex = this.data.forcedIndex;
         this._file.twister = this._twister;
 
@@ -847,7 +863,7 @@ export default class CanvasEffect extends PIXI.Container {
                 : this._animationDuration * this.data.time.end.value;
         }
 
-        this.endTime = this._animationDuration / 1000;
+        this._endTime = this._animationDuration / 1000;
 
         this._animationDuration /= (this.data.playbackRate ?? 1.0);
 
@@ -1644,7 +1660,7 @@ class PersistentCanvasEffect extends CanvasEffect {
         }
 
         this.video.pause();
-        this.video.currentTime = this.endTime;
+        this.video.currentTime = this._endTime;
         if (this.sprite.texture) {
             setTimeout(() => {
                 this.sprite.texture.update();

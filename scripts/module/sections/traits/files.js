@@ -1,6 +1,4 @@
 import * as lib from "../../lib/lib.js";
-import { is_real_number } from "../../lib/lib.js";
-import { SequencerFile } from "../../sequencer-file.js";
 
 export default {
 
@@ -8,6 +6,7 @@ export default {
      * Base properties
      */
     _file: "",
+    _fileOptions: false,
     _baseFolder: "",
     _mustache: null,
 

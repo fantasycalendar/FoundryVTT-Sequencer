@@ -325,7 +325,16 @@ export function from_uuid_fast(uuid) {
     // Embedded Documents
     while (doc && (parts.length > 1)) {
         const [embeddedName, embeddedId] = parts.slice(0, 2);
-        doc = doc.getEmbeddedDocument(embeddedName, embeddedId);
+        if(embeddedName === "SequencerEffect"){
+            if(game.user.viewedScene !== docId){
+                let effects = doc.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
+                doc = new Map(effects).get(embeddedId)
+            }else{
+                doc = Sequencer.EffectManager.getEffects({ effect: docId })?.[0];
+            }
+        }else {
+            doc = doc.getEmbeddedDocument(embeddedName, embeddedId);
+        }
         parts = parts.slice(2);
     }
     return doc || null;

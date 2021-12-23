@@ -96,7 +96,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     close(options){
         super.close(options)
-        EffectPlayer.snapLocationToGrid = false;
+        EffectPlayer._snapLocationToGrid = false;
     }
 
     async _onSubmit(event) {
@@ -230,7 +230,7 @@ export default class SequencerEffectsUI extends FormApplication {
                 default: false,
                 label: game.i18n.localize("SEQUENCER.PlayerOptionSnapToGrid"),
                 callback: (e) => {
-                    EffectPlayer.snapLocationToGrid = e.target.checked;
+                    EffectPlayer._snapLocationToGrid = e.target.checked;
                 }
             },
             "randomRotation": {

@@ -127,7 +127,13 @@ export const InteractionManager = {
 
 export const EffectPlayer = {
 
-    sequenceBuffer: [], snapLocationToGrid: false,
+    sequenceBuffer: [],
+
+    _snapLocationToGrid: false,
+
+    get snapLocationToGrid(){
+        return this._snapLocationToGrid || InteractionManager.state.Control;
+    },
 
     /**
      * Opens the Sequencer Effects UI with the player tab open
@@ -393,9 +399,9 @@ export const SelectionManager = {
         if (!this.selectedEffect) return;
 
         let showCursor = false;
-        let showPoint = InteractionManager.state.Shift;
+        let showPoint = InteractionManager.state.Control;
 
-        let position = canvaslib.get_mouse_position(InteractionManager.state.Shift);
+        let position = canvaslib.get_mouse_position(InteractionManager.state.Control);
 
         if (!this.selectedEffect.data.stretchTo && !this.dragOffset) {
             this.dragOffset = {
@@ -412,7 +418,7 @@ export const SelectionManager = {
             }
         }
 
-        if (this.dragOffset && !showCursor && !InteractionManager.state.Shift) {
+        if (this.dragOffset && !showCursor && !InteractionManager.state.Control) {
             position.x -= this.dragOffset.x;
             position.y -= this.dragOffset.y;
         }
