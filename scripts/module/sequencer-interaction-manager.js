@@ -414,9 +414,9 @@ export const SelectionManager = {
     /**
      * Hotkeys
      */
-    delete() {
+    async delete() {
         if(!this.selectedEffect) return;
-        SequencerEffectManager.endEffects({ effects: this.selectedEffect });
+        await SequencerEffectManager.endEffects({ effects: this.selectedEffect });
         this.selectedEffect = false;
     },
 
