@@ -845,7 +845,7 @@ export default class EffectSection extends Section {
              * Core properties
              */
             _id: randomID(),
-            flagVersion: "1.0.0",//flagManager.latestFlagVersion,
+            flagVersion: flagManager.latestFlagVersion,
             sequenceId: this.sequence.id,
             creationTimestamp: (+new Date()),
             sceneId: game.user.viewedScene,
