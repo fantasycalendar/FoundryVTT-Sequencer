@@ -186,7 +186,7 @@ export const EffectPlayer = {
 
         let position = canvaslib.get_mouse_position(this.snapLocationToGrid)
 
-        const attachToObject = attach ? canvaslib.get_closest_object(position, { minimumDistance: canvas.grid.size }) : false;
+        const attachToObject = attach ? canvaslib.get_closest_token(position, { minimumDistance: canvas.grid.size }) : false;
 
         let attachFound = false;
         if(attachToObject){
@@ -263,7 +263,7 @@ export const EffectPlayer = {
             .randomizeMirrorY(settings.randomMirrorY)
             .persist(settings.persist)
 
-        const attachToObject = settings.attachTo ? canvaslib.get_closest_object(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
+        const attachToObject = settings.attachTo ? canvaslib.get_closest_token(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
         if(attachToObject){
             effect.attachTo(attachToObject);
         }else{
@@ -285,7 +285,7 @@ export const EffectPlayer = {
                     effect.moveSpeed(settings.moveSpeed)
                 }
             } else {
-                let target = settings.stretchToAttach ? canvaslib.get_closest_object(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
+                let target = settings.stretchToAttach ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
                 effect.stretchTo(target, { attachTo: settings.stretchToAttach })
             }
         } else {
@@ -439,7 +439,7 @@ export const SelectionManager = {
         }
 
         if (this.attachToTarget) {
-            const obj = canvaslib.get_closest_object(position, { minimumDistance: canvas.grid.size })
+            const obj = canvaslib.get_closest_token(position, { minimumDistance: canvas.grid.size })
             if (obj) {
                 position = canvaslib.get_object_position(obj);
                 showCursor = true;
@@ -466,7 +466,7 @@ export const SelectionManager = {
         }
 
         if (this.attachToTarget) {
-            const obj = canvaslib.get_closest_object(this.suggestedProperties.position, { minimumDistance: canvas.grid.size });
+            const obj = canvaslib.get_closest_token(this.suggestedProperties.position, { minimumDistance: canvas.grid.size, type: TokenDocument });
             if (obj) {
                 let objUuid = lib.get_object_identifier(obj);
                 if (this.sourceOrTarget === "target") {

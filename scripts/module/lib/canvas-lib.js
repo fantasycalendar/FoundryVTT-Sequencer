@@ -251,20 +251,19 @@ export function rotate_coordinate(p1, p2, radians) {
 }
 
 /**
- * Gets the closest object to a certain position
+ * Gets the closest token to a certain position
  *
  * @param inPosition
- * @param inScene
  * @param minimumDistance
  * @returns {*|boolean}
  */
-export function get_closest_object(inPosition, { inScene = game.sceneId, minimumDistance = Infinity } = {}) {
-    let objects = lib.get_all_objects(inScene);
-    if (minimumDistance !== Infinity) {
-        objects = objects.filter(object => distance_between(get_object_position(object), inPosition) <= minimumDistance)
+export function get_closest_token(inPosition, { minimumDistance = false } = {}) {
+    let tokens = Array.from(canvas.scene.tokens);
+    if (minimumDistance) {
+        tokens = tokens.filter(token => distance_between(get_object_position(token), inPosition) <= minimumDistance)
     }
-    objects.sort((a, b) => {
+    tokens.sort((a, b) => {
         return distance_between(get_object_position(a), inPosition) - distance_between(get_object_position(b), inPosition)
     });
-    return objects?.[0] ?? false;
+    return tokens?.[0] ?? false;
 }
