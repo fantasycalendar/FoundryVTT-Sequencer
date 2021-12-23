@@ -279,21 +279,29 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 2.0.0
 **Breaking changes:**
+- *Sequencer* - All existing persistent effects will be ended when updating, this is because the new effect system is not compatible with the 1.X.X versions
 - *Sequencer* - Reworked Sequencer to require the `socketlib` module
 - *Sequencer* - Bumped minimum version to 0.8.9
 - *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
-- *Effects* - Removed `.JB2A()` as it was deprecated
+- *Effects* - Removed deprecated method `.JB2A()`
 - *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)
 
+**Tweaks:**
+- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
+- *Effects* - Deprecated and renamed `.reachTowards()` to `.stretchTo()` to better describe what the method actually does
+- *Effects* - Tweaked `.filter()` to allow being called multiple times, which now layers the filters in the order they were created
+
 **Additions:**
-- *Sequencer* - Added wildcard support when filtering for named effects in the Effect Manager's methods (such as `getEffects`, `endEffects`, etc)
-- *Sequencer* - Added support to filter for `source` and `target` in the Effect Manager's methods (such as `getEffects`, `endEffects`, etc)
-- *Sequencer* - Added flag to `Sequencer.Database.registerEntries()` which causes the entries to not be visible in the Database Viewer and Effect Player
+- *Sequencer* - Added selection tool to the Effect Layer - select, move, rotate, reattach, and delete effects on the canvas!
+- *Sequencer* - Added `updateEffects` to the Effect Manager's API
+- *Sequencer* - Added wildcard support when filtering for named effects in the Effect Manager's API (such as `getEffects`, `endEffects`, etc)
+- *Sequencer* - Added support to filter for `source` and `target` in the Effect Manager's API (such as `getEffects`, `endEffects`, etc)
+- *Sequencer* - Added "private" boolean flag to `Sequencer.Database.registerEntries()` which causes the entries to not be visible in the Database Viewer and Effect Player
 - *Sequencer* - Added checkbox to Database Viewer to show all ranges of a single effect, which is by default set to false
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
-- *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
-- *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki!
+- *Effects* - Tweaked `.file()` to support an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
+- *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
 - *Effects* - At long last, `.stretchTo()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
 
 **Fixes:**
@@ -303,10 +311,9 @@ Click the link above to go to the documentation where each feature is listed.
 - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
 - *Animations* - Fixed `.delay()` not being respected
 - *Effects* - Fixed memory leak where effect textures were not properly destroyed
-- *Effects* - Tweaked `.filter()` to allow being called multiple times (layered filters!)  
 - *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
 - *Effects* - Fixed `.from()` not taking mirror x/y into account on tokens
-- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners, gms, etc)
+- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners of the token, GMs, etc)
 - *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
 - *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
 
