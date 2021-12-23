@@ -30,12 +30,10 @@ export const InteractionManager = {
 
     initialize() {
 
-        this.interaction = canvas?.app?.renderer?.plugins?.interaction;
-
-        const board = document.getElementById("board");
-
-        document.body.addEventListener("mousedown", (event) => {
-            if(event.target !== board) return;
+        window.addEventListener("mousedown", (event) => {
+            if ( !canvas.ready ) return;
+            const hover = document.elementFromPoint(event.clientX, event.clientY);
+            if ( !hover || (hover.id !== "board" )) return;
             if (!this.isLayerActive) return;
             const button = event.button;
             if (!(button === 0 || button === 2)) return;
@@ -49,8 +47,10 @@ export const InteractionManager = {
             }
         });
 
-        document.body.addEventListener("mouseup", (event) => {
-            if(event.target !== board) return;
+        window.addEventListener("mouseup", (event) => {
+            if ( !canvas.ready ) return;
+            const hover = document.elementFromPoint(event.clientX, event.clientY);
+            if ( !hover || (hover.id !== "board" )) return;
             if (!this.isLayerActive) return;
             const button = event.button;
             if (!(button === 0 || button === 2)) return;
@@ -68,11 +68,11 @@ export const InteractionManager = {
             }
         });
 
-        document.body.addEventListener("mousemove", (event) => {
+        window.addEventListener("mousemove", (event) => {
+            if ( !canvas.ready ) return;
+            const hover = document.elementFromPoint(event.clientX, event.clientY);
+            if ( !hover || (hover.id !== "board" )) return;
             if (!this.isLayerActive) return;
-            let hoverElements = document.querySelectorAll(':hover');
-            let hoverElement = hoverElements[hoverElements.length - 1];
-            if(hoverElement !== board) return;
             this._propagateEvent("mouseMove");
             if (this.state.LeftMouseDown && !this.startDragPosition) {
                 this.startDragPosition = canvaslib.get_mouse_position();
