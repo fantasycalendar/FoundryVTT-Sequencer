@@ -53,15 +53,17 @@ export class BaseEffectsLayer extends CanvasLayer {
         this.effectTargetPosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
 
         this.effectSelectionBorder.zIndex = 1;
-        this.effectSourcePosition.interactive = true;
-        this.effectTargetPosition.interactive = true;
 
+        this.effectSourcePosition.interactive = true;
         this.effectSourcePosition.pointerdown = () => {
             SelectionManager.sourcePointSelected();
         }
+
+        this.effectTargetPosition.interactive = true;
         this.effectTargetPosition.pointerdown = () => {
             SelectionManager.targetPointSelected();
         }
+
         this.isSetup = true;
     }
 
@@ -132,21 +134,21 @@ export class BaseEffectsLayer extends CanvasLayer {
         if(SelectionManager.hoveredEffectUI) effects.add(SelectionManager.hoveredEffectUI)
         for (const effect of effects) {
             if (effect === SelectionManager.selectedEffect) continue;
-            this._drawBoxAroundEffect(this.effectHoverBoxes, effect, 0xFFFFFF);
+            this._drawBoxAroundEffect(this.effectHoverBoxes, effect);
         }
     }
 
     _drawSelectedEffectElements() {
-        this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, CONSTANTS.COLOR.PRIMARY);
+        this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, true);
         this._drawEffectStartEndPoints(SelectionManager.selectedEffect);
     }
 
-    _drawBoxAroundEffect(graphic, effect, color) {
+    _drawBoxAroundEffect(graphic, effect, selected = false) {
 
         if (effect._destroyed || !effect.spriteContainer) return;
 
         const boundingBox = effect.spriteContainer.getLocalBounds();
-        graphic.lineStyle(3, color, 0.9)
+        graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xFFFFFF, 0.9)
 
         const dimensions = {
             x: effect.position.x + boundingBox.x * effect.scale.x,
@@ -155,38 +157,41 @@ export class BaseEffectsLayer extends CanvasLayer {
             height: boundingBox.height * effect.scale.y,
         }
 
-        this._drawRoundedRectangle(graphic, effect.position, effect.rotation, dimensions);
+        this._drawRectangle(graphic, effect.position, effect.rotation, dimensions);
 
     }
 
-    _drawRoundedRectangle(graphic, position, rotation, dimensions){
-
-        let borderSize = canvas.grid.size * 0.1;
+    _drawRectangle(graphic, position, rotation, dimensions){
 
         graphic.moveTo(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x,
-            y: dimensions.y - borderSize
+            y: dimensions.y
         }, -rotation))
 
-        graphic.arc(...canvaslib.rotate_coordinate(position, {
+        graphic.lineTo(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x + dimensions.width,
             y: dimensions.y
-        }, -rotation), borderSize, (rotation) + Math.toRadians(90) - Math.PI, (rotation) + Math.toRadians(180) - Math.PI)
+        }, -rotation))
 
-        graphic.arc(...canvaslib.rotate_coordinate(position, {
+        graphic.lineTo(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x + dimensions.width,
             y: dimensions.y + dimensions.height
-        }, -rotation), borderSize, (rotation) + Math.toRadians(180) - Math.PI, (rotation) + Math.toRadians(270) - Math.PI)
+        }, -rotation))
 
-        graphic.arc(...canvaslib.rotate_coordinate(position, {
+        graphic.lineTo(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x,
             y: dimensions.y + dimensions.height
-        }, -rotation), borderSize, (rotation) + Math.toRadians(270) - Math.PI, (rotation) + Math.toRadians(360) - Math.PI)
+        }, -rotation))
 
-        graphic.arc(...canvaslib.rotate_coordinate(position, {
+        graphic.lineTo(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x,
             y: dimensions.y
-        }, -rotation), borderSize, (rotation) + Math.toRadians(0) - Math.PI, (rotation) + Math.toRadians(90) - Math.PI)
+        }, -rotation))
+
+        graphic.lineTo(...canvaslib.rotate_coordinate(position, {
+            x: dimensions.x + dimensions.width,
+            y: dimensions.y
+        }, -rotation))
 
     }
 
@@ -246,7 +251,7 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         this.suggestionPoint.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 0.9)
         this.suggestionPoint.position.set(suggestion.position.x, suggestion.position.y);
-        this._drawRoundedRectangle(this.suggestionPoint, suggestion.position, effect.rotation, dimensions);
+        this._drawRectangle(this.suggestionPoint, suggestion.position, effect.rotation, dimensions, true);
 
         if (suggestion.showCursor) {
             this.suggestionPoint.beginFill(CONSTANTS.COLOR.SECONDARY);

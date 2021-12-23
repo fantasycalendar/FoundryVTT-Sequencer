@@ -117,9 +117,9 @@ export const EffectPlayer = {
 
     snapLocationToGrid: false,
 
-    sourceAttach: true,
+    sourceAttach: false,
     sourceAttachFound: false,
-    targetAttach: true,
+    targetAttach: false,
     targetAttachFound: false,
 
     get isActive() {
