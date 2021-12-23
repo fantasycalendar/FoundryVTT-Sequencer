@@ -1,8 +1,9 @@
 import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./module/constants.js";
 import { user_can_do } from "./module/lib/lib.js";
+import { InteractionManager } from "./module/sequencer-interaction-manager.js";
 
-export default function registerSettings() {
+export function registerSettings() {
 
     // Define a settings submenu which handles advanced configuration needs
     game.settings.registerMenu(CONSTANTS.MODULE_NAME, "openSequencerDatabaseViewer", {
@@ -214,6 +215,50 @@ export default function registerSettings() {
     });
 
     console.log("Sequencer | Registered settings");
+
+}
+
+export function registerHotkeys(){
+
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-shift", {
+        name: "LEFT SHIFT",
+        editable: [
+            { key: "ShiftLeft" },
+        ],
+        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
+        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
+        reservedModifiers: [ "CONTROL", "ALT" ]
+    });
+
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-control", {
+        name: "LEFT CONTROL",
+        editable: [
+            { key: "ControlLeft" },
+        ],
+        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
+        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
+        reservedModifiers: [ "SHIFT", "ALT" ]
+    });
+
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-alt", {
+        name: "LEFT ALT",
+        editable: [
+            { key: "AltLeft" },
+        ],
+        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
+        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
+        reservedModifiers: [ "CONTROL", "SHIFT" ]
+    });
+
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "hotkey-delete", {
+        name: "Delete Effect",
+        editable: [
+            { key: "Delete" },
+        ],
+        onDown: InteractionManager.hotkeyDown.bind(InteractionManager),
+        onUp: InteractionManager.hotkeyDown.bind(InteractionManager),
+    });
+
 
 }
 

@@ -293,6 +293,11 @@ export default class SequencerEffectsUI extends FormApplication {
                 callback: (e) => {
                     EffectPlayer.targetAttach = e.target.checked;
                 }
+            },
+            "persist": {
+                type: "checkbox",
+                default: false,
+                label: game.i18n.localize("SEQUENCER.PlayerOptionPersist")
             }
         }
     }

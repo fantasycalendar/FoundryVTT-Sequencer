@@ -1,5 +1,6 @@
 import { EffectPlayer, InteractionManager, SelectionManager } from "../sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
+import CONSTANTS from "../constants.js";
 
 export class BaseEffectsLayer extends CanvasLayer {
 
@@ -8,9 +9,6 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         this.active = false;
         this.isSetup = false;
-
-        this.startPos = false;
-        this.endPos = false;
 
     }
 
@@ -88,12 +86,12 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     _drawLine() {
 
-        if (!this.startPos || !this.endPos || game.activeTool !== "play-effect") return;
+        if (!EffectPlayer.startPos || !EffectPlayer.endPos || game.activeTool !== "play-effect") return;
 
-        this.line.lineStyle(3, 0xFF2937, 1)
+        this.line.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 1)
         // If line already present then set its position only
-        this.line.moveTo(this.startPos.x, this.startPos.y);
-        this.line.lineTo(this.endPos.x, this.endPos.y);
+        this.line.moveTo(EffectPlayer.startPos.x, EffectPlayer.startPos.y);
+        this.line.lineTo(EffectPlayer.endPos.x, EffectPlayer.endPos.y);
 
     }
 
@@ -101,22 +99,29 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         if (game.activeTool !== "play-effect") return;
 
-        const position = this.startPos || canvaslib.get_mouse_position(EffectPlayer.snapLocationToGrid);
+        this.linePoint.beginFill(CONSTANTS.COLOR.PRIMARY);
+        this.linePoint.drawCircle(EffectPlayer.startPos.x, EffectPlayer.startPos.y, 5)
 
-        this.linePoint.beginFill(0xFF2937);
-        this.linePoint.drawCircle(position.x, position.y, 5)
+        if(EffectPlayer.sourceAttachFound){
+            this._drawCrossAtLocation(this.linePoint, EffectPlayer.startPos);
+        }
 
-        if (!this.endPos) return;
+        if (!EffectPlayer.endPos) return;
 
-        const angle = new Ray(this.startPos, this.endPos).angle;
+        const angle = new Ray(EffectPlayer.startPos, EffectPlayer.endPos).angle;
 
-        this.lineHead.beginFill(0xFF2937);
+        this.lineHead.beginFill(CONSTANTS.COLOR.PRIMARY);
         this.lineHead.moveTo(0, -5);
         this.lineHead.lineTo(-15, 30);
         this.lineHead.lineTo(15, 30);
         this.lineHead.endFill()
         this.lineHead.rotation = angle + Math.PI / 2;
-        this.lineHead.position.set(this.endPos.x, this.endPos.y)
+        this.lineHead.position.set(EffectPlayer.endPos.x, EffectPlayer.endPos.y)
+
+        if(EffectPlayer.targetAttachFound){
+            this.linePoint.beginFill(CONSTANTS.COLOR.SECONDARY);
+            this._drawCrossAtLocation(this.linePoint, EffectPlayer.endPos);
+        }
 
     }
 
@@ -130,7 +135,7 @@ export class BaseEffectsLayer extends CanvasLayer {
     }
 
     _drawSelectedEffectElements() {
-        this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, 0xFF0000);
+        this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, CONSTANTS.COLOR.PRIMARY);
         this._drawEffectStartEndPoints(SelectionManager.selectedEffect);
     }
 
@@ -148,26 +153,38 @@ export class BaseEffectsLayer extends CanvasLayer {
             height: boundingBox.height * effect.scale.y,
         }
 
-        graphic.moveTo(...canvaslib.rotate_coordinate(effect.position, {
+        this._drawRoundedRectangle(graphic, effect.position, effect.rotation, dimensions);
+
+    }
+
+    _drawRoundedRectangle(graphic, position, rotation, dimensions){
+
+        let borderSize = canvas.grid.size * 0.1;
+
+        graphic.moveTo(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x,
-            y: dimensions.y
-        }, -effect.rotation))
-        graphic.lineTo(...canvaslib.rotate_coordinate(effect.position, {
+            y: dimensions.y - borderSize
+        }, -rotation))
+
+        graphic.arc(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x + dimensions.width,
             y: dimensions.y
-        }, -effect.rotation))
-        graphic.lineTo(...canvaslib.rotate_coordinate(effect.position, {
+        }, -rotation), borderSize, (rotation) + Math.toRadians(90) - Math.PI, (rotation) + Math.toRadians(180) - Math.PI)
+
+        graphic.arc(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x + dimensions.width,
             y: dimensions.y + dimensions.height
-        }, -effect.rotation))
-        graphic.lineTo(...canvaslib.rotate_coordinate(effect.position, {
+        }, -rotation), borderSize, (rotation) + Math.toRadians(180) - Math.PI, (rotation) + Math.toRadians(270) - Math.PI)
+
+        graphic.arc(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x,
             y: dimensions.y + dimensions.height
-        }, -effect.rotation))
-        graphic.lineTo(...canvaslib.rotate_coordinate(effect.position, {
+        }, -rotation), borderSize, (rotation) + Math.toRadians(270) - Math.PI, (rotation) + Math.toRadians(360) - Math.PI)
+
+        graphic.arc(...canvaslib.rotate_coordinate(position, {
             x: dimensions.x,
             y: dimensions.y
-        }, -effect.rotation))
+        }, -rotation), borderSize, (rotation) + Math.toRadians(0) - Math.PI, (rotation) + Math.toRadians(90) - Math.PI)
 
     }
 
@@ -181,104 +198,77 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         if (!effect.data.stretchTo || !effect.sourcePosition || !effect.targetPosition) return;
 
-        this.effectSourcePosition.beginFill(0xFFFF00);
+        this.effectSourcePosition.beginFill(CONSTANTS.COLOR.PRIMARY);
         this.effectSourcePosition.drawCircle(effect.sourcePosition.x, effect.sourcePosition.y, canvas.grid.size * 0.25)
 
         if (typeof effect.data.source === "string") {
-            this.effectSourcePosition.drawRect(
-                effect.sourcePosition.x - canvas.grid.size * 0.05,
-                effect.sourcePosition.y - canvas.grid.size * 0.5,
-                canvas.grid.size * 0.1,
-                canvas.grid.size,
-            )
-            this.effectSourcePosition.drawRect(
-                effect.sourcePosition.x - canvas.grid.size * 0.5,
-                effect.sourcePosition.y - canvas.grid.size * 0.05,
-                canvas.grid.size,
-                canvas.grid.size * 0.1,
-            )
+            this._drawCrossAtLocation(this.effectSourcePosition, effect.sourcePosition);
         }
 
-        this.effectTargetPosition.beginFill(0xFF00FF);
+        this.effectTargetPosition.beginFill(CONSTANTS.COLOR.SECONDARY);
         this.effectTargetPosition.drawCircle(effect.targetPosition.x, effect.targetPosition.y, canvas.grid.size * 0.25)
         this.effectTargetPosition.alpha = 0.75;
 
         if (typeof effect.data.target === "string") {
-            this.effectTargetPosition.drawRect(
-                effect.targetPosition.x - canvas.grid.size * 0.05,
-                effect.targetPosition.y - canvas.grid.size * 0.5,
-                canvas.grid.size * 0.1,
-                canvas.grid.size,
-            )
-            this.effectTargetPosition.drawRect(
-                effect.targetPosition.x - canvas.grid.size * 0.5,
-                effect.targetPosition.y - canvas.grid.size * 0.05,
-                canvas.grid.size,
-                canvas.grid.size * 0.1,
-            )
+            this._drawCrossAtLocation(this.effectTargetPosition, effect.targetPosition);
         }
     }
 
     _drawSuggestionPoint() {
 
-        if (!SelectionManager.suggestedPosition || !SelectionManager.selectedEffect) return;
+        if (!SelectionManager.suggestedProperties || !SelectionManager.selectedEffect) return;
 
         const effect = SelectionManager.selectedEffect;
-        const suggestion = SelectionManager.suggestedPosition;
+        const suggestion = SelectionManager.suggestedProperties;
 
         this.suggestionPoint.position.set(0, 0)
         this.suggestionPoint.rotation = 0;
 
         if (effect.data.stretchTo) {
             this.suggestionPoint.beginFill(suggestion.color);
-            this.suggestionPoint.drawCircle(suggestion.x, suggestion.y, canvas.grid.size * 0.25);
+            this.suggestionPoint.drawCircle(suggestion.position.x, suggestion.position.y, canvas.grid.size * 0.25);
             if (suggestion.showCursor) {
-                this.suggestionPoint.drawRect(
-                    suggestion.x - canvas.grid.size * 0.05,
-                    suggestion.y - canvas.grid.size * 0.5,
-                    canvas.grid.size * 0.1,
-                    canvas.grid.size,
-                )
-                this.suggestionPoint.drawRect(
-                    suggestion.x - canvas.grid.size * 0.5,
-                    suggestion.y - canvas.grid.size * 0.05,
-                    canvas.grid.size,
-                    canvas.grid.size * 0.1,
-                )
+                this._drawCrossAtLocation(this.suggestionPoint, suggestion.position);
             }
             return;
         }
 
         const boundingBox = effect.spriteContainer.getLocalBounds()
-        this.suggestionPoint.position.set(suggestion.x, suggestion.y)
-        this.suggestionPoint.rotation = effect.rotation;
-        this.suggestionPoint.lineStyle(3, 0xFF0000, 0.9)
-        this.suggestionPoint.drawRect(
-            boundingBox.x * effect.scale.x,
-            boundingBox.y * effect.scale.y,
-            boundingBox.width * effect.scale.x,
-            boundingBox.height * effect.scale.y,
-        )
+
+        const dimensions = {
+            x: boundingBox.x * effect.scale.x,
+            y: boundingBox.y * effect.scale.y,
+            width: boundingBox.width * effect.scale.x,
+            height: boundingBox.height * effect.scale.y,
+        }
+
+        this.suggestionPoint.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 0.9)
+        this.suggestionPoint.position.set(suggestion.position.x, suggestion.position.y);
+        this._drawRoundedRectangle(this.suggestionPoint, suggestion.position, effect.rotation, dimensions);
 
         if (suggestion.showCursor) {
-            this.suggestionPoint.beginFill(0xFF0000);
-            this.suggestionPoint.drawRect(
-                canvas.grid.size * -0.05,
-                canvas.grid.size * -0.5,
-                canvas.grid.size * 0.1,
-                canvas.grid.size,
-            )
-            this.suggestionPoint.drawRect(
-                canvas.grid.size * -0.5,
-                canvas.grid.size * -0.05,
-                canvas.grid.size,
-                canvas.grid.size * 0.1,
-            )
+            this.suggestionPoint.beginFill(CONSTANTS.COLOR.SECONDARY);
+            this._drawCrossAtLocation(this.suggestionPoint);
         }
 
         if (suggestion.showPoint) {
             this.suggestionPoint.drawCircle(0, 0, canvas.grid.size * 0.2)
         }
+    }
+
+    _drawCrossAtLocation(inElement, inPosition = { x: 0, y: 0 }){
+        inElement.drawRect(
+            inPosition.x + canvas.grid.size * -0.05,
+            inPosition.y + canvas.grid.size * -0.5,
+            canvas.grid.size * 0.1,
+            canvas.grid.size,
+        )
+        inElement.drawRect(
+            inPosition.x + canvas.grid.size * -0.5,
+            inPosition.y + canvas.grid.size * -0.05,
+            canvas.grid.size,
+            canvas.grid.size * 0.1,
+        )
     }
 
 }

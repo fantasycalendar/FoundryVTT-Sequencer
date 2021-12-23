@@ -1,4 +1,4 @@
-import registerSettings from "./settings.js";
+import { registerSettings, registerHotkeys } from "./settings.js";
 import registerLayers from "./layers.js";
 import registerLibwrappers from "./libwrapper.js";
 import { registerSocket } from "./sockets.js";
@@ -47,6 +47,7 @@ Hooks.once('init', async function () {
 
     registerLayers();
     registerSettings();
+    registerHotkeys();
     registerLibwrappers();
 
 });

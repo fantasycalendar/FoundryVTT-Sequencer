@@ -2,11 +2,11 @@
   "name": "sequencer",
   "title": "Sequencer",
   "description": "This module implements an advanced sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
-  "version": "0.0.2",
+  "version": "2.0.0",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.8.9",
-  "compatibleCoreVersion": "9.000",
+  "minimumCoreVersion": "9.236",
+  "compatibleCoreVersion": "9.236",
   "author": "Wasp (Wasp#2005)",
   "esmodules": [
     "scripts/module.js"

@@ -37,6 +37,7 @@
   "SEQUENCER.PlayerOptionMoveSpeed": "Move speed",
   "SEQUENCER.PlayerOptionAttachTo": "Attach to start point",
   "SEQUENCER.PlayerOptionStretchToAttach": "Attach to end point",
+  "SEQUENCER.PlayerOptionPersist": "Persistent",
 
   "SEQUENCER.PlayerPermissionsWarning": "Hi there! Since you're a GM you can create effects, but by default <strong>so can your players</strong>. If you don't want that, you can configure permissions by clicking this button:",
 
