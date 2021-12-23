@@ -6,6 +6,64 @@ const flagManager = {
 
     flagAddBuffer: new Map(),
     flagRemoveBuffer: new Map(),
+    _latestFlagVersion: false,
+
+    /**
+     * Sanitizes the effect data, accounting for changes to the structure in previous versions
+     *
+     * @param doc
+     * @returns {array}
+     */
+    getFlags(doc){
+
+        let effects = doc.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
+        if(!effects.length) return [];
+
+        let changes = [];
+        for(let [effectId, effectData] of effects){
+
+            let effectVersion = effectData.flagVersion || "1.0.0";
+
+            if(effectData.flagVersion === this.latestFlagVersion) continue;
+
+            for(let [version, migration] of Object.entries(this.migrations)){
+
+                if(!isNewerVersion(version, effectVersion)) continue;
+
+                effectData = migration(effectData);
+
+            }
+
+            lib.debug(`Migrated effect with ID ${effectId} from version ${effectVersion} to version ${this.latestFlagVersion}`)
+
+            effectData.flagVersion = this.latestFlagVersion;
+
+            changes.push(effectData)
+        }
+
+        if(changes.length){
+            flagManager.addFlags(doc.uuid, changes);
+        }
+
+        return effects;
+    },
+
+    migrations: {
+        "2.0.0": (effects) => {
+            return effects;
+        }
+    },
+
+    get latestFlagVersion(){
+        if(!this._latestFlagVersion){
+            const versions = Object.keys(this.migrations);
+            versions.sort((a,b) => {
+                return isNewerVersion(a, b) ? -1 : 1;
+            })
+            this._latestFlagVersion = versions[0];
+        }
+        return this._latestFlagVersion;
+    },
 
     /**
      * Adds effects to a given document

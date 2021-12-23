@@ -3,6 +3,7 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
+import flagManager from "../flag-manager.js";
 
 export default class EffectSection extends Section {
 
@@ -844,6 +845,7 @@ export default class EffectSection extends Section {
              * Core properties
              */
             _id: randomID(),
+            flagVersion: "1.0.0",//flagManager.latestFlagVersion,
             sequenceId: this.sequence.id,
             creationTimestamp: (+new Date()),
             sceneId: game.user.viewedScene,

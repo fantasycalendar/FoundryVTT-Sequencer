@@ -246,12 +246,12 @@ export default class SequencerEffectManager {
      *
      * @param inEffectId
      * @param inUpdates
-     * @returns {promise}
+     * @returns {promise|boolean}
      * @private
      */
     static _updateEffect(inEffectId, inUpdates) {
         const effect = EffectsContainer.get(inEffectId);
-        if (!effect) return;
+        if (!effect) return false;
         return effect._update(inUpdates);
     }
 
@@ -264,10 +264,9 @@ export default class SequencerEffectManager {
         this.tearDownPersists();
         const allObjects = lib.get_all_objects();
         allObjects.push(canvas.scene);
-        let promises = allObjects.map(obj => {
-            const document = lib.validate_document(obj);
-            const objEffects = document.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? [];
-            return this._playEffectMap(objEffects, document);
+        const promises = allObjects.map(doc => {
+            const objEffects = flagManager.getFlags(doc);
+            return this._playEffectMap(objEffects, doc);
         }).flat();
         debounceUpdateEffectViewer();
         return Promise.all(promises).then(() => {
@@ -297,20 +296,19 @@ export default class SequencerEffectManager {
      */
     static patchCreationData(inDocument) {
 
-        let effects = inDocument.data.flags.sequencer.effects;
+        const effects = inDocument.data.flags.sequencer.effects
+            .map(effect => {
+                let effectData = effect[1].data;
 
-        effects = effects.map(effect => {
-            let effectData = effect[1].data;
+                if (effectData.attachTo || lib.is_UUID(effectData.source)) {
+                    effectData.source = lib.get_object_identifier(inDocument);
+                }
 
-            if (effectData.attachTo || lib.is_UUID(effectData.source)) {
-                effectData.source = lib.get_object_identifier(inDocument);
-            }
+                effectData.sceneId = canvas.scene.id;
 
-            effectData.sceneId = canvas.scene.id;
-
-            effect[1].data = effectData;
-            return effect;
-        });
+                effect[1].data = effectData;
+                return effect;
+            });
 
         this._playEffectMap(effects, inDocument);
 
