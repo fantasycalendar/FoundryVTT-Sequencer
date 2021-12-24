@@ -63,26 +63,30 @@ export default class Sequence {
     /**
      * Creates a section that will run a macro based on a name or a direct reference to a macro.
      *
-     * @param {string|Macro} [inMacro]
-     * @param {boolean} [inWaitUntilFinished=true]
-     * @returns {Sequence}
+     * @param {string|Macro} inMacro
+     * @param {*} args
+     * @returns {Sequence} this
      */
-    macro(inMacro, inWaitUntilFinished = true) {
+    macro(inMacro, ...args) {
         let macro;
         if (typeof inMacro === "string") {
             macro = game.macros.getName(inMacro);
             if (!macro) {
-                throw this._customError(this, "macro", `Macro '${inMacro}' was not found`);
+                throw lib.custom_error(this.moduleName, `macro - Macro '${inMacro}' was not found`);
             }
         } else if (inMacro instanceof Macro) {
             macro = inMacro;
         } else {
-            throw this._customError(this, "macro", `inMacro must be of instance string or Macro`);
+            throw lib.custom_error(this.moduleName, `macro - inMacro must be of instance string or Macro`);
+        }
+
+        if(args && !game.modules.get("advanced-macros")?.active){
+            lib.custom_warning(this.moduleName, `macro - Supplying macros with arguments require the advanced-macros module to be active`, true);
         }
 
         const func = lib.section_proxy_wrap(new FunctionSection(this, async () => {
-            await macro.execute();
-        }, inWaitUntilFinished));
+            await macro.execute(...args);
+        }, true));
         this.sections.push(func)
         return this;
     }
@@ -132,8 +136,8 @@ export default class Sequence {
      * @returns {Sequence} this
      */
     wait(msMin = 1, msMax = 1) {
-        if (msMin < 1) throw this._customError(this, "wait", 'Wait ms cannot be less than 1')
-        if (msMax < 1) throw this._customError(this, "wait", 'Max wait ms cannot be less than 1')
+        if (msMin < 1) throw lib.custom_error(this.moduleName, `wait - Wait ms cannot be less than 1`);
+        if (msMax < 1) throw lib.custom_error(this.moduleName, `wait - Max wait ms cannot be less than 1`);
         const wait = lib.random_int_between(msMin, Math.max(msMin, msMax))
         const section = lib.section_proxy_wrap(this._createWaitSection(wait));
         this.sections.push(section);
@@ -148,7 +152,9 @@ export default class Sequence {
      */
     addSequence(inSequence) {
         if (inSequence instanceof Section) inSequence = inSequence.sequence;
-        if (!(inSequence instanceof Sequence)) throw this._customError(this, "addSequence", `could not find the sequence from the given parameter`);
+        if (!(inSequence instanceof Sequence)){
+            throw lib.custom_error(this.moduleName, `addSequence - could not find the sequence from the given parameter`);
+        }
         this.sections = this.sections.concat(inSequence.sections);
         return this;
     }
