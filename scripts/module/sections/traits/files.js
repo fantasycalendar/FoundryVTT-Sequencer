@@ -54,7 +54,7 @@ export default {
             return this._validateCustomRange(inFile);
         }
 
-        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
+        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile, { recurse: true });
 
         inFile = this._applyMustache(inFile);
 
@@ -72,7 +72,7 @@ export default {
         inFile = this._applyMustache(inFile);
         inFile = this._applyBaseFolder(inFile);
         inFile = await this._applyWildcard(inFile);
-        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
+        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile, { recurse: true });
         return inFile;
     },
 
