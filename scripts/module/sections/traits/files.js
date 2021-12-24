@@ -70,9 +70,8 @@ export default {
 
     async _processFile(inFile){
         inFile = this._applyMustache(inFile);
-        inFile = await this._applyWildcard(inFile);
         inFile = this._applyBaseFolder(inFile);
-        inFile = this._applyMustache(inFile);
+        inFile = await this._applyWildcard(inFile);
         if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
         return inFile;
     },
