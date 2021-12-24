@@ -338,10 +338,12 @@ export default class EffectSection extends Section {
      * Sets the width and the height of the effect in pixels, this size is set before any scaling
      *
      * @param {number|object} inSize
+     * @param {object} inOptions
      * @returns {EffectSection}
      */
-    size(inSize) {
+    size(inSize, inOptions= {}) {
         if (!lib.is_real_number(inSize) && typeof inSize !== "object") throw this.sequence._customError(this, "size", "inSize must be of type number or object");
+        if (typeof inOptions !== "object") throw this.sequence._customError(this, "size", "inOptions must be of type object");
         if (lib.is_real_number(inSize)) {
             inSize = {
                 width: inSize,
@@ -359,13 +361,19 @@ export default class EffectSection extends Section {
             }
         }
 
+        inOptions = foundry.utils.mergeObject({
+            gridUnits: false
+        }, inOptions)
+
         if (!lib.is_real_number(inSize?.width) && inSize?.width !== "auto") throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
         if (!lib.is_real_number(inSize?.height) && inSize?.height !== "auto") throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
-        inSize = {
+        if (typeof inOptions.gridUnits !== "boolean") throw this.sequence._customError(this, "size", "inOptions.gridUnits must be of type boolean");
+
+        this._size = {
             width: inSize?.width ?? canvas.grid.size,
-            height: inSize?.height ?? canvas.grid.size
-        }
-        this._size = inSize;
+            height: inSize?.height ?? canvas.grid.size,
+            ...inOptions
+        };
         return this;
     }
 
