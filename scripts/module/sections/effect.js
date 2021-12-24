@@ -4,6 +4,7 @@ import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
+import { SequencerFileRangeFind } from "../sequencer-file.js";
 
 export default class EffectSection extends Section {
 
@@ -844,9 +845,9 @@ export default class EffectSection extends Section {
      */
     async _sanitizeEffectData() {
 
-        const { file, forcedIndex } = this._file
+        const { file, forcedIndex, customRange } = this._file
             ? await this._determineFile(this._file)
-            : { file: this._file, forcedIndex: false };
+            : { file: this._file, forcedIndex: false, customRange: false };
 
         let data = foundry.utils.duplicate({
             /**
@@ -885,7 +886,8 @@ export default class EffectSection extends Section {
             /**
              * Sprite properties
              */
-            file: file.dbPath ?? file,
+            file: file?.dbPath ?? file,
+            customRange,
             forcedIndex,
             text: this._text,
 
@@ -965,7 +967,7 @@ export default class EffectSection extends Section {
             data = await override(this, data);
         }
 
-        if ((typeof data.file !== "string" || data.file === "") && !this._text) {
+        if ((typeof data.file !== "string" || data.file === "") && !data.text && !data.customRange) {
             throw this.sequence._customError(this, "file", "an effect must have a file or have text configured!");
         }
 

@@ -766,28 +766,36 @@ export default class CanvasEffect extends PIXI.Container {
             return;
         }
 
-        if (!(Sequencer.Database.entryExists(this.data.file) || (await srcExists(this.data.file)))) {
-            let error = "Sequencer "
-            if (this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
-            error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.ErrorCouldNotPlay")}:<br>${this.data.file}`;
-            ui.notifications.error(error);
-            console.error(error.replace("<br>", "\n"))
-            this._reject();
-            this._durationReject();
-            return;
-        }
+        if(this.data.customRange){
 
-        if (!Sequencer.Database.entryExists(this.data.file)) {
-            let texture = await SequencerFileCache.loadFile(this.data.file);
-            this.video = this.data.file.endsWith(".webm")
-                ? texture?.baseTexture?.resource?.source ?? false
-                : false;
-            this._texture = texture;
-            this._file = texture;
-            return;
-        }
+            this._file = SequencerFile.make(this.data.file, [this.data.gridSize, this.data.startPoint, this.data.endPoint], "temporary.range.file");
 
-        this._file = Sequencer.Database.getEntry(this.data.file).clone();
+        }else {
+
+            if (!(Sequencer.Database.entryExists(this.data.file) || (await srcExists(this.data.file)))) {
+                let error = "Sequencer "
+                if (this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
+                error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.Error.CouldNotPlay")}:<br>${this.data.file}`;
+                ui.notifications.error(error);
+                console.error(error.replace("<br>", "\n"))
+                this._reject();
+                this._durationReject();
+                return;
+            }
+
+            if (!Sequencer.Database.entryExists(this.data.file)) {
+                let texture = await SequencerFileCache.loadFile(this.data.file);
+                this.video = this.data.file.endsWith(".webm")
+                    ? texture?.baseTexture?.resource?.source ?? false
+                    : false;
+                this._texture = texture;
+                this._file = texture;
+                return;
+            }
+
+            this._file = Sequencer.Database.getEntry(this.data.file).clone();
+
+        }
 
         this._file.forcedIndex = this.data.forcedIndex;
         this._file.twister = this._twister;

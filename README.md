@@ -301,9 +301,9 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Added checkbox to Database Viewer to show all ranges of a single effect, which is by default set to false
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
+- *Effects* - At long last, `.stretchTo()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
 - *Effects* - Tweaked `.file()` to support an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
 - *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
-- *Effects* - At long last, `.stretchTo()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
 - *Effects* - Added options parameter to `.size()` which allows for `{ gridUnits: true }` - this makes the size given to the method scale to the scene's grid, instead of setting the exact width and height
 - *Effects* - Added the same option as above to `.animateProperty()` and `.loopProperty()`, which only works if you animate the `width` or `height`
 

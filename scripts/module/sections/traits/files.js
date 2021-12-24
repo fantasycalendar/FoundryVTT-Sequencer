@@ -1,4 +1,5 @@
 import * as lib from "../../lib/lib.js";
+import { SequencerFileRangeFind } from "../../sequencer-file.js";
 
 export default {
 
@@ -49,6 +50,10 @@ export default {
 
     async _determineFile(inFile) {
 
+        if(!Array.isArray(inFile) && typeof inFile === "object"){
+            return this._validateCustomRange(inFile);
+        }
+
         if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
 
         inFile = this._applyMustache(inFile);
@@ -57,11 +62,32 @@ export default {
             return this._determineDatabaseFile(inFile);
         }
 
+        const determinedFile = await this._processFile(inFile);
+
+        return { file: determinedFile, forcedIndex: false, customRange: false };
+
+    },
+
+    async _processFile(inFile){
         inFile = await this._applyWildcard(inFile);
         inFile = this._applyBaseFolder(inFile);
         inFile = this._applyMustache(inFile);
+        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
+        return inFile;
+    },
 
-        return { file: inFile, forcedIndex: false };
+    async _validateCustomRange(inFile){
+
+        const finalFiles = {};
+        const validRanges = Object.keys(SequencerFileRangeFind.ftToDistanceMap);
+        for(const [range, rangeFile] of Object.entries(inFile)){
+            if(!validRanges.includes(range)){
+                throw this.sequence._customError(this, "file", `a file-distance key map must only contain the following keys: ${validRanges.join(", ")}`);
+            }
+            finalFiles[range] = await this._processFile(rangeFile);
+        }
+
+        return { file: finalFiles, forcedIndex: false, customRange: true };
 
     },
 
@@ -69,10 +95,11 @@ export default {
         const entries = Sequencer.Database.getEntry(inFile);
         const entry = Array.isArray(entries) ? lib.random_array_element(entries) : entries;
         const match = inFile.match(/\[([0-9]+)]$/);
-        return { file: entry, forcedIndex: match ? Number(match[1]) : false };
+        return { file: entry, forcedIndex: match ? Number(match[1]) : false, customRange: false };
     },
 
     _applyBaseFolder(inFile) {
+        if (Array.isArray(inFile)) return inFile.map((file) => this._applyBaseFolder(file));
         return inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
     },
 
