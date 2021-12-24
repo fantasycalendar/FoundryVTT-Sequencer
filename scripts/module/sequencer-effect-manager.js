@@ -331,9 +331,13 @@ export default class SequencerEffectManager {
         return Promise.all(inEffects.map(effect => {
             return this._playEffect(effect[1], false)
                 .then((result) => {
-                    if (!result) flagManager.removeFlags(inDocument.uuid, effect);
+                    if (!result){
+                        lib.debug("Error playing effect")
+                        flagManager.removeFlags(inDocument.uuid, effect);
+                    }
                 })
-                .catch(() => {
+                .catch((err) => {
+                    lib.debug("Error playing effect:", err)
                     flagManager.removeFlags(inDocument.uuid, effect)
                 });
         }));
