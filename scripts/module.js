@@ -18,13 +18,13 @@ import * as warnings from "./warnings.js";
 import * as lib from "./module/lib/lib.js";
 
 Hooks.once('init', async function () {
-    if(game.modules.get("socketlib")?.active) return;
+    if(!game.modules.get("socketlib")?.active) return;
     initialize_module();
 });
 
 Hooks.once('ready', async function () {
 
-    if(game.modules.get("socketlib")?.active){
+    if(!game.modules.get("socketlib")?.active){
         ui.notifications.error("Sequencer requires the SocketLib module to be active and will not work without it!");
         throw new Error("Sequencer requires the SocketLib module to be active and will not work without it!");
     }
