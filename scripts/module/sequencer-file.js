@@ -3,6 +3,19 @@ import SequencerFileCache from "./sequencer-file-cache.js";
 
 export class SequencerFile {
 
+    static make(inData, inTemplate, inDBPath) {
+
+        const originalFile = inData?.file ?? inData;
+        const file = foundry.utils.duplicate(originalFile);
+        const isRangeFind = typeof file !== "string" && !Array.isArray(originalFile)
+            ? Object.keys(originalFile).filter(key => key.endsWith("ft")).length > 0
+            : false;
+
+        return isRangeFind
+            ? new SequencerFileRangeFind(inData, inTemplate, inDBPath)
+            : new SequencerFile(inData, inTemplate, inDBPath)
+    }
+
     constructor(inData, inTemplate, inDBPath) {
         inData = foundry.utils.duplicate(inData);
         this.originalData = inData;
@@ -23,20 +36,7 @@ export class SequencerFile {
         this.twister = false;
     }
 
-    static make(inData, inTemplate, inDBPath) {
-
-        const originalFile = inData?.file ?? inData;
-        const file = foundry.utils.duplicate(originalFile);
-        const isRangeFind = typeof file !== "string" && !Array.isArray(originalFile)
-            ? Object.keys(originalFile).filter(key => key.endsWith("ft")).length > 0
-            : false;
-
-        return isRangeFind
-            ? new SequencerFileRangeFind(inData, inTemplate, inDBPath)
-            : new SequencerFile(inData, inTemplate, inDBPath)
-    }
-
-    copy() {
+    clone() {
         return SequencerFile.make(this.originalData, this.template, this.dbPath);
     }
 
@@ -78,6 +78,15 @@ export class SequencerFile {
         }
 
         return this.file;
+    }
+
+    getPreviewFile(){
+        let files = this.getAllFiles();
+        if(Array.isArray(files)) {
+            const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
+            files = files?.[index-1] ?? files[index];
+        }
+        return files;
     }
 
     destroy() {
@@ -127,13 +136,9 @@ export class SequencerFileRangeFind extends SequencerFile {
     static get ftToDistanceMap() {
         return {
             "90ft": canvas.grid.size * 15,
-            "75ft": canvas.grid.size * 12,
             "60ft": canvas.grid.size * 9,
-            "45ft": canvas.grid.size * 7,
             "30ft": canvas.grid.size * 5,
-            "20ft": canvas.grid.size * 3.5,
             "15ft": canvas.grid.size * 2,
-            "10ft": canvas.grid.size * 1,
             "05ft": 0
         }
     }

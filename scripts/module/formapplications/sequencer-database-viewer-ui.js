@@ -208,14 +208,12 @@ export default class SequencerDatabaseViewer extends FormApplication {
         let entry = Sequencer.Database.getEntry(entryText);
 
         if(entry instanceof SequencerFile){
-            const files = entry.getAllFiles();
-            if(Array.isArray(files)) {
-                const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
-                entry = files?.[index-1] ?? files[index];
-            }
+            entry = entry.getPreviewFile();
         }
 
         entry = entry?.file ?? entry;
+
+        console.log(entry)
 
         const isImage = !entry.toLowerCase().endsWith("webm");
 

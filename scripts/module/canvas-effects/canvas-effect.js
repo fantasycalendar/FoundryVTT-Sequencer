@@ -787,7 +787,7 @@ export default class CanvasEffect extends PIXI.Container {
             return;
         }
 
-        this._file = Sequencer.Database.getEntry(this.data.file).copy();
+        this._file = Sequencer.Database.getEntry(this.data.file).clone();
 
         this._file.forcedIndex = this.data.forcedIndex;
         this._file.twister = this._twister;

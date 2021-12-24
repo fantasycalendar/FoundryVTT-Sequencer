@@ -278,7 +278,7 @@ const SequencerDatabase = {
 
         if (typeof entries === "string" || typeof entries?.file === "string") {
 
-            entryCache.push(new SequencerFile(entries, template, dbPath));
+            entryCache.push(SequencerFile.make(entries, template, dbPath));
 
         } else if (Array.isArray(entries)) {
 
@@ -294,7 +294,7 @@ const SequencerDatabase = {
             let foundDistances = Object.keys(entries).filter(entry => feetTest.test(entry)).length !== 0;
 
             if (foundDistances) {
-                entryCache.push(new SequencerFile(entries, template, dbPath));
+                entryCache.push(SequencerFile.make(entries, template, dbPath));
             } else {
                 for (let entry of Object.keys(entries)) {
                     if (entry.startsWith('_')) continue;
