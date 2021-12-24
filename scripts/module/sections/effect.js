@@ -931,6 +931,7 @@ export default class EffectSection extends Section {
              * Animation properties
              */
             moves: this._moveTowards,
+            moveSpeed: this._moveSpeed,
             fadeIn: this._fadeIn,
             fadeOut: this._fadeOut,
             scaleIn: this._scaleIn,

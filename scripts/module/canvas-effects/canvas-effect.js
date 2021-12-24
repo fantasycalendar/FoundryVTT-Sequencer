@@ -818,8 +818,8 @@ export default class CanvasEffect extends PIXI.Container {
         this._animationDuration = this.data.duration || (this.video?.duration ?? 1) * 1000;
 
         // If the effect moves, then infer the duration from the distance divided by the speed
-        if (this.data.speed && this.data.moves) {
-            let durationFromSpeed = (this.data.distance / this.data.speed) * 1000;
+        if (this.data.moveSpeed && this.data.moves) {
+            let durationFromSpeed = (this.data.distance / this.data.moveSpeed) * 1000;
             this._animationDuration = Math.max(durationFromSpeed, this.data.duration);
         } else if (!this.data.duration && !this.video) {
 
@@ -829,7 +829,7 @@ export default class CanvasEffect extends PIXI.Container {
             let rotateDuration = (this.data.rotateIn?.duration ?? 0) + (this.data.rotateOut?.duration ?? 0);
             let moveDuration = 0;
             if (this.data.moves) {
-                moveDuration = (this.data.speed ? (this.data.distance / this.data.speed) * 1000 : 1000) + this.data.moves.delay;
+                moveDuration = (this.data.moveSpeed ? (this.data.distance / this.data.moveSpeed) * 1000 : 1000) + this.data.moves.delay;
             }
 
             let animationDurations = this.data.animations ? Math.max(...this.data.animations.map(animation => {
@@ -1564,8 +1564,8 @@ export default class CanvasEffect extends PIXI.Container {
         let moves = this.data.moves;
 
         let movementDuration = this._animationDuration;
-        if (this.data.speed) {
-            movementDuration = (this.data.distance / this.data.speed) * 1000;
+        if (this.data.moveSpeed) {
+            movementDuration = (this.data.distance / this.data.moveSpeed) * 1000;
         }
 
         if (this.data.moves.rotate) this._rotateTowards();

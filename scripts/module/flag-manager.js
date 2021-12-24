@@ -8,15 +8,26 @@ const flagManager = {
     flagRemoveBuffer: new Map(),
     _latestFlagVersion: false,
 
+    get latestFlagVersion(){
+        if(!this._latestFlagVersion){
+            const versions = Object.keys(this.migrations);
+            versions.sort((a,b) => {
+                return isNewerVersion(a, b) ? -1 : 1;
+            })
+            this._latestFlagVersion = versions[0];
+        }
+        return this._latestFlagVersion;
+    },
+
     /**
      * Sanitizes the effect data, accounting for changes to the structure in previous versions
      *
-     * @param doc
+     * @param inDocument
      * @returns {array}
      */
-    getFlags(doc){
+    getFlags(inDocument){
 
-        let effects = doc.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
+        let effects = inDocument.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
         if(!effects.length) return [];
 
         let changes = [];
@@ -30,7 +41,7 @@ const flagManager = {
 
                 if(!isNewerVersion(version, effectVersion)) continue;
 
-                effectData = migration(effectData);
+                effectData = migration(inDocument, effectData);
 
             }
 
@@ -42,27 +53,68 @@ const flagManager = {
         }
 
         if(changes.length){
-            flagManager.addFlags(doc.uuid, changes);
+            flagManager.addFlags(inDocument.uuid, changes);
         }
 
         return effects;
     },
 
     migrations: {
-        "2.0.0": (effects) => {
-            return effects;
-        }
-    },
+        "2.0.0": (inDocument, effectData) => {
 
-    get latestFlagVersion(){
-        if(!this._latestFlagVersion){
-            const versions = Object.keys(this.migrations);
-            versions.sort((a,b) => {
-                return isNewerVersion(a, b) ? -1 : 1;
-            })
-            this._latestFlagVersion = versions[0];
+            effectData._id = effectData.id;
+            effectData.creationTimestamp = effectData.timestamp;
+
+            if(effectData.template){
+                effectData.gridSize = effectData.template[0];
+                effectData.startPoint = effectData.template[1];
+                effectData.endPoint = effectData.template[2];
+            }
+
+            effectData.stretchTo = effectData.reachTowards;
+
+            if(effectData.attachTo) {
+                effectData.attachTo = true;
+                effectData.origin = inDocument.uuid;
+            }else if(effectData.position){
+                effectData.origin = effectData.position;
+            }
+
+            if(effectData.filters){
+                effectData.filters = Object.entries(effectData.filters)
+                    .map(entry => {
+                        return {
+                            className: entry[0],
+                            ...entry[1]
+                        }
+                    })
+            }
+
+            effectData.moveSpeed = effectData.speed;
+
+            effectData.target = null;
+            effectData.forcedIndex = null;
+            effectData.flipX = false;
+            effectData.flipY = false;
+            effectData.nameOffsetMap = {};
+            effectData.sequenceId = 0;
+
+            delete effectData.id;
+            delete effectData.timestamp;
+            delete effectData.reachTowards;
+            delete effectData.speed;
+            delete effectData.audioVolume;
+            delete effectData.gridSizeDifference;
+            delete effectData.position;
+
+            delete effectData.animatedProperties.fadeInAudio;
+            delete effectData.animatedProperties.fadeOutAudio;
+
+            effectData = foundry.utils.mergeObject(effectData, effectData.animatedProperties)
+
+            return effectData;
+            
         }
-        return this._latestFlagVersion;
     },
 
     /**
