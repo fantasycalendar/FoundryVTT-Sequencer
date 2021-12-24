@@ -69,6 +69,7 @@ export default {
     },
 
     async _processFile(inFile){
+        inFile = this._applyMustache(inFile);
         inFile = await this._applyWildcard(inFile);
         inFile = this._applyBaseFolder(inFile);
         inFile = this._applyMustache(inFile);
