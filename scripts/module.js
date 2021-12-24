@@ -1,6 +1,7 @@
-import { registerSettings, registerHotkeys } from "./settings.js";
+import registerSettings from "./settings.js";
 import registerLayers from "./layers.js";
 import registerLibwrappers from "./libwrapper.js";
+import registerHotkeys from "./hotkeys.js";
 import { registerSocket } from "./sockets.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
 
@@ -17,6 +18,38 @@ import * as warnings from "./warnings.js";
 import * as lib from "./module/lib/lib.js";
 
 Hooks.once('init', async function () {
+    if(game.modules.get("socketlib")?.active) return;
+    initialize_module();
+});
+
+Hooks.once('ready', async function () {
+
+    if(game.modules.get("socketlib")?.active){
+        ui.notifications.error("Sequencer requires the SocketLib module to be active and will not work without it!");
+        throw new Error("Sequencer requires the SocketLib module to be active and will not work without it!");
+    }
+
+    setTimeout(() => {
+        console.log("Sequencer | Ready to go!")
+        Hooks.call('sequencer.ready')
+        Hooks.call('sequencerReady')
+
+        warnings.check();
+
+        SequencerEffectManager.setUpPersists();
+        InteractionManager.initialize();
+
+        Hooks.on("canvasReady", () => {
+            SequencerEffectManager.setUpPersists();
+        });
+
+    }, 100);
+});
+
+/**
+ * Creation & delete hooks for persistent effects
+ */
+function initialize_module(){
 
     window.Sequence = Sequence;
     window.Sequencer = {
@@ -50,61 +83,40 @@ Hooks.once('init', async function () {
     registerHotkeys();
     registerLibwrappers();
 
-});
 
-Hooks.once("socketlib.ready", () => {
-    registerSocket();
-})
+    Hooks.once("socketlib.ready", () => {
+        if(game.modules.get("socketlib")?.active) return;
+        registerSocket();
+    })
 
-Hooks.once('ready', async function () {
-    setTimeout(() => {
-        console.log("Sequencer | Ready to go!")
-        Hooks.call('sequencer.ready')
-        Hooks.call('sequencerReady')
-        runReadyMethods();
-    }, 100);
-});
-
-function runReadyMethods(){
-    warnings.check();
-
-    SequencerEffectManager.setUpPersists();
-    InteractionManager.initialize();
-
-    Hooks.on("canvasReady", () => {
-        SequencerEffectManager.setUpPersists();
+    Hooks.on("createToken", (document) => {
+        if(!document.data?.flags?.sequencer?.effects) return;
+        const effects = SequencerEffectManager.patchCreationData(document);
+        document.data.update({"flags.sequencer.effects": effects});
     });
+
+    Hooks.on("createTile", (document) => {
+        if(!document.data?.flags?.sequencer?.effects) return;
+        const effects = SequencerEffectManager.patchCreationData(document);
+        document.data.update({"flags.sequencer.effects": effects});
+    });
+
+    Hooks.on("createMeasuredTemplate", (document) => {
+        if(!document.data?.flags?.sequencer?.effects) return;
+        const effects = SequencerEffectManager.patchCreationData(document);
+        document.data.update({"flags.sequencer.effects": effects});
+    });
+
+    Hooks.on("preDeleteToken", (document) => {
+        SequencerEffectManager.tearDownPersists(document.uuid);
+    });
+
+    Hooks.on("preDeleteTile", (document) => {
+        SequencerEffectManager.tearDownPersists(document.uuid);
+    });
+
+    Hooks.on("preDeleteMeasuredTemplate", (document) => {
+        SequencerEffectManager.tearDownPersists(document.uuid);
+    });
+
 }
-
-/**
- * Creation & delete hooks for persistent effects
- */
-Hooks.on("createToken", (document) => {
-    if(!document.data?.flags?.sequencer?.effects) return;
-    const effects = SequencerEffectManager.patchCreationData(document);
-    document.data.update({"flags.sequencer.effects": effects});
-});
-
-Hooks.on("createTile", (document) => {
-    if(!document.data?.flags?.sequencer?.effects) return;
-    const effects = SequencerEffectManager.patchCreationData(document);
-    document.data.update({"flags.sequencer.effects": effects});
-});
-
-Hooks.on("createMeasuredTemplate", (document) => {
-    if(!document.data?.flags?.sequencer?.effects) return;
-    const effects = SequencerEffectManager.patchCreationData(document);
-    document.data.update({"flags.sequencer.effects": effects});
-});
-
-Hooks.on("preDeleteToken", (document) => {
-    SequencerEffectManager.tearDownPersists(document.uuid);
-});
-
-Hooks.on("preDeleteTile", (document) => {
-    SequencerEffectManager.tearDownPersists(document.uuid);
-});
-
-Hooks.on("preDeleteMeasuredTemplate", (document) => {
-    SequencerEffectManager.tearDownPersists(document.uuid);
-});

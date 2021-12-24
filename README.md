@@ -279,8 +279,8 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 2.0.0
 **Breaking changes:**
+- *Sequencer* - Sequencer now requires the `socketlib` module
 - *Sequencer* - All existing persistent effects created using 1.X.X Sequencer will be updated to the 2.0.0 system, but it's nigh impossible to catch all the edge cases, so please report any strangeness!
-- *Sequencer* - Reworked Sequencer to require the `socketlib` module
 - *Effects* - Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version
 - *Effects* - Removed deprecated method `.JB2A()`
 - *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)

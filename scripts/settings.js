@@ -1,9 +1,8 @@
 import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./module/constants.js";
 import { user_can_do } from "./module/lib/lib.js";
-import { EffectPlayer, SelectionManager } from "./module/sequencer-interaction-manager.js";
 
-export function registerSettings() {
+export default function registerSettings() {
 
     // Define a settings submenu which handles advanced configuration needs
     game.settings.registerMenu(CONSTANTS.MODULE_NAME, "openSequencerDatabaseViewer", {
@@ -202,81 +201,6 @@ export function registerSettings() {
     });
 
     console.log("Sequencer | Registered settings");
-
-}
-
-export function registerHotkeys() {
-
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-shift", {
-        name: "SEQUENCER.Hotkeys.PlayTool.Shift",
-        uneditable: [
-            { key: "ShiftLeft" },
-        ],
-        onDown: () => {
-            EffectPlayer.playMany = true;
-        },
-        onUp: () => {
-            EffectPlayer.playMany = false;
-            if(!EffectPlayer.isActive) return;
-            EffectPlayer.shiftUp();
-        },
-        reservedModifiers: ["CONTROL"]
-    });
-
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-control", {
-        name: "SEQUENCER.Hotkeys.PlayTool.Control",
-        uneditable: [
-            { key: "ControlLeft" },
-        ],
-        onDown: () => {
-            EffectPlayer.playManySequenced = true;
-        },
-        onUp: () => {
-            EffectPlayer.playManySequenced = false;
-        },
-        reservedModifiers: ["SHIFT"]
-    });
-
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-control", {
-        name: "SEQUENCER.Hotkeys.SelectTool.Control",
-        uneditable: [
-            { key: "ControlLeft" },
-        ],
-        onDown: () => {
-            SelectionManager.snapToGrid = true;
-        },
-        onUp: () => {
-            SelectionManager.snapToGrid = false;
-        },
-        reservedModifiers: ["SHIFT", "ALT"]
-    });
-
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-alt", {
-        name: "SEQUENCER.Hotkeys.SelectTool.Alt",
-        uneditable: [
-            { key: "AltLeft" },
-        ],
-        onDown: () => {
-            SelectionManager.attachToTarget = true;
-            if(!SelectionManager.isActive) return;
-            SelectionManager.altDown()
-        },
-        onUp: () => {
-            SelectionManager.attachToTarget = false;
-        },
-        reservedModifiers: ["CONTROL", "SHIFT"]
-    });
-
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-delete", {
-        name: "SEQUENCER.Hotkeys.SelectTool.Delete",
-        uneditable: [
-            { key: "Delete" },
-        ],
-        onDown: () => {
-            SelectionManager.delete();
-        },
-    });
-
 
 }
 

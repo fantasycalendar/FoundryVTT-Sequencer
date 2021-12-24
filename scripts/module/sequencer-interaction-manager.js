@@ -17,11 +17,7 @@ export const InteractionManager = {
     state: {
         LeftMouseDown: false,
         RightMouseDown: false,
-        Dragging: false,
-        Alt: false,
-        Control: false,
-        Shift: false,
-        Delete: false
+        Dragging: false
     },
 
     get isLayerActive() {
