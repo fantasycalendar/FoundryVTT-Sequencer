@@ -28,6 +28,7 @@ export class BaseEffectsLayer extends CanvasLayer {
         super.deactivate();
         this._clearChildren();
         this.active = false;
+        this.isSetup = false;
         InteractionManager.tearDown();
     }
 
