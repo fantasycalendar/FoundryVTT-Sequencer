@@ -213,8 +213,6 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
         entry = entry?.file ?? entry;
 
-        console.log(entry)
-
         const isImage = !entry.toLowerCase().endsWith("webm");
 
         player.classList.toggle("hidden", isImage);
