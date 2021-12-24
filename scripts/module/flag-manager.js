@@ -1,4 +1,5 @@
 import * as lib from "./lib/lib.js";
+import * as canvaslib from "./lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import CONSTANTS from "./constants.js";
 
@@ -65,19 +66,20 @@ const flagManager = {
             effectData._id = effectData.id;
             effectData.creationTimestamp = effectData.timestamp;
 
-            if(effectData.template){
-                effectData.gridSize = effectData.template[0];
-                effectData.startPoint = effectData.template[1];
-                effectData.endPoint = effectData.template[2];
-            }
-
-            effectData.stretchTo = effectData.reachTowards;
+            effectData.gridSize = effectData.template ? effectData.template[0] : 100;
+            effectData.startPoint = effectData.template ? effectData.template[1] : 0;
+            effectData.endPoint = effectData.template ? effectData.template[2] : 0;
 
             if(effectData.attachTo) {
                 effectData.attachTo = true;
-                effectData.origin = inDocument.uuid;
+                effectData.source = inDocument.uuid;
+                const objectSize = canvaslib.get_object_dimensions(inDocument, true);
+                effectData.offset = {
+                    x: (effectData.position.x) - objectSize.width,
+                    y: (effectData.position.y) - objectSize.height,
+                }
             }else if(effectData.position){
-                effectData.origin = effectData.position;
+                effectData.source = effectData.position;
             }
 
             if(effectData.filters){
@@ -101,16 +103,19 @@ const flagManager = {
 
             delete effectData.id;
             delete effectData.timestamp;
+            delete effectData.position;
             delete effectData.reachTowards;
             delete effectData.speed;
             delete effectData.audioVolume;
             delete effectData.gridSizeDifference;
-            delete effectData.position;
+            delete effectData.template;
 
             delete effectData.animatedProperties.fadeInAudio;
             delete effectData.animatedProperties.fadeOutAudio;
 
             effectData = foundry.utils.mergeObject(effectData, effectData.animatedProperties)
+
+            delete effectData.animatedProperties;
 
             return effectData;
             
