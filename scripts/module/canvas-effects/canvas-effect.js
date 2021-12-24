@@ -1310,12 +1310,12 @@ export default class CanvasEffect extends PIXI.Container {
                 animation.to = ((animation.to / 180) * Math.PI);
             }
 
-            if (animation.propertyName.indexOf("width") > -1 && animation.options.gridUnits) {
+            if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
                 animation.from *= canvas.grid.size;
                 animation.to *= canvas.grid.size;
             }
 
-            if (animation.propertyName.indexOf("height") > -1 && animation.options.gridUnits) {
+            if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
                 animation.from *= canvas.grid.size;
                 animation.to *= canvas.grid.size;
             }
@@ -1343,13 +1343,13 @@ export default class CanvasEffect extends PIXI.Container {
                 });
             }
 
-            if (animation.propertyName.indexOf("width") > -1 && animation.options.gridUnits) {
+            if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
                 });
             }
 
-            if (animation.propertyName.indexOf("height") > -1 && animation.options.gridUnits) {
+            if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
                 });
