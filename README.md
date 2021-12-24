@@ -279,7 +279,6 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 2.0.0
 **Breaking changes:**
-- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Sequencer 2.0.0 is only compatible with Foundry V9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 - *Sequencer* - All existing persistent effects created using 1.X.X Sequencer will be updated to the 2.0.0 system, but it's nigh impossible to catch all the edge cases, so please report any strangeness!
 - *Sequencer* - Reworked Sequencer to require the `socketlib` module
 - *Effects* - Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version
