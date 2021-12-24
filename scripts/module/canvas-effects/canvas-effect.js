@@ -1164,12 +1164,21 @@ export default class CanvasEffect extends PIXI.Container {
 
                     if (this.data.size.width === "auto") {
                         height = this.data.size.height;
+                        if(this.data.size.gridUnits){
+                            height *= canvas.grid.size;
+                        }
                         width = height / ratio;
                     } else if (this.data.size.height === "auto") {
                         width = this.data.size.width;
+                        if(this.data.size.gridUnits){
+                            width *= canvas.grid.size;
+                        }
                         height = width * ratio;
                     }
 
+                }else if(this.data.size.gridUnits){
+                    height *= canvas.grid.size;
+                    width *= canvas.grid.size;
                 }
 
                 this.sprite.width = (width * this.data.scale.x);
@@ -1301,6 +1310,21 @@ export default class CanvasEffect extends PIXI.Container {
                 animation.to = ((animation.to / 180) * Math.PI);
             }
 
+            if (animation.propertyName.indexOf("width") > -1 && animation.options.gridUnits) {
+                animation.from *= canvas.grid.size;
+                animation.to *= canvas.grid.size;
+            }
+
+            if (animation.propertyName.indexOf("height") > -1 && animation.options.gridUnits) {
+                animation.from *= canvas.grid.size;
+                animation.to *= canvas.grid.size;
+            }
+
+            if (animation.propertyName.indexOf("scale") > -1) {
+                animation.from *= this.gridSizeDifference;
+                animation.to *= this.gridSizeDifference;
+            }
+
             animationsToSend = animationsToSend.concat(this._counterAnimateRotation(animation))
 
         }
@@ -1316,6 +1340,24 @@ export default class CanvasEffect extends PIXI.Container {
             if (animation.propertyName.indexOf("rotation") > -1) {
                 animation.values = animation.values.map(value => {
                     return ((value / 180) * Math.PI);
+                });
+            }
+
+            if (animation.propertyName.indexOf("width") > -1 && animation.options.gridUnits) {
+                animation.values = animation.values.map(value => {
+                    return value * canvas.grid.size;
+                });
+            }
+
+            if (animation.propertyName.indexOf("height") > -1 && animation.options.gridUnits) {
+                animation.values = animation.values.map(value => {
+                    return value * canvas.grid.size;
+                });
+            }
+
+            if (animation.propertyName.indexOf("scale") > -1) {
+                animation.values = animation.values.map(value => {
+                    return value * this.gridSizeDifference;
                 });
             }
 
