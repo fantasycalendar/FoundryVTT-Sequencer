@@ -337,6 +337,7 @@ export const SelectionManager = {
 
     tearDown() {
         this._reset();
+        this.hoveredEffects = new Set();
     },
 
     sourcePointSelected() {
@@ -490,7 +491,6 @@ export const SelectionManager = {
         this.suggestedProperties = false;
         this.sourceOrTarget = false;
         this.dragOffset = false;
-        this.hoveredEffects = new Set();
     }
 
 }
