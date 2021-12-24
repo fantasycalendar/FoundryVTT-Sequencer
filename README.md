@@ -219,7 +219,7 @@ new Sequence()
         .atLocation(canvas.tokens.controlled[0])
         .scaleToObject(2)
         .belowTokens()
-        ._fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+        .fadeIn(1500, {ease: "easeOutCubic", delay: 500})
         .fadeOut(1500)
         .rotateIn(90, 2500, {ease: "easeInOutCubic"})
         .rotateOut(350, 1500, {ease: "easeInCubic"})
@@ -279,10 +279,10 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 2.0.0
 **Breaking changes:**
-- *Sequencer* - All existing persistent effects will be ended when updating, this is because the new effect system is not compatible with the 1.X.X versions
+- *Sequencer* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Sequencer 2.0.0 is only compatible with Foundry V9 <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Sequencer* - All existing persistent effects created using 1.X.X Sequencer will be updated to the 2.0.0 system, but it's nigh impossible to catch all the edge cases, so please report any strangeness!
 - *Sequencer* - Reworked Sequencer to require the `socketlib` module
-- *Sequencer* - Bumped minimum version to 0.8.9
-- *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
+- *Effects* - Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version
 - *Effects* - Removed deprecated method `.JB2A()`
 - *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)
 
@@ -303,6 +303,8 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Tweaked `.file()` to support an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
 - *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
 - *Effects* - At long last, `.stretchTo()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
+- *Effects* - Added options parameter to `.size()` which allows for `{ gridUnits: true }` - this makes the size given to the method scale to the scene's grid, instead of setting the exact width and height
+- *Effects* - Added the same option as above to `.animateProperty()` and `.loopProperty()`, which only works if you animate the `width` or `height`
 
 **Fixes:**
 - *Sequencer* - Fixed module permissions settings being slightly wonky
@@ -319,7 +321,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
-- *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Breaking change <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> - Fixed issue where setting the `.size()` of an effect and then scaling it would result in unexpected behavior. As a result, `._scaleIn()` and `._scaleOut()` now function as _multipliers_ to the existing scale on the effect
+- *Effects* - <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> Breaking change <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> - Fixed issue where setting the `.size()` of an effect and then scaling it would result in unexpected behavior. As a result, `.scaleIn()` and `.scaleOut()` now function as _multipliers_ to the existing scale on the effect
 
 ### Version 1.3.4
 - *Sequencer* - Added popup warning the first time a GM opens the Effect Player to tell them about the custom Permissions
@@ -341,8 +343,8 @@ Click the link above to go to the documentation where each feature is listed.
 ### Version 1.3.0
 - *Sequencer* - Sequencer is now v9 ready!
 - *Sequencer* - Improved search accuracy functionality on the Effect Player
-- *Animations* - Added `relativeToCenter` option to `.teleportTo()` and `._moveTowards()`, which will offset the location relative to the object's center, effectively centering the animated object on the location - use with `.snapToGrid()` for reliable snapping!
-- *Animations* - Fixed `._fadeOut()`, `.fadeOutAudio()`, and `._rotateOut()` not correctly setting the duration of the animation, causing `.waitUntilFinished()` to not actually wait for the animation to finish
+- *Animations* - Added `relativeToCenter` option to `.teleportTo()` and `.moveTowards()`, which will offset the location relative to the object's center, effectively centering the animated object on the location - use with `.snapToGrid()` for reliable snapping!
+- *Animations* - Fixed `.fadeOut()`, `.fadeOutAudio()`, and `.rotateOut()` not correctly setting the duration of the animation, causing `.waitUntilFinished()` to not actually wait for the animation to finish
 - *Effects* - Deprecated `.JB2A()` as the recommended workflow is now to use Database paths
 
 ### Version 1.2.12 Hotfix
@@ -351,7 +353,7 @@ Click the link above to go to the documentation where each feature is listed.
 ### Version 1.2.11
 - *Sequencer* - Added French localization (thanks to Elfenduil)
 - *Sequencer* - Fixed error with `Sequencer.Database.validateEntries()` throwing an error
-- *Effects* - Improved handling of the `Glow` filter when used with `._fadeIn()` and `._fadeOut()`
+- *Effects* - Improved handling of the `Glow` filter when used with `.fadeIn()` and `.fadeOut()`
     - Due to this change, it is now recommended that if you use `.animateProperty()` or `.loopProperty()` on the `sprite`'s `alpha` property to instead use it on the `alphaFilter`'s `alpha` property   
 - *Macros* - Updated the Misty Step macro to be more generic and not specifically _require_ MidiQOL
 
@@ -379,7 +381,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Fixed bug that caused effects to linger for other clients after having been ended
 
 ### Version 1.2.4
-- *Sequencer* - Fixed error caused by _preload option on Sequencer Effect Player 
+- *Sequencer* - Fixed error caused by preload option on Sequencer Effect Player 
 - *Sequencer* - Fixed error when pressing ESC in the Sequencer Layer 
 - *Sequencer* - Fixed permissions not being loaded properly 
 - *Effects & Animations* - Added `.tint()` which allows you to tint effects, tokens, and tiles
@@ -502,11 +504,11 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects & Sounds* - Added support for wildcard paths, like `modules/jb2a_patreon/Library/1st_Level/Bardic_Inspiration/BardicInspiration_01_*_400x400.webm`
 
 ### Version 0.6.12
-- *Sequencer* - Fixed an issue where the preloader would sometimes fail to _preload
+- *Sequencer* - Fixed an issue where the preloader would sometimes fail to preload
 - *Effects* - Fixed effects not playing on hex grids
 
 ### Version 0.6.11 Hotfix
-- *Effects* - Fixed rangefinding effects sometimes not picking the right distance
+- *Effects* - Fixed range-finding effects sometimes not picking the right distance
 
 ### Version 0.6.10
 - *Sequencer* - Improved the search speed of the Database Viewer
@@ -522,7 +524,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 0.6.7 
 - *Effects & Sounds* - Fixed `.locally()` and `.forUsers()` sometimes erroneously remembering users between different effects & sounds
-- *Effects* - Fixed `._scaleIn()` would not take a custom `.size()` into account
+- *Effects* - Fixed `.scaleIn()` would not take a custom `.size()` into account
 - *Effects* - Fixed static images sometimes not playing due to duration being set to 0ms
 
 ### Version 0.6.6
@@ -539,8 +541,8 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Added client-side settings for users to be able to turn off effects and sounds being played locally
 - *Effects & Sounds* - Fixed effects and sounds playing on scenes they did not originate from
 - *Effects* - Added `.size()`, which sets the width and height of the effect in pixels
-- *Effects* - Added `rotate` option to `._moveTowards()`, which defaults to true. If set to false, the effect will not rotate towards the end location. 
-- *Effects* - Fixed duration of effects using `._moveTowards()` not being calculated correctly
+- *Effects* - Added `rotate` option to `.moveTowards()`, which defaults to true. If set to false, the effect will not rotate towards the end location. 
+- *Effects* - Fixed duration of effects using `.moveTowards()` not being calculated correctly
 - *Effects* - Fixed static image effects' durations also not being calculated correctly 
 
 ### Version 0.6.3 Hotfix
@@ -558,7 +560,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.JB2A()` has been altered to set the gridsize to 200, as it was previously set to 100 - this will halve the size all JB2A on-the-spot effects, sorry! <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
 
 **Additions:**
-- *Sequencer* - Added `SequencerPreloader` - you can now _preload images, effects, and sounds for your players, read more on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Preloader)
+- *Sequencer* - Added `SequencerPreloader` - you can now preload images, effects, and sounds for your players, read more on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Preloader)
 - *Sequencer* - Added support for templates and time ranges in database structure, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/How-to:-Sequencer-Database)
 - *Effects* - Added support for static images such as webp, pngs, jpgs, etc
 - *Effects & Sounds* - Added `.startTime()`, `.startTimePerc()`, `.endTime()`, `.endTimePerc()`, and `.timeRange()`, more info on the [docs](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#start-time)
@@ -579,7 +581,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 0.5.7
 - *Effects* - Fixed templates sometimes not being found
-- *Effects* - Re-added backwards compatibility with old macros that still use `data._distance` in overrides 
+- *Effects* - Re-added backwards compatibility with old macros that still use `data.distance` in overrides 
 
 ### Version 0.5.6
 - *Sequencer* - Added alpha version of the Sequencer Database Viewer
@@ -605,7 +607,7 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Added support for static image effects (.jpeg, .png, etc)
 - *Effects* - Fixed grid size sometimes not being taken into account when playing effects with `.reachTowards()` 
 - *Sounds* - Vastly improved and fixed sound implementation, big thanks to ghost#2000!
-- *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for `._fadeIn()` and `._fadeOut()` in Sounds <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
+- *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> Removed support for `.fadeIn()` and `.fadeOut()` in Sounds <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
 
 ### Version 0.5.1
 - *Sequencer* - Added two sample scenes with macros and accompanying art:
@@ -625,14 +627,14 @@ Click the link above to go to the documentation where each feature is listed.
   - `.fadeInAudio()`
   - `.fadeOutAudio()`
 - *Effects* - Added support for delays on these methods (e.g. a delay of -500 means it will finish 500ms before the end of the duration):
-  - `._rotateOut()`
-  - `._fadeOut()`
-  - `._scaleOut()`
+  - `.rotateOut()`
+  - `.fadeOut()`
+  - `.scaleOut()`
   - `.fadeOutAudio()`
 - *Animations* - Fixed `.rotateTowards()` to properly rotate towards the target without having to add an offset to properly line them up
-- *Effects* - Made effects more intelligent when determining locations when given partial object data with `_id` collections
+- *Effects* - Made effects more intelligent when determining locations when given partial object data with `id` collections
 - *Effects* - Fixed issues surrounding delays and fades
-- *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `._fadeIn()` and `._fadeOut()` will become deprecated in a future version, please switch to `.fadeInAudio()` and `.fadeOutAudio()` <img src="images/siren.gif" width="12px" height="12px" alt="Siren">   
+- *Sounds* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> `.fadeIn()` and `.fadeOut()` will become deprecated in a future version, please switch to `.fadeInAudio()` and `.fadeOutAudio()` <img src="images/siren.gif" width="12px" height="12px" alt="Siren">   
 
 ### Version 0.4.6 Hotfix
 - *Effects* - Fixed effects not playing on tokens on 0.7.10 and below
@@ -640,12 +642,12 @@ Click the link above to go to the documentation where each feature is listed.
 ### Version 0.4.5
 - *Effects* - Added `.offset()` so that you can offset the effect - an optional parameter allows you to offset in local or canvas space 
 - *Animations* - Added `.snapToSquare()`, which causes the given object to be snapped to the square it is moving or teleported towards
-- *Animations* - Fixed `._rotateIn()` and `._rotateOut()` not properly calculating rotation
+- *Animations* - Fixed `.rotateIn()` and `.rotateOut()` not properly calculating rotation
 - *Animations* - Adjusted `.rotateTowards()` to instead consider the target position as the rotation origin, rather than the object's current position
 
 ### Version 0.4.4
 - *Animations* - Added `.animation()` section - animate tokens and tiles! Check out the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Animations) how to use it!
-- *Effects* - Added official support for tiles in `.atLocation()`, `._moveTowards()`, etc
+- *Effects* - Added official support for tiles in `.atLocation()`, `.moveTowards()`, etc
 - *Effects* - Tweaked how effects get locations when dealing with raw template data
 - *Sequencer* - Added `.sequence()` so you can combine multiple sequences into one
 - *Sequencer* - Updated all sample macros to 0.8.x conventions
@@ -656,7 +658,7 @@ Click the link above to go to the documentation where each feature is listed.
 
 ### Version 0.4.2 Hotfix
 - *Effects* - Added `.rotate()` which adds an offset to the effect's rotation
-- *Effects* - Fixed `._moveTowards()` not respecting given easing
+- *Effects* - Fixed `.moveTowards()` not respecting given easing
 
 ### Version 0.4.1
 - *Sequencer* - <img src="images/siren.gif" width="12px" height="12px" alt="Siren"> **Breaking Changes**: Removed deprecated `.then()` method <img src="images/siren.gif" width="12px" height="12px" alt="Siren">
@@ -685,15 +687,15 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Added `.zIndex()` for you to have direct control over the order of effects
 - *Effects & Sounds* - Added `.duration()` which can override the duration of an effect or sound
 - *Effects & Sounds* - Tweaked `.waitUntilFinished()` to accept a single number parameter as a delay or to end the effect or sound earlier - read more in the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki#wait-until-finished)
-- *Sounds* - Added support for `._fadeIn()` and `._fadeOut()` - easing sadly doesn't work for sounds yet
+- *Sounds* - Added support for `.fadeIn()` and `.fadeOut()` - easing sadly doesn't work for sounds yet
 
 ### Version 0.3.10
 - *Sequencer* - Added macro pack containing examples of Sequencer usages
 - *Effects* - Added the following animated functions:
-  - `._scaleIn()`
-  - `._scaleOut()`
-  - `._rotateIn()`
-  - `._rotateOut()`
+  - `.scaleIn()`
+  - `.scaleOut()`
+  - `.rotateIn()`
+  - `.rotateOut()`
   - All of these can utilize any of the easings listed here: https://easings.net/
   - Read the [documentation](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#scale-in) how to use these
 - *Effects* - Added better error reporting when something goes wrong in the sequence
@@ -708,13 +710,13 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Fixed effects that were supposed to be once-off instead looping  
 
 ### Version 0.3.7
-- *Effects* - Added `._moveTowards()` and `.moveSpeed()` for missile-like behavior
+- *Effects* - Added `.moveTowards()` and `.moveSpeed()` for missile-like behavior
 - *Effects* - Tweaked the way the effects layer is applied to the canvas' layers
 - *Effects* - Fixed major issue with the way effects that were using `.missed()` and `.name()` were cached
 - *Sequencer* - Removed stray debug code
 
 ### Version 0.3.6
-- *Effects* - Added `._fadeIn()` and `._fadeOut()` - you can now make your effects look slightly nicer!
+- *Effects* - Added `.fadeIn()` and `.fadeOut()` - you can now make your effects look slightly nicer!
 - *Effects* - Added support for cone and line templates with `.reachTowards()` and `.rotateTowards()` - it now reaches towards the end point of the template
 - *Effects* - Added `.name()` to effects - this will cause the effect's position to be stored and can then be used with `.atLocation()`, `.reachTowards()`, and `.rotateTowards()` to refer to previous effects' locations
     - Example: naming an impact effect with `.name("hit_location")` and making it miss with `.missed()`, and then have a subsequent effect use `.rotateTowards("hit_location")` to rotate towards the previous effect's calculated location
