@@ -336,7 +336,7 @@ export const SelectionManager = {
     },
 
     tearDown() {
-        this._deselectEffect();
+        this._reset();
     },
 
     sourcePointSelected() {
@@ -355,7 +355,7 @@ export const SelectionManager = {
             return this._selectEffects();
         }
         if (!this.hoveredEffects.size) {
-            this._deselectEffect();
+            this._reset();
         }
     },
 
@@ -403,12 +403,8 @@ export const SelectionManager = {
     /**
      * Private methods
      */
-    _deselectEffect() {
-        this._reset();
-    },
-
     _selectEffects() {
-        this._deselectEffect();
+        this._reset();
         if (!this.hoveredEffects.size) return;
         const firstElement = Array.from(this.hoveredEffects)[0];
         this.selectedEffect = !firstElement.selected ? firstElement : false;
@@ -494,6 +490,7 @@ export const SelectionManager = {
         this.suggestedProperties = false;
         this.sourceOrTarget = false;
         this.dragOffset = false;
+        this.hoveredEffects = new Set();
     }
 
 }
