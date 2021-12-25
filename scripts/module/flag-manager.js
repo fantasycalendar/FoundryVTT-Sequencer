@@ -66,9 +66,13 @@ const flagManager = {
             effectData._id = effectData.id;
             effectData.creationTimestamp = effectData.timestamp;
 
-            effectData.gridSize = effectData.template ? effectData.template[0] : 100;
-            effectData.startPoint = effectData.template ? effectData.template[1] : 0;
-            effectData.endPoint = effectData.template ? effectData.template[2] : 0;
+            if(effectData.template){
+                effectData.template = {
+                    gridSize: effectData.template[0],
+                    startPoint: effectData.template[1],
+                    endPoint: effectData.template[2]
+                }
+            }
 
             if(effectData.attachTo) {
                 effectData.attachTo = {
@@ -84,6 +88,13 @@ const flagManager = {
                 }
             }else if(effectData.position){
                 effectData.source = effectData.position;
+            }
+
+            if(effectData.reachTowards){
+                effectData.stretchTo = {
+                    attachTo: false,
+                    onlyX: false
+                }
             }
 
             if(effectData.filters){

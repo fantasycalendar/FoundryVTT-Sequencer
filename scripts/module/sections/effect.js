@@ -26,9 +26,7 @@ export default class EffectSection extends Section {
         this._mirrorX = null;
         this._mirrorY = null;
         this._playbackRate = 1.0;
-        this._gridSize = 100;
-        this._startPoint = 0;
-        this._endPoint = 0;
+        this._template = null;
         this._overrides = [];
         this._name = null;
         this._layer = 2;
@@ -122,7 +120,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
-        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use addOverride instead.")
+        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use .addOverride() instead.")
         if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addPostOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
@@ -196,7 +194,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
-        this.sequence._showWarning(self, "reachTowards", "reachTowards has been deprecated, please use stretchTo instead", false);
+        this.sequence._showWarning(self, "reachTowards", "This method has been deprecated, please use .stretchTo() instead", false);
         return this.stretchTo(inLocation, inOptions);
     }
 
@@ -212,12 +210,14 @@ export default class EffectSection extends Section {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "stretchTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
-            attachTo: false
+            attachTo: false,
+            onlyX: true
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
+        if (typeof inOptions.onlyX !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.onlyX must be of type boolean");
 
         if (inOptions.cacheLocation && inOptions.attachTo){
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
@@ -225,7 +225,8 @@ export default class EffectSection extends Section {
 
         this._stretchTo = {
             target: inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation,
-            attachTo: inOptions.attachTo
+            attachTo: inOptions.attachTo,
+            onlyX: inOptions.onlyX
         };
         return this;
     }
@@ -392,6 +393,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     gridSize(inGridSize) {
+        this.sequence._showWarning(self, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.")
         if (!lib.is_real_number(inGridSize)) throw this.sequence._customError(this, "gridSize", "inGridSize must be of type number");
         this._gridSize = inGridSize;
         return this;
@@ -406,6 +408,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
+        this.sequence._showWarning(self, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
         if (!lib.is_real_number(inStartPoint)) throw this.sequence._customError(this, "startPoint", "inStartPoint must be of type number");
         this._startPoint = inStartPoint;
         return this;
@@ -418,8 +421,29 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
+        this.sequence._showWarning(self, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
         if (!lib.is_real_number(inEndPoint)) throw this.sequence._customError(this, "endPoint", "inEndPoint must be of type number");
         this._endPoint = inEndPoint;
+        return this;
+    }
+
+    /**
+     * This defines the internal padding of this effect. Gridsize determines the internal grid size of this effect which will determine how big it is on the canvas
+     * relative to the canvas's grid size. Start and end point defines padding at the left and right of the effect
+     *
+     * @param gridSize
+     * @param startPoint
+     * @param endPoint
+     * @returns {EffectSection}
+     */
+    template({ gridSize, startPoint, endPoint }={}){
+        if (gridSize && !lib.is_real_number(gridSize)) throw this.sequence._customError(this, "template", "gridSize must be of type number");
+        if (startPoint && !lib.is_real_number(startPoint)) throw this.sequence._customError(this, "template", "startPoint must be of type number");
+        if (endPoint && !lib.is_real_number(endPoint)) throw this.sequence._customError(this, "template", "endPoint must be of type number");
+        this._template = {};
+        if(gridSize) this._template["gridSize"] = gridSize;
+        if(startPoint) this._template["startPoint"] = startPoint;
+        if(endPoint) this._template["endPoint"] = endPoint;
         return this;
     }
 
@@ -881,7 +905,8 @@ export default class EffectSection extends Section {
             target: this._getTargetObject(),
             rotateTowards: this._rotateTowards,
             stretchTo: this._stretchTo ? {
-                attachTo: this._stretchTo.attachTo
+                attachTo: this._stretchTo.attachTo,
+                onlyX: this._stretchTo.onlyX
             } : false,
             moveTowards: this._moveTowards ? {
                 ease: this._moveTowards.ease,
@@ -907,9 +932,7 @@ export default class EffectSection extends Section {
             anchor: this._anchor,
             spriteOffset: this._spriteOffset,
             spriteAnchor: this._spriteAnchor,
-            gridSize: this._gridSize,
-            startPoint: this._startPoint,
-            endPoint: this._endPoint,
+            template: this._template,
             zeroSpriteRotation: this._zeroSpriteRotation,
             randomOffset: this._randomOffset,
             randomRotation: this._randomRotation,

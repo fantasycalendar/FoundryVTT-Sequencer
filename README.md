@@ -281,10 +281,11 @@ Click the link above to go to the documentation where each feature is listed.
 **Breaking changes:**
 - *Sequencer* - Sequencer now requires the `socketlib` module
 - *Sequencer* - All existing persistent effects created using 1.X.X Sequencer will be updated to the 2.0.0 system, but it's nigh impossible to catch all the edge cases, so please report any strangeness!
-- *Effects* - Deprecated and renamed`.reachTowards()` to `.stretchTo()`. Deprecated method will be removed in 2.1.0.
-- *Effects* - Deprecated `.addPostOverride()`, please use `.addOverride()` instead. Deprecated method will be removed in 2.1.0.
-- *Effects* - Removed deprecated method `.JB2A()`
 - *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)
+- *Effects* - Deprecated and renamed`.reachTowards()` to `.stretchTo()`. The deprecated method will be removed in 2.1.0.
+- *Effects* - Deprecated `.addPostOverride()`, please use `.addOverride()` instead. The deprecated method will be removed in 2.1.0.
+- *Effects* - Deprecated `.gridSize()`, `.startPoint()`, and `.endPoint()` in favor for `.template()`. The deprecated methods will be removed in 2.1.0.
+- *Effects* - Removed deprecated method `.JB2A()`
 
 **Tweaks:**
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
@@ -301,7 +302,9 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Added checkbox to Database Viewer to show all ranges of a single effect, which is by default set to false
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
-- *Effects* - At long last, `.stretchTo()` has an option to `attachTo` (boolean) the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
+- *Effects* - Added more secondary options parameters to `.stretchTo()`, which accepts:
+  - At long last, this can now `attachTo` (boolean) to the given target. Combine with `.attachTo()` to link an effect between two tokens!
+  - `onlyX` (boolean), if set to true, this will cause stretchTo to only stretch the X axis of the sprite towards the target (keeping Y at 1.0, or your given scale)
 - *Effects* - Added `keepRatio` (boolean)
 - *Effects* - Added support to `.file()` for an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
 - *Effects* - Added secondary options parameter to `.attachTo()`, which accepts:

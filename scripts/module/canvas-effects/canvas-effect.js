@@ -265,12 +265,25 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     /**
+     * The template of the effect, determining the effect's internal grid size, and start/end padding
+     *
+     * @returns {object}
+     */
+    get template(){
+        return foundry.utils.mergeObject({
+            gridSize: canvas.grid.size,
+            startPoint: 0,
+            endPoint: 0
+        }, this._template ?? {})
+    }
+
+    /**
      * The grid size difference between the internal effect's grid vs the grid on the canvas
      *
      * @returns {number}
      */
     get gridSizeDifference() {
-        return canvas.grid.size / this._gridSize;
+        return canvas.grid.size / this.template.gridSize;
     }
 
     /**
@@ -504,7 +517,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _initializeVariables() {
-        this._gridSize = this.data.gridSize;
+        this._template = this.data.template;
         this.ended = null;
         this.spriteContainer = null;
         this.sprite = null;
@@ -774,7 +787,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         if(this.data.customRange){
 
-            this._file = SequencerFile.make(this.data.file, [this.data.gridSize, this.data.startPoint, this.data.endPoint], "temporary.range.file");
+            this._file = SequencerFile.make(this.data.file, Object.values(this.template), "temporary.range.file");
 
         }else {
 
@@ -817,7 +830,7 @@ export default class CanvasEffect extends PIXI.Container {
             this._texture = texture;
         }
 
-        this._gridSize = this._file.template?.[0] ?? this._gridSize;
+        this._template = this._file.template ?? this._template;
         this.video = this._texture?.baseTexture?.resource?.source ?? false;
 
     }
@@ -929,10 +942,10 @@ export default class CanvasEffect extends PIXI.Container {
         this.rotationContainer = this.addChild(new PIXI.Container());
 
         // Responsible for zeroing out rotation for the sprite if needed
-        this.zeroRotationContainer = this.rotationContainer.addChild(new PIXI.Container());
+        this.offsetContainer = this.rotationContainer.addChild(new PIXI.Container());
 
         // An offset container for the sprite
-        this.spriteContainer = this.zeroRotationContainer.addChild(new PIXI.Container());
+        this.spriteContainer = this.offsetContainer.addChild(new PIXI.Container());
 
         // The sprite itself
         this.sprite = this.spriteContainer.addChild(new PIXI.Sprite());
@@ -1054,17 +1067,28 @@ export default class CanvasEffect extends PIXI.Container {
                 spriteAnchor = result.spriteAnchor ?? this.anchor?.x ?? 0.5;
 
                 scaleX = result.spriteScale;
-                scaleY = result.spriteScale;
+                if(!this.data.stretchTo?.onlyX) {
+                    scaleY = result.spriteScale;
+                }else{
+                    const widthWithPadding = texture.width - (this.template.startPoint + this.template.endPoint);
+                    scaleY = widthWithPadding / texture.width;
+                }
 
             } else if (this._file instanceof PIXI.Texture) {
 
                 texture = this._file;
 
-                spriteAnchor = this.data.startPoint / texture.width;
+                spriteAnchor = this.template.startPoint / texture.width;
 
-                let spriteScale = distance / (texture.width - (this.data.startPoint + this.data.endPoint));
+                const widthWithPadding = texture.width - (this.template.startPoint + this.template.endPoint);
+                let spriteScale = distance / widthWithPadding;
                 scaleX = spriteScale;
-                scaleY = spriteScale;
+
+                if(!this.data.stretchTo?.onlyX) {
+                    scaleY = spriteScale;
+                }else{
+                    scaleY = widthWithPadding / texture.width;
+                }
 
             }
 
@@ -1096,7 +1120,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         let { texture, spriteAnchor, scaleX, scaleY } = await this._getTextureForDistance(ray.distance);
 
-        this.scale.set(
+        this.sprite.scale.set(
             scaleX * this.data.scale.x * this.data.flipX,
             scaleY * this.data.scale.y * this.data.flipY
         )
@@ -1132,12 +1156,6 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.rotationContainer.rotation = Math.normalizeRadians(ray.angle);
 
-        if (!this._isRangeFind && this.data.zeroSpriteRotation) {
-
-            this.zeroRotationContainer.rotation = -this.rotationContainer.rotation;
-
-        }
-
     }
 
     /**
@@ -1146,38 +1164,6 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     async _transformSprite() {
-
-        if(this.data.attachTo){
-
-            this._ticker.add(() => {
-
-                let offset = { x: 0, y: 0 };
-
-                if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
-
-                    offset = canvaslib.align({
-                        context: this.source,
-                        spriteWidth: this.sprite.width,
-                        spriteHeight: this.sprite.height,
-                        align: this.data.attachTo?.align
-                    })
-
-                }
-
-                this.position.set(
-                    this.sourcePosition.x - offset.x,
-                    this.sourcePosition.y - offset.y
-                );
-
-            });
-
-            if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
-                this._ticker.add(() => {
-                    this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
-                });
-            }
-
-        }
 
         if (this.data.stretchTo) {
 
@@ -1189,18 +1175,11 @@ export default class CanvasEffect extends PIXI.Container {
                 });
             }
 
-        }else if (this.data.rotateTowards) {
+        }else {
 
-            this._rotateTowards();
-
-            if (this.data.rotateTowards?.attachTo) {
-                this._ticker.add(() => {
-                    this._rotateTowards();
-                });
+            if (!this.sprite.texture.valid && this._texture?.valid) {
+                this.sprite.texture = this._texture;
             }
-        }
-
-        if (!this.data.stretchTo) {
 
             if (this.data.scaleToObject) {
 
@@ -1266,8 +1245,51 @@ export default class CanvasEffect extends PIXI.Container {
 
         }
 
-        if (!this.sprite.texture.valid && this._texture?.valid) {
-            this.sprite.texture = this._texture;
+        if(this.data.attachTo){
+
+            this._ticker.add(() => {
+
+                let offset = { x: 0, y: 0 };
+
+                if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
+
+                    offset = canvaslib.align({
+                        context: this.source,
+                        spriteWidth: this.sprite.width,
+                        spriteHeight: this.sprite.height,
+                        align: this.data.attachTo?.align
+                    })
+
+                }
+
+                this.position.set(
+                    this.sourcePosition.x - offset.x,
+                    this.sourcePosition.y - offset.y
+                );
+
+            });
+
+            if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
+                this._ticker.add(() => {
+                    this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
+                });
+            }
+
+        }
+
+        if (this.data.rotateTowards) {
+
+            const startPointRatio = (this.template.startPoint / this._texture.width) / 2;
+
+            this.rotationContainer.pivot.set(this.sprite.width * (-0.5 + startPointRatio), 0);
+
+            this._rotateTowards();
+
+            if (this.data.rotateTowards?.attachTo) {
+                this._ticker.add(() => {
+                    this._rotateTowards();
+                });
+            }
         }
 
         if (this.video && (this._startTime || this._loopOffset > 0) && this.video?.currentTime !== undefined) {
