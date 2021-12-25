@@ -278,7 +278,7 @@ export default class SequencerEffectsUI extends FormApplication {
                 default: 0,
                 label: game.i18n.localize("SEQUENCER.Player.Option.MoveSpeed"),
             },
-            "attachTo": {
+            /*"attachTo": {
                 type: "checkbox",
                 default: false,
                 label: game.i18n.localize("SEQUENCER.Player.Option.AttachTo"),
@@ -298,7 +298,7 @@ export default class SequencerEffectsUI extends FormApplication {
                 type: "checkbox",
                 default: false,
                 label: game.i18n.localize("SEQUENCER.Player.Option.Persist")
-            }
+            }*/
         }
     }
 

@@ -257,7 +257,7 @@ export const EffectPlayer = {
             .belowTokens(settings.belowTokens)
             .repeats(settings.repetitions, settings.repeatDelayMin, settings.repeatDelayMax)
             .randomizeMirrorY(settings.randomMirrorY)
-            .persist(settings.persist)
+            //.persist(settings.persist)
 
         const attachToObject = settings.attachTo ? canvaslib.get_closest_token(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
         if(attachToObject){
