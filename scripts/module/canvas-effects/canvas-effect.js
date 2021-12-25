@@ -1064,7 +1064,7 @@ export default class CanvasEffect extends PIXI.Container {
 
                 texture = result.texture;
 
-                spriteAnchor = result.spriteAnchor ?? this.anchor?.x ?? 0.5;
+                spriteAnchor = result.spriteAnchor ?? this.data.anchor?.x ?? 0.5;
 
                 scaleX = result.spriteScale;
                 if(!this.data.stretchTo?.onlyX) {
@@ -1181,6 +1181,15 @@ export default class CanvasEffect extends PIXI.Container {
                 this.sprite.texture = this._texture;
             }
 
+        }
+
+        if (this.video && (this._startTime || this._loopOffset > 0) && this.video?.currentTime !== undefined) {
+            await lib.wait(20)
+            this.sprite.texture.update();
+        }
+
+        if(!this.data.stretchTo){
+
             if (this.data.scaleToObject) {
 
                 let { width, height } = this.target
@@ -1279,10 +1288,6 @@ export default class CanvasEffect extends PIXI.Container {
 
         if (this.data.rotateTowards) {
 
-            const startPointRatio = (this.template.startPoint / this._texture.width) / 2;
-
-            this.rotationContainer.pivot.set(this.sprite.width * (-0.5 + startPointRatio), 0);
-
             this._rotateTowards();
 
             if (this.data.rotateTowards?.attachTo) {
@@ -1290,11 +1295,6 @@ export default class CanvasEffect extends PIXI.Container {
                     this._rotateTowards();
                 });
             }
-        }
-
-        if (this.video && (this._startTime || this._loopOffset > 0) && this.video?.currentTime !== undefined) {
-            await lib.wait(20)
-            this.sprite.texture.update();
         }
 
         if (!this.data.screenSpace) {
@@ -1306,10 +1306,15 @@ export default class CanvasEffect extends PIXI.Container {
 
         }
 
-        this.pivot.set(
-            lib.interpolate(this.sprite.width * -0.5, this.sprite.width * 0.5, this.data.anchor?.x ?? 0.5),
-            lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data.anchor?.y ?? 0.5)
-        );
+        if(!this.data.anchor && this.data.rotateTowards) {
+            const startPointRatio = (this.template.startPoint / this._texture.width) / 2;
+            this.rotationContainer.pivot.set(this.sprite.width * (-0.5 + startPointRatio), 0);
+        }else{
+            this.rotationContainer.pivot.set(
+                lib.interpolate(this.sprite.width * -0.5, this.sprite.width * 0.5, this.data.anchor?.x ?? 0.5),
+                lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data.anchor?.y ?? 0.5)
+            );
+        }
 
     }
 
