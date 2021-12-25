@@ -282,6 +282,7 @@ export default class CanvasEffect extends PIXI.Container {
             game.user.viewedScene === this.data.sceneId &&
             (
                 game.user.isGM ||
+                !this.data.users ||
                 this.data.users.length === 0 ||
                 this.data.users.includes(game.userId) ||
                 this.data.creatorUserId === game.userId
@@ -514,6 +515,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._video = null;
         this._distanceCache = null;
         this._isRangeFind = false;
+        this._hooks = [];
 
         if(this._resetTimeout){
             clearTimeout(this._resetTimeout);
@@ -543,6 +545,8 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _destroyDependencies() {
+
+        this._removeHooks();
 
         this._ticker.stop();
 
@@ -957,6 +961,19 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.renderable = !this.data.animations;
 
+        if(this.data.tiedVisibility && lib.is_UUID(this.data.source)){
+            const hookName = "update" + this.data.source.split('.')[2];
+            this._addHook(hookName, (doc) => {
+                if(doc !== this.source.document) return;
+                this.renderable = this.source.visible;
+                this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+            });
+            this.renderable = this.source.visible;
+            this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+        }else{
+            this.alpha = 1.0;
+        }
+
         this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle));
 
         this.spriteContainer = new PIXI.Container();
@@ -993,6 +1010,18 @@ export default class CanvasEffect extends PIXI.Container {
         this.ui.zIndex = 10;
         this.addChild(this.ui);
 
+    }
+
+    _addHook(hookName, hookCallable){
+        const id = Hooks.on(hookName, hookCallable.bind(this));
+        this._hooks.push([hookName, id]);
+    }
+
+    _removeHooks(){
+        this._hooks.forEach(hookData => {
+            Hooks.off(hookData[0], hookData[1]);
+        })
+        this._hooks = [];
     }
 
     /**

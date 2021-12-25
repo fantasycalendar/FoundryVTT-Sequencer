@@ -48,6 +48,7 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
+        this._tiedVisibility = null;
     }
 
     /**
@@ -158,7 +159,8 @@ export default class EffectSection extends Section {
      */
     attachTo(inObject, inOptions) {
         inOptions = foundry.utils.mergeObject({
-            align: "center"
+            align: "center",
+            tiedVisibility: false
         }, inOptions);
 
         let validatedObject = this._validateLocation(inObject);
@@ -176,10 +178,12 @@ export default class EffectSection extends Section {
         if(typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)){
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
+        if(typeof inOptions.tiedVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.tiedVisibility must be of type boolean`);
 
         this._source = validatedObject;
         this._attachTo = isValidObject;
         this._align = inOptions.align;
+        this._tiedVisibility = inOptions.tiedVisibility;
         if(!validatedObject?.id) this.locally();
         return this;
     }
@@ -910,6 +914,7 @@ export default class EffectSection extends Section {
 
             // Appearance
             zIndex: this._zIndex,
+            tiedVisibility: this._tiedVisibility,
             opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
             filters: this._filters,
             layer: this._layer,
