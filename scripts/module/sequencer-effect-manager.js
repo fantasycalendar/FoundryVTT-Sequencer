@@ -333,12 +333,12 @@ export default class SequencerEffectManager {
                 .then((result) => {
                     if (!result){
                         lib.debug("Error playing effect")
-                        flagManager.removeFlags(inDocument.uuid, effect);
+                        //flagManager.removeFlags(inDocument.uuid, effect);
                     }
                 })
                 .catch((err) => {
                     lib.debug("Error playing effect:", err)
-                    flagManager.removeFlags(inDocument.uuid, effect)
+                    //flagManager.removeFlags(inDocument.uuid, effect)
                 });
         }));
     }

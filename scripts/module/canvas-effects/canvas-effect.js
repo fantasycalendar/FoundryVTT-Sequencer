@@ -473,7 +473,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._playCustomAnimations();
         this._playPresetAnimations();
         this._setEndTimeout();
-        this._timeoutSpriteVisibility();
+        this._timeoutVisibility();
         if (play) canvaslib.try_to_play_video(this.video);
         if (this.data.attachTo) {
             this._contextLostCallback();
@@ -894,9 +894,9 @@ export default class CanvasEffect extends PIXI.Container {
      *
      * @private
      */
-    _timeoutSpriteVisibility() {
+    _timeoutVisibility() {
         setTimeout(() => {
-            this.renderable = true;
+            this._determineVisibility();
         }, this.data.animations ? 50 : 0);
     }
 
@@ -959,26 +959,13 @@ export default class CanvasEffect extends PIXI.Container {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
-        this.renderable = !this.data.animations;
-
-        if(this.data.tiedVisibility && lib.is_UUID(this.data.source)){
-            const hookName = "update" + this.data.source.split('.')[2];
-            this._addHook(hookName, (doc) => {
-                if(doc !== this.source.document) return;
-                this.renderable = this.source.visible;
-                this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-            });
-            this.renderable = this.source.visible;
-            this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-        }else{
-            this.alpha = 1.0;
-        }
-
         this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle));
 
         this.spriteContainer = new PIXI.Container();
         this.spriteContainer.sortableChildren = true;
         this.spriteContainer.addChild(this.sprite);
+
+        this.renderable = false;
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
@@ -1009,6 +996,24 @@ export default class CanvasEffect extends PIXI.Container {
         this.ui = new PIXI.Container();
         this.ui.zIndex = 10;
         this.addChild(this.ui);
+
+    }
+
+    _determineVisibility(){
+
+        if(this.data.tiedVisibility && lib.is_UUID(this.data.source)){
+            const hookName = "update" + this.data.source.split('.')[2];
+            this._addHook(hookName, (doc) => {
+                if(doc !== this.source.document) return;
+                this.renderable = this.source.visible;
+                this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+            });
+            this.renderable = this.source.visible;
+            this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+        }else{
+            this.renderable = true;
+            this.alpha = 1.0;
+        }
 
     }
 
@@ -1780,11 +1785,11 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 
     /** @OVERRIDE */
-    _timeoutSpriteVisibility() {
+    _timeoutVisibility() {
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
         let timeout = (creationTimeDifference === 0 && !this.data.animations) ? 0 : 50;
         setTimeout(() => {
-            this.renderable = true;
+            this._determineVisibility();
         }, timeout);
     }
 
