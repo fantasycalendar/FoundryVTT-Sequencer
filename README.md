@@ -295,7 +295,8 @@ Click the link above to go to the documentation where each feature is listed.
 **Additions:**
 - *Sequencer* - Added selection tool to the Effect Layer - select, move, reattach, and delete effects on the canvas!
 - *Sequencer* - Added `updateEffects` to the Effect Manager's API
-- *Sequencer* - Added support to `.macro()`s to be able to supply additional arguments by leveraging the advanced-macros module
+- *Sequencer* - Added `updateSequencerEffect` hook
+- *Sequencer* - Added support to `.macro()`s to be able to supply additional arguments (requires the Advanced Macros module)
 - *Sequencer* - Added wildcard support when filtering for named effects in the Effect Manager's API (such as `getEffects`, `endEffects`, etc)
 - *Sequencer* - Added support to filter for `source` and `target` in the Effect Manager's API (such as `getEffects`, `endEffects`, etc)
 - *Sequencer* - Added "private" boolean flag to `Sequencer.Database.registerEntries()` which causes the entries to not be visible in the Database Viewer and Effect Player
