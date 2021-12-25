@@ -25,12 +25,12 @@ export default class EffectSection extends Section {
         this._randomMirrorY = null;
         this._mirrorX = null;
         this._mirrorY = null;
-        this._playbackRate = 1.0;
+        this._playbackRate = null;
         this._template = null;
         this._overrides = [];
         this._name = null;
         this._layer = 2;
-        this._zIndex = 0;
+        this._zIndex = null;
         this._offset = null;
         this._spriteOffset = null;
         this._size = null;
@@ -820,17 +820,22 @@ export default class EffectSection extends Section {
      * @private
      */
     async _initialize() {
-        if(this._name && !this.sequence.nameOffsetMap[this._name]){
-            this.sequence.nameOffsetMap[this._name] = {
-                seed: `${this._name}-${randomID()}`,
-                source: this._getSourceObject(),
-                target: this._getTargetObject(),
-                randomOffset: this._randomOffset,
-                missed: this._missed,
-                offset: this._offset,
-                repetitions: this._repetitions,
-                twister: {}
-            };
+        if(this._name){
+            if(!this.sequence.nameOffsetMap){
+                this.sequence.nameOffsetMap = {};
+            }
+            if(!this.sequence.nameOffsetMap[this._name]){
+                this.sequence.nameOffsetMap[this._name] = {
+                    seed: `${this._name}-${randomID()}`,
+                    source: this._getSourceObject(),
+                    target: this._getTargetObject(),
+                    randomOffset: this._randomOffset,
+                    missed: this._missed,
+                    offset: this._offset,
+                    repetitions: this._repetitions,
+                    twister: {}
+                };
+            }
         }
     }
 
@@ -945,8 +950,8 @@ export default class EffectSection extends Section {
             layer: this._layer,
             noLoop: this._noLoop,
             tint: this._tint?.decimal,
-            flipX: this._mirrorX || (this._randomMirrorX && Math.random() < 0.5) ? -1 : 1,
-            flipY: this._mirrorY || (this._randomMirrorY && Math.random() < 0.5) ? -1 : 1,
+            flipX: (this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)),
+            flipY: (this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)),
 
             /**
              * Time properties
@@ -1000,6 +1005,9 @@ export default class EffectSection extends Section {
         if ((typeof data.file !== "string" || data.file === "") && !data.text && !data.customRange) {
             throw this.sequence._customError(this, "file", "an effect must have a file or have text configured!");
         }
+
+        // TODO: Revisit this at some point?
+        // data = Object.fromEntries(Object.entries(data).filter(entry => entry[1] !== null && entry[1] !== false));
 
         return data;
 

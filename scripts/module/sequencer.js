@@ -7,11 +7,11 @@ import Section from "./sections/section.js";
 
 export default class Sequence {
 
-    constructor(moduleName="Sequencer") {
+    constructor(moduleName = "Sequencer") {
         this.id = randomID();
         this.moduleName = moduleName;
         this.sections = [];
-        this.nameOffsetMap = {};
+        this.nameOffsetMap = false;
         this.effectIndex = 0;
         this.sectionToCreate = undefined;
         return lib.sequence_proxy_wrap(this);

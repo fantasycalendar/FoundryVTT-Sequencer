@@ -224,8 +224,9 @@ export default class CanvasEffect extends PIXI.Container {
         // And if the effect is going to be played for a subset of users
         // And the users does not contain this user
         return game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") !== 0
-            && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId))
+            && this.data.users
             && this.data.users.length
+            && !(this.data.users.length === 1 && this.data.users.includes(this.data.creatorUserId))
             && !this.data.users.includes(game.userId);
     }
 
@@ -284,6 +285,19 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get gridSizeDifference() {
         return canvas.grid.size / this.template.gridSize;
+    }
+
+    /**
+     * Whether the effect should be flipped on any given axis
+     *
+     * @returns {number}
+     */
+    get flipX(){
+        return this.data.flipX ? -1 : 1;
+    }
+
+    get flipY(){
+        return this.data.flipY ? -1 : 1;
     }
 
     /**
@@ -544,7 +558,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._targetPosition = false;
         this._targetOffset = false;
 
-        this._nameOffsetMap = Object.fromEntries(Object.entries(foundry.utils.duplicate(this.data.nameOffsetMap)).map(entry => {
+        this._nameOffsetMap = Object.fromEntries(Object.entries(foundry.utils.duplicate(this.data.nameOffsetMap ?? {})).map(entry => {
             return [entry[0], this._setupOffsetMap(entry[1])];
         }));
 
@@ -846,7 +860,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         // If the effect moves, then infer the duration from the distance divided by the speed
         if (this.data.moveSpeed && this.data.moves) {
-            let durationFromSpeed = (this.data.distance / this.data.moveSpeed) * 1000;
+            let distance = canvaslib.distance_between(this.sourcePosition, this.targetPosition);
+            let durationFromSpeed = (distance / this.data.moveSpeed) * 1000;
             this._animationDuration = Math.max(durationFromSpeed, this.data.duration);
         } else if (!this.data.duration && !this.video) {
 
@@ -856,7 +871,8 @@ export default class CanvasEffect extends PIXI.Container {
             let rotateDuration = (this.data.rotateIn?.duration ?? 0) + (this.data.rotateOut?.duration ?? 0);
             let moveDuration = 0;
             if (this.data.moves) {
-                moveDuration = (this.data.moveSpeed ? (this.data.distance / this.data.moveSpeed) * 1000 : 1000) + this.data.moves.delay;
+                let distance = canvaslib.distance_between(this.sourcePosition, this.targetPosition);
+                moveDuration = (this.data.moveSpeed ? (distance / this.data.moveSpeed) * 1000 : 1000) + this.data.moves.delay;
             }
 
             let animationDurations = this.data.animations ? Math.max(...this.data.animations.map(animation => {
@@ -966,11 +982,13 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.sprite.filters = [];
 
-        for (let filterData of (this.data.filters || [])) {
-            const filter = new filters[filterData.className](filterData.data);
-            this.sprite.filters.push(filter);
-            const filterKeyName = filterData.name || filterData.className;
-            this.filters[filterKeyName] = filter;
+        if(this.data.filters) {
+            for (let filterData of this.data.filters) {
+                const filter = new filters[filterData.className](filterData.data);
+                this.sprite.filters.push(filter);
+                const filterKeyName = filterData.name || filterData.className;
+                this.filters[filterKeyName] = filter;
+            }
         }
 
         this.alphaFilter = new PIXI.filters.AlphaFilter(this.data.opacity);
@@ -986,7 +1004,7 @@ export default class CanvasEffect extends PIXI.Container {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
-        this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle));
+        this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle ?? 0));
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
@@ -1059,7 +1077,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this._file instanceof SequencerFile) {
 
-                const scaledDistance = distance / this.data.scale.x;
+                const scaledDistance = distance / (this.data.scale.x ?? 1.0);
                 const result = await this._file.getTexture(scaledDistance);
 
                 texture = result.texture;
@@ -1121,12 +1139,12 @@ export default class CanvasEffect extends PIXI.Container {
         let { texture, spriteAnchor, scaleX, scaleY } = await this._getTextureForDistance(ray.distance);
 
         this.sprite.scale.set(
-            scaleX * this.data.scale.x * this.data.flipX,
-            scaleY * this.data.scale.y * this.data.flipY
+            scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
+            scaleY * (this.data.scale.y ?? 1.0) * this.flipY
         )
 
         this.sprite.anchor.set(
-            this.data.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
+            this.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
             (this.data.anchor?.y ?? 0.5)
         )
 
@@ -1149,8 +1167,8 @@ export default class CanvasEffect extends PIXI.Container {
     _rotateTowards(ray) {
 
         if (!ray) {
-            const sourcePosition = this.data.flipX === 1 ? this.sourcePosition : this.targetPosition;
-            const targetPosition = this.data.flipX === 1 ? this.targetPosition : this.sourcePosition;
+            const sourcePosition = this.flipX === 1 ? this.sourcePosition : this.targetPosition;
+            const targetPosition = this.flipX === 1 ? this.targetPosition : this.sourcePosition;
             ray = new Ray(sourcePosition, targetPosition);
         }
 
@@ -1196,11 +1214,11 @@ export default class CanvasEffect extends PIXI.Container {
                     ? canvaslib.get_object_dimensions(this.target)
                     : canvaslib.get_object_dimensions(this.source);
 
-                this.sprite.width = width * this.data.scale.x;
-                this.sprite.height = height * this.data.scale.y;
+                this.sprite.width = width * (this.data.scale.x ?? 1.0);
+                this.sprite.height = height * (this.data.scale.y ?? 1.0);
 
-                this.sprite.scale.x *= this.data.flipX;
-                this.sprite.scale.y *= this.data.flipY;
+                this.sprite.scale.x *= this.flipX;
+                this.sprite.scale.y *= this.flipY;
 
             } else if (this.data.size) {
 
@@ -1232,17 +1250,17 @@ export default class CanvasEffect extends PIXI.Container {
                     width *= canvas.grid.size;
                 }
 
-                this.sprite.width = (width * this.data.scale.x);
-                this.sprite.height = (height * this.data.scale.y);
+                this.sprite.width = width * (this.data.scale.x ?? 1.0);
+                this.sprite.height = height * (this.data.scale.y ?? 1.0);
 
-                this.sprite.scale.x *= this.data.flipX;
-                this.sprite.scale.y *= this.data.flipY;
+                this.sprite.scale.x *= this.flipX;
+                this.sprite.scale.y *= this.flipY;
 
             } else {
 
                 this.sprite.scale.set(
-                    (this.data.scale?.x ?? 1.0) * this.data.flipX,
-                    (this.data.scale?.y ?? 1.0) * this.data.flipY
+                    (this.data.scale?.x ?? 1.0) * this.flipX,
+                    (this.data.scale?.y ?? 1.0) * this.flipY
                 );
 
             }
@@ -1284,6 +1302,17 @@ export default class CanvasEffect extends PIXI.Container {
                 });
             }
 
+        }else{
+
+            if (!this.data.screenSpace) {
+
+                this.position.set(
+                    this.sourcePosition.x,
+                    this.sourcePosition.y
+                );
+
+            }
+
         }
 
         if (this.data.rotateTowards) {
@@ -1295,15 +1324,6 @@ export default class CanvasEffect extends PIXI.Container {
                     this._rotateTowards();
                 });
             }
-        }
-
-        if (!this.data.screenSpace) {
-
-            this.position.set(
-                this.sourcePosition.x,
-                this.sourcePosition.y
-            );
-
         }
 
         if(!this.data.anchor && this.data.rotateTowards) {
@@ -1511,11 +1531,11 @@ export default class CanvasEffect extends PIXI.Container {
         };
 
         if (lib.is_real_number(property.value)) {
-            scale.x *= property.value * this.gridSizeDifference * this.data.flipX;
-            scale.y *= property.value * this.gridSizeDifference * this.data.flipY;
+            scale.x *= property.value * this.gridSizeDifference * this.flipX;
+            scale.y *= property.value * this.gridSizeDifference * this.flipY;
         } else {
-            scale.x *= property.value.x * this.gridSizeDifference * this.data.flipX;
-            scale.y *= property.value.y * this.gridSizeDifference * this.data.flipY;
+            scale.x *= property.value.x * this.gridSizeDifference * this.flipX;
+            scale.y *= property.value.y * this.gridSizeDifference * this.flipY;
         }
 
         return scale;
@@ -1674,7 +1694,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         let movementDuration = this._animationDuration;
         if (this.data.moveSpeed) {
-            movementDuration = (this.data.distance / this.data.moveSpeed) * 1000;
+            const distance = canvaslib.distance_between(this.sourcePosition, this.targetPosition);
+            movementDuration = (distance / this.data.moveSpeed) * 1000;
         }
 
         if (this.data.moves.rotate) this._rotateTowards();
