@@ -306,7 +306,6 @@ Click the link above to go to the documentation where each feature is listed.
 - *Effects* - Added more secondary options parameters to `.stretchTo()`, which accepts:
   - At long last, this can now `attachTo` (boolean) to the given target. Combine with `.attachTo()` to link an effect between two tokens!
   - `onlyX` (boolean), if set to true, this will cause stretchTo to only stretch the X axis of the sprite towards the target (keeping Y at 1.0, or your given scale)
-- *Effects* - Added `keepRatio` (boolean)
 - *Effects* - Added support to `.file()` for an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
 - *Effects* - Added secondary options parameter to `.attachTo()`, which accepts:
   - `align` (string), accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
@@ -317,16 +316,16 @@ Click the link above to go to the documentation where each feature is listed.
 
 **Fixes:**
 - *Sequencer* - Fixed module permissions settings being slightly wonky
-- *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
-- *Animations* - Fixed users not being able to teleport or move tokens they do not own
-- *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
-- *Animations* - Fixed `.delay()` not being respected
-- *Effects* - Fixed memory leak where effect textures were not properly destroyed
-- *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
-- *Effects* - Fixed `.from()` not taking mirror x/y into account on tokens
-- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners of the token, GMs, etc)
-- *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
-- *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
+  - *Sequencer* - Fixed number inputs not throwing errors on `NaN` values 
+  - *Animations* - Fixed users not being able to teleport or move tokens they do not own
+  - *Animations* - Fixed `.moveSpeed()` not affecting the duration of the animation
+  - *Animations* - Fixed `.delay()` not being respected
+  - *Effects* - Fixed memory leak where effect textures were not properly destroyed
+  - *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
+  - *Effects* - Fixed `.from()` not taking mirror x/y into account on tokens
+  - *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners of the token, GMs, etc)
+  - *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
+  - *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
 
 ### Version 1.3.5
 - *Sequencer* - Fixed Permissions being broken in the latest Foundry update, and moved Sequencer specific permissions into module settings instead
