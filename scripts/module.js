@@ -85,7 +85,6 @@ function initialize_module(){
 
 
     Hooks.once("socketlib.ready", () => {
-        if(game.modules.get("socketlib")?.active) return;
         registerSocket();
     })
 
