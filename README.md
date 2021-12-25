@@ -282,9 +282,9 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Sequencer now requires the `socketlib` module
 - *Sequencer* - All existing persistent effects created using 1.X.X Sequencer will be updated to the 2.0.0 system, but it's nigh impossible to catch all the edge cases, so please report any strangeness!
 - *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)
-- *Effects* - Deprecated and renamed`.reachTowards()` to `.stretchTo()`. The deprecated method will be removed in 2.1.0.
+- *Effects* - Deprecated `.reachTowards()` and renamed it to `.stretchTo()`. The deprecated method will be removed in 2.1.0.
 - *Effects* - Deprecated `.addPostOverride()`, please use `.addOverride()` instead. The deprecated method will be removed in 2.1.0.
-- *Effects* - Deprecated `.gridSize()`, `.startPoint()`, and `.endPoint()` in favor for `.template()`. The deprecated methods will be removed in 2.1.0.
+- *Effects* - Deprecated `.gridSize()`, `.startPoint()`, and `.endPoint()` in favor for `.template({ gridSize, startPoint, endPoint })`. The deprecated methods will be removed in 2.1.0.
 - *Effects* - Removed deprecated method `.JB2A()`
 
 **Tweaks:**
