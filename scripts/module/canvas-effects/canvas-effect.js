@@ -1001,7 +1001,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     _determineVisibility(){
 
-        if(this.data.tiedVisibility && lib.is_UUID(this.data.source)){
+        if(this.data.bindVisibility && lib.is_UUID(this.data.source)){
             const hookName = "update" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if(doc !== this.source.document) return;
@@ -1017,8 +1017,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
-    _addHook(hookName, hookCallable){
-        const id = Hooks.on(hookName, hookCallable.bind(this));
+    _addHook(hookName, callable){
+        const id = Hooks.on(hookName, callable.bind(this));
         this._hooks.push([hookName, id]);
     }
 

@@ -31,7 +31,6 @@ export default class EffectSection extends Section {
         this._startPoint = 0;
         this._endPoint = 0;
         this._overrides = [];
-        this._postOverrides = [];
         this._name = null;
         this._layer = 2;
         this._zIndex = 0;
@@ -48,7 +47,7 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
-        this._tiedVisibility = null;
+        this._bindVisibility = null;
     }
 
     /**
@@ -125,8 +124,9 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
+        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use addOverride instead.")
         if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addPostOverride", "The given function needs to be an actual function.");
-        this._postOverrides.push(inFunc);
+        this._overrides.push(inFunc);
         return this;
     }
 
@@ -139,6 +139,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     atLocation(inLocation, inOptions = {}) {
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "atLocation", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false
         }, inOptions)
@@ -157,20 +158,21 @@ export default class EffectSection extends Section {
      * @param {object} inOptions
      * @returns {EffectSection}
      */
-    attachTo(inObject, inOptions) {
+    attachTo(inObject, inOptions={}) {
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             align: "center",
-            tiedVisibility: false
+            bindVisibility: true
         }, inOptions);
 
-        let validatedObject = this._validateLocation(inObject);
+        const validatedObject = this._validateLocation(inObject);
         if (validatedObject === undefined) throw this.sequence._customError(this, "attachTo", "could not find given object");
 
         let isValidObject = true;
         if(typeof inObject === "string"){
             isValidObject = validatedObject instanceof Token || validatedObject instanceof Tile || validatedObject instanceof Drawing || validatedObject instanceof MeasuredTemplate || validatedObject instanceof CanvasEffect;
             if (!isValidObject){
-                this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, and Drawings may have attached effects - will play effect on target's location");
+                this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, Drawings, and MeasuredTemplates may have attached effects - will play effect on target's location");
             }
         }
 
@@ -178,12 +180,12 @@ export default class EffectSection extends Section {
         if(typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)){
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
-        if(typeof inOptions.tiedVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.tiedVisibility must be of type boolean`);
+        if(typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
 
         this._source = validatedObject;
         this._attachTo = isValidObject;
         this._align = inOptions.align;
-        this._tiedVisibility = inOptions.tiedVisibility;
+        this._bindVisibility = inOptions.bindVisibility;
         if(!validatedObject?.id) this.locally();
         return this;
     }
@@ -209,6 +211,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     stretchTo(inLocation, inOptions) {
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "stretchTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
             attachTo: false
@@ -238,6 +241,7 @@ export default class EffectSection extends Section {
      */
     from(inObject, inOptions = {}){
         inObject = inObject instanceof foundry.abstract.Document ? inObject.object : inObject;
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "from", `inOptions must be of type object`);
         if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._customError(this, "from", "inObject must be of type Token or Tile");
         if(!inObject?.data?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({
@@ -686,6 +690,8 @@ export default class EffectSection extends Section {
      */
     screenSpaceScale(inOptions) {
 
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "screenSpaceScale", `inOptions must be of type object`);
+
         inOptions = foundry.utils.mergeObject({
             x: 1.0,
             y: 1.0,
@@ -914,7 +920,7 @@ export default class EffectSection extends Section {
 
             // Appearance
             zIndex: this._zIndex,
-            tiedVisibility: this._tiedVisibility,
+            bindVisibility: this._bindVisibility,
             opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
             filters: this._filters,
             layer: this._layer,

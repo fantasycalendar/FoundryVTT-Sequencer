@@ -281,17 +281,18 @@ Click the link above to go to the documentation where each feature is listed.
 **Breaking changes:**
 - *Sequencer* - Sequencer now requires the `socketlib` module
 - *Sequencer* - All existing persistent effects created using 1.X.X Sequencer will be updated to the 2.0.0 system, but it's nigh impossible to catch all the edge cases, so please report any strangeness!
-- *Effects* - Renamed `.reachTowards()` to `.stretchTo()`, will remove `.reachTowards()` implementation in future version
+- *Effects* - Deprecated and renamed`.reachTowards()` to `.stretchTo()`. Deprecated method will be removed in 2.1.0.
+- *Effects* - Deprecated `.addPostOverride()`, please use `.addOverride()` instead. Deprecated method will be removed in 2.1.0.
 - *Effects* - Removed deprecated method `.JB2A()`
 - *Effects* - Removed support for audio methods on effects (hardly used and caused a whole host of problems)
 
 **Tweaks:**
 - *Sounds & Effects* - Tweaked `.forUsers()` to also accept player names (case-sensitive) instead of just IDs
-- *Effects* - Tweaked effect layering 
+- *Effects* - Tweaked attached effects' layer handling - effects can now be attached but exist below _all_ Tokens, for example
 - *Effects* - Tweaked `.filter()` to allow being called multiple times, which now layers the filters in the order they were created
 
 **Additions:**
-- *Sequencer* - Added selection tool to the Effect Layer - select, move, rotate, reattach, and delete effects on the canvas!
+- *Sequencer* - Added selection tool to the Effect Layer - select, move, reattach, and delete effects on the canvas!
 - *Sequencer* - Added `updateEffects` to the Effect Manager's API
 - *Sequencer* - Added support to `.macro()`s to be able to supply additional arguments by leveraging the advanced-macros module
 - *Sequencer* - Added wildcard support when filtering for named effects in the Effect Manager's API (such as `getEffects`, `endEffects`, etc)
@@ -300,11 +301,13 @@ Click the link above to go to the documentation where each feature is listed.
 - *Sequencer* - Added checkbox to Database Viewer to show all ranges of a single effect, which is by default set to false
 - *Sequencer* - Added `Sequencer.Helpers`, a library of useful methods - check them out on the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Helper-Functions
 - *Animations* - Added `.hide()` and `.show()` to hide or show the animated object
-- *Effects* - At long last, `.stretchTo()` has a secondary flag to `attachTo` the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
+- *Effects* - At long last, `.stretchTo()` has an option to `attachTo` (boolean) the given location or target. Combine with `.attachTo()` to link an effect between two tokens!
+- *Effects* - Added `keepRatio` (boolean)
 - *Effects* - Added support to `.file()` for an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
-- *Effects* - Added `align` as a secondary option to `.attachTo()`, accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
-- *Effects* - Added `tiedVisibility` as a secondary option to `.attachTo()`, if set to true, it will cause the effect to only be visible if the token is visible on each player's client
-- *Effects* - Added options parameter to `.size()` which allows for `{ gridUnits: true }` - this makes the size given to the method scale to the scene's grid, instead of setting the exact width and height
+- *Effects* - Added secondary options parameter to `.attachTo()`, which accepts:
+  - `align` (string), accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
+  - `bindVisibility` (boolean), if set to true, it will cause the effect to only be visible if the token is visible on each player's client
+- *Effects* - Added options to `.size()` which allows for `{ gridUnits: true }` - this makes the size given to the method scale to the scene's grid, instead of setting the exact width and height
 - *Effects* - Added the same option as above to `.animateProperty()` and `.loopProperty()`, which only works if you animate the `width` or `height`
 
 **Fixes:**
