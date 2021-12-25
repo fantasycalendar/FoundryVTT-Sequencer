@@ -71,7 +71,11 @@ const flagManager = {
             effectData.endPoint = effectData.template ? effectData.template[2] : 0;
 
             if(effectData.attachTo) {
-                effectData.attachTo = true;
+                effectData.attachTo = {
+                    align: "center",
+                    rotation: true,
+                    bindVisibility: true
+                };
                 effectData.source = inDocument.uuid;
                 const objectSize = canvaslib.get_object_dimensions(inDocument, true);
                 effectData.offset = {

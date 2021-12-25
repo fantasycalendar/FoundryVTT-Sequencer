@@ -13,6 +13,8 @@ export default class CanvasEffect extends PIXI.Container {
     constructor(inData) {
         super();
 
+        this.sortableChildren = true;
+
         // Set default values
         this.actualCreationTime = (+new Date())
         this.data = inData;
@@ -921,6 +923,20 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _createSprite() {
 
+        this.renderable = false;
+
+        // Responsible for rotating the sprite
+        this.rotationContainer = this.addChild(new PIXI.Container());
+
+        // Responsible for zeroing out rotation for the sprite if needed
+        this.zeroRotationContainer = this.rotationContainer.addChild(new PIXI.Container());
+
+        // An offset container for the sprite
+        this.spriteContainer = this.zeroRotationContainer.addChild(new PIXI.Container());
+
+        // The sprite itself
+        this.sprite = this.spriteContainer.addChild(new PIXI.Sprite());
+
         this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
 
         if (this.data.text) {
@@ -931,11 +947,9 @@ export default class CanvasEffect extends PIXI.Container {
 
             this.text = new PIXI.Text(text, fontSettings);
             this.text.resolution = 10;
+            this.text.zIndex = 1;
 
         }
-
-        this.sprite = new PIXI.Sprite();
-        this.sprite.zIndex = 0;
 
         this.sprite.filters = [];
 
@@ -961,12 +975,6 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle));
 
-        this.spriteContainer = new PIXI.Container();
-        this.spriteContainer.sortableChildren = true;
-        this.spriteContainer.addChild(this.sprite);
-
-        this.renderable = false;
-
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
         }
@@ -986,22 +994,11 @@ export default class CanvasEffect extends PIXI.Container {
             ];
         }
 
-        this.sortableChildren = true;
-
-        this.zeroRotationContainer = new PIXI.Container();
-        this.zeroRotationContainer.addChild(this.spriteContainer);
-        this.zeroRotationContainer.zIndex = 1;
-        this.addChild(this.zeroRotationContainer);
-
-        this.ui = new PIXI.Container();
-        this.ui.zIndex = 10;
-        this.addChild(this.ui);
-
     }
 
     _determineVisibility(){
 
-        if(this.data.bindVisibility && lib.is_UUID(this.data.source)){
+        if(this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)){
             const hookName = "update" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if(doc !== this.source.document) return;
@@ -1125,7 +1122,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @param ray
      * @private
      */
-    _rotateTowards(ray = false) {
+    _rotateTowards(ray) {
 
         if (!ray) {
             const sourcePosition = this.data.flipX === 1 ? this.sourcePosition : this.targetPosition;
@@ -1133,13 +1130,11 @@ export default class CanvasEffect extends PIXI.Container {
             ray = new Ray(sourcePosition, targetPosition);
         }
 
-        const angle = Math.normalizeRadians(ray.angle)
-
-        this.rotation = angle;
+        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle);
 
         if (!this._isRangeFind && this.data.zeroSpriteRotation) {
 
-            this.zeroRotationContainer.rotation = -angle;
+            this.zeroRotationContainer.rotation = -this.rotationContainer.rotation;
 
         }
 
@@ -1152,29 +1147,55 @@ export default class CanvasEffect extends PIXI.Container {
      */
     async _transformSprite() {
 
+        if(this.data.attachTo){
+
+            this._ticker.add(() => {
+
+                let offset = { x: 0, y: 0 };
+
+                if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
+
+                    offset = canvaslib.align({
+                        context: this.source,
+                        spriteWidth: this.sprite.width,
+                        spriteHeight: this.sprite.height,
+                        align: this.data.attachTo?.align
+                    })
+
+                }
+
+                this.position.set(
+                    this.sourcePosition.x - offset.x,
+                    this.sourcePosition.y - offset.y
+                );
+
+            });
+
+            if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
+                this._ticker.add(() => {
+                    this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
+                });
+            }
+
+        }
+
         if (this.data.stretchTo) {
 
             await this._applyDistanceScaling();
 
             if (this.data.stretchTo?.attachTo) {
                 this._ticker.add(async () => {
-                    try {
-                        await this._applyDistanceScaling();
-                    } catch (err) {
-                        ticker.destroy();
-                    }
+                    await this._applyDistanceScaling();
                 });
             }
 
-        } else if (this.data._rotateTowards) {
+        }else if (this.data.rotateTowards) {
+
             this._rotateTowards();
-            if (this.data._rotateTowards?.attachTo) {
-                this._ticker.add(async () => {
-                    try {
-                        await this._rotateTowards();
-                    } catch (err) {
-                        ticker.destroy();
-                    }
+
+            if (this.data.rotateTowards?.attachTo) {
+                this._ticker.add(() => {
+                    this._rotateTowards();
                 });
             }
         }
@@ -1254,30 +1275,7 @@ export default class CanvasEffect extends PIXI.Container {
             this.sprite.texture.update();
         }
 
-        if (this.data.attachTo) {
-
-            this._ticker.add(() => {
-
-                let offset = { x: 0, y: 0 };
-
-                if (this.data.align && this.data.align !== "center") {
-
-                    offset = canvaslib.align({
-                        context: this.source,
-                        spriteWidth: this.sprite.width,
-                        spriteHeight: this.sprite.height,
-                        align: this.data.align
-                    })
-
-                }
-
-                this.position.set(
-                    this.sourcePosition.x - offset.x,
-                    this.sourcePosition.y - offset.y
-                );
-            });
-
-        } else if (!this.data.screenSpace) {
+        if (!this.data.screenSpace) {
 
             this.position.set(
                 this.sourcePosition.x,
@@ -1303,7 +1301,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _counterAnimateRotation(animation) {
 
-        if (animation.target === this.spriteContainer) {
+        if (animation.target === this.spriteContainer && this.data.zeroSpriteRotation) {
             delete animation.target;
             let counterAnimation = foundry.utils.duplicate(animation);
             animation.target = this.spriteContainer;
@@ -1481,8 +1479,8 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _determineScale(property) {
         let scale = {
-            x: this.sprite.scale.x * this.data.flipX,
-            y: this.sprite.scale.y * this.data.flipY
+            x: this.sprite.scale.x,
+            y: this.sprite.scale.y
         };
 
         if (lib.is_real_number(property.value)) {

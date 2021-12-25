@@ -16,7 +16,6 @@ export default class EffectSection extends Section {
         this._source = null;
         this._stretchTo = null;
         this._attachTo = null;
-        this._align = null;
         this._origin = null;
         this._anchor = null;
         this._spriteAnchor = null;
@@ -47,7 +46,6 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
-        this._bindVisibility = null;
     }
 
     /**
@@ -162,7 +160,8 @@ export default class EffectSection extends Section {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             align: "center",
-            bindVisibility: true
+            bindVisibility: true,
+            followRotation: true
         }, inOptions);
 
         const validatedObject = this._validateLocation(inObject);
@@ -181,11 +180,10 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
         if(typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
+        if(typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
 
         this._source = validatedObject;
-        this._attachTo = isValidObject;
-        this._align = inOptions.align;
-        this._bindVisibility = inOptions.bindVisibility;
+        this._attachTo = isValidObject ? inOptions : false;
         if(!validatedObject?.id) this.locally();
         return this;
     }
@@ -881,7 +879,7 @@ export default class EffectSection extends Section {
              */
             source: this._getSourceObject(),
             target: this._getTargetObject(),
-            rotateTowards: this._rotateTowards !== false,
+            rotateTowards: this._rotateTowards,
             stretchTo: this._stretchTo ? {
                 attachTo: this._stretchTo.attachTo
             } : false,
@@ -902,7 +900,6 @@ export default class EffectSection extends Section {
             text: this._text,
 
             // Transforms
-            align: this._align,
             scale: this._getCalculatedScale(),
             angle: this._angle,
             size: this._size,
@@ -920,7 +917,6 @@ export default class EffectSection extends Section {
 
             // Appearance
             zIndex: this._zIndex,
-            bindVisibility: this._bindVisibility,
             opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
             filters: this._filters,
             layer: this._layer,
