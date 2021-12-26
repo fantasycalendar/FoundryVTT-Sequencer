@@ -395,7 +395,8 @@ export default class EffectSection extends Section {
     gridSize(inGridSize) {
         this.sequence._showWarning(self, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.")
         if (!lib.is_real_number(inGridSize)) throw this.sequence._customError(this, "gridSize", "inGridSize must be of type number");
-        this._gridSize = inGridSize;
+        if(!this._template) this._template = {};
+        this._template["gridSize"] = inGridSize;
         return this;
     }
 
@@ -410,7 +411,8 @@ export default class EffectSection extends Section {
     startPoint(inStartPoint) {
         this.sequence._showWarning(self, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
         if (!lib.is_real_number(inStartPoint)) throw this.sequence._customError(this, "startPoint", "inStartPoint must be of type number");
-        this._startPoint = inStartPoint;
+        if(!this._template) this._template = {};
+        this._template["startPoint"] = inStartPoint;
         return this;
     }
 
@@ -423,7 +425,8 @@ export default class EffectSection extends Section {
     endPoint(inEndPoint) {
         this.sequence._showWarning(self, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
         if (!lib.is_real_number(inEndPoint)) throw this.sequence._customError(this, "endPoint", "inEndPoint must be of type number");
-        this._endPoint = inEndPoint;
+        if(!this._template) this._template = {};
+        this._template["endPoint"] = inEndPoint;
         return this;
     }
 
@@ -440,7 +443,7 @@ export default class EffectSection extends Section {
         if (gridSize && !lib.is_real_number(gridSize)) throw this.sequence._customError(this, "template", "gridSize must be of type number");
         if (startPoint && !lib.is_real_number(startPoint)) throw this.sequence._customError(this, "template", "startPoint must be of type number");
         if (endPoint && !lib.is_real_number(endPoint)) throw this.sequence._customError(this, "template", "endPoint must be of type number");
-        this._template = {};
+        if(!this._template) this._template = {};
         if(gridSize) this._template["gridSize"] = gridSize;
         if(startPoint) this._template["startPoint"] = startPoint;
         if(endPoint) this._template["endPoint"] = endPoint;
