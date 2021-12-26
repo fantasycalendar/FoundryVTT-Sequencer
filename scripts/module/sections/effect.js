@@ -4,7 +4,6 @@ import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
-import { SequencerFileRangeFind } from "../sequencer-file.js";
 
 export default class EffectSection extends Section {
 

@@ -3,7 +3,6 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import flagManager from "./flag-manager.js";
-import CONSTANTS from "./constants.js";
 
 const EffectsContainer = new Map();
 
