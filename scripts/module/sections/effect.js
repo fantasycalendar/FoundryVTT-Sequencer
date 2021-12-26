@@ -211,7 +211,7 @@ export default class EffectSection extends Section {
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
             attachTo: false,
-            onlyX: true
+            onlyX: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
