@@ -7,46 +7,50 @@ const hotkeys = {
         return canvas.ready && canvas.sequencerEffectsAboveTokens.active;
     },
 
-    playToolControlDown: () => {
-        if(!this._ready) return;
-        EffectPlayer.playManySequenced = true;
-    },
-    playToolControlUp: () => {
-        if(!this._ready) return;
-        SelectionManager.snapToGrid = false;
-    },
-    playToolShiftDown: () => {
-        if(!this._ready) return;
-        EffectPlayer.playMany = true;
-    },
-    playToolShiftUp: () => {
-        if(!this._ready) return;
-        EffectPlayer.playMany = false;
-        if(!EffectPlayer.isActive) return;
-        EffectPlayer.shiftUp();
+    playTool: {
+        controlDown: () => {
+            if(!this._ready) return;
+            EffectPlayer.playManySequenced = true;
+        },
+        controlUp: () => {
+            if(!this._ready) return;
+            SelectionManager.snapToGrid = false;
+        },
+        shiftDown: () => {
+            if(!this._ready) return;
+            EffectPlayer.playMany = true;
+        },
+        shiftUp: () => {
+            if(!this._ready) return;
+            EffectPlayer.playMany = false;
+            if(!EffectPlayer.isActive) return;
+            EffectPlayer.shiftUp();
+        }
     },
 
-    selectToolControlDown: () => {
-        if(!this._ready) return;
-        SelectionManager.snapToGrid = true;
-    },
-    selectToolControlUp: () => {
-        if(!this._ready) return;
-        SelectionManager.snapToGrid = false;
-    },
-    selectToolAltDown: () => {
-        if(!this._ready) return;
-        SelectionManager.attachToTarget = true;
-        if(!SelectionManager.isActive) return;
-        SelectionManager.altDown()
-    },
-    selectToolAltUp: () => {
-        if(!this._ready) return;
-        SelectionManager.attachToTarget = false;
-    },
-    selectToolDeleteDown: () => {
-        if(!this._ready) return;
-        SelectionManager.delete();
+    selectTool: {
+        controlDown: () => {
+            if(!this._ready) return;
+            SelectionManager.snapToGrid = true;
+        },
+        controlUp: () => {
+            if(!this._ready) return;
+            SelectionManager.snapToGrid = false;
+        },
+        altDown: () => {
+            if(!this._ready) return;
+            SelectionManager.attachToTarget = true;
+            if(!SelectionManager.isActive) return;
+            SelectionManager.altDown()
+        },
+        altUp: () => {
+            if(!this._ready) return;
+            SelectionManager.attachToTarget = false;
+        },
+        deleteDown: () => {
+            if(!this._ready) return;
+            SelectionManager.delete();
+        }
     }
 }
 
@@ -61,8 +65,8 @@ export default function registerHotkeys() {
         uneditable: [
             { key: "ShiftLeft" },
         ],
-        onDown: hotkeys.playToolShiftDown,
-        onUp: hotkeys.playToolShiftUp,
+        onDown: hotkeys.playTool.shiftDown,
+        onUp: hotkeys.playTool.shiftUp,
         reservedModifiers: ["CONTROL"]
     });
 
@@ -71,8 +75,8 @@ export default function registerHotkeys() {
         uneditable: [
             { key: "ControlLeft" },
         ],
-        onDown: hotkeys.playToolControlDown,
-        onUp: hotkeys.playToolControlUp,
+        onDown: hotkeys.playTool.controlDown,
+        onUp: hotkeys.playTool.controlUp,
         reservedModifiers: ["SHIFT"]
     });
 
@@ -81,8 +85,8 @@ export default function registerHotkeys() {
         uneditable: [
             { key: "ControlLeft" },
         ],
-        onDown: hotkeys.selectToolControlDown,
-        onUp: hotkeys.selectToolControlUp,
+        onDown: hotkeys.selectTool.controlDown,
+        onUp: hotkeys.selectTool.controlUp,
         reservedModifiers: ["SHIFT", "ALT"]
     });
 
@@ -91,8 +95,8 @@ export default function registerHotkeys() {
         uneditable: [
             { key: "AltLeft" },
         ],
-        onDown: hotkeys.selectToolAltDown,
-        onUp: hotkeys.selectToolAltUp,
+        onDown: hotkeys.selectTool.altDown,
+        onUp: hotkeys.selectTool.altUp,
         reservedModifiers: ["CONTROL", "SHIFT"]
     });
 
@@ -101,7 +105,7 @@ export default function registerHotkeys() {
         uneditable: [
             { key: "Delete" },
         ],
-        onDown: hotkeys.selectToolDeleteDown,
+        onDown: hotkeys.selectTool.deleteDown,
     });
 
 
@@ -112,17 +116,17 @@ function registerHotkeysLegacy(){
     window.addEventListener("keydown", (event) => {
         switch(event.code){
             case "ShiftLeft":
-                hotkeys.playToolShiftDown();
+                hotkeys.playTool.shiftDown();
                 break;
             case "ControlLeft":
-                hotkeys.playToolControlDown();
-                hotkeys.selectToolControlDown();
+                hotkeys.playTool.controlDown();
+                hotkeys.selectTool.controlDown();
                 break;
             case "AltLeft":
-                hotkeys.selectToolAltDown();
+                hotkeys.selectTool.altDown();
                 break;
             case "Delete":
-                hotkeys.selectToolDeleteDown();
+                hotkeys.selectTool.deleteDown();
                 break;
         }
     });
@@ -130,14 +134,14 @@ function registerHotkeysLegacy(){
     window.addEventListener("keyup", (event) => {
         switch(event.code){
             case "ShiftLeft":
-                hotkeys.playToolShiftUp();
+                hotkeys.playTool.shiftUp();
                 break;
             case "ControlLeft":
-                hotkeys.playToolControlUp();
-                hotkeys.selectToolControlUp();
+                hotkeys.playTool.controlUp();
+                hotkeys.selectTool.controlUp();
                 break;
             case "AltLeft":
-                hotkeys.selectToolAltUp();
+                hotkeys.selectTool.altUp();
                 break;
         }
     });
