@@ -3,43 +3,56 @@ import CONSTANTS from "./module/constants.js";
 import { EffectPlayer, SelectionManager } from "./module/sequencer-interaction-manager.js";
 
 const hotkeys = {
+    get _ready(){
+        return !canvas.ready && !canvas.sequencerEffectsAboveTokens.active;
+    },
+
     playToolControlDown: () => {
+        if(!this._ready) return;
         EffectPlayer.playManySequenced = true;
     },
     playToolControlUp: () => {
+        if(!this._ready) return;
         SelectionManager.snapToGrid = false;
     },
     playToolShiftDown: () => {
+        if(!this._ready) return;
         EffectPlayer.playMany = true;
     },
     playToolShiftUp: () => {
+        if(!this._ready) return;
         EffectPlayer.playMany = false;
         if(!EffectPlayer.isActive) return;
         EffectPlayer.shiftUp();
     },
 
     selectToolControlDown: () => {
+        if(!this._ready) return;
         SelectionManager.snapToGrid = true;
     },
     selectToolControlUp: () => {
+        if(!this._ready) return;
         SelectionManager.snapToGrid = false;
     },
     selectToolAltDown: () => {
+        if(!this._ready) return;
         SelectionManager.attachToTarget = true;
         if(!SelectionManager.isActive) return;
         SelectionManager.altDown()
     },
     selectToolAltUp: () => {
+        if(!this._ready) return;
         SelectionManager.attachToTarget = false;
     },
     selectToolDeleteDown: () => {
+        if(!this._ready) return;
         SelectionManager.delete();
     }
 }
 
 export default function registerHotkeys() {
 
-    if(isVersion9()){
+    if(!isVersion9()){
         return registerHotkeysLegacy();
     }
 
@@ -88,7 +101,7 @@ export default function registerHotkeys() {
         uneditable: [
             { key: "Delete" },
         ],
-        onDown: hotkeys.selectToolDelete,
+        onDown: hotkeys.selectToolDeleteDown,
     });
 
 
@@ -97,8 +110,6 @@ export default function registerHotkeys() {
 function registerHotkeysLegacy(){
 
     window.addEventListener("keydown", (event) => {
-        if ( !canvas.ready ) return;
-        if ( !canvas.sequencerEffectsAboveTokens.active ) return;
         switch(event.code){
             case "ShiftLeft":
                 hotkeys.playToolShiftDown();
@@ -117,8 +128,6 @@ function registerHotkeysLegacy(){
     });
 
     window.addEventListener("keyup", (event) => {
-        if ( !canvas.ready ) return;
-        if ( !canvas.sequencerEffectsAboveTokens.active ) return;
         switch(event.code){
             case "ShiftLeft":
                 hotkeys.playToolShiftUp();
