@@ -9,19 +9,19 @@ const hotkeys = {
 
     playTool: {
         controlDown: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             EffectPlayer.playManySequenced = true;
         },
         controlUp: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             SelectionManager.snapToGrid = false;
         },
         shiftDown: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             EffectPlayer.playMany = true;
         },
         shiftUp: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             EffectPlayer.playMany = false;
             if(!EffectPlayer.isActive) return;
             EffectPlayer.shiftUp();
@@ -30,25 +30,25 @@ const hotkeys = {
 
     selectTool: {
         controlDown: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             SelectionManager.snapToGrid = true;
         },
         controlUp: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             SelectionManager.snapToGrid = false;
         },
         altDown: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             SelectionManager.attachToTarget = true;
             if(!SelectionManager.isActive) return;
             SelectionManager.altDown()
         },
         altUp: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             SelectionManager.attachToTarget = false;
         },
         deleteDown: () => {
-            if(!this._ready) return;
+            if(!hotkeys._ready) return;
             SelectionManager.delete();
         }
     }
