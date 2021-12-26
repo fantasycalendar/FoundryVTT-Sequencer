@@ -10,6 +10,12 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
+    static make(inData) {
+        return !inData.persist
+            ? new CanvasEffect(inData)
+            : new PersistentCanvasEffect(inData);
+    }
+
     constructor(inData) {
         super();
 
@@ -66,7 +72,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {string}
      */
     get uuid() {
-        return this.context.uuid + ".SequencerEffect." + this.id;
+        return this.context.uuid + ".data.flags.sequencer.effects." + this.id;
     }
 
     /**
@@ -326,12 +332,6 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get playNaturally() {
         return !this.data.time || (this._startTime === 0 && this._endTime === this.video.duration);
-    }
-
-    static make(inData) {
-        return !inData.persist
-            ? new CanvasEffect(inData)
-            : new PersistentCanvasEffect(inData);
     }
 
     /**
@@ -733,6 +733,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * Initializes the name offset map by establishing targets
+     *
      * @param inOffsetMap
      * @returns {{setup}|*}
      * @private
@@ -754,6 +755,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     /**
      * Adds this effect to the appropriate container on the right layer
+     *
      * @private
      */
     _addToContainer() {
@@ -1085,11 +1087,11 @@ export default class CanvasEffect extends PIXI.Container {
                 spriteAnchor = result.spriteAnchor ?? this.data.anchor?.x ?? 0.5;
 
                 scaleX = result.spriteScale;
-                if(!this.data.stretchTo?.onlyX) {
-                    scaleY = result.spriteScale;
-                }else{
+                if(this.data.stretchTo?.onlyX) {
                     const widthWithPadding = texture.width - (this.template.startPoint + this.template.endPoint);
                     scaleY = widthWithPadding / texture.width;
+                }else{
+                    scaleY = result.spriteScale;
                 }
 
             } else if (this._file instanceof PIXI.Texture) {
@@ -1102,10 +1104,10 @@ export default class CanvasEffect extends PIXI.Container {
                 let spriteScale = distance / widthWithPadding;
                 scaleX = spriteScale;
 
-                if(!this.data.stretchTo?.onlyX) {
-                    scaleY = spriteScale;
-                }else{
+                if(this.data.stretchTo?.onlyX) {
                     scaleY = widthWithPadding / texture.width;
+                }else{
+                    scaleY = spriteScale;
                 }
 
             }
