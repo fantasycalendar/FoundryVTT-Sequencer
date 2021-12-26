@@ -206,7 +206,7 @@ export default class EffectSection extends Section {
      * @param {object} inOptions
      * @returns {EffectSection}
      */
-    stretchTo(inLocation, inOptions) {
+    stretchTo(inLocation, inOptions = {}) {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "stretchTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
