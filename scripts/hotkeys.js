@@ -14,7 +14,7 @@ const hotkeys = {
         },
         controlUp: () => {
             if(!hotkeys._ready) return;
-            SelectionManager.snapToGrid = false;
+            EffectPlayer.playManySequenced = false;
         },
         shiftDown: () => {
             if(!hotkeys._ready) return;
