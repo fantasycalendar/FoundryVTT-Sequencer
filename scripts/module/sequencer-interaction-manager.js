@@ -28,9 +28,10 @@ export const InteractionManager = {
 
         window.addEventListener("mousedown", (event) => {
             if ( !canvas.ready ) return;
+            if (!this.isLayerActive) return;
             const hover = document.elementFromPoint(event.clientX, event.clientY);
             if ( !hover || (hover.id !== "board" )) return;
-            if (!this.isLayerActive) return;
+            
             const button = event.button;
             if (!(button === 0 || button === 2)) return;
             if (button === 0) {
@@ -45,9 +46,11 @@ export const InteractionManager = {
 
         window.addEventListener("mouseup", (event) => {
             if ( !canvas.ready ) return;
+            if (!this.isLayerActive) return;
             const hover = document.elementFromPoint(event.clientX, event.clientY);
             if ( !hover || (hover.id !== "board" )) return;
-            if (!this.isLayerActive) return;
+            if(document.activeElement.tagName !== "BODY") return;
+
             const button = event.button;
             if (!(button === 0 || button === 2)) return;
             if (button === 0) {
@@ -281,8 +284,8 @@ export const EffectPlayer = {
                     effect.moveSpeed(settings.moveSpeed)
                 }
             } else {
-                let target = settings.stretchToAttach ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
-                effect.stretchTo(target, { attachTo: settings.stretchToAttach })
+                //let target = settings.stretchToAttach ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
+                effect.stretchTo(settings.endPos)
             }
         } else {
             effect.scale(settings.scale)
