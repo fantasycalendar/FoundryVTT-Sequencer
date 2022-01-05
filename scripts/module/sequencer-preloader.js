@@ -55,8 +55,6 @@ const SequencerPreloader = {
 
         if (inSrcs.length === 0) throw lib.custom_error("Sequencer", "preloadForClients - You need to provide files to preload");
 
-        console.log(inSrcs);
-
         if (!lib.user_can_do("permissions-_preload")){
             return this._preload({
                 inSrcs,
