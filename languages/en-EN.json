@@ -109,6 +109,10 @@
         "Title": "Enable debugging",
         "Label": "This will make the sequencer log into the console what it is doing"
       },
+      "ShowTools": {
+        "Title": "Show Sequencer Tools",
+        "Label": "Shows or hides the Sequencer tools on the sidebar."
+      },
       "EnableEffects": {
         "Title": "Enable Effects",
         "Label": "Enables effects to be played on this client"

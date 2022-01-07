@@ -19,11 +19,6 @@
       "lang": "en",
       "name": "English",
       "path": "languages/en-EN.json"
-    },
-    {
-      "lang": "fr-FR",
-      "name": "Français (France)",
-      "path": "languages/fr-FR.json"
     }
   ],
   "packs": [

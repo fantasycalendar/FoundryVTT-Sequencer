@@ -22,6 +22,16 @@ export default function registerSettings() {
         type: Boolean
     });
 
+    game.settings.register(CONSTANTS.MODULE_NAME, "showSidebarTools", {
+        name: "SEQUENCER.Setting.ShowTools.Title",
+        hint: "SEQUENCER.Setting.ShowTools.Label",
+        scope: "client",
+        config: true,
+        default: true,
+        onChange: debouncedReload,
+        type: Boolean
+    });
+
     game.settings.register(CONSTANTS.MODULE_NAME, "effectsEnabled", {
         name: "SEQUENCER.Setting.EnableEffects.Title",
         hint: "SEQUENCER.Setting.EnableEffects.Label",
@@ -139,6 +149,8 @@ export default function registerSettings() {
     });
 
     Hooks.on("getSceneControlButtons", (controls) => {
+
+        if(!game.settings.get(CONSTANTS.MODULE_NAME, "showSidebarTools")) return;
 
         const selectTool = {
             icon: "fas fa-expand",
