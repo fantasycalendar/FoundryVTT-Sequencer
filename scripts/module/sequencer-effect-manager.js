@@ -146,7 +146,7 @@ export default class SequencerEffectManager {
         if (!(object instanceof PlaceableObject || typeof object === "string")) {
             throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
         } else if (object instanceof PlaceableObject) {
-            object = lib.get_object_identifier(object);
+            object = lib.get_object_identifier(object.document);
         } else if (typeof object === "string") {
             if (!lib.get_object_from_scene(object, sceneId)) {
                 throw lib.custom_error("Sequencer", `EffectManager | could not find object with ID: ${object}`)
@@ -172,7 +172,6 @@ export default class SequencerEffectManager {
 
         if (inFilter?.object) {
             inFilter.source = this._validateObject(inFilter.object, inFilter.sceneId);
-            inFilter.target = inFilter.source;
             delete inFilter.object;
         }
 
@@ -283,6 +282,7 @@ export default class SequencerEffectManager {
             .filter(effect => !inUUID || effect.data?.source === inUUID || effect.data?.target === inUUID)
             .forEach(effect => {
                 EffectsContainer.delete(effect.id);
+                effect.destroy();
                 debounceUpdateEffectViewer();
             })
     }
@@ -350,7 +350,8 @@ export default class SequencerEffectManager {
      * @private
      */
     static _endEffects(inEffectIds) {
-        const effects = inEffectIds.map(id => EffectsContainer.get(id));
+        debugger;
+        const effects = inEffectIds.map(id => EffectsContainer.get(id)).filter(Boolean);
         if (!effects.length) return;
         return this._endManyEffects(effects);
     }

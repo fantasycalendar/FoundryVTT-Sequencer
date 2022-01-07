@@ -101,6 +101,9 @@ export default class CanvasEffect extends PIXI.Container {
                 this._sourcePosition = canvaslib.get_object_position(this.source);
             }
         }
+        if(this._sourcePosition instanceof MeasuredTemplate){
+            return canvaslib.get_object_position(this._sourcePosition)
+        }
         return this._sourcePosition?.worldPosition || this._sourcePosition?.center || this._sourcePosition || this.source;
     }
 
@@ -145,6 +148,10 @@ export default class CanvasEffect extends PIXI.Container {
             } else {
                 this._targetPosition = canvaslib.get_object_position(this.target, true);
             }
+        }
+
+        if(this._targetPosition instanceof MeasuredTemplate){
+            return canvaslib.get_object_position(this._targetPosition)
         }
 
         return this._targetPosition?.worldPosition || this._targetPosition?.center || this._targetPosition || this.target;
@@ -494,6 +501,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     async _initialize(play = true) {
         this._initializeVariables();
+        this._contextLostCallback();
         await this._loadTexture();
         this._calculateDuration();
         this._addToContainer();
@@ -504,9 +512,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._setEndTimeout();
         this._timeoutVisibility();
         if (play) canvaslib.try_to_play_video(this.video);
-        if (this.data.attachTo) {
-            this._contextLostCallback();
-        }
     }
 
     /**
@@ -519,6 +524,8 @@ export default class CanvasEffect extends PIXI.Container {
     async _reinitialize(play = true) {
         this.renderable = false;
         if (!this.shouldPlay) {
+            debugger;
+            console.log('here?')
             return Sequencer.EffectManager._removeEffect(this);
         }
         return this._initialize(play);
@@ -939,12 +946,14 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _contextLostCallback() {
-        this._ticker.add(() => {
-            if (this.source._destroyed) {
-                this._ticker.stop();
-                sequencerSocket.executeForEveryone(SOCKET_HANDLERS.END_EFFECTS, [this.id]);
-            }
-        });
+        if (this.data.attachTo) {
+            this._ticker.add(() => {
+                if (this.source._destroyed) {
+                    this._ticker.stop();
+                    this.destroy();
+                }
+            });
+        }
     }
 
     /**
@@ -1193,6 +1202,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.stretchTo?.attachTo) {
                 this._ticker.add(async () => {
+                    if(this.source.destroyed || this.target.destroyed) return;
                     await this._applyDistanceScaling();
                 });
             }
@@ -1280,6 +1290,8 @@ export default class CanvasEffect extends PIXI.Container {
 
             this._ticker.add(() => {
 
+                if(this.source.destroyed) return;
+
                 let offset = { x: 0, y: 0 };
 
                 if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
@@ -1302,6 +1314,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
                 this._ticker.add(() => {
+                    if(this.source.destroyed) return;
                     this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
                 });
             }
@@ -1325,6 +1338,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.rotateTowards?.attachTo) {
                 this._ticker.add(() => {
+                    if(this.source.destroyed || this.target.destroyed) return;
                     this._rotateTowards();
                 });
             }
