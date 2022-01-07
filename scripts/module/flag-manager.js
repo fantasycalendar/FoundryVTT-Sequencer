@@ -29,7 +29,8 @@ const flagManager = {
     getFlags(inDocument){
 
         let effects = inDocument.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
-        if(!effects.length) return [];
+
+        if(!effects?.length) return [];
 
         let changes = [];
         for(let [effectId, effectData] of effects){
@@ -58,6 +59,7 @@ const flagManager = {
         }
 
         return effects;
+        
     },
 
     migrations: {
