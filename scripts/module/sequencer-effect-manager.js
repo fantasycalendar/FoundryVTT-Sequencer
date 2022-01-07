@@ -350,7 +350,6 @@ export default class SequencerEffectManager {
      * @private
      */
     static _endEffects(inEffectIds) {
-        debugger;
         const effects = inEffectIds.map(id => EffectsContainer.get(id)).filter(Boolean);
         if (!effects.length) return;
         return this._endManyEffects(effects);

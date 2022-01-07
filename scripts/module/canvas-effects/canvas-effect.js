@@ -524,8 +524,6 @@ export default class CanvasEffect extends PIXI.Container {
     async _reinitialize(play = true) {
         this.renderable = false;
         if (!this.shouldPlay) {
-            debugger;
-            console.log('here?')
             return Sequencer.EffectManager._removeEffect(this);
         }
         return this._initialize(play);

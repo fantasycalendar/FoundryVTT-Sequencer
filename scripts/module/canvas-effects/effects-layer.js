@@ -158,7 +158,9 @@ export class BaseEffectsLayer extends CanvasLayer {
             height: boundingBox.height * effect.scale.y,
         }
 
-        this._drawRectangle(graphic, effect.position, effect.rotation, dimensions);
+        const rotation = Math.normalizeRadians(effect.rotation + effect.rotationContainer.rotation + effect.offsetContainer.rotation);
+
+        this._drawRectangle(graphic, effect.position, rotation, dimensions);
 
     }
 
