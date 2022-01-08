@@ -1,8 +1,31 @@
-![Animation showing the Sequencer](images/Animation2.gif)
-
 # Sequencer
 
-This module implements a basic pipeline that can be used for managing the flow of a set of functions, effects, sounds, and macros.
+![Latest Release Download Count](https://img.shields.io/github/downloads/fantasycalendar/FoundryVTT-Sequencer/latest/module.zip?color=2b82fc&label=DOWNLOADS&style=for-the-badge) [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fsequencer&colorB=006400&style=for-the-badge)](https://forge-vtt.com/bazaar#package=sequencer) ![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fgithub.com%2Ffantasycalendar%2FFoundryVTT-Sequencer%2Freleases%2Flatest%2Fdownload%2Fmodule.json&label=Foundry%20Version&query=$.compatibleCoreVersion&colorB=orange&style=for-the-badge) ![Latest Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fgithub.com%2Ffantasycalendar%2FFoundryVTT-Sequencer%2Freleases%2Flatest%2Fdownload%2Fmodule.json&label=Latest%20Release&prefix=v&query=$.version&colorB=red&style=for-the-badge)
+
+
+![Animation showing the Sequencer](images/Animation2.gif)
+
+---
+
+<img src="https://app.fantasy-calendar.com/resources/computerworks-logo-full.png" alt="Fantasy Computerworks Logo" style="width:250px;"/>
+
+A module made by Fantasy Computerworks.
+
+Other works by us:
+- [Fantasy Calendar](https://app.fantasy-calendar.com) - The best calendar creator and management app on the internet
+- [Item Piles](https://foundryvtt.com/packages/item-piles) - Drag & drop items into the scene to drop item piles that you can then easily pick up
+- [Potato Or Not](https://foundryvtt.com/packages/potato-or-not) - Automatically set up Foundry to the best visual settings for your players' potato computers
+- [Tagger](https://foundryvtt.com/packages/tagger) - Tag objects in the scene and retrieve them with a powerful API
+
+Like what we've done? Buy us a coffee!
+
+<a href='https://ko-fi.com/H2H2LCCQ' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
+---
+
+## What Is Sequencer?
+
+Sequencer is a powerful module that allows you and other module creators to quickly and easily play visual effects in your scenes, attaching them to tokens or other objects, animating them, ending them easily and quickly, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
 
 ## Effects shown in this readme
 * [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.patreon.com/JB2A))
@@ -53,11 +76,13 @@ let sequence = new Sequence()
 
 To start the sequence off, you simply call `play()` on the sequence.
 
-[⬇️ Go to advanced examples ⬇️](https://github.com/Haxxer/FoundryVTT-Sequencer#advanced-examples)
+# Advanced examples
 
-## Usage Example
+## Teleportation Usage Example
 
 ### This example uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
+
+![Animation showing the Sequencer](images/Animation2.gif)
 
 To get the following result:
 
@@ -65,99 +90,10 @@ To get the following result:
 * Wait for 400 milliseconds
 * Play a sound
 * Wait for 600 milliseconds
-* Play another effect pointing towards 500px to the left of the token
+* Play another effect pointing towards 5 squares to the left of the token
 * Wait for 100 milliseconds
-* Teleport the token 500px to the left
+* Teleport the token 5 squares to the left
 * Play another effect on the token's location
-
-![Animation showing the Sequencer](images/Animation2.gif)
-
-
-You'd have to write something like this (with FXMaster installed):
-
-```js
-async function wait(ms) {
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
-    });
-}
-
-const token = canvas.tokens.controlled[0];
-
-let data = {
-    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm",
-    position: token.center,
-    anchor: {
-        x: 0.5,
-        y: 0.5
-    },
-    scale: {
-        x: 0.35,
-        y: 0.35
-    }
-};
-
-game.socket.emit("module.fxmaster", data);
-canvas.fxmaster.playVideo(data);
-
-await wait(400);
-
-AudioHelper.play({
-    src: ["Music/Sound_Effects/teleport.wav"],
-    volume: 0.8,
-    autoplay: true,
-    loop: false
-}, true);
-
-await wait(600);
-
-let to_location = {
-    x: token.center.x + canvas.grid.size*4,
-    y: token.center.y
-}
-
-let ray = new Ray(token.center, to_location);
-
-data = {
-    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm",
-    position: token.center,
-    anchor: {
-        x: 0.5,
-        y: 0.5
-    },
-    scale: {
-        x: 0.2,
-        y: 0.2
-    },
-    rotation: ray.angle,
-    width: ray.distance
-};
-
-game.socket.emit("module.fxmaster", data);
-canvas.fxmaster.playVideo(data);
-
-await wait(100);
-
-await token.update({ x: token.position.x + canvas.grid.size*4, y: token.position.y }, { animate: false });
-
-data = {
-    file: "modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm",
-    position: token.center,
-    anchor: {
-        x: 0.5,
-        y: 0.5
-    },
-    scale: {
-        x: 0.5,
-        y: 0.5
-    }
-};
-
-game.socket.emit("module.fxmaster", data);
-canvas.fxmaster.playVideo(data);
-```
-
-Here's an example using the Sequencer instead:
 
 ```js
 let tokenD = canvas.tokens.controlled[0];
@@ -171,14 +107,14 @@ let sequence = new Sequence()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
         .atLocation(tokenD)
         .reachTowards({
-            x: tokenD.center.x + canvas.grid.size*4,
+            x: tokenD.center.x + canvas.grid.size*5,
             y: tokenD.center.y
         })
     .wait(100)
     .animation()
         .on(tokenD)
         .teleportTo({
-            x: tokenD.x + canvas.grid.size*4,
+            x: tokenD.x + canvas.grid.size*5,
             y: tokenD.y
         })
         .waitUntilFinished()
@@ -189,8 +125,6 @@ let sequence = new Sequence()
 
 sequence.play();
 ```
-
-# Advanced examples
 
 ## Magic Missile
 
