@@ -1,4 +1,5 @@
 import * as lib from "../lib/lib.js";
+import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
@@ -372,7 +373,7 @@ class AnimationSection extends Section {
             targetLocation.y += this._offset.y;
 
             if (this._moveTowards.relativeToCenter){
-                const dimensions = lib.getObjectDimensions(this._originObject);
+                const dimensions = canvaslib.get_object_dimensions(this._originObject);
                 targetLocation.x -= dimensions.width/2;
                 targetLocation.y -= dimensions.height/2;
                 if(this._snapToGrid){
@@ -497,7 +498,7 @@ class AnimationSection extends Section {
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
                 if (this._teleportTo.relativeToCenter){
-                    const dimensions = lib.getObjectDimensions(this._originObject);
+                    const dimensions = canvaslib.get_object_dimensions(this._originObject);
                     targetLocation.x -= dimensions.width/2;
                     targetLocation.y -= dimensions.height/2;
                     if(this._snapToGrid){

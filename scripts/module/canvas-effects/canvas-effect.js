@@ -703,8 +703,8 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.offset) {
-            offset.x -= this.data.offset.x;
-            offset.y -= this.data.offset.y;
+            offset.x += this.data.offset.x;
+            offset.y += this.data.offset.y;
         }
 
         let offsetMap = this._nameOffsetMap?.[offsetMapName];
@@ -724,8 +724,8 @@ export default class CanvasEffect extends PIXI.Container {
             }
 
             if (offsetMap.offset) {
-                offset.x -= offsetMap.offset.x;
-                offset.y -= offsetMap.offset.y;
+                offset.x += offsetMap.offset.x;
+                offset.y += offsetMap.offset.y;
             }
 
         }
@@ -1013,7 +1013,7 @@ export default class CanvasEffect extends PIXI.Container {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
-        this.sprite.rotation = Math.normalizeRadians(Math.toRadians(this.data.angle ?? 0));
+        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(this.data.angle ?? 0));
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
@@ -1183,7 +1183,7 @@ export default class CanvasEffect extends PIXI.Container {
             ray = new Ray(sourcePosition, targetPosition);
         }
 
-        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle);
+        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle) - Math.normalizeRadians(Math.toRadians(this.data.angle ?? 0));
 
     }
 
