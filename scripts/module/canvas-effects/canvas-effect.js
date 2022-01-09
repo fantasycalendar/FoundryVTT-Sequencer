@@ -204,13 +204,13 @@ export default class CanvasEffect extends PIXI.Container {
             offset.y -= missedOffset.y;
         }
 
-        if (this.data.randomOffset) {
+        if (this.data.randomOffset && (!source || !this.data.target)) {
             let randomOffset = canvaslib.get_random_offset(this.target, this.data.randomOffset, twister);
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
 
-        if (this.data.offset) {
+        if (this.data.offset && (!source || !this.data.target)) {
             offset.x += this.data.offset.x;
             offset.y += this.data.offset.y;
         }
