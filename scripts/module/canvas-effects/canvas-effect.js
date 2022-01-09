@@ -116,11 +116,10 @@ export default class CanvasEffect extends PIXI.Container {
 
         const position = this.originalSourcePosition;
         this._sourceOffset = this._sourceOffset || this._getOffset(this.data.source, true);
-        const offset = this._sourceOffset;
 
         return {
-            x: position.x - offset.x,
-            y: position.y - offset.y
+            x: position.x - this._sourceOffset.x,
+            y: position.y - this._sourceOffset.y
         };
 
     }
@@ -152,7 +151,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if(this._targetPosition instanceof MeasuredTemplate){
-            return canvaslib.get_object_position(this._targetPosition)
+            return canvaslib.get_object_position(this._targetPosition, true)
         }
 
         return this._targetPosition?.worldPosition || this._targetPosition?.center || this._targetPosition || this.target;
@@ -167,11 +166,10 @@ export default class CanvasEffect extends PIXI.Container {
 
         const position = this.originalTargetPosition;
         this._targetOffset = this._targetOffset || this._getOffset(this.data.target);
-        const offset = this._targetOffset;
 
         return {
-            x: position.x - offset.x,
-            y: position.y - offset.y
+            x: position.x - this._targetOffset.x,
+            y: position.y - this._targetOffset.y
         };
 
     }
