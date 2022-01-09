@@ -80,7 +80,8 @@ const flagManager = {
                 effectData.attachTo = {
                     align: "center",
                     rotation: true,
-                    bindVisibility: true
+                    bindVisibility: true,
+                    bindAlpha: true
                 };
                 effectData.source = inDocument.uuid;
                 const objectSize = canvaslib.get_object_dimensions(inDocument, true);

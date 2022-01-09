@@ -158,6 +158,7 @@ export default class EffectSection extends Section {
         inOptions = foundry.utils.mergeObject({
             align: "center",
             bindVisibility: true,
+            bindAlpha: true,
             followRotation: true
         }, inOptions);
 

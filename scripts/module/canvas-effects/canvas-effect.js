@@ -1033,18 +1033,29 @@ export default class CanvasEffect extends PIXI.Container {
 
     _determineVisibility(){
 
-        if(this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)){
+        if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
             const hookName = "update" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
-                if(doc !== this.source.document) return;
+                if (doc !== this.source.document) return;
                 this.renderable = this.source.visible;
                 this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
             });
             this.renderable = this.source.visible;
             this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-        }else{
+        } else {
             this.renderable = true;
             this.alpha = 1.0;
+        }
+
+        if (this.data.attachTo?.bindAlpha && lib.is_UUID(this.data.source)) {
+            const hookName = "update" + this.data.source.split('.')[2];
+            this._addHook(hookName, (doc) => {
+                if (doc !== this.source.document) return;
+                this.sprite.alpha = this.source.data.alpha;
+            });
+            this.sprite.alpha = this.source.data.alpha;
+        } else {
+            this.sprite.alpha = 1.0;
         }
 
     }

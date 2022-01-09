@@ -32,9 +32,10 @@
     - `onlyX` (boolean), if set to true, this will cause stretchTo to only stretch the X axis of the sprite towards the target (keeping Y at 1.0, or your given scale)
 - *Effects* - Added support to `.file()` for an object map containing the feet range and filepath key-value pair. Check out the file wiki entry to understand what this means: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#file
 - *Effects* - Added secondary options parameter to `.attachTo()`, which accepts:
-    - `align` (string), accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
-    - `bindVisibility` (boolean), if set to true, it will cause the effect to only be visible if attached object is visible on each player's client
-    - `followRotation` (boolean), if set to false, the effect will not follow the rotation of the attached object
+    - `align` (string, default "center"), accepts `top-left`, `center`, `left`, `bottom-right`, etc. Read the wiki: https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Effects#attach-to
+    - `bindVisibility` (boolean, default true), if set to false, the effect will not be hidden if the attached object is hidden
+    - `bindAlpha` (boolean, default true), if set to false, the effect's alpha will be independent of the attached object
+    - `followRotation` (boolean, default true), if set to false, the effect will not follow the rotation of the attached object
 - *Effects* - Added options to `.size()` which allows for `{ gridUnits: true }` - this makes the size given to the method scale to the scene's grid, instead of setting the exact width and height
 - *Effects* - Added the same option as above to `.animateProperty()` and `.loopProperty()`, which only works if you animate the `width` or `height`
 

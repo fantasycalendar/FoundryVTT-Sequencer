@@ -306,7 +306,6 @@ class AnimationSection extends Section {
             let fadeDuration = this._fadeIn.duration + this._fadeIn.delay;
 
             overallDuration = overallDuration > fadeDuration ? overallDuration : fadeDuration;
-
         }
 
         if (this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined) {
@@ -417,7 +416,9 @@ class AnimationSection extends Section {
 
         if (this._fadeOut) {
 
-            let from = lib.is_real_number(this._opacity) ? this._opacity : this._originObject.alpha;
+            let from = lib.is_real_number(this._opacity) ? this._opacity : (this._originObject.data.alpha ?? 1.0);
+
+            console.log(from)
 
             animData.attributes.push({
                 name: "alpha",
@@ -623,6 +624,8 @@ class AnimationSection extends Section {
                             val = attribute.to;
                             attribute.done = true;
                         }
+
+                        console.log(attribute.name, attribute.progress, attribute.from, attribute.to)
 
                         animatedAttributes[attribute.name] = val;
 
