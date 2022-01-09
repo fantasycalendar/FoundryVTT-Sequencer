@@ -128,6 +128,8 @@ export function get_random_offset(target, randomOffset, twister = false) {
 
 export function get_object_dimensions(inObj, half = false) {
 
+    inObj = inObj?.object ?? inObj;
+
     const width = inObj?.hitArea?.width
         ?? inObj?.w
         ?? inObj?.shape?.width
