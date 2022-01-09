@@ -248,10 +248,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
-        const size = canvaslib.get_object_dimensions(inObject);
-        size.width *= inObject?.data?.scale ?? 1.0;
-        size.height *= inObject?.data?.scale ?? 1.0;
-        this.size(size);
+        this.size(canvaslib.get_object_dimensions(inObject.icon));
         this.mirrorX(inObject.data.mirrorX);
         this.mirrorY(inObject.data.mirrorY);
         if(inObject?.data?.rotation){
