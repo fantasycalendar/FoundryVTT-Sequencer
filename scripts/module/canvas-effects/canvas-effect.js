@@ -115,7 +115,8 @@ export default class CanvasEffect extends PIXI.Container {
     get sourcePosition() {
 
         const position = this.originalSourcePosition;
-        const offset = this._getOffset(this._sourceOffset, this.data.source);
+        this._sourceOffset = this._sourceOffset || this._getOffset(this.data.source, true);
+        const offset = this._sourceOffset;
 
         return {
             x: position.x - offset.x,
@@ -165,13 +166,104 @@ export default class CanvasEffect extends PIXI.Container {
     get targetPosition() {
 
         const position = this.originalTargetPosition;
-        const offset = this._getOffset(this._targetOffset, this.data.target);
+        this._targetOffset = this._targetOffset || this._getOffset(this.data.target);
+        const offset = this._targetOffset;
 
         return {
             x: position.x - offset.x,
             y: position.y - offset.y
         };
 
+    }
+
+    /**
+     * Calculates the offset for a given offset property and name mapping
+     *
+     * @param {string} offsetMapName
+     * @param {boolean} source
+     * @returns {{x: number, y: number}|*}
+     * @private
+     */
+    _getOffset(offsetMapName, source = false) {
+
+        const offset = {
+            x: 0,
+            y: 0
+        }
+
+        let twister = this._twister;
+
+        let nameOffsetMap = this._nameOffsetMap?.[this.data.name];
+
+        if (nameOffsetMap) {
+            twister = nameOffsetMap.twister;
+        }
+
+        // If the effect is missing, and it's not the source we're offsetting OR it is the source but we don't have a target (it's playing on the spot)
+        if (this.data.missed && (!source || !this.data.target)) {
+            let missedOffset = canvaslib.calculate_missed_position(this.source, this.target, twister);
+            offset.x -= missedOffset.x;
+            offset.y -= missedOffset.y;
+        }
+
+        if (this.data.randomOffset) {
+            let randomOffset = canvaslib.get_random_offset(this.target, this.data.randomOffset, twister);
+            offset.x -= randomOffset.x;
+            offset.y -= randomOffset.y;
+        }
+
+        if (this.data.offset) {
+            offset.x += this.data.offset.x;
+            offset.y += this.data.offset.y;
+        }
+
+        let offsetMap = this._nameOffsetMap?.[offsetMapName];
+
+        if (offsetMap) {
+
+            if (offsetMap.missed) {
+                const missedOffset = canvaslib.calculate_missed_position(offsetMap.sourceObj, offsetMap.targetObj, offsetMap.twister);
+                offset.x -= missedOffset.x;
+                offset.y -= missedOffset.y;
+            }
+
+            if (offsetMap.randomOffset) {
+                const randomOffset = canvaslib.get_random_offset(offsetMap.actualTarget, offsetMap.randomOffset, offsetMap.twister);
+                offset.x -= randomOffset.x;
+                offset.y -= randomOffset.y;
+            }
+
+            if (offsetMap.offset) {
+                offset.x += offsetMap.offset.x;
+                offset.y += offsetMap.offset.y;
+            }
+
+        }
+
+        return offset;
+
+    }
+
+    /**
+     * Initializes the name offset map by establishing targets
+     *
+     * @param inOffsetMap
+     * @returns {{setup}|*}
+     * @private
+     */
+    _setupOffsetMap(inOffsetMap) {
+
+        if (!inOffsetMap.setup) {
+            inOffsetMap.setup = true;
+            inOffsetMap.sourceObj = this._validateObject(inOffsetMap.source);
+            inOffsetMap.targetObj = this._validateObject(inOffsetMap.target);
+            inOffsetMap.actualTarget = inOffsetMap.targetObj || inOffsetMap.sourceObj;
+            let repetition = this.data.repetition % inOffsetMap.repetitions;
+            const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
+            inOffsetMap.twister = new MersenneTwister(seed);
+        }
+
+        return inOffsetMap;
     }
 
     /**
@@ -661,101 +753,6 @@ export default class CanvasEffect extends PIXI.Container {
             inObject = inObject?._object ?? inObject;
         }
         return inObject;
-    }
-
-    /**
-     * Calculates the offset for a given offset property and name mapping
-     *
-     * @param {object} offsetProperty
-     * @param {string} offsetMapName
-     * @returns {{x: number, y: number}|*}
-     * @private
-     */
-    _getOffset(offsetProperty, offsetMapName) {
-
-        if (offsetProperty) {
-            return offsetProperty;
-        }
-
-        const offset = {
-            x: 0,
-            y: 0
-        }
-
-        let twister = this._twister;
-
-        let nameOffsetMap = this._nameOffsetMap?.[this.data.name];
-
-        if (nameOffsetMap) {
-            twister = nameOffsetMap.twister;
-        }
-
-        if (this.data.missed) {
-            let _offset = canvaslib.calculate_missed_position(this.source, this.target, twister);
-            offset.x -= _offset.x;
-            offset.y -= _offset.y;
-        }
-
-        if (this.data.randomOffset) {
-            let _offset = canvaslib.get_random_offset(this.target, this.data.randomOffset, twister);
-            offset.x -= _offset.x;
-            offset.y -= _offset.y;
-        }
-
-        if (this.data.offset) {
-            offset.x += this.data.offset.x;
-            offset.y += this.data.offset.y;
-        }
-
-        let offsetMap = this._nameOffsetMap?.[offsetMapName];
-
-        if (offsetMap) {
-
-            if (offsetMap.missed) {
-                const missedOffset = canvaslib.calculate_missed_position(offsetMap.sourceObj, offsetMap.targetObj, offsetMap.twister);
-                offset.x -= missedOffset.x;
-                offset.y -= missedOffset.y;
-            }
-
-            if (offsetMap.randomOffset) {
-                const randomOffset = canvaslib.get_random_offset(offsetMap.actualTarget, offsetMap.randomOffset, offsetMap.twister);
-                offset.x -= randomOffset.x;
-                offset.y -= randomOffset.y;
-            }
-
-            if (offsetMap.offset) {
-                offset.x += offsetMap.offset.x;
-                offset.y += offsetMap.offset.y;
-            }
-
-        }
-
-        offsetProperty = offset;
-
-        return offsetProperty;
-
-    }
-
-    /**
-     * Initializes the name offset map by establishing targets
-     *
-     * @param inOffsetMap
-     * @returns {{setup}|*}
-     * @private
-     */
-    _setupOffsetMap(inOffsetMap) {
-
-        if (!inOffsetMap.setup) {
-            inOffsetMap.setup = true;
-            inOffsetMap.sourceObj = this._validateObject(inOffsetMap.source);
-            inOffsetMap.targetObj = this._validateObject(inOffsetMap.target);
-            inOffsetMap.actualTarget = inOffsetMap.targetObj || inOffsetMap.sourceObj;
-            let repetition = this.data.repetition % inOffsetMap.repetitions;
-            const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
-            inOffsetMap.twister = new MersenneTwister(seed);
-        }
-
-        return inOffsetMap;
     }
 
     /**
