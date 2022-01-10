@@ -384,6 +384,10 @@ export function debug(msg, args = "") {
     if (game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
 }
 
+export function debug_error(msg, args) {
+    if (game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.error(`DEBUG | Sequencer | ${msg}`, args)
+}
+
 export function custom_warning(inClassName, warning, notify = false) {
     inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
     warning = `${inClassName} | ${warning}`;

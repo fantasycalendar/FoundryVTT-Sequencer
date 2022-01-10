@@ -7,6 +7,7 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
+import { debug_error } from "../lib/lib.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -486,7 +487,7 @@ export default class CanvasEffect extends PIXI.Container {
     /**
      *  Ends the effect
      */
-    endEffect() {
+    endEffect(immediate = false) {
         if (!this.ended) {
             this.ended = true;
             this._destroyDependencies();
@@ -929,7 +930,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _timeoutVisibility() {
         setTimeout(() => {
-            this._determineVisibility();
+            this._setupHooks();
         }, this.data.animations ? 50 : 0);
     }
 
@@ -939,11 +940,11 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _contextLostCallback() {
-        if (this.data.attachTo) {
+        if (this.data.attachTo && !lib.is_UUID(this.data.source)) {
             this._ticker.add(() => {
                 if (this.source._destroyed) {
                     this._ticker.stop();
-                    this.destroy();
+                    this.endEffect(true);
                 }
             });
         }
@@ -1031,7 +1032,16 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
-    _determineVisibility(){
+    _setupHooks(){
+
+        if (this.data.attachTo && lib.is_UUID(this.data.source)){
+            const hookName = "preDelete" + this.data.source.split('.')[2];
+            this._addHook(hookName, (doc) => {
+                if (doc !== this.source.document) return;
+                this.visible = false;
+                this.endEffect(true);
+            });
+        }
 
         if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
             const hookName = "update" + this.data.source.split('.')[2];
@@ -1044,18 +1054,19 @@ export default class CanvasEffect extends PIXI.Container {
             this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
         } else {
             this.renderable = true;
-            this.alpha = 1.0;
+            this.alpha = 1;
         }
 
         if (this.data.attachTo?.bindAlpha && lib.is_UUID(this.data.source)) {
-            const hookName = "update" + this.data.source.split('.')[2];
-            this._addHook(hookName, (doc) => {
-                if (doc !== this.source.document) return;
+            const document = this.source.document;
+            if(document instanceof TokenDocument || document instanceof TileDocument) {
+                const hookName = "update" + this.data.source.split('.')[2];
+                this._addHook(hookName, (doc) => {
+                    if (doc !== this.source.document) return;
+                    this.sprite.alpha = this.source.data.alpha;
+                });
                 this.sprite.alpha = this.source.data.alpha;
-            });
-            this.sprite.alpha = this.source.data.alpha;
-        } else {
-            this.sprite.alpha = 1.0;
+            }
         }
 
     }
@@ -1207,7 +1218,11 @@ export default class CanvasEffect extends PIXI.Container {
             if (this.data.stretchTo?.attachTo) {
                 this._ticker.add(async () => {
                     if(this.source.destroyed || this.target.destroyed) return;
-                    await this._applyDistanceScaling();
+                    try {
+                        await this._applyDistanceScaling();
+                    } catch (err){
+                        lib.debug_error(err);
+                    }
                 });
             }
 
@@ -1296,30 +1311,40 @@ export default class CanvasEffect extends PIXI.Container {
 
                 if(this.source.destroyed) return;
 
-                let offset = { x: 0, y: 0 };
+                try {
 
-                if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
+                    let offset = { x: 0, y: 0 };
 
-                    offset = canvaslib.align({
-                        context: this.source,
-                        spriteWidth: this.sprite.width,
-                        spriteHeight: this.sprite.height,
-                        align: this.data.attachTo?.align
-                    })
+                    if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
 
+                        offset = canvaslib.align({
+                            context: this.source,
+                            spriteWidth: this.sprite.width,
+                            spriteHeight: this.sprite.height,
+                            align: this.data.attachTo?.align
+                        })
+
+                    }
+
+                    this.position.set(
+                        this.sourcePosition.x - offset.x,
+                        this.sourcePosition.y - offset.y
+                    );
+
+                } catch (err){
+                    lib.debug_error(err);
                 }
-
-                this.position.set(
-                    this.sourcePosition.x - offset.x,
-                    this.sourcePosition.y - offset.y
-                );
 
             });
 
             if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
                 this._ticker.add(() => {
                     if(this.source.destroyed) return;
-                    this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
+                    try {
+                        this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
+                    } catch (err){
+                        lib.debug_error(err);
+                    }
                 });
             }
 
@@ -1343,7 +1368,11 @@ export default class CanvasEffect extends PIXI.Container {
             if (this.data.rotateTowards?.attachTo) {
                 this._ticker.add(() => {
                     if(this.source.destroyed || this.target.destroyed) return;
-                    this._rotateTowards();
+                    try {
+                        this._rotateTowards();
+                    } catch (err){
+                        lib.debug_error(err);
+                    }
                 });
             }
         }
@@ -1857,7 +1886,7 @@ class PersistentCanvasEffect extends CanvasEffect {
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
         let timeout = (creationTimeDifference === 0 && !this.data.animations) ? 0 : 50;
         setTimeout(() => {
-            this._determineVisibility();
+            this._setupHooks();
         }, timeout);
     }
 
@@ -1871,8 +1900,8 @@ class PersistentCanvasEffect extends CanvasEffect {
     }
 
     /** @OVERRIDE */
-    async endEffect() {
-        const durations = [
+    async endEffect(immediate = false) {
+        const durations = immediate ? [0] : [
             this._fadeOut(this.data.extraEndDuration),
             this._scaleOut(this.data.extraEndDuration),
             this._rotateOut(this.data.extraEndDuration),
