@@ -65,8 +65,8 @@
     ],
     "socket": true,
     "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
-    "manifest": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.json",
-    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/1.3.5/module.zip",
+    "manifest": "https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/2.0.0/release_candidates/module.json",
+    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/raw/2.0.0/release_candidates/pre_release.zip",
     "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
     "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
 }
