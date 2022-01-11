@@ -253,7 +253,7 @@ export default class EffectSection extends Section {
         this.mirrorX(inObject.data.mirrorX);
         this.mirrorY(inObject.data.mirrorY);
         if(inObject?.data?.rotation){
-            this.rotate(inObject.data.rotation);
+            this.rotate(-inObject.data.rotation);
         }
         return this;
     }
@@ -772,8 +772,8 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while moving towards it? You're insane.");
         }
 
-        const source = this._sanitizeObject(this._source);
-        const target = this._sanitizeObject(this._target);
+        const source = this._getSourceObject();
+        const target = this._getTargetObject();
 
         if(!source && !target && !this._screenSpace){
             throw this.sequence._customError(this, "play", "Could not determine where to play the effect!");
