@@ -126,7 +126,7 @@ export default class SequencerEffectManager {
         }
         return this.effects
             .filter(effect => !inFilter.effects || inFilter.effects.includes(effect.id))
-            .filter(effect => !inFilter.name || effect.entry.match(inFilter.name)?.length)
+            .filter(effect => !inFilter.name || effect.data.name.match(inFilter.name)?.length)
             .filter(effect => !inFilter.source || inFilter.source === effect.data.source)
             .filter(effect => !inFilter.target || inFilter.target === effect.data.target)
             .filter(effect => !inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
