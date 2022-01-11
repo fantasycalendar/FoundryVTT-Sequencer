@@ -7,7 +7,6 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
-import { debug_error } from "../lib/lib.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -1444,8 +1443,8 @@ export default class CanvasEffect extends PIXI.Container {
             if (!animation.target) continue;
 
             if (animation.propertyName.indexOf("rotation") > -1) {
-                animation.from = ((animation.from / 180) * Math.PI);
-                animation.to = ((animation.to / 180) * Math.PI);
+                animation.from = Math.toRadians(animation.from);
+                animation.to = Math.toRadians(animation.to);
             }
 
             if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
@@ -1477,7 +1476,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (animation.propertyName.indexOf("rotation") > -1) {
                 animation.values = animation.values.map(value => {
-                    return ((value / 180) * Math.PI);
+                    return Math.toRadians(value);
                 });
             }
 
@@ -1688,7 +1687,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (this.actualCreationTime - (this.data.creationTimestamp + rotateIn.duration + rotateIn.delay) > 0) return;
 
         let original_radians = this.spriteContainer.rotation;
-        this.spriteContainer.rotation = (rotateIn.value / 180) * Math.PI;
+        this.spriteContainer.rotation = Math.toRadians(rotateIn.value);
 
         SequencerAnimationEngine.addAnimation(this.id, this._counterAnimateRotation({
             target: this.spriteContainer,
@@ -1721,7 +1720,7 @@ export default class CanvasEffect extends PIXI.Container {
         SequencerAnimationEngine.addAnimation(this.id, this._counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
-            to: (rotateOut.value / 180) * Math.PI,
+            to: Math.toRadians(rotateOut.value),
             duration: rotateOut.duration,
             ease: rotateOut.ease,
             delay: rotateOut.delay
