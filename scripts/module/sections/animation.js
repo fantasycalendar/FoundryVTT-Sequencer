@@ -418,8 +418,6 @@ class AnimationSection extends Section {
 
             let from = lib.is_real_number(this._opacity) ? this._opacity : (this._originObject.data.alpha ?? 1.0);
 
-            console.log(from)
-
             animData.attributes.push({
                 name: "alpha",
                 from: from,
@@ -624,8 +622,6 @@ class AnimationSection extends Section {
                             val = attribute.to;
                             attribute.done = true;
                         }
-
-                        console.log(attribute.name, attribute.progress, attribute.from, attribute.to)
 
                         animatedAttributes[attribute.name] = val;
 

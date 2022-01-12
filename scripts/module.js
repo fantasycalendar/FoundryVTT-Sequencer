@@ -76,13 +76,21 @@ function initialize_module(){
         }
     }
 
-    window.SequencerDatabase = Sequencer.Database;
+    const warningDebounce = debounce(() => {
+        lib.custom_warning("Sequencer", `Accessing the Sequencer Database through "SequencerDatabase" has been deprecated - please use "Sequencer.Database"`, true);
+    }, 50);
+
+    window.SequencerDatabase = new Proxy(window.Sequencer.Database, {
+        get: function (target, prop) {
+            warningDebounce();
+            return window.Sequencer.Database[prop];
+        }
+    });
 
     registerLayers();
     registerSettings();
     registerHotkeys();
     registerLibwrappers();
-
 
     Hooks.once("socketlib.ready", () => {
         registerSocket();
@@ -107,15 +115,15 @@ function initialize_module(){
     });
 
     Hooks.on("preDeleteToken", (document) => {
-        SequencerEffectManager.tearDownPersists(document.uuid);
+        SequencerEffectManager.objectDeleted(document.uuid);
     });
 
     Hooks.on("preDeleteTile", (document) => {
-        SequencerEffectManager.tearDownPersists(document.uuid);
+        SequencerEffectManager.objectDeleted(document.uuid);
     });
 
     Hooks.on("preDeleteMeasuredTemplate", (document) => {
-        SequencerEffectManager.tearDownPersists(document.uuid);
+        SequencerEffectManager.objectDeleted(document.uuid);
     });
 
 }

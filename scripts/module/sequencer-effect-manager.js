@@ -258,8 +258,8 @@ export default class SequencerEffectManager {
      *
      * @returns {promise}
      */
-    static setUpPersists() {
-        this.tearDownPersists();
+    static async setUpPersists() {
+        await this.tearDownPersists();
         const allObjects = lib.get_all_objects();
         allObjects.push(canvas.scene);
         const promises = allObjects.map(doc => {
@@ -274,17 +274,31 @@ export default class SequencerEffectManager {
 
     /**
      * Tears down persisting effects when the scene is unloaded
-     *
-     * @param {string} inUUID
      */
-    static tearDownPersists(inUUID) {
-        this.effects
-            .filter(effect => !inUUID || effect.data?.source === inUUID || effect.data?.target === inUUID)
-            .forEach(effect => {
-                EffectsContainer.delete(effect.id);
-                effect.destroy();
-                debounceUpdateEffectViewer();
-            })
+    static tearDownPersists() {
+        return Promise.allSettled(this.effects.map(effect => {
+            EffectsContainer.delete(effect.id);
+            debounceUpdateEffectViewer();
+            return effect.destroy();
+        }));
+    }
+
+    /**
+     * Handles the deletion of objects that effects are attached to
+     *
+     * @param inUUID
+     * @returns {Promise}
+     */
+    static objectDeleted(inUUID){
+        const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID)
+        return Promise.allSettled(effectsToEnd.map(effect => {
+            EffectsContainer.delete(effect.id);
+            if(inUUID === effect.data.target){
+                flagManager.removeFlags(effect.data.source, effect);
+            }
+            debounceUpdateEffectViewer();
+            return effect.destroy();
+        }));
     }
 
     /**
@@ -327,7 +341,14 @@ export default class SequencerEffectManager {
      */
     static _playEffectMap(inEffects, inDocument) {
         if (inEffects instanceof Map) inEffects = Array.from(inEffects);
-        return Promise.all(inEffects.map(effect => {
+        return Promise.all(inEffects.map(async (effect) => {
+            if(!CanvasEffect.checkValid(effect[1])){
+                if(game.user.isGM) {
+                    lib.custom_warning(`Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`);
+                    return flagManager.removeFlags(inDocument.uuid, effect);
+                }
+                return;
+            }
             return this._playEffect(effect[1], false)
                 .then((result) => {
                     if (!result){

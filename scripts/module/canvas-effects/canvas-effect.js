@@ -16,6 +16,18 @@ export default class CanvasEffect extends PIXI.Container {
             : new PersistentCanvasEffect(inData);
     }
 
+    static checkValid(effectData) {
+        let sourceExists = true;
+        let targetExists = true;
+        if(effectData.source && lib.is_UUID(effectData.source)){
+            sourceExists = lib.from_uuid_fast(effectData.source);
+        }
+        if(effectData.target && lib.is_UUID(effectData.target)){
+            targetExists = lib.from_uuid_fast(effectData.target);
+        }
+        return sourceExists && targetExists;
+    }
+
     constructor(inData) {
         super();
 
@@ -591,7 +603,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     async _initialize(play = true) {
         this._initializeVariables();
-        this._contextLostCallback();
+        await this._contextLostCallback();
         await this._loadTexture();
         this._calculateDuration();
         this._addToContainer();
@@ -939,9 +951,17 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _contextLostCallback() {
-        if (this.data.attachTo && !lib.is_UUID(this.data.source)) {
+        if (this.data.attachTo && lib.is_UUID(this.data.source)) {
             this._ticker.add(() => {
-                if (this.source._destroyed) {
+                if (!this.source || this.source._destroyed) {
+                    this._ticker.stop();
+                    this.endEffect(true);
+                }
+            });
+        }
+        if (this.data.stretchTo?.attachTo && lib.is_UUID(this.data.target)) {
+            this._ticker.add(() => {
+                if (!this.target || this.target._destroyed) {
                     this._ticker.stop();
                     this.endEffect(true);
                 }
@@ -1031,12 +1051,26 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
+    /**
+     * Sets up the hooks relating to this effect's source and target
+     *
+     * @private
+     */
     _setupHooks(){
 
         if (this.data.attachTo && lib.is_UUID(this.data.source)){
             const hookName = "preDelete" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.source.document) return;
+                this.visible = false;
+                this.endEffect(true);
+            });
+        }
+
+        if (this.data.stretchTo?.attachTo && lib.is_UUID(this.data.target)){
+            const hookName = "preDelete" + this.data.target.split('.')[2];
+            this._addHook(hookName, (doc) => {
+                if (doc !== this.target.document) return;
                 this.visible = false;
                 this.endEffect(true);
             });
@@ -1908,7 +1942,7 @@ class PersistentCanvasEffect extends CanvasEffect {
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
-            super.endEffect()
+            super.endEffect(immediate)
             resolve(this.data);
         }, waitDuration));
     }
