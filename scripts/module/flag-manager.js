@@ -78,6 +78,7 @@ const flagManager = {
 
             if(effectData.attachTo) {
                 effectData.attachTo = {
+                    active: true,
                     align: "center",
                     rotation: true,
                     bindVisibility: true,

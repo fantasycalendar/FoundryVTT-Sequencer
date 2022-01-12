@@ -306,7 +306,7 @@ export default class CanvasEffect extends PIXI.Container {
     get userCanUpdate() {
         return game.user.isGM
             || this.owner
-            || (this.data.attachTo && this.source.document.canUserModify(game.user, "update"));
+            || (this.data.attachTo?.active && this.source.document.canUserModify(game.user, "update"));
     }
 
     /**
@@ -570,17 +570,6 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     /**
-     * Determines whether a position is within the bounds of this effect
-     *
-     * @param inPosition
-     * @returns {boolean}
-     */
-    isPositionWithinBounds(inPosition) {
-        if (!this.spriteContainer) return false;
-        return canvaslib.is_position_within_bounds(inPosition, this.spriteContainer, this.parent)
-    }
-
-    /**
      * Updates the effect
      *
      * @param inUpdates
@@ -592,6 +581,17 @@ export default class CanvasEffect extends PIXI.Container {
         Hooks.call("updateSequencerEffect", this);
         this._destroyDependencies();
         return this._reinitialize();
+    }
+
+    /**
+     * Determines whether a position is within the bounds of this effect
+     *
+     * @param inPosition
+     * @returns {boolean}
+     */
+    isPositionWithinBounds(inPosition) {
+        if (!this.spriteContainer) return false;
+        return canvaslib.is_position_within_bounds(inPosition, this.spriteContainer, this.parent)
     }
 
     /**
@@ -670,7 +670,7 @@ export default class CanvasEffect extends PIXI.Container {
             return [entry[0], this._setupOffsetMap(entry[1])];
         }));
 
-        this.context = this.data.attachTo && this.source?.document ? this.source.document : game.scenes.get(this.data.sceneId);
+        this.context = this.data.attachTo?.active && this.source?.document ? this.source.document : game.scenes.get(this.data.sceneId);
 
         this._ticker = new PIXI.Ticker;
         this._ticker.start();
@@ -952,7 +952,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _contextLostCallback() {
-        if (this.data.attachTo && lib.is_UUID(this.data.source)) {
+        if (this.data.attachTo?.active && lib.is_UUID(this.data.source)) {
             this._ticker.add(() => {
                 if (!this.source || this.source._destroyed) {
                     this._ticker.stop();
@@ -1059,7 +1059,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _setupHooks(){
 
-        if (this.data.attachTo && lib.is_UUID(this.data.source)){
+        if (this.data.attachTo?.active && lib.is_UUID(this.data.source)){
             const hookName = "preDelete" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.source.document) return;
@@ -1339,7 +1339,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         }
 
-        if(this.data.attachTo){
+        if(this.data.attachTo?.active){
 
             this._ticker.add(() => {
 

@@ -458,7 +458,8 @@ export const SelectionManager = {
     _updateEffect(){
 
         const updates = {
-            attachTo: this.selectedEffect.data.attachTo, stretchTo: this.selectedEffect.data.stretchTo
+            attachTo: this.selectedEffect.data.attachTo,
+            stretchTo: this.selectedEffect.data.stretchTo
         }
 
         if (this.attachToTarget) {
@@ -470,10 +471,26 @@ export const SelectionManager = {
                     updates.stretchTo.attachTo = true;
                 } else {
                     updates.source = objUuid;
-                    updates.attachTo = true;
+                    if(!updates.attachTo){
+                        updates.attachTo = {
+                            active: true,
+                            align: "center",
+                            rotation: true,
+                            bindVisibility: true,
+                            bindAlpha: true
+                        };
+                    }
+                    updates.attachTo.active = true;
                 }
             }
         } else {
+            updates.attachTo = foundry.utils.mergeObject(updates.attachTo || {}, {
+                active: false,
+                align: "center",
+                rotation: true,
+                bindVisibility: true,
+                bindAlpha: true
+            })
             updates[this.sourceOrTarget ? this.sourceOrTarget : "source"] = this.suggestedProperties.position;
         }
 

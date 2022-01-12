@@ -156,6 +156,7 @@ export default class EffectSection extends Section {
     attachTo(inObject, inOptions={}) {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
+            active: true,
             align: "center",
             bindVisibility: true,
             bindAlpha: true,
@@ -181,7 +182,8 @@ export default class EffectSection extends Section {
         if(typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
 
         this._source = validatedObject;
-        this._attachTo = isValidObject ? inOptions : false;
+        inOptions.active = isValidObject;
+        this._attachTo = inOptions;
         if(!validatedObject?.id) this.locally();
         return this;
     }
@@ -854,7 +856,7 @@ export default class EffectSection extends Section {
      */
     _getSourceObject(){
         if(typeof this._source !== "object") return this._source;
-        return this._attachTo
+        return this._attachTo?.active
             ? this._sanitizeObject(this._source)
             : canvaslib.get_object_canvas_data(this._source);
     }
