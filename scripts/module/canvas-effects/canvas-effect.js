@@ -628,6 +628,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (!this.shouldPlay) {
             return Sequencer.EffectManager._removeEffect(this);
         }
+        this.actualCreationTime = (+new Date());
         return this._initialize(play);
     }
 
@@ -1935,9 +1936,9 @@ class PersistentCanvasEffect extends CanvasEffect {
     /** @OVERRIDE */
     async endEffect(immediate = false) {
         const durations = immediate ? [0] : [
-            this._fadeOut(this.data.extraEndDuration),
-            this._scaleOut(this.data.extraEndDuration),
-            this._rotateOut(this.data.extraEndDuration),
+            this._fadeOut(this.data.extraEndDuration ?? 0),
+            this._scaleOut(this.data.extraEndDuration ?? 0),
+            this._rotateOut(this.data.extraEndDuration ?? 0),
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
