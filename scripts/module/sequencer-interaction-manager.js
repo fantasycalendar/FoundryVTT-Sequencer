@@ -122,7 +122,7 @@ export const EffectPlayer = {
     targetAttachFound: false,
 
     get isActive() {
-        return InteractionManager.isLayerActive && game.activeTool === "play-effect";
+        return InteractionManager.isLayerActive && game?.activeTool === "play-effect";
     },
 
     /**
@@ -323,7 +323,7 @@ export const SelectionManager = {
     attachToTarget: false,
 
     get isActive() {
-        return InteractionManager.isLayerActive && game.activeTool === "select-effect";
+        return InteractionManager.isLayerActive && game?.activeTool === "select-effect";
     },
 
     get effects() {

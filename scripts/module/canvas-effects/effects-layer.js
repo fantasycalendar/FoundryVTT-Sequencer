@@ -89,7 +89,7 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     _drawLine() {
 
-        if (!EffectPlayer.startPos || !EffectPlayer.endPos || game.activeTool !== "play-effect") return;
+        if (!EffectPlayer.startPos || !EffectPlayer.endPos || game?.activeTool !== "play-effect") return;
 
         this.line.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 1)
         // If line already present then set its position only
@@ -100,7 +100,7 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     _drawPoints() {
 
-        if (game.activeTool !== "play-effect") return;
+        if (game?.activeTool !== "play-effect") return;
 
         const startPos = EffectPlayer.startPos || EffectPlayer.cursorPos;
 
