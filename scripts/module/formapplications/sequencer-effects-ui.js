@@ -1,6 +1,6 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
-import SequencerPlayer from "../sequencer-effect-player.js";
+import { EffectPlayer, SelectionManager } from "../sequencer-interaction-manager.js";
 import CONSTANTS from "../constants.js";
 
 export default class SequencerEffectsUI extends FormApplication {
@@ -89,14 +89,14 @@ export default class SequencerEffectsUI extends FormApplication {
     getData() {
         let data = super.getData()
         data.userIsGM = game.user.isGM;
-        data.canCreateEffects = lib.userCanDo("permissions-effect-create");
+        data.canCreateEffects = lib.user_can_do("permissions-effect-create");
         data = this.getPlayerData(data);
         return data;
     }
 
     close(options){
         super.close(options)
-        SequencerPlayer.snapLocationToGrid = false;
+        EffectPlayer.snapLocationToGrid = false;
     }
 
     async _onSubmit(event) {
@@ -148,15 +148,16 @@ export default class SequencerEffectsUI extends FormApplication {
         nameInput.innerText = effectName;
 
         endButton.addEventListener("click", function(e) {
+            SelectionManager.hoveredEffectUI = effect;
             Sequencer.EffectManager.endEffects({ effects: effect, sceneId: game.user.viewedScene });
         });
 
         el.addEventListener("mouseover", function() {
-            effect.highlight(true);
+            SelectionManager.hoveredEffectUI = effect;
         });
 
         el.addEventListener("mouseleave", function() {
-            effect.highlight(false);
+            SelectionManager.hoveredEffectUI = false;
         });
 
         return el;
@@ -217,66 +218,87 @@ export default class SequencerEffectsUI extends FormApplication {
             "scale": {
                 type: "number",
                 default: 1.0,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionScale"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.Scale"),
             },
             "belowTokens": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionBelowTokens"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.BelowTokens"),
             },
             "snapToGrid": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionSnapToGrid"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.SnapToGrid"),
                 callback: (e) => {
-                    SequencerPlayer.snapLocationToGrid = e.target.checked;
+                    EffectPlayer.snapLocationToGrid = e.target.checked;
                 }
             },
             "randomRotation": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionRandomRotation"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.RandomRotation"),
             },
             "randomMirrorY": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionRandomMirrorY"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.RandomMirrorY"),
             },
             "randomOffset": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionRandomOffset"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.RandomOffset"),
             },
             "repetitions": {
                 type: "number",
                 default: 1.0,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionRepetitions"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.Repetitions"),
             },
             "repeatDelayMin": {
                 type: "number",
                 default: 200,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionDelayMin"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.DelayMin"),
             },
             "repeatDelayMax": {
                 type: "number",
                 default: 400,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionDelayMax"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.DelayMax"),
             },
             "preload": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionPreload"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.Preload"),
             },
             "moveTowards": {
                 type: "checkbox",
                 default: false,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionDragBehavior"),
+                label: game.i18n.localize("SEQUENCER.Player.Option.DragBehavior"),
             },
             "moveSpeed": {
                 type: "number",
                 default: 0,
-                label: game.i18n.localize("SEQUENCER.PlayerOptionMoveSpeed"),
-            }
+                label: game.i18n.localize("SEQUENCER.Player.Option.MoveSpeed"),
+            },
+            /*"attachTo": {
+                type: "checkbox",
+                default: false,
+                label: game.i18n.localize("SEQUENCER.Player.Option.AttachTo"),
+                callback: (e) => {
+                    EffectPlayer.sourceAttach = e.target.checked;
+                }
+            },
+            "stretchToAttach": {
+                type: "checkbox",
+                default: false,
+                label: game.i18n.localize("SEQUENCER.Player.Option.StretchToAttach"),
+                callback: (e) => {
+                    EffectPlayer.targetAttach = e.target.checked;
+                }
+            },
+            "persist": {
+                type: "checkbox",
+                default: false,
+                label: game.i18n.localize("SEQUENCER.Player.Option.Persist")
+            }*/
         }
     }
 
@@ -289,12 +311,13 @@ export default class SequencerEffectsUI extends FormApplication {
 
     activatePlayerListeners(html) {
 
-        if(!lib.userCanDo("permissions-effect-create")) return;
+        if(!lib.user_can_do("permissions-effect-create")) return;
 
-        html.find('.activate-layer').click(() => {
+        html.find('.activate-layer').click(async () => {
             canvas.sequencerEffectsAboveTokens.activate();
-            ui.controls.render();
             ui.controls.control.activeTool = "play-effect";
+            await lib.wait(10)
+            ui.controls.render();
         });
 
         const _this = this;
@@ -386,8 +409,8 @@ export default class SequencerEffectsUI extends FormApplication {
                 if(Object.keys(diff).length){
                     $(this).val(activeSettings.name);
                     const doSwitch = await Dialog.confirm({
-                        title: game.i18n.localize("SEQUENCER.PlayerApplyPresetTitle"),
-                        content: `<p>${game.i18n.format("SEQUENCER.PlayerApplyPresetContent", { preset_name })}</p>`
+                        title: game.i18n.localize("SEQUENCER.Player.ApplyPresetTitle"),
+                        content: `<p>${game.i18n.format("SEQUENCER.Player.ApplyPresetContent", { preset_name })}</p>`
                     });
                     if(!doSwitch){
                         return;
@@ -411,7 +434,7 @@ export default class SequencerEffectsUI extends FormApplication {
     promptPermissionsWarning() {
         if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning")) return;
 
-        const content = `<p>${ game.i18n.localize("SEQUENCER.PlayerPermissionsWarning") }</p><p><button type="button" class="w-100 open-module-settings"><i class="fas fa-plug"></i> Open Module Settings</button></p>`
+        const content = `<p>${ game.i18n.localize("SEQUENCER.Player.PermissionsWarning") }</p><p><button type="button" class="w-100 open-module-settings"><i class="fas fa-plug"></i> Open Module Settings</button></p>`
         Dialog.prompt({
             title: "Sequencer Permissions",
             content: content,
@@ -443,8 +466,8 @@ export default class SequencerEffectsUI extends FormApplication {
 
         const settingsList = $(settings.element).find(".settings-list");
         const settingToScrollTo = settingsList.find('select[name="sequencer.permissions-sidebar-tools"]').parent().parent();
-        await lib.scrollToElement(settingsList, settingToScrollTo);
-        await lib.highlightElement(settingToScrollTo, { duration: 2500 });
+        await lib.scroll_to_element(settingsList, settingToScrollTo);
+        await lib.highlight_element(settingToScrollTo, { duration: 2500 });
 
     }
 
@@ -525,8 +548,8 @@ export default class SequencerEffectsUI extends FormApplication {
     async deletePreset(inName){
 
         const doDelete = await Dialog.confirm({
-            title: game.i18n.localize("SEQUENCER.PlayerDeletePresetTitle"),
-            content: `<p>${game.i18n.format("SEQUENCER.PlayerDeletePresetContent", { preset_name: inName })}</p>`
+            title: game.i18n.localize("SEQUENCER.Player.DeletePresetTitle"),
+            content: `<p>${game.i18n.format("SEQUENCER.Player.DeletePresetContent", { preset_name: inName })}</p>`
         });
         if(!doDelete) return;
 
@@ -548,14 +571,14 @@ export default class SequencerEffectsUI extends FormApplication {
     async promptPresetName(copy = false, inName = ""){
 
         let title = copy
-            ? game.i18n.localize("SEQUENCER.PlayerCopyPresetTitle")
-            : game.i18n.localize("SEQUENCER.PlayerCreateNewPresetTitle");
+            ? game.i18n.localize("SEQUENCER.Player.CopyPresetTitle")
+            : game.i18n.localize("SEQUENCER.Player.CreateNewPresetTitle");
 
         let presetName = await new Promise((resolve) => {
             let rejected = false;
             new Dialog({
                 title: title,
-                content: `<p><input type="text" placeholder="${game.i18n.localize("SEQUENCER.PlayerCreateNewPresetInputLabel")}" id="newPresetName" style="width:100%;"></p>`,
+                content: `<p><input type="text" placeholder="${game.i18n.localize("SEQUENCER.Player.CreateNewPresetInputLabel")}" id="newPresetName" style="width:100%;"></p>`,
                 buttons: {
                     okay: {
                         icon: '<i class="fas fa-check"></i>',
@@ -594,8 +617,8 @@ export default class SequencerEffectsUI extends FormApplication {
 
             if (presetName.toLowerCase() === "default") {
                 Dialog.prompt({
-                    title: game.i18n.localize("SEQUENCER.PlayerDefaultErrorTitle"),
-                    content: `<p>${game.i18n.localize("SEQUENCER.PlayerDefaultErrorContent")}</p>`,
+                    title: game.i18n.localize("SEQUENCER.Player.DefaultErrorTitle"),
+                    content: `<p>${game.i18n.localize("SEQUENCER.Player.DefaultErrorContent")}</p>`,
                     label: game.i18n.localize("SEQUENCER.OK"),
                     callback: () => {}
                 });
@@ -605,8 +628,8 @@ export default class SequencerEffectsUI extends FormApplication {
             if (this.presets[presetName]) {
 
                 const overwrite = await Dialog.confirm({
-                    title: game.i18n.localize("SEQUENCER.PlayerOverwritePresetTitle"),
-                    content: `<p>${game.i18n.format("SEQUENCER.PlayerOverwritePresetContent", { preset_name: presetName })}</p>`
+                    title: game.i18n.localize("SEQUENCER.Player.OverwritePresetTitle"),
+                    content: `<p>${game.i18n.format("SEQUENCER.Player.OverwritePresetContent", { preset_name: presetName })}</p>`
                 });
 
                 if (!overwrite) {

@@ -2,7 +2,7 @@
   "name": "sequencer",
   "title": "Sequencer",
   "description": "This module implements an advanced sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
-  "version": "0.0.2",
+  "version": "2.0.0",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
   "minimumCoreVersion": "0.8.9",
@@ -19,11 +19,6 @@
       "lang": "en",
       "name": "English",
       "path": "languages/en-EN.json"
-    },
-    {
-      "lang": "fr-FR",
-      "name": "Français (France)",
-      "path": "languages/fr-FR.json"
     }
   ],
   "packs": [

@@ -1,5 +1,5 @@
 import * as lib from "../../lib/lib.js";
-import { is_real_number } from "../../lib/lib.js";
+import { SequencerFileRangeFind } from "../../sequencer-file.js";
 
 export default {
 
@@ -7,8 +7,9 @@ export default {
      * Base properties
      */
     _file: "",
+    _fileOptions: false,
     _baseFolder: "",
-    _mustache: false,
+    _mustache: null,
 
     /**
      * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
@@ -31,11 +32,7 @@ export default {
      */
     baseFolder(inBaseFolder) {
         if (typeof inBaseFolder !== "string") throw this.sequence._customError(this, "baseFolder", "inBaseFolder must be of type string");
-        inBaseFolder = inBaseFolder.replace("\\", "/");
-        if (!inBaseFolder.endsWith("/")) {
-            inBaseFolder += "/";
-        }
-        this._baseFolder = inBaseFolder;
+        this._baseFolder = inBaseFolder + (inBaseFolder.endsWith("/") ? "" : "/");
         return this;
     },
 
@@ -51,95 +48,72 @@ export default {
         return this;
     },
 
-    _recurseFileObject(inFile) {
+    async _determineFile(inFile) {
 
-        if (inFile instanceof lib.SequencerFile || typeof inFile === "string" || typeof inFile.file === "string") {
-            return inFile;
+        if(!Array.isArray(inFile) && typeof inFile === "object"){
+            return this._validateCustomRange(inFile);
         }
 
-        if (Array.isArray(inFile)) {
-            inFile = lib.random_array_element(inFile);
-        } else {
-            inFile = lib.random_object_element(inFile);
+        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile, { recurse: true });
+
+        inFile = this._applyMustache(inFile);
+
+        if (Sequencer.Database.entryExists(inFile)) {
+            return this._determineDatabaseFile(inFile);
         }
 
-        return this._recurseFileObject(inFile);
+        const determinedFile = await this._processFile(inFile);
+
+        return { file: determinedFile, forcedIndex: false, customRange: false };
 
     },
 
-    async _determineFile(inFile) {
-
-        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile);
-
+    async _processFile(inFile){
         inFile = this._applyMustache(inFile);
-
-        let forcedIndex = false;
-        if (typeof inFile === "string") {
-            let databaseEntry = window.Sequencer.Database.entryExists(inFile);
-            if (databaseEntry) {
-                let match = inFile.match(/\[([0-9]+)]$/)
-                if (match) {
-                    forcedIndex = Number(match[1]);
-                }
-                let dbEntry = window.Sequencer.Database.getEntry(inFile);
-                if (dbEntry) {
-                    inFile = dbEntry;
-                }
-            } else {
-                inFile = await this._applyWildcard(inFile);
-            }
-        }
-
-        inFile = this._recurseFileObject(inFile);
-
-        if (Array.isArray(inFile)) {
-            inFile = !is_real_number(forcedIndex) ? lib.random_array_element(inFile) : inFile[forcedIndex % inFile.length];
-        }
-
-        if (is_real_number(forcedIndex) && inFile instanceof lib.SequencerFile) {
-            inFile.fileIndex = forcedIndex;
-        }
-
         inFile = this._applyBaseFolder(inFile);
-
-        inFile = this._applyMustache(inFile);
-
+        inFile = await this._applyWildcard(inFile);
+        if (Array.isArray(inFile)) inFile = lib.random_array_element(inFile, { recurse: true });
         return inFile;
+    },
 
+    async _validateCustomRange(inFile){
+
+        const finalFiles = {};
+        const validRanges = Object.keys(SequencerFileRangeFind.ftToDistanceMap);
+        for(const [range, rangeFile] of Object.entries(inFile)){
+            if(!validRanges.includes(range)){
+                throw this.sequence._customError(this, "file", `a file-distance key map must only contain the following keys: ${validRanges.join(", ")}`);
+            }
+            finalFiles[range] = await this._processFile(rangeFile);
+        }
+
+        return { file: finalFiles, forcedIndex: false, customRange: true };
+
+    },
+
+    _determineDatabaseFile(inFile){
+        const entries = Sequencer.Database.getEntry(inFile);
+        const entry = Array.isArray(entries) ? lib.random_array_element(entries) : entries;
+        const match = inFile.match(/\[([0-9]+)]$/);
+        return { file: entry, forcedIndex: match ? Number(match[1]) : false, customRange: false };
     },
 
     _applyBaseFolder(inFile) {
-
-        if (inFile instanceof lib.SequencerFile) {
-            return inFile.applyBaseFolder(this._baseFolder);
-        }
-
+        if (Array.isArray(inFile)) return inFile.map((file) => this._applyBaseFolder(file));
         return inFile.startsWith(this._baseFolder) ? inFile : this._baseFolder + inFile;
-
     },
 
     _applyMustache(inFile) {
         if (!this._mustache) return inFile;
-
-        if (inFile instanceof lib.SequencerFile) {
-            inFile = inFile.applyMustache(this._mustache);
-        } else if (typeof inFile === "string") {
-            let template = Handlebars.compile(inFile);
-            inFile = template(this._mustache);
-        }
-        return inFile;
+        let template = Handlebars.compile(inFile);
+        return template(this._mustache);
     },
 
     async _applyWildcard(inFile) {
-
         if (!inFile.includes("*")) return inFile;
-
         if (Array.isArray(inFile)) return inFile.map(async (file) => await this._applyWildcard(file));
-
         inFile = this._applyBaseFolder(inFile);
-
         return lib.getFiles(inFile, { applyWildCard: true });
-
     }
 
 }

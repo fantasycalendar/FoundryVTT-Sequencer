@@ -1,4 +1,5 @@
 import * as lib from "../lib/lib.js";
+import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
@@ -112,10 +113,16 @@ class AnimationSection extends Section {
         return this;
     }
 
+    /**
+     * @private
+     */
     async run() {
         return this._runAnimate();
     }
 
+    /**
+     * @private
+     */
     _applyTraits() {
         Object.assign(this.constructor.prototype, traits.moves);
         Object.assign(this.constructor.prototype, traits.opacity);
@@ -124,22 +131,36 @@ class AnimationSection extends Section {
         Object.assign(this.constructor.prototype, traits.tint);
     }
 
+    /**
+     * @private
+     */
     async _updateObject(obj, updates, animate = false, animation = {}) {
-        await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_DOCUMENT, obj.document.uuid, updates, { animate, animation });
+        const uuid = obj?.uuid ?? obj?.document?.uuid;
+        await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_DOCUMENT, uuid, updates, { animate, animation });
     }
 
+    /**
+     * @private
+     */
     async _execute() {
         if (!(await this._shouldPlay())) return;
+        let self = this;
+        this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
         return new Promise(async (resolve) => {
-            if (this._shouldAsync) {
-                await this.run();
-            } else {
-                this.run();
-            }
-            resolve();
+            setTimeout(async () => {
+                if (this._shouldAsync) {
+                    await self.run();
+                } else {
+                    self.run();
+                }
+                resolve();
+            }, this._basicDelay);
         });
     }
 
+    /**
+     * @private
+     */
     _getClosestSquare(origin, target) {
 
         let originLoc = this._getCleanPosition(origin);
@@ -181,6 +202,9 @@ class AnimationSection extends Section {
 
     }
 
+    /**
+     * @private
+     */
     _getCleanPosition(obj, measure = false) {
 
         let pos = {
@@ -200,6 +224,9 @@ class AnimationSection extends Section {
         return pos;
     }
 
+    /**
+     * @private
+     */
     _snapLocationToGrid(inLocation) {
         let coords = canvas.grid.grid.getGridPositionFromPixels(inLocation.x, inLocation.y);
         return {
@@ -279,7 +306,6 @@ class AnimationSection extends Section {
             let fadeDuration = this._fadeIn.duration + this._fadeIn.delay;
 
             overallDuration = overallDuration > fadeDuration ? overallDuration : fadeDuration;
-
         }
 
         if (this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined) {
@@ -346,7 +372,7 @@ class AnimationSection extends Section {
             targetLocation.y += this._offset.y;
 
             if (this._moveTowards.relativeToCenter){
-                const dimensions = lib.getObjectDimensions(this._originObject);
+                const dimensions = canvaslib.get_object_dimensions(this._originObject);
                 targetLocation.x -= dimensions.width/2;
                 targetLocation.y -= dimensions.height/2;
                 if(this._snapToGrid){
@@ -390,7 +416,7 @@ class AnimationSection extends Section {
 
         if (this._fadeOut) {
 
-            let from = lib.is_real_number(this._opacity) ? this._opacity : this._originObject.alpha;
+            let from = lib.is_real_number(this._opacity) ? this._opacity : (this._originObject.data.alpha ?? 1.0);
 
             animData.attributes.push({
                 name: "alpha",
@@ -471,7 +497,7 @@ class AnimationSection extends Section {
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
                 if (this._teleportTo.relativeToCenter){
-                    const dimensions = lib.getObjectDimensions(this._originObject);
+                    const dimensions = canvaslib.get_object_dimensions(this._originObject);
                     targetLocation.x -= dimensions.width/2;
                     targetLocation.y -= dimensions.height/2;
                     if(this._snapToGrid){
@@ -522,6 +548,9 @@ class AnimationSection extends Section {
 
     }
 
+    /**
+     * @private
+     */
     async _animate(animData, resolve, timespan) {
 
         // If it's not the first tick

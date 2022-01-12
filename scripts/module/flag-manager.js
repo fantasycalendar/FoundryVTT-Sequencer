@@ -1,6 +1,7 @@
 import * as lib from "./lib/lib.js";
-import CONSTANTS from "./constants.js";
+import * as canvaslib from "./lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import CONSTANTS from "./constants.js";
 
 const flagManager = {
 
@@ -8,92 +9,182 @@ const flagManager = {
     flagRemoveBuffer: new Map(),
     _latestFlagVersion: false,
 
-    getFlag: (inObject) => {
+    get latestFlagVersion(){
+        if(!this._latestFlagVersion){
+            const versions = Object.keys(this.migrations);
+            versions.sort((a,b) => {
+                return isNewerVersion(a, b) ? -1 : 1;
+            })
+            this._latestFlagVersion = versions[0];
+        }
+        return this._latestFlagVersion;
+    },
 
-        let flags = inObject.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
+    /**
+     * Sanitizes the effect data, accounting for changes to the structure in previous versions
+     *
+     * @param inDocument
+     * @returns {array}
+     */
+    getFlags(inDocument){
 
-        if(!flags) return [];
+        let effects = inDocument.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
 
-        let update = false;
-        flags = flags.map(entries => {
-            let [id, effect] = entries;
-            for(let [version, migration] of Object.entries(flagManager.migrations)){
-                version = Number(version);
-                if((effect?.flagVersion ?? 0.0) >= version) continue;
-                lib.debug(`Patching flags on ${inObject.id} to version ${version}`);
-                update = true;
-                effect = migration(effect)
+        if(!effects?.length) return [];
+
+        let changes = [];
+        for(let [effectId, effectData] of effects){
+
+            let effectVersion = effectData.flagVersion || "1.0.0";
+
+            if(effectData.flagVersion === this.latestFlagVersion) continue;
+
+            for(let [version, migration] of Object.entries(this.migrations)){
+
+                if(!isNewerVersion(version, effectVersion)) continue;
+
+                effectData = migration(inDocument, effectData);
+
             }
-            effect.flagVersion = flagManager.latestFlagVersion;
-            return [id, effect];
-        })
 
-        if(update){
-            sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, inObject.uuid, flags);
+            lib.debug(`Migrated effect with ID ${effectId} from version ${effectVersion} to version ${this.latestFlagVersion}`)
+
+            effectData.flagVersion = this.latestFlagVersion;
+
+            changes.push(effectData)
         }
 
-        return flags;
+        if(changes.length){
+            flagManager.addFlags(inDocument.uuid, changes);
+        }
 
+        return effects;
+        
     },
 
     migrations: {
+        "2.0.0": (inDocument, effectData) => {
 
-        /**
-         * Basic version, nothing happens here
-         */
-        "1.0": (data) => {
-            return data;
-        },
+            effectData._id = effectData.id;
+            effectData.creationTimestamp = effectData.timestamp;
 
-        /**
-         * Add support for align on attachTo
-         */
-        "1.1": (data) => {
-            data.attachTo = {
-                id: data.attachTo,
-                align: "center"
+            if(effectData.template){
+                effectData.template = {
+                    gridSize: effectData.template[0],
+                    startPoint: effectData.template[1],
+                    endPoint: effectData.template[2]
+                }
             }
-            return data;
-        }
 
+            if(effectData.attachTo) {
+                effectData.attachTo = {
+                    align: "center",
+                    rotation: true,
+                    bindVisibility: true,
+                    bindAlpha: true
+                };
+                effectData.source = inDocument.uuid;
+                const objectSize = canvaslib.get_object_dimensions(inDocument, true);
+                effectData.offset = {
+                    x: (effectData.position.x) - objectSize.width,
+                    y: (effectData.position.y) - objectSize.height,
+                }
+            }else if(effectData.position){
+                effectData.source = effectData.position;
+            }
+
+            if(effectData.reachTowards){
+                effectData.stretchTo = {
+                    attachTo: false,
+                    onlyX: false
+                }
+            }
+
+            if(effectData.filters){
+                effectData.filters = Object.entries(effectData.filters)
+                    .map(entry => {
+                        return {
+                            className: entry[0],
+                            ...entry[1]
+                        }
+                    })
+            }
+
+            effectData.moveSpeed = effectData.speed;
+
+            effectData.target = null;
+            effectData.forcedIndex = null;
+            effectData.flipX = false;
+            effectData.flipY = false;
+            effectData.nameOffsetMap = {};
+            effectData.sequenceId = 0;
+
+            delete effectData.id;
+            delete effectData.timestamp;
+            delete effectData.position;
+            delete effectData.reachTowards;
+            delete effectData.speed;
+            delete effectData.audioVolume;
+            delete effectData.gridSizeDifference;
+            delete effectData.template;
+
+            delete effectData.animatedProperties.fadeInAudio;
+            delete effectData.animatedProperties.fadeOutAudio;
+
+            effectData = foundry.utils.mergeObject(effectData, effectData.animatedProperties)
+
+            delete effectData.animatedProperties;
+
+            return effectData;
+            
+        }
     },
 
-    get latestFlagVersion(){
-        if(!flagManager._latestFlagVersion) {
-            const versions = Object.keys(this.migrations).map(version => Number(version));
-            versions.sort();
-            flagManager._latestFlagVersion = versions.pop();
-        }
-        return flagManager._latestFlagVersion;
+    /**
+     * Adds effects to a given document
+     *
+     * @param inObjectUUID
+     * @param inEffects
+     */
+    addFlags: (inObjectUUID, inEffects) => {
+        if (!Array.isArray(inEffects)) inEffects = [inEffects];
+        sequencerSocket.executeAsGM(SOCKET_HANDLERS.ADD_FLAGS, inObjectUUID, inEffects);
     },
 
-    addFlags: (inObject, inEffects) => {
+    /**
+     * Removes effects from a given document
+     *
+     * @param inObjectUUID
+     * @param inEffects
+     * @param removeAll
+     */
+    removeFlags: (inObjectUUID, inEffects, removeAll) => {
+        sequencerSocket.executeAsGM(SOCKET_HANDLERS.REMOVE_FLAGS, inObjectUUID, inEffects, removeAll);
+    },
 
-        if(!inObject?.id) return;
+    _addFlags: (inObjectUUID, inEffects) => {
 
         if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
-        let flagsToSet = flagManager.flagAddBuffer.get(inObject.id) ?? { obj: inObject, effects: [] };
+        let flagsToSet = flagManager.flagAddBuffer.get(inObjectUUID) ?? { effects: [] };
 
         flagsToSet.effects.push(...inEffects);
 
-        flagManager.flagAddBuffer.set(inObject.id, flagsToSet);
+        flagManager.flagAddBuffer.set(inObjectUUID, flagsToSet);
 
         flagManager.updateFlags();
 
     },
 
-    removeFlags: (inObject, inEffects, removeAll) => {
-
-        if(!inObject?.id) return;
+    _removeFlags: (inObjectUUID, inEffects, removeAll) => {
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 
-        let flagsToSet = flagManager.flagRemoveBuffer.get(inObject.id) ?? { obj: inObject, effects: [], removeAll: removeAll };
+        let flagsToSet = flagManager.flagRemoveBuffer.get(inObjectUUID) ?? { effects: [], removeAll: removeAll };
 
-        if(inEffects) flagsToSet.effects.push(...inEffects);
+        if (inEffects) flagsToSet.effects.push(...inEffects);
 
-        flagManager.flagRemoveBuffer.set(inObject.id, flagsToSet);
+        flagManager.flagRemoveBuffer.set(inObjectUUID, flagsToSet);
 
         flagManager.updateFlags();
 
@@ -112,34 +203,34 @@ const flagManager = {
         flagsToAdd = new Map(flagsToAdd);
         flagsToRemove = new Map(flagsToRemove);
 
-        for(let objectId of objects) {
+        for (let objectUUID of objects) {
 
-            let toAdd = flagsToAdd.get(objectId) ?? { effects: [] };
-            let toRemove = flagsToRemove.get(objectId) ?? { effects: [], removeAll: false };
+            let object = lib.from_uuid_fast(objectUUID);
 
-            let obj = toAdd.obj ?? toRemove.obj;
+            let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
+            let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
 
             if (toRemove?.removeAll) {
-                await obj.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, []);
-                lib.debug(`All flags removed for object with ID "${obj.id}"`);
+                await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, []);
+                lib.debug(`All flags removed for object with ID "${object.uuid}"`);
                 continue;
             }
 
-            let flagsToSet = new Map(await flagManager.getFlag(obj));
+            const existingFlags = new Map(object.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
 
             for (const effect of toAdd.effects) {
-                flagsToSet.set(effect?.data?.id ?? effect.id, effect?.data ?? effect);
+                existingFlags.set(effect._id, effect);
             }
 
             for (const effect of toRemove.effects) {
-                flagsToSet.delete(effect?.data?.id ?? effect.id);
+                existingFlags.delete(effect._id);
             }
-            
-            flagsToSet = Array.from(flagsToSet)
 
-            await sequencerSocket.executeAsGM(SOCKET_HANDLERS.UPDATE_FLAGS, obj.uuid, flagsToSet);
+            const flagsToSet = Array.from(existingFlags);
 
-            lib.debug(`Flags set for object with ID "${obj.id}":\n`, flagsToSet)
+            await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flagsToSet);
+
+            lib.debug(`Flags set for object with ID "${object.uuid}":\n`, flagsToSet)
 
         }
 

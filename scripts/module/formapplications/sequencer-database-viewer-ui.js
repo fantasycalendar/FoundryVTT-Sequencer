@@ -1,6 +1,7 @@
 import { cache } from "../lib/cache.js";
 import { reactiveEl as html } from "../lib/html.js";
-import { clamp, strToSearchRegexStr } from "../lib/lib.js";
+import { SequencerFile } from "../sequencer-file.js";
+import * as lib from "../lib/lib.js";
 
 const MAX_NODES = 24;
 
@@ -10,21 +11,8 @@ export default class SequencerDatabaseViewer extends FormApplication {
         this.filter = "all";
         this.search = "";
         this.autoplay = true;
-        this.packs = Object.keys(window.Sequencer.Database.entries);
-
-        let localizedFilepathButton = game.i18n.localize("SEQUENCER.DatabaseFilepathButton");
-        let localizedDatabaseButton = game.i18n.localize("SEQUENCER.DatabaseButton");
-
-        this.entries = window.Sequencer.Database.flattenedEntries.map(
-            (entry) => {
-                return {
-                    pack: entry.split(".")[0],
-                    entry: entry,
-                    fileButton: localizedFilepathButton,
-                    dbButton: localizedDatabaseButton,
-                };
-            }
-        );
+        this.packs = Sequencer.Database.publicModules;
+        this.allRanges = false;
 
         // cache getFilteredEntries method, breaking cache whenever search or filter property changes
         cache(this, "getFilteredEntries", ["search", "filter"]);
@@ -106,7 +94,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
     /** @override */
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            title: game.i18n.localize("SEQUENCER.Database"),
+            title: game.i18n.localize("SEQUENCER.Database.Title"),
             template: `modules/sequencer/templates/sequencer-database-template.html`,
             classes: ["dialog"],
             width: 900,
@@ -129,6 +117,26 @@ export default class SequencerDatabaseViewer extends FormApplication {
                         searchParts.length)
             );
         });
+    }
+
+    get entries(){
+        const entries = this.allRanges
+            ? Sequencer.Database.publicFlattenedEntries
+            : Sequencer.Database.publicFlattenedSimpleEntries;
+
+        let localizedFilepathButton = game.i18n.localize("SEQUENCER.Database.ButtonFilepath");
+        let localizedDatabaseButton = game.i18n.localize("SEQUENCER.Database.ButtonDatabasePath");
+
+        return entries.map(
+            (entry) => {
+                return {
+                    pack: entry.split(".")[0],
+                    entry: entry,
+                    fileButton: localizedFilepathButton,
+                    dbButton: localizedDatabaseButton,
+                };
+            }
+        );
     }
 
     /* -------------------------------------------- */
@@ -155,7 +163,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
             const wrapperHeight = entries.length * 20;
 
             const scrolledIndex = Math.floor(scroller.scrollTop / 20) - 5;
-            const startIndex = clamp(
+            const startIndex = lib.clamp(
                 scrolledIndex,
                 0,
                 Math.max(entries.length - MAX_NODES, 0)
@@ -176,11 +184,13 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
         const filter = html.querySelector('select[name="pack-select"]');
         const input = html.querySelector('input[name="search-field"]');
+        const allRanges = html.querySelector('#database-all-ranges');
         this.player = html.querySelector(".database-player");
         this.image = html.querySelector(".database-image");
 
         const filterDebounce = debounce(() => {
-            this.search = strToSearchRegexStr(input.value);
+            this.allRanges = allRanges.checked;
+            this.search = lib.str_to_search_regex_str(input.value);
             this.filter = filter.value;
             scroller.scrollTop = 0;
             rerenderList();
@@ -188,13 +198,18 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
         filter.addEventListener("change", filterDebounce);
         input.addEventListener("input", filterDebounce);
+        allRanges.addEventListener("change", filterDebounce);
     }
 
     playAsset(entryText) {
         if (!this.autoplay) return;
         const { player, image } = this;
 
-        let entry = window.Sequencer.Database.getEntry(entryText);
+        let entry = Sequencer.Database.getEntry(entryText);
+
+        if(entry instanceof SequencerFile){
+            entry = entry.getPreviewFile();
+        }
 
         entry = entry?.file ?? entry;
 
@@ -223,7 +238,16 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     copyText(button, entry, getFilepath) {
         if (getFilepath) {
-            entry = window.Sequencer.Database.getEntry(entry);
+            entry = Sequencer.Database.getEntry(entry);
+
+            if(entry instanceof SequencerFile){
+                const files = entry.getAllFiles();
+                if(Array.isArray(files)) {
+                    const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
+                    entry = files[index];
+                }
+            }
+
             entry = entry?.file ?? entry;
         }
 

@@ -3,11 +3,13 @@ import * as lib from "./lib/lib.js";
 const SequencerAnimationEngine = {
 
     _animations: [],
+    _propertyLinks: [],
     _maxFPS: false,
     _debug: undefined,
     _deltas: [],
 
-    dt: false,
+    ticker: false,
+    dt: 0,
 
     isRunning: false,
 
@@ -18,16 +20,32 @@ const SequencerAnimationEngine = {
         return this._maxFPS;
     },
 
-    addAnimation(attributes = [], timeDifference = 0) {
+    addPropertyLink(origin, source, target, sourceProperty, targetProperty){
+        this._propertyLinks.push({
+            origin,
+            source,
+            target,
+            sourceProperty,
+            targetProperty
+        });
+        if(!this.isRunning){
+            this.start();
+        }
+        lib.debug(`Added property link to Animation Engine`);
+    },
+
+    addAnimation(origin, attributes = [], timeDifference = 0) {
 
         if (!Array.isArray(attributes)) attributes = [attributes];
 
         return new Promise((resolve) => {
             this._animations.push({
+                origin,
                 attributes: attributes.map(attribute => {
                     attribute.started = false;
-                    attribute.complete = false;
                     attribute.initialized = false;
+                    attribute.finishing = false;
+                    attribute.complete = false;
                     attribute.progress = 0;
 
                     attribute.duration = attribute.duration ?? 0;
@@ -51,51 +69,57 @@ const SequencerAnimationEngine = {
                 totalDt: timeDifference,
                 resolve: resolve
             });
-            lib.debug(`Added animations to Animation Engine`);
-            if(!this.isRunning){
+            if(!this.ticker || !this.ticker.started){
                 this.start();
             }
+            lib.debug(`Added animations to Animation Engine`);
         });
 
     },
 
     endAnimations(target){
-        this._animations = this._animations.map(animation => {
-            animation.attributes = animation.attributes.filter(attribute => attribute.target !== target);
-            return animation;
-        }).filter(animation => animation.attributes.length > 0);
+        this._animations = this._animations.filter(animation => animation.origin !== target);
+        this._propertyLinks = this._propertyLinks.filter(link => link.origin !== target);
     },
 
     start(){
-        this.isRunning = true;
         lib.debug(`Animation Engine Started`);
-        this.nextFrame();
+        if(!this.ticker) {
+            this.ticker = new PIXI.Ticker;
+            this.ticker.add(this.nextFrame.bind(this));
+        }
+        this.ticker.start();
     },
 
-    nextFrame(timespan = performance.now(), lastTimespan = performance.now()){
+    nextFrame(){
 
-        if(this._animations.length === 0){
-            this.isRunning = false;
-            this._deltas = [];
+        if(this._animations.length === 0 && this._propertyLinks.length === 0){
             lib.debug(`Animation Engine Paused`);
+            this.ticker.stop();
             return;
         }
 
-        this.dt = Math.min(timespan - lastTimespan, this.maxFPS);
-
         this._animations.forEach(animation => this._animate(animation));
-
         this._animations = this._animations.filter(animation => !animation.complete);
-
         this._applyDeltas();
 
-        lastTimespan = timespan;
+        this._applyPropertyLinks();
 
-        let nextFrame = this.nextFrame.bind(this);
-        requestAnimationFrame(function (timespan) {
-            nextFrame(timespan, lastTimespan);
-        });
+    },
 
+    _applyPropertyLinks() {
+        for(const propertyLink of this._propertyLinks){
+            try {
+                lib.deep_set(
+                    propertyLink.target,
+                    propertyLink.targetProperty,
+                    lib.deep_get(
+                        propertyLink.source,
+                        propertyLink.sourceProperty
+                    )
+                )
+            } catch (err) { }
+        }
     },
 
     _applyDeltas() {
@@ -107,6 +131,10 @@ const SequencerAnimationEngine = {
             for(const attribute of animation.attributes) {
 
                 if(!attribute.started || attribute.complete) continue;
+
+                if(attribute.finishing){
+                    attribute.complete = true;
+                }
 
                 let delta = deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
 
@@ -127,7 +155,7 @@ const SequencerAnimationEngine = {
 
         for (let delta of deltas) {
             try {
-                lib.deepSet(
+                lib.deep_set(
                     delta.target,
                     delta.propertyName,
                     delta.value
@@ -135,11 +163,13 @@ const SequencerAnimationEngine = {
             } catch (err) { }
         }
 
+        deltas = [];
+
     },
 
     _animate(animation){
 
-        animation.totalDt += this.dt;
+        animation.totalDt += this.ticker.deltaMS;
 
         animation.attributes.filter(attribute => !attribute.complete)
             .forEach(attribute => this._animateAttribute(animation.totalDt, attribute));
@@ -172,7 +202,7 @@ const SequencerAnimationEngine = {
 
         if (!attribute.initialized) {
             if (attribute.values.length === 1) {
-                attribute.values.unshift(lib.deepGet(
+                attribute.values.unshift(lib.deep_get(
                     attribute.target,
                     attribute.propertyName
                 ));
@@ -180,7 +210,7 @@ const SequencerAnimationEngine = {
             attribute.initialized = true;
         }
 
-        attribute.loopDurationDone += this.dt;
+        attribute.loopDurationDone += this.ticker.deltaMS;
         attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
 
         attribute.value = lib.interpolate(
@@ -225,16 +255,16 @@ const SequencerAnimationEngine = {
 
         this._handleBaseLoop(attribute);
 
-        attribute.durationDone += this.dt;
+        attribute.durationDone += this.ticker.deltaMS;
         attribute.overallProgress = attribute.durationDone / attribute.duration;
 
         if (attribute.progress >= 1.0 && attribute.loopsDone === attribute.loops * 2) {
-            attribute.complete = true;
+            attribute.finishing = true;
             attribute.value = attribute.values[attribute.index];
         }
 
         if (attribute.overallProgress >= 1.0) {
-            attribute.complete = true;
+            attribute.finishing = true;
         }
 
     },
@@ -242,13 +272,13 @@ const SequencerAnimationEngine = {
     _handleDefault(attribute) {
 
         if (attribute.from === undefined) {
-            attribute.from = lib.deepGet(
+            attribute.from = lib.deep_get(
                 attribute.target,
                 attribute.propertyName
             );
         }
 
-        attribute.durationDone += this.dt;
+        attribute.durationDone += this.ticker.deltaMS;
         attribute.progress = attribute.durationDone / attribute.duration;
 
         attribute.value = lib.interpolate(
@@ -260,7 +290,7 @@ const SequencerAnimationEngine = {
 
         if (attribute.progress >= 1.0) {
             attribute.value = attribute.to;
-            attribute.complete = true;
+            attribute.finishing = true;
         }
 
     }

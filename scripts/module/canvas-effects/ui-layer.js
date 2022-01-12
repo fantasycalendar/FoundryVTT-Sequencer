@@ -31,6 +31,7 @@ export default class SequencerUILayer{
 
         this.container = new PIXI.Container();
         this.container.sortableChildren = true;
+        this.container.parentName = "sequencer";
 
         this.app.stage.addChild(this.container);
 
@@ -47,7 +48,7 @@ export default class SequencerUILayer{
     }
 
     removeContainerByEffect(inEffect){
-        const child = this.children.find(child => child.effect === inEffect);
+        const child = this.children.find(child => child === inEffect);
         if(!child) return;
         this.container.removeChild(child);
     }
@@ -56,31 +57,42 @@ export default class SequencerUILayer{
 
         for(let child of this.children){
 
-            if(child.effect.data.screenSpaceAnchor.x !== 0 || child.effect.data.screenSpaceAnchor.y !== 0){
+            let screenSpaceAnchor = child.data.screenSpaceAnchor;
+            let screenSpacePosition = child.data.screenSpacePosition;
 
-                const screenSpaceAnchor = child.effect.data.screenSpaceAnchor;
-                const screenSpacePosition = child.effect.data.screenSpacePosition;
-
-                child.position.set(
-                    screenSpacePosition.x + this.app.renderer.width * screenSpaceAnchor.x,
-                    screenSpacePosition.y + this.app.renderer.height * screenSpaceAnchor.y
-                );
-
+            if(!screenSpaceAnchor) {
+                if (!child.data.anchor) {
+                    if (!screenSpaceAnchor) {
+                        screenSpaceAnchor = { x: 0.5, y: 0.5 };
+                    }
+                    if (child.data.screenSpace) {
+                        child.data.anchor = { ...screenSpaceAnchor };
+                    } else {
+                        child.data.anchor = { x: 0.5, y: 0.5 };
+                    }
+                } else if (!screenSpaceAnchor) {
+                    screenSpaceAnchor = { ...child.data.anchor };
+                }
             }
 
-            if(child.effect.data.screenSpaceScale) {
+            child.position.set(
+                screenSpacePosition.x + this.app.renderer.width * screenSpaceAnchor.x,
+                screenSpacePosition.y + this.app.renderer.height * screenSpaceAnchor.y
+            );
 
-                const scaleData = child.effect.data.screenSpaceScale;
+            if(child.data.screenSpaceScale) {
+
+                const scaleData = child.data.screenSpaceScale;
 
                 let scaleX = scaleData.x;
                 let scaleY = scaleData.y;
 
                 if(scaleData.fitX){
-                    scaleX = scaleX * (this.app.renderer.width / child.effect.sprite.width);
+                    scaleX = scaleX * (this.app.renderer.width / child.sprite.width);
                 }
 
                 if(scaleData.fitY){
-                    scaleY = scaleY * (this.app.renderer.height / child.effect.sprite.height);
+                    scaleY = scaleY * (this.app.renderer.height / child.sprite.height);
                 }
 
                 scaleX = scaleData.ratioX ? scaleY : scaleX;

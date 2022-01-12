@@ -146,9 +146,9 @@
     </style>
 
     <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
-        {{#if canCreateEffects}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> {{ localize "SEQUENCER.Player" }}</a> {{/if}}
-        <a class="item" data-tab="manager"><i class="fas fa-film"></i> {{ localize "SEQUENCER.Manager" }}</a>
-        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> {{ localize "SEQUENCER.HowTo" }}</a>
+        {{#if canCreateEffects}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> {{ localize "SEQUENCER.Player.Title" }}</a> {{/if}}
+        <a class="item" data-tab="manager"><i class="fas fa-film"></i> {{ localize "SEQUENCER.Manager.Title" }}</a>
+        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> {{ localize "SEQUENCER.HowTo.Title" }}</a>
     </nav>
 
     <hr>
@@ -158,11 +158,11 @@
         {{#if canCreateEffects}}
         <div class="tab effect-player-container" data-tab="player" data-group="effect-manager">
 
-            <button type="button" class="activate-layer w-100 mb-2">{{ localize "SEQUENCER.PlayerActivateLayer" }}</button>
+            <button type="button" class="activate-layer w-100 mb-2">{{ localize "SEQUENCER.Player.SwitchToLayer" }}</button>
 
             <div class="file-settings flexcol mb-2">
                 <div class="row">
-                    <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder='{{ localize "SEQUENCER.PlayerPathInput" }}'>
+                    <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder='{{ localize "SEQUENCER.Player.PathInput" }}'>
                     <button type="button" class="custom-file-picker small-button"><i class="fas fa-file-import"></i></button>
                 </div>
                 <datalist id="dblist"></datalist>
@@ -184,7 +184,7 @@
             <div class="user-settings flexcol mb-2">
                 <label for="file">Play for users:</label>
                 <select class="user-select" id="user-select" multiple>
-                    <option value="all" selected>{{ localize "SEQUENCER.PlayerAllUsers" }}</option>
+                    <option value="all" selected>{{ localize "SEQUENCER.Player.AllUsers" }}</option>
                     {{#each users}}
                     <option value="{{ this.id }}">{{ this.name }}</option>
                     {{/each}}
@@ -193,13 +193,13 @@
 
             <div class="flexcol">
 
-                <div class="row w-100">{{ localize "SEQUENCER.PlayerPresets" }}</div>
+                <div class="row w-100">{{ localize "SEQUENCER.Player.Presets" }}</div>
 
                 <div class="row w-100">
 
                     <select class="preset-select flex-grow">
 
-                        <option value="default">{{ localize "SEQUENCER.PlayerPresetsDefault" }}</option>
+                        <option value="default">{{ localize "SEQUENCER.Player.PresetsDefault" }}</option>
                         {{#each presets}}
                         <option>{{ @key }}</option>
                         {{/each}}
@@ -219,18 +219,18 @@
 
         <div class="tab effects-container" data-tab="manager" data-group="effect-manager">
 
-            <button type="button" class="w-100 end-all-effects mb-2">{{ localize "SEQUENCER.ManagerEndAllEffects" }}</button>
+            <button type="button" class="w-100 end-all-effects mb-2">{{ localize "SEQUENCER.Manager.EndAllEffects" }}</button>
 
-            <h2 class="no-effects">{{ localize "SEQUENCER.ManagerNoEffects" }}</h2>
+            <h2 class="no-effects">{{ localize "SEQUENCER.Manager.NoEffects" }}</h2>
 
             <div class="effects" style="display: none">
 
-                <h2>{{ localize "SEQUENCER.ManagerPersistentEffects" }}</h2>
+                <h2>{{ localize "SEQUENCER.Manager.PersistentEffects" }}</h2>
                 <div class="persistent-effects"></div>
 
                 <hr>
 
-                <h2>{{ localize "SEQUENCER.ManagerTemporaryEffects" }}</h2>
+                <h2>{{ localize "SEQUENCER.Manager.TemporaryEffects" }}</h2>
                 <div class="temporary-effects"></div>
 
             </div>
@@ -239,33 +239,33 @@
 
         {{#if canCreateEffects}}
         <div class="tab howto-container" data-tab="howto" data-group="effect-manager">
-            <p>{{ localize "SEQUENCER.HowToWelcome" }}</p>
-            <p>{{{ localize "SEQUENCER.HowToExplanation" }}}</p>
+            <p>{{ localize "SEQUENCER.HowTo.Welcome" }}</p>
+            <p>{{{ localize "SEQUENCER.HowTo.Explanation" }}}</p>
             {{#if userIsGM}}
-            <p>{{ localize "SEQUENCER.HowToPermissionsExplanation"}}</p>
-            <button type="button" class="w-100 open-module-settings"><i class="fas fa-plug"></i> Open Module Settings</button>
+            <p>{{ localize "SEQUENCER.HowTo.PermissionsExplanation"}}</p>
+            <button type="button" class="w-100 open-module-settings"><i class="fas fa-plug"></i> {{ localize "SEQUENCER.HowTo.OpenModuleSettings" }}</button>
             {{/if}}
-            <p>{{{ localize "SEQUENCER.HowToPlayerExplanation" }}}</p>
-            <p>{{{ localize "SEQUENCER.HowToLayerExplanation" }}}</p>
+            <p>{{{ localize "SEQUENCER.HowTo.PlayerExplanation" }}}</p>
+            <p>{{{ localize "SEQUENCER.HowTo.LayerExplanation" }}}</p>
             <ol>
                 <li>
-                    <strong>{{ localize "SEQUENCER.HowToClick" }}</strong><br>
-                    {{ localize "SEQUENCER.HowToClickLabel" }}
+                    <strong>{{ localize "SEQUENCER.HowTo.Click" }}</strong><br>
+                    {{ localize "SEQUENCER.HowTo.ClickLabel" }}
                 </li>
                 <li>
-                    <strong>{{ localize "SEQUENCER.HowToClickDrag" }}</strong><br>
-                    {{ localize "SEQUENCER.HowToClickDragLabel" }}
+                    <strong>{{ localize "SEQUENCER.HowTo.ClickDrag" }}</strong><br>
+                    {{ localize "SEQUENCER.HowTo.ClickDragLabel" }}
                 </li>
                 <li>
-                    <strong>{{ localize "SEQUENCER.HowToShift" }}</strong><br>
-                    {{ localize "SEQUENCER.HowToShiftLabel" }}
+                    <strong>{{ localize "SEQUENCER.HowTo.Shift" }}</strong><br>
+                    {{ localize "SEQUENCER.HowTo.ShiftLabel" }}
                 </li>
                 <li>
-                    <strong>{{ localize "SEQUENCER.HowToShiftControl" }}</strong><br>
-                    {{ localize "SEQUENCER.HowToShiftControlLabel" }}
+                    <strong>{{ localize "SEQUENCER.HowTo.ShiftControl" }}</strong><br>
+                    {{ localize "SEQUENCER.HowTo.ShiftControlLabel" }}
                 </li>
                 <li>
-                    <strong>{{ localize "SEQUENCER.HowToMoreToCome" }}</strong>
+                    <strong>{{ localize "SEQUENCER.HowTo.MoreToCome" }}</strong>
                 </li>
             </ol>
         </div>

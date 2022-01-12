@@ -2,6 +2,7 @@ import * as lib from "../lib/lib.js";
 import SequencerAudioHelper from "../sequencer-audio-helper.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
+import { SequencerFile } from "../sequencer-file.js";
 
 class SoundSection extends Section {
 
@@ -27,6 +28,9 @@ class SoundSection extends Section {
         return this;
     }
 
+    /**
+     * @private
+     */
     _applyTraits() {
         Object.assign(this.constructor.prototype, traits.files);
         Object.assign(this.constructor.prototype, traits.audio);
@@ -34,6 +38,10 @@ class SoundSection extends Section {
         Object.assign(this.constructor.prototype, traits.users);
     }
 
+    /**
+     * @OVERRIDE
+     * @returns {Promise}
+     */
     async run() {
         let { play, ...data } = await this._sanitizeSoundData();
 
@@ -44,15 +52,20 @@ class SoundSection extends Section {
 
         Hooks.call("preCreateSequencerSound", data);
 
-        let push = !(data.users.length === 1 && data.users.includes(game.userId));
+        let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
         return SequencerAudioHelper.play(data, push);
     }
 
+    /**
+     * @returns {Promise}
+     * @private
+     */
     async _sanitizeSoundData() {
 
-        let file = await this._determineFile(this._file)
+        let { file, forcedIndex } = await this._determineFile(this._file)
 
-        if (file instanceof lib.SequencerFile) {
+        if (file instanceof SequencerFile) {
+            file.forcedIndex = forcedIndex;
             if (file.timeRange) {
                 [this._startTime, this._endTime] = file.timeRange;
                 this._isRange = true;
@@ -79,7 +92,7 @@ class SoundSection extends Section {
 
         duration += this._waitUntilFinishedDelay;
 
-        return {
+        let data = {
             play: true,
             src: file,
             loop: this._duration > duration,
@@ -89,8 +102,18 @@ class SoundSection extends Section {
             startTime: startTime,
             duration: this._duration || duration,
             sceneId: game.user.viewedScene,
-            users: Array.from(this._users)
+            users: this._users ? Array.from(this._users) : null
         };
+
+        for (let override of this._overrides) {
+            data = await override(this, data);
+        }
+
+        if (typeof data.src !== "string" || data.src === "") {
+            throw this.sequence._customError(this, "file", "a sound must have a src of type string!");
+        }
+
+        return data;
     }
 }
 

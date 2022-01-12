@@ -2,14 +2,15 @@ import filters from "../../lib/filters.js";
 
 export default {
 
-    _filters: false,
+    _filters: null,
 
     _addFilter(inFilterName, inData, inName = false) {
-        if (!this._filters) this._filters = {};
-        this._filters[inFilterName] = {
+        if (!this._filters) this._filters = [];
+        this._filters.push({
+            className: inFilterName,
             name: inName,
             data: inData
-        };
+        });
     },
 
     _testFilter(inFilterName, inData) {

@@ -1,6 +1,6 @@
 export default {
 
-    _users: false,
+    _users: null,
 
     _addUser(inUser) {
         if(!this._users) this._users = [];

@@ -5,7 +5,7 @@ export default {
     /**
      * Base properties
      */
-    _animations: false,
+    _animations: null,
 
     /**
      * Animates a property on the target of the animation.
@@ -13,26 +13,33 @@ export default {
      * @param {string} inTarget
      * @param {string} inPropertyName
      * @param {object} inOptions
-     *      @param {Number} inOptions.from      - a single number from which to animate
-     *      @param {Number} inOptions.to        - a single number to which to animate
-     *      @param {Number} inOptions.duration  - how long in ms the animation should take
-     *      @param {Number} inOptions.delay     - inserts a delay in ms before the animation starts
-     *      @param {String} inOptions.ease      - what type of easing the animation should use
+     *      @param {Number} inOptions.from       - a single number from which to animate
+     *      @param {Number} inOptions.to         - a single number to which to animate
+     *      @param {Number} inOptions.duration   - how long in ms the animation should take
+     *      @param {Number} inOptions.delay      - inserts a delay in ms before the animation starts
+     *      @param {String} inOptions.ease       - what type of easing the animation should use
+     *      @param {Boolean} inOptions.gridUnits - if animating width or height, this will set it to work in the scene's grid units
      *
      * @returns this
      */
     animateProperty(inTarget, inPropertyName, inOptions = {}) {
         if (!this._animations) this._animations = [];
 
-        is_real_number
-
         if (typeof inPropertyName !== "string") throw this.sequence._customError(this, "animateProperty", `inPropertyName must be of type string`);
         if (typeof inTarget !== "string") throw this.sequence._customError(this, "animateProperty", `inTarget must be of type string`);
         if (!is_real_number(inOptions.from)) throw this.sequence._customError(this, "animateProperty", `inOptions.from must be of type number`);
         if (!is_real_number(inOptions.to)) throw this.sequence._customError(this, "animateProperty", `inOptions.to must be of type number`);
         if (!is_real_number(inOptions.duration)) throw this.sequence._customError(this, "animateProperty", `inOptions.duration must be of type number`);
-        if (inOptions?.delay && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateProperty", `inOptions.delay must be of type number`);
-        if (inOptions?.ease && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateProperty", `inOptions.ease must be of type string`);
+        if (inOptions?.delay !== undefined && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateProperty", `inOptions.delay must be of type number`);
+        if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateProperty", `inOptions.ease must be of type string`);
+        if (inOptions?.gridUnits !== undefined){
+            if(typeof inOptions.gridUnits !== "boolean"){
+                throw this.sequence._customError(this, "animateProperty", `inOptions.gridUnits must be of type boolean`);
+            }
+            if(inOptions.gridUnits && !(inPropertyName === "width" || inPropertyName === "height")){
+                throw this.sequence._customError(this, "animateProperty", `if inOptions.gridUnits is true, inPropertyName must be "width" or "height"`);
+            }
+        }
 
         this._animations.push({
             target: inTarget,
@@ -43,6 +50,7 @@ export default {
             delay: inOptions?.delay ?? 0,
             ease: inOptions?.ease ?? "linear",
             looping: false,
+            gridUnits: inOptions?.gridUnits ?? false
         });
 
         return this;
@@ -55,14 +63,15 @@ export default {
      * @param {string} inTarget
      * @param {string} inPropertyName
      * @param {object} inOptions
-     *      @param {Number} inOptions.from      - a single number from which to loop
-     *      @param {Number} inOptions.to        - a single number to which to loop
-     *      @param {Number} inOptions.values    - an array of values to loop between
-     *      @param {Number} inOptions.duration  - how long in ms the loop should take
-     *      @param {Number} inOptions.loops     - how many loops in total this animation should go through - if none are specified, the loop is indefinite
-     *      @param {Number} inOptions.delay     - inserts a delay in ms before the animation starts
-     *      @param {String} inOptions.ease      - what type of easing the animation should use
-     *      @param {Boolean} inOptions.pingPong - sets whether loop should interpolate to the first value after it reaches the first value, or simply set it to the first value
+     *      @param {Number} inOptions.from       - a single number from which to loop
+     *      @param {Number} inOptions.to         - a single number to which to loop
+     *      @param {Number} inOptions.values     - an array of values to loop between
+     *      @param {Number} inOptions.duration   - how long in ms the loop should take
+     *      @param {Number} inOptions.loops      - how many loops in total this animation should go through - if none are specified, the loop is indefinite
+     *      @param {Number} inOptions.delay      - inserts a delay in ms before the animation starts
+     *      @param {String} inOptions.ease       - what type of easing the animation should use
+     *      @param {Boolean} inOptions.pingPong  - sets whether loop should interpolate to the first value after it reaches the first value, or simply set it to the first value
+     *      @param {Boolean} inOptions.gridUnits - if animating width or height, this will set it to work in the scene's grid units
      *
      * @returns this
      */
@@ -92,6 +101,14 @@ export default {
         if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateLoop", `inOptions.ease must be of type string`);
         if (inOptions?.loops !== undefined && !is_real_number(inOptions.loops)) throw this.sequence._customError(this, "animateLoop", `inOptions.loops must be of type number`);
         if (inOptions?.pingPong !== undefined && typeof inOptions.pingPong !== "boolean") throw this.sequence._customError(this, "animateLoop", `inOptions.loops must be of type boolean`);
+        if (inOptions?.gridUnits !== undefined){
+            if(typeof inOptions.gridUnits !== "boolean"){
+                throw this.sequence._customError(this, "loopProperty", `inOptions.gridUnits must be of type boolean`);
+            }
+            if(inOptions.gridUnits && !(inPropertyName === "width" || inPropertyName === "height")){
+                throw this.sequence._customError(this, "loopProperty", `if inOptions.gridUnits is true, inPropertyName must be "width" or "height"`);
+            }
+        }
 
         this._animations.push({
             target: inTarget,
@@ -103,7 +120,8 @@ export default {
             looping: true,
             loops: inOptions?.loops,
             indefinite: inOptions?.loops === undefined,
-            pingPong: inOptions?.pingPong ?? false
+            pingPong: inOptions?.pingPong ?? false,
+            gridUnits: inOptions?.gridUnits ?? false
         });
 
         return this;

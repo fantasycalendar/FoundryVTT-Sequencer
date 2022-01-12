@@ -10,11 +10,18 @@ export default class FunctionSection extends Section {
         this._waitUntilFinished = inFunc.constructor.name === 'AsyncFunction';
     }
 
+    /**
+     * @returns {Promise<void>}
+     */
     async run() {
         lib.debug("Running function");
         await this._func();
     }
 
+    /**
+     * @returns {Promise}
+     * @private
+     */
     async _execute() {
         await this.run();
     }

@@ -13,7 +13,7 @@ export default class SequencerEffectManager {
      *
      * @returns {Array}
      */
-    static get effects(){
+    static get effects() {
         return Array.from(EffectsContainer.values());
     }
 
@@ -22,7 +22,7 @@ export default class SequencerEffectManager {
      *
      * @returns {SequencerEffectsUI}
      */
-    static show(){
+    static show() {
         return SequencerEffectsUI.show({ tab: "manager" });
     }
 
@@ -34,41 +34,65 @@ export default class SequencerEffectManager {
      * @returns {CanvasEffect} A CanvasEffect object
      */
     static async play(data, push = true) {
-        if(!lib.userCanDo("permissions-effect-create")) return;
+        if (!lib.user_can_do("permissions-effect-create")) return;
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
         return this._playEffect(data);
     }
 
     /**
-     * Get effects that is playing on the canvas based on a set of filters
+     * Get effects that are playing on the canvas based on a set of filters
      *
-     * @param {object} inData An object containing filters that determine which effects to return
+     * @param {object} inFilter An object containing filters that determine which effects to return
      *                             - object: An ID or a PlaceableObject
      *                             - name: The name of the effect
      *                             - sceneId: the ID of the scene to search within
      *                             - effects: a single CanvasEffect or its ID, or an array of such
      * @returns {Array} An array containing effects that match the given filter
      */
-    static getEffects(inData = {}){
-        const filters = this._validateFilters(inData);
+    static getEffects(inFilter = {}) {
+        const filters = this._validateFilters(inFilter);
+        if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | getEffects | Incorrect or incomplete parameters provided")
         return this._filterEffects(filters);
     }
 
     /**
-     * End effects that is playing on the canvas based on a set of filters
+     * Updates effects based on a set of filters
      *
-     * @param {object} inData An object containing filters that determine which effects to end
+     * @param {object} inFilter An object containing filters that determine which effects to return
+     *                             - object: An ID or a PlaceableObject
+     *                             - name: The name of the effect
+     *                             - sceneId: the ID of the scene to search within
+     *                             - effects: a single CanvasEffect or its ID, or an array of such
+     * @param {object} inUpdates
+     * @returns {promise}
+     */
+    static updateEffects(inFilter, inUpdates) {
+        inFilter = this._validateFilters(inFilter);
+        if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | updateEffects | Incorrect or incomplete parameters provided")
+
+        CanvasEffect.validateUpdate(inUpdates);
+
+        const effectsToUpdate = this._filterEffects(inFilter)
+            .filter(effect => effect.userCanUpdate);
+
+        return Promise.allSettled(effectsToUpdate.map(effect => effect.update(inUpdates)));
+    }
+
+    /**
+     * End effects that are playing on the canvas based on a set of filters
+     *
+     * @param {object} inFilter An object containing filters that determine which effects to end
      *                             - object: An ID or a PlaceableObject
      *                             - name: The name of the effect
      *                             - sceneId: the ID of the scene to search within
      *                             - effects: a single CanvasEffect or its ID, or an array of such
      * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
-     * @returns {Promise} A promise that resolves when the effects have ended
+     * @returns {promise} A promise that resolves when the effects have ended
      */
-    static async endEffects(inData = {}, push = true) {
-        inData = this._validateFilters(inData);
-        if (!inData) throw lib.customError("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided")
-        const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
+    static async endEffects(inFilter = {}, push = true) {
+        inFilter = this._validateFilters(inFilter);
+        if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided")
+        const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.id);
         if (!effectsToEnd.length) return;
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
@@ -79,86 +103,132 @@ export default class SequencerEffectManager {
      *
      * @param {string} [inSceneId] A parameter which determines which scene to end all effects on, defaults to current viewed scene
      * @param {boolean} [push=true] A flag indicating whether or not to make other clients end all effects
-     * @returns {Promise} A promise that resolves when all of the effects have ended
+     * @returns {promise} A promise that resolves when all of the effects have ended
      */
     static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
-        const inData = this._validateFilters({ sceneId: inSceneId });
-        const effectsToEnd = this._filterEffects(inData).filter(effect => effect.userCanDelete).map(effect => effect.data.id);
+        const inFilter = this._validateFilters({ sceneId: inSceneId });
+        const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.id);
         if (!effectsToEnd.length) return;
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
     }
 
-    static _filterEffects(inData){
+    /**
+     * Filters the existing effects based on the given filter
+     *
+     * @param inFilter
+     * @returns {array}
+     * @private
+     */
+    static _filterEffects(inFilter) {
+        if (inFilter.name) {
+            inFilter.name = new RegExp(lib.str_to_search_regex_str(inFilter.name), "gu");
+        }
         return this.effects
-            .filter(effect => !inData.effects || inData.effects.includes(effect.data.id))
-            .filter(effect => !inData.name || inData.name === effect.data.name)
-            .filter(effect => !inData.attachTo || inData.attachTo === effect.data.attachTo.id)
-            .filter(effect => !inData.sceneId || inData.sceneId === effect.data.sceneId)
-            .filter(effect => !inData.origin || inData.origin === effect.data.origin);
+            .filter(effect => !inFilter.effects || inFilter.effects.includes(effect.id))
+            .filter(effect => !inFilter.name || effect.data.name.match(inFilter.name)?.length)
+            .filter(effect => !inFilter.source || inFilter.source === effect.data.source)
+            .filter(effect => !inFilter.target || inFilter.target === effect.data.target)
+            .filter(effect => !inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
+            .filter(effect => !inFilter.origin || inFilter.origin === effect.data.origin);
     }
 
-    static _validateFilters(inData){
+    /**
+     * Validates an object actually exists, and gets its UUID
+     *
+     * @param object
+     * @param sceneId
+     * @returns {string}
+     * @private
+     */
+    static _validateObject(object, sceneId) {
 
-        if (inData?.object) {
-            if (!(inData.object instanceof PlaceableObject || typeof inData.object === "string")) {
-                throw lib.customError("Sequencer", "EffectManager | inData.object must be instance of PlaceableObject or of type string")
-            } else if (inData.object instanceof PlaceableObject) {
-                inData.attachTo = lib.getObjectIdentifier(inData.object);
-            } else if (typeof inData.object === "string") {
-                if (!lib.getObjectFromScene(inData.object)) {
-                    throw lib.customError("Sequencer", `EffectManager | could not find object with ID: ${inData.object}`)
-                }
-                inData.attachTo = inData.object;
+        if (!(object instanceof PlaceableObject || typeof object === "string")) {
+            throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
+        } else if (object instanceof PlaceableObject) {
+            object = lib.get_object_identifier(object.document);
+        } else if (typeof object === "string") {
+            if (!lib.get_object_from_scene(object, sceneId)) {
+                throw lib.custom_error("Sequencer", `EffectManager | could not find object with ID: ${object}`)
             }
-            delete inData.object;
         }
 
-        if (inData?.name && typeof inData?.name !== "string") throw lib.customError("Sequencer", "EffectManager | inData.name must be of type string")
-        if (inData?.origin && typeof inData?.origin !== "string") throw lib.customError("Sequencer", "EffectManager | inData.origin must be of type string")
-        if (inData?.sceneId) {
-            if (typeof inData.sceneId !== "string") throw lib.customError("Sequencer", "EffectManager | inData.sceneId must be of type string")
-            if (!game.scenes.get(inData.sceneId)) throw lib.customError("Sequencer", "EffectManager | inData.sceneId must be a valid scene id (could not find scene)")
+        return object;
+    }
+
+    /**
+     * Validates the filter given to any of the above public methods
+     *
+     * @param inFilter
+     * @returns {boolean}
+     * @private
+     */
+    static _validateFilters(inFilter) {
+
+        if (inFilter?.sceneId) {
+            if (typeof inFilter.sceneId !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.sceneId must be of type string")
+            if (!game.scenes.get(inFilter.sceneId)) throw lib.custom_error("Sequencer", "EffectManager | inFilter.sceneId must be a valid scene id (could not find scene)")
         }
 
-        if(inData?.effects){
-            if (!Array.isArray(inData.effects)) inData.effects = [inData.effects];
-            inData.effects = inData.effects.map(effect => {
-                if(!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.customError("Sequencer", "EffectManager | entries in inData.effects must be of type string or CanvasEffect")
-                if(effect instanceof CanvasEffect) return effect.data.id;
+        if (inFilter?.object) {
+            inFilter.source = this._validateObject(inFilter.object, inFilter.sceneId);
+            delete inFilter.object;
+        }
+
+        if (inFilter?.source) {
+            inFilter.source = this._validateObject(inFilter.source, inFilter.sceneId);
+        }
+
+        if (inFilter?.target) {
+            inFilter.target = this._validateObject(inFilter.target, inFilter.sceneId);
+        }
+
+        if (inFilter?.name && typeof inFilter?.name !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.name must be of type string")
+        if (inFilter?.origin && typeof inFilter?.origin !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.origin must be of type string")
+
+        if (inFilter?.effects) {
+            if (!Array.isArray(inFilter.effects)) inFilter.effects = [inFilter.effects];
+            inFilter.effects = inFilter.effects.map(effect => {
+                if (!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.custom_error("Sequencer", "EffectManager | collections in inFilter.effects must be of type string or CanvasEffect")
+                if (effect instanceof CanvasEffect) return effect.id;
                 return effect;
             })
         }
 
-        if (!inData.name && !inData.attachTo && !inData.sceneId && !inData.effects && !inData.origin) return false;
+        if (!inFilter.name && !inFilter.origin && !inFilter.target && !inFilter.sceneId && !inFilter.effects && !inFilter.origin) return false;
 
         return foundry.utils.mergeObject({
             effects: false,
             name: false,
-            attachTo: false,
+            source: false,
+            target: false,
             sceneId: game.user.viewedScene,
             origin: false
-        }, inData);
+        }, inFilter);
 
     }
 
+    /**
+     * Actually plays the effect on the canvas
+     *
+     * @param data
+     * @param setFlags
+     * @returns {Promise<{duration: Promise<number>, promise: Promise<void>}>}
+     * @private
+     */
     static async _playEffect(data, setFlags = true) {
 
         const effect = CanvasEffect.make(data);
 
-        if (!effect.context) return false;
+        if (!effect.shouldPlay) return;
 
         const playData = await effect.play();
 
-        if (data.persist && setFlags && effect.context?.id){
-            flagManager.addFlags(effect.contextDocument, effect);
+        if (data.persist && setFlags && effect.context && effect.owner) {
+            flagManager.addFlags(effect.context.uuid, effect.data);
         }
 
-        if(data.persist && !effect.context?.id){
-            effect.timeoutRemove();
-        }
-
-        EffectsContainer.set(effect.data.id, effect);
+        EffectsContainer.set(effect.id, effect);
 
         if (!data.persist) {
             playData.promise.then(() => this._removeEffect(effect));
@@ -169,14 +239,32 @@ export default class SequencerEffectManager {
         return playData;
     }
 
-    static _setUpPersists() {
-        this._tearDownPersists();
-        const allObjects = lib.getAllObjects();
+    /**
+     * Updates a single effect with the given data
+     *
+     * @param inEffectId
+     * @param inUpdates
+     * @returns {promise|boolean}
+     * @private
+     */
+    static _updateEffect(inEffectId, inUpdates) {
+        const effect = EffectsContainer.get(inEffectId);
+        if (!effect) return false;
+        return effect._update(inUpdates);
+    }
+
+    /**
+     * Sets up persisting effects when the scene is first loaded
+     *
+     * @returns {promise}
+     */
+    static async setUpPersists() {
+        await this.tearDownPersists();
+        const allObjects = lib.get_all_objects();
         allObjects.push(canvas.scene);
-        let promises = allObjects.map(obj => {
-            const document = obj?.document ?? obj;
-            let objEffects = flagManager.getFlag(document);
-            return this._playEffectMap(objEffects, document);
+        const promises = allObjects.map(doc => {
+            const objEffects = flagManager.getFlags(doc);
+            return this._playEffectMap(objEffects, doc);
         }).flat();
         debounceUpdateEffectViewer();
         return Promise.all(promises).then(() => {
@@ -184,24 +272,56 @@ export default class SequencerEffectManager {
         });
     }
 
-    static _tearDownPersists(inId) {
-        this.effects
-            .filter(effect => !inId || effect.data?.attachTo === inId)
-            .forEach(effect => {
-                EffectsContainer.delete(effect.data.id);
-                debounceUpdateEffectViewer();
-            })
+    /**
+     * Tears down persisting effects when the scene is unloaded
+     */
+    static tearDownPersists() {
+        return Promise.allSettled(this.effects.map(effect => {
+            EffectsContainer.delete(effect.id);
+            debounceUpdateEffectViewer();
+            return effect.destroy();
+        }));
     }
 
-    static _patchCreationData(inDocument){
+    /**
+     * Handles the deletion of objects that effects are attached to
+     *
+     * @param inUUID
+     * @returns {Promise}
+     */
+    static objectDeleted(inUUID){
+        const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID)
+        return Promise.allSettled(effectsToEnd.map(effect => {
+            EffectsContainer.delete(effect.id);
+            if(inUUID === effect.data.target){
+                flagManager.removeFlags(effect.data.source, effect);
+            }
+            debounceUpdateEffectViewer();
+            return effect.destroy();
+        }));
+    }
 
-        let effects = inDocument.data.flags.sequencer.effects;
+    /**
+     * Patches an object's creation data before it's created so that the effect plays on it correctly
+     *
+     * @param inDocument
+     * @returns {*}
+     */
+    static patchCreationData(inDocument) {
 
-        effects = effects.map(effect => {
-            if(effect[1].attachTo) effect[1].attachTo.id = lib.getObjectIdentifier(inDocument.object);
-            effect[1].sceneId = canvas.scene.id;
-            return effect;
-        });
+        const effects = inDocument.data.flags.sequencer.effects
+            .map(effect => {
+                let effectData = effect[1].data;
+
+                if (effectData.attachTo || lib.is_UUID(effectData.source)) {
+                    effectData.source = lib.get_object_identifier(inDocument);
+                }
+
+                effectData.sceneId = canvas.scene.id;
+
+                effect[1].data = effectData;
+                return effect;
+            });
 
         this._playEffectMap(effects, inDocument);
 
@@ -211,42 +331,69 @@ export default class SequencerEffectManager {
 
     }
 
-    static _playEffectMap(inEffects, inDocument){
-        if(inEffects instanceof Map) inEffects = Array.from(inEffects);
-        return Promise.all(inEffects.map(effect => {
+    /**
+     * Plays multiple effects at the same time
+     *
+     * @param inEffects
+     * @param inDocument
+     * @returns {Promise<{duration: Promise<number>, promise: Promise<void>}[]>}
+     * @private
+     */
+    static _playEffectMap(inEffects, inDocument) {
+        if (inEffects instanceof Map) inEffects = Array.from(inEffects);
+        return Promise.all(inEffects.map(async (effect) => {
+            if(!CanvasEffect.checkValid(effect[1])){
+                if(game.user.isGM) {
+                    lib.custom_warning(`Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`);
+                    return flagManager.removeFlags(inDocument.uuid, effect);
+                }
+                return;
+            }
             return this._playEffect(effect[1], false)
                 .then((result) => {
-                    if(!result) flagManager.removeFlags(inDocument, effect);
+                    if (!result){
+                        lib.debug("Error playing effect")
+                        //flagManager.removeFlags(inDocument.uuid, effect);
+                    }
                 })
-                .catch(() => {
-                    flagManager.removeFlags(inDocument, effect)
+                .catch((err) => {
+                    lib.debug("Error playing effect:", err)
+                    //flagManager.removeFlags(inDocument.uuid, effect)
                 });
         }));
     }
 
-    static _removeEffect(effect) {
-        EffectsContainer.delete(effect.data.id);
-        debounceUpdateEffectViewer();
-        return effect.endEffect();
-    }
-
+    /**
+     * Ends multiple effects by ID
+     *
+     * @param inEffectIds
+     * @returns {Promise<boolean|any>}
+     * @private
+     */
     static _endEffects(inEffectIds) {
-        const effects = inEffectIds.map(id => EffectsContainer.get(id));
+        const effects = inEffectIds.map(id => EffectsContainer.get(id)).filter(Boolean);
         if (!effects.length) return;
         return this._endManyEffects(effects);
     }
 
+    /**
+     * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully ended
+     *
+     * @param inEffects
+     * @returns {promise}
+     * @private
+     */
     static async _endManyEffects(inEffects = false) {
 
         const effectsToEnd = (inEffects || this.effects);
 
-        const effectsByObjectId = Object.values(lib.groupBy(effectsToEnd, "context.id"));
+        const effectsByObjectId = Object.values(lib.group_by(effectsToEnd, "context.uuid"));
 
-        if(!effectsByObjectId.length) return true;
+        if (!effectsByObjectId.length) return true;
 
         effectsByObjectId.forEach(effects => {
             effects = effects.filter(effect => effect.data.persist)
-            if(effects.length) flagManager.removeFlags(effects[0].contextDocument, effects, !inEffects)
+            if (effects.length) flagManager.removeFlags(effects[0].context.uuid, effects.map(effect => effect.data), !inEffects)
         });
 
         return Promise.allSettled(...effectsByObjectId.map(
@@ -254,9 +401,22 @@ export default class SequencerEffectManager {
         ));
 
     }
+
+    /**
+     * Removes the effect from the manager and ends it, returning a promise that resolves once the effect has fully ended
+     *
+     * @param effect
+     * @returns {promise}
+     * @private
+     */
+    static _removeEffect(effect) {
+        EffectsContainer.delete(effect.id);
+        debounceUpdateEffectViewer();
+        return effect.endEffect();
+    }
 }
 
 const debounceUpdateEffectViewer = debounce(async () => {
-    if(!SequencerEffectsUI.isVisible) return;
+    if (!SequencerEffectsUI.isVisible) return;
     SequencerEffectsUI.activeInstance.updateEffects();
 }, 100);
