@@ -541,9 +541,7 @@ export default class CanvasEffect extends PIXI.Container {
         const updateKeys = Object.keys(inUpdates);
 
         updateKeys.forEach(key => {
-            if (newData?.[key] !== undefined && inUpdates?.[key] !== undefined) {
-                newData[key] = inUpdates[key];
-            }
+            setProperty(newData, key, inUpdates[key]);
         });
 
         if (Object.keys(foundry.utils.diffObject(newData, this.data)).length === 0) {
