@@ -1,28 +1,43 @@
 const SequencerFileCache = {
 
     _videos: {},
+    _totalCacheSize: 0,
 
     async loadVideo(inSrc) {
         let src = this._videos[inSrc];
         if (!src) {
             try {
                 src = await fetch(inSrc)
-                    .then(r => r.blob());
+                    .then(r => r.blob())
+                    .catch(err => {
+                        console.error(err)
+                    });
+
+                if (src?.type !== "video/webm") return false;
+
+                while((this._totalCacheSize + src.size) >= 524288000){
+                    let [oldSrc, blob] = Object.entries(this._videos)[0];
+                    delete this._videos[oldSrc];
+                    this._totalCacheSize -= blob.size;
+                }
+
+                this._totalCacheSize += src.size;
+                this._videos[inSrc] = src;
+
             } catch (err) {
                 return false;
             }
-            if (src?.type !== "video/webm") return false;
-            this._videos[inSrc] = src;
         }
         return src;
     },
 
-    async loadFile(inSrc) {
+    async loadFile(inSrc, preload = false) {
 
         if (inSrc.toLowerCase().endsWith(".webm")) {
 
             let blob = await this.loadVideo(inSrc);
             if(!blob) return false;
+            if(preload) return true;
             return get_video_texture(blob);
 
         } else if (AudioHelper.hasAudioExtension(inSrc)) {

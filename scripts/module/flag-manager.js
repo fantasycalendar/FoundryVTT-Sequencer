@@ -208,12 +208,17 @@ const flagManager = {
 
             let object = lib.from_uuid_fast(objectUUID);
 
+            if(!object){
+                lib.custom_warning("Sequencer", `Failed to set flags on non-existent object with UUID: ${objectUUID}`);
+                continue;
+            }
+
             let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
             let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
 
             if (toRemove?.removeAll) {
                 await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, []);
-                lib.debug(`All flags removed for object with ID "${object.uuid}"`);
+                lib.debug(`All flags removed for object with ID: ${objectUUID}`);
                 continue;
             }
 
@@ -231,7 +236,7 @@ const flagManager = {
 
             await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flagsToSet);
 
-            lib.debug(`Flags set for object with ID "${object.uuid}":\n`, flagsToSet)
+            lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
 
         }
 

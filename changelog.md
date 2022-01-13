@@ -1,5 +1,15 @@
 ## Sequencer Changelog
 
+### Version 2.0.1
+- *Sequencer* - Fixed preloader throwing error about missing function
+- *Sequencer* - Fixed Effect Manager complaining if trying to filter effects by name while some effects didn't have a valid name
+- *Effects* - Added the ability to use Effects as elements to play other Effects on
+- *Effects* - Added cache-busting for when the Sequencer .webm cache would get larger than 1GB
+- *Effects* - Fixed persistent effects attached to WarpGate crosshairs throwing errors
+- *Effects* - Fixed `cacheLocation` throwing errors regarding missing function
+- *Effects* - Fixed `endedSequencerEffect` being called too late for users to be able to use its parameters
+- *Effects* - Fixed error when deleting the object an effect was attached to through both `.attachTo()` and `.stretchTo()` 
+
 ### Version 2.0.0
 **Breaking changes:**
 - *Sequencer* - Sequencer now requires the `socketlib` module

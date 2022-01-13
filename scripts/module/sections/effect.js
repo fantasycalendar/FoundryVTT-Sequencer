@@ -141,7 +141,7 @@ export default class EffectSection extends Section {
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
-        this._source = inOptions.cacheLocation ? this._getCleanPosition(inLocation) : inLocation;
+        this._source = inOptions.cacheLocation ? canvaslib.get_object_position(inLocation) : inLocation;
         return this;
     }
 
@@ -226,7 +226,7 @@ export default class EffectSection extends Section {
         }
 
         this._stretchTo = {
-            target: inOptions.cacheLocation ? this._getCleanPosition(inLocation, true) : inLocation,
+            target: inOptions.cacheLocation ? canvaslib.get_object_position(inLocation, true) : inLocation,
             attachTo: inOptions.attachTo,
             onlyX: inOptions.onlyX
         };

@@ -106,7 +106,7 @@ export default function registerSettings() {
         onChange: debouncedReload
     });
 
-    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-_preload", {
+    game.settings.register(CONSTANTS.MODULE_NAME, "permissions-preload", {
         name: "SEQUENCER.Setting.Permission.PreloadClients.Title",
         hint: "SEQUENCER.Setting.Permission.PreloadClients.Label",
         scope: "world",

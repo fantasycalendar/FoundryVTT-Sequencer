@@ -84,7 +84,28 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {string}
      */
     get uuid() {
+        if(!lib.is_UUID(this.context.uuid)){
+            return "";
+        }
         return this.context.uuid + ".data.flags.sequencer.effects." + this.id;
+    }
+
+    /**
+     * Whether the source of this effect is temporary
+     *
+     * @returns {boolean}
+     */
+    get isSourceTemporary(){
+        return this.data.attachTo?.active && this.source?.document && !lib.is_UUID(this.source?.document.uuid);
+    }
+
+    /**
+     * Whether the target of this effect is temporary
+     *
+     * @returns {boolean}
+     */
+    get isTargetTemporary(){
+        return this.data.stretchTo?.attachTo && this.target?.document && !lib.is_UUID(this.target?.document.uuid);
     }
 
     /**
@@ -501,21 +522,10 @@ export default class CanvasEffect extends PIXI.Container {
     endEffect(immediate = false) {
         if (!this.ended) {
             this.ended = true;
+            Hooks.call("endedSequencerEffect", this);
             this._destroyDependencies();
             this.destroy();
         }
-    }
-
-    /**
-     * Destroys the PIXI element
-     *
-     * @OVERRIDE
-     * @param options
-     * @returns {*}
-     */
-    destroy(options) {
-        Hooks.call("endedSequencerEffect", this.data);
-        return super.destroy(options);
     }
 
     /**
@@ -952,7 +962,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _contextLostCallback() {
-        if (this.data.attachTo?.active && lib.is_UUID(this.data.source)) {
+        if (this.isSourceTemporary) {
             this._ticker.add(() => {
                 if (!this.source || this.source._destroyed) {
                     this._ticker.stop();
@@ -960,7 +970,7 @@ export default class CanvasEffect extends PIXI.Container {
                 }
             });
         }
-        if (this.data.stretchTo?.attachTo && lib.is_UUID(this.data.target)) {
+        if (this.isTargetTemporary) {
             this._ticker.add(() => {
                 if (!this.target || this.target._destroyed) {
                     this._ticker.stop();
@@ -1142,7 +1152,7 @@ export default class CanvasEffect extends PIXI.Container {
 
                 texture = result.texture;
 
-                spriteAnchor = result.spriteAnchor ?? this.data.anchor?.x ?? 0.5;
+                spriteAnchor = result.spriteAnchor ?? this.data.anchor?.x ?? 0.0;
 
                 scaleX = result.spriteScale;
 
@@ -1913,8 +1923,6 @@ class PersistentCanvasEffect extends CanvasEffect {
         }, this._animationDuration - (this._loopOffset * 1000));
     }
 
-
-
     /** @OVERRIDE */
     _timeoutVisibility() {
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
@@ -1927,7 +1935,7 @@ class PersistentCanvasEffect extends CanvasEffect {
     /** @OVERRIDE */
     _setEndTimeout() {
         let creationTimeDifference = this.actualCreationTime - this.data.creationTimestamp;
-        if (!this.data.noLoop || creationTimeDifference >= this._animationDuration || !this.video) return;
+        if (!this.data.noLoop || creationTimeDifference >= this._animationDuration || !(this.video || this.data.text)) return;
         setTimeout(() => {
             this.video.pause();
         }, this._animationDuration)

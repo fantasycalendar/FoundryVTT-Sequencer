@@ -59,15 +59,11 @@ export function calculate_missed_position(source, target, twister) {
 
 export function get_object_position(obj, measure = false) {
 
-    obj = obj?._object ?? obj;
-
-    if (obj instanceof CanvasEffect) {
-        const t = canvas.stage.worldTransform;
-        return {
-            x: (obj.sprite.worldTransform.tx - t.tx) / canvas.stage.scale.x,
-            y: (obj.sprite.worldTransform.ty - t.ty) / canvas.stage.scale.y
-        }
+    if(obj instanceof CanvasEffect){
+        return obj.worldPosition;
     }
+
+    obj = obj?._object ?? obj;
 
     let pos = {};
     if (obj instanceof MeasuredTemplate) {

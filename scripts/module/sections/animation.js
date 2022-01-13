@@ -163,8 +163,8 @@ class AnimationSection extends Section {
      */
     _getClosestSquare(origin, target) {
 
-        let originLoc = this._getCleanPosition(origin);
-        let targetLoc = this._getCleanPosition(target);
+        let originLoc = canvaslib.get_object_position(origin);
+        let targetLoc = canvaslib.get_object_position(target);
 
         let originSizeWidth = (origin?.data?.width ?? 1) * canvas.grid.size;
         let originSizeHeight = (origin?.data?.height ?? 1) * canvas.grid.size;
@@ -257,7 +257,7 @@ class AnimationSection extends Section {
 
             targetLoc = this._closestSquare
                 ? this._getClosestSquare(this._originObject, targetLoc)
-                : this._getCleanPosition(targetLoc);
+                : canvaslib.get_object_position(targetLoc);
 
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
@@ -363,10 +363,10 @@ class AnimationSection extends Section {
 
         if (this._moveTowards) {
 
-            let originLocation = this._getCleanPosition(this._originObject);
+            let originLocation = canvaslib.get_object_position(this._originObject);
             let targetLocation = this._closestSquare
                 ? this._getClosestSquare(this._originObject, this._moveTowards.target)
-                : this._getCleanPosition(this._moveTowards.target);
+                : canvaslib.get_object_position(this._moveTowards.target);
 
             targetLocation.x += this._offset.x;
             targetLocation.y += this._offset.y;
@@ -493,7 +493,7 @@ class AnimationSection extends Section {
             setTimeout(async () => {
                 let targetLocation = this._closestSquare
                     ? this._getClosestSquare(this._originObject, this._teleportTo.target)
-                    : this._getCleanPosition(this._teleportTo.target);
+                    : canvaslib.get_object_position(this._teleportTo.target);
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
                 if (this._teleportTo.relativeToCenter){

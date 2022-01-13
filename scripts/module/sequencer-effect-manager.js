@@ -126,7 +126,7 @@ export default class SequencerEffectManager {
         }
         return this.effects
             .filter(effect => !inFilter.effects || inFilter.effects.includes(effect.id))
-            .filter(effect => !inFilter.name || effect.data.name.match(inFilter.name)?.length)
+            .filter(effect => !inFilter.name || !effect.data.name || effect.data.name.match(inFilter.name)?.length)
             .filter(effect => !inFilter.source || inFilter.source === effect.data.source)
             .filter(effect => !inFilter.target || inFilter.target === effect.data.target)
             .filter(effect => !inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
@@ -148,9 +148,15 @@ export default class SequencerEffectManager {
         } else if (object instanceof PlaceableObject) {
             object = lib.get_object_identifier(object.document);
         } else if (typeof object === "string") {
-            if (!lib.get_object_from_scene(object, sceneId)) {
+            const actualObject = lib.get_object_from_scene(object, sceneId);
+            if (!actualObject) {
                 throw lib.custom_error("Sequencer", `EffectManager | could not find object with ID: ${object}`)
             }
+            const uuid = lib.get_object_identifier(actualObject);
+            if (!uuid) {
+                throw lib.custom_error("Sequencer", `EffectManager | could could not establish identifier of object with ID: ${object}`)
+            }
+            object = uuid;
         }
 
         return object;
@@ -224,7 +230,7 @@ export default class SequencerEffectManager {
 
         const playData = await effect.play();
 
-        if (data.persist && setFlags && effect.context && effect.owner) {
+        if (data.persist && setFlags && effect.context && effect.owner && !effect.isSourceTemporary) {
             flagManager.addFlags(effect.context.uuid, effect.data);
         }
 
@@ -293,7 +299,7 @@ export default class SequencerEffectManager {
         const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID)
         return Promise.allSettled(effectsToEnd.map(effect => {
             EffectsContainer.delete(effect.id);
-            if(inUUID === effect.data.target){
+            if(effect.data?.source !== inUUID && inUUID === effect.data.target){
                 flagManager.removeFlags(effect.data.source, effect);
             }
             debounceUpdateEffectViewer();
