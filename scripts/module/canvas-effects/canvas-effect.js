@@ -492,7 +492,7 @@ export default class CanvasEffect extends PIXI.Container {
      * Plays the effect, returning two promises; one that resolves once the duration has been established, and another
      * when the effect has finished playing
      *
-     * @returns {Promise<{duration: Promise<unknown>, promise: Promise<unknown>}>}
+     * @returns {Promise}
      */
     async play() {
 
@@ -519,7 +519,7 @@ export default class CanvasEffect extends PIXI.Container {
     /**
      *  Ends the effect
      */
-    endEffect(immediate = false) {
+    endEffect() {
         if (!this.ended) {
             this.ended = true;
             Hooks.call("endedSequencerEffect", this);
