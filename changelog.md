@@ -1,7 +1,7 @@
 ## Sequencer Changelog
 
 ### Version 2.0.1
-- *Sequencer* - Fixed preloader throwing error about missing function
+- *Sequencer* - Fixed preloader throwing error about missing functions
 - *Sequencer* - Fixed Effect Manager complaining if trying to filter effects by name while some effects didn't have a valid name
 - *Effects* - Added the ability to use Effects as elements to play other Effects on
 - *Effects* - Added cache-busting for when the Sequencer .webm cache would get larger than 1GB
