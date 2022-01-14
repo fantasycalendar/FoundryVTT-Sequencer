@@ -7,6 +7,7 @@ import SequencerAnimationEngine from "../sequencer-animation-engine.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
+import SequencerEffectManager from "../sequencer-effect-manager.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -531,9 +532,9 @@ export default class CanvasEffect extends PIXI.Container {
     /**
      * Updates this effect with the given parameters
      * @param inUpdates
-     * @returns {Promise|*}
+     * @returns {Promise}
      */
-    update(inUpdates) {
+    async update(inUpdates) {
         if (!this.userCanUpdate) throw lib.custom_error("Sequencer", "CanvasEffect | Update | You do not have permission to update this effect")
         CanvasEffect.validateUpdate(inUpdates);
 
@@ -545,10 +546,8 @@ export default class CanvasEffect extends PIXI.Container {
         });
 
         if (Object.keys(foundry.utils.diffObject(newData, this.data)).length === 0) {
-            lib.debug(`Skipped updating effect with ID ${this.id} - no changes needed`)
-            return new Promise(resolve => {
-                resolve();
-            });
+            lib.debug(`Skipped updating effect with ID ${this.id} - no changes needed`);
+            return;
         }
 
         if ((lib.is_UUID(newData.target) && newData.source === newData.target) || (lib.is_UUID(newData.source) && newData.source === newData.target)) {
@@ -1068,20 +1067,22 @@ export default class CanvasEffect extends PIXI.Container {
     _setupHooks(){
 
         if (this.data.attachTo?.active && lib.is_UUID(this.data.source)){
-            const hookName = "preDelete" + this.data.source.split('.')[2];
+            const hookName = "delete" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.source.document) return;
                 this.visible = false;
-                this.endEffect(true);
+                const uuid = doc.uuid;
+                SequencerEffectManager.objectDeleted(uuid);
             });
         }
 
         if (this.data.stretchTo?.attachTo && lib.is_UUID(this.data.target)){
-            const hookName = "preDelete" + this.data.target.split('.')[2];
+            const hookName = "delete" + this.data.target.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.target.document) return;
                 this.visible = false;
-                this.endEffect(true);
+                const uuid = doc.uuid;
+                SequencerEffectManager.objectDeleted(uuid);
             });
         }
 

@@ -20,6 +20,8 @@ const SequencerPreloader = {
 
         const srcs = this._cleanSrcs(inSrcs);
 
+        if (srcs.length === 0) return;
+
         return this._preloadLocal(srcs, showProgressBar);
 
     },
@@ -35,6 +37,8 @@ const SequencerPreloader = {
     preloadForClients(inSrcs, showProgressBar = false) {
 
         const srcs = this._cleanSrcs(inSrcs);
+
+        if (srcs.length === 0) return;
 
         if (!lib.user_can_do("permissions-preload")){
             lib.custom_warning("Sequencer", "preloadForClients - You do not have permission to force other clients to preload. Preloading locally instead.");
@@ -94,11 +98,9 @@ const SequencerPreloader = {
             inSrcs = [inSrcs];
         }
 
-        inSrcs = this._cleanSrcs(inSrcs);
-
         if (inSrcs.length === 0){
             lib.custom_warning("Sequencer", "You need to provide files to preload");
-            return;
+            return [];
         }
 
         inSrcs = lib.make_array_unique(inSrcs.filter(Boolean).map(src => {

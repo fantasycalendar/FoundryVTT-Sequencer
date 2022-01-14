@@ -96,34 +96,9 @@ function initialize_module(){
         registerSocket();
     })
 
-    Hooks.on("createToken", (document) => {
-        if(!document.data?.flags?.sequencer?.effects) return;
-        const effects = SequencerEffectManager.patchCreationData(document);
-        document.data.update({"flags.sequencer.effects": effects});
-    });
-
-    Hooks.on("createTile", (document) => {
-        if(!document.data?.flags?.sequencer?.effects) return;
-        const effects = SequencerEffectManager.patchCreationData(document);
-        document.data.update({"flags.sequencer.effects": effects});
-    });
-
-    Hooks.on("createMeasuredTemplate", (document) => {
-        if(!document.data?.flags?.sequencer?.effects) return;
-        const effects = SequencerEffectManager.patchCreationData(document);
-        document.data.update({"flags.sequencer.effects": effects});
-    });
-
-    Hooks.on("preDeleteToken", (document) => {
-        SequencerEffectManager.objectDeleted(document.uuid);
-    });
-
-    Hooks.on("preDeleteTile", (document) => {
-        SequencerEffectManager.objectDeleted(document.uuid);
-    });
-
-    Hooks.on("preDeleteMeasuredTemplate", (document) => {
-        SequencerEffectManager.objectDeleted(document.uuid);
-    });
+    Hooks.on("createToken", Sequencer.EffectManager.patchCreationData);
+    Hooks.on("createDrawing", Sequencer.EffectManager.patchCreationData);
+    Hooks.on("createTile", Sequencer.EffectManager.patchCreationData);
+    Hooks.on("createMeasuredTemplate", Sequencer.EffectManager.patchCreationData);
 
 }

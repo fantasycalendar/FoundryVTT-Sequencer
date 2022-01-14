@@ -303,7 +303,7 @@ export default class SequencerEffectManager {
                 flagManager.removeFlags(effect.data.source, effect);
             }
             debounceUpdateEffectViewer();
-            return effect.destroy();
+            return effect.endEffect();
         }));
     }
 
@@ -314,6 +314,8 @@ export default class SequencerEffectManager {
      * @returns {*}
      */
     static patchCreationData(inDocument) {
+
+        if(!inDocument.data?.flags?.sequencer?.effects) return;
 
         const effects = inDocument.data.flags.sequencer.effects
             .map(effect => {
@@ -333,7 +335,7 @@ export default class SequencerEffectManager {
 
         debounceUpdateEffectViewer();
 
-        return effects;
+        return inDocument.data.update({"flags.sequencer.effects": effects});
 
     }
 

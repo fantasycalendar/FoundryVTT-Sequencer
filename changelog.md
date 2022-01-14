@@ -1,8 +1,11 @@
 ## Sequencer Changelog
 
 ### Version 2.0.2
+- *Sequencer* - Fixed the preloader throwing error about recursion
 - *Effects* - Fixed rotational animations not working properly
 - *Effects* - Fixed the update interface not allowing attribute paths like core Foundry does
+- *Effects* - Fixed effects lingering for other users after their attached objects were deleted
+- *Effects* - Fixed issues with using `.from()` on tiles
 
 ### Version 2.0.1
 - *Sequencer* - Fixed preloader throwing error about missing functions

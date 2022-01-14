@@ -168,7 +168,15 @@ export default class EffectSection extends Section {
 
         let isValidObject = true;
         if(typeof inObject === "string"){
-            isValidObject = validatedObject instanceof Token || validatedObject instanceof Tile || validatedObject instanceof Drawing || validatedObject instanceof MeasuredTemplate || validatedObject instanceof CanvasEffect;
+            isValidObject = validatedObject instanceof Token
+                || validatedObject instanceof TokenDocument
+                || validatedObject instanceof Tile
+                || validatedObject instanceof TileDocument
+                || validatedObject instanceof Drawing
+                || validatedObject instanceof DrawingDocument
+                || validatedObject instanceof MeasuredTemplate
+                || validatedObject instanceof MeasuredTemplateDocument
+                || validatedObject instanceof CanvasEffect;
             if (!isValidObject){
                 this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, Drawings, and MeasuredTemplates may have attached effects - will play effect on target's location");
             }
@@ -251,9 +259,9 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
-        this.size(canvaslib.get_object_dimensions(inObject.icon));
-        this.mirrorX(inObject.data.mirrorX);
-        this.mirrorY(inObject.data.mirrorY);
+        this.size(canvaslib.get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject));
+        if(inObject.data.mirrorX) this.mirrorX();
+        if(inObject.data.mirrorY) this.mirrorY();
         if(inObject?.data?.rotation){
             this.rotate(-inObject.data.rotation);
         }
