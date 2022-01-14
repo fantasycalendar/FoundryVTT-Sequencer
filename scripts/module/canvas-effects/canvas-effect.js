@@ -1486,8 +1486,8 @@ export default class CanvasEffect extends PIXI.Container {
             if (!animation.target) continue;
 
             if (animation.propertyName.indexOf("rotation") > -1) {
-                animation.from = Math.toRadians(animation.from);
-                animation.to = Math.toRadians(animation.to);
+                animation.from = animation.from * (Math.PI / 180);
+                animation.to = animation.to * (Math.PI / 180);
             }
 
             if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
@@ -1518,8 +1518,8 @@ export default class CanvasEffect extends PIXI.Container {
             if (!animation.target) continue;
 
             if (animation.propertyName.indexOf("rotation") > -1) {
-                animation.values = animation.values.map(value => {
-                    return Math.toRadians(value);
+                animation.values = animation.values.map(angle => {
+                    return angle * (Math.PI / 180);
                 });
             }
 
@@ -1730,7 +1730,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (this.actualCreationTime - (this.data.creationTimestamp + rotateIn.duration + rotateIn.delay) > 0) return;
 
         let original_radians = this.spriteContainer.rotation;
-        this.spriteContainer.rotation = Math.toRadians(rotateIn.value);
+        this.spriteContainer.rotation = rotateIn.value * (Math.PI / 180);
 
         SequencerAnimationEngine.addAnimation(this.id, this._counterAnimateRotation({
             target: this.spriteContainer,
@@ -1763,7 +1763,7 @@ export default class CanvasEffect extends PIXI.Container {
         SequencerAnimationEngine.addAnimation(this.id, this._counterAnimateRotation({
             target: this.spriteContainer,
             propertyName: "rotation",
-            to: Math.toRadians(rotateOut.value),
+            to: rotateOut.value * (Math.PI / 180),
             duration: rotateOut.duration,
             ease: rotateOut.ease,
             delay: rotateOut.delay
