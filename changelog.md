@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.0.2
+- *Effects* - Fixed rotational animations not working properly
+- *Effects* - Fixed the update interface not allowing attribute paths like core Foundry does
+
 ### Version 2.0.1
 - *Sequencer* - Fixed preloader throwing error about missing functions
 - *Sequencer* - Fixed Effect Manager complaining if trying to filter effects by name while some effects didn't have a valid name
