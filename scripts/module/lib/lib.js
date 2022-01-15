@@ -44,6 +44,8 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
 
 export async function sequencerSrcExists(inSrc) {
 
+    return srcExists(inSrc);
+
     // If we're not on forge or if it's a direct url, just check immediately
     if (typeof ForgeVTT === "undefined" || !ForgeVTT.usingTheForge || inSrc.match(/^https?:\/\//)) {
         return srcExists(inSrc);
