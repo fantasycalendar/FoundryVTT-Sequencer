@@ -855,7 +855,6 @@ export default class EffectSection extends Section {
             ? await this._determineFile(this._file)
             : { file: this._file, forcedIndex: false, customRange: false };
 
-
         if(Sequencer.Database.entryExists(this._fileData.file)) return;
 
         try{

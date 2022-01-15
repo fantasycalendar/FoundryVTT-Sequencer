@@ -1,8 +1,8 @@
 ## Sequencer Changelog
 
 ### Version 2.0.3
-- *Effects* - Fixed issue on the ForgeVTT where effects would fail to play if they had direct file paths
-- *Effects* - Fixed issue where `.scaleToObject()` would fail to scale to objects properly
+- *Effects* - Fixed some issues regarding file paths on ForgeVTT, though they did most of the legwork on their side
+- *Effects* - Fixed issue where `.scaleToObject()` would fail to scale to the object properly
 - *Effects* - Fixed Effect Manager not finding effects to end when it was only provided an object
 - *Effects* - Fixed copying tokens and other objects with ongoing effects would not properly play it for everyone
 - *Effects* - Fixed screenspace effects would sometimes not play properly 
