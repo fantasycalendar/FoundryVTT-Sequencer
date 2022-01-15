@@ -96,9 +96,9 @@ function initialize_module(){
         registerSocket();
     })
 
-    Hooks.on("createToken", Sequencer.EffectManager.patchCreationData);
-    Hooks.on("createDrawing", Sequencer.EffectManager.patchCreationData);
-    Hooks.on("createTile", Sequencer.EffectManager.patchCreationData);
-    Hooks.on("createMeasuredTemplate", Sequencer.EffectManager.patchCreationData);
+    Hooks.on("createToken", (doc) => Sequencer.EffectManager.patchCreationData(doc));
+    Hooks.on("createDrawing", (doc) => Sequencer.EffectManager.patchCreationData(doc));
+    Hooks.on("createTile", (doc) => Sequencer.EffectManager.patchCreationData(doc));
+    Hooks.on("createMeasuredTemplate", (doc) => Sequencer.EffectManager.patchCreationData(doc));
 
 }

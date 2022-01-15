@@ -66,7 +66,8 @@ export function get_object_position(obj, measure = false) {
     obj = obj?._object ?? obj;
 
     let pos = {};
-    if (obj instanceof MeasuredTemplate) {
+    if (obj instanceof MeasuredTemplate || obj instanceof MeasuredTemplateDocument) {
+        obj = obj instanceof MeasuredTemplateDocument ? obj.object : obj;
         if (measure) {
             if (obj.data.t === "cone" || obj.data.t === "ray") {
                 pos.x = obj.ray.B.x;
@@ -78,6 +79,7 @@ export function get_object_position(obj, measure = false) {
             pos.y = obj.y + (obj.shape.height / 2)
         }
     } else if (obj instanceof Tile || obj instanceof TileDocument) {
+        obj = obj instanceof TileDocument ? obj.object : obj;
         pos = {
             x: obj.data.x + (obj.data.width / 2),
             y: obj.data.y + (obj.data.height / 2)
@@ -182,9 +184,10 @@ export function is_object_canvas_data(inObj) {
 }
 
 export function get_object_canvas_data(inObject, measure = false) {
+    inObject = inObject?.object ?? inObject;
     return {
         ...get_object_position(inObject, measure),
-        ...get_object_dimensions(inObject)
+        ...get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject)
     }
 }
 

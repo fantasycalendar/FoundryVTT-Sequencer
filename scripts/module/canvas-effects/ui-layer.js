@@ -57,8 +57,9 @@ export default class SequencerUILayer{
 
         for(let child of this.children){
 
+
             let screenSpaceAnchor = child.data.screenSpaceAnchor;
-            let screenSpacePosition = child.data.screenSpacePosition;
+            let screenSpacePosition = child.data.screenSpacePosition
 
             if(!screenSpaceAnchor) {
                 if (!child.data.anchor) {
@@ -75,6 +76,10 @@ export default class SequencerUILayer{
                 }
             }
 
+            if(!screenSpacePosition){
+                screenSpacePosition = { x: 0, y: 0}
+            }
+
             child.position.set(
                 screenSpacePosition.x + this.app.renderer.width * screenSpaceAnchor.x,
                 screenSpacePosition.y + this.app.renderer.height * screenSpaceAnchor.y
@@ -82,7 +87,7 @@ export default class SequencerUILayer{
 
             if(child.data.screenSpaceScale) {
 
-                const scaleData = child.data.screenSpaceScale;
+                const scaleData = child.data.screenSpaceScale ?? { x: 1, y: 1 };
 
                 let scaleX = scaleData.x;
                 let scaleY = scaleData.y;

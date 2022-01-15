@@ -174,6 +174,8 @@ export default class SequencerEffectManager {
         if (inFilter?.sceneId) {
             if (typeof inFilter.sceneId !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.sceneId must be of type string")
             if (!game.scenes.get(inFilter.sceneId)) throw lib.custom_error("Sequencer", "EffectManager | inFilter.sceneId must be a valid scene id (could not find scene)")
+        }else{
+            inFilter.sceneId = game.user.viewedScene;
         }
 
         if (inFilter?.object) {
@@ -208,7 +210,7 @@ export default class SequencerEffectManager {
             name: false,
             source: false,
             target: false,
-            sceneId: game.user.viewedScene,
+            sceneId: false,
             origin: false
         }, inFilter);
 
@@ -315,9 +317,11 @@ export default class SequencerEffectManager {
      */
     static patchCreationData(inDocument) {
 
-        if(!inDocument.data?.flags?.sequencer?.effects) return;
+        const flags = flagManager.getFlags(inDocument);
 
-        const effects = inDocument.data.flags.sequencer.effects
+        if(!flags?.effects?.length) return;
+
+        const effects = flags.effects
             .map(effect => {
                 let effectData = effect[1].data;
 
@@ -330,6 +334,8 @@ export default class SequencerEffectManager {
                 effect[1].data = effectData;
                 return effect;
             });
+
+        flagManager.addFlags(inDocument.uuid, effects);
 
         this._playEffectMap(effects, inDocument);
 
@@ -353,9 +359,8 @@ export default class SequencerEffectManager {
             if(!CanvasEffect.checkValid(effect[1])){
                 if(game.user.isGM) {
                     lib.custom_warning(`Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`);
-                    return flagManager.removeFlags(inDocument.uuid, effect);
                 }
-                return;
+                return flagManager.removeFlags(inDocument.uuid, effect);
             }
             return this._playEffect(effect[1], false)
                 .then((result) => {

@@ -7,7 +7,7 @@ const SequencerFileCache = {
         let src = this._videos[inSrc];
         if (!src) {
             try {
-                src = await fetch(inSrc)
+                src = await fetch(inSrc, {mode: "cors", credentials: "same-origin"})
                     .then(r => r.blob())
                     .catch(err => {
                         console.error(err)
@@ -86,6 +86,7 @@ async function get_video_texture(inBlob){
         };
 
         video.onerror = () => {
+            URL.revokeObjectURL(video.src);
             reject();
         };
 
