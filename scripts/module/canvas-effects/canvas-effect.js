@@ -827,17 +827,6 @@ export default class CanvasEffect extends PIXI.Container {
 
         }else {
 
-            if (!(Sequencer.Database.entryExists(this.data.file) || (await srcExists(this.data.file)))) {
-                let error = "Sequencer "
-                if (this.data.moduleName !== "Sequencer") error += `| Module: ${this.data.moduleName}`;
-                error += ` | CanvasEffect | Play Effect - ${game.i18n.localize("SEQUENCER.Error.CouldNotPlay")}:<br>${this.data.file}`;
-                ui.notifications.error(error);
-                console.error(error.replace("<br>", "\n"))
-                this._reject();
-                this._durationReject();
-                return;
-            }
-
             if (!Sequencer.Database.entryExists(this.data.file)) {
                 let texture = await SequencerFileCache.loadFile(this.data.file);
                 this.video = this.data.file.endsWith(".webm")

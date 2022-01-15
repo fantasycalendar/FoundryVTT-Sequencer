@@ -23,7 +23,9 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
     let source = 'data';
     const browseOptions = { wildcard: applyWildCard };
 
-    if (/\.s3\./.test(inFile)) {
+    if (typeof ForgeVTT !== "undefined" && ForgeVTT.usingTheForge) {
+        source = "forge-bazaar";
+    }else if (/\.s3\./.test(inFile)) {
         source = 's3'
         const { bucket, keyPrefix } = FilePicker.parseS3URL(inFile);
         if (bucket) {
@@ -38,6 +40,37 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
         if (softFail) return false;
         throw custom_error("Sequencer", `getFiles | ${err}`);
     }
+}
+
+export async function sequencerSrcExists(inSrc) {
+
+    // If we're not on forge or if it's a direct url, just check immediately
+    if (typeof ForgeVTT === "undefined" || !ForgeVTT.usingTheForge || inSrc.match(/^https?:\/\//)) {
+        return srcExists(inSrc);
+    }
+
+    // We're on the Forge and it's a relative path, it's likely to be a file from the bazaar or the user's asset library
+    const match = inSrc.match(/^(.*\/)?([^\/]+)$/);
+    const dir = match[1] || "/";
+    const filename = match[2];
+
+    // If the path is for a module, system or world, try the bazaar first as it might be from an installed package
+    if (dir.match(/\.?\/?(modules|systems|worlds)\//)) {
+        const bazaarListing = await FilePicker.browse("forge-bazaar", dir);
+        const bazaarURL = bazaarListing.files.find(url => url.endsWith(filename));
+        if (bazaarURL) return true;
+    }
+
+    // See if we can find the real URL of the relative path in the user's assets library
+    const assetsListing = await FilePicker.browse("forgevtt", dir);
+    const assetsURL = assetsListing.files.find(url => url.endsWith(filename));
+    if (assetsURL) return true;
+
+    // Not found in the Bazaar or the user's assets library, file might not exist,
+    // This might be a player on someone else's game so the file is not in their library but the GM's library.
+    // fallback to a srcExists check, which would work in that case
+    return srcExists(inSrc);
+
 }
 
 

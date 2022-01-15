@@ -4,6 +4,7 @@ import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
+import { sequencerSrcExists } from "../lib/lib.js";
 
 export default class EffectSection extends Section {
 
@@ -43,6 +44,8 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
+
+        this._fileData = null;
     }
 
     /**
@@ -847,6 +850,22 @@ export default class EffectSection extends Section {
                 };
             }
         }
+
+        this._fileData = this._file
+            ? await this._determineFile(this._file)
+            : { file: this._file, forcedIndex: false, customRange: false };
+
+
+        if(Sequencer.Database.entryExists(this._fileData.file)) return;
+
+        try{
+            const exists = await lib.sequencerSrcExists(this._fileData.file);
+            if (exists) {
+                return true;
+            }
+        }catch(err){}
+
+        throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
     }
 
     /**
@@ -892,9 +911,7 @@ export default class EffectSection extends Section {
      */
     async _sanitizeEffectData() {
 
-        const { file, forcedIndex, customRange } = this._file
-            ? await this._determineFile(this._file)
-            : { file: this._file, forcedIndex: false, customRange: false };
+        const { file, forcedIndex, customRange } = this._fileData;
 
         let data = foundry.utils.duplicate({
             /**
