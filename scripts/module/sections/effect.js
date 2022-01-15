@@ -4,7 +4,7 @@ import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
-import { sequencerSrcExists } from "../lib/lib.js";
+import SequencerFileCache from "../sequencer-file-cache.js";
 
 export default class EffectSection extends Section {
 
@@ -859,10 +859,8 @@ export default class EffectSection extends Section {
         if(Sequencer.Database.entryExists(this._fileData.file)) return;
 
         try{
-            const exists = await lib.sequencerSrcExists(this._fileData.file);
-            if (exists) {
-                return true;
-            }
+            const exists = await SequencerFileCache.srcExists(this._fileData.file);
+            if (exists) return;
         }catch(err){}
 
         throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);

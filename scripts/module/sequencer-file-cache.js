@@ -1,6 +1,7 @@
 const SequencerFileCache = {
 
     _videos: {},
+    _preloadedFiles: new Set(),
     _totalCacheSize: 0,
 
     async loadVideo(inSrc) {
@@ -18,6 +19,7 @@ const SequencerFileCache = {
                 while((this._totalCacheSize + src.size) >= 524288000){
                     let [oldSrc, blob] = Object.entries(this._videos)[0];
                     delete this._videos[oldSrc];
+                    this._preloadedFiles.delete(oldSrc);
                     this._totalCacheSize -= blob.size;
                 }
 
@@ -31,6 +33,13 @@ const SequencerFileCache = {
         return src;
     },
 
+    srcExists(inSrc){
+        if(this._preloadedFiles.has(inSrc)){
+            return true;
+        }
+        return srcExists(inSrc);
+    },
+
     async loadFile(inSrc, preload = false) {
 
         if (inSrc.toLowerCase().endsWith(".webm")) {
@@ -38,12 +47,17 @@ const SequencerFileCache = {
             let blob = await this.loadVideo(inSrc);
             if(!blob) return false;
             if(preload) return true;
+            this._preloadedFiles.add(inSrc);
             return get_video_texture(blob);
 
         } else if (AudioHelper.hasAudioExtension(inSrc)) {
 
             try {
-                return await AudioHelper.preloadSound(inSrc);
+                const audio = await AudioHelper.preloadSound(inSrc);
+                if(audio){
+                    this._preloadedFiles.add(inSrc);
+                }
+                return audio;
             } catch (err) {
                 console.error(`Failed to load audio: ${inSrc}`)
                 return false;
@@ -51,7 +65,11 @@ const SequencerFileCache = {
 
         }
 
-        return await loadTexture(inSrc);
+        const texture = await loadTexture(inSrc);
+        if(texture){
+            this._preloadedFiles.add(inSrc);
+        }
+        return texture;
 
     }
 

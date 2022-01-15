@@ -3,6 +3,7 @@ import * as lib from './lib/lib.js';
 import * as canvaslib from "./lib/canvas-lib.js";
 import SequencerEffectManager from "./sequencer-effect-manager.js";
 import CONSTANTS from "./constants.js";
+import SequencerFileCache from "./sequencer-file-cache.js";
 
 /**
  * -------------------------------------------------------------
@@ -244,7 +245,7 @@ export const EffectPlayer = {
 
         if (settings.file === "") return;
 
-        if (!(Sequencer.Database.entryExists(settings.file) || (await srcExists(settings.file)))) {
+        if (!(Sequencer.Database.entryExists(settings.file) || (await SequencerFileCache.srcExists(settings.file)))) {
             throw lib.custom_error("Sequencer", `Sequencer Player | Could not find file or database entry: ${settings.file}`);
         }
 

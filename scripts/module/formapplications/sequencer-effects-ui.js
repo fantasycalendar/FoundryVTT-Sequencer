@@ -2,6 +2,7 @@ import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
 import { EffectPlayer, SelectionManager } from "../sequencer-interaction-manager.js";
 import CONSTANTS from "../constants.js";
+import SequencerFileCache from "../sequencer-file-cache.js";
 
 export default class SequencerEffectsUI extends FormApplication {
 
@@ -472,7 +473,7 @@ export default class SequencerEffectsUI extends FormApplication {
     }
 
     async updateFile(inPath){
-        if(!(Sequencer.Database.entryExists(inPath) || (await srcExists(inPath)))) return;
+        if(!(Sequencer.Database.entryExists(inPath) || (await SequencerFileCache.srcExists(inPath)))) return;
         this.setSetting('file', inPath);
     }
 
