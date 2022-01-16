@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.0.5 Hotfix Hotfix
+- *Effects* - Hotfix for the hotfix. It's just hotfixes all the way down, man.
+
 ### Version 2.0.4 Hotfix
 - *Effects* - Fixed some modules causing Sequencer to complain 
 - *Effects* - Actually fixed copying objects would not copy the effects on it
