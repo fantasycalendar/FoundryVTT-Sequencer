@@ -851,18 +851,23 @@ export default class EffectSection extends Section {
             }
         }
 
-        this._fileData = this._file
-            ? await this._determineFile(this._file)
-            : { file: this._file, forcedIndex: false, customRange: false };
+        if(this._file && !this._silentlyFail) {
 
-        if(Sequencer.Database.entryExists(this._fileData.file)) return;
+            this._fileData = this._file
+                ? await this._determineFile(this._file)
+                : { file: this._file, forcedIndex: false, customRange: false };
 
-        try{
-            const exists = await SequencerFileCache.srcExists(this._fileData.file);
-            if (exists) return;
-        }catch(err){}
+            if (Sequencer.Database.entryExists(this._fileData.file)) return;
 
-        throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
+            try {
+                const exists = await SequencerFileCache.srcExists(this._fileData.file);
+                if (exists) return;
+            } catch (err) {
+            }
+
+            throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
+
+        }
     }
 
     /**

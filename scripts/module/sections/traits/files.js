@@ -10,16 +10,19 @@ export default {
     _fileOptions: false,
     _baseFolder: "",
     _mustache: null,
+    _silentlyFail: true,
 
     /**
      * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
      * time the section is played.
      *
      * @param {string|array} inFile
+     * @param {boolean} silentlyFail
      * @returns this
      */
-    file(inFile) {
+    file(inFile, silentlyFail = true) {
         this._file = inFile;
+        this._silentlyFail = silentlyFail;
         return this;
     },
 

@@ -315,33 +315,35 @@ export default class SequencerEffectManager {
      * @param inDocument
      * @returns {*}
      */
-    static patchCreationData(inDocument) {
+    static async patchCreationData(inDocument) {
 
-        const flags = flagManager.getFlags(inDocument);
+        const effects = flagManager.getFlags(inDocument);
 
-        if(!flags?.effects?.length) return;
+        if(!effects?.length) return;
 
-        const effects = flags.effects
+        const newEffects = effects
             .map(effect => {
-                let effectData = effect[1].data;
+                let effectData = effect[1];
 
-                if (effectData.attachTo || lib.is_UUID(effectData.source)) {
+                effectData._id = randomID();
+
+                if (lib.is_UUID(effectData.source)) {
                     effectData.source = lib.get_object_identifier(inDocument);
                 }
 
                 effectData.sceneId = canvas.scene.id;
 
-                effect[1].data = effectData;
+                effect[1] = effectData;
                 return effect;
             });
 
-        flagManager.addFlags(inDocument.uuid, effects);
-
-        this._playEffectMap(effects, inDocument);
+        if(game.user.isGM) {
+            flagManager.addFlags(inDocument.uuid, newEffects);
+        }
 
         debounceUpdateEffectViewer();
 
-        return inDocument.data.update({"flags.sequencer.effects": effects});
+        return this._playEffectMap(newEffects, inDocument);
 
     }
 

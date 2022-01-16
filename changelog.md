@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.0.4 Hotfix
+- *Effects* - Fixed some modules causing Sequencer to complain 
+- *Effects* - Actually fixed copying objects would not copy the effects on it
+
 ### Version 2.0.3
 - *Effects* - Fixed some issues regarding file paths on ForgeVTT, though they did most of the legwork on their side
 - *Effects* - Fixed issue where `.scaleToObject()` would fail to scale to the object properly
