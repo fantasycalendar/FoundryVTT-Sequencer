@@ -851,7 +851,7 @@ export default class EffectSection extends Section {
             }
         }
 
-        if(!this._file && this._silentlyFail) {
+        if((!this._file && this._silentlyFail) || (!this._file && this._text)) {
             return;
         }
 
