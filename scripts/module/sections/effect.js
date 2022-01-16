@@ -403,7 +403,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     gridSize(inGridSize) {
-        this.sequence._showWarning(self, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.")
+        this.sequence._showWarning(this, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.")
         if (!lib.is_real_number(inGridSize)) throw this.sequence._customError(this, "gridSize", "inGridSize must be of type number");
         if(!this._template) this._template = {};
         this._template["gridSize"] = inGridSize;
@@ -419,7 +419,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
-        this.sequence._showWarning(self, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
+        this.sequence._showWarning(this, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
         if (!lib.is_real_number(inStartPoint)) throw this.sequence._customError(this, "startPoint", "inStartPoint must be of type number");
         if(!this._template) this._template = {};
         this._template["startPoint"] = inStartPoint;
@@ -433,7 +433,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
-        this.sequence._showWarning(self, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
+        this.sequence._showWarning(this, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
         if (!lib.is_real_number(inEndPoint)) throw this.sequence._customError(this, "endPoint", "inEndPoint must be of type number");
         if(!this._template) this._template = {};
         this._template["endPoint"] = inEndPoint;
@@ -851,23 +851,24 @@ export default class EffectSection extends Section {
             }
         }
 
-        if(this._file && !this._silentlyFail) {
-
-            this._fileData = this._file
-                ? await this._determineFile(this._file)
-                : { file: this._file, forcedIndex: false, customRange: false };
-
-            if (Sequencer.Database.entryExists(this._fileData.file)) return;
-
-            try {
-                const exists = await SequencerFileCache.srcExists(this._fileData.file);
-                if (exists) return;
-            } catch (err) {
-            }
-
-            throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
-
+        if(!this._file && this._silentlyFail) {
+            return;
         }
+
+        this._fileData = this._file
+            ? await this._determineFile(this._file)
+            : { file: this._file, forcedIndex: false, customRange: false };
+
+        if(this._fileData.customRange || this._fileData.file?.dbPath) return;
+
+        try {
+            const exists = await SequencerFileCache.srcExists(this._fileData.file);
+            if (exists) return;
+        } catch (err) {
+        }
+
+        throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
+
     }
 
     /**
