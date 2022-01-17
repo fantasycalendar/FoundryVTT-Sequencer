@@ -143,6 +143,58 @@
             min-width: 230px;
         }
 
+        .effect-manager-tab-paper {
+            border: var(--color-border-dark-primary) 1px solid;
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        .effect-manager-tab-paper:first-of-type {
+            row-gap: 8px;
+        }
+
+        .effect-manager-tab-paper div {
+            display: flex;
+            flex-flow: row nowrap;
+            align-items: center;
+            column-gap: 4px;
+        }
+        .effect-manager-tab-paper input {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .effect-manager-tab-paper input[type="number"] {
+            width: 40px;
+        }
+        .effect-manager-tab-paper .button-group {
+            display: flex;
+            flex-flow: row nowrap;
+            background-color: var(--color-bg-btn-minor-inactive);
+            border: var(--color-border-light-primary) 1px solid;
+            border-radius: 5px;
+            margin: 2px 0;
+        }
+        .effect-manager-tab-paper .button-group input {
+            display: none;
+        }
+        .effect-manager-tab-paper .button-group label {
+            border-radius: 5px;
+            padding: 2px 4px;
+        }
+        .effect-manager-tab-paper .button-group input:checked + label {
+            background-color: var(--color-bg-btn-minor-active);
+        }
+
+        .effect-manager-tab-paper #effect-manager-setting-user-select {
+            display: flex;
+            flex-direction: column;
+        }
+        .effect-manager-tab-paper #effect-manager-setting-user-select select {
+            align-self: stretch;
+        }
+        .effect-manager-tab-paper #effect-manager-tab-transform-grid {
+            display: grid;
+            grid-template: repeat(7, auto) / auto 1fr auto;
+        }
     </style>
 
     <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
@@ -156,64 +208,137 @@
     <section id="effect-manager-tabs" class="content">
 
         {{#if canCreateEffects}}
-        <div class="tab effect-player-container" data-tab="player" data-group="effect-manager">
-
-            <button type="button" class="activate-layer w-100 mb-2">{{ localize "SEQUENCER.Player.SwitchToLayer" }}</button>
-
-            <div class="file-settings flexcol mb-2">
-                <div class="row">
-                    <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder='{{ localize "SEQUENCER.Player.PathInput" }}'>
-                    <button type="button" class="custom-file-picker small-button"><i class="fas fa-file-import"></i></button>
+        <div class="tab effect-player-container flexrow" data-tab="player" data-group="effect-manager">
+            <fieldset class="effect-manager-tab-paper">
+                <legend>Effect</legend>
+                <button type="button" class="activate-layer w-100">{{ localize "SEQUENCER.Player.SwitchToLayer" }}</button>
+                <div class="file-settings flexcol">
+                    <div class="row">
+                        <input type="text" class="file-input flex3" name="file" id="file" list="dblist" placeholder='{{ localize "SEQUENCER.Player.PathInput" }}'>
+                        <button type="button" class="custom-file-picker small-button"><i class="fas fa-file-import"></i></button>
+                    </div>
+                    <datalist id="dblist"></datalist>
                 </div>
-                <datalist id="dblist"></datalist>
-            </div>
-
-            <div class="settings flexcol mb-2">
-                <div class="input-column">
-                    {{#each defaultSettings}}
-                    <div class="input-row"><input type="{{this.type}}" class="setting" name="{{@key}}" id="{{@key}}" value="{{this.default}}"></div>
-                    {{/each}}
+                <div class="flexcol">
+                    <div class="row w-100">{{ localize "SEQUENCER.Player.Presets" }}</div>
+                    <div class="row w-100">
+                        <select class="preset-select flex-grow">
+                            <option value="default">{{ localize "SEQUENCER.Player.PresetsDefault" }}</option>
+                            {{#each presets}}
+                            <option>{{ @key }}</option>
+                            {{/each}}
+                        </select>
+                        <button type="button" class="save-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
+                        <button type="button" class="copy-preset flex-shrink small-button" disabled><i class="fas fa-copy"></i></button>
+                        <button type="button" class="delete-preset flex-shrink small-button" disabled><i class="fas fa-times"></i></button>
+                    </div>
                 </div>
-                <div class="label-column">
-                    {{#each defaultSettings}}
-                    <div class="label-row"><label for="{{ @key }}">{{{ this.label }}}</label></div>
-                    {{/each}}
-                </div>
-            </div>
-
-            <div class="user-settings flexcol mb-2">
-                <label for="file">Play for users:</label>
-                <select class="user-select" id="user-select" multiple>
-                    <option value="all" selected>{{ localize "SEQUENCER.Player.AllUsers" }}</option>
-                    {{#each users}}
-                    <option value="{{ this.id }}">{{ this.name }}</option>
-                    {{/each}}
-                </select>
-            </div>
-
-            <div class="flexcol">
-
-                <div class="row w-100">{{ localize "SEQUENCER.Player.Presets" }}</div>
-
-                <div class="row w-100">
-
-                    <select class="preset-select flex-grow">
-
-                        <option value="default">{{ localize "SEQUENCER.Player.PresetsDefault" }}</option>
-                        {{#each presets}}
-                        <option>{{ @key }}</option>
+                <div id="effect-manager-setting-user-select">
+                    <label for="file">Play for users:</label>
+                    <select class="user-select" id="user-select" multiple>
+                        <option value="all" selected>{{ localize "SEQUENCER.Player.AllUsers" }}</option>
+                        {{#each users}}
+                        <option value="{{ this.id }}">{{ this.name }}</option>
                         {{/each}}
-
                     </select>
+                </div>
+            </fieldset>
+            <fieldset class="effect-manager-tab-paper">
+                <legend>Transform</legend>
+                <div id="effect-manager-tab-transform-grid">
+                    <span  style="grid-area: 1/1/1/1;">{{ localize "SEQUENCER.Player.Option.Scale" }}</span>
+                    <input style="grid-area: 1/2/1/2;" type="range" value="1.0" min="0" max="3" step="0.1" oninput="this.nextElementSibling.value = this.value">
+                    <input style="grid-area: 1/3/1/3;" type="number" value="1.0" name="effect-manager-setting-scale" oninput="this.previousElementSibling.value = this.value">
 
-                    <button type="button" class="save-preset flex-shrink small-button"><i class="fas fa-download"></i></button>
-                    <button type="button" class="copy-preset flex-shrink small-button" disabled><i class="fas fa-copy"></i></button>
-                    <button type="button" class="delete-preset flex-shrink small-button" disabled><i class="fas fa-times"></i></button>
+                    <span  style="grid-area: 2/1/2/1;">{{ localize "SEQUENCER.Player.Option.Rotation" }}</span>
+                    <input style="grid-area: 2/2/2/2;" type="range" value="1.0" min="0" max="3" step="0.1" oninput="this.nextElementSibling.value = this.value">
+                    <input style="grid-area: 2/3/2/3;" type="number" value="1.0" name="effect-manager-setting-rotation" oninput="this.previousElementSibling.value = this.value">
+                    <div   style="grid-area: 3/2/3/2;" class="flexrow">
+                        <input type="checkbox" name="effect-manager-setting-rotate-random">
+                        <span>{{ localize "SEQUENCER.Player.Option.Randomize" }}</span>
+                    </div>
 
+                    <span  style="grid-area: 4/1/4/1;">{{ localize "SEQUENCER.Player.Option.OffsetX" }}</span>
+                    <input style="grid-area: 4/2/4/2;" type="range" value="1.0" min="0" max="3" step="0.1" oninput="this.nextElementSibling.value = this.value">
+                    <input style="grid-area: 4/3/4/3;" type="number" value="1.0" name="effect-manager-setting-offset-x" oninput="this.previousElementSibling.value = this.value">
+                    <div   style="grid-area: 5/2/5/2;" class="flexrow">
+                        <input type="checkbox" name="effect-manager-setting-offset-x-random">
+                        <span>{{ localize "SEQUENCER.Player.Option.Randomize" }}</span>
+                    </div>
+
+                    <span  style="grid-area: 6/1/6/1;">{{ localize "SEQUENCER.Player.Option.OffsetY" }}</span>
+                    <input style="grid-area: 6/2/6/2;" type="range" value="1.0" min="0" max="3" step="0.1" oninput="this.nextElementSibling.value = this.value">
+                    <input style="grid-area: 6/3/6/3;" type="number" value="1.0" name="effect-manager-setting-offset-y" oninput="this.previousElementSibling.value = this.value">
+                    <div   style="grid-area: 7/2/7/2;" class="flexrow">
+                        <input type="checkbox" name="effect-manager-setting-offset-y-random">
+                        <span>{{ localize "SEQUENCER.Player.Option.Randomize" }}</span>
+                    </div>
+                </div>
+                <div>
+                    <input type="checkbox" name="effect-manager-setting-random-mirror-x">
+                    <span>{{ localize "SEQUENCER.Player.Option.RandomMirrorX" }}</span>
+                </div>
+                <div>
+                    <input type="checkbox" name="effect-manager-setting-random-mirror-y">
+                    <span>{{ localize "SEQUENCER.Player.Option.RandomMirrorY" }}</span>
+                </div>
+            </fieldset>
+            <fieldset class="effect-manager-tab-paper">
+                <legend>Behaviour</legend>
+                <div>
+                    <input type="checkbox" name="effect-manager-setting-repeat" id="effect-manager-setting-repeat">
+                    <label for="effect-manager-setting-repeat">{{ localize "SEQUENCER.Player.Option.Repeat" }}</label>
+                    <div class="flex1"></div>
+                    <label for="effect-manager-setting-repetitions">{{ localize "SEQUENCER.Player.Option.Repetitions" }}</label>
+                    <input type="number" name="effect-manager-setting-repeat" id="effect-manager-setting-repetitions">
                 </div>
 
-            </div>
+                <div>
+                    <input type="checkbox" name="effect-manager-setting-repeat" id="effect-manager-setting-delay">
+                    <label for="effect-manager-setting-repeat">{{ localize "SEQUENCER.Player.Option.Delay" }}</label>
+                    <div class="flex1"></div>
+                    <span>(ms)</span>
+                    <input type="number" name="effect-manager-setting-delay-from" id="effect-manager-setting-delay-from">
+                    <span> - </span>
+                    <input type="number" name="effect-manager-setting-delay-to" id="effect-manager-setting-delay-to">
+                </div>
 
+                <div>
+                    <input type="checkbox" name="effect-manager-setting-movement" id="effect-manager-setting-movement">
+                    <label for="effect-manager-setting-movement">{{ localize "SEQUENCER.Player.Option.Movement" }}</label>
+                    <div class="flex1"></div>
+                    <label for="effect-manager-setting-movement-speed">{{ localize "SEQUENCER.Player.Option.MovementSpeed" }}</label>
+                    <input type="number" name="effect-manager-setting-movement-speed" id="effect-manager-setting-movement-speed">
+                </div>
+
+                <div>
+                    <input type="checkbox" name="effect-manager-setting-preload" id="effect-manager-setting-preload">
+                    <label for="effect-manager-setting-preload">{{ localize "SEQUENCER.Player.Option.Preload" }}</label>
+                    <div class="flex1"></div>
+                </div>
+                <hr/>
+                <div>
+                    <span>{{ localize "SEQUENCER.Player.Option.DragBehaviour" }}</span>
+                    <div class="flex1"></div>
+                    <div class="button-group">
+                        <input type="radio" name="effect-manager-setting-drag-behaviour" id="effect-manager-setting-drag-behaviour-stretch" checked>
+                        <label for="effect-manager-setting-drag-behaviour-stretch">{{ localize "SEQUENCER.Player.Option.DragBehaviourStretch" }}</label>
+                        <input type="radio" name="effect-manager-setting-drag-behaviour" id="effect-manager-setting-drag-behaviour-move">
+                        <label for="effect-manager-setting-drag-behaviour-move">{{ localize "SEQUENCER.Player.Option.DragBehaviourMove" }}</label>
+                    </div>
+                </div>
+
+                <div>
+                    <span>{{ localize "SEQUENCER.Player.Option.TokenLayering" }}</span>
+                    <div class="flex1"></div>
+                    <div class="button-group">
+                        <input type="radio" name="effect-manager-setting-token-layering" id="effect-manager-setting-token-layering-above">
+                        <label for="effect-manager-setting-token-layering-above">{{ localize "SEQUENCER.Player.Option.TokenLayeringAbove" }}</label>
+                        <input type="radio" name="effect-manager-setting-token-layering" id="effect-manager-setting-token-layering-below" checked>
+                        <label for="effect-manager-setting-token-layering-below">{{ localize "SEQUENCER.Player.Option.TokenLayeringBelow" }}</label>
+                    </div>
+                </div>
+            </fieldset>
         </div>
         {{/if}}
 
