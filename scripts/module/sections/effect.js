@@ -21,6 +21,7 @@ export default class EffectSection extends Section {
         this._spriteAnchor = null;
         this._randomOffset = null;
         this._missed = null;
+        this._private = null;
         this._randomMirrorX = null;
         this._randomMirrorY = null;
         this._mirrorX = null;
@@ -663,6 +664,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Causes the effect to not show up in the Effect Manager UI - DO NOT USE UNLESS YOU KNOW WHAT YOU ARE DOING
+     *
+     * @param inBool
+     * @returns {EffectSection}
+     */
+    private(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "private", "inBool must be of type boolean");
+        this._private = inBool;
+        return this;
+    }
+
+    /**
      * Causes the effect to be played in screen space instead of world space (where tokens are)
      *
      * @param {boolean} [inBool=true] inBool
@@ -932,6 +945,7 @@ export default class EffectSection extends Section {
             origin: this._origin,
             index: this.sequence.effectIndex,
             repetition: this._currentRepetition,
+            private: this._private,
 
             /**
              * Source/target properties

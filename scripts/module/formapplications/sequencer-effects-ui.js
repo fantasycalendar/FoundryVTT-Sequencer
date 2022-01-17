@@ -115,7 +115,8 @@ export default class SequencerEffectsUI extends FormApplication {
         this.temporaryEffectsContainer = html.find(".temporary-effects");
 
         html.find(".end-all-effects").click(function() {
-            Sequencer.EffectManager.endAllEffects();
+            const effects = Sequencer.EffectManager.effects.filter(effect => effect.userCanDelete && !effect.data.private);
+            Sequencer.EffectManager.endEffects({ effects: effects });
         });
     }
 
@@ -167,7 +168,7 @@ export default class SequencerEffectsUI extends FormApplication {
     updateEffects() {
 
         const effects = Sequencer.EffectManager.effects
-            .filter(effect => effect.onCurrentScene && effect.userCanDelete);
+            .filter(effect => effect.onCurrentScene && effect.userCanDelete && !effect.data.private);
 
         this.persistentEffectsContainer.empty();
         this.temporaryEffectsContainer.empty();

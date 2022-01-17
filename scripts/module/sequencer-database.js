@@ -183,7 +183,7 @@ const SequencerDatabase = {
         });
 
         if(foundEntries.length === 0){
-            const regexString = lib.str_to_search_regex_str(inPath);
+            const regexString = lib.str_to_search_regex_str(inPath).replace(/\s+/g, "|");
             const searchParts = regexString.split('|').length;
             const regexSearch = new RegExp(regexString, "gu");
             foundEntries = this.flattenedEntries.filter(e => {

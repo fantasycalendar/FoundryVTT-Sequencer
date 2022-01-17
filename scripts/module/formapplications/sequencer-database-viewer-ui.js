@@ -190,7 +190,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
         const filterDebounce = debounce(() => {
             this.allRanges = allRanges.checked;
-            this.search = lib.str_to_search_regex_str(input.value);
+            this.search = lib.str_to_search_regex_str(input.value).replace(/\s+/g, "|");
             this.filter = filter.value;
             scroller.scrollTop = 0;
             rerenderList();

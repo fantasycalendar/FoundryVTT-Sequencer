@@ -5,32 +5,43 @@ const SequencerFileCache = {
     _totalCacheSize: 0,
 
     async loadVideo(inSrc) {
-        let src = this._videos[inSrc];
-        if (!src) {
-            try {
-                src = await fetch(inSrc, {mode: "cors", credentials: "same-origin"})
-                    .then(r => r.blob())
-                    .catch(err => {
-                        console.error(err)
-                    });
 
-                if (src?.type !== "video/webm") return false;
+        if (!this._videos[inSrc]) {
 
-                while((this._totalCacheSize + src.size) >= 524288000){
-                    let [oldSrc, blob] = Object.entries(this._videos)[0];
-                    delete this._videos[oldSrc];
-                    this._preloadedFiles.delete(oldSrc);
-                    this._totalCacheSize -= blob.size;
-                }
+            const blob = await fetch(inSrc, {mode: "cors", credentials: "same-origin"})
+                .then(r => r.blob())
+                .catch(err => {
+                    console.error(err)
+                });
 
-                this._totalCacheSize += src.size;
-                this._videos[inSrc] = src;
+            if (blob?.type !== "video/webm") return false;
 
-            } catch (err) {
-                return false;
+            while((this._totalCacheSize + blob.size) > 524288000){
+
+                const entries = Object.entries(this._videos);
+
+                entries.sort((a, b) => {
+                    return b[1].lastUsed - a[1].lastUsed;
+                });
+
+                const [ oldSrc ] = entries[0];
+
+                this._preloadedFiles.delete(oldSrc);
+                this._totalCacheSize -= this._videos[oldSrc].blob.size;
+                delete this._videos[oldSrc];
             }
+
+            this._totalCacheSize += blob.size;
+            this._preloadedFiles.add(inSrc);
+            this._videos[inSrc] = {
+                blob,
+                lastUsed: (+new Date())
+            };
+
         }
-        return src;
+
+        this._videos[inSrc].lastUsed = (+new Date());
+        return this._videos[inSrc].blob;
     },
 
     srcExists(inSrc){
@@ -46,8 +57,8 @@ const SequencerFileCache = {
 
             let blob = await this.loadVideo(inSrc);
             if(!blob) return false;
-            if(preload) return true;
             this._preloadedFiles.add(inSrc);
+            if(preload) return true;
             return get_video_texture(blob);
 
         } else if (AudioHelper.hasAudioExtension(inSrc)) {

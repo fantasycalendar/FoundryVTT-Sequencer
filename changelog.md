@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.0.6
+- *Effects* - Added `.private()` method to hide effects in the effect manager - DO NOT USE IF YOU DO NOT KNOW WHAT YOU ARE DOING
+- *Effects* - Fixed issue where ending effects by name would cause other effects without a name to get ended
+- *Effects* - Fixed issue where filtering for effects with the Effect Manager would cause it to split the given name on each whitespace 
+
 ### Version 2.0.5 Hotfix Hotfix
 - *Effects* - Hotfix for the hotfix. It's just hotfixes all the way down, man.
 

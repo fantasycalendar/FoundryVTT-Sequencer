@@ -138,6 +138,13 @@ const flagManager = {
 
             return effectData;
             
+        },
+
+        "2.0.6": (inDocument, effectData) => {
+
+            effectData.private = null;
+
+            return effectData;
         }
     },
 

@@ -447,8 +447,7 @@ export function str_to_search_regex_str(str) {
     return str
         .trim()
         .replace(/[^A-Za-z0-9 .*_-]/g, "")
-        .replace(/\*+/g, ".*?")
-        .replace(/\s+/g, "|");
+        .replace(/\*+/g, ".*?");
 }
 
 export function scroll_to_element(scrollElement, scrollToElement, duration = 500) {
