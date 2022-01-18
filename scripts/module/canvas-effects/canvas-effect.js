@@ -8,6 +8,7 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
+import { random_float_between } from "../lib/lib.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -180,12 +181,12 @@ export default class CanvasEffect extends PIXI.Container {
             if (this.data.stretchTo?.attachTo) {
                 this._targetPosition = this.target;
             } else {
-                this._targetPosition = canvaslib.get_object_position(this.target, true);
+                this._targetPosition = canvaslib.get_object_position(this.target, { measure: true });
             }
         }
 
         if(this._targetPosition instanceof MeasuredTemplate){
-            return canvaslib.get_object_position(this._targetPosition, true)
+            return canvaslib.get_object_position(this._targetPosition, { measure: true })
         }
 
         return this._targetPosition?.worldPosition || this._targetPosition?.center || this._targetPosition || this.target;
@@ -1025,7 +1026,12 @@ export default class CanvasEffect extends PIXI.Container {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
-        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(this.data.angle ?? 0));
+        let angle = this.data.angle ?? 0;
+        if(this.data.randomRotation){
+            angle += random_float_between(-180, 180, this._twister)
+        }
+
+        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(angle));
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;

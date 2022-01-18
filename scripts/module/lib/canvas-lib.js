@@ -57,7 +57,7 @@ export function calculate_missed_position(source, target, twister) {
 
 }
 
-export function get_object_position(obj, measure = false) {
+export function get_object_position(obj, { measure = false, exact = false }={}) {
 
     if(obj instanceof CanvasEffect){
         return obj.worldPosition;
@@ -75,14 +75,24 @@ export function get_object_position(obj, measure = false) {
             }
         }
         if (obj.data.t === "rect") {
-            pos.x = obj.x + (obj.shape.width / 2)
-            pos.y = obj.y + (obj.shape.height / 2)
+            pos.x = obj.x
+            pos.y = obj.y
+
+            if(!exact){
+                pos.x += (obj.shape.width / 2)
+                pos.y += (obj.shape.height / 2)
+            }
         }
     } else if (obj instanceof Tile || obj instanceof TileDocument) {
         obj = obj instanceof TileDocument ? obj.object : obj;
         pos = {
-            x: obj.data.x + (obj.data.width / 2),
-            y: obj.data.y + (obj.data.height / 2)
+            x: obj.data.x,
+            y: obj.data.y
+        }
+
+        if(!exact){
+            pos.x += (obj.data.width / 2)
+            pos.y += (obj.data.height / 2)
         }
     } else {
         pos = {
@@ -90,7 +100,7 @@ export function get_object_position(obj, measure = false) {
             y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0
         }
 
-        if (obj instanceof Token) {
+        if (obj instanceof Token && !exact) {
             const halfSize = get_object_dimensions(obj, true);
             pos.x += halfSize.width;
             pos.y += halfSize.height;
@@ -186,7 +196,7 @@ export function is_object_canvas_data(inObj) {
 export function get_object_canvas_data(inObject, measure = false) {
     inObject = inObject?.object ?? inObject;
     return {
-        ...get_object_position(inObject, measure),
+        ...get_object_position(inObject, { measure }),
         ...get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject)
     }
 }

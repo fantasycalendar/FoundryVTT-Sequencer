@@ -66,7 +66,7 @@ async function main(){
         chatMessageContent = await duplicate(chatMessage?.data?.content ?? "");
     }
 
-    const targetToken = canvas.tokens.get(args[0].hitTargets[0]._id);
+    const targetToken = canvas.tokens.get(args[0].hitTargets[0].id);
 
     let enemies = canvas.tokens.placeables.filter(function(target){
         return target?.actor?.data?.data?.attributes?.hp?.value > 0

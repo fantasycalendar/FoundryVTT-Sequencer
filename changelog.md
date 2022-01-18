@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.0.7
+- *Sequencer* - Fixed broken macro in the Ouija example
+- *Animations* - Fixed various animation methods not resulting accurate movement or teleportation
+- *Effects* - Fixed `.randomRotation()` not working
+
 ### Version 2.0.6
 - *Sequencer* - Improved intelligence of webm cache 
 - *Effects* - Added `.private()` method to hide effects in the effect manager - DO NOT USE IF YOU DO NOT KNOW WHAT YOU ARE DOING

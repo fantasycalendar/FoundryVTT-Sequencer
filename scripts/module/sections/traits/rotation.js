@@ -60,7 +60,7 @@ export default {
         if (typeof options.cacheLocation !== "boolean") throw this.sequence._customError(this, "rotateTowards", "options.cacheLocation must be of type boolean");
         options.target = this._validateLocation(inLocation);
         if (!options.target) throw this.sequence._customError(this, "rotateTowards", "could not find position of given object");
-        options.target = options.cacheLocation ? canvaslib.get_object_position(options.target, true) : options.target;
+        options.target = options.cacheLocation ? canvaslib.get_object_position(options.target, { measure: true }) : options.target;
         this._rotateTowards = options;
         return this;
     },

@@ -163,8 +163,8 @@ class AnimationSection extends Section {
      */
     _getClosestSquare(origin, target) {
 
-        let originLoc = canvaslib.get_object_position(origin);
-        let targetLoc = canvaslib.get_object_position(target);
+        let originLoc = canvaslib.get_object_position(origin, { exact: true });
+        let targetLoc = canvaslib.get_object_position(target, { exact: true });
 
         let originSizeWidth = (origin?.data?.width ?? 1) * canvas.grid.size;
         let originSizeHeight = (origin?.data?.height ?? 1) * canvas.grid.size;
@@ -257,7 +257,7 @@ class AnimationSection extends Section {
 
             targetLoc = this._closestSquare
                 ? this._getClosestSquare(this._originObject, targetLoc)
-                : canvaslib.get_object_position(targetLoc);
+                : canvaslib.get_object_position(targetLoc, { exact: true });
 
             targetLoc.x += this._offset.x;
             targetLoc.y += this._offset.y;
@@ -363,10 +363,10 @@ class AnimationSection extends Section {
 
         if (this._moveTowards) {
 
-            let originLocation = canvaslib.get_object_position(this._originObject);
+            let originLocation = canvaslib.get_object_position(this._originObject, { exact: true });
             let targetLocation = this._closestSquare
                 ? this._getClosestSquare(this._originObject, this._moveTowards.target)
-                : canvaslib.get_object_position(this._moveTowards.target);
+                : canvaslib.get_object_position(this._moveTowards.target, { exact: true });
 
             targetLocation.x += this._offset.x;
             targetLocation.y += this._offset.y;
@@ -493,7 +493,7 @@ class AnimationSection extends Section {
             setTimeout(async () => {
                 let targetLocation = this._closestSquare
                     ? this._getClosestSquare(this._originObject, this._teleportTo.target)
-                    : canvaslib.get_object_position(this._teleportTo.target);
+                    : canvaslib.get_object_position(this._teleportTo.target, { exact: true });
                 targetLocation.x += this._offset.x;
                 targetLocation.y += this._offset.y;
                 if (this._teleportTo.relativeToCenter){

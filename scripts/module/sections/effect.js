@@ -238,7 +238,7 @@ export default class EffectSection extends Section {
         }
 
         this._stretchTo = {
-            target: inOptions.cacheLocation ? canvaslib.get_object_position(inLocation, true) : inLocation,
+            target: inOptions.cacheLocation ? canvaslib.get_object_position(inLocation, { measure: true }) : inLocation,
             attachTo: inOptions.attachTo,
             onlyX: inOptions.onlyX
         };
