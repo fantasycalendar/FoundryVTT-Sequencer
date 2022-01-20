@@ -986,8 +986,12 @@ export default class CanvasEffect extends PIXI.Container {
         // An offset container for the sprite
         this.spriteContainer = this.offsetContainer.addChild(new PIXI.Container());
 
+        const sprite = this.data.stretchTo?.tiling
+            ? new PIXI.TilingSprite()
+            : new PIXI.Sprite();
+
         // The sprite itself
-        this.sprite = this.spriteContainer.addChild(new PIXI.Sprite());
+        this.sprite = this.spriteContainer.addChild(sprite);
 
         this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
 
@@ -1203,12 +1207,23 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._rotateTowards(ray);
 
-        let { texture, spriteAnchor, scaleX, scaleY } = await this._getTextureForDistance(ray.distance);
+        let { texture, spriteAnchor, scaleX, scaleY, distance } = await this._getTextureForDistance(ray.distance);
 
-        this.sprite.scale.set(
-            scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
-            scaleY * (this.data.scale.y ?? 1.0) * this.flipY
-        )
+        if (this.data.stretchTo?.tiling) {
+            const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
+            const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
+            this.sprite.width = distance / scaleX;
+            this.sprite.height = texture.height;
+            this.sprite.scale.set(
+                scaleX * this.flipX,
+                scaleY * this.flipY
+            )
+        }else {
+            this.sprite.scale.set(
+                scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
+                scaleY * (this.data.scale.y ?? 1.0) * this.flipY
+            )
+        }
 
         this.sprite.anchor.set(
             this.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
@@ -1261,6 +1276,7 @@ export default class CanvasEffect extends PIXI.Container {
                         await this._applyDistanceScaling();
                     } catch (err){
                         lib.debug_error(err);
+                        console.log(err)
                     }
                 });
             }

@@ -145,6 +145,15 @@ const flagManager = {
             effectData.private = null;
 
             return effectData;
+        },
+
+        "2.0.8": (inDocument, effectData) => {
+
+            if(effectData.stretchTo){
+                effectData.stretchTo.tiling = false;
+            }
+
+            return effectData;
         }
     },
 

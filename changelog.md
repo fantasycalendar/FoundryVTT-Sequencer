@@ -1,7 +1,10 @@
 ## Sequencer Changelog
 
 ### Version 2.0.8
+- *Sequencer* - Added rope and chain sample macros to the Sequencer macro compendium
+- *Sequencer* - Removed non-functional Chain Lightning macro from macro collection
 - *Sequencer* - Added warnings to Preloader when it is given invalid parameters
+- *Effects* - Added `tiling` as an option to `.stretchTo()`
 - *Effects* - Fixed `.randomRotation()` not working with `.attachTo()`
 - *Effects* - Fixed issue with effects with a defined width and height were still being scaled by the scene-effect grid size difference
 

@@ -225,13 +225,15 @@ export default class EffectSection extends Section {
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
             attachTo: false,
-            onlyX: false
+            onlyX: false,
+            tiling: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
         if (typeof inOptions.onlyX !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.onlyX must be of type boolean");
+        if (typeof inOptions.tiling !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.tiling must be of type boolean");
 
         if (inOptions.cacheLocation && inOptions.attachTo){
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
@@ -240,7 +242,8 @@ export default class EffectSection extends Section {
         this._stretchTo = {
             target: inOptions.cacheLocation ? canvaslib.get_object_position(inLocation, { measure: true }) : inLocation,
             attachTo: inOptions.attachTo,
-            onlyX: inOptions.onlyX
+            onlyX: inOptions.onlyX,
+            tiling: inOptions.tiling
         };
         return this;
     }
@@ -955,7 +958,8 @@ export default class EffectSection extends Section {
             rotateTowards: this._rotateTowards,
             stretchTo: this._stretchTo ? {
                 attachTo: this._stretchTo.attachTo,
-                onlyX: this._stretchTo.onlyX
+                onlyX: this._stretchTo.onlyX,
+                tiling: this._stretchTo.tiling
             } : false,
             moveTowards: this._moveTowards ? {
                 ease: this._moveTowards.ease,
