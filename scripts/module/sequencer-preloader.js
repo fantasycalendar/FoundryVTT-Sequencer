@@ -18,6 +18,20 @@ const SequencerPreloader = {
      */
     preload(inSrcs, showProgressBar = false){
 
+        if(Array.isArray(inSrcs)){
+            inSrcs.forEach(str => {
+                if(typeof str !== "string"){
+                    throw lib.custom_error("Sequencer", "preload | each entry in inSrcs must be of type string")
+                }
+            })
+        }else if(typeof inSrcs !== "string"){
+            throw lib.custom_error("Sequencer", "preload | inSrcs must be of type string or array of strings")
+        }
+
+        if(typeof showProgressBar !== "boolean"){
+            throw lib.custom_error("Sequencer", "preload | showProgressBar must be of type of boolean")
+        }
+
         const srcs = this._cleanSrcs(inSrcs);
 
         if (srcs.length === 0) return;
@@ -35,6 +49,20 @@ const SequencerPreloader = {
      * @returns {Promise<void>}
      */
     preloadForClients(inSrcs, showProgressBar = false) {
+
+        if(Array.isArray(inSrcs)){
+            inSrcs.forEach(str => {
+                if(typeof str !== "string"){
+                    throw lib.custom_error("Sequencer", "preloadForClients | each entry in inSrcs must be of type string")
+                }
+            })
+        }else if(typeof inSrcs !== "string"){
+            throw lib.custom_error("Sequencer", "preloadForClients | inSrcs must be of type string or array of strings")
+        }
+
+        if(typeof showProgressBar !== "boolean"){
+            throw lib.custom_error("Sequencer", "preloadForClients | showProgressBar must be of type of boolean")
+        }
 
         const srcs = this._cleanSrcs(inSrcs);
 

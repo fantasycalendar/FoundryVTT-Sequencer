@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.0.8
+- *Sequencer* - Added warnings to Preloader when it is given invalid parameters
+- *Effects* - Fixed `.randomRotation()` not working with `.attachTo()`
+- *Effects* - Fixed issue with effects with a defined width and height were still being scaled by the scene-effect grid size difference
+
 ### Version 2.0.7
 - *Sequencer* - Fixed broken macro in the Ouija example
 - *Animations* - Fixed various animation methods not resulting accurate movement or teleportation

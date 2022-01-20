@@ -417,12 +417,12 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     /**
-     * The grid size difference between the internal effect's grid vs the grid on the canvas
+     * The grid size difference between the internal effect's grid vs the grid on the canvas. If the effect is in screen space, we ignore this.
      *
      * @returns {number}
      */
     get gridSizeDifference() {
-        return canvas.grid.size / this.template.gridSize;
+        return this.data.screenSpace ? 1 : canvas.grid.size / this.template.gridSize;
     }
 
     /**
@@ -660,6 +660,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._video = null;
         this._distanceCache = null;
         this._isRangeFind = false;
+        this.angle = 0;
         this._hooks = [];
 
         if(this._resetTimeout){
@@ -1026,12 +1027,12 @@ export default class CanvasEffect extends PIXI.Container {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
-        let angle = this.data.angle ?? 0;
+        this.angle = this.data.angle ?? 0;
         if(this.data.randomRotation){
-            angle += random_float_between(-180, 180, this._twister)
+            this.angle += random_float_between(-180, 180, this._twister)
         }
 
-        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(angle));
+        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(this.angle));
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
@@ -1281,7 +1282,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.scaleToObject) {
 
-                let { width, height } = this.target
+                const { width, height } = this.target
                     ? canvaslib.get_object_dimensions(this.target)
                     : canvaslib.get_object_dimensions(this.source);
 
@@ -1330,15 +1331,10 @@ export default class CanvasEffect extends PIXI.Container {
             } else {
 
                 this.sprite.scale.set(
-                    (this.data.scale?.x ?? 1.0) * this.flipX,
-                    (this.data.scale?.y ?? 1.0) * this.flipY
+                    (this.data.scale?.x ?? 1.0) * this.flipX * this.gridSizeDifference,
+                    (this.data.scale?.y ?? 1.0) * this.flipY * this.gridSizeDifference
                 );
 
-            }
-
-            if (!this.data.screenSpace) {
-                this.sprite.scale.x *= this.gridSizeDifference;
-                this.sprite.scale.y *= this.gridSizeDifference;
             }
 
         }
@@ -1379,7 +1375,7 @@ export default class CanvasEffect extends PIXI.Container {
                 this._ticker.add(() => {
                     if(this.source.destroyed) return;
                     try {
-                        this.rotationContainer.rotation = Math.toRadians(this.source.data.rotation);
+                        this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation - this.angle));
                     } catch (err){
                         lib.debug_error(err);
                     }
