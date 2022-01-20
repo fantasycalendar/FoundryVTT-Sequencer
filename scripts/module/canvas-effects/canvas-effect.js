@@ -1091,13 +1091,13 @@ export default class CanvasEffect extends PIXI.Container {
             this._addHook(hookName, (doc) => {
                 if (doc !== this.source.document) return;
                 this.renderable = this.source.visible;
-                this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+                this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
             });
             this.renderable = this.source.visible;
-            this.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+            this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
         } else {
             this.renderable = true;
-            this.alpha = 1;
+            this.spriteContainer.alpha = 1;
         }
 
         if (this.data.attachTo?.bindAlpha && lib.is_UUID(this.data.source)) {
@@ -1276,7 +1276,6 @@ export default class CanvasEffect extends PIXI.Container {
                         await this._applyDistanceScaling();
                     } catch (err){
                         lib.debug_error(err);
-                        console.log(err)
                     }
                 });
             }
