@@ -660,7 +660,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._video = null;
         this._distanceCache = null;
         this._isRangeFind = false;
-        this.angle = 0;
+        this._customAngle = 0;
         this._hooks = [];
 
         if(this._resetTimeout){
@@ -1031,12 +1031,12 @@ export default class CanvasEffect extends PIXI.Container {
             this.data.spriteAnchor?.y ?? 0.5
         );
 
-        this.angle = this.data.angle ?? 0;
+        this._customAngle = this.data.angle ?? 0;
         if(this.data.randomRotation){
-            this.angle += random_float_between(-180, 180, this._twister)
+            this._customAngle += lib.random_float_between(-360, 360, this._twister)
         }
 
-        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(this.angle));
+        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(this._customAngle));
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
@@ -1254,7 +1254,7 @@ export default class CanvasEffect extends PIXI.Container {
             ray = new Ray(sourcePosition, targetPosition);
         }
 
-        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle) - Math.normalizeRadians(Math.toRadians(this.data.angle ?? 0));
+        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle - Math.toRadians(this._customAngle));
 
     }
 
@@ -1388,12 +1388,8 @@ export default class CanvasEffect extends PIXI.Container {
 
             if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
                 this._ticker.add(() => {
-                    if(this.source.destroyed) return;
-                    try {
-                        this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation - this.angle));
-                    } catch (err){
-                        lib.debug_error(err);
-                    }
+                    if (this.source.destroyed) return;
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation - this._customAngle));
                 });
             }
 
