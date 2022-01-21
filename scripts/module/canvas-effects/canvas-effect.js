@@ -410,7 +410,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get template(){
         return foundry.utils.mergeObject({
-            gridSize: canvas.grid.size,
+            gridSize: 100,
             startPoint: 0,
             endPoint: 0
         }, this._template ?? {})

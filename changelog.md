@@ -2,6 +2,7 @@
 
 ### Version 2.0.9 Hotfix
 - *Effects* - Fixed nasty issue with rotation on effects
+- *Effects* - Made all effects have an assumed internal grid size of 100
 
 ### Version 2.0.8
 - *Sequencer* - Added rope and chain sample macros to the Sequencer macro compendium
