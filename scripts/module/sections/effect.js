@@ -459,7 +459,7 @@ export default class EffectSection extends Section {
         if (gridSize && !lib.is_real_number(gridSize)) throw this.sequence._customError(this, "template", "gridSize must be of type number");
         if (startPoint && !lib.is_real_number(startPoint)) throw this.sequence._customError(this, "template", "startPoint must be of type number");
         if (endPoint && !lib.is_real_number(endPoint)) throw this.sequence._customError(this, "template", "endPoint must be of type number");
-        if(!gridSize || !startPoint || !endPoint) throw this.sequence._customError(this, "template", "You need to define at least one parameter!");
+        if(!gridSize && !startPoint && !endPoint) throw this.sequence._customError(this, "template", "You need to define at least one parameter!");
         if(!this._template) this._template = {};
         if(gridSize) this._template["gridSize"] = gridSize;
         if(startPoint) this._template["startPoint"] = startPoint;
