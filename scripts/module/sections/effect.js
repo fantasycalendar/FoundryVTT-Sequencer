@@ -39,6 +39,7 @@ export default class EffectSection extends Section {
         this._zeroSpriteRotation = null;
         this._extraEndDuration = null;
         this._noLoop = null;
+        this._tilingTexture = null;
         this._snapToGrid = null;
         this._scaleToObject = null;
         this._screenSpace = null;
@@ -239,11 +240,11 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
         }
 
+        this.tilingTexture();
         this._stretchTo = {
             target: inOptions.cacheLocation ? canvaslib.get_object_position(inLocation, { measure: true }) : inLocation,
             attachTo: inOptions.attachTo,
-            onlyX: inOptions.onlyX,
-            tiling: inOptions.tiling
+            onlyX: inOptions.onlyX
         };
         return this;
     }
@@ -461,6 +462,37 @@ export default class EffectSection extends Section {
         if(gridSize) this._template["gridSize"] = gridSize;
         if(startPoint) this._template["startPoint"] = startPoint;
         if(endPoint) this._template["endPoint"] = endPoint;
+        return this;
+    }
+
+    /**
+     * This makes the texture of the effect tile, effectively repeat itself within the sprite's dimensions
+     *
+     * @param scale
+     * @param position
+     * @returns {EffectSection}
+     */
+    tilingTexture(scale = { x: 1.0, y: 1.0 }, position = { x: 0, y: 0 }){
+
+        if (lib.is_real_number(scale)) {
+            scale = { x: scale, y: scale }
+        }
+
+        scale = { x: scale?.x ?? 1.0, y: scale?.y ?? 1.0 }
+
+        if (!lib.is_real_number(scale.x)) throw this.sequence._customError(this, "tilingTexture", `scale.x must be of type number!`);
+        if (!lib.is_real_number(scale.y)) throw this.sequence._customError(this, "tilingTexture", `scale.y must be of type number!`);
+
+        position = { x: position?.x ?? 0, y: position?.y ?? 0 }
+
+        if (!lib.is_real_number(position.x)) throw this.sequence._customError(this, "tilingTexture", `position.x must be of type number!`);
+        if (!lib.is_real_number(position.y)) throw this.sequence._customError(this, "tilingTexture", `position.y must be of type number!`);
+
+        this._tilingTexture = {
+            scale,
+            position
+        };
+
         return this;
     }
 
@@ -958,8 +990,7 @@ export default class EffectSection extends Section {
             rotateTowards: this._rotateTowards,
             stretchTo: this._stretchTo ? {
                 attachTo: this._stretchTo.attachTo,
-                onlyX: this._stretchTo.onlyX,
-                tiling: this._stretchTo.tiling
+                onlyX: this._stretchTo.onlyX
             } : false,
             moveTowards: this._moveTowards ? {
                 ease: this._moveTowards.ease,
@@ -976,6 +1007,7 @@ export default class EffectSection extends Section {
             customRange,
             forcedIndex,
             text: this._text,
+            tilingTexture: this._tilingTexture,
 
             // Transforms
             scale: this._getCalculatedScale(),

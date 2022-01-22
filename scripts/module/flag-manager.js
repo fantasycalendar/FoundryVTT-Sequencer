@@ -154,6 +154,23 @@ const flagManager = {
             }
 
             return effectData;
+        },
+
+        "2.0.9": (inDocument, effectData) => {
+
+            effectData.tilingTexture = false;
+
+            if(effectData.stretchTo?.tiling !== undefined){
+                if(effectData.stretchTo.tiling){
+                    effectData.tilingTexture = {
+                        scale: { x: 1, y: 1 },
+                        position: { x: 0, y: 0 }
+                    }
+                }
+                delete effectData.stretchTo.tiling;
+            }
+
+            return effectData;
         }
     },
 

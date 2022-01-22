@@ -551,10 +551,6 @@ export default class CanvasEffect extends PIXI.Container {
             return;
         }
 
-        if ((lib.is_UUID(newData.target) && newData.source === newData.target) || (lib.is_UUID(newData.source) && newData.source === newData.target)) {
-            throw lib.custom_error("Sequencer", `CanvasEffect | update | update to effect with ID ${this.data.id} failed - an effect can't have the same source and target`)
-        }
-
         if (this.data.persist) {
 
             const originalSourceUUID = lib.is_UUID(this.data.source) && this.data.attachTo
@@ -986,7 +982,7 @@ export default class CanvasEffect extends PIXI.Container {
         // An offset container for the sprite
         this.spriteContainer = this.offsetContainer.addChild(new PIXI.Container());
 
-        const sprite = this.data.stretchTo?.tiling
+        const sprite = this.data.tilingTexture
             ? new PIXI.TilingSprite()
             : new PIXI.Sprite();
 
@@ -1106,9 +1102,9 @@ export default class CanvasEffect extends PIXI.Container {
                 const hookName = "update" + this.data.source.split('.')[2];
                 this._addHook(hookName, (doc) => {
                     if (doc !== this.source.document) return;
-                    this.sprite.alpha = this.source.data.alpha;
+                    this.offsetContainer.alpha = this.source.data.alpha;
                 });
-                this.sprite.alpha = this.source.data.alpha;
+                this.offsetContainer.alpha = this.source.data.alpha;
             }
         }
 
@@ -1209,15 +1205,23 @@ export default class CanvasEffect extends PIXI.Container {
 
         let { texture, spriteAnchor, scaleX, scaleY, distance } = await this._getTextureForDistance(ray.distance);
 
-        if (this.data.stretchTo?.tiling) {
+        if (this.data.tilingTexture) {
+
             const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
             const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
-            this.sprite.width = distance / scaleX;
+            this.sprite.width = distance / (scaleX);
             this.sprite.height = texture.height;
             this.sprite.scale.set(
                 scaleX * this.flipX,
                 scaleY * this.flipY
             )
+
+            this.sprite.tileScale.x = this.data.tilingTexture.scale.x;
+            this.sprite.tileScale.y = this.data.tilingTexture.scale.y;
+
+            this.sprite.tilePosition = this.data.tilingTexture.position;
+
+
         }else {
             this.sprite.scale.set(
                 scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
@@ -1294,6 +1298,17 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if(!this.data.stretchTo){
+
+            if(this.data.tilingTexture){
+
+                this.sprite.tileScale = {
+                    x: this.data.tilingTexture.scale.x * this.gridSizeDifference,
+                    y: this.data.tilingTexture.scale.y * this.gridSizeDifference
+                };
+
+                this.sprite.tilePosition = this.data.tilingTexture.position;
+
+            }
 
             if (this.data.scaleToObject) {
 
@@ -1943,7 +1958,7 @@ class PersistentCanvasEffect extends CanvasEffect {
     }
 
     /** @OVERRIDE */
-    async endEffect(immediate = false) {
+    async endEffect() {
         const durations = immediate ? [0] : [
             this._fadeOut(this.data.extraEndDuration ?? 0),
             this._scaleOut(this.data.extraEndDuration ?? 0),
