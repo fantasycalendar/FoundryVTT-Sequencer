@@ -49,7 +49,7 @@ export class SequencerFile {
             directory.pop()
             directory = directory.join('/')
             if (directories[directory] === undefined) {
-                directories[directory] = await getFiles(directory);
+                directories[directory] = await lib.getFiles(directory);
             }
         }
         for (const file of allFiles) {

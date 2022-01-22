@@ -64,7 +64,7 @@ export default class EffectSection extends Section {
     }
 
     /**
-     * Causes the effect to persist indefinitely on the canvas until ended via SequencerEffectManager.endAllEffects() or
+     * Causes the effect to persist indefinitely on the canvas until _ended via SequencerEffectManager.endAllEffects() or
      * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
      *
      * @param {boolean} [inBool=true] inBool
@@ -240,7 +240,8 @@ export default class EffectSection extends Section {
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
         }
 
-        this.tilingTexture();
+        if(inOptions.tiling) this.tilingTexture();
+
         this._stretchTo = {
             target: inOptions.cacheLocation ? canvaslib.get_object_position(inLocation, { measure: true }) : inLocation,
             attachTo: inOptions.attachTo,
@@ -449,15 +450,16 @@ export default class EffectSection extends Section {
      * This defines the internal padding of this effect. Gridsize determines the internal grid size of this effect which will determine how big it is on the canvas
      * relative to the canvas's grid size. Start and end point defines padding at the left and right of the effect
      *
-     * @param gridSize
-     * @param startPoint
-     * @param endPoint
+     * @param {number} gridSize
+     * @param {number} startPoint
+     * @param {number} endPoint
      * @returns {EffectSection}
      */
     template({ gridSize, startPoint, endPoint }={}){
         if (gridSize && !lib.is_real_number(gridSize)) throw this.sequence._customError(this, "template", "gridSize must be of type number");
         if (startPoint && !lib.is_real_number(startPoint)) throw this.sequence._customError(this, "template", "startPoint must be of type number");
         if (endPoint && !lib.is_real_number(endPoint)) throw this.sequence._customError(this, "template", "endPoint must be of type number");
+        if(!gridSize || !startPoint || !endPoint) throw this.sequence._customError(this, "template", "You need to define at least one parameter!");
         if(!this._template) this._template = {};
         if(gridSize) this._template["gridSize"] = gridSize;
         if(startPoint) this._template["startPoint"] = startPoint;
@@ -468,8 +470,8 @@ export default class EffectSection extends Section {
     /**
      * This makes the texture of the effect tile, effectively repeat itself within the sprite's dimensions
      *
-     * @param scale
-     * @param position
+     * @param {object/number} scale
+     * @param {object} position
      * @returns {EffectSection}
      */
     tilingTexture(scale = { x: 1.0, y: 1.0 }, position = { x: 0, y: 0 }){
@@ -848,7 +850,7 @@ export default class EffectSection extends Section {
     async run() {
         this._expressWarnings();
         const data = await this._sanitizeEffectData();
-        Hooks.call("preCreateSequencerEffect", data);
+        if(Hooks.call("preCreateSequencerEffect", data) === false) return;
         let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
         let canvasEffectData = await Sequencer.EffectManager.play(data, push);
         let totalDuration = this._currentWaitTime;

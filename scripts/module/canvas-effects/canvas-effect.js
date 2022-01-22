@@ -45,6 +45,9 @@ export default class CanvasEffect extends PIXI.Container {
         this._durationResolve = null;
         this._durationReject = null;
 
+        this._ended = false;
+        this._isEnding = false;
+
     }
 
     static get protectedValues() {
@@ -522,12 +525,11 @@ export default class CanvasEffect extends PIXI.Container {
      *  Ends the effect
      */
     endEffect() {
-        if (!this.ended) {
-            this.ended = true;
-            Hooks.call("endedSequencerEffect", this);
-            this._destroyDependencies();
-            this.destroy();
-        }
+        if (this._ended) return;
+        this._ended = true;
+        Hooks.call("endedSequencerEffect", this);
+        this._destroyDependencies();
+        this.destroy();
     }
 
     /**
@@ -950,7 +952,8 @@ export default class CanvasEffect extends PIXI.Container {
             this._ticker.add(() => {
                 if (!this.source || this.source._destroyed) {
                     this._ticker.stop();
-                    this.endEffect(true);
+                    this._source = this._sourcePosition;
+                    this.endEffect();
                 }
             });
         }
@@ -958,7 +961,8 @@ export default class CanvasEffect extends PIXI.Container {
             this._ticker.add(() => {
                 if (!this.target || this.target._destroyed) {
                     this._ticker.stop();
-                    this.endEffect(true);
+                    this._source = this._sourcePosition;
+                    this.endEffect();
                 }
             });
         }
@@ -1066,7 +1070,7 @@ export default class CanvasEffect extends PIXI.Container {
             const hookName = "delete" + this.data.source.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.source.document) return;
-                this.visible = false;
+                this._source = this._sourcePosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
             });
@@ -1076,7 +1080,7 @@ export default class CanvasEffect extends PIXI.Container {
             const hookName = "delete" + this.data.target.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.target.document) return;
-                this.visible = false;
+                this._target = this._targetPosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
             });
@@ -1930,7 +1934,7 @@ class PersistentCanvasEffect extends CanvasEffect {
      */
     async _resetLoop() {
         this.video.currentTime = this._startTime + this._loopOffset;
-        if (this.ended) return;
+        if (this._ended) return;
         await canvaslib.try_to_play_video(this.video);
         if (this.video.loop) return;
         this._resetTimeout = setTimeout(() => {
@@ -1959,7 +1963,9 @@ class PersistentCanvasEffect extends CanvasEffect {
 
     /** @OVERRIDE */
     async endEffect() {
-        const durations = immediate ? [0] : [
+        if(this._isEnding) return;
+        this._isEnding = true;
+        const durations = [
             this._fadeOut(this.data.extraEndDuration ?? 0),
             this._scaleOut(this.data.extraEndDuration ?? 0),
             this._rotateOut(this.data.extraEndDuration ?? 0),
@@ -1967,7 +1973,7 @@ class PersistentCanvasEffect extends CanvasEffect {
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
-            super.endEffect(immediate)
+            super.endEffect()
             resolve(this.data);
         }, waitDuration));
     }

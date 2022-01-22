@@ -50,7 +50,7 @@ class SoundSection extends Section {
             return new Promise((reject) => reject());
         }
 
-        Hooks.call("preCreateSequencerSound", data);
+        if(Hooks.call("preCreateSequencerSound", data) === false) return;
 
         let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
         return SequencerAudioHelper.play(data, push);

@@ -87,7 +87,7 @@ export default class SequencerEffectManager {
      *                             - sceneId: the ID of the scene to search within
      *                             - effects: a single CanvasEffect or its ID, or an array of such
      * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
-     * @returns {promise} A promise that resolves when the effects have ended
+     * @returns {promise} A promise that resolves when the effects have _ended
      */
     static async endEffects(inFilter = {}, push = true) {
         inFilter = this._validateFilters(inFilter);
@@ -103,7 +103,7 @@ export default class SequencerEffectManager {
      *
      * @param {string} [inSceneId] A parameter which determines which scene to end all effects on, defaults to current viewed scene
      * @param {boolean} [push=true] A flag indicating whether or not to make other clients end all effects
-     * @returns {promise} A promise that resolves when all of the effects have ended
+     * @returns {promise} A promise that resolves when all of the effects have _ended
      */
     static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
         const inFilter = this._validateFilters({ sceneId: inSceneId });
@@ -392,7 +392,7 @@ export default class SequencerEffectManager {
     }
 
     /**
-     * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully ended
+     * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully _ended
      *
      * @param inEffects
      * @returns {promise}
@@ -418,7 +418,7 @@ export default class SequencerEffectManager {
     }
 
     /**
-     * Removes the effect from the manager and ends it, returning a promise that resolves once the effect has fully ended
+     * Removes the effect from the manager and ends it, returning a promise that resolves once the effect has fully _ended
      *
      * @param effect
      * @returns {promise}

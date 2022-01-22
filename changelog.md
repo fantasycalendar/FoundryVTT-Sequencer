@@ -1,7 +1,10 @@
 ## Sequencer Changelog
 
 ### Version 2.0.10
-- *Effects* - Added `.tilingTexture()`
+- *Sequencer* - Fixed error in `Database.validateEntries()`
+- *Sequencer* - Updated `pre` hooks to cancel the action if any function return `false`
+- *Effects* - Added `.tilingTexture()` - this will replace the `tiling` parameter on `.stretchTowards()` in the long term
+- *Effects* - Deleting the object an effect is attached to will now actually trigger the effect's `.fadeOut()`, `.scaleOut()` etc
 
 ### Version 2.0.9 Hotfix
 - *Effects* - Fixed nasty issue with rotation on effects
@@ -23,7 +26,7 @@
 ### Version 2.0.6
 - *Sequencer* - Improved intelligence of webm cache 
 - *Effects* - Added `.private()` method to hide effects in the effect manager - DO NOT USE IF YOU DO NOT KNOW WHAT YOU ARE DOING
-- *Effects* - Fixed issue where ending effects by name would cause other effects without a name to get ended
+- *Effects* - Fixed issue where ending effects by name would cause other effects without a name to get _ended
 - *Effects* - Fixed issue where filtering for effects with the Effect Manager would cause it to split the given name on each whitespace 
 
 ### Version 2.0.5 Hotfix Hotfix
@@ -105,7 +108,7 @@
 - *Effects* - Fixed memory leak where effect textures were not properly destroyed
 - *Effects* - Adjusted `.origin()` to be able to accept a `Document` object to infer the UUID from
 - *Effects* - Fixed `.from()` not taking mirror x/y into account on tokens
-- *Effects* - Tokens with effects attached to them can now be ended by anyone who can update the token (owners of the token, GMs, etc)
+- *Effects* - Tokens with effects attached to them can now be _ended by anyone who can update the token (owners of the token, GMs, etc)
 - *Effects* - Increased default resolution of `.text()` to 10 (should increase quality)
 - *Effects* - Fixed `.screenSpace()` effects still being affected by grid size normalization
 
@@ -168,7 +171,7 @@
 
 ### Version 1.2.5
 - *Sequencer* - Made hooks `createSequencerEffect` and `endedSequencerEffect` instead supply the CanvasEffect itself, rather than its data
-- *Effects* - Fixed bug that caused effects to linger for other clients after having been ended
+- *Effects* - Fixed bug that caused effects to linger for other clients after having been _ended
 
 ### Version 1.2.4
 - *Sequencer* - Fixed error caused by preload option on Sequencer Effect Player
@@ -211,7 +214,7 @@
 - *Sequencer* - Added `getPathsUnder` method to the Sequencer Database, which retrieves valid collections under a certain database path
 - *Sequencer* - Minor speed improvements to how the database retrieves files
 - *Sequencer* - Removed the requirement for a user to be trusted to use the Database Viewer
-- *Sequencer* - Fixed `Sequencer.EffectManager.endEffects` not throwing error when incorrect or incomplete parameters were given, and instead ended all effects (whoops)
+- *Sequencer* - Fixed `Sequencer.EffectManager.endEffects` not throwing error when incorrect or incomplete parameters were given, and instead _ended all effects (whoops)
 - *Effects* - Made user-created effects that were made to be displayed only for other users also show up for GMs, though saturated and with 50% opacity. This is to ensure no player-to-player abuse would occur
 - *Effects* - Fixed scaled tokens causing effects to not play on the correct location
 - *Effects* - Fixed temporary effects attached to warpgate cursors no longer stays around for longer than they should
