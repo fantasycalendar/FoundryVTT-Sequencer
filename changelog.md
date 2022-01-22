@@ -4,7 +4,7 @@
 - *Sequencer* - Fixed error in `Database.validateEntries()`
 - *Sequencer* - Updated `pre` hooks to cancel the action if any function return `false`
 - *Sequencer* - Updated Rope and Chain macros in compendium
-- *Effects* - Added `.tilingTexture()` - this will replace the `tiling` parameter on `.stretchTowards()` in the long term
+- *Effects* - Added `.tilingTexture()` - this will replace the `tiling` parameter on `.stretchTo()` in the long term
 - *Effects* - Deleting the object an effect is attached to will now actually trigger the effect's `.fadeOut()`, `.scaleOut()` etc
 
 ### Version 2.0.9 Hotfix
