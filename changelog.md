@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.0.10
+- *Effects* - Added `.tilingTexture()`
+
 ### Version 2.0.9 Hotfix
 - *Effects* - Fixed nasty issue with rotation on effects
 - *Effects* - Made all effects have an assumed internal grid size of 100
