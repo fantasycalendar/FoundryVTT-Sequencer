@@ -3,7 +3,6 @@ import * as lib from "./lib/lib.js";
 const SequencerAnimationEngine = {
 
     _animations: [],
-    _propertyLinks: [],
     _maxFPS: false,
     _debug: undefined,
     _deltas: [],
@@ -18,20 +17,6 @@ const SequencerAnimationEngine = {
             this._maxFPS = 1000 / game.settings.get('core', "maxFPS")
         }
         return this._maxFPS;
-    },
-
-    addPropertyLink(origin, source, target, sourceProperty, targetProperty){
-        this._propertyLinks.push({
-            origin,
-            source,
-            target,
-            sourceProperty,
-            targetProperty
-        });
-        if(!this.isRunning){
-            this.start();
-        }
-        lib.debug(`Added property link to Animation Engine`);
     },
 
     addAnimation(origin, attributes = [], timeDifference = 0) {
@@ -79,7 +64,6 @@ const SequencerAnimationEngine = {
 
     endAnimations(target){
         this._animations = this._animations.filter(animation => animation.origin !== target);
-        this._propertyLinks = this._propertyLinks.filter(link => link.origin !== target);
     },
 
     start(){
@@ -93,7 +77,7 @@ const SequencerAnimationEngine = {
 
     nextFrame(){
 
-        if(this._animations.length === 0 && this._propertyLinks.length === 0){
+        if(this._animations.length === 0){
             lib.debug(`Animation Engine Paused`);
             this.ticker.stop();
             return;
@@ -103,23 +87,6 @@ const SequencerAnimationEngine = {
         this._animations = this._animations.filter(animation => !animation.complete);
         this._applyDeltas();
 
-        this._applyPropertyLinks();
-
-    },
-
-    _applyPropertyLinks() {
-        for(const propertyLink of this._propertyLinks){
-            try {
-                lib.deep_set(
-                    propertyLink.target,
-                    propertyLink.targetProperty,
-                    lib.deep_get(
-                        propertyLink.source,
-                        propertyLink.sourceProperty
-                    )
-                )
-            } catch (err) { }
-        }
     },
 
     _applyDeltas() {

@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.0.11
+- *Effects* - Fixed `.extraEndDuration()` not working properly when `.waitUntilFinished()` was provided a negative number
+- *Effects* - Fixed `.noLoop()` effects sometimes not reaching their proper end time when `.endTime()`, `.endTimePerc()` or `.timeRange()` was used
+
 ### Version 2.0.10
 - *Sequencer* - Fixed error in `Database.validateEntries()`
 - *Sequencer* - Updated `pre` hooks to cancel the action if any function return `false`

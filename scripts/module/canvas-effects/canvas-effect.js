@@ -1901,6 +1901,12 @@ class PersistentCanvasEffect extends CanvasEffect {
 
         if (creationTimeDifference < this._animationDuration) {
             this.video.currentTime = creationTimeDifference / 1000;
+            if(this._endTime !== this.video.duration){
+                setTimeout(() => {
+                    this.video.currentTime = this._endTime;
+                    this.sprite.texture.update();
+                }, this._endTime*1000 - creationTimeDifference)
+            }
             return;
         }
 
@@ -1969,6 +1975,7 @@ class PersistentCanvasEffect extends CanvasEffect {
             this._fadeOut(this.data.extraEndDuration ?? 0),
             this._scaleOut(this.data.extraEndDuration ?? 0),
             this._rotateOut(this.data.extraEndDuration ?? 0),
+            this.data.extraEndDuration
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);

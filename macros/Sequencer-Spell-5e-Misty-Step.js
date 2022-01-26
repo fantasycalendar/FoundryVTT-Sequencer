@@ -22,7 +22,7 @@ if(error){
     return;
 }
 
-let range = await MeasuredTemplate.create({
+let range = await canvas.scene.createEmbeddedDocuments('MeasuredTemplate', [{
     t: "circle",
     user: game.user._id,
     x: tokenD.x + canvas.grid.size / 2,
@@ -30,7 +30,7 @@ let range = await MeasuredTemplate.create({
     direction: 0,
     distance: 30,
     borderColor: "#FF0000"
-});
+}])
 
 let position = await warpgate.crosshairs.show({
     size: 1,
