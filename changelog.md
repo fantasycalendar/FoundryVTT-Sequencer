@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.0.12
+- *Effects* - Fixed effects with only `.text()` and no `.file()` not working properly
+- *Effects* - Fixed `.text()` combined with `.screenSpace()` would not be scaled properly 
+
 ### Version 2.0.11
 - *Effects* - Fixed `.extraEndDuration()` not working properly when `.waitUntilFinished()` was provided a negative number
 - *Effects* - Fixed `.noLoop()` effects sometimes not reaching their proper end time when `.endTime()`, `.endTimePerc()` or `.timeRange()` was used

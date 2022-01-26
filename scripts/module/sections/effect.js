@@ -901,13 +901,13 @@ export default class EffectSection extends Section {
             }
         }
 
+        this._fileData = { file: this._file, forcedIndex: false, customRange: false };
+
         if((!this._file && this._silentlyFail) || (!this._file && this._text)) {
             return;
         }
 
-        this._fileData = this._file
-            ? await this._determineFile(this._file)
-            : { file: this._file, forcedIndex: false, customRange: false };
+        this._fileData = await this._determineFile(this._file);
 
         if(this._fileData.customRange || this._fileData.file?.dbPath) return;
 

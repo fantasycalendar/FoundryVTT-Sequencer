@@ -425,7 +425,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {number}
      */
     get gridSizeDifference() {
-        return this.data.screenSpace ? 1 : canvas.grid.size / this.template.gridSize;
+        return canvas.grid.size / this.template.gridSize;
     }
 
     /**
