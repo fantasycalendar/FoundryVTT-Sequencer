@@ -79,8 +79,8 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
             pos.y = obj.y
 
             if(!exact){
-                pos.x += Math.abs(obj.shape.width / 2)
-                pos.y += Math.abs(obj.shape.height / 2)
+                pos.x += Math.abs(obj.shape.width / 2) + (obj.shape.x)
+                pos.y += Math.abs(obj.shape.height / 2) + (obj.shape.y)
             }
         }
     } else if (obj instanceof Tile || obj instanceof TileDocument) {

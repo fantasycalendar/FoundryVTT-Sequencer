@@ -140,7 +140,7 @@ export default class CanvasEffect extends PIXI.Container {
                 this._sourcePosition = canvaslib.get_object_position(this.source);
             }
         }
-        if(this._sourcePosition instanceof MeasuredTemplate){
+        if(this._sourcePosition instanceof MeasuredTemplate || this._sourcePosition instanceof Tile){
             return canvaslib.get_object_position(this._sourcePosition)
         }
         return this._sourcePosition?.worldPosition || this._sourcePosition?.center || this._sourcePosition || this.source;
@@ -189,7 +189,7 @@ export default class CanvasEffect extends PIXI.Container {
             }
         }
 
-        if(this._targetPosition instanceof MeasuredTemplate){
+        if(this._targetPosition instanceof MeasuredTemplate || this._targetPosition instanceof Tile){
             return canvaslib.get_object_position(this._targetPosition, { measure: true })
         }
 
