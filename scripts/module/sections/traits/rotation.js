@@ -51,7 +51,7 @@ export default {
             offset: 0,
             towardsCenter: true,
             cacheLocation: false,
-            attachTo: true
+            attachTo: false
         }, options);
         if (!is_real_number(options.duration)) throw this.sequence._customError(this, "rotateTowards", "options.duration must be of type number");
         if (typeof options.ease !== "string") throw this.sequence._customError(this, "rotateTowards", "options.ease must be of type string");

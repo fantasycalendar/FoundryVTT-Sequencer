@@ -182,7 +182,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get originalTargetPosition() {
         if (!this._targetPosition && this.target) {
-            if (this.data.stretchTo?.attachTo) {
+            if (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) {
                 this._targetPosition = this.target;
             } else {
                 this._targetPosition = canvaslib.get_object_position(this.target, { measure: true });
@@ -1079,7 +1079,7 @@ export default class CanvasEffect extends PIXI.Container {
             });
         }
 
-        if (this.data.stretchTo?.attachTo && lib.is_UUID(this.data.target)){
+        if ((this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target)){
             const hookName = "delete" + this.data.target.split('.')[2];
             this._addHook(hookName, (doc) => {
                 if (doc !== this.target.document) return;

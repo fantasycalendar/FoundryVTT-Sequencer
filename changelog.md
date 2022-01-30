@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.0.14
+- *Effects* - Fixed `rotateTowards` with `attachTo` enabled not respecting actual target position end position
+
 ### Version 2.0.13
 - *Effects* - Fixed flipped tiles and measurable templates (with negative width or height) causing effects to not play on the correct location
 - *Effects* - Fixed `.rotateTowards()` not following the rotation of attached objects
