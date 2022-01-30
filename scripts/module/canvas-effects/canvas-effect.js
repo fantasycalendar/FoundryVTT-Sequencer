@@ -1039,7 +1039,7 @@ export default class CanvasEffect extends PIXI.Container {
             this._customAngle += lib.random_float_between(-360, 360, this._twister)
         }
 
-        this.rotationContainer.rotation = -Math.normalizeRadians(Math.toRadians(this._customAngle));
+        this.spriteContainer.rotation = -Math.normalizeRadians(Math.toRadians(this._customAngle));
 
         if (this.data.tint) {
             this.sprite.tint = this.data.tint;
@@ -1265,7 +1265,7 @@ export default class CanvasEffect extends PIXI.Container {
             ray = new Ray(sourcePosition, targetPosition);
         }
 
-        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle - Math.toRadians(this._customAngle));
+        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle);
 
     }
 
@@ -1411,7 +1411,7 @@ export default class CanvasEffect extends PIXI.Container {
             if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
                 this._ticker.add(() => {
                     if (this.source.destroyed) return;
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation - this._customAngle));
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
                 });
             }
 
