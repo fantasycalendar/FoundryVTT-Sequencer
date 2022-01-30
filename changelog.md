@@ -1,6 +1,6 @@
 ## Sequencer Changelog
 
-### Version 2.0.14
+### Version 2.0.14 Beta - Not released (see beta track on readme)
 - *Effects* - Fixed `rotateTowards` with `attachTo` enabled not respecting actual target position end position
 
 ### Version 2.0.13

@@ -35,6 +35,10 @@ Sequencer is a powerful module that allows you and other module creators to quic
 ## Download here:
 [https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json](https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json)
 
+
+If you want to test the beta track, you can install it from this link - **NOT RECOMMENDED FOR NOVICE USERS**:
+[https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json](https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json)
+
 ## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation & Guides](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
 Click the link above to go to the documentation where each feature is listed.
 
