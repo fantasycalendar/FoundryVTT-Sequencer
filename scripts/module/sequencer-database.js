@@ -7,6 +7,7 @@ const SequencerDatabase = {
     entries: {},
     flattenedEntries: [],
     privateModules: [],
+    feetTest: new RegExp(/\.[0-9]+ft\.*/g),
 
     get publicModules(){
         return Object.keys(this.entries).filter(module => !this.privateModules.includes(module));
@@ -17,9 +18,8 @@ const SequencerDatabase = {
     },
 
     get publicFlattenedSimpleEntries(){
-        const feetTest = new RegExp(/\.[0-9]+ft/g);
         return lib.make_array_unique(this.publicFlattenedEntries.map(entry => {
-            return entry.split(feetTest)[0];
+            return entry.split(this.feetTest)[0];
         }));
     },
 
@@ -90,12 +90,10 @@ const SequencerDatabase = {
         inString = inString.replace(/\[[0-9]+]$/, "");
         if (!this.entryExists(inString)) return this._throwError("getEntry", `Could not find ${inString} in database`);
 
-        let feetTest = new RegExp(/[0-9]+ft/g);
-
         let ft = false;
         let index = false;
-        if(feetTest.test(inString)){
-            ft = inString.match(feetTest)[0];
+        if(this.feetTest.test(inString)){
+            ft = inString.match(this.feetTest)[0];
             const split = inString.split(ft);
             if(inString.length > 1){
                 index = split[1].substring(1);
@@ -174,11 +172,10 @@ const SequencerDatabase = {
 
         entries = entries.filter(e => e.startsWith(inPath) && e !== inPath);
 
-        let feetTest = new RegExp(/.[0-9]+ft/g);
         if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
         let length = inPath.split('.').length+1;
         let foundEntries = entries.map(e =>{
-            let path = e.split(feetTest)[0];
+            let path = e.split(this.feetTest)[0];
             return path.split('.').slice(0, length).join('.');
         });
 
@@ -189,7 +186,7 @@ const SequencerDatabase = {
             foundEntries = this.flattenedEntries.filter(e => {
                 return e.match(regexSearch)?.length >= searchParts;
             }).map(e =>{
-                return e.split(feetTest)[0];
+                return e.split(this.feetTest)[0];
             });
         }
 
