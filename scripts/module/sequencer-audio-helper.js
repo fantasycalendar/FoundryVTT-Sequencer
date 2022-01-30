@@ -39,7 +39,7 @@ export default class SequencerAudioHelper {
             offset: data.startTime
         });
 
-        const soundId = randomId();
+        const soundId = randomID();
 
         if (data.fadeIn) {
             SequencerAnimationEngine.addAnimation(soundId, {

@@ -3,6 +3,7 @@
 ### Version 2.0.14 Beta - Not released (see beta track on readme)
 - *Database* - Fixed the database sometimes getting confused by paths that have `ft` in them without being range-finding
 - *Effects* - Fixed `rotateTowards` with `attachTo` enabled not respecting actual target position end position
+- *Sounds* - Fixed error when playing sounds
 
 ### Version 2.0.13
 - *Effects* - Fixed flipped tiles and measurable templates (with negative width or height) causing effects to not play on the correct location
