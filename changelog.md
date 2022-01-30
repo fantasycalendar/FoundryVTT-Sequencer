@@ -3,6 +3,7 @@
 ### Version 2.0.14 Beta - Not released (see beta track on readme)
 - *Database* - Fixed the database sometimes getting confused by paths that have `ft` in them without being range-finding
 - *Effects* - Fixed `rotateTowards` with `attachTo` enabled not respecting actual target position end position
+- *Effects* - Fixed `.rotation()` with `.loopProperty()` on the `spriteContainer`'s `rotation` causing rotational strangeness
 - *Sounds* - Fixed error when playing sounds
 
 ### Version 2.0.13
