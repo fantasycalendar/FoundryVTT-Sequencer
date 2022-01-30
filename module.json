@@ -1,0 +1,67 @@
+{
+    "name": "sequencer",
+    "title": "Sequencer",
+    "description": "This module implements an advanced sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
+    "version": "2.0.13.1",
+    "library": "false",
+    "manifestPlusVersion": "1.0.0",
+    "minimumCoreVersion": "0.8.9",
+    "compatibleCoreVersion": "9.000",
+    "author": "Wasp (Wasp#2005)",
+    "esmodules": [
+        "scripts/module.js"
+    ],
+    "scripts": [
+        "scripts/module/lib/ext/pixi-filters.js"
+    ],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "languages/en-EN.json"
+        }
+    ],
+    "packs": [
+        {
+            "name": "sequencer-sample-macros",
+            "label": "Sequencer Sample Macros",
+            "path": "./packs/sequencer-sample-macros.db",
+            "module": "world",
+            "entity": "Macro",
+            "lang": [
+                "en"
+            ]
+        },
+        {
+            "name": "sequencer-sample-scenes",
+            "label": "Sequencer Sample Scenes",
+            "path": "./packs/sequencer-sample-scenes.db",
+            "module": "world",
+            "entity": "Scene",
+            "lang": [
+                "en"
+            ]
+        },
+        {
+            "name": "sequencer-oujia-board",
+            "label": "Sequencer Oujia Board",
+            "path": "./packs/sequencer-oujia-board.db",
+            "module": "world",
+            "entity": "JournalEntry",
+            "lang": [
+                "en"
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "name": "socketlib"
+        }
+    ],
+    "socket": true,
+    "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
+    "manifest": "https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json",
+    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.0.13.1/module.zip",
+    "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
+    "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
+}
