@@ -79,8 +79,8 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
             pos.y = obj.y
 
             if(!exact){
-                pos.x += (obj.shape.width / 2)
-                pos.y += (obj.shape.height / 2)
+                pos.x += Math.abs(obj.shape.width / 2)
+                pos.y += Math.abs(obj.shape.height / 2)
             }
         }
     } else if (obj instanceof Tile || obj instanceof TileDocument) {
@@ -91,8 +91,8 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
         }
 
         if(!exact){
-            pos.x += (obj.data.width / 2)
-            pos.y += (obj.data.height / 2)
+            pos.x += Math.abs(obj.data.width / 2)
+            pos.y += Math.abs(obj.data.height / 2)
         }
     } else {
         pos = {

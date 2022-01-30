@@ -269,8 +269,8 @@ export default class EffectSection extends Section {
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
         this.size(canvaslib.get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject));
-        if(inObject.data.mirrorX) this.mirrorX();
-        if(inObject.data.mirrorY) this.mirrorY();
+        if(inObject.data.mirrorX || (inObject?.tile && inObject?.tile.scale.x < 0)) this.mirrorX();
+        if(inObject.data.mirrorY || (inObject?.tile && inObject?.tile.scale.y < 0)) this.mirrorY();
         if(inObject?.data?.rotation){
             this.rotate(-inObject.data.rotation);
         }
@@ -911,13 +911,13 @@ export default class EffectSection extends Section {
 
         if(this._fileData.customRange || this._fileData.file?.dbPath) return;
 
+        let exists = false;
         try {
-            const exists = await SequencerFileCache.srcExists(this._fileData.file);
-            if (exists) return;
+            exists = await SequencerFileCache.srcExists(this._fileData.file);
         } catch (err) {
         }
 
-        throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
+        if(!exists) throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
 
     }
 

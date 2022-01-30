@@ -39,8 +39,10 @@ export default class SequencerAudioHelper {
             offset: data.startTime
         });
 
+        const soundId = randomId();
+
         if (data.fadeIn) {
-            SequencerAnimationEngine.addAnimation({
+            SequencerAnimationEngine.addAnimation(soundId, {
                 target: sound,
                 propertyName: "volume",
                 from: 0.0,
@@ -52,7 +54,7 @@ export default class SequencerAudioHelper {
         }
 
         if (data.fadeOut) {
-            SequencerAnimationEngine.addAnimation({
+            SequencerAnimationEngine.addAnimation(soundId, {
                 target: sound,
                 propertyName: "volume",
                 from: data.volume,

@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.0.13
+- *Effects* - Fixed flipped tiles and measurable templates (with negative width or height) causing effects to not play on the correct location
+- *Effects* - Fixed `.rotateTowards()` not following the rotation of attached objects
+- *Sounds* - Fixed `.fadeInAudio()` and `.fadeOutAudio()` being broken
+
 ### Version 2.0.12
 - *Effects* - Fixed effects with only `.text()` and no `.file()` not working properly
 - *Effects* - Fixed `.text()` combined with `.screenSpace()` would not be scaled properly 

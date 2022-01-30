@@ -8,7 +8,6 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
-import { random_float_between } from "../lib/lib.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -47,6 +46,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ended = false;
         this._isEnding = false;
+
+        this._relatedSprites = [];
 
     }
 
@@ -243,7 +244,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.randomOffset && (!source || !this.data.target)) {
-            let randomOffset = canvaslib.get_random_offset(this.target, this.data.randomOffset, twister);
+            let randomOffset = canvaslib.get_random_offset(this.target || this.source, this.data.randomOffset, twister);
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
@@ -697,6 +698,8 @@ export default class CanvasEffect extends PIXI.Container {
         this._ticker.destroy();
 
         this._ticker = null;
+
+        this._relatedSprites.forEach((sprite) => sprite.destroy());
 
         SequencerAnimationEngine.endAnimations(this);
 
