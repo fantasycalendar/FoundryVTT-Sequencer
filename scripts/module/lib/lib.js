@@ -1,6 +1,5 @@
 import CONSTANTS from "../constants.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
-import SequencerFileCache from "../sequencer-file-cache.js";
 
 /**
  *  This function is a backwards compatible method for both 0.8.9 and 9.224 that returns a boolean whether
@@ -266,7 +265,8 @@ export function clamp(num, min, max) {
 export function get_all_objects(inSceneId) {
     const scene = inSceneId
         ? game.scenes.get(inSceneId)
-        : game.scenes.get(game.user.viewedScene);
+        : game.scenes.get(game.user?.viewedScene);
+    if(!scene) return [];
     return [
         ...Array.from(scene.tokens),
         ...Array.from(scene.templates),

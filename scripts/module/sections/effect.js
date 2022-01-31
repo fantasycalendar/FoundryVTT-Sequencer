@@ -5,6 +5,7 @@ import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
+import { SequencerFileRangeFind } from "../sequencer-file.js";
 
 export default class EffectSection extends Section {
 
@@ -47,7 +48,7 @@ export default class EffectSection extends Section {
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
 
-        this._fileData = null;
+        this._isRangedEffect = null;
     }
 
     /**
@@ -822,8 +823,8 @@ export default class EffectSection extends Section {
      * @private
      */
     _expressWarnings(){
-        if(this._stretchTo && this._anchor){
-            this.sequence._showWarning(this, "stretchTo", "you have called .stretchTowards() and .anchor() - stretchTo will manually set the X axis of the anchor and may not behave like you expect.", true);
+        if(this._stretchTo && this._anchor?.x){
+            this.sequence._showWarning(this, "stretchTo", "you have called .stretchTo() and .anchor() - stretchTo will manually set the X axis of the anchor and may not behave like you expect.", true);
         }
         if(this._stretchTo && this._scaleToObject){
             throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while scaling to fit another??? Make up your mind!");
@@ -833,6 +834,9 @@ export default class EffectSection extends Section {
         }
         if(this._stretchTo && this._moveTowards){
             throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while moving towards it? You're insane.");
+        }
+        if(this._attachTo && this._stretchTo?.attachTo && (this._startTime || this._endTime) && this._isRangedEffect){
+            throw this.sequence._customError(this, "stretchTo", "Dual-attached range-finding effects combined while using any of the time methods is stable - modern web browsers cannot handle it and it may crash them, so this feature has been disabled.");
         }
 
         const source = this._getSourceObject();
@@ -901,23 +905,23 @@ export default class EffectSection extends Section {
             }
         }
 
-        this._fileData = { file: this._file, forcedIndex: false, customRange: false };
-
         if((!this._file && this._silentlyFail) || (!this._file && this._text)) {
             return;
         }
 
-        this._fileData = await this._determineFile(this._file);
+        let fileData = this._file ? (await this._determineFile(this._file)) : { file: this._file, forcedIndex: false, customRange: false };
 
-        if(this._fileData.customRange || this._fileData.file?.dbPath) return;
+        this._isRangedEffect = fileData?.file instanceof SequencerFileRangeFind || fileData?.customRange;
+
+        if(fileData.customRange || fileData.file?.dbPath) return;
 
         let exists = false;
         try {
-            exists = await SequencerFileCache.srcExists(this._fileData.file);
+            exists = await SequencerFileCache.srcExists(fileData.file);
         } catch (err) {
         }
 
-        if(!exists) throw this.sequence._customError(this, "Play", `Could not find file:<br>${this._fileData.file}`);
+        if(!exists) throw this.sequence._customError(this, "Play", `Could not find file:<br>${fileData.file}`);
 
     }
 
@@ -964,7 +968,7 @@ export default class EffectSection extends Section {
      */
     async _sanitizeEffectData() {
 
-        const { file, forcedIndex, customRange } = this._fileData;
+        const { file, forcedIndex, customRange } = this._file ? (await this._determineFile(this._file)) : { file: this._file, forcedIndex: false, customRange: false };
 
         let data = foundry.utils.duplicate({
             /**

@@ -218,27 +218,8 @@ export function distance_between(p1, p2) {
  * @returns {boolean}
  */
 export function is_video_playing(video) {
-    return (video && video.currentTime > 0 && !video.paused);
+    return (!!video && video.currentTime >= 0 && !video.paused && video.currentTime <= video.duration);
 }
-
-const tryingToPlay = new Set();
-
-export function try_to_play_video(video) {
-    if (!video || is_video_playing(video) || tryingToPlay.has(video.src)) return;
-    tryingToPlay.add(video.src)
-    return new Promise(async (resolve) => {
-        while (!is_video_playing(video)) {
-            try {
-                await video.play();
-            } catch (err) {
-                break;
-            }
-        }
-        tryingToPlay.delete(video.src)
-        resolve();
-    });
-}
-
 
 /**
  * Determines whether a position is within the bounds of this effect

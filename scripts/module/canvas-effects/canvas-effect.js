@@ -47,8 +47,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._ended = false;
         this._isEnding = false;
 
-        this._relatedSprites = [];
-
     }
 
     static get protectedValues() {
@@ -115,6 +113,17 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     /**
+     * Gets the source hook name
+     *
+     * @param {string} type
+     * @returns {string|boolean}
+     */
+    getSourceHook(type = ""){
+        if(!lib.is_UUID(this.data.source)) return false;
+        return type + this.data.source.split('.')[2];
+    }
+
+    /**
      * The source object (or source location) of the effect
      *
      * @returns {boolean|object}
@@ -161,6 +170,17 @@ export default class CanvasEffect extends PIXI.Container {
             y: position.y - this._sourceOffset.y
         };
 
+    }
+
+    /**
+     * Gets the target hook name
+     *
+     * @param {string} type
+     * @returns {string|boolean}
+     */
+    getTargetHook(type = ""){
+        if(!lib.is_UUID(this.data.target)) return false;
+        return type + this.data.target.split('.')[2];
     }
 
     /**
@@ -400,7 +420,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._video = inVideo;
 
-        this._video.currentTime = this.playNaturally ? 0 : currentTime;
+        this._video.currentTime = this.playNaturally ? 0 : Math.min(currentTime, this._video.seekable.end(currentTime));
         this._video.loop = isLooping;
 
         this._texture.update();
@@ -620,7 +640,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._playPresetAnimations();
         this._setEndTimeout();
         this._timeoutVisibility();
-        if (play) canvaslib.try_to_play_video(this.video);
+        if (play) this.video.play();
     }
 
     /**
@@ -647,7 +667,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _initializeVariables() {
         this._template = this.data.template;
-        this.ended = null;
+        this._ended = null;
         this.spriteContainer = null;
         this.sprite = null;
         this.text = null;
@@ -660,6 +680,8 @@ export default class CanvasEffect extends PIXI.Container {
         this._distanceCache = null;
         this._isRangeFind = false;
         this._customAngle = 0;
+        this._currentFilePath = this.data.file;
+        this._relatedSprites = {};
         this._hooks = [];
 
         if(this._resetTimeout){
@@ -699,7 +721,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ticker = null;
 
-        this._relatedSprites.forEach((sprite) => sprite.destroy());
+        Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy());
 
         SequencerAnimationEngine.endAnimations(this);
 
@@ -837,6 +859,7 @@ export default class CanvasEffect extends PIXI.Container {
                     : false;
                 this._texture = texture;
                 this._file = texture;
+                this._currentFilePath = this.data.file;
                 return;
             }
 
@@ -851,10 +874,12 @@ export default class CanvasEffect extends PIXI.Container {
 
         if (this.data.stretchTo) {
             const ray = new Ray(this.sourcePosition, this.targetPosition);
-            let { texture } = await this._getTextureForDistance(ray.distance);
+            let { filePath, texture } = await this._getTextureForDistance(ray.distance);
+            this._currentFilePath = filePath;
             this._texture = texture;
         } else if (!this._isRangeFind) {
-            const { texture } = await this._file.getTexture();
+            const { filePath, texture } = await this._file.getTexture();
+            this._currentFilePath = filePath;
             this._texture = texture;
         }
 
@@ -1070,8 +1095,7 @@ export default class CanvasEffect extends PIXI.Container {
     _setupHooks(){
 
         if (this.data.attachTo?.active && lib.is_UUID(this.data.source)){
-            const hookName = "delete" + this.data.source.split('.')[2];
-            this._addHook(hookName, (doc) => {
+            this._addHook(this.getSourceHook("delete"), (doc) => {
                 if (doc !== this.source.document) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
@@ -1080,8 +1104,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if ((this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target)){
-            const hookName = "delete" + this.data.target.split('.')[2];
-            this._addHook(hookName, (doc) => {
+            this._addHook(this.getTargetHook("delete"), (doc) => {
                 if (doc !== this.target.document) return;
                 this._target = this._targetPosition;
                 const uuid = doc.uuid;
@@ -1090,8 +1113,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
-            const hookName = "update" + this.data.source.split('.')[2];
-            this._addHook(hookName, (doc) => {
+            this._addHook(this.getSourceHook("update"), (doc) => {
                 if (doc !== this.source.document) return;
                 this.renderable = this.source.visible;
                 this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
@@ -1106,8 +1128,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (this.data.attachTo?.bindAlpha && lib.is_UUID(this.data.source)) {
             const document = this.source.document;
             if(document instanceof TokenDocument || document instanceof TileDocument) {
-                const hookName = "update" + this.data.source.split('.')[2];
-                this._addHook(hookName, (doc) => {
+                this._addHook(this.getSourceHook("update"), (doc) => {
                     if (doc !== this.source.document) return;
                     this.offsetContainer.alpha = this.source.data.alpha;
                 });
@@ -1145,12 +1166,15 @@ export default class CanvasEffect extends PIXI.Container {
             let scaleX = 1.0;
             let scaleY = 1.0;
             let texture;
+            let filePath;
             let spriteAnchor = this.data.anchor?.x ?? 1.0;
 
             if (this._file instanceof SequencerFile) {
 
                 const scaledDistance = distance / (this.data.scale.x ?? 1.0);
                 const result = await this._file.getTexture(scaledDistance);
+
+                filePath = result.filePath;
 
                 texture = result.texture;
 
@@ -1166,6 +1190,8 @@ export default class CanvasEffect extends PIXI.Container {
                 }
 
             } else if (this._file instanceof PIXI.Texture) {
+
+                filePath = this.data.file;
 
                 texture = this._file;
 
@@ -1185,6 +1211,7 @@ export default class CanvasEffect extends PIXI.Container {
             }
 
             this._distanceCache = {
+                filePath,
                 texture,
                 spriteAnchor,
                 scaleX,
@@ -1210,44 +1237,72 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._rotateTowards(ray);
 
-        let { texture, spriteAnchor, scaleX, scaleY, distance } = await this._getTextureForDistance(ray.distance);
+        let { filePath, texture, spriteAnchor, scaleX, scaleY, distance } = await this._getTextureForDistance(ray.distance);
 
-        if (this.data.tilingTexture) {
+        if (this._currentFilePath !== filePath || !this._relatedSprites[filePath]) {
 
-            const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
-            const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
-            this.sprite.width = distance / (scaleX);
-            this.sprite.height = texture.height;
-            this.sprite.scale.set(
-                scaleX * this.flipX,
-                scaleY * this.flipY
-            )
+            this._texture = texture;
+            this.video = texture?.baseTexture?.resource?.source ?? false;
 
-            this.sprite.tileScale.x = this.data.tilingTexture.scale.x;
-            this.sprite.tileScale.y = this.data.tilingTexture.scale.y;
+            Object.values(this._relatedSprites).forEach(subsprite => {
+                subsprite.renderable = false;
+            })
 
-            this.sprite.tilePosition = this.data.tilingTexture.position;
+            this._currentFilePath = filePath;
 
+            if (this._relatedSprites[filePath]) {
+                this._relatedSprites[filePath].renderable = true;
+                if(!canvaslib.is_video_playing(this.video)){
+                    await this.video.play();
+                }
+            } else {
+                const sprite = new PIXI.Sprite(texture);
+                this._relatedSprites[filePath] = sprite;
+                this.sprite.addChild(sprite);
+            }
 
-        }else {
-            this.sprite.scale.set(
-                scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
-                scaleY * (this.data.scale.y ?? 1.0) * this.flipY
-            )
         }
 
-        this.sprite.anchor.set(
-            this.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
-            (this.data.anchor?.y ?? 0.5)
-        )
+        try {
+            texture?.baseTexture?.resource?.source.play().then(() => {
+                texture.update();
+            });
+        }catch(err){}
 
-        if (this.sprite.texture === texture) return;
+        if(this._relatedSprites[filePath]){
 
-        this.sprite.texture = texture;
-        this._texture = texture;
-        this.video = texture?.baseTexture?.resource?.source ?? false;
+            const sprite = this._relatedSprites[filePath];
 
-        canvaslib.try_to_play_video(this.video);
+            if (this.data.tilingTexture) {
+
+                const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
+                const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
+                sprite.width = distance / (scaleX);
+                sprite.height = texture.height;
+                sprite.scale.set(
+                    scaleX * this.flipX,
+                    scaleY * this.flipY
+                )
+
+                sprite.tileScale.x = this.data.tilingTexture.scale.x;
+                sprite.tileScale.y = this.data.tilingTexture.scale.y;
+
+                sprite.tilePosition = this.data.tilingTexture.position;
+
+
+            }else {
+                sprite.scale.set(
+                    scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
+                    scaleY * (this.data.scale.y ?? 1.0) * this.flipY
+                )
+            }
+
+            sprite.anchor.set(
+                this.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
+                (this.data.anchor?.y ?? 0.5)
+            )
+
+        }
 
     }
 
@@ -1278,12 +1333,51 @@ export default class CanvasEffect extends PIXI.Container {
 
         if (this.data.stretchTo) {
 
-            await this._applyDistanceScaling();
-
             if (this.data.stretchTo?.attachTo) {
+
+                let sourceIsAnimating = false;
+                let targetIsAnimating = false;
+
+                if (lib.is_UUID(this.data.source)) {
+                    this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
+                        if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined)) return;
+                        if(this.getSourceHook() !== "Token" || options?.animate === false){
+                            return this._applyDistanceScaling();
+                        }
+                        sourceIsAnimating = true;
+                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                            setTimeout(() => {
+                                sourceIsAnimating = false;
+                            }, 75)
+                        });
+                    });
+                }else{
+                    sourceIsAnimating = true;
+                }
+
+                if (lib.is_UUID(this.data.target)) {
+                    this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
+                        if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
+                        if(this.getTargetHook() !== "Token" || options?.animate === false){
+                            return this._applyDistanceScaling();
+                        }
+                        setTimeout(() => {
+                            targetIsAnimating = true;
+                        }, 50);
+                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                            setTimeout(() => {
+                                targetIsAnimating = false;
+                            }, 75)
+                        });
+                    });
+                }else{
+                    targetIsAnimating = true;
+                }
+
                 this._ticker.add(async () => {
-                    if(this.source.destroyed || this.target.destroyed) return;
-                    try {
+                    const neitherAnimating = !sourceIsAnimating && !targetIsAnimating;
+                    if(this.source.destroyed || this.target.destroyed || neitherAnimating) return;
+                    try{
                         await this._applyDistanceScaling();
                     } catch (err){
                         lib.debug_error(err);
@@ -1376,44 +1470,63 @@ export default class CanvasEffect extends PIXI.Container {
 
         }
 
+        if(this.data.stretchTo){
+            await this._applyDistanceScaling();
+        }
+
         if(this.data.attachTo?.active){
 
-            this._ticker.add(() => {
+            let sourceIsAnimating = false;
+
+            if (lib.is_UUID(this.data.source)) {
+                this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
+                    if (doc !== this.source.document) return;
+
+                    if(changes.rotation){
+                        this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.rotation));
+                    }
+
+                    if(changes?.y === undefined && changes?.x === undefined) return;
+
+                    if(this.getSourceHook() !== "Token" || options?.animate === false){
+                        return this._applyAttachmentOffset();
+                    }
+
+                    sourceIsAnimating = true;
+                    CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                        setTimeout(() => {
+                            sourceIsAnimating = false;
+                        }, 75)
+                    });
+                });
+            }else if(this.isSourceTemporary){
+                sourceIsAnimating = true;
+            }
+
+            const applyRotation = this.data.attachTo?.followRotation
+                && this.source.data.rotation !== undefined
+                && !this.data.rotateTowards
+                && !this.data.stretchTo
+                && this.isSourceTemporary;
+
+            this._ticker.add(async () => {
 
                 if(this.source.destroyed) return;
 
+                if(applyRotation) {
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
+                }
+
+                if(!sourceIsAnimating) return;
+
                 try {
-
-                    let offset = { x: 0, y: 0 };
-
-                    if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
-
-                        offset = canvaslib.align({
-                            context: this.source,
-                            spriteWidth: this.sprite.width,
-                            spriteHeight: this.sprite.height,
-                            align: this.data.attachTo?.align
-                        })
-
-                    }
-
-                    this.position.set(
-                        this.sourcePosition.x - offset.x,
-                        this.sourcePosition.y - offset.y
-                    );
-
+                    this._applyAttachmentOffset();
                 } catch (err){
                     lib.debug_error(err);
                 }
-
             });
 
-            if(this.data.attachTo?.followRotation && this.source.data.rotation !== undefined && !this.data.rotateTowards && !this.data.stretchTo) {
-                this._ticker.add(() => {
-                    if (this.source.destroyed) return;
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-                });
-            }
+            await this._applyAttachmentOffset();
 
         }else{
 
@@ -1433,9 +1546,31 @@ export default class CanvasEffect extends PIXI.Container {
             this._rotateTowards();
 
             if (this.data.rotateTowards?.attachTo) {
-                this._ticker.add(() => {
-                    if(this.source.destroyed || this.target.destroyed) return;
-                    try {
+
+                let targetIsAnimating = false;
+
+                if (lib.is_UUID(this.data.target)) {
+                    this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
+                        if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
+                        if(this.getTargetHook() !== "Token" || options?.animate === false){
+                            return this._rotateTowards();
+                        }
+                        setTimeout(() => {
+                            targetIsAnimating = true;
+                        }, 50);
+                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                            setTimeout(() => {
+                                targetIsAnimating = false;
+                            }, 75)
+                        });
+                    });
+                }else{
+                    targetIsAnimating = true;
+                }
+
+                this._ticker.add(async () => {
+                    if(this.target.destroyed || !targetIsAnimating) return;
+                    try{
                         this._rotateTowards();
                     } catch (err){
                         lib.debug_error(err);
@@ -1453,6 +1588,28 @@ export default class CanvasEffect extends PIXI.Container {
                 lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data.anchor?.y ?? 0.5)
             );
         }
+
+    }
+
+    _applyAttachmentOffset(){
+
+        let offset = { x: 0, y: 0 };
+
+        if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
+
+            offset = canvaslib.align({
+                context: this.source,
+                spriteWidth: this.sprite.width,
+                spriteHeight: this.sprite.height,
+                align: this.data.attachTo?.align
+            })
+
+        }
+
+        this.position.set(
+            this.sourcePosition.x - offset.x,
+            this.sourcePosition.y - offset.y
+        );
 
     }
 
@@ -1900,7 +2057,7 @@ class PersistentCanvasEffect extends CanvasEffect {
             return this._startLoop(creationTimeDifference);
         }
 
-        await canvaslib.try_to_play_video(this.video);
+        await this.video.play();
 
         if (creationTimeDifference < this._animationDuration) {
             this.video.currentTime = creationTimeDifference / 1000;
@@ -1944,7 +2101,7 @@ class PersistentCanvasEffect extends CanvasEffect {
     async _resetLoop() {
         this.video.currentTime = this._startTime + this._loopOffset;
         if (this._ended) return;
-        await canvaslib.try_to_play_video(this.video);
+        await this.video.play();
         if (this.video.loop) return;
         this._resetTimeout = setTimeout(() => {
             this._loopOffset = 0;

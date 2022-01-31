@@ -93,6 +93,7 @@ async function get_video_texture(inBlob){
         const video = document.createElement("video");
         video.preload = "auto";
         video.crossOrigin = "anonymous";
+        video.controls = true;
         video.autoplay = false;
         video.autoload = true;
         video.muted = true;

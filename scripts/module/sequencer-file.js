@@ -95,6 +95,7 @@ export class SequencerFile {
             try {
                 texture?.baseTexture?.resource?.source?.removeAttribute('src');
                 texture?.baseTexture?.resource?.source?.pause();
+                texture?.baseTexture?.resource?.source?.remove();
                 texture?.baseTexture?.resource?.source?.load();
             } catch (err) {
             }
@@ -117,8 +118,10 @@ export class SequencerFile {
     }
 
     async getTexture(distance) {
+        const filePath = this.getFile();
         const texture = await this._getTexture(this.getFile());
         return {
+            filePath,
             texture,
             spriteScale: this._adjustScaleForPadding(distance, texture.width),
             spriteAnchor: this._adjustAnchorForPadding(texture.width)
@@ -166,8 +169,9 @@ export class SequencerFileRangeFind extends SequencerFile {
     }
 
     async getTexture(distance) {
-        const texture = await this._getTextureForDistance(distance);
+        const { filePath, texture } = await this._getTextureForDistance(distance);
         return {
+            filePath,
             texture,
             spriteScale: this._adjustScaleForPadding(distance, texture.width),
             spriteAnchor: this._adjustAnchorForPadding(texture.width)
@@ -220,7 +224,8 @@ export class SequencerFileRangeFind extends SequencerFile {
     }
 
     async _getTextureForDistance(distance) {
-        const file = this._rangeFind(distance);
-        return await this._getTexture(file);
+        const filePath = this._rangeFind(distance);
+        const texture = await this._getTexture(filePath);
+        return { filePath, texture }
     }
 }

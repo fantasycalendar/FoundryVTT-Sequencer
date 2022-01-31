@@ -20,7 +20,7 @@ export default {
      * @param {boolean} silentlyFail
      * @returns this
      */
-    file(inFile, silentlyFail = true) {
+    file(inFile, silentlyFail = false) {
         this._file = inFile;
         this._silentlyFail = silentlyFail;
         return this;
