@@ -1271,6 +1271,10 @@ export default class CanvasEffect extends PIXI.Container {
 
         if(this._relatedSprites[filePath]){
 
+            if(this.data.attachTo?.active){
+                await this._applyAttachmentOffset();
+            }
+
             const sprite = this._relatedSprites[filePath];
 
             if (this.data.tilingTexture) {
@@ -1339,6 +1343,9 @@ export default class CanvasEffect extends PIXI.Container {
                 let targetIsAnimating = false;
 
                 if (lib.is_UUID(this.data.source)) {
+                    const turnOff = debounce(() => {
+                        sourceIsAnimating = false;
+                    }, 400)
                     this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
                         if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined)) return;
                         if(this.getSourceHook() !== "Token" || options?.animate === false){
@@ -1346,9 +1353,7 @@ export default class CanvasEffect extends PIXI.Container {
                         }
                         sourceIsAnimating = true;
                         CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            setTimeout(() => {
-                                sourceIsAnimating = false;
-                            }, 75)
+                            turnOff();
                         });
                     });
                 }else{
@@ -1356,6 +1361,9 @@ export default class CanvasEffect extends PIXI.Container {
                 }
 
                 if (lib.is_UUID(this.data.target)) {
+                    const turnOff = debounce(() => {
+                        targetIsAnimating = false;
+                    }, 400)
                     this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
                         if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
                         if(this.getTargetHook() !== "Token" || options?.animate === false){
@@ -1365,9 +1373,7 @@ export default class CanvasEffect extends PIXI.Container {
                             targetIsAnimating = true;
                         }, 50);
                         CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            setTimeout(() => {
-                                targetIsAnimating = false;
-                            }, 75)
+                            turnOff()
                         });
                     });
                 }else{
@@ -1384,6 +1390,8 @@ export default class CanvasEffect extends PIXI.Container {
                     }
                 });
             }
+
+            await this._applyDistanceScaling();
 
         }else {
 
@@ -1470,15 +1478,14 @@ export default class CanvasEffect extends PIXI.Container {
 
         }
 
-        if(this.data.stretchTo){
-            await this._applyDistanceScaling();
-        }
-
-        if(this.data.attachTo?.active){
+        if(this.data.attachTo?.active && !this.data.stretchTo?.attachTo){
 
             let sourceIsAnimating = false;
 
             if (lib.is_UUID(this.data.source)) {
+                const turnOff = debounce(() => {
+                    sourceIsAnimating = false;
+                }, 400);
                 this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
                     if (doc !== this.source.document) return;
 
@@ -1494,9 +1501,7 @@ export default class CanvasEffect extends PIXI.Container {
 
                     sourceIsAnimating = true;
                     CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                        setTimeout(() => {
-                            sourceIsAnimating = false;
-                        }, 75)
+                        turnOff();
                     });
                 });
             }else if(this.isSourceTemporary){
@@ -1550,6 +1555,9 @@ export default class CanvasEffect extends PIXI.Container {
                 let targetIsAnimating = false;
 
                 if (lib.is_UUID(this.data.target)) {
+                    const turnOff = debounce(() => {
+                        targetIsAnimating = false;
+                    }, 400);
                     this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
                         if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
                         if(this.getTargetHook() !== "Token" || options?.animate === false){
@@ -1559,9 +1567,7 @@ export default class CanvasEffect extends PIXI.Container {
                             targetIsAnimating = true;
                         }, 50);
                         CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            setTimeout(() => {
-                                targetIsAnimating = false;
-                            }, 75)
+                            turnOff();
                         });
                     });
                 }else{
