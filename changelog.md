@@ -1,6 +1,6 @@
 ## Sequencer Changelog
 
-### Version 2.0.14 Beta - Not released (see beta track on readme)
+### Version 2.0.14
 - *Database* - Fixed the database sometimes getting confused by paths that have `ft` in them without being range-finding
 - *Effects* - Fixed double-attached effects sometimes resulting in the sprite freezing (or in rare cases, browser crashes), though this type of effect is still expensive!
 - *Effects* - Fixed `rotateTowards` with `attachTo` enabled not respecting actual target position end position
