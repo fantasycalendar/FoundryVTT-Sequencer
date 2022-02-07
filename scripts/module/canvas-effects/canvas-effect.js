@@ -109,7 +109,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isTargetTemporary(){
-        return this.data.stretchTo?.attachTo && this.target?.document && !lib.is_UUID(this.target?.document.uuid);
+        return (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && this.target?.document && !lib.is_UUID(this.target?.document.uuid);
     }
 
     /**
@@ -640,7 +640,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._playPresetAnimations();
         this._setEndTimeout();
         this._timeoutVisibility();
-        if (play) this.video.play();
+        if (play && this.video) this.video.play();
     }
 
     /**
@@ -981,7 +981,7 @@ export default class CanvasEffect extends PIXI.Container {
                 if (!this.source || this.source._destroyed) {
                     this._ticker.stop();
                     this._source = this._sourcePosition;
-                    this.endEffect();
+                    SequencerEffectManager.endEffects({ effects: this });
                 }
             });
         }
@@ -990,7 +990,7 @@ export default class CanvasEffect extends PIXI.Container {
                 if (!this.target || this.target._destroyed) {
                     this._ticker.stop();
                     this._source = this._sourcePosition;
-                    this.endEffect();
+                    SequencerEffectManager.endEffects({ effects: this });
                 }
             });
         }
@@ -1008,15 +1008,10 @@ export default class CanvasEffect extends PIXI.Container {
         // Responsible for rotating the sprite
         this.rotationContainer = this.addChild(new PIXI.Container());
 
-        // Responsible for zeroing out rotation for the sprite if needed
-        this.offsetContainer = this.rotationContainer.addChild(new PIXI.Container());
-
         // An offset container for the sprite
-        this.spriteContainer = this.offsetContainer.addChild(new PIXI.Container());
+        this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
 
-        const sprite = this.data.tilingTexture
-            ? new PIXI.TilingSprite()
-            : new PIXI.Sprite();
+        const sprite = new PIXI.Sprite();
 
         // The sprite itself
         this.sprite = this.spriteContainer.addChild(sprite);
@@ -1130,9 +1125,9 @@ export default class CanvasEffect extends PIXI.Container {
             if(document instanceof TokenDocument || document instanceof TileDocument) {
                 this._addHook(this.getSourceHook("update"), (doc) => {
                     if (doc !== this.source.document) return;
-                    this.offsetContainer.alpha = this.source.data.alpha;
+                    this.rotationContainer.alpha = this.source.data.alpha;
                 });
-                this.offsetContainer.alpha = this.source.data.alpha;
+                this.rotationContainer.alpha = this.source.data.alpha;
             }
         }
 
@@ -1252,11 +1247,13 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this._relatedSprites[filePath]) {
                 this._relatedSprites[filePath].renderable = true;
-                if(!canvaslib.is_video_playing(this.video)){
+                if(this.video && !canvaslib.is_video_playing(this.video)){
                     await this.video.play();
                 }
             } else {
-                const sprite = new PIXI.Sprite(texture);
+                const sprite = this.data.tilingTexture
+                    ? new PIXI.TilingSprite(texture)
+                    : new PIXI.Sprite(texture);
                 this._relatedSprites[filePath] = sprite;
                 this.sprite.addChild(sprite);
             }
@@ -1345,7 +1342,7 @@ export default class CanvasEffect extends PIXI.Container {
                 if (lib.is_UUID(this.data.source)) {
                     const turnOff = debounce(() => {
                         sourceIsAnimating = false;
-                    }, 400)
+                    }, 1000)
                     this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
                         if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined)) return;
                         if(this.getSourceHook() !== "Token" || options?.animate === false){
@@ -1363,7 +1360,7 @@ export default class CanvasEffect extends PIXI.Container {
                 if (lib.is_UUID(this.data.target)) {
                     const turnOff = debounce(() => {
                         targetIsAnimating = false;
-                    }, 400)
+                    }, 1000)
                     this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
                         if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
                         if(this.getTargetHook() !== "Token" || options?.animate === false){
@@ -1482,14 +1479,19 @@ export default class CanvasEffect extends PIXI.Container {
 
             let sourceIsAnimating = false;
 
+            const applyRotation = this.data.attachTo?.followRotation
+                && this.source.data.rotation !== undefined
+                && !this.data.rotateTowards
+                && !this.data.stretchTo;
+
             if (lib.is_UUID(this.data.source)) {
                 const turnOff = debounce(() => {
                     sourceIsAnimating = false;
-                }, 400);
+                }, 1000);
                 this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
                     if (doc !== this.source.document) return;
 
-                    if(changes.rotation){
+                    if(changes.rotation !== undefined && applyRotation){
                         this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.rotation));
                     }
 
@@ -1504,21 +1506,16 @@ export default class CanvasEffect extends PIXI.Container {
                         turnOff();
                     });
                 });
+
             }else if(this.isSourceTemporary){
                 sourceIsAnimating = true;
             }
-
-            const applyRotation = this.data.attachTo?.followRotation
-                && this.source.data.rotation !== undefined
-                && !this.data.rotateTowards
-                && !this.data.stretchTo
-                && this.isSourceTemporary;
 
             this._ticker.add(async () => {
 
                 if(this.source.destroyed) return;
 
-                if(applyRotation) {
+                if(applyRotation && this.isSourceTemporary) {
                     this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
                 }
 
@@ -1532,6 +1529,10 @@ export default class CanvasEffect extends PIXI.Container {
             });
 
             await this._applyAttachmentOffset();
+
+            if(applyRotation){
+                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
+            }
 
         }else{
 
@@ -1557,15 +1558,13 @@ export default class CanvasEffect extends PIXI.Container {
                 if (lib.is_UUID(this.data.target)) {
                     const turnOff = debounce(() => {
                         targetIsAnimating = false;
-                    }, 400);
+                    }, 1000);
                     this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                        if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
+                        if (doc !== this.target.document || (changes?.y !== undefined && changes?.x !== undefined && changes.direction !== undefined)) return;
                         if(this.getTargetHook() !== "Token" || options?.animate === false){
                             return this._rotateTowards();
                         }
-                        setTimeout(() => {
-                            targetIsAnimating = true;
-                        }, 50);
+                        targetIsAnimating = true;
                         CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
                             turnOff();
                         });
@@ -1587,9 +1586,9 @@ export default class CanvasEffect extends PIXI.Container {
 
         if(!this.data.anchor && this.data.rotateTowards) {
             const startPointRatio = (this.template.startPoint / this._texture.width) / 2;
-            this.rotationContainer.pivot.set(this.sprite.width * (-0.5 + startPointRatio), 0);
+            this.spriteContainer.pivot.set(this.sprite.width * (-0.5 + startPointRatio), 0);
         }else{
-            this.rotationContainer.pivot.set(
+            this.spriteContainer.pivot.set(
                 lib.interpolate(this.sprite.width * -0.5, this.sprite.width * 0.5, this.data.anchor?.x ?? 0.5),
                 lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data.anchor?.y ?? 0.5)
             );

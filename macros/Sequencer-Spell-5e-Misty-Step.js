@@ -34,6 +34,7 @@ let range = await canvas.scene.createEmbeddedDocuments('MeasuredTemplate', [{
 
 let position = await warpgate.crosshairs.show({
     size: 1,
+    interval: -1,
     tag: randomID(),
     label: "Teleport to",
     drawOutline: false,

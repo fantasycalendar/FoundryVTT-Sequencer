@@ -148,19 +148,19 @@ export class BaseEffectsLayer extends CanvasLayer {
 
         if (effect._destroyed || !effect.spriteContainer) return;
 
-        const boundingBox = effect.spriteContainer.getLocalBounds();
+        const boundingBox = effect.sprite.getLocalBounds();
         graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xFFFFFF, 0.9)
 
         const dimensions = {
-            x: effect.position.x + boundingBox.x * effect.scale.x,
-            y: effect.position.y + boundingBox.y * effect.scale.y,
-            width: boundingBox.width * effect.scale.x,
-            height: boundingBox.height * effect.scale.y,
+            x: effect.position.x + boundingBox.x,
+            y: effect.position.y + boundingBox.y,
+            width: boundingBox.width,
+            height: boundingBox.height
         }
 
-        const rotation = Math.normalizeRadians(effect.rotation + effect.rotationContainer.rotation + effect.offsetContainer.rotation);
+        const rotation = Math.normalizeRadians(effect.rotation + effect.rotationContainer.rotation + effect.spriteContainer.rotation + effect.sprite.rotation);
 
-        this._drawRectangle(graphic, effect.position, rotation, dimensions);
+        this._drawRectangle(graphic, effect.position, rotation, dimensions, effect.spriteContainer.pivot);
 
     }
 

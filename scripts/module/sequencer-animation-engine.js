@@ -3,7 +3,6 @@ import * as lib from "./lib/lib.js";
 const SequencerAnimationEngine = {
 
     _animations: [],
-    _maxFPS: false,
     _debug: undefined,
     _deltas: [],
 
@@ -11,13 +10,6 @@ const SequencerAnimationEngine = {
     dt: 0,
 
     isRunning: false,
-
-    get maxFPS(){
-        if(!this._maxFPS){
-            this._maxFPS = 1000 / game.settings.get('core', "maxFPS")
-        }
-        return this._maxFPS;
-    },
 
     addAnimation(origin, attributes = [], timeDifference = 0) {
 
@@ -136,7 +128,7 @@ const SequencerAnimationEngine = {
 
     _animate(animation){
 
-        animation.totalDt += this.ticker.deltaMS;
+        animation.totalDt += this.ticker.elapsedMs;
 
         animation.attributes.filter(attribute => !attribute.complete)
             .forEach(attribute => this._animateAttribute(animation.totalDt, attribute));
