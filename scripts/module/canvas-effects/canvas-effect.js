@@ -1354,7 +1354,6 @@ export default class CanvasEffect extends PIXI.Container {
                         }
                         sourceIsAnimating = true;
                         CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            console.log("is off")
                             turnOff();
                         })
                     });
@@ -1375,7 +1374,6 @@ export default class CanvasEffect extends PIXI.Container {
                             targetIsAnimating = true;
                         }, 50);
                         CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            console.log("target has stopped animating")
                             turnOff()
                         });
                     });
