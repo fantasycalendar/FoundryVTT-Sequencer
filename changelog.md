@@ -1,5 +1,13 @@
 ## Sequencer Changelog
 
+### Version 2.0.15
+- *Effects* - Fixed errors relating to tiling textures
+- *Effects* - Fixed drifting effect animations when FPS dropped
+- *Effects* - Improved performance relating to always updating the position of the sprites, even when attached objects weren't moving
+- *Effects* - Hopefully fixed some memory leaks relating to assets not being deleted properly 
+- *Effects* - Fixed attached effects' rotations being funky
+- *Effects* - Fixed effects attached to temporary objects (such as the warpgate crosshair) would not be properly removed from the effect manager 
+
 ### Version 2.0.14
 - *Database* - Fixed the database sometimes getting confused by paths that have `ft` in them without being range-finding
 - *Effects* - Fixed double-attached effects sometimes resulting in the sprite freezing (or in rare cases, browser crashes), though this type of effect is still expensive!
