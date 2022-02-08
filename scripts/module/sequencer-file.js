@@ -92,13 +92,10 @@ export class SequencerFile {
     destroy() {
         for (let texture of Object.values(this.fileTextureMap)) {
             if (!texture) continue;
-            try {
-                texture?.baseTexture?.resource?.source?.removeAttribute('src');
-                texture?.baseTexture?.resource?.source?.pause();
-                texture?.baseTexture?.resource?.source?.remove();
-                texture?.baseTexture?.resource?.source?.load();
-            } catch (err) {
-            }
+            try { texture?.baseTexture?.resource?.source?.removeAttribute('src'); } catch (err) {}
+            try { texture?.baseTexture?.resource?.source?.pause(); } catch (err) {}
+            try { texture?.baseTexture?.resource?.source?.remove(); } catch (err) {}
+            try { texture?.baseTexture?.resource?.source?.load(); } catch (err) {}
             texture.destroy();
         }
     }

@@ -420,7 +420,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._video = inVideo;
 
-        this._video.currentTime = this.playNaturally ? 0 : Math.min(currentTime, this._video.seekable.end(currentTime));
+        this._video.currentTime = this.playNaturally ? 0 : Math.min(currentTime, this._video.duration);
         this._video.loop = isLooping;
 
         this._texture.update();
@@ -854,7 +854,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (!Sequencer.Database.entryExists(this.data.file)) {
                 let texture = await SequencerFileCache.loadFile(this.data.file);
-                this.video = this.data.file.endsWith(".webm")
+                this._video = this.data.file.toLowerCase().endsWith(".webm")
                     ? texture?.baseTexture?.resource?.source ?? false
                     : false;
                 this._texture = texture;
@@ -884,7 +884,9 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         this._template = this._file.template ?? this._template;
-        this.video = this._texture?.baseTexture?.resource?.source ?? false;
+        this._video = this._currentFilePath.toLowerCase().endsWith(".webm")
+            ? this._texture?.baseTexture?.resource?.source
+            : false;
 
     }
 

@@ -128,7 +128,7 @@ const SequencerAnimationEngine = {
 
     _animate(animation){
 
-        animation.totalDt += this.ticker.elapsedMs;
+        animation.totalDt += this.ticker.elapsedMS;
 
         animation.attributes.filter(attribute => !attribute.complete)
             .forEach(attribute => this._animateAttribute(animation.totalDt, attribute));
