@@ -47,8 +47,10 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
+        this._masks = [];
 
         this._isRangedEffect = null;
+        this._randomOffsetLegacy = null;
     }
 
     /**
@@ -142,12 +144,18 @@ export default class EffectSection extends Section {
     atLocation(inLocation, inOptions = {}) {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "atLocation", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
-            cacheLocation: false
+            cacheLocation: false,
+            randomOffset: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
+        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be false or of type number");
         this._source = inOptions.cacheLocation ? canvaslib.get_object_position(inLocation) : inLocation;
+        this._randomOffset = {
+            source: inOptions.randomOffset,
+            target: this._randomOffset?.target ?? false
+        }
         return this;
     }
 
@@ -162,11 +170,11 @@ export default class EffectSection extends Section {
     attachTo(inObject, inOptions={}) {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
-            active: true,
             align: "center",
             bindVisibility: true,
             bindAlpha: true,
-            followRotation: true
+            followRotation: true,
+            randomOffset: false
         }, inOptions);
 
         const validatedObject = this._validateLocation(inObject);
@@ -189,15 +197,26 @@ export default class EffectSection extends Section {
         }
 
         const aligns = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'];
-        if(typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)){
+        if (typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)) {
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
-        if(typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
-        if(typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
+        if (typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
+        if (typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
+        if (typeof inOptions.bindAlpha !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindAlpha must be of type boolean");
+        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "attachTo", "inOptions.randomOffset must be false or of type number");
 
         this._source = validatedObject;
-        inOptions.active = isValidObject;
-        this._attachTo = inOptions;
+        this._randomOffset = {
+            source: this._randomOffset?.source ?? false,
+            target: inOptions.randomOffset
+        }
+        this._attachTo = {
+            active: isValidObject,
+            align: inOptions.align,
+            bindVisibility: inOptions.bindVisibility,
+            bindAlpha: inOptions.bindAlpha,
+            followRotation: inOptions.followRotation
+        };
         if(!validatedObject?.id) this.locally();
         return this;
     }
@@ -228,7 +247,8 @@ export default class EffectSection extends Section {
             cacheLocation: false,
             attachTo: false,
             onlyX: false,
-            tiling: false
+            tiling: false,
+            randomOffset: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
@@ -236,6 +256,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
         if (typeof inOptions.onlyX !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.onlyX must be of type boolean");
         if (typeof inOptions.tiling !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.tiling must be of type boolean");
+        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be false or of type number");
 
         if (inOptions.cacheLocation && inOptions.attachTo){
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
@@ -248,6 +269,12 @@ export default class EffectSection extends Section {
             attachTo: inOptions.attachTo,
             onlyX: inOptions.onlyX
         };
+
+        this._randomOffset = {
+            source: this._randomOffset?.source ?? false,
+            target: inOptions.randomOffset
+        }
+
         return this;
     }
 
@@ -264,9 +291,11 @@ export default class EffectSection extends Section {
         if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._customError(this, "from", "inObject must be of type Token or Tile");
         if(!inObject?.data?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({
-            cacheLocation: false
+            cacheLocation: false,
+            randomOffset: false
         }, inOptions)
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
+        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be false or of type number");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
         this.size(canvaslib.get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject));
@@ -274,6 +303,10 @@ export default class EffectSection extends Section {
         if(inObject.data.mirrorY || (inObject?.tile && inObject?.tile.scale.y < 0)) this.mirrorY();
         if(inObject?.data?.rotation){
             this.rotate(-inObject.data.rotation);
+        }
+        this._randomOffset = {
+            source: inOptions.randomOffset,
+            target: this._randomOffset?.target ?? false
         }
         return this;
     }
@@ -572,8 +605,9 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
+        this.sequence._showWarning(self, "randomOffset", "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.")
         if (!lib.is_real_number(inOffsetScale)) throw this.sequence._customError(this, "randomOffset", "inBool must be of type number");
-        this._randomOffset = inOffsetScale;
+        this._randomOffsetLegacy = inOffsetScale;
         return this;
     }
 
@@ -820,6 +854,37 @@ export default class EffectSection extends Section {
     }
 
     /**
+     *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
+     *  The method accepts a string or a Document that has an UUID.
+     *
+     * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Array} inObject
+     * @returns {Section}
+     */
+    mask(inObject){
+
+        if(Array.isArray(inObject)){
+            for(let obj of inObject){
+                this.mask(obj);
+            }
+            return this;
+        }
+
+        const validatedObject = this._validateLocation(inObject);
+
+        const isValidObject = validatedObject instanceof TokenDocument
+            || validatedObject instanceof TileDocument
+            || validatedObject instanceof DrawingDocument
+            || validatedObject instanceof MeasuredTemplateDocument;
+        if (!isValidObject) {
+            throw this.sequence._customError(this, "mask", "A foundry object was provided, but only Tokens, Tiles, Drawings, and MeasuredTemplates may be used to create effect masks");
+        }
+
+        this._masks.push(lib.get_object_identifier(validatedObject));
+
+        return this;
+    }
+
+    /**
      * @private
      */
     _expressWarnings(){
@@ -891,11 +956,23 @@ export default class EffectSection extends Section {
             if(!this.sequence.nameOffsetMap){
                 this.sequence.nameOffsetMap = {};
             }
+
             if(!this.sequence.nameOffsetMap[this._name]){
+
+                const source = this._getSourceObject();
+                const target = this._getTargetObject();
+
+                if(this._randomOffsetLegacy && !this._randomOffset){
+                    this._randomOffset = {
+                        source: !target ? this._randomOffsetLegacy : false,
+                        target: !!target ? this._randomOffsetLegacy : false
+                    }
+                }
+
                 this.sequence.nameOffsetMap[this._name] = {
                     seed: `${this._name}-${randomID()}`,
-                    source: this._getSourceObject(),
-                    target: this._getTargetObject(),
+                    source: source,
+                    target: target,
                     randomOffset: this._randomOffset,
                     missed: this._missed,
                     offset: this._offset,
@@ -970,6 +1047,16 @@ export default class EffectSection extends Section {
 
         const { file, forcedIndex, customRange } = this._file ? (await this._determineFile(this._file)) : { file: this._file, forcedIndex: false, customRange: false };
 
+        const source = this._getSourceObject();
+        const target = this._getTargetObject();
+
+        if(this._randomOffsetLegacy && !this._randomOffset){
+            this._randomOffset = {
+                source: !target ? this._randomOffsetLegacy : false,
+                target: !!target ? this._randomOffsetLegacy : false
+            }
+        }
+
         let data = foundry.utils.duplicate({
             /**
              * Core properties
@@ -991,8 +1078,8 @@ export default class EffectSection extends Section {
             /**
              * Source/target properties
              */
-            source: this._getSourceObject(),
-            target: this._getTargetObject(),
+            source: source,
+            target: target,
             rotateTowards: this._rotateTowards,
             stretchTo: this._stretchTo ? {
                 attachTo: this._stretchTo.attachTo,
@@ -1014,6 +1101,7 @@ export default class EffectSection extends Section {
             forcedIndex,
             text: this._text,
             tilingTexture: this._tilingTexture,
+            masks: this._masks,
 
             // Transforms
             scale: this._getCalculatedScale(),

@@ -259,3 +259,30 @@ export function get_closest_token(inPosition, { minimumDistance = false } = {}) 
     });
     return tokens?.[0] ?? false;
 }
+
+
+
+export function getBezierControlPoints(factor, previous, point, next) {
+
+    // Calculate distance vectors
+    let vector = { x: next[0] - previous[0], y: next[1] - previous[1] },
+        preDistance = Math.hypot(previous[0] - point[0], previous[1] - point[1]),
+        postDistance = Math.hypot(next[0] - point[0], next[1] - point[1]),
+        distance = preDistance + postDistance;
+
+    // Compute control point locations
+    let cp0d = distance === 0 ? 0 : factor * (preDistance / distance),
+        cp1d = distance === 0 ? 0 : factor * (postDistance / distance);
+
+    // Return points
+    return {
+        cp1: {
+            x: point[0] - (vector.x * cp0d),
+            y: point[1] - (vector.y * cp0d)
+        },
+        next_cp0: {
+            x: point[0] + (vector.x * cp1d),
+            y: point[1] + (vector.y * cp1d)
+        }
+    }
+}

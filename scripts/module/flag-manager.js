@@ -171,6 +171,29 @@ const flagManager = {
             }
 
             return effectData;
+        },
+
+        "2.1.0": (inDocument, effectData) => {
+
+            if(effectData.randomOffset){
+                effectData.randomOffset = {
+                    source: !effectData.target ? effectData.randomOffset : false,
+                    target: !!effectData.target ? effectData.randomOffset : false
+                };
+            }
+
+            if(effectData.nameOffsetMap){
+                Object.values(effectData.nameOffsetMap).forEach(offsetMap => {
+                    if(offsetMap.randomOffset){
+                        offsetMap.randomOffset = {
+                            source: !offsetMap.target ? offsetMap.randomOffset : false,
+                            target: !!offsetMap.target ? offsetMap.randomOffset : false
+                        };
+                    }
+                })
+            }
+
+            return effectData;
         }
     },
 

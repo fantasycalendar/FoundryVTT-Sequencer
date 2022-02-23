@@ -8,6 +8,7 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
+import filter from "../sections/traits/filter.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -263,8 +264,11 @@ export default class CanvasEffect extends PIXI.Container {
             offset.y -= missedOffset.y;
         }
 
-        if (this.data.randomOffset && (!source || !this.data.target)) {
-            let randomOffset = canvaslib.get_random_offset(this.target || this.source, this.data.randomOffset, twister);
+        const obj = source ? this.source : this.target;
+        const multiplier = source ? this.data.randomOffset?.source : this.data.randomOffset?.target;
+
+        if (obj && multiplier) {
+            let randomOffset = canvaslib.get_random_offset(obj, multiplier, twister);
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
@@ -284,8 +288,11 @@ export default class CanvasEffect extends PIXI.Container {
                 offset.y -= missedOffset.y;
             }
 
-            if (offsetMap.randomOffset) {
-                const randomOffset = canvaslib.get_random_offset(offsetMap.actualTarget, offsetMap.randomOffset, offsetMap.twister);
+            const obj = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.targetObj;
+            const multiplier = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.target;
+
+            if (obj && multiplier) {
+                let randomOffset = canvaslib.get_random_offset(obj, multiplier, twister);
                 offset.x -= randomOffset.x;
                 offset.y -= randomOffset.y;
             }
@@ -314,8 +321,7 @@ export default class CanvasEffect extends PIXI.Container {
             inOffsetMap.setup = true;
             inOffsetMap.sourceObj = this._validateObject(inOffsetMap.source);
             inOffsetMap.targetObj = this._validateObject(inOffsetMap.target);
-            inOffsetMap.actualTarget = inOffsetMap.targetObj || inOffsetMap.sourceObj;
-            let repetition = this.data.repetition % inOffsetMap.repetitions;
+            const repetition = this.data.repetition % inOffsetMap.repetitions;
             const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
             inOffsetMap.twister = new MersenneTwister(seed);
         }
@@ -635,6 +641,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._calculateDuration();
         this._addToContainer();
         this._createSprite();
+        await this._setupMasks();
         await this._transformSprite();
         this._playCustomAnimations();
         this._playPresetAnimations();
@@ -671,6 +678,8 @@ export default class CanvasEffect extends PIXI.Container {
         this.spriteContainer = null;
         this.sprite = null;
         this.text = null;
+        this._maskContainer = null;
+        this._maskSprite = null;
         this._file = null;
         this._loopOffset = 0;
         this.filters = {};
@@ -724,6 +733,12 @@ export default class CanvasEffect extends PIXI.Container {
         Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy());
 
         SequencerAnimationEngine.endAnimations(this);
+
+        if(this._maskContainer) this._maskContainer.destroy({ children: true })
+        if(this._maskSprite){
+            this._maskSprite.texture.destroy(true);
+            this._maskSprite.destroy()
+        }
 
         if (this._file instanceof SequencerFile) {
             this._file.destroy();
@@ -1081,6 +1096,233 @@ export default class CanvasEffect extends PIXI.Container {
                 new PIXI.filters.AlphaFilter(game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100)
             ];
         }
+
+    }
+
+    async _setupMasks(){
+
+        if(!this.data.masks.length) return;
+
+        this._maskContainer = new PIXI.Container();
+
+        this._maskSprite = new PIXI.Sprite();
+        this.parent.addChild(this._maskSprite);
+        if(this.sprite){
+            this.sprite.mask = this._maskSprite;
+        }else if(this.text){
+            this.text.mask = this._maskSprite;
+        }
+
+        this.masksReady = false;
+
+        for(const uuid of this.data.masks){
+
+            const documentType = uuid.split('.')[2];
+            const documentObj = await fromUuid(uuid);
+            if(!documentObj) continue;
+
+            const placeableObject = documentObj.object;
+            const objMaskSprite = (documentType === "Token" || documentType === "Tile") ? new PIXI.Sprite() : new PIXI.Graphics();
+            const clipFilter = new filters.Clip();
+            const blurFilter = new filters.Blur({ strength: 1 });
+            objMaskSprite.filters = [clipFilter, blurFilter]
+            objMaskSprite.uuid = uuid;
+            objMaskSprite.placeableObject = placeableObject;
+            objMaskSprite.documentType = documentType;
+
+            const spriteContainer = new PIXI.Container();
+
+            spriteContainer.addChild(objMaskSprite);
+            spriteContainer.maskSprite = objMaskSprite;
+
+            this._maskContainer.addChild(spriteContainer);
+
+            this._addHook("delete" + documentType, (doc) => {
+                if(doc !== documentObj) return
+                const mask = this._maskContainer.children.find(mask => mask.maskSprite.uuid === doc.uuid);
+                if(!mask) return;
+                mask.destroy();
+                this._updateMaskSprite();
+
+            });
+
+            this._addHook("update" + documentType, (doc) => {
+                if(doc !== documentObj) return;
+                const mask = this._maskContainer.children.find(mask => mask.maskSprite.uuid === doc.uuid);
+                if(!mask) return;
+                const changed = this._handleUpdatingMask(mask);
+                if(changed) this._updateMaskSprite();
+            });
+
+        }
+
+        this._ticker.add(() => {
+
+            let anyMaskChanged = false;
+
+            for(let container of this._maskContainer.children){
+                anyMaskChanged = this._handleUpdatingMask(container) || anyMaskChanged;
+            }
+
+            if(anyMaskChanged){
+                this._updateMaskSprite();
+            }
+
+        });
+
+        this.masksReady = true;
+
+    }
+
+    _handleUpdatingMask(container){
+
+        const mask = container.maskSprite;
+
+        let objectSprite;
+        let objectWidth = 0;
+        let objectHeight = 0;
+
+        if(mask.documentType === "Token"){
+            objectSprite = mask.placeableObject.icon;
+            objectWidth = objectSprite.width/2;
+            objectHeight = objectSprite.height/2;
+        }else if(mask.documentType === "Tile"){
+            objectSprite = mask.placeableObject.tile;
+            objectWidth = objectSprite.width/2;
+            objectHeight = objectSprite.height/2;
+        }else if(mask.documentType === "Drawing"){
+            objectSprite = mask.placeableObject.drawing;
+        }
+
+        let position = {
+            x: (objectSprite.parent.x + objectSprite.x) - objectWidth,
+            y: (objectSprite.parent.y + objectSprite.y) - objectHeight
+        }
+
+        const angle = objectSprite.angle;
+
+        const noChange = (container.position.x === position.x)
+            && (container.position.y === position.y)
+            && (mask.scale.x === objectSprite.scale.x)
+            && (mask.scale.y === objectSprite.scale.y)
+            && (mask.texture === objectSprite.texture)
+            && (mask.angle === angle);
+
+        if(noChange) return false;
+
+        console.log('change!')
+
+        if(mask.documentType === "Drawing"){
+
+            mask.clear();
+            mask.beginFill(0xFFFFFF, 1);
+
+            const drawingType = mask.placeableObject.data.type;
+
+            if(drawingType === CONST.DRAWING_TYPES.RECTANGLE){
+                mask.drawRect(0, 0, objectSprite.width, objectSprite.height)
+            }else if(drawingType === CONST.DRAWING_TYPES.ELLIPSE) {
+                mask.drawEllipse(objectSprite.width/2, objectSprite.height/2, objectSprite.width/2, objectSprite.height/2)
+            }else{
+                const vertices = mask.placeableObject.data.points;
+
+                if(drawingType === CONST.DRAWING_TYPES.FREEHAND) {
+
+                    // Shamelessly stolen from Foundry's source-code
+                    let factor = mask.placeableObject.bezierFactor ?? 0.5;
+
+                    // Get drawing points
+                    let last = vertices[vertices.length - 1];
+                    let isClosed = vertices[0].equals(last);
+
+                    // Handle edge cases
+                    mask.moveTo(...vertices[0]);
+                    if (vertices.length < 2) return;
+                    else if (vertices.length === 2) {
+                        mask.lineTo(...vertices[1]);
+                        return;
+                    }
+
+                    // Set initial conditions
+                    let [previous, point] = vertices.slice(0, 2);
+                    let cp0 = canvaslib.getBezierControlPoints(factor, last, previous, point).next_cp0;
+                    let cp1, next_cp0, next;
+
+                    // Begin iteration
+                    for (let i = 1; i < vertices.length; i++) {
+                        next = vertices[i + 1];
+                        if (next) {
+                            let bp = canvaslib.getBezierControlPoints(factor, previous, point, next);
+                            cp1 = bp.cp1;
+                            next_cp0 = bp.next_cp0;
+                        }
+
+                        // First point
+                        if ((i === 1) && !isClosed) {
+                            mask.quadraticCurveTo(cp1.x, cp1.y, point[0], point[1]);
+                        }
+
+                        // Last Point
+                        else if ((i === vertices.length - 1) && !isClosed) {
+                            mask.quadraticCurveTo(cp0.x, cp0.y, point[0], point[1]);
+                        }
+
+                        // Bezier points
+                        else {
+                            mask.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point[0], point[1]);
+                        }
+
+                        // Increment
+                        previous = point;
+                        point = next;
+                        cp0 = next_cp0;
+
+                    }
+
+                }else{
+                    mask.moveTo(...vertices[0])
+                    for (let i = 1; i < vertices.length; i++) {
+                        mask.lineTo(...vertices[i])
+                    }
+                }
+            }
+
+            mask.endFill();
+
+        }
+
+        mask.texture = objectSprite.texture;
+        container.position.set(position.x, position.y);
+        mask.scale.set(objectSprite.scale.x, objectSprite.scale.y);
+        mask.angle = angle;
+
+        if(mask instanceof PIXI.Sprite) {
+            mask.anchor.set(0.5, 0.5);
+            mask.position.set(mask.width / 2, mask.height / 2)
+        }
+
+        return true;
+
+    }
+
+    _updateMaskSprite(){
+
+        if(!this.masksReady) return;
+
+        const smallestX = this._maskContainer.children.reduce((acc, container) => {
+            const bounds = container.getBounds();
+            return acc >= bounds.x ? bounds.x : acc;
+        }, Infinity);
+
+        const smallestY = this._maskContainer.children.reduce((acc, container) => {
+            const bounds = container.getBounds(true);
+            return acc >= bounds.y ? bounds.y : acc;
+        }, Infinity);
+
+        this._maskSprite.position.set(smallestX, smallestY);
+
+        this._maskSprite.texture.destroy(true);
+        this._maskSprite.texture = canvas.app.renderer.generateTexture(this._maskContainer);
 
     }
 
