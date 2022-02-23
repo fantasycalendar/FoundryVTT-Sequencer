@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.0.16
+- *Sequencer* - Added japanese localization (thanks to the illustrious Brother Sharp#6921!)
+
 ### Version 2.0.15
 - *Effects* - Fixed errors relating to tiling textures
 - *Effects* - Fixed drifting effect animations when FPS dropped
