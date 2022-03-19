@@ -124,13 +124,14 @@ export default class SequencerEffectManager {
         if (inFilter.name) {
             inFilter.name = new RegExp(lib.str_to_search_regex_str(inFilter.name), "gu");
         }
-        return this.effects
-            .filter(effect => !inFilter.effects || inFilter.effects.includes(effect.id))
-            .filter(effect => !inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length))
-            .filter(effect => !inFilter.source || inFilter.source === effect.data.source)
-            .filter(effect => !inFilter.target || inFilter.target === effect.data.target)
-            .filter(effect => !inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
-            .filter(effect => !inFilter.origin || inFilter.origin === effect.data.origin);
+        return this.effects.filter(effect => {
+            return (!inFilter.effects || inFilter.effects.includes(effect.id))
+                && (!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length))
+                && (!inFilter.source || inFilter.source === effect.data.source)
+                && (!inFilter.target || inFilter.target === effect.data.target)
+                && (!inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
+                && (!inFilter.origin || inFilter.origin === effect.data.origin)
+        });
     }
 
     /**

@@ -44,10 +44,12 @@ export default class EffectSection extends Section {
         this._snapToGrid = null;
         this._scaleToObject = null;
         this._screenSpace = null;
+        this._screenSpaceAboveUI = null;
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
         this._masks = [];
+        this._selfMask = false;
 
         this._isRangedEffect = null;
         this._randomOffsetLegacy = null;
@@ -127,7 +129,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
-        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use .addOverride() instead.")
+        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use .addOverride() instead.", true)
         if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addPostOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
@@ -229,7 +231,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
-        this.sequence._showWarning(self, "reachTowards", "This method has been deprecated, please use .stretchTo() instead", false);
+        this.sequence._showWarning(self, "reachTowards", "This method has been deprecated, please use .stretchTo() instead", true);
         return this.stretchTo(inLocation, inOptions);
     }
 
@@ -443,7 +445,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     gridSize(inGridSize) {
-        this.sequence._showWarning(this, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.")
+        this.sequence._showWarning(this, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.", true)
         if (!lib.is_real_number(inGridSize)) throw this.sequence._customError(this, "gridSize", "inGridSize must be of type number");
         if(!this._template) this._template = {};
         this._template["gridSize"] = inGridSize;
@@ -459,7 +461,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
-        this.sequence._showWarning(this, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
+        this.sequence._showWarning(this, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.", true)
         if (!lib.is_real_number(inStartPoint)) throw this.sequence._customError(this, "startPoint", "inStartPoint must be of type number");
         if(!this._template) this._template = {};
         this._template["startPoint"] = inStartPoint;
@@ -473,7 +475,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
-        this.sequence._showWarning(this, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
+        this.sequence._showWarning(this, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.", true)
         if (!lib.is_real_number(inEndPoint)) throw this.sequence._customError(this, "endPoint", "inEndPoint must be of type number");
         if(!this._template) this._template = {};
         this._template["endPoint"] = inEndPoint;
@@ -760,6 +762,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Causes the effect to be played above all of the UI elements
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection}
+     */
+    screenSpaceAboveUI(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpaceAboveUI", "inBool must be of type boolean");
+        this._screenSpaceAboveUI = inBool;
+        return this;
+    }
+
+    /**
      *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
      *
      * @param {object} inPosition
@@ -861,6 +875,11 @@ export default class EffectSection extends Section {
      * @returns {Section}
      */
     mask(inObject){
+
+        if(!inObject){
+            this._selfMask = true;
+            return this;
+        }
 
         if(Array.isArray(inObject)){
             for(let obj of inObject){
@@ -1057,6 +1076,10 @@ export default class EffectSection extends Section {
             }
         }
 
+        if(this._selfMask){
+            this._masks.push(source);
+        }
+
         let data = foundry.utils.duplicate({
             /**
              * Core properties
@@ -1165,6 +1188,7 @@ export default class EffectSection extends Section {
              * Screenspace properties
              */
             screenSpace: this._screenSpace,
+            screenSpaceAboveUI: this._screenSpaceAboveUI,
             screenSpaceAnchor: this._screenSpaceAnchor,
             screenSpacePosition: this._screenSpacePosition,
             screenSpaceScale: this._screenSpaceScale,

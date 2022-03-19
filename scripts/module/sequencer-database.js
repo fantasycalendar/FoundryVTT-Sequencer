@@ -75,6 +75,8 @@ const SequencerDatabase = {
      */
     entryExists(inString) {
         if (typeof inString !== "string") return this._throwError("entryExists", "inString must be of type string");
+        inString = inString.trim()
+        if (inString === "")  return this._throwError("entryExists", "inString cannot be empty")
         inString = inString.replace(/\[[0-9]+]$/, "");
         return this.flattenedEntries.find(entry => entry.startsWith(inString));
     },
@@ -87,6 +89,8 @@ const SequencerDatabase = {
      */
     getEntry(inString) {
         if (typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
+        inString = inString.trim()
+        if (inString === "")  return this._throwError("getEntry", "inString cannot be empty")
         inString = inString.replace(/\[[0-9]+]$/, "");
         if (!this.entryExists(inString)) return this._throwError("getEntry", `Could not find ${inString} in database`);
 
@@ -128,7 +132,9 @@ const SequencerDatabase = {
      * @return {array|boolean}                  The found entries in the database under the module's name, or false if not found (with warning)
      */
     getAllFileEntries(inDBPath) {
-        if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inString must be of type string");
+        if (typeof inDBPath !== "string") return this._throwError("getAllFileEntries", "inDBPath must be of type string");
+        inDBPath = inDBPath.trim();
+        if (inDBPath === "")  return this._throwError("getAllFileEntries", "inDBPath cannot be empty")
         if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
         const entries = this._recurseGetFilePaths(inDBPath);
         return lib.make_array_unique(entries.flat());
@@ -141,7 +147,9 @@ const SequencerDatabase = {
      * @return {array}                          An array containing the next layer of valid paths
      */
     getPathsUnder(inPath){
-        if (typeof inPath !== "string") return this._throwError("getPathsUnder", "inString must be of type string")
+        if (typeof inPath !== "string") return this._throwError("getPathsUnder", "inPath must be of type string")
+        inPath = inPath.trim();
+        if (inPath === "")  return this._throwError("getPathsUnder", "inPath cannot be empty")
         inPath = inPath.replace(/\[[0-9]+]$/, "");
         if (!this.entryExists(inPath)) return this._throwError("getPathsUnder", `Could not find ${inPath} in database`);
         let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
@@ -164,8 +172,12 @@ const SequencerDatabase = {
         if((!inPath || inPath === "") && !modules.includes(inPath)) return modules;
 
         if (typeof inPath !== "string"){
-            return this._throwError("getPathsUnder", "inString must be of type string")
+            return this._throwError("searchFor", "inString must be of type string")
         }
+
+        inPath = inPath.trim();
+
+        if (inPath === "")  return this._throwError("searchFor", "inString cannot be empty")
 
         inPath = inPath.replace(/\[[0-9]+]$/, "");
         inPath = inPath.trim()

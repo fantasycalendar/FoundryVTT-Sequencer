@@ -11,9 +11,7 @@ void main() {
 `;
 
 export default class ClipFilter extends PIXI.Filter{
-
     constructor() {
         super(null, shader);
     }
-
 }

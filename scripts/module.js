@@ -61,7 +61,7 @@ function initialize_module(){
         SectionManager: new SequencerSectionManager(),
         registerEase: registerEase,
         BaseSection: Section,
-        UILayer: new SequencerUILayer(),
+        UILayers: SequencerUILayer.setup(),
         Helpers: {
             wait: lib.wait,
             clamp: lib.clamp,
@@ -75,17 +75,6 @@ function initialize_module(){
             from_uuid: lib.from_uuid_fast
         }
     }
-
-    const warningDebounce = debounce(() => {
-        lib.custom_warning("Sequencer", `Accessing the Sequencer Database through "SequencerDatabase" has been deprecated - please use "Sequencer.Database"`, true);
-    }, 50);
-
-    window.SequencerDatabase = new Proxy(window.Sequencer.Database, {
-        get: function (target, prop) {
-            warningDebounce();
-            return window.Sequencer.Database[prop];
-        }
-    });
 
     registerLayers();
     registerSettings();

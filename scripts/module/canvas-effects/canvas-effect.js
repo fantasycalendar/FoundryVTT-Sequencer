@@ -8,7 +8,6 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
-import filter from "../sections/traits/filter.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -202,6 +201,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean|object}
      */
     get originalTargetPosition() {
+
         if (!this._targetPosition && this.target) {
             if (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) {
                 this._targetPosition = this.target;
@@ -753,7 +753,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         try {
             if (this.data.screenSpace) {
-                Sequencer.UILayer.removeContainerByEffect(this);
+                Sequencer.UILayers.above.removeContainerByEffect(this);
+                Sequencer.UILayers.below.removeContainerByEffect(this);
             }
         } catch (err) {
         }
@@ -821,8 +822,11 @@ export default class CanvasEffect extends PIXI.Container {
     _addToContainer() {
 
         if (this.data.screenSpace) {
-            Sequencer.UILayer.container.addChild(this);
-            return;
+            if(this.data.screenSpaceAboveUI) {
+                return Sequencer.UILayers.above.container.addChild(this);
+            }
+
+            return Sequencer.UILayers.below.container.addChild(this);
         }
 
         const layer = [
@@ -846,7 +850,7 @@ export default class CanvasEffect extends PIXI.Container {
             layer.sortChildren();
         }
 
-        container.addChild(this);
+        return container.addChild(this);
 
     }
 
@@ -1143,7 +1147,13 @@ export default class CanvasEffect extends PIXI.Container {
                 if(!mask) return;
                 mask.destroy();
                 this._updateMaskSprite();
-
+                if(!this._maskContainer.children.length){
+                    if(this.sprite){
+                        this.sprite.mask = null;
+                    }else if(this.text){
+                        this.text.mask = null;
+                    }
+                }
             });
 
             this._addHook("update" + documentType, (doc) => {
@@ -1154,6 +1164,15 @@ export default class CanvasEffect extends PIXI.Container {
                 if(changed) this._updateMaskSprite();
             });
 
+        }
+
+        if(!this._maskContainer.children.length){
+            if(this.sprite){
+                this.sprite.mask = null;
+            }else if(this.text){
+                this.text.mask = null;
+            }
+            return;
         }
 
         this._ticker.add(() => {
@@ -1181,18 +1200,28 @@ export default class CanvasEffect extends PIXI.Container {
         let objectSprite;
         let objectWidth = 0;
         let objectHeight = 0;
+        let additionalData = {}
 
         if(mask.documentType === "Token"){
             objectSprite = mask.placeableObject.icon;
             objectWidth = objectSprite.width/2;
             objectHeight = objectSprite.height/2;
+            additionalData["img"] = mask.placeableObject.data.img;
         }else if(mask.documentType === "Tile"){
             objectSprite = mask.placeableObject.tile;
             objectWidth = objectSprite.width/2;
             objectHeight = objectSprite.height/2;
+            additionalData["img"] = mask.placeableObject.data.img;
         }else if(mask.documentType === "Drawing"){
             objectSprite = mask.placeableObject.drawing;
+        }else if(mask.documentType === "MeasuredTemplate") {
+            objectSprite = mask.placeableObject.template;
+            additionalData["direction"] = mask.placeableObject.data.direction;
+            additionalData["distance"] = mask.placeableObject.data.distance;
+            additionalData["angle"] = mask.placeableObject.data.angle;
+            additionalData["width"] = mask.placeableObject.data.width;
         }
+
 
         let position = {
             x: (objectSprite.parent.x + objectSprite.x) - objectWidth,
@@ -1201,16 +1230,17 @@ export default class CanvasEffect extends PIXI.Container {
 
         const angle = objectSprite.angle;
 
+        const data = duplicate(additionalData);
+
         const noChange = (container.position.x === position.x)
             && (container.position.y === position.y)
             && (mask.scale.x === objectSprite.scale.x)
             && (mask.scale.y === objectSprite.scale.y)
             && (mask.texture === objectSprite.texture)
-            && (mask.angle === angle);
+            && (mask.angle === angle)
+            && (isObjectEmpty(diffObject(mask.oldData, data)));
 
         if(noChange) return false;
-
-        console.log('change!')
 
         if(mask.documentType === "Drawing"){
 
@@ -1289,12 +1319,44 @@ export default class CanvasEffect extends PIXI.Container {
 
             mask.endFill();
 
+        } else if(mask.documentType === "MeasuredTemplate"){
+
+            mask.clear();
+            mask.beginFill(0xFFFFFF, 1);
+
+            let d = canvas.dimensions;
+
+            const templateData = mask.placeableObject.data;
+            const drawingType = templateData.t;
+            let {direction, distance, angle, width} = templateData;
+            distance *= (d.size / d.distance);
+            width *= (d.size / d.distance);
+            direction = Math.toRadians(direction);
+
+            let shape;
+            switch ( drawingType ) {
+                case "circle":
+                    shape = mask.placeableObject._getCircleShape(distance);
+                    break;
+                case "cone":
+                    shape = mask.placeableObject._getConeShape(direction, angle, distance);
+                    break;
+                case "rect":
+                    shape = mask.placeableObject._getRectShape(direction, distance);
+                    break;
+                case "ray":
+                    shape = mask.placeableObject._getRayShape(direction, distance, width);
+            }
+
+            mask.drawShape(shape);
+
         }
 
         mask.texture = objectSprite.texture;
         container.position.set(position.x, position.y);
         mask.scale.set(objectSprite.scale.x, objectSprite.scale.y);
         mask.angle = angle;
+        mask.oldData = additionalData;
 
         if(mask instanceof PIXI.Sprite) {
             mask.anchor.set(0.5, 0.5);
@@ -1581,57 +1643,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (this.data.stretchTo) {
 
             if (this.data.stretchTo?.attachTo) {
-
-                let sourceIsAnimating = false;
-                let targetIsAnimating = false;
-
-                if (lib.is_UUID(this.data.source)) {
-                    const turnOff = debounce(() => {
-                        sourceIsAnimating = false;
-                    }, 250)
-                    this._addHook(this.getSourceHook("update"), async (doc, changes, options) => {
-                        if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined)) return;
-                        if(this.getSourceHook() !== "Token" || options?.animate === false){
-                            return this._applyDistanceScaling();
-                        }
-                        sourceIsAnimating = true;
-                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            turnOff();
-                        })
-                    });
-                }else{
-                    sourceIsAnimating = true;
-                }
-
-                if (lib.is_UUID(this.data.target)) {
-                    const turnOff = debounce(() => {
-                        targetIsAnimating = false;
-                    }, 250)
-                    this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                        if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
-                        if(this.getTargetHook() !== "Token" || options?.animate === false){
-                            return this._applyDistanceScaling();
-                        }
-                        setTimeout(() => {
-                            targetIsAnimating = true;
-                        }, 50);
-                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            turnOff()
-                        });
-                    });
-                }else{
-                    targetIsAnimating = true;
-                }
-
-                this._ticker.add(async () => {
-                    const neitherAnimating = !sourceIsAnimating && !targetIsAnimating;
-                    if(this.source.destroyed || this.target.destroyed || neitherAnimating) return;
-                    try{
-                        await this._applyDistanceScaling();
-                    } catch (err){
-                        lib.debug_error(err);
-                    }
-                });
+                this._transformStretchToAttachedSprite();
             }
 
             await this._applyDistanceScaling();
@@ -1650,135 +1662,12 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if(!this.data.stretchTo){
-
-            if(this.data.tilingTexture){
-
-                this.sprite.tileScale = {
-                    x: this.data.tilingTexture.scale.x * this.gridSizeDifference,
-                    y: this.data.tilingTexture.scale.y * this.gridSizeDifference
-                };
-
-                this.sprite.tilePosition = this.data.tilingTexture.position;
-
-            }
-
-            if (this.data.scaleToObject) {
-
-                const { width, height } = this.target
-                    ? canvaslib.get_object_dimensions(this.target)
-                    : canvaslib.get_object_dimensions(this.source);
-
-                this.sprite.width = width * (this.data.scale.x ?? 1.0);
-                this.sprite.height = height * (this.data.scale.y ?? 1.0);
-
-                this.sprite.scale.x *= this.flipX;
-                this.sprite.scale.y *= this.flipY;
-
-            } else if (this.data.size) {
-
-                const ratio = this.sprite.height / this.sprite.width;
-
-                let { height, width } = this.data.size;
-
-                if (this.data.size.width === "auto" || this.data.size.height === "auto") {
-
-                    height = this.sprite.height;
-                    width = this.sprite.width;
-
-                    if (this.data.size.width === "auto") {
-                        height = this.data.size.height;
-                        if(this.data.size.gridUnits){
-                            height *= canvas.grid.size;
-                        }
-                        width = height / ratio;
-                    } else if (this.data.size.height === "auto") {
-                        width = this.data.size.width;
-                        if(this.data.size.gridUnits){
-                            width *= canvas.grid.size;
-                        }
-                        height = width * ratio;
-                    }
-
-                }else if(this.data.size.gridUnits){
-                    height *= canvas.grid.size;
-                    width *= canvas.grid.size;
-                }
-
-                this.sprite.width = width * (this.data.scale.x ?? 1.0);
-                this.sprite.height = height * (this.data.scale.y ?? 1.0);
-
-                this.sprite.scale.x *= this.flipX;
-                this.sprite.scale.y *= this.flipY;
-
-            } else {
-
-                this.sprite.scale.set(
-                    (this.data.scale?.x ?? 1.0) * this.flipX * this.gridSizeDifference,
-                    (this.data.scale?.y ?? 1.0) * this.flipY * this.gridSizeDifference
-                );
-
-            }
-
+            this._transformNoStretchSprite();
         }
 
         if(this.data.attachTo?.active && !this.data.stretchTo?.attachTo){
 
-            let sourceIsAnimating = false;
-
-            const applyRotation = this.data.attachTo?.followRotation
-                && this.source.data.rotation !== undefined
-                && !this.data.rotateTowards
-                && !this.data.stretchTo;
-
-            if (lib.is_UUID(this.data.source)) {
-                const turnOff = debounce(() => {
-                    sourceIsAnimating = false;
-                }, 250);
-                this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
-                    if (doc !== this.source.document) return;
-
-                    if(changes.rotation !== undefined && applyRotation){
-                        this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.rotation));
-                    }
-
-                    if(changes?.y === undefined && changes?.x === undefined) return;
-
-                    if(this.getSourceHook() !== "Token" || options?.animate === false){
-                        return this._applyAttachmentOffset();
-                    }
-
-                    sourceIsAnimating = true;
-                    CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                        turnOff();
-                    });
-                });
-
-            }else if(this.isSourceTemporary){
-                sourceIsAnimating = true;
-            }
-
-            this._ticker.add(async () => {
-
-                if(this.source.destroyed) return;
-
-                if(applyRotation && this.isSourceTemporary) {
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-                }
-
-                if(!sourceIsAnimating) return;
-
-                try {
-                    this._applyAttachmentOffset();
-                } catch (err){
-                    lib.debug_error(err);
-                }
-            });
-
-            await this._applyAttachmentOffset();
-
-            if(applyRotation){
-                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-            }
+            await this._transformAttachedNoStretchSprite();
 
         }else{
 
@@ -1799,34 +1688,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.rotateTowards?.attachTo) {
 
-                let targetIsAnimating = false;
-
-                if (lib.is_UUID(this.data.target)) {
-                    const turnOff = debounce(() => {
-                        targetIsAnimating = false;
-                    }, 250);
-                    this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                        if (doc !== this.target.document || (changes?.y !== undefined && changes?.x !== undefined && changes.direction !== undefined)) return;
-                        if(this.getTargetHook() !== "Token" || options?.animate === false){
-                            return this._rotateTowards();
-                        }
-                        targetIsAnimating = true;
-                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            turnOff();
-                        });
-                    });
-                }else{
-                    targetIsAnimating = true;
-                }
-
-                this._ticker.add(async () => {
-                    if(this.target.destroyed || !targetIsAnimating) return;
-                    try{
-                        this._rotateTowards();
-                    } catch (err){
-                        lib.debug_error(err);
-                    }
-                });
+                this._transformRotateTowardsAttachedSprite();
             }
         }
 
@@ -1839,6 +1701,235 @@ export default class CanvasEffect extends PIXI.Container {
                 lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data.anchor?.y ?? 0.5)
             );
         }
+
+    }
+
+    _transformStretchToAttachedSprite(){
+
+        let sourceIsAnimating = false;
+        let targetIsAnimating = false;
+
+        if (lib.is_UUID(this.data.source)) {
+            const turnOff = debounce(() => {
+                sourceIsAnimating = false;
+            }, 250)
+            this._addHook(this.getSourceHook("update"), async (doc, changes, options) => {
+                if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined && changes?.angle === undefined && changes?.direction === undefined)) return;
+                if(this.getSourceHook() !== "Token" || options?.animate === false){
+                    return this._applyDistanceScaling();
+                }
+                sourceIsAnimating = true;
+                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                    turnOff();
+                })
+            });
+        }else{
+            sourceIsAnimating = true;
+        }
+
+        if(this.data.source === this.data.target) {
+            if (lib.is_UUID(this.data.target)) {
+                const turnOff = debounce(() => {
+                    targetIsAnimating = false;
+                }, 250)
+                this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
+                    if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
+                    if (this.getTargetHook() !== "Token" || options?.animate === false) {
+                        return this._applyDistanceScaling();
+                    }
+                    setTimeout(() => {
+                        targetIsAnimating = true;
+                    }, 50);
+                    CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                        turnOff()
+                    });
+                });
+            } else {
+                targetIsAnimating = true;
+            }
+        }
+
+        this._ticker.add(async () => {
+            const neitherAnimating = !sourceIsAnimating && !targetIsAnimating;
+            if(this.source.destroyed || this.target.destroyed || neitherAnimating) return;
+            try{
+                await this._applyDistanceScaling();
+            } catch (err){
+                lib.debug_error(err);
+            }
+        });
+
+    }
+
+    _transformNoStretchSprite(){
+
+        if(this.data.tilingTexture){
+
+            this.sprite.tileScale = {
+                x: this.data.tilingTexture.scale.x * this.gridSizeDifference,
+                y: this.data.tilingTexture.scale.y * this.gridSizeDifference
+            };
+
+            this.sprite.tilePosition = this.data.tilingTexture.position;
+
+        }
+
+        if (this.data.scaleToObject) {
+
+            const { width, height } = this.target
+                ? canvaslib.get_object_dimensions(this.target)
+                : canvaslib.get_object_dimensions(this.source);
+
+            this.sprite.width = width * (this.data.scale.x ?? 1.0);
+            this.sprite.height = height * (this.data.scale.y ?? 1.0);
+
+            this.sprite.scale.x *= this.flipX;
+            this.sprite.scale.y *= this.flipY;
+
+        } else if (this.data.size) {
+
+            const ratio = this.sprite.height / this.sprite.width;
+
+            let { height, width } = this.data.size;
+
+            if (this.data.size.width === "auto" || this.data.size.height === "auto") {
+
+                height = this.sprite.height;
+                width = this.sprite.width;
+
+                if (this.data.size.width === "auto") {
+                    height = this.data.size.height;
+                    if(this.data.size.gridUnits){
+                        height *= canvas.grid.size;
+                    }
+                    width = height / ratio;
+                } else if (this.data.size.height === "auto") {
+                    width = this.data.size.width;
+                    if(this.data.size.gridUnits){
+                        width *= canvas.grid.size;
+                    }
+                    height = width * ratio;
+                }
+
+            }else if(this.data.size.gridUnits){
+                height *= canvas.grid.size;
+                width *= canvas.grid.size;
+            }
+
+            this.sprite.width = width * (this.data.scale.x ?? 1.0);
+            this.sprite.height = height * (this.data.scale.y ?? 1.0);
+
+            this.sprite.scale.x *= this.flipX;
+            this.sprite.scale.y *= this.flipY;
+
+        } else {
+
+            this.sprite.scale.set(
+                (this.data.scale?.x ?? 1.0) * this.flipX * this.gridSizeDifference,
+                (this.data.scale?.y ?? 1.0) * this.flipY * this.gridSizeDifference
+            );
+
+        }
+
+    }
+
+    async _transformAttachedNoStretchSprite(){
+
+        let sourceIsAnimating = false;
+
+        const applyRotation = this.data.attachTo?.followRotation
+            && (this.source.data.rotation !== undefined || this.source.data.direction !== undefined)
+            && !this.data.rotateTowards
+            && !this.data.stretchTo;
+
+        if (lib.is_UUID(this.data.source)) {
+            const turnOff = debounce(() => {
+                sourceIsAnimating = false;
+            }, 250);
+            this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
+                if (doc !== this.source.document) return;
+
+                if(changes.rotation !== undefined && applyRotation){
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.rotation));
+                }
+
+                if(changes.direction !== undefined && applyRotation){
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.direction));
+                }
+
+                if(changes?.y === undefined && changes?.x === undefined) return;
+
+                if(this.getSourceHook() !== "Token" || options?.animate === false){
+                    return this._applyAttachmentOffset();
+                }
+
+                sourceIsAnimating = true;
+                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                    turnOff();
+                });
+            });
+
+        }else if(this.isSourceTemporary){
+            sourceIsAnimating = true;
+        }
+
+        this._ticker.add(async () => {
+
+            if(this.source.destroyed) return;
+
+            if(applyRotation && this.isSourceTemporary) {
+                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
+                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+            }
+
+            if(!sourceIsAnimating) return;
+
+            try {
+                this._applyAttachmentOffset();
+            } catch (err){
+                lib.debug_error(err);
+            }
+        });
+
+        await this._applyAttachmentOffset();
+
+        if(applyRotation){
+            this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
+            this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+        }
+
+    }
+
+    _transformRotateTowardsAttachedSprite(){
+
+        let targetIsAnimating = false;
+
+        if (lib.is_UUID(this.data.target)) {
+            const turnOff = debounce(() => {
+                targetIsAnimating = false;
+            }, 250);
+            this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
+                if (doc !== this.target.document || (changes?.y !== undefined && changes?.x !== undefined && changes.direction !== undefined)) return;
+                if(this.getTargetHook() !== "Token" || options?.animate === false){
+                    return this._rotateTowards();
+                }
+                targetIsAnimating = true;
+                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                    turnOff();
+                });
+            });
+        }else{
+            targetIsAnimating = true;
+        }
+
+        this._ticker.add(async () => {
+            if(this.target.destroyed || !targetIsAnimating) return;
+            try{
+                this._rotateTowards();
+            } catch (err){
+                lib.debug_error(err);
+            }
+        });
 
     }
 
