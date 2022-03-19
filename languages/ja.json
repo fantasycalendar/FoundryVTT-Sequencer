@@ -1,0 +1,159 @@
+{
+  "SEQUENCER": {
+    "OK": "OK",
+    "Cancel": "キャンセル",
+
+    "Effects": "Sequencerアニメーション効果",
+
+    "PlayerPermissionsWarning": "こんにちは！GMとして君はアニメーション効果を作成することができますが……<strong>PLも同じように作成できます！</strong>この挙動が望ましくない場合は次のボタンをクリックして権限設定を行ってください：",
+
+    "Error": {
+      "CouldNotPlay": "再生できませんでした"
+    },
+
+    "Player": {
+      "Title": "プレーヤー",
+      "SwitchToLayer": "レイヤ切替",
+      "PathInput": "dbパスまたはファイルパスを入力してください",
+      "AllUsers": "すべてのユーザ",
+      "Presets": "プリセット：",
+      "PresetsDefault": "デフォルト",
+      "ApplyPresetTitle": "プリセット適用",
+      "ApplyPresetContent": "\"{preset_name}\"を本当に適用しますか？保存されていない変更は破棄されます。",
+      "CreateNewPresetTitle": "新たなSequencer効果を作成",
+      "CreateNewPresetInputLabel": "プリセット名を入力",
+      "CopyPresetTitle": "Sequencer効果プリセットをコピー",
+      "CopyPresetInputLabel": "新プリセット名を入力",
+      "DefaultErrorTitle": "エラー",
+      "DefaultErrorContent": "\"default\"は既存の名称として使用されているのでプリセット名として使用できませんでした。",
+      "OverwritePresetTitle": "プリセット上書き",
+      "OverwritePresetContent": "プリセット\"{preset_name}\"を本当に上書きしますか？",
+      "DeletePresetTitle": "プリセット削除",
+      "DeletePresetContent": "プリセット\"{preset_name}\"を本当に削除しますか？",
+
+      "Option": {
+        "Scale": "縮尺",
+        "BelowTokens": "コマの下",
+        "SnapToGrid":  "マス目に沿う",
+        "RandomRotation": "ランダム回転",
+        "RandomMirrorY":  "ランダムY反転",
+        "RandomOffset": "ランダムオフセット",
+        "Repetitions":  "繰り返し",
+        "DelayMin": "遅延（最低）",
+        "DelayMax":  "遅延（最大）",
+        "Preload": "先読み",
+        "DragBehavior":  "ドラッグの挙動：引き伸ばしまたは移動",
+        "MoveSpeed": "移動速度",
+        "AttachTo": "開始地点に貼り付け",
+        "StretchToAttach": "終了地点に貼り付け",
+        "Persist": "常在"
+      }
+    },
+
+    "Hotkeys": {
+      "PlayTool": {
+        "Shift": "プレーヤー：複数の効果を同時再生",
+        "Control": "プレーヤー：複数の効果の逐次再生"
+      },
+      "SelectTool": {
+        "Control": "選択：マス目に沿う",
+        "Alt": "選択：キャンバス上の他のオブジェクトに貼り付け",
+        "Delete": "選択：選択肢た効果を削除"
+      }
+    },
+
+    "Manager": {
+      "Title": "マネージャー",
+      "NoEffects": "再最中の効果はありません…",
+      "PersistentEffects": "再生中の効果：",
+      "TemporaryEffects": "一時効果：",
+      "PlayersEffect": "{user_name}さんの効果",
+      "UnknownEffect": "不明なユーザの効果",
+      "EndAllEffects": "すべての効果を停止"
+    },
+
+    "HowTo": {
+      "Title": "操作説明",
+      "Welcome": "アニメーション管理を行うSequencerへようこそ！",
+      "Explanation": "プレーヤー<i class=\"fas fa-play-circle\"></i>でシーン上に好きな効果を再生することができます。マネージャー<i class=\"fas fa-film\"></i>ではいつでも再生中の効果を終わらせる事ができます。",
+      "PermissionsExplanation": "GMとして君はアニメーション効果を作成することができますが……<strong>PLも同じように作成できます！</strong>この挙動が望ましくない場合は次のボタンをクリックして権限設定を行ってください：",
+      "PlayerExplanation": "プレーヤー<i class=\"fas fa-play-circle\"></i>使用中、どの効果を再生するのかを選ぶ必要があります。<strong>入力ファイル</strong>より現在の使用可能なアニメーションを確認するか検索を行ってください。ファイルの隣の<i class=\"fas fa-file-import\"></i>ボタンをクリックすることでファイルを直接検索できます。",
+      "LayerExplanation": "ファイル選択後、<i class=\"fas fa-list-ol\"></i> Sequencerレイヤで以下の操作を行うことができます。",
+      "OpenModuleSettings": "モッド設定を開く",
+      "Click": "クリック",
+      "ClickLabel": "クリック先に効果を再生",
+      "ClickDrag": "クリック長押し＋ドラッグ",
+      "ClickDragLabel": "ドラッグ先までに向かうようにアニメーションを再生",
+      "Shift": "Shift",
+      "ShiftLabel": "Shift押している間アニメーションが溜まっていき、Shiftを離したタイミングで溜まったアニメーションを再生",
+      "ShiftControl": "Shift + Control",
+      "ShiftControlLabel": "効果を逐次再生します、効果の間に遅延あり",
+      "MoreToCome": "...今後の追加機能にご期待ください！"
+    },
+
+    "Database": {
+      "Title": "Sequencerデータベース閲覧",
+      "AllPacks": "すべてのパック",
+      "Search": "検索……",
+      "ButtonFilepath": "ファイルパス",
+      "ButtonDatabasePath": "データベース",
+      "ShowAllRanges": "すべての範囲を表示"
+    },
+
+    "Setting": {
+      "DatabaseViewer":{
+        "Title": "Sequencerデータベース閲覧",
+        "Label": "Sequencerデータベース閲覧"
+      },
+      "Debug": {
+        "Title": "デバッグ有効化",
+        "Label": "有効化するとコンソールにログが現れるようになります。"
+      },
+      "ShowTools": {
+        "Title": "Sequencerツール表示",
+        "Label": "サイドバーのSequencerツールの表示を設定します。"
+      },
+      "EnableEffects": {
+        "Title": "効果有効化",
+        "Label": "このクライアントは効果を再生するようになります。"
+      },
+      "EnableSounds": {
+        "Title": "音声有効化",
+        "Label": "このクライアントは音声を再生するようになります。"
+      },
+      "ExternalEffectOpacity": {
+        "Title": "他人向けの効果",
+        "Label": "他のプレイヤーに見せたいけど、自分には見せたくないような効果があれば、これを０以外のものにすることで自分も見えるようになります（音声はミュート）。GMの場合は必ずすべての効果が見えます。"
+      },
+      "Permission": {
+        "EffectCreate": {
+          "Title": "Sequencer: 効果再生",
+          "Label": "この役職より上のPLはマクロとSequencer効果プレーヤーを通じてアニメーションを再生する権限を得ます。"
+        },
+        "EffectDelete": {
+          "Title": "Sequencer: すべての効果削除",
+          "Label": "この役職より上のPLはSequencerマネージャーを通じてアニメーションを削除する権限を得ます。"
+        },
+        "SoundCreate": {
+          "Title": "Sequencer: 効果音再生",
+          "Label": "この役職より上のPLはSequencerを通じて音声を再生する権限を得ます。"
+        },
+        "PreloadClients": {
+          "Title": "Sequencer: 他人先読み",
+          "Label": "この役職より上のPLは他人にアニメーションや音声を先読みさせる権限を得ます。"
+        },
+        "UseSidebarTools": {
+          "Title": "Sequencer: サイドバーツール",
+          "Label": "この役職より上のPLはサイドバーにあるツール（プレーヤー＆マネージャー等）を使用できるようになります。合わせて効果再生権限も必要です。"
+        }
+      }
+    },
+
+    "Permission": {
+      "Player": "プレイヤー以上",
+      "Trusted": "優良プレイヤー以上",
+      "Assistant": "アシスタントGM以上",
+      "GM": "GMのみ"
+    }
+  }
+}
