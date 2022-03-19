@@ -135,13 +135,6 @@ export default function registerSettings() {
         type: Boolean
     });
 
-    game.settings.register(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning", {
-        scope: "client",
-        config: false,
-        default: false,
-        type: Boolean
-    });
-
     game.settings.register(CONSTANTS.MODULE_NAME, "effectPresets", {
         scope: "client",
         default: {},

@@ -3,6 +3,7 @@
 ### Version 2.1.0
 - *Sequencer* - As `SequencerDatabase` was deprecated in 2.0.0 to `Sequencer.Database`, the former has now been removed
 - *Sequencer* - Added more validation to the Database methods so that searching with empty strings won't throw hard to read errors 
+- *Sequencer* - Removed bogus Effect Player warning about permissions that no longer reflects what Sequencer does
 - *Effects* - Added `.mask()`, which can now clip-mask effects to only show them within templates, tiles, drawings, or tokens
 - *Effects* - Added `.screenSpaceAboveUI()`, which causes `.screenSpace()` effects to play above _all_ UI elements in Foundry
 - *Effects* - Deprecated `.randomOffset()` in favor of adding `{ randomOffset: true }` as a secondary argument on `.atLocation()`, `.stretchTo()`, `.rotateTowards()`, and `.attachTo()`
