@@ -1105,7 +1105,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     async _setupMasks(){
 
-        if(!this.data.masks.length) return;
+        if(!this.data.masks?.length) return;
 
         this._maskContainer = new PIXI.Container();
 
@@ -1895,7 +1895,9 @@ export default class CanvasEffect extends PIXI.Container {
 
         if(applyRotation){
             this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-            this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+            if(this.source.data.direction) {
+                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+            }
         }
 
     }
