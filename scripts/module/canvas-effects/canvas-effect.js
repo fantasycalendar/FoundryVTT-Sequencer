@@ -1110,8 +1110,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
-            this._addHook(this.getSourceHook("update"), (doc) => {
-                if (doc !== this.source.document) return;
+            this._addHook("sightRefresh", () => {
                 this.renderable = this.source.visible;
                 this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
             });
