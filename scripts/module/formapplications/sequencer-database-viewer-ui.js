@@ -187,6 +187,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
         const allRanges = html.querySelector('#database-all-ranges');
         this.player = html.querySelector(".database-player");
         this.image = html.querySelector(".database-image");
+        this.audio = html.querySelector(".database-audio")
 
         const filterDebounce = debounce(() => {
             this.allRanges = allRanges.checked;
@@ -203,7 +204,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     playAsset(entryText) {
         if (!this.autoplay) return;
-        const { player, image } = this;
+        const { player, image, audio } = this;
 
         let entry = Sequencer.Database.getEntry(entryText);
 
@@ -213,13 +214,20 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
         entry = entry?.file ?? entry;
 
-        const isImage = !entry.toLowerCase().endsWith("webm");
+        const isAudio = entry.toLowerCase().endsWith("ogg");
+        const isImage = (!entry.toLowerCase().endsWith("webm")) && !isAudio;
+        const isVideo = !isAudio && !isAudio;
 
-        player.classList.toggle("hidden", isImage);
+        audio.classList.toggle("hidden", !isAudio);
         image.classList.toggle("hidden", !isImage);
+        player.classList.toggle("hidden", !isVideo);
 
         if (isImage) {
             image.src = entry;
+            return;
+        } else if (isAudio) {
+            audio.src = entry;
+            audio.play();
             return;
         }
 
