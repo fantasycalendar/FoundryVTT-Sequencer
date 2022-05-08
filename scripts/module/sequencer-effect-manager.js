@@ -6,6 +6,7 @@ import flagManager from "./flag-manager.js";
 import CONSTANTS from "./constants.js";
 
 const EffectsContainer = new Map();
+const PositionContainer = new Map();
 
 export default class SequencerEffectManager {
 
@@ -112,6 +113,18 @@ export default class SequencerEffectManager {
         if (!effectsToEnd.length) return;
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
         return this._endEffects(effectsToEnd);
+    }
+
+    /**
+     * If an effect has been named its position will be cached, which can be retrieved with this method
+     *
+     * @param {string} inName
+     * @returns {object|boolean}
+     * @private
+     */
+    static getEffectPositionByName(inName){
+        if (!(typeof inName === "string")) throw lib.custom_error("Sequencer", "EffectManager | getEffectPositionByName | inName must be of type string")
+        return PositionContainer.get(inName) ?? false;
     }
 
     /**
@@ -239,6 +252,14 @@ export default class SequencerEffectManager {
         }
 
         EffectsContainer.set(effect.id, effect);
+        if(effect.data.name){
+            effect._ticker.add(() => {
+                PositionContainer.set(effect.data.name, {
+                    start: effect.sourcePosition,
+                    end: effect.targetPosition
+                });
+            });
+        }
 
         if (!data.persist) {
             playData.promise.then(() => this._removeEffect(effect));
