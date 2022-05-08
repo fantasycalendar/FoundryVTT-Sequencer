@@ -1914,9 +1914,7 @@ export default class CanvasEffect extends PIXI.Container {
                 spriteWidth: this.sprite.width / scaleX,
                 spriteHeight: this.sprite.height / scaleY,
                 align: this.data.attachTo?.align
-            })
-
-            console.log(this.sourcePosition.x, this.sourcePosition.y, this.sprite.width, scaleX, this.sprite.height, scaleY, offset);
+            });
 
             this.position.set(
                 this.sourcePosition.x - offset.x,
