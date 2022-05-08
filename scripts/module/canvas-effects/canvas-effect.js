@@ -1904,24 +1904,26 @@ export default class CanvasEffect extends PIXI.Container {
 
     _applyAttachmentOffset(){
 
+        let offset = { x: 0, y: 0 };
+
         if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
 
             const scaleX = (this.data.scale.x ?? 1.0);
             const scaleY = (this.data.scale.y ?? 1.0);
 
-            let offset = canvaslib.align({
+            offset = canvaslib.align({
                 context: this.source,
                 spriteWidth: this.sprite.width / scaleX,
                 spriteHeight: this.sprite.height / scaleY,
                 align: this.data.attachTo?.align
             });
 
-            this.position.set(
-                this.sourcePosition.x - offset.x,
-                this.sourcePosition.y - offset.y
-            );
-
         }
+
+        this.position.set(
+            this.sourcePosition.x - offset.x,
+            this.sourcePosition.y - offset.y
+        );
 
     }
 
