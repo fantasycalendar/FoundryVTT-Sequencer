@@ -1119,6 +1119,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.masksReady = false;
 
+        console.log(this.data.masks)
+
         for(const uuid of this.data.masks){
 
             const documentType = uuid.split('.')[2];

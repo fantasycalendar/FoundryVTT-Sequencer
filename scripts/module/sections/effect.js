@@ -1085,7 +1085,7 @@ export default class EffectSection extends Section {
         }
 
         if(this._selfMask){
-            this._masks.push(source);
+            this._masks.push(this._sanitizeObject(this._source));
         }
 
         let data = foundry.utils.duplicate({
