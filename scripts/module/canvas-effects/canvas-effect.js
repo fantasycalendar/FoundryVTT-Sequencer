@@ -1850,11 +1850,11 @@ export default class CanvasEffect extends PIXI.Container {
                 if (doc !== this.source.document) return;
 
                 if(changes.rotation !== undefined && applyRotation){
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.rotation));
+                    this.rotationContainer.rotation = changes.rotation ? Math.normalizeRadians(Math.toRadians(changes.rotation)) : 0;
                 }
 
-                if(changes.direction !== undefined && applyRotation){
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.direction));
+                if(changes.direction !== undefined && applyRotation && !(doc instanceof MeasuredTemplate && (doc.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || doc.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))){
+                    this.rotationContainer.rotation = changes.direction ? Math.normalizeRadians(Math.toRadians(changes.direction)) : 0;
                 }
 
                 if(changes?.y === undefined && changes?.x === undefined) return;
@@ -1878,8 +1878,10 @@ export default class CanvasEffect extends PIXI.Container {
             if(this.source.destroyed) return;
 
             if(applyRotation && this.isSourceTemporary) {
-                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+                this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
+                if (!(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+                }
             }
 
             if(!sourceIsAnimating) return;
@@ -1894,8 +1896,8 @@ export default class CanvasEffect extends PIXI.Container {
         await this._applyAttachmentOffset();
 
         if(applyRotation){
-            this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-            if(this.source.data.direction) {
+            this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
+            if(this.source.data.direction && !(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
                 this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
             }
         }
