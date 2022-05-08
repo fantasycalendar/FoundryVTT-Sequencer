@@ -179,8 +179,8 @@ export function align({ context, spriteWidth, spriteHeight, align } = {}) {
     }[align];
 
     return {
-        x: lib.interpolate(width * -0.5, width * 0.5, alignRatio.x),
-        y: lib.interpolate(height * -0.5, height * 0.5, alignRatio.y)
+        x: lib.interpolate(width * 0.5, width * -0.5, alignRatio.x),
+        y: lib.interpolate(height * 0.5, height * -0.5, alignRatio.y)
     }
 
 }

@@ -3,6 +3,7 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import flagManager from "./flag-manager.js";
+import CONSTANTS from "./constants.js";
 
 const EffectsContainer = new Map();
 
@@ -314,38 +315,46 @@ export default class SequencerEffectManager {
      * Patches an object's creation data before it's created so that the effect plays on it correctly
      *
      * @param inDocument
+     * @param data
+     * @param options
      * @returns {*}
      */
-    static async patchCreationData(inDocument) {
+    static async patchCreationData(inDocument, data, options) {
+
+        inDocument.data.update({_id: randomID()});
+        options.keepId = true;
 
         const effects = flagManager.getFlags(inDocument);
 
         if(!effects?.length) return;
 
-        const newEffects = effects
-            .map(effect => {
-                let effectData = effect[1];
+        effects.forEach(effect => {
+            const effectData = effect[1];
+            effect[0] = randomID();
+            effectData._id = effect[0];
+            if (lib.is_UUID(effectData.source)) {
+                effectData.source = lib.get_object_identifier(inDocument);
+            }
+            effectData.sceneId = doc.parent.id;
+        });
 
-                effectData._id = randomID();
+        inDocument.data.update({
+            [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
+        });
 
-                if (lib.is_UUID(effectData.source)) {
-                    effectData.source = lib.get_object_identifier(inDocument);
-                }
+    }
 
-                effectData.sceneId = canvas.scene.id;
-
-                effect[1] = effectData;
-                return effect;
-            });
-
-        if(game.user.isGM) {
-            flagManager.addFlags(inDocument.uuid, newEffects);
-        }
-
+    /**
+     * Plays the effects of a given document on creation
+     *
+     * @param inDocument
+     * @returns {*}
+     */
+    static async documentCreated(inDocument){
+        let effects = flagManager.getFlags(inDocument);
+        if(!effects?.length) return;
         debounceUpdateEffectViewer();
-
-        return this._playEffectMap(newEffects, inDocument);
-
+        return this._playEffectMap(effects, inDocument);
     }
 
     /**

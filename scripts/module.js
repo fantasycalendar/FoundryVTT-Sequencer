@@ -85,9 +85,14 @@ function initialize_module(){
         registerSocket();
     })
 
-    Hooks.on("createToken", (doc) => Sequencer.EffectManager.patchCreationData(doc));
-    Hooks.on("createDrawing", (doc) => Sequencer.EffectManager.patchCreationData(doc));
-    Hooks.on("createTile", (doc) => Sequencer.EffectManager.patchCreationData(doc));
-    Hooks.on("createMeasuredTemplate", (doc) => Sequencer.EffectManager.patchCreationData(doc));
+    Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+    Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+    Hooks.on("preCreateTile", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+    Hooks.on("preCreateMeasuredTemplate", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+
+    Hooks.on("createToken", (...args) => Sequencer.EffectManager.documentCreated(...args));
+    Hooks.on("createDrawing", (...args) => Sequencer.EffectManager.documentCreated(...args));
+    Hooks.on("createTile", (...args) => Sequencer.EffectManager.documentCreated(...args));
+    Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
 
 }

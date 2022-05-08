@@ -1902,6 +1902,31 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
+    _applyAttachmentOffset(){
+
+        if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
+
+            const scaleX = (this.data.scale.x ?? 1.0);
+            const scaleY = (this.data.scale.y ?? 1.0);
+
+            let offset = canvaslib.align({
+                context: this.source,
+                spriteWidth: this.sprite.width / scaleX,
+                spriteHeight: this.sprite.height / scaleY,
+                align: this.data.attachTo?.align
+            })
+
+            console.log(this.sourcePosition.x, this.sourcePosition.y, this.sprite.width, scaleX, this.sprite.height, scaleY, offset);
+
+            this.position.set(
+                this.sourcePosition.x - offset.x,
+                this.sourcePosition.y - offset.y
+            );
+
+        }
+
+    }
+
     _transformRotateTowardsAttachedSprite(){
 
         let targetIsAnimating = false;
@@ -1932,28 +1957,6 @@ export default class CanvasEffect extends PIXI.Container {
                 lib.debug_error(err);
             }
         });
-
-    }
-
-    _applyAttachmentOffset(){
-
-        let offset = { x: 0, y: 0 };
-
-        if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
-
-            offset = canvaslib.align({
-                context: this.source,
-                spriteWidth: this.sprite.width,
-                spriteHeight: this.sprite.height,
-                align: this.data.attachTo?.align
-            })
-
-        }
-
-        this.position.set(
-            this.sourcePosition.x - offset.x,
-            this.sourcePosition.y - offset.y
-        );
 
     }
 

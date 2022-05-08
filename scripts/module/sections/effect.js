@@ -37,6 +37,7 @@ export default class EffectSection extends Section {
         this._spriteOffset = null;
         this._size = null;
         this._persist = null;
+        this._persistOptions = null;
         this._zeroSpriteRotation = null;
         this._extraEndDuration = null;
         this._noLoop = null;
@@ -73,11 +74,18 @@ export default class EffectSection extends Section {
      * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
      *
      * @param {boolean} [inBool=true] inBool
+     * @param {object} [inOptions={}] inOptions
      * @returns {EffectSection}
      */
-    persist(inBool = true) {
+    persist(inBool = true, inOptions={}) {
         if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type boolean");
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "persist", `inOptions must be of type object`);
+        inOptions = foundry.utils.mergeObject({
+            persistTokenPrototype: false
+        }, inOptions)
+        if (typeof inOptions.persistTokenPrototype !== "boolean") throw this.sequence._customError(this, "persist", "inOptions.persistTokenPrototype must be of type boolean");
         this._persist = inBool;
+        this._persistOptions = inOptions;
         return this;
     }
 
@@ -1155,6 +1163,7 @@ export default class EffectSection extends Section {
              */
             duration: this._duration,
             persist: this._persist,
+            persistOptions: this._persistOptions,
             playbackRate: this._playbackRate,
             extraEndDuration: this._extraEndDuration,
             time: (this._startTime || this._endTime) ? {
