@@ -159,8 +159,8 @@ export default class EffectSection extends Section {
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
-        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
-        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be false or of type number");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "atLocation", "inOptions.cacheLocation must be of type boolean");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "atLocation", "inOptions.randomOffset must be of type boolean or number");
         this._source = inOptions.cacheLocation ? canvaslib.get_object_position(inLocation) : inLocation;
         this._randomOffset = {
             source: inOptions.randomOffset,
@@ -213,7 +213,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
         if (typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
         if (typeof inOptions.bindAlpha !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindAlpha must be of type boolean");
-        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "attachTo", "inOptions.randomOffset must be false or of type number");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "attachTo", "inOptions.randomOffset must be of type boolean or number");
 
         this._source = validatedObject;
         this._randomOffset = {
@@ -266,7 +266,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
         if (typeof inOptions.onlyX !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.onlyX must be of type boolean");
         if (typeof inOptions.tiling !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.tiling must be of type boolean");
-        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be false or of type number");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be of type boolean or number");
 
         if (inOptions.cacheLocation && inOptions.attachTo){
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
@@ -305,7 +305,7 @@ export default class EffectSection extends Section {
             randomOffset: false
         }, inOptions)
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
-        if (inOptions.randomOffset !== false && !lib.is_real_number(inOptions.randomOffset)) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be false or of type number");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
         this.size(canvaslib.get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject));
