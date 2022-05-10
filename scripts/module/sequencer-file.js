@@ -80,11 +80,16 @@ export class SequencerFile {
         return this.file;
     }
 
-    getPreviewFile(){
+    getPreviewFile(entry){
+        let parts = entry.split('.');
         let files = this.getAllFiles();
         if(Array.isArray(files)) {
-            const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
-            files = files?.[index-1] ?? files[index];
+            if(lib.is_real_number(parts[parts.length-1])){
+                files = files[parts[parts.length-1]];
+            }else {
+                const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
+                files = files?.[index - 1] ?? files[index];
+            }
         }
         return files;
     }
@@ -163,6 +168,19 @@ export class SequencerFileRangeFind extends SequencerFile {
         }
 
         return this.file;
+    }
+
+    getPreviewFile(entry){
+        let parts = entry.split('.');
+        const ft = parts.find(part => Object.keys(SequencerFileRangeFind.ftToDistanceMap).indexOf(part) > -1)
+        if(!ft){
+            return super.getPreviewFile(entry);
+        }
+        const fileIndex = parts.slice(parts.indexOf(ft)+1)?.[0];
+        if(lib.is_real_number(Number(fileIndex))){
+            this.fileIndex = Number(fileIndex);
+        }
+        return this.getFile(ft);
     }
 
     async getTexture(distance) {

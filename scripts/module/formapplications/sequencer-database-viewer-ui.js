@@ -202,13 +202,15 @@ export default class SequencerDatabaseViewer extends FormApplication {
     }
 
     playAsset(entryText) {
+
         if (!this.autoplay) return;
         const { player, image } = this;
 
         let entry = Sequencer.Database.getEntry(entryText);
 
         if(entry instanceof SequencerFile){
-            entry = entry.getPreviewFile();
+            entry = entry.clone();
+            entry = entry.getPreviewFile(entryText);
         }
 
         entry = entry?.file ?? entry;

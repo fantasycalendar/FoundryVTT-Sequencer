@@ -152,15 +152,15 @@ export class BaseEffectsLayer extends CanvasLayer {
         graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xFFFFFF, 0.9)
 
         const dimensions = {
-            x: effect.position.x + boundingBox.x,
-            y: effect.position.y + boundingBox.y,
-            width: boundingBox.width,
-            height: boundingBox.height
+            x: effect.position.x + (boundingBox.x * effect.sprite.scale.x),
+            y: effect.position.y + (boundingBox.y * effect.sprite.scale.y),
+            width: boundingBox.width * effect.sprite.scale.x,
+            height: boundingBox.height * effect.sprite.scale.y
         }
 
         const rotation = Math.normalizeRadians(effect.rotation + effect.rotationContainer.rotation + effect.spriteContainer.rotation + effect.sprite.rotation);
 
-        this._drawRectangle(graphic, effect.position, rotation, dimensions, effect.spriteContainer.pivot);
+        this._drawRectangle(graphic, effect.position, rotation, dimensions);
 
     }
 

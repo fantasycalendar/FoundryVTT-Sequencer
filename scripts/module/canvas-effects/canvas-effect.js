@@ -1910,14 +1910,12 @@ export default class CanvasEffect extends PIXI.Container {
 
         if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
 
-            const scaleX = (this.data.scale.x ?? 1.0);
-            const scaleY = (this.data.scale.y ?? 1.0);
-
             offset = canvaslib.align({
                 context: this.source,
-                spriteWidth: this.sprite.width / scaleX,
-                spriteHeight: this.sprite.height / scaleY,
-                align: this.data.attachTo?.align
+                spriteWidth: this.sprite.width,
+                spriteHeight: this.sprite.height,
+                align: this.data.attachTo?.align,
+                edge: this.data.attachTo?.edge
             });
 
         }

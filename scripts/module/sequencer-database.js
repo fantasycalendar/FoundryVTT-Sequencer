@@ -98,11 +98,11 @@ const SequencerDatabase = {
         let index = false;
         if(this.feetTest.test(inString)){
             ft = inString.match(this.feetTest)[0];
-            const split = inString.split(ft);
-            if(inString.length > 1){
-                index = split[1].substring(1);
+            const split = inString.split(ft).filter(str => str !== "");
+            if(split.length > 1){
+                index = split[1].split('.')[0];
             }
-            inString = split[0].slice(0, -1);
+            inString = split[0];
         }
 
         const module = inString.split('.')[0];
@@ -123,7 +123,13 @@ const SequencerDatabase = {
 
         if (!filteredEntries.length) return this._throwError("getEntry", `Could not find ${inString} in database`);
 
-        return filteredEntries.length === 1 ? filteredEntries[0] : filteredEntries;
+        const foundEntry = filteredEntries.length === 1 ? filteredEntries[0] : filteredEntries;
+
+        if(index && filteredEntries.length === 1){
+            foundEntry.fileIndex = Number(index);
+        }
+
+        return foundEntry;
     },
     /**
      *  Gets all files under a database path

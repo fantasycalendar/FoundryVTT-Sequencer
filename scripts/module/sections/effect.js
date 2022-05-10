@@ -6,6 +6,7 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import { SequencerFileRangeFind } from "../sequencer-file.js";
+import { alignments } from "../lib/canvas-lib.js";
 
 export default class EffectSection extends Section {
 
@@ -181,6 +182,7 @@ export default class EffectSection extends Section {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
             align: "center",
+            edge: "on",
             bindVisibility: true,
             bindAlpha: true,
             followRotation: true,
@@ -206,9 +208,12 @@ export default class EffectSection extends Section {
             }
         }
 
-        const aligns = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'];
+        const aligns = Object.keys(canvaslib.alignments);
         if (typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)) {
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
+        }
+        if(typeof inOptions.edge !== "string" || !(inOptions.edge === "on" || inOptions.edge === "inner" || inOptions.edge === "outer")){
+            throw this.sequence._customError(this, "attachTo", `inOptions.edge must of type string with the value of either "on", "inner", or "outer"`);
         }
         if (typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
         if (typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
@@ -223,6 +228,7 @@ export default class EffectSection extends Section {
         this._attachTo = {
             active: isValidObject,
             align: inOptions.align,
+            edge: inOptions.edge,
             bindVisibility: inOptions.bindVisibility,
             bindAlpha: inOptions.bindAlpha,
             followRotation: inOptions.followRotation

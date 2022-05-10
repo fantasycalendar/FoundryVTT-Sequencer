@@ -1,12 +1,14 @@
 ## Sequencer Changelog
 
 ### Version 2.1.0
-- *Sequencer* - As `SequencerDatabase` was deprecated in 2.0.0 to `Sequencer.Database`, the former has now been removed
+- *Sequencer* - As `SequencerDatabase` was deprecated in 2.0.0 in favor of `Sequencer.Database`, the former has now been removed
 - *Sequencer* - Added more validation to the Database methods so that searching with empty strings won't throw hard to read errors 
 - *Sequencer* - Removed bogus Effect Player warning about permissions that no longer reflects what Sequencer does
-- *Effects* - Added `.mask()`, which can now clip-mask effects to only show them within templates, tiles, drawings, or tokens
+- *Sequencer* - Fixed some issues when copying and playing effects through the Database Viewer
+- *Effects* - Added `.mask()`, which can now clip-mask effects to only show them within tokens, templates, tiles, or drawings
+- *Effects* - Added `edge` option to `.attachTo()`, which can be set to `inner`, `on`, or `outer` to align the effect on the attached object's edge when used with `align` 
 - *Effects* - Added `.screenSpaceAboveUI()`, which causes `.screenSpace()` effects to play above _all_ UI elements in Foundry
-- *Effects* - Deprecated `.randomOffset()` in favor of adding `{ randomOffset: true }` as a secondary argument on `.atLocation()`, `.stretchTo()`, `.rotateTowards()`, and `.attachTo()`
+- *Effects* - Fixed `align` on `.attachTo()` not working as expected when an effect's scale or size was set
 - *Effects* - Fixed blur filter not taking given properties into account
 - *Effects* - The following functions now have loud deprecation warnings:
     - `.addPostOverride()`
@@ -14,6 +16,7 @@
     - `.gridSize()`
     - `.startPoint()`
     - `.endPoint()`
+- *Effects* - Deprecated `.randomOffset()` in favor of adding `randomOffset` as a secondary argument on `.atLocation()`, `.stretchTo()`, `.rotateTowards()`, and `.attachTo()`
 
 ### Version 2.0.16
 - *Sequencer* - Added japanese localization (thanks to the illustrious Brother Sharp#6921!)

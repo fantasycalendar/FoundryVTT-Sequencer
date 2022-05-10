@@ -158,29 +158,31 @@ export function get_object_dimensions(inObj, half = false) {
     }
 }
 
+export const alignments = {
+    "top-left":          { x: 0.5,  y: 0.5  },
+    "top":               { x: 0,    y: 0.5  },
+    "top-right":         { x: -0.5, y: 0.5  },
+    "left":              { x: 0.5,  y: 0    },
+    "center":            { x: 0,    y: 0    },
+    "right":             { x: -0.5, y: 0    },
+    "bottom-left":       { x: 0.5,  y: -0.5 },
+    "bottom":            { x: 0,    y: -0.5 },
+    "bottom-right":      { x: -0.5, y: -0.5 }
+};
 
-export function align({ context, spriteWidth, spriteHeight, align } = {}) {
+export function align({ context, spriteWidth, spriteHeight, align, edge } = {}) {
 
     let { width, height } = get_object_dimensions(context);
 
-    let widthRatio = (width - (spriteWidth * 0.5)) / width;
-    let heightRatio = (height - (spriteHeight * 0.5)) / height;
-
-    const alignRatio = {
-        "top-left": { x: widthRatio, y: heightRatio },
-        "top": { x: 0.5, y: heightRatio },
-        "top-right": { x: 1 - widthRatio, y: heightRatio },
-        "left": { x: widthRatio, y: 0.5 },
-        "center": { x: 0.5, y: 0.5 },
-        "right": { x: 1 - widthRatio, y: 0.5 },
-        "bottom-left": { x: widthRatio, y: 1 - heightRatio },
-        "bottom": { x: 0.5, y: 1 - heightRatio },
-        "bottom-right": { x: 1 - widthRatio, y: 1 - heightRatio }
-    }[align];
+    const alignRatio = alignments[align];
+    const offset = {
+        x: lib.interpolate(width*-0.5, width*0.5, alignRatio.x+0.5),
+        y: lib.interpolate(height*-0.5, height*0.5, alignRatio.y+0.5)
+    };
 
     return {
-        x: lib.interpolate(width * 0.5, width * -0.5, alignRatio.x),
-        y: lib.interpolate(height * 0.5, height * -0.5, alignRatio.y)
+        x: offset.x + (edge && edge !== "on" ? (spriteWidth * alignRatio.x * (edge === "outer" ? 1 : -1)) : 0),
+        y: offset.y + (edge && edge !== "on" ? (spriteHeight * alignRatio.y * (edge === "outer" ? 1 : -1)) : 0)
     }
 
 }
