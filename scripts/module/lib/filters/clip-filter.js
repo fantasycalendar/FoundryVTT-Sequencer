@@ -5,7 +5,7 @@ float alpha;
 
 void main() {
     vec4 pixel = texture2D(uSampler, vTextureCoord);
-    alpha = smoothstep(0.75,1.0,pixel.a);
+    alpha = smoothstep(0.6,1.0,pixel.a);
     gl_FragColor = vec4(alpha, alpha, alpha, pixel.a);
 }
 `;

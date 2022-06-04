@@ -643,6 +643,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._addToContainer();
         this._createSprite();
         await this._setupMasks();
+        this._setupLightingMask();
         await this._transformSprite();
         this._playCustomAnimations();
         this._playPresetAnimations();
@@ -1113,9 +1114,10 @@ export default class CanvasEffect extends PIXI.Container {
 
     async _setupMasks(){
 
-        if(!this.data.masks?.length) return;
-
         this._maskContainer = new PIXI.Container();
+
+        if(!this.data.masks?.length && !canvas.scene.data.tokenVision) return;
+        this.masksReady = false;
 
         this._maskSprite = new PIXI.Sprite();
         this.parent.addChild(this._maskSprite);
@@ -1125,7 +1127,8 @@ export default class CanvasEffect extends PIXI.Container {
             this.text.mask = this._maskSprite;
         }
 
-        this.masksReady = false;
+        const blurFilter = new filters.Blur({ strength: 2 });
+        this._maskContainer.filters = [blurFilter];
 
         for(const uuid of this.data.masks){
 
@@ -1135,12 +1138,13 @@ export default class CanvasEffect extends PIXI.Container {
 
             const placeableObject = documentObj.object;
             const objMaskSprite = (documentType === "Token" || documentType === "Tile") ? new PIXI.Sprite() : new PIXI.Graphics();
-            const clipFilter = new filters.Clip();
-            const blurFilter = new filters.Blur({ strength: 1 });
-            objMaskSprite.filters = [clipFilter, blurFilter]
             objMaskSprite.uuid = uuid;
             objMaskSprite.placeableObject = placeableObject;
             objMaskSprite.documentType = documentType;
+
+            const clipFilter = new filters.Clip();
+            const blurFilter = new filters.Blur({ strength: 1 });
+            objMaskSprite.filters = [blurFilter, clipFilter];
 
             const spriteContainer = new PIXI.Container();
 
@@ -1188,6 +1192,7 @@ export default class CanvasEffect extends PIXI.Container {
             let anyMaskChanged = false;
 
             for(let container of this._maskContainer.children){
+                if(container.documentType === "lighting") continue;
                 anyMaskChanged = this._handleUpdatingMask(container) || anyMaskChanged;
             }
 
@@ -1208,7 +1213,9 @@ export default class CanvasEffect extends PIXI.Container {
         let objectSprite;
         let objectWidth = 0;
         let objectHeight = 0;
-        let additionalData = {}
+        let additionalData = {
+            walledmask: getProperty(mask.placeableObject.data, "flags.walledtemplates.enabled")
+        }
 
         if(mask.documentType === "Token"){
             objectSprite = mask.placeableObject.icon;
@@ -1230,7 +1237,6 @@ export default class CanvasEffect extends PIXI.Container {
             additionalData["width"] = mask.placeableObject.data.width;
         }
 
-
         let position = {
             x: (objectSprite.parent.x + objectSprite.x) - objectWidth,
             y: (objectSprite.parent.y + objectSprite.y) - objectHeight
@@ -1246,7 +1252,7 @@ export default class CanvasEffect extends PIXI.Container {
             && (mask.scale.y === objectSprite.scale.y)
             && (mask.texture === objectSprite.texture)
             && (mask.angle === angle)
-            && (isObjectEmpty(diffObject(mask.oldData, data)));
+            && (isObjectEmpty(diffObject(mask.oldData, data)))
 
         if(noChange) return false;
 
@@ -1328,36 +1334,10 @@ export default class CanvasEffect extends PIXI.Container {
             mask.endFill();
 
         } else if(mask.documentType === "MeasuredTemplate"){
-
             mask.clear();
             mask.beginFill(0xFFFFFF, 1);
-
-            let d = canvas.dimensions;
-
-            const templateData = mask.placeableObject.data;
-            const drawingType = templateData.t;
-            let {direction, distance, angle, width} = templateData;
-            distance *= (d.size / d.distance);
-            width *= (d.size / d.distance);
-            direction = Math.toRadians(direction);
-
-            let shape;
-            switch ( drawingType ) {
-                case "circle":
-                    shape = mask.placeableObject._getCircleShape(distance);
-                    break;
-                case "cone":
-                    shape = mask.placeableObject._getConeShape(direction, angle, distance);
-                    break;
-                case "rect":
-                    shape = mask.placeableObject._getRectShape(direction, distance);
-                    break;
-                case "ray":
-                    shape = mask.placeableObject._getRayShape(direction, distance, width);
-            }
-
+            const shape = mask.placeableObject.shape.clone();
             mask.drawShape(shape);
-
         }
 
         mask.texture = objectSprite.texture;
@@ -1380,12 +1360,12 @@ export default class CanvasEffect extends PIXI.Container {
         if(!this.masksReady) return;
 
         const smallestX = this._maskContainer.children.reduce((acc, container) => {
-            const bounds = container.getBounds();
+            let bounds = container.getBounds();
             return acc >= bounds.x ? bounds.x : acc;
         }, Infinity);
 
         const smallestY = this._maskContainer.children.reduce((acc, container) => {
-            const bounds = container.getBounds(true);
+            let bounds = container.getBounds(true);
             return acc >= bounds.y ? bounds.y : acc;
         }, Infinity);
 
@@ -1393,6 +1373,19 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._maskSprite.texture.destroy(true);
         this._maskSprite.texture = canvas.app.renderer.generateTexture(this._maskContainer);
+
+    }
+
+    _setupLightingMask(){
+
+        this._addHook("sightRefresh", (doc) => {
+            if(canvas.lighting.masks.children[0]) {
+                this._maskContainer.mask = canvas.lighting.masks.children[0].clone();
+            }else{
+                this._maskContainer.mask = false;
+            }
+            this._updateMaskSprite();
+        });
 
     }
 
