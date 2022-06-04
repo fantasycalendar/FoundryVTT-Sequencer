@@ -363,7 +363,7 @@ export default class SequencerEffectManager {
             if (lib.is_UUID(effectData.source)) {
                 effectData.source = lib.get_object_identifier(inDocument);
             }
-            effectData.sceneId = doc.parent.id;
+            effectData.sceneId = inDocument.parent.id;
         });
 
         inDocument.data.update({
