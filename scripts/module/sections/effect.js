@@ -918,6 +918,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Causes the effect to be visible through walls
+     *
+     * @param inBool
+     * @returns {EffectSection}
+     */
+    xray(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "xray", "inBool must be of type boolean");
+        this._xray = inBool;
+        return this;
+    }
+
+    /**
      * @private
      */
     _expressWarnings(){
@@ -1139,6 +1151,7 @@ export default class EffectSection extends Section {
             text: this._text,
             tilingTexture: this._tilingTexture,
             masks: this._masks,
+            xray: this._xray,
 
             // Transforms
             scale: this._getCalculatedScale(),

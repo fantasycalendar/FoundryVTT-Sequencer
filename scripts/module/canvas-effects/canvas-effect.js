@@ -748,6 +748,8 @@ export default class CanvasEffect extends PIXI.Container {
 
         SequencerAnimationEngine.endAnimations(this);
 
+        this._sightMaskContainer.destroy({ children: true });
+
         if(this._maskContainer) this._maskContainer.destroy({ children: true, texture: true })
         if(this._maskSprite){
             this._maskSprite.texture.destroy(true);
@@ -1386,6 +1388,8 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     _setupLightingMask(){
+
+        if(this.data.xray) return;
 
         this._addHook("sightRefresh", () => {
             setTimeout(() => {
