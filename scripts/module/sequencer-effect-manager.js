@@ -138,12 +138,19 @@ export default class SequencerEffectManager {
         if (inFilter.name) {
             inFilter.name = new RegExp(lib.str_to_search_regex_str(inFilter.name), "gu");
         }
-        return this.effects.filter(effect => {
+        let effects = this.effects;
+        if(inFilter.sceneId && inFilter.sceneId !== canvas.scene.id){
+            effects = lib.get_all_documents_from_scene(inFilter.sceneId).map(doc => {
+                return getProperty(doc.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
+            }).filter(flags => !!flags).map(flags => {
+                return flags.map(flag => CanvasEffect.make(flag[1]));
+            }).deepFlatten();
+        }
+        return effects.filter(effect => {
             return (!inFilter.effects || inFilter.effects.includes(effect.id))
                 && (!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length))
                 && (!inFilter.source || inFilter.source === effect.data.source)
                 && (!inFilter.target || inFilter.target === effect.data.target)
-                && (!inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
                 && (!inFilter.origin || inFilter.origin === effect.data.origin)
         });
     }
@@ -158,7 +165,7 @@ export default class SequencerEffectManager {
      */
     static _validateObject(object, sceneId) {
 
-        if (!(object instanceof PlaceableObject || typeof object === "string")) {
+        if (!(object instanceof Document || object instanceof PlaceableObject || typeof object === "string")) {
             throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
         } else if (object instanceof PlaceableObject) {
             object = lib.get_object_identifier(object.document);
@@ -291,7 +298,7 @@ export default class SequencerEffectManager {
      */
     static async setUpPersists() {
         await this.tearDownPersists();
-        const allObjects = lib.get_all_objects();
+        const allObjects = lib.get_all_documents_from_scene();
         allObjects.push(canvas.scene);
         const promises = allObjects.map(doc => {
             const objEffects = flagManager.getFlags(doc);

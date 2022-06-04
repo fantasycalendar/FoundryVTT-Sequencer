@@ -257,26 +257,6 @@ export function clamp(num, min, max) {
 }
 
 /**
- *  Gets all objects from a scene
- *
- * @param  {String}     [inSceneId]   The scene ID to get all valid objects from
- * @return {Array}                  Array containing all objects
- */
-export function get_all_objects(inSceneId) {
-    const scene = inSceneId
-        ? game.scenes.get(inSceneId)
-        : game.scenes.get(game.user?.viewedScene);
-    if(!scene) return [];
-    return [
-        ...Array.from(scene.tokens),
-        ...Array.from(scene.templates),
-        ...Array.from(scene.tiles),
-        ...Array.from(scene.drawings),
-        ...canvas.templates.preview.children
-    ].deepFlatten().filter(Boolean);
-}
-
-/**
  * Checks whether a given string is a valid UUID or not
  *
  * @param {string} inId
@@ -303,7 +283,7 @@ export function get_object_from_scene(inObjectId, inSceneId = game.user.viewedSc
         if (obj) return obj;
         tryUUID = false;
     }
-    return get_all_objects(inSceneId).find(obj => {
+    return get_all_documents_from_scene(inSceneId).find(obj => {
         return get_object_identifier(obj, tryUUID) === inObjectId;
     });
 }
@@ -339,6 +319,27 @@ export function from_uuid_fast(uuid) {
         parts = parts.slice(2);
     }
     return doc || null;
+}
+
+/**
+ * Gets all documents from the given scene
+ *
+ * @param inSceneId
+ * @returns {Array<Document>}
+ */
+export function get_all_documents_from_scene(inSceneId){
+    const scene = inSceneId
+        ? game.scenes.get(inSceneId)
+        : game.scenes.get(game.user?.viewedScene);
+    return [
+        ...Array.from(scene.tokens),
+        ...Array.from(scene.lights),
+        ...Array.from(scene.sounds),
+        ...Array.from(scene.templates),
+        ...Array.from(scene.tiles),
+        ...Array.from(scene.walls),
+        ...Array.from(scene.drawings),
+    ].deepFlatten().filter(Boolean);
 }
 
 /**

@@ -2443,13 +2443,11 @@ class PersistentCanvasEffect extends CanvasEffect {
      */
     async _startLoop(creationTimeDifference) {
         this.video.loop = this.playNaturally;
-        if(creationTimeDifference > this._animationDuration) {
-            if (this._animationTimes.loopStart) {
-                const loopDuration = this._animationTimes.loopEnd - this._animationTimes.loopStart;
-                this._loopOffset = ((creationTimeDifference % (loopDuration * 1000)) / 1000);
-            } else {
-                this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
-            }
+        if(!this._animationTimes.loopStart) {
+            this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
+        }else if ((creationTimeDifference/1000) > this._animationTimes.loopStart) {
+            const loopDuration = this._animationTimes.loopEnd - this._animationTimes.loopStart;
+            this._loopOffset = ((creationTimeDifference % (loopDuration * 1000)) / 1000);
         }
         return this._resetLoop();
     }
@@ -2480,9 +2478,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 
         try {
             await this.video.play();
-        }catch(err){
-            console.log(err);
-        }
+        }catch(err){}
 
         if (this.video.loop) return;
 
