@@ -14,7 +14,6 @@ import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import { EffectPlayer, InteractionManager } from "./module/sequencer-interaction-manager.js";
 import Section from "./module/sections/section.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
-import * as warnings from "./warnings.js";
 import * as lib from "./module/lib/lib.js";
 
 Hooks.once('init', async function () {
@@ -33,8 +32,6 @@ Hooks.once('ready', async function () {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
-
-        warnings.check();
 
         SequencerEffectManager.setUpPersists();
         InteractionManager.initialize();
