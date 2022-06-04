@@ -717,16 +717,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._ticker = new PIXI.Ticker;
         this._ticker.start();
 
-        if(this._sightMaskContainer) {
-            this._sightMaskContainer.destroy({ children: true, texture: true })
-            this.mask = null;
-        }
-
-        this._sightMaskContainer = new PIXI.Container();
-        this._sightMaskContainer.renderable = false;
-        this._sightMaskContainer.position.set(0,0);
-        canvas.sequencerEffectsAboveTokens.addChild(this._sightMaskContainer)
-
     }
 
     /**
@@ -735,6 +725,8 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _destroyDependencies() {
+
+        this.mask = null;
 
         this._removeHooks();
 
@@ -748,9 +740,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         SequencerAnimationEngine.endAnimations(this);
 
-        this._sightMaskContainer.destroy({ children: true });
-
-        if(this._maskContainer) this._maskContainer.destroy({ children: true, texture: true })
+        if(this._maskContainer) this._maskContainer.destroy({ children: true })
         if(this._maskSprite){
             this._maskSprite.texture.destroy(true);
             this._maskSprite.destroy()
@@ -1127,9 +1117,11 @@ export default class CanvasEffect extends PIXI.Container {
 
     async _setupMasks(){
 
-        this._maskContainer = new PIXI.Container();
+        if(!this.data?.masks?.length) return;
 
         this.masksReady = false;
+
+        this._maskContainer = new PIXI.Container();
 
         this._maskSprite = new PIXI.Sprite();
         this.parent.addChild(this._maskSprite);
@@ -1391,32 +1383,9 @@ export default class CanvasEffect extends PIXI.Container {
 
         if(this.data.xray) return;
 
-        this._addHook("sightRefresh", () => {
-            setTimeout(() => {
-                if(this._sightMaskContainer) {
-                    this._sightMaskContainer.children.forEach(child => child.destroy());
-                }
-
-                const points = canvas.sight.los.geometry.points;
-                if(points.length) {
-                    const mask = new PIXI.Graphics();
-                    this._sightMaskContainer.addChild(mask);
-                    mask.beginFill(0xFFFFFF, 1);
-                    mask.lineStyle(0);
-                    for(let index = 0; index < points.length; index+=2){
-                        const x = points[index];
-                        const y = points[index+1];
-                        if(index === 0){
-                            mask.moveTo(x, y)
-                        }else{
-                            mask.lineTo(x, y)
-                        }
-                    }
-                    this.mask = this._sightMaskContainer;
-                }else{
-                    this.mask = null;
-                }
-            }, 20)
+        this._addHook("sightRefresh", (layer) => {
+            if(this._ended) return;
+            this.mask = layer.visible ? canvas.sight.los : null;
         });
 
     }

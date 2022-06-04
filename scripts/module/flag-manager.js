@@ -293,7 +293,9 @@ const flagManager = {
 
             const flagsToSet = Array.from(existingFlags);
 
-            await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flagsToSet);
+            await object.update({
+                [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+            });
 
             if(object instanceof TokenDocument && object.data.actorLink){
                 const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
