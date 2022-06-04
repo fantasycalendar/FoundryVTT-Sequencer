@@ -493,7 +493,8 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get playNaturally() {
-        return !this.data.time || (this._startTime === 0 && this._endTime === this.video.duration);
+        return (!this.data.time || (this._startTime === 0 && this._endTime === this.video.duration))
+            && this._animationTimes.loopStart === undefined && this._animationTimes.loopEnd === undefined;
     }
 
     /**
@@ -684,6 +685,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._loopOffset = 0;
         this.filters = {};
         this._animationDuration = 0;
+        this._animationTimes = {};
         this._twister = new MersenneTwister(this.data.creationTimestamp);
         this._video = null;
         this._distanceCache = null;
@@ -967,6 +969,12 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         this._endTime = this._animationDuration / 1000;
+
+        if(this._file.markers && this._startTime === 0 && this._endTime === this.video.duration){
+            this._animationTimes.loopStart = this._file.markers.loop.start / 1000;
+            this._animationTimes.loopEnd = this._file.markers.loop.end / 1000;
+            this._animationTimes.forcedEnd = this._file.markers.end / 1000;
+        }
 
         this._animationDuration /= (this.data.playbackRate ?? 1.0);
 
@@ -2435,8 +2443,15 @@ class PersistentCanvasEffect extends CanvasEffect {
      */
     async _startLoop(creationTimeDifference) {
         this.video.loop = this.playNaturally;
-        this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
-        this._resetLoop();
+        if(creationTimeDifference > this._animationDuration) {
+            if (this._animationTimes.loopStart) {
+                const loopDuration = this._animationTimes.loopEnd - this._animationTimes.loopStart;
+                this._loopOffset = ((creationTimeDifference % (loopDuration * 1000)) / 1000);
+            } else {
+                this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
+            }
+        }
+        return this._resetLoop();
     }
 
     /**
@@ -2445,15 +2460,37 @@ class PersistentCanvasEffect extends CanvasEffect {
      * @returns {Promise<void>}
      * @private
      */
-    async _resetLoop() {
-        this.video.currentTime = this._startTime + this._loopOffset;
+    async _resetLoop(firstLoop = true) {
         if (this._ended) return;
-        await this.video.play();
+
+        let loopWaitTime = 0;
+        if (this._animationTimes.loopStart) {
+            if (this._isEnding) return;
+            if(this._loopOffset > 0) {
+                this.video.currentTime = this._animationTimes.loopStart + this._loopOffset;
+                loopWaitTime = (this._animationTimes.loopEnd - (this.video.currentTime)) * 1000;
+            } else {
+                this.video.currentTime = firstLoop ? 0 : this._animationTimes.loopStart;
+                loopWaitTime = (this._animationTimes.loopEnd - this._animationTimes.loopStart) * 1000;
+            }
+        }else{
+            this.video.currentTime = this._startTime + this._loopOffset;
+            loopWaitTime = this._animationDuration - (this._loopOffset * 1000);
+        }
+
+        try {
+            await this.video.play();
+        }catch(err){
+            console.log(err);
+        }
+
         if (this.video.loop) return;
+
         this._resetTimeout = setTimeout(() => {
+            if (this._ended) return;
             this._loopOffset = 0;
-            this._resetLoop();
-        }, this._animationDuration - (this._loopOffset * 1000));
+            this._resetLoop(false);
+        }, loopWaitTime);
     }
 
     /** @OVERRIDE */
@@ -2478,16 +2515,27 @@ class PersistentCanvasEffect extends CanvasEffect {
     async endEffect() {
         if(this._isEnding) return;
         this._isEnding = true;
+        let fullWaitDuration = 0;
+        let extraEndDuration = this.data.extraEndDuration ?? 0;
+        if(this._animationTimes.forcedEnd){
+            this.video.currentTime = this._animationTimes.forcedEnd;
+            fullWaitDuration = (this.video.duration - (this._animationTimes?.forcedEnd ?? 0)) * 1000;
+        }else if(this._animationTimes.loopEnd){
+            fullWaitDuration = (this.video.duration - this.video.currentTime) * 1000;
+            this.video.loop = false;
+            extraEndDuration = Math.max(extraEndDuration, fullWaitDuration);
+        }
         const durations = [
-            this._fadeOut(this.data.extraEndDuration ?? 0),
-            this._scaleOut(this.data.extraEndDuration ?? 0),
-            this._rotateOut(this.data.extraEndDuration ?? 0),
-            this.data.extraEndDuration
+            this._fadeOut(extraEndDuration),
+            this._scaleOut(extraEndDuration),
+            this._rotateOut(extraEndDuration),
+            this.data.extraEndDuration,
+            fullWaitDuration
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
-            super.endEffect()
+            super.endEffect();
             resolve(this.data);
         }, waitDuration));
     }

@@ -23,6 +23,7 @@ export class SequencerFile {
         this.dbPath = inDBPath;
         this.moduleName = inDBPath.split('.')[0];
         this.timeRange = inData?._timeRange;
+        this.markers = inData?._markers;
         this.originalFile = inData?.file ?? inData;
         delete this.originalFile["_template"];
         delete this.originalFile["_timeRange"];
