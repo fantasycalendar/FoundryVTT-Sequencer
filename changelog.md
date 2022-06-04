@@ -3,7 +3,7 @@
 ### Version 2.1.0
 **Additions:**
 - *Sequencer* - Added support for the Effect Manager to be able to manipulate effects on other scenes, which means you can now end effects on other scenes than the one you're on via the API
-- *Effects* - Added vision masking to effects, now token vision affects how much of an effect they can see
+- *Effects* - Added vision masking - now token vision affects how much of an effect they can see
 - *Effects* - Added `.mask()`, which can now clip-mask effects to only show them within tokens, templates, tiles, or drawings - this supports the [Walled Templates module](https://foundryvtt.com/packages/walledtemplates)!
 - *Effects* - Added support in the Sequencer Database for internal effect loops, see the [documentation for more information](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/How-to:-Sequencer-Database#Internal-loops)
 - *Effects* - Added `edge` option to `.attachTo()`, which can be set to `inner`, `on`, or `outer` to align the effect on the attached object's edge when used with `align` 

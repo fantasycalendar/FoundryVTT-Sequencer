@@ -716,6 +716,17 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ticker = new PIXI.Ticker;
         this._ticker.start();
+
+        if(this._sightMaskContainer) {
+            this._sightMaskContainer.destroy({ children: true, texture: true })
+            this.mask = null;
+        }
+
+        this._sightMaskContainer = new PIXI.Container();
+        this._sightMaskContainer.renderable = false;
+        this._sightMaskContainer.position.set(0,0);
+        canvas.sequencerEffectsAboveTokens.addChild(this._sightMaskContainer)
+
     }
 
     /**
@@ -733,11 +744,11 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ticker = null;
 
-        Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy());
+        Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy({ children: true, texture: true }));
 
         SequencerAnimationEngine.endAnimations(this);
 
-        if(this._maskContainer) this._maskContainer.destroy({ children: true })
+        if(this._maskContainer) this._maskContainer.destroy({ children: true, texture: true })
         if(this._maskSprite){
             this._maskSprite.texture.destroy(true);
             this._maskSprite.destroy()
@@ -762,7 +773,7 @@ export default class CanvasEffect extends PIXI.Container {
         } catch (err) {
         }
 
-        this.removeChildren().forEach(child => child.destroy({ children: true }));
+        this.removeChildren().forEach(child => child.destroy({ children: true, texture: true }));
 
     }
 
@@ -1116,7 +1127,6 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._maskContainer = new PIXI.Container();
 
-        if(!this.data.masks?.length && !canvas.scene.data.tokenVision) return;
         this.masksReady = false;
 
         this._maskSprite = new PIXI.Sprite();
@@ -1184,7 +1194,7 @@ export default class CanvasEffect extends PIXI.Container {
             }else if(this.text){
                 this.text.mask = null;
             }
-            return;
+            return false;
         }
 
         this._ticker.add(() => {
@@ -1192,7 +1202,6 @@ export default class CanvasEffect extends PIXI.Container {
             let anyMaskChanged = false;
 
             for(let container of this._maskContainer.children){
-                if(container.documentType === "lighting") continue;
                 anyMaskChanged = this._handleUpdatingMask(container) || anyMaskChanged;
             }
 
@@ -1378,13 +1387,32 @@ export default class CanvasEffect extends PIXI.Container {
 
     _setupLightingMask(){
 
-        this._addHook("sightRefresh", (doc) => {
-            if(canvas.lighting.masks.children[0]) {
-                this._maskContainer.mask = canvas.lighting.masks.children[0].clone();
-            }else{
-                this._maskContainer.mask = false;
-            }
-            this._updateMaskSprite();
+        this._addHook("sightRefresh", () => {
+            setTimeout(() => {
+                if(this._sightMaskContainer) {
+                    this._sightMaskContainer.children.forEach(child => child.destroy());
+                }
+
+                const points = canvas.sight.los.geometry.points;
+                if(points.length) {
+                    const mask = new PIXI.Graphics();
+                    this._sightMaskContainer.addChild(mask);
+                    mask.beginFill(0xFFFFFF, 1);
+                    mask.lineStyle(0);
+                    for(let index = 0; index < points.length; index+=2){
+                        const x = points[index];
+                        const y = points[index+1];
+                        if(index === 0){
+                            mask.moveTo(x, y)
+                        }else{
+                            mask.lineTo(x, y)
+                        }
+                    }
+                    this.mask = this._sightMaskContainer;
+                }else{
+                    this.mask = null;
+                }
+            }, 20)
         });
 
     }
