@@ -6,6 +6,7 @@
 - *Sequencer* - Added secondary options parameter to `Sequencer.Database.getEntry`, where `softFail: true` will cause the method to not throw errors when an entry was not found. 
 - *Sequencer* - Added `Sequencer.EffectManager.getEffectPositionByName` which will allow you retrieve an effect's position by name, in real time
 - *Effects* - Added `.mask()`, which can now clip-mask effects to only show them within tokens, templates, tiles, or drawings - this supports the [Walled Templates module](https://foundryvtt.com/packages/walledtemplates)!
+- *Effects* - Added a secondary options parameter to `.persist()`, which can accept `persistTokenPrototype: true` to persist the effect on the token's prototype data, useful for active effect-based VFX
 - *Effects* - Added vision masking - now token vision affects how much of an effect they can see
 - *Effects* - Added `.xray()` which can be used to turn off vision masking on individual effects 
 - *Effects* - Added support in the Sequencer Database for internal effect loops, see the [documentation for more information](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/How-to:-Sequencer-Database#Internal-loops)
