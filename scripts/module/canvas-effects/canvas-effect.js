@@ -974,7 +974,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._endTime = this._animationDuration / 1000;
 
-        if(this._file.markers && this._startTime === 0 && this._endTime === this.video.duration){
+        if(this._file?.markers && this._startTime === 0 && this._endTime === this.video.duration){
             this._animationTimes.loopStart = this._file.markers.loop.start / 1000;
             this._animationTimes.loopEnd = this._file.markers.loop.end / 1000;
             this._animationTimes.forcedEnd = this._file.markers.end / 1000;

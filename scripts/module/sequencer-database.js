@@ -85,14 +85,18 @@ const SequencerDatabase = {
      *  Gets the entry in the database by a dot-notated string
      *
      * @param  {string}                     inString        The entry to find in the database
+     * @param  {boolean}                    softFail        Whether it should soft fail (no error) when no entry was found
      * @return {array|SequencerFile|boolean}                The found entry in the database, or false if not found (with warning)
      */
-    getEntry(inString) {
+    getEntry(inString, { softFail = false }={}) {
         if (typeof inString !== "string") return this._throwError("getEntry", "inString must be of type string")
         inString = inString.trim()
         if (inString === "")  return this._throwError("getEntry", "inString cannot be empty")
         inString = inString.replace(/\[[0-9]+]$/, "");
-        if (!this.entryExists(inString)) return this._throwError("getEntry", `Could not find ${inString} in database`);
+        if (!this.entryExists(inString)){
+            if(softFail) return false;
+            return this._throwError("getEntry", `Could not find ${inString} in database`);
+        }
 
         let ft = false;
         let index = false;

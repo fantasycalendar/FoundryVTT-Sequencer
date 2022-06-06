@@ -69,10 +69,22 @@ export default class Sequence {
      */
     macro(inMacro, ...args) {
         let macro;
+        let compendium = false;
         if (typeof inMacro === "string") {
-            macro = game.macros.getName(inMacro);
-            if (!macro) {
-                throw lib.custom_error(this.moduleName, `macro - Macro '${inMacro}' was not found`);
+            if (inMacro.startsWith("Compendium")) {
+                let packArray = inMacro.split(".")
+                let pack = game.packs.get(`${packArray[1]}.${packArray[2]}`)
+                // Catch invalid compendium pack
+                if (!pack) {
+                    throw lib.custom_error(this.moduleName, `macro - Compendium '${packArray[1]}.${packArray[2]}' was not found`);
+                }
+                macro = packArray;
+                compendium = pack;
+            }else {
+                macro = game.macros.getName(inMacro);
+                if (!macro) {
+                    throw lib.custom_error(this.moduleName, `macro - Macro '${inMacro}' was not found`);
+                }
             }
         } else if (inMacro instanceof Macro) {
             macro = inMacro;
@@ -80,11 +92,20 @@ export default class Sequence {
             throw lib.custom_error(this.moduleName, `macro - inMacro must be of instance string or Macro`);
         }
 
-        if(args && !game.modules.get("advanced-macros")?.active){
+        if(args && args.length && !game.modules.get("advanced-macros")?.active){
             lib.custom_warning(this.moduleName, `macro - Supplying macros with arguments require the advanced-macros module to be active`, true);
         }
 
         const func = lib.section_proxy_wrap(new FunctionSection(this, async () => {
+            if(compendium){
+                const macroData = (await compendium.getDocuments()).find((i) => i.data.name === macro[3])?.toObject();
+                if (!macroData) {
+                    throw lib.custom_error(this.moduleName, `macro - Macro '${macro[3]}' was not found in compendium '${macro[1]}.${macro[2]}'`);
+                }
+                macro = new Macro(macroData);
+                macro.data.permission.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
+                console.log(macro);
+            }
             await macro.execute(...args);
         }, true));
         this.sections.push(func)
