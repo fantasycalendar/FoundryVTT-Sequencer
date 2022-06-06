@@ -976,7 +976,7 @@ export default class CanvasEffect extends PIXI.Container {
         if(this._file?.markers && this._startTime === 0 && this._endTime === this.video.duration){
             this._animationTimes.loopStart = this._file.markers.loop.start / 1000;
             this._animationTimes.loopEnd = this._file.markers.loop.end / 1000;
-            this._animationTimes.forcedEnd = this._file.markers.end / 1000;
+            this._animationTimes.forcedEnd = this._file.markers.forcedEnd / 1000;
         }
 
         this._animationDuration /= (this.data.playbackRate ?? 1.0);
@@ -1178,6 +1178,16 @@ export default class CanvasEffect extends PIXI.Container {
                 if(changed) this._updateMaskSprite();
             });
 
+            let func = debounce(() => {
+                if(this._ended) return;
+                const changed = this._handleUpdatingMask(spriteContainer, true);
+                if (changed) this._updateMaskSprite();
+            }, 100);
+
+            this._addHook("sightRefresh", () => {
+                func();
+            });
+
         }
 
         if(!this._maskContainer.children.length){
@@ -1205,7 +1215,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
-    _handleUpdatingMask(container){
+    _handleUpdatingMask(container, forced = false){
 
         const mask = container.maskSprite;
 
@@ -1216,24 +1226,28 @@ export default class CanvasEffect extends PIXI.Container {
             walledmask: getProperty(mask.placeableObject.data, "flags.walledtemplates.enabled")
         }
 
-        if(mask.documentType === "Token"){
-            objectSprite = mask.placeableObject.icon;
-            objectWidth = objectSprite.width/2;
-            objectHeight = objectSprite.height/2;
-            additionalData["img"] = mask.placeableObject.data.img;
-        }else if(mask.documentType === "Tile"){
-            objectSprite = mask.placeableObject.tile;
-            objectWidth = objectSprite.width/2;
-            objectHeight = objectSprite.height/2;
-            additionalData["img"] = mask.placeableObject.data.img;
-        }else if(mask.documentType === "Drawing"){
-            objectSprite = mask.placeableObject.drawing;
-        }else if(mask.documentType === "MeasuredTemplate") {
-            objectSprite = mask.placeableObject.template;
-            additionalData["direction"] = mask.placeableObject.data.direction;
-            additionalData["distance"] = mask.placeableObject.data.distance;
-            additionalData["angle"] = mask.placeableObject.data.angle;
-            additionalData["width"] = mask.placeableObject.data.width;
+        try {
+            if (mask.documentType === "Token") {
+                objectSprite = mask.placeableObject.icon;
+                objectWidth = objectSprite.width / 2;
+                objectHeight = objectSprite.height / 2;
+                additionalData["img"] = mask.placeableObject.data.img;
+            } else if (mask.documentType === "Tile") {
+                objectSprite = mask.placeableObject.tile;
+                objectWidth = objectSprite.width / 2;
+                objectHeight = objectSprite.height / 2;
+                additionalData["img"] = mask.placeableObject.data.img;
+            } else if (mask.documentType === "Drawing") {
+                objectSprite = mask.placeableObject.drawing;
+            } else if (mask.documentType === "MeasuredTemplate") {
+                objectSprite = mask.placeableObject.template;
+                additionalData["direction"] = mask.placeableObject.data.direction;
+                additionalData["distance"] = mask.placeableObject.data.distance;
+                additionalData["angle"] = mask.placeableObject.data.angle;
+                additionalData["width"] = mask.placeableObject.data.width;
+            }
+        }catch(err){
+            return false;
         }
 
         let position = {
@@ -1252,6 +1266,7 @@ export default class CanvasEffect extends PIXI.Container {
             && (mask.texture === objectSprite.texture)
             && (mask.angle === angle)
             && (isObjectEmpty(diffObject(mask.oldData, data)))
+            && !forced;
 
         if(noChange) return false;
 
@@ -1345,7 +1360,7 @@ export default class CanvasEffect extends PIXI.Container {
         mask.angle = angle;
         mask.oldData = additionalData;
 
-        if(mask instanceof PIXI.Sprite) {
+        if (mask instanceof PIXI.Sprite) {
             mask.anchor.set(0.5, 0.5);
             mask.position.set(mask.width / 2, mask.height / 2)
         }
@@ -1773,9 +1788,15 @@ export default class CanvasEffect extends PIXI.Container {
 
         if (this.data.scaleToObject) {
 
-            const { width, height } = this.target
+            let { width, height } = this.target
                 ? canvaslib.get_object_dimensions(this.target)
                 : canvaslib.get_object_dimensions(this.source);
+
+            if(this.data.scaleToObject?.uniform){
+                let newWidth = Math.max(width, height);
+                height = Math.max(width, height);
+                width = newWidth;
+            }
 
             this.sprite.width = width * (this.data.scale.x ?? 1.0);
             this.sprite.height = height * (this.data.scale.y ?? 1.0);

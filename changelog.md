@@ -10,6 +10,7 @@
 - *Effects* - Added support in the Sequencer Database for internal effect loops, see the [documentation for more information](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/How-to:-Sequencer-Database#Internal-loops)
 - *Effects* - Added `edge` option to `.attachTo()`, which can be set to `inner`, `on`, or `outer` to align the effect on the attached object's edge when used with `align` 
 - *Effects* - Added `.screenSpaceAboveUI()`, which causes `.screenSpace()` effects to play above _all_ UI elements in Foundry (use with caution)
+- *Effects* - Added options parameter to `.scaleToObject()`, which can be passed `uniform: true` to cause the scaling to always be uniform (it picks the largest dimension of the object)
 - *Macros* - Added the ability to reference compendiums when creating `.macro()`s in sequences
 
 **Fixes:**
@@ -17,7 +18,7 @@
 - *Sequencer* - Adjusted Database methods with more validation so that searching with empty strings won't throw hard to read errors
 - *Sequencer* - Removed bogus Effect Player warning about permissions that no longer reflects what Sequencer does
 - *Sequencer* - Fixed some issues when copying and playing effects through the Database Viewer
-- *Effects* - Fixed effects being invisible to players if the effect was created out of sight
+- *Effects* - Fixed effects being invisible to players if the effect was created out of sight (thanks @dev7355608!)
 - *Effects* - Fixed `align` on `.attachTo()` not working as expected when an effect's scale or size was set
 - *Effects* - Fixed blur filter not taking given properties into account
 - *Effects* - The following functions now have loud deprecation warnings:

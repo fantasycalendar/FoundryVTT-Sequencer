@@ -400,11 +400,17 @@ export default class EffectSection extends Section {
      * Causes the effect to be scaled to the target object's width
      *
      * @param {number} inScale
+     * @param {object} inOptions
      * @returns {EffectSection}
      */
-    scaleToObject(inScale = 1.0){
+    scaleToObject(inScale = 1.0, inOptions={}){
         if (!lib.is_real_number(inScale)) throw this.sequence._customError(this, "scaleToObject", `inScale must be of type number!`);
-        this._scaleToObject = true;
+        if (typeof inOptions !== "object") throw this.sequence._customError(this, "scaleToObject", "inOptions must be of type object");
+        inOptions = foundry.utils.mergeObject({
+            uniform: false
+        }, inOptions);
+        if (typeof inOptions.uniform !== "boolean") throw this.sequence._customError(this, "scaleToObject", "inBool must be of type boolean");
+        this._scaleToObject = inOptions;
         return this.scale(inScale);
     }
 
@@ -882,8 +888,8 @@ export default class EffectSection extends Section {
     }
 
     /**
-     *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
-     *  The method accepts a string or a Document that has an UUID.
+     *  Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source
+     *  of the effect.
      *
      * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Array} inObject
      * @returns {Section}

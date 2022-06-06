@@ -361,7 +361,12 @@ export default class SequencerEffectManager {
             effect[0] = randomID();
             effectData._id = effect[0];
             if (lib.is_UUID(effectData.source)) {
-                effectData.source = lib.get_object_identifier(inDocument);
+                let newUuid = lib.get_object_identifier(inDocument);
+                if(effectData.masks.includes(effectData.source)){
+                    const index = effectData.masks.indexOf(effectData.source);
+                    effectData.masks[index] = newUuid;
+                }
+                effectData.source = newUuid;
             }
             effectData.sceneId = inDocument.parent.id;
         });

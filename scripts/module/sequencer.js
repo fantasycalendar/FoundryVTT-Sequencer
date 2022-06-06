@@ -104,7 +104,6 @@ export default class Sequence {
                 }
                 macro = new Macro(macroData);
                 macro.data.permission.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
-                console.log(macro);
             }
             await macro.execute(...args);
         }, true));
