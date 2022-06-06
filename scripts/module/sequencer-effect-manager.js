@@ -366,7 +366,7 @@ export default class SequencerEffectManager {
             effectData.sceneId = inDocument.parent.id;
         });
 
-        inDocument.data.update({
+        return inDocument.data.update({
             [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
         });
 
