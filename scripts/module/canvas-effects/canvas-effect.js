@@ -679,7 +679,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._ended = null;
         this.spriteContainer = null;
         this.sprite = null;
-        this.text = null;
         this._maskContainer = null;
         this._maskSprite = null;
         this._file = null;
@@ -1051,15 +1050,22 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
 
+        let textSprite;
+
         if (this.data.text) {
 
             const text = this.data.text.text;
             const fontSettings = foundry.utils.duplicate(this.data.text);
             fontSettings.fontSize = (fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
 
-            this.text = new PIXI.Text(text, fontSettings);
-            this.text.resolution = 10;
-            this.text.zIndex = 1;
+            textSprite = new PIXI.Text(text, fontSettings);
+            textSprite.resolution = 5;
+            textSprite.zIndex = 1;
+
+            textSprite.anchor.set(
+                this.data.text?.anchor?.x ?? 0.5,
+                this.data.text?.anchor?.y ?? 0.5
+            );
 
         }
 
@@ -1098,12 +1104,8 @@ export default class CanvasEffect extends PIXI.Container {
             this.sprite.tint = this.data.tint;
         }
 
-        if (this.text) {
-            this.sprite.addChild(this.text);
-            this.text.anchor.set(
-                this.data.text?.anchor?.x ?? 0.5,
-                this.data.text?.anchor?.y ?? 0.5
-            );
+        if (textSprite) {
+            this.sprite.addChild(textSprite);
         }
 
         if (this.shouldShowFadedVersion) {
@@ -1127,8 +1129,6 @@ export default class CanvasEffect extends PIXI.Container {
         this.parent.addChild(this._maskSprite);
         if(this.sprite){
             this.sprite.mask = this._maskSprite;
-        }else if(this.text){
-            this.text.mask = this._maskSprite;
         }
 
         const blurFilter = new filters.Blur({ strength: 2 });
@@ -1166,8 +1166,6 @@ export default class CanvasEffect extends PIXI.Container {
                 if(!this._maskContainer.children.length){
                     if(this.sprite){
                         this.sprite.mask = null;
-                    }else if(this.text){
-                        this.text.mask = null;
                     }
                 }
             });
@@ -1185,8 +1183,6 @@ export default class CanvasEffect extends PIXI.Container {
         if(!this._maskContainer.children.length){
             if(this.sprite){
                 this.sprite.mask = null;
-            }else if(this.text){
-                this.text.mask = null;
             }
             return false;
         }
@@ -1416,8 +1412,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
-            this._addHook(this.getSourceHook("update"), (doc) => {
-                if (doc !== this.source.document) return;
+            this._addHook("sightRefresh", () => {
                 this.renderable = this.source.visible;
                 this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
             });
