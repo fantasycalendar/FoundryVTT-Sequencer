@@ -6,6 +6,7 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import { SequencerFileRangeFind } from "../sequencer-file.js";
+import { alignments } from "../lib/canvas-lib.js";
 
 export default class EffectSection extends Section {
 
@@ -37,6 +38,7 @@ export default class EffectSection extends Section {
         this._spriteOffset = null;
         this._size = null;
         this._persist = null;
+        this._persistOptions = null;
         this._zeroSpriteRotation = null;
         this._extraEndDuration = null;
         this._noLoop = null;
@@ -44,11 +46,15 @@ export default class EffectSection extends Section {
         this._snapToGrid = null;
         this._scaleToObject = null;
         this._screenSpace = null;
+        this._screenSpaceAboveUI = null;
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
+        this._masks = [];
+        this._selfMask = false;
 
         this._isRangedEffect = null;
+        this._randomOffsetLegacy = null;
     }
 
     /**
@@ -69,11 +75,18 @@ export default class EffectSection extends Section {
      * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
      *
      * @param {boolean} [inBool=true] inBool
+     * @param {object} [inOptions={}] inOptions
      * @returns {EffectSection}
      */
-    persist(inBool = true) {
+    persist(inBool = true, inOptions={}) {
         if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type boolean");
+        if(typeof inOptions !== "object") throw this.sequence._customError(this, "persist", `inOptions must be of type object`);
+        inOptions = foundry.utils.mergeObject({
+            persistTokenPrototype: false
+        }, inOptions)
+        if (typeof inOptions.persistTokenPrototype !== "boolean") throw this.sequence._customError(this, "persist", "inOptions.persistTokenPrototype must be of type boolean");
         this._persist = inBool;
+        this._persistOptions = inOptions;
         return this;
     }
 
@@ -125,7 +138,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
-        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use .addOverride() instead.")
+        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use .addOverride() instead.", true)
         if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addPostOverride", "The given function needs to be an actual function.");
         this._overrides.push(inFunc);
         return this;
@@ -142,12 +155,18 @@ export default class EffectSection extends Section {
     atLocation(inLocation, inOptions = {}) {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "atLocation", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
-            cacheLocation: false
+            cacheLocation: false,
+            randomOffset: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
-        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
+        if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "atLocation", "inOptions.cacheLocation must be of type boolean");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "atLocation", "inOptions.randomOffset must be of type boolean or number");
         this._source = inOptions.cacheLocation ? canvaslib.get_object_position(inLocation) : inLocation;
+        this._randomOffset = {
+            source: inOptions.randomOffset,
+            target: this._randomOffset?.target ?? false
+        }
         return this;
     }
 
@@ -162,11 +181,12 @@ export default class EffectSection extends Section {
     attachTo(inObject, inOptions={}) {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
-            active: true,
             align: "center",
+            edge: "on",
             bindVisibility: true,
             bindAlpha: true,
-            followRotation: true
+            followRotation: true,
+            randomOffset: false
         }, inOptions);
 
         const validatedObject = this._validateLocation(inObject);
@@ -188,16 +208,31 @@ export default class EffectSection extends Section {
             }
         }
 
-        const aligns = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'];
-        if(typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)){
+        const aligns = Object.keys(canvaslib.alignments);
+        if (typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)) {
             throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
         }
-        if(typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
-        if(typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
+        if(typeof inOptions.edge !== "string" || !(inOptions.edge === "on" || inOptions.edge === "inner" || inOptions.edge === "outer")){
+            throw this.sequence._customError(this, "attachTo", `inOptions.edge must of type string with the value of either "on", "inner", or "outer"`);
+        }
+        if (typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
+        if (typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
+        if (typeof inOptions.bindAlpha !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindAlpha must be of type boolean");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "attachTo", "inOptions.randomOffset must be of type boolean or number");
 
         this._source = validatedObject;
-        inOptions.active = isValidObject;
-        this._attachTo = inOptions;
+        this._randomOffset = {
+            source: this._randomOffset?.source ?? false,
+            target: inOptions.randomOffset
+        }
+        this._attachTo = {
+            active: isValidObject,
+            align: inOptions.align,
+            edge: inOptions.edge,
+            bindVisibility: inOptions.bindVisibility,
+            bindAlpha: inOptions.bindAlpha,
+            followRotation: inOptions.followRotation
+        };
         if(!validatedObject?.id) this.locally();
         return this;
     }
@@ -210,7 +245,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
-        this.sequence._showWarning(self, "reachTowards", "This method has been deprecated, please use .stretchTo() instead", false);
+        this.sequence._showWarning(self, "reachTowards", "This method has been deprecated, please use .stretchTo() instead", true);
         return this.stretchTo(inLocation, inOptions);
     }
 
@@ -228,7 +263,8 @@ export default class EffectSection extends Section {
             cacheLocation: false,
             attachTo: false,
             onlyX: false,
-            tiling: false
+            tiling: false,
+            randomOffset: false
         }, inOptions)
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
@@ -236,6 +272,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
         if (typeof inOptions.onlyX !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.onlyX must be of type boolean");
         if (typeof inOptions.tiling !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.tiling must be of type boolean");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be of type boolean or number");
 
         if (inOptions.cacheLocation && inOptions.attachTo){
             throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
@@ -248,6 +285,12 @@ export default class EffectSection extends Section {
             attachTo: inOptions.attachTo,
             onlyX: inOptions.onlyX
         };
+
+        this._randomOffset = {
+            source: this._randomOffset?.source ?? false,
+            target: inOptions.randomOffset
+        }
+
         return this;
     }
 
@@ -264,9 +307,11 @@ export default class EffectSection extends Section {
         if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._customError(this, "from", "inObject must be of type Token or Tile");
         if(!inObject?.data?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({
-            cacheLocation: false
+            cacheLocation: false,
+            randomOffset: false
         }, inOptions)
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
+        if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
         this.atLocation(inObject, inOptions)
         this.file(inObject?.data?.img);
         this.size(canvaslib.get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject));
@@ -274,6 +319,10 @@ export default class EffectSection extends Section {
         if(inObject.data.mirrorY || (inObject?.tile && inObject?.tile.scale.y < 0)) this.mirrorY();
         if(inObject?.data?.rotation){
             this.rotate(-inObject.data.rotation);
+        }
+        this._randomOffset = {
+            source: inOptions.randomOffset,
+            target: this._randomOffset?.target ?? false
         }
         return this;
     }
@@ -351,11 +400,17 @@ export default class EffectSection extends Section {
      * Causes the effect to be scaled to the target object's width
      *
      * @param {number} inScale
+     * @param {object} inOptions
      * @returns {EffectSection}
      */
-    scaleToObject(inScale = 1.0){
+    scaleToObject(inScale = 1.0, inOptions={}){
         if (!lib.is_real_number(inScale)) throw this.sequence._customError(this, "scaleToObject", `inScale must be of type number!`);
-        this._scaleToObject = true;
+        if (typeof inOptions !== "object") throw this.sequence._customError(this, "scaleToObject", "inOptions must be of type object");
+        inOptions = foundry.utils.mergeObject({
+            uniform: false
+        }, inOptions);
+        if (typeof inOptions.uniform !== "boolean") throw this.sequence._customError(this, "scaleToObject", "inBool must be of type boolean");
+        this._scaleToObject = inOptions;
         return this.scale(inScale);
     }
 
@@ -410,7 +465,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     gridSize(inGridSize) {
-        this.sequence._showWarning(this, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.")
+        this.sequence._showWarning(this, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.", true)
         if (!lib.is_real_number(inGridSize)) throw this.sequence._customError(this, "gridSize", "inGridSize must be of type number");
         if(!this._template) this._template = {};
         this._template["gridSize"] = inGridSize;
@@ -426,7 +481,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
-        this.sequence._showWarning(this, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
+        this.sequence._showWarning(this, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.", true)
         if (!lib.is_real_number(inStartPoint)) throw this.sequence._customError(this, "startPoint", "inStartPoint must be of type number");
         if(!this._template) this._template = {};
         this._template["startPoint"] = inStartPoint;
@@ -440,7 +495,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
-        this.sequence._showWarning(this, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.")
+        this.sequence._showWarning(this, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.", true)
         if (!lib.is_real_number(inEndPoint)) throw this.sequence._customError(this, "endPoint", "inEndPoint must be of type number");
         if(!this._template) this._template = {};
         this._template["endPoint"] = inEndPoint;
@@ -572,8 +627,9 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
+        this.sequence._showWarning(self, "randomOffset", "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.")
         if (!lib.is_real_number(inOffsetScale)) throw this.sequence._customError(this, "randomOffset", "inBool must be of type number");
-        this._randomOffset = inOffsetScale;
+        this._randomOffsetLegacy = inOffsetScale;
         return this;
     }
 
@@ -726,6 +782,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Causes the effect to be played above all of the UI elements
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection}
+     */
+    screenSpaceAboveUI(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpaceAboveUI", "inBool must be of type boolean");
+        this._screenSpaceAboveUI = inBool;
+        return this;
+    }
+
+    /**
      *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
      *
      * @param {object} inPosition
@@ -820,6 +888,54 @@ export default class EffectSection extends Section {
     }
 
     /**
+     *  Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source
+     *  of the effect.
+     *
+     * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Array} inObject
+     * @returns {Section}
+     */
+    mask(inObject){
+
+        if(!inObject){
+            this._selfMask = true;
+            return this;
+        }
+
+        if(Array.isArray(inObject)){
+            for(let obj of inObject){
+                this.mask(obj);
+            }
+            return this;
+        }
+
+        const validatedObject = this._validateLocation(inObject);
+
+        const isValidObject = validatedObject instanceof TokenDocument
+            || validatedObject instanceof TileDocument
+            || validatedObject instanceof DrawingDocument
+            || validatedObject instanceof MeasuredTemplateDocument;
+        if (!isValidObject) {
+            throw this.sequence._customError(this, "mask", "A foundry object was provided, but only Tokens, Tiles, Drawings, and MeasuredTemplates may be used to create effect masks");
+        }
+
+        this._masks.push(lib.get_object_identifier(validatedObject));
+
+        return this;
+    }
+
+    /**
+     * Causes the effect to be visible through walls
+     *
+     * @param inBool
+     * @returns {EffectSection}
+     */
+    xray(inBool = true){
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "xray", "inBool must be of type boolean");
+        this._xray = inBool;
+        return this;
+    }
+
+    /**
      * @private
      */
     _expressWarnings(){
@@ -891,11 +1007,23 @@ export default class EffectSection extends Section {
             if(!this.sequence.nameOffsetMap){
                 this.sequence.nameOffsetMap = {};
             }
+
             if(!this.sequence.nameOffsetMap[this._name]){
+
+                const source = this._getSourceObject();
+                const target = this._getTargetObject();
+
+                if(this._randomOffsetLegacy && !this._randomOffset){
+                    this._randomOffset = {
+                        source: !target ? this._randomOffsetLegacy : false,
+                        target: !!target ? this._randomOffsetLegacy : false
+                    }
+                }
+
                 this.sequence.nameOffsetMap[this._name] = {
                     seed: `${this._name}-${randomID()}`,
-                    source: this._getSourceObject(),
-                    target: this._getTargetObject(),
+                    source: source,
+                    target: target,
                     randomOffset: this._randomOffset,
                     missed: this._missed,
                     offset: this._offset,
@@ -970,6 +1098,20 @@ export default class EffectSection extends Section {
 
         const { file, forcedIndex, customRange } = this._file ? (await this._determineFile(this._file)) : { file: this._file, forcedIndex: false, customRange: false };
 
+        const source = this._getSourceObject();
+        const target = this._getTargetObject();
+
+        if(this._randomOffsetLegacy && !this._randomOffset){
+            this._randomOffset = {
+                source: !target ? this._randomOffsetLegacy : false,
+                target: !!target ? this._randomOffsetLegacy : false
+            }
+        }
+
+        if(this._selfMask){
+            this._masks.push(this._sanitizeObject(this._source));
+        }
+
         let data = foundry.utils.duplicate({
             /**
              * Core properties
@@ -991,8 +1133,8 @@ export default class EffectSection extends Section {
             /**
              * Source/target properties
              */
-            source: this._getSourceObject(),
-            target: this._getTargetObject(),
+            source: source,
+            target: target,
             rotateTowards: this._rotateTowards,
             stretchTo: this._stretchTo ? {
                 attachTo: this._stretchTo.attachTo,
@@ -1014,6 +1156,8 @@ export default class EffectSection extends Section {
             forcedIndex,
             text: this._text,
             tilingTexture: this._tilingTexture,
+            masks: this._masks,
+            xray: this._xray,
 
             // Transforms
             scale: this._getCalculatedScale(),
@@ -1044,6 +1188,7 @@ export default class EffectSection extends Section {
              */
             duration: this._duration,
             persist: this._persist,
+            persistOptions: this._persistOptions,
             playbackRate: this._playbackRate,
             extraEndDuration: this._extraEndDuration,
             time: (this._startTime || this._endTime) ? {
@@ -1077,6 +1222,7 @@ export default class EffectSection extends Section {
              * Screenspace properties
              */
             screenSpace: this._screenSpace,
+            screenSpaceAboveUI: this._screenSpaceAboveUI,
             screenSpaceAnchor: this._screenSpaceAnchor,
             screenSpacePosition: this._screenSpacePosition,
             screenSpaceScale: this._screenSpaceScale,

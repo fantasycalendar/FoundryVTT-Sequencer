@@ -56,10 +56,6 @@ export default class SequencerEffectsUI extends FormApplication {
             activeApp.render(true, { focus: inFocus });
         }
 
-        if(tab === "player"){
-            activeApp.promptPermissionsWarning();
-        }
-
         return activeApp.setTab(tab);
     }
 
@@ -433,32 +429,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     }
 
-    promptPermissionsWarning() {
-        if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning")) return;
-
-        const content = `<p>${ game.i18n.localize("SEQUENCER.Player.PermissionsWarning") }</p><p><button type="button" class="w-100 open-module-settings"><i class="fas fa-plug"></i> Open Module Settings</button></p>`
-        Dialog.prompt({
-            title: "Sequencer Permissions",
-            content: content,
-            rejectClose: false,
-            label: game.i18n.localize('SEQUENCER.OK'),
-            callback: () => {
-                game.settings.set(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning", true)
-            },
-            render: (html) => {
-                const thisDialog = html.closest('.app.window-app.dialog').attr('id').split("-")[1];
-                const _this = this;
-                html.find('.open-module-settings').click(function(){
-                    _this.renderPermissionsConfig();
-                    ui.windows[thisDialog].close();
-                });
-            }
-        })
-    }
-
     async renderPermissionsConfig() {
-
-        game.settings.set(CONSTANTS.MODULE_NAME, "effect-tools-permissions-tools-warning", true);
 
         const settings = new SettingsConfig().render(true);
 

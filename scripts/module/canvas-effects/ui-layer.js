@@ -1,9 +1,16 @@
 export default class SequencerUILayer{
 
-    constructor() {
+    static setup(){
+        return {
+            "below": new this("sequencerUILayerBelow"),
+            "above": new this("sequencerUILayerAbove", 10000)
+        }
+    }
+
+    constructor(name, zIndex = 0.1) {
 
         this.canvas = document.createElement("canvas");
-        this.canvas.id = "sequencerUILayer"
+        this.canvas.id = name;
 
         this.canvas.style.cssText = `
             position:absolute;
@@ -11,7 +18,7 @@ export default class SequencerUILayer{
             pointer-events: none;
             width:100%;
             height:100%;
-            z-index:0.1;
+            z-index:${zIndex};
             padding: 0;
             margin: 0;
         `;
@@ -56,7 +63,6 @@ export default class SequencerUILayer{
     updateAnchoredElements(){
 
         for(let child of this.children){
-
 
             let screenSpaceAnchor = child.data.screenSpaceAnchor;
             let screenSpacePosition = child.data.screenSpacePosition

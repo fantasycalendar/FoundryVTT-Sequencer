@@ -24,15 +24,16 @@ const flagManager = {
      * Sanitizes the effect data, accounting for changes to the structure in previous versions
      *
      * @param inDocument
+     * @param applyFlags
      * @returns {array}
      */
-    getFlags(inDocument){
+    getFlags(inDocument, applyFlags = true){
 
-        let effects = inDocument.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
+        let effects = getProperty(inDocument.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
 
         if(!effects?.length) return [];
 
-        let changes = [];
+        const changes = [];
         for(let [effectId, effectData] of effects){
 
             let effectVersion = effectData.flagVersion || "1.0.0";
@@ -54,7 +55,7 @@ const flagManager = {
             changes.push(effectData)
         }
 
-        if(changes.length){
+        if(changes.length && applyFlags){
             flagManager.addFlags(inDocument.uuid, changes);
         }
 
@@ -129,8 +130,10 @@ const flagManager = {
             delete effectData.gridSizeDifference;
             delete effectData.template;
 
-            delete effectData.animatedProperties.fadeInAudio;
-            delete effectData.animatedProperties.fadeOutAudio;
+            if(effectData.animatedProperties) {
+                delete effectData.animatedProperties.fadeInAudio;
+                delete effectData.animatedProperties.fadeOutAudio;
+            }
 
             effectData = foundry.utils.mergeObject(effectData, effectData.animatedProperties)
 
@@ -168,6 +171,29 @@ const flagManager = {
                     }
                 }
                 delete effectData.stretchTo.tiling;
+            }
+
+            return effectData;
+        },
+
+        "2.1.0": (inDocument, effectData) => {
+
+            if(effectData.randomOffset){
+                effectData.randomOffset = {
+                    source: !effectData.target ? effectData.randomOffset : false,
+                    target: !!effectData.target ? effectData.randomOffset : false
+                };
+            }
+
+            if(effectData.nameOffsetMap){
+                Object.values(effectData.nameOffsetMap).forEach(offsetMap => {
+                    if(offsetMap.randomOffset){
+                        offsetMap.randomOffset = {
+                            source: !offsetMap.target ? offsetMap.randomOffset : false,
+                            target: !!offsetMap.target ? offsetMap.randomOffset : false
+                        };
+                    }
+                })
             }
 
             return effectData;
@@ -267,7 +293,16 @@ const flagManager = {
 
             const flagsToSet = Array.from(existingFlags);
 
-            await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, flagsToSet);
+            await object.update({
+                [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+            });
+
+            if(object instanceof TokenDocument && object.data.actorLink){
+                const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
+                await object.actor.update({
+                    [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToPrototypePersist
+                });
+            }
 
             lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
 

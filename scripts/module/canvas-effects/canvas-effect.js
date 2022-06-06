@@ -201,6 +201,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean|object}
      */
     get originalTargetPosition() {
+
         if (!this._targetPosition && this.target) {
             if (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) {
                 this._targetPosition = this.target;
@@ -263,8 +264,11 @@ export default class CanvasEffect extends PIXI.Container {
             offset.y -= missedOffset.y;
         }
 
-        if (this.data.randomOffset && (!source || !this.data.target)) {
-            let randomOffset = canvaslib.get_random_offset(this.target || this.source, this.data.randomOffset, twister);
+        const obj = source ? this.source : this.target;
+        const multiplier = source ? this.data.randomOffset?.source : this.data.randomOffset?.target;
+
+        if (obj && multiplier) {
+            let randomOffset = canvaslib.get_random_offset(obj, multiplier, twister);
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
@@ -284,8 +288,11 @@ export default class CanvasEffect extends PIXI.Container {
                 offset.y -= missedOffset.y;
             }
 
-            if (offsetMap.randomOffset) {
-                const randomOffset = canvaslib.get_random_offset(offsetMap.actualTarget, offsetMap.randomOffset, offsetMap.twister);
+            const obj = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.targetObj;
+            const multiplier = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.target;
+
+            if (obj && multiplier) {
+                let randomOffset = canvaslib.get_random_offset(obj, multiplier, twister);
                 offset.x -= randomOffset.x;
                 offset.y -= randomOffset.y;
             }
@@ -314,8 +321,7 @@ export default class CanvasEffect extends PIXI.Container {
             inOffsetMap.setup = true;
             inOffsetMap.sourceObj = this._validateObject(inOffsetMap.source);
             inOffsetMap.targetObj = this._validateObject(inOffsetMap.target);
-            inOffsetMap.actualTarget = inOffsetMap.targetObj || inOffsetMap.sourceObj;
-            let repetition = this.data.repetition % inOffsetMap.repetitions;
+            const repetition = this.data.repetition % inOffsetMap.repetitions;
             const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
             inOffsetMap.twister = new MersenneTwister(seed);
         }
@@ -487,7 +493,8 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get playNaturally() {
-        return !this.data.time || (this._startTime === 0 && this._endTime === this.video.duration);
+        return (!this.data.time || (this._startTime === 0 && this._endTime === this.video.duration))
+            && this._animationTimes.loopStart === undefined && this._animationTimes.loopEnd === undefined;
     }
 
     /**
@@ -635,6 +642,8 @@ export default class CanvasEffect extends PIXI.Container {
         this._calculateDuration();
         this._addToContainer();
         this._createSprite();
+        await this._setupMasks();
+        this._setupLightingMask();
         await this._transformSprite();
         this._playCustomAnimations();
         this._playPresetAnimations();
@@ -670,11 +679,13 @@ export default class CanvasEffect extends PIXI.Container {
         this._ended = null;
         this.spriteContainer = null;
         this.sprite = null;
-        this.text = null;
+        this._maskContainer = null;
+        this._maskSprite = null;
         this._file = null;
         this._loopOffset = 0;
         this.filters = {};
         this._animationDuration = 0;
+        this._animationTimes = {};
         this._twister = new MersenneTwister(this.data.creationTimestamp);
         this._video = null;
         this._distanceCache = null;
@@ -704,6 +715,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ticker = new PIXI.Ticker;
         this._ticker.start();
+
     }
 
     /**
@@ -713,6 +725,8 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _destroyDependencies() {
 
+        this.mask = null;
+
         this._removeHooks();
 
         this._ticker.stop();
@@ -721,9 +735,15 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ticker = null;
 
-        Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy());
+        Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy({ children: true, texture: true }));
 
         SequencerAnimationEngine.endAnimations(this);
+
+        if(this._maskContainer) this._maskContainer.destroy({ children: true })
+        if(this._maskSprite){
+            this._maskSprite.texture.destroy(true);
+            this._maskSprite.destroy()
+        }
 
         if (this._file instanceof SequencerFile) {
             this._file.destroy();
@@ -738,12 +758,13 @@ export default class CanvasEffect extends PIXI.Container {
 
         try {
             if (this.data.screenSpace) {
-                Sequencer.UILayer.removeContainerByEffect(this);
+                Sequencer.UILayers.above.removeContainerByEffect(this);
+                Sequencer.UILayers.below.removeContainerByEffect(this);
             }
         } catch (err) {
         }
 
-        this.removeChildren().forEach(child => child.destroy({ children: true }));
+        this.removeChildren().forEach(child => child.destroy({ children: true, texture: true }));
 
     }
 
@@ -806,8 +827,11 @@ export default class CanvasEffect extends PIXI.Container {
     _addToContainer() {
 
         if (this.data.screenSpace) {
-            Sequencer.UILayer.container.addChild(this);
-            return;
+            if(this.data.screenSpaceAboveUI) {
+                return Sequencer.UILayers.above.container.addChild(this);
+            }
+
+            return Sequencer.UILayers.below.container.addChild(this);
         }
 
         const layer = [
@@ -831,7 +855,7 @@ export default class CanvasEffect extends PIXI.Container {
             layer.sortChildren();
         }
 
-        container.addChild(this);
+        return container.addChild(this);
 
     }
 
@@ -949,6 +973,12 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._endTime = this._animationDuration / 1000;
 
+        if(this._file?.markers && this._startTime === 0 && this._endTime === this.video.duration){
+            this._animationTimes.loopStart = this._file.markers.loop.start / 1000;
+            this._animationTimes.loopEnd = this._file.markers.loop.end / 1000;
+            this._animationTimes.forcedEnd = this._file.markers.forcedEnd / 1000;
+        }
+
         this._animationDuration /= (this.data.playbackRate ?? 1.0);
 
         // Resolve duration promise so that owner of effect may
@@ -1020,15 +1050,22 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
 
+        let textSprite;
+
         if (this.data.text) {
 
             const text = this.data.text.text;
             const fontSettings = foundry.utils.duplicate(this.data.text);
             fontSettings.fontSize = (fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
 
-            this.text = new PIXI.Text(text, fontSettings);
-            this.text.resolution = 10;
-            this.text.zIndex = 1;
+            textSprite = new PIXI.Text(text, fontSettings);
+            textSprite.resolution = 5;
+            textSprite.zIndex = 1;
+
+            textSprite.anchor.set(
+                this.data.text?.anchor?.x ?? 0.5,
+                this.data.text?.anchor?.y ?? 0.5
+            );
 
         }
 
@@ -1067,12 +1104,8 @@ export default class CanvasEffect extends PIXI.Container {
             this.sprite.tint = this.data.tint;
         }
 
-        if (this.text) {
-            this.sprite.addChild(this.text);
-            this.text.anchor.set(
-                this.data.text?.anchor?.x ?? 0.5,
-                this.data.text?.anchor?.y ?? 0.5
-            );
+        if (textSprite) {
+            this.sprite.addChild(textSprite);
         }
 
         if (this.shouldShowFadedVersion) {
@@ -1081,6 +1114,290 @@ export default class CanvasEffect extends PIXI.Container {
                 new PIXI.filters.AlphaFilter(game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100)
             ];
         }
+
+    }
+
+    async _setupMasks(){
+
+        if(!this.data?.masks?.length) return;
+
+        this.masksReady = false;
+
+        this._maskContainer = new PIXI.Container();
+
+        this._maskSprite = new PIXI.Sprite();
+        this.parent.addChild(this._maskSprite);
+        if(this.sprite){
+            this.sprite.mask = this._maskSprite;
+        }
+
+        const blurFilter = new filters.Blur({ strength: 2 });
+        this._maskContainer.filters = [blurFilter];
+
+        for(const uuid of this.data.masks){
+
+            const documentType = uuid.split('.')[2];
+            const documentObj = await fromUuid(uuid);
+            if(!documentObj) continue;
+
+            const placeableObject = documentObj.object;
+            const objMaskSprite = (documentType === "Token" || documentType === "Tile") ? new PIXI.Sprite() : new PIXI.Graphics();
+            objMaskSprite.uuid = uuid;
+            objMaskSprite.placeableObject = placeableObject;
+            objMaskSprite.documentType = documentType;
+
+            const clipFilter = new filters.Clip();
+            const blurFilter = new filters.Blur({ strength: 1 });
+            objMaskSprite.filters = [blurFilter, clipFilter];
+
+            const spriteContainer = new PIXI.Container();
+
+            spriteContainer.addChild(objMaskSprite);
+            spriteContainer.maskSprite = objMaskSprite;
+
+            this._maskContainer.addChild(spriteContainer);
+
+            this._addHook("delete" + documentType, (doc) => {
+                if(doc !== documentObj) return
+                const mask = this._maskContainer.children.find(mask => mask.maskSprite.uuid === doc.uuid);
+                if(!mask) return;
+                mask.destroy();
+                this._updateMaskSprite();
+                if(!this._maskContainer.children.length){
+                    if(this.sprite){
+                        this.sprite.mask = null;
+                    }
+                }
+            });
+
+            this._addHook("update" + documentType, (doc) => {
+                if(doc !== documentObj) return;
+                const mask = this._maskContainer.children.find(mask => mask.maskSprite.uuid === doc.uuid);
+                if(!mask) return;
+                const changed = this._handleUpdatingMask(mask);
+                if(changed) this._updateMaskSprite();
+            });
+
+            let func = debounce(() => {
+                if(this._ended) return;
+                const changed = this._handleUpdatingMask(spriteContainer, true);
+                if (changed) this._updateMaskSprite();
+            }, 100);
+
+            this._addHook("sightRefresh", () => {
+                func();
+            });
+
+        }
+
+        if(!this._maskContainer.children.length){
+            if(this.sprite){
+                this.sprite.mask = null;
+            }
+            return false;
+        }
+
+        this._ticker.add(() => {
+
+            let anyMaskChanged = false;
+
+            for(let container of this._maskContainer.children){
+                anyMaskChanged = this._handleUpdatingMask(container) || anyMaskChanged;
+            }
+
+            if(anyMaskChanged){
+                this._updateMaskSprite();
+            }
+
+        });
+
+        this.masksReady = true;
+
+    }
+
+    _handleUpdatingMask(container, forced = false){
+
+        const mask = container.maskSprite;
+
+        let objectSprite;
+        let objectWidth = 0;
+        let objectHeight = 0;
+        let additionalData = {
+            walledmask: getProperty(mask.placeableObject.data, "flags.walledtemplates.enabled")
+        }
+
+        try {
+            if (mask.documentType === "Token") {
+                objectSprite = mask.placeableObject.icon;
+                objectWidth = objectSprite.width / 2;
+                objectHeight = objectSprite.height / 2;
+                additionalData["img"] = mask.placeableObject.data.img;
+            } else if (mask.documentType === "Tile") {
+                objectSprite = mask.placeableObject.tile;
+                objectWidth = objectSprite.width / 2;
+                objectHeight = objectSprite.height / 2;
+                additionalData["img"] = mask.placeableObject.data.img;
+            } else if (mask.documentType === "Drawing") {
+                objectSprite = mask.placeableObject.drawing;
+            } else if (mask.documentType === "MeasuredTemplate") {
+                objectSprite = mask.placeableObject.template;
+                additionalData["direction"] = mask.placeableObject.data.direction;
+                additionalData["distance"] = mask.placeableObject.data.distance;
+                additionalData["angle"] = mask.placeableObject.data.angle;
+                additionalData["width"] = mask.placeableObject.data.width;
+            }
+        }catch(err){
+            return false;
+        }
+
+        let position = {
+            x: (objectSprite.parent.x + objectSprite.x) - objectWidth,
+            y: (objectSprite.parent.y + objectSprite.y) - objectHeight
+        }
+
+        const angle = objectSprite.angle;
+
+        const data = duplicate(additionalData);
+
+        const noChange = (container.position.x === position.x)
+            && (container.position.y === position.y)
+            && (mask.scale.x === objectSprite.scale.x)
+            && (mask.scale.y === objectSprite.scale.y)
+            && (mask.texture === objectSprite.texture)
+            && (mask.angle === angle)
+            && (isObjectEmpty(diffObject(mask.oldData, data)))
+            && !forced;
+
+        if(noChange) return false;
+
+        if(mask.documentType === "Drawing"){
+
+            mask.clear();
+            mask.beginFill(0xFFFFFF, 1);
+
+            const drawingType = mask.placeableObject.data.type;
+
+            if(drawingType === CONST.DRAWING_TYPES.RECTANGLE){
+                mask.drawRect(0, 0, objectSprite.width, objectSprite.height)
+            }else if(drawingType === CONST.DRAWING_TYPES.ELLIPSE) {
+                mask.drawEllipse(objectSprite.width/2, objectSprite.height/2, objectSprite.width/2, objectSprite.height/2)
+            }else{
+                const vertices = mask.placeableObject.data.points;
+
+                if(drawingType === CONST.DRAWING_TYPES.FREEHAND) {
+
+                    // Shamelessly stolen from Foundry's source-code
+                    let factor = mask.placeableObject.bezierFactor ?? 0.5;
+
+                    // Get drawing points
+                    let last = vertices[vertices.length - 1];
+                    let isClosed = vertices[0].equals(last);
+
+                    // Handle edge cases
+                    mask.moveTo(...vertices[0]);
+                    if (vertices.length < 2) return;
+                    else if (vertices.length === 2) {
+                        mask.lineTo(...vertices[1]);
+                        return;
+                    }
+
+                    // Set initial conditions
+                    let [previous, point] = vertices.slice(0, 2);
+                    let cp0 = canvaslib.getBezierControlPoints(factor, last, previous, point).next_cp0;
+                    let cp1, next_cp0, next;
+
+                    // Begin iteration
+                    for (let i = 1; i < vertices.length; i++) {
+                        next = vertices[i + 1];
+                        if (next) {
+                            let bp = canvaslib.getBezierControlPoints(factor, previous, point, next);
+                            cp1 = bp.cp1;
+                            next_cp0 = bp.next_cp0;
+                        }
+
+                        // First point
+                        if ((i === 1) && !isClosed) {
+                            mask.quadraticCurveTo(cp1.x, cp1.y, point[0], point[1]);
+                        }
+
+                        // Last Point
+                        else if ((i === vertices.length - 1) && !isClosed) {
+                            mask.quadraticCurveTo(cp0.x, cp0.y, point[0], point[1]);
+                        }
+
+                        // Bezier points
+                        else {
+                            mask.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point[0], point[1]);
+                        }
+
+                        // Increment
+                        previous = point;
+                        point = next;
+                        cp0 = next_cp0;
+
+                    }
+
+                }else{
+                    mask.moveTo(...vertices[0])
+                    for (let i = 1; i < vertices.length; i++) {
+                        mask.lineTo(...vertices[i])
+                    }
+                }
+            }
+
+            mask.endFill();
+
+        } else if(mask.documentType === "MeasuredTemplate"){
+            mask.clear();
+            mask.beginFill(0xFFFFFF, 1);
+            const shape = mask.placeableObject.shape.clone();
+            mask.drawShape(shape);
+        }
+
+        mask.texture = objectSprite.texture;
+        container.position.set(position.x, position.y);
+        mask.scale.set(objectSprite.scale.x, objectSprite.scale.y);
+        mask.angle = angle;
+        mask.oldData = additionalData;
+
+        if (mask instanceof PIXI.Sprite) {
+            mask.anchor.set(0.5, 0.5);
+            mask.position.set(mask.width / 2, mask.height / 2)
+        }
+
+        return true;
+
+    }
+
+    _updateMaskSprite(){
+
+        if(!this.masksReady) return;
+
+        const smallestX = this._maskContainer.children.reduce((acc, container) => {
+            let bounds = container.getBounds();
+            return acc >= bounds.x ? bounds.x : acc;
+        }, Infinity);
+
+        const smallestY = this._maskContainer.children.reduce((acc, container) => {
+            let bounds = container.getBounds(true);
+            return acc >= bounds.y ? bounds.y : acc;
+        }, Infinity);
+
+        this._maskSprite.position.set(smallestX, smallestY);
+
+        this._maskSprite.texture.destroy(true);
+        this._maskSprite.texture = canvas.app.renderer.generateTexture(this._maskContainer);
+
+    }
+
+    _setupLightingMask(){
+
+        if(this.data.xray) return;
+
+        this._addHook("sightRefresh", (layer) => {
+            if(this._ended) return;
+            this.mask = layer.visible ? canvas.sight.los : null;
+        });
 
     }
 
@@ -1110,8 +1427,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
-            this._addHook(this.getSourceHook("update"), (doc) => {
-                if (doc !== this.source.document) return;
+            this._addHook("sightRefresh", () => {
                 this.renderable = this.source.visible;
                 this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
             });
@@ -1339,57 +1655,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (this.data.stretchTo) {
 
             if (this.data.stretchTo?.attachTo) {
-
-                let sourceIsAnimating = false;
-                let targetIsAnimating = false;
-
-                if (lib.is_UUID(this.data.source)) {
-                    const turnOff = debounce(() => {
-                        sourceIsAnimating = false;
-                    }, 250)
-                    this._addHook(this.getSourceHook("update"), async (doc, changes, options) => {
-                        if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined)) return;
-                        if(this.getSourceHook() !== "Token" || options?.animate === false){
-                            return this._applyDistanceScaling();
-                        }
-                        sourceIsAnimating = true;
-                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            turnOff();
-                        })
-                    });
-                }else{
-                    sourceIsAnimating = true;
-                }
-
-                if (lib.is_UUID(this.data.target)) {
-                    const turnOff = debounce(() => {
-                        targetIsAnimating = false;
-                    }, 250)
-                    this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                        if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
-                        if(this.getTargetHook() !== "Token" || options?.animate === false){
-                            return this._applyDistanceScaling();
-                        }
-                        setTimeout(() => {
-                            targetIsAnimating = true;
-                        }, 50);
-                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            turnOff()
-                        });
-                    });
-                }else{
-                    targetIsAnimating = true;
-                }
-
-                this._ticker.add(async () => {
-                    const neitherAnimating = !sourceIsAnimating && !targetIsAnimating;
-                    if(this.source.destroyed || this.target.destroyed || neitherAnimating) return;
-                    try{
-                        await this._applyDistanceScaling();
-                    } catch (err){
-                        lib.debug_error(err);
-                    }
-                });
+                this._transformStretchToAttachedSprite();
             }
 
             await this._applyDistanceScaling();
@@ -1408,135 +1674,12 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if(!this.data.stretchTo){
-
-            if(this.data.tilingTexture){
-
-                this.sprite.tileScale = {
-                    x: this.data.tilingTexture.scale.x * this.gridSizeDifference,
-                    y: this.data.tilingTexture.scale.y * this.gridSizeDifference
-                };
-
-                this.sprite.tilePosition = this.data.tilingTexture.position;
-
-            }
-
-            if (this.data.scaleToObject) {
-
-                const { width, height } = this.target
-                    ? canvaslib.get_object_dimensions(this.target)
-                    : canvaslib.get_object_dimensions(this.source);
-
-                this.sprite.width = width * (this.data.scale.x ?? 1.0);
-                this.sprite.height = height * (this.data.scale.y ?? 1.0);
-
-                this.sprite.scale.x *= this.flipX;
-                this.sprite.scale.y *= this.flipY;
-
-            } else if (this.data.size) {
-
-                const ratio = this.sprite.height / this.sprite.width;
-
-                let { height, width } = this.data.size;
-
-                if (this.data.size.width === "auto" || this.data.size.height === "auto") {
-
-                    height = this.sprite.height;
-                    width = this.sprite.width;
-
-                    if (this.data.size.width === "auto") {
-                        height = this.data.size.height;
-                        if(this.data.size.gridUnits){
-                            height *= canvas.grid.size;
-                        }
-                        width = height / ratio;
-                    } else if (this.data.size.height === "auto") {
-                        width = this.data.size.width;
-                        if(this.data.size.gridUnits){
-                            width *= canvas.grid.size;
-                        }
-                        height = width * ratio;
-                    }
-
-                }else if(this.data.size.gridUnits){
-                    height *= canvas.grid.size;
-                    width *= canvas.grid.size;
-                }
-
-                this.sprite.width = width * (this.data.scale.x ?? 1.0);
-                this.sprite.height = height * (this.data.scale.y ?? 1.0);
-
-                this.sprite.scale.x *= this.flipX;
-                this.sprite.scale.y *= this.flipY;
-
-            } else {
-
-                this.sprite.scale.set(
-                    (this.data.scale?.x ?? 1.0) * this.flipX * this.gridSizeDifference,
-                    (this.data.scale?.y ?? 1.0) * this.flipY * this.gridSizeDifference
-                );
-
-            }
-
+            this._transformNoStretchSprite();
         }
 
         if(this.data.attachTo?.active && !this.data.stretchTo?.attachTo){
 
-            let sourceIsAnimating = false;
-
-            const applyRotation = this.data.attachTo?.followRotation
-                && this.source.data.rotation !== undefined
-                && !this.data.rotateTowards
-                && !this.data.stretchTo;
-
-            if (lib.is_UUID(this.data.source)) {
-                const turnOff = debounce(() => {
-                    sourceIsAnimating = false;
-                }, 250);
-                this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
-                    if (doc !== this.source.document) return;
-
-                    if(changes.rotation !== undefined && applyRotation){
-                        this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(changes.rotation));
-                    }
-
-                    if(changes?.y === undefined && changes?.x === undefined) return;
-
-                    if(this.getSourceHook() !== "Token" || options?.animate === false){
-                        return this._applyAttachmentOffset();
-                    }
-
-                    sourceIsAnimating = true;
-                    CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                        turnOff();
-                    });
-                });
-
-            }else if(this.isSourceTemporary){
-                sourceIsAnimating = true;
-            }
-
-            this._ticker.add(async () => {
-
-                if(this.source.destroyed) return;
-
-                if(applyRotation && this.isSourceTemporary) {
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-                }
-
-                if(!sourceIsAnimating) return;
-
-                try {
-                    this._applyAttachmentOffset();
-                } catch (err){
-                    lib.debug_error(err);
-                }
-            });
-
-            await this._applyAttachmentOffset();
-
-            if(applyRotation){
-                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.rotation));
-            }
+            await this._transformAttachedNoStretchSprite();
 
         }else{
 
@@ -1557,34 +1700,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.rotateTowards?.attachTo) {
 
-                let targetIsAnimating = false;
-
-                if (lib.is_UUID(this.data.target)) {
-                    const turnOff = debounce(() => {
-                        targetIsAnimating = false;
-                    }, 250);
-                    this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                        if (doc !== this.target.document || (changes?.y !== undefined && changes?.x !== undefined && changes.direction !== undefined)) return;
-                        if(this.getTargetHook() !== "Token" || options?.animate === false){
-                            return this._rotateTowards();
-                        }
-                        targetIsAnimating = true;
-                        CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                            turnOff();
-                        });
-                    });
-                }else{
-                    targetIsAnimating = true;
-                }
-
-                this._ticker.add(async () => {
-                    if(this.target.destroyed || !targetIsAnimating) return;
-                    try{
-                        this._rotateTowards();
-                    } catch (err){
-                        lib.debug_error(err);
-                    }
-                });
+                this._transformRotateTowardsAttachedSprite();
             }
         }
 
@@ -1600,6 +1716,212 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
+    _transformStretchToAttachedSprite(){
+
+        let sourceIsAnimating = false;
+        let targetIsAnimating = false;
+
+        if (lib.is_UUID(this.data.source)) {
+            const turnOff = debounce(() => {
+                sourceIsAnimating = false;
+            }, 500)
+            this._addHook(this.getSourceHook("update"), async (doc, changes, options) => {
+                if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined && changes?.angle === undefined && changes?.direction === undefined)) return;
+                if(this.getSourceHook() !== "Token" || options?.animate === false){
+                    return this._applyDistanceScaling();
+                }
+                sourceIsAnimating = true;
+                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                    turnOff();
+                })
+            });
+        }else{
+            sourceIsAnimating = true;
+        }
+
+        if(this.data.source === this.data.target) {
+            if (lib.is_UUID(this.data.target)) {
+                const turnOff = debounce(() => {
+                    targetIsAnimating = false;
+                }, 500)
+                this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
+                    if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
+                    if (this.getTargetHook() !== "Token" || options?.animate === false) {
+                        return this._applyDistanceScaling();
+                    }
+                    setTimeout(() => {
+                        targetIsAnimating = true;
+                    }, 50);
+                    CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                        turnOff()
+                    });
+                });
+            } else {
+                targetIsAnimating = true;
+            }
+        }
+
+        this._ticker.add(async () => {
+            const neitherAnimating = !sourceIsAnimating && !targetIsAnimating;
+            if(this.source.destroyed || this.target.destroyed || neitherAnimating) return;
+            try{
+                await this._applyDistanceScaling();
+            } catch (err){
+                lib.debug_error(err);
+            }
+        });
+
+    }
+
+    _transformNoStretchSprite(){
+
+        if(this.data.tilingTexture){
+
+            this.sprite.tileScale = {
+                x: this.data.tilingTexture.scale.x * this.gridSizeDifference,
+                y: this.data.tilingTexture.scale.y * this.gridSizeDifference
+            };
+
+            this.sprite.tilePosition = this.data.tilingTexture.position;
+
+        }
+
+        if (this.data.scaleToObject) {
+
+            let { width, height } = this.target
+                ? canvaslib.get_object_dimensions(this.target)
+                : canvaslib.get_object_dimensions(this.source);
+
+            if(this.data.scaleToObject?.uniform){
+                let newWidth = Math.max(width, height);
+                height = Math.max(width, height);
+                width = newWidth;
+            }
+
+            this.sprite.width = width * (this.data.scale.x ?? 1.0);
+            this.sprite.height = height * (this.data.scale.y ?? 1.0);
+
+            this.sprite.scale.x *= this.flipX;
+            this.sprite.scale.y *= this.flipY;
+
+        } else if (this.data.size) {
+
+            const ratio = this.sprite.height / this.sprite.width;
+
+            let { height, width } = this.data.size;
+
+            if (this.data.size.width === "auto" || this.data.size.height === "auto") {
+
+                height = this.sprite.height;
+                width = this.sprite.width;
+
+                if (this.data.size.width === "auto") {
+                    height = this.data.size.height;
+                    if(this.data.size.gridUnits){
+                        height *= canvas.grid.size;
+                    }
+                    width = height / ratio;
+                } else if (this.data.size.height === "auto") {
+                    width = this.data.size.width;
+                    if(this.data.size.gridUnits){
+                        width *= canvas.grid.size;
+                    }
+                    height = width * ratio;
+                }
+
+            }else if(this.data.size.gridUnits){
+                height *= canvas.grid.size;
+                width *= canvas.grid.size;
+            }
+
+            this.sprite.width = width * (this.data.scale.x ?? 1.0);
+            this.sprite.height = height * (this.data.scale.y ?? 1.0);
+
+            this.sprite.scale.x *= this.flipX;
+            this.sprite.scale.y *= this.flipY;
+
+        } else {
+
+            this.sprite.scale.set(
+                (this.data.scale?.x ?? 1.0) * this.flipX * this.gridSizeDifference,
+                (this.data.scale?.y ?? 1.0) * this.flipY * this.gridSizeDifference
+            );
+
+        }
+
+    }
+
+    async _transformAttachedNoStretchSprite(){
+
+        let sourceIsAnimating = false;
+
+        const applyRotation = this.data.attachTo?.followRotation
+            && (this.source.data.rotation !== undefined || this.source.data.direction !== undefined)
+            && !this.data.rotateTowards
+            && !this.data.stretchTo;
+
+        if (lib.is_UUID(this.data.source)) {
+            const turnOff = debounce(() => {
+                sourceIsAnimating = false;
+            }, 500);
+            this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
+                if (doc !== this.source.document) return;
+
+                if(changes.rotation !== undefined && applyRotation){
+                    this.rotationContainer.rotation = changes.rotation ? Math.normalizeRadians(Math.toRadians(changes.rotation)) : 0;
+                }
+
+                if(changes.direction !== undefined && applyRotation && !(doc instanceof MeasuredTemplate && (doc.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || doc.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))){
+                    this.rotationContainer.rotation = changes.direction ? Math.normalizeRadians(Math.toRadians(changes.direction)) : 0;
+                }
+
+                if(changes?.y === undefined && changes?.x === undefined) return;
+
+                if(this.getSourceHook() !== "Token" || options?.animate === false){
+                    return this._applyAttachmentOffset();
+                }
+
+                sourceIsAnimating = true;
+                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                    turnOff();
+                });
+            });
+
+        }else if(this.isSourceTemporary){
+            sourceIsAnimating = true;
+        }
+
+        this._ticker.add(async () => {
+
+            if(this.source.destroyed) return;
+
+            if(applyRotation && this.isSourceTemporary) {
+                this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
+                if (!(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+                }
+            }
+
+            if(!sourceIsAnimating) return;
+
+            try {
+                this._applyAttachmentOffset();
+            } catch (err){
+                lib.debug_error(err);
+            }
+        });
+
+        await this._applyAttachmentOffset();
+
+        if(applyRotation){
+            this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
+            if(this.source.data.direction && !(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
+                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+            }
+        }
+
+    }
+
     _applyAttachmentOffset(){
 
         let offset = { x: 0, y: 0 };
@@ -1610,8 +1932,9 @@ export default class CanvasEffect extends PIXI.Container {
                 context: this.source,
                 spriteWidth: this.sprite.width,
                 spriteHeight: this.sprite.height,
-                align: this.data.attachTo?.align
-            })
+                align: this.data.attachTo?.align,
+                edge: this.data.attachTo?.edge
+            });
 
         }
 
@@ -1619,6 +1942,39 @@ export default class CanvasEffect extends PIXI.Container {
             this.sourcePosition.x - offset.x,
             this.sourcePosition.y - offset.y
         );
+
+    }
+
+    _transformRotateTowardsAttachedSprite(){
+
+        let targetIsAnimating = false;
+
+        if (lib.is_UUID(this.data.target)) {
+            const turnOff = debounce(() => {
+                targetIsAnimating = false;
+            }, 500);
+            this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
+                if (doc !== this.target.document || (changes?.y !== undefined && changes?.x !== undefined && changes.direction !== undefined)) return;
+                if(this.getTargetHook() !== "Token" || options?.animate === false){
+                    return this._rotateTowards();
+                }
+                targetIsAnimating = true;
+                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
+                    turnOff();
+                });
+            });
+        }else{
+            targetIsAnimating = true;
+        }
+
+        this._ticker.add(async () => {
+            if(this.target.destroyed || !targetIsAnimating) return;
+            try{
+                this._rotateTowards();
+            } catch (err){
+                lib.debug_error(err);
+            }
+        });
 
     }
 
@@ -2097,8 +2453,13 @@ class PersistentCanvasEffect extends CanvasEffect {
      */
     async _startLoop(creationTimeDifference) {
         this.video.loop = this.playNaturally;
-        this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
-        this._resetLoop();
+        if(!this._animationTimes.loopStart) {
+            this._loopOffset = (creationTimeDifference % this._animationDuration) / 1000;
+        }else if ((creationTimeDifference/1000) > this._animationTimes.loopStart) {
+            const loopDuration = this._animationTimes.loopEnd - this._animationTimes.loopStart;
+            this._loopOffset = ((creationTimeDifference % (loopDuration * 1000)) / 1000);
+        }
+        return this._resetLoop();
     }
 
     /**
@@ -2107,15 +2468,35 @@ class PersistentCanvasEffect extends CanvasEffect {
      * @returns {Promise<void>}
      * @private
      */
-    async _resetLoop() {
-        this.video.currentTime = this._startTime + this._loopOffset;
+    async _resetLoop(firstLoop = true) {
         if (this._ended) return;
-        await this.video.play();
+
+        let loopWaitTime = 0;
+        if (this._animationTimes.loopStart) {
+            if (this._isEnding) return;
+            if(this._loopOffset > 0) {
+                this.video.currentTime = this._animationTimes.loopStart + this._loopOffset;
+                loopWaitTime = (this._animationTimes.loopEnd - (this.video.currentTime)) * 1000;
+            } else {
+                this.video.currentTime = firstLoop ? 0 : this._animationTimes.loopStart;
+                loopWaitTime = (this._animationTimes.loopEnd - this._animationTimes.loopStart) * 1000;
+            }
+        }else{
+            this.video.currentTime = this._startTime + this._loopOffset;
+            loopWaitTime = this._animationDuration - (this._loopOffset * 1000);
+        }
+
+        try {
+            await this.video.play();
+        }catch(err){}
+
         if (this.video.loop) return;
+
         this._resetTimeout = setTimeout(() => {
+            if (this._ended) return;
             this._loopOffset = 0;
-            this._resetLoop();
-        }, this._animationDuration - (this._loopOffset * 1000));
+            this._resetLoop(false);
+        }, loopWaitTime);
     }
 
     /** @OVERRIDE */
@@ -2140,16 +2521,27 @@ class PersistentCanvasEffect extends CanvasEffect {
     async endEffect() {
         if(this._isEnding) return;
         this._isEnding = true;
+        let fullWaitDuration = 0;
+        let extraEndDuration = this.data.extraEndDuration ?? 0;
+        if(this._animationTimes.forcedEnd){
+            this.video.currentTime = this._animationTimes.forcedEnd;
+            fullWaitDuration = (this.video.duration - (this._animationTimes?.forcedEnd ?? 0)) * 1000;
+        }else if(this._animationTimes.loopEnd){
+            fullWaitDuration = (this.video.duration - this.video.currentTime) * 1000;
+            this.video.loop = false;
+            extraEndDuration = Math.max(extraEndDuration, fullWaitDuration);
+        }
         const durations = [
-            this._fadeOut(this.data.extraEndDuration ?? 0),
-            this._scaleOut(this.data.extraEndDuration ?? 0),
-            this._rotateOut(this.data.extraEndDuration ?? 0),
-            this.data.extraEndDuration
+            this._fadeOut(extraEndDuration),
+            this._scaleOut(extraEndDuration),
+            this._rotateOut(extraEndDuration),
+            this.data.extraEndDuration,
+            fullWaitDuration
         ].filter(Boolean);
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
-            super.endEffect()
+            super.endEffect();
             resolve(this.data);
         }, waitDuration));
     }

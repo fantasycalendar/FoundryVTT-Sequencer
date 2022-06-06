@@ -11,14 +11,15 @@ export default class BlurFilter extends PIXI.filters.BlurFilter {
      *     - kernelSize [5]
      */
     constructor(inData = {}) {
-        super();
 
         inData = foundry.utils.mergeObject({
-            strength: 8,
+            strength: 1,
             quality: 4,
             resolution: PIXI.settings.FILTER_RESOLUTION,
             kernelSize: 5
         }, inData)
+
+        super(...Object.values(inData));
 
         this.isValid = true;
         for (let [key, value] of Object.entries(inData)) {

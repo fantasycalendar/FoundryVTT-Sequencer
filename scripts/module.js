@@ -14,7 +14,6 @@ import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import { EffectPlayer, InteractionManager } from "./module/sequencer-interaction-manager.js";
 import Section from "./module/sections/section.js";
 import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
-import * as warnings from "./warnings.js";
 import * as lib from "./module/lib/lib.js";
 
 Hooks.once('init', async function () {
@@ -33,8 +32,6 @@ Hooks.once('ready', async function () {
         console.log("Sequencer | Ready to go!")
         Hooks.call('sequencer.ready')
         Hooks.call('sequencerReady')
-
-        warnings.check();
 
         SequencerEffectManager.setUpPersists();
         InteractionManager.initialize();
@@ -61,7 +58,7 @@ function initialize_module(){
         SectionManager: new SequencerSectionManager(),
         registerEase: registerEase,
         BaseSection: Section,
-        UILayer: new SequencerUILayer(),
+        UILayers: SequencerUILayer.setup(),
         Helpers: {
             wait: lib.wait,
             clamp: lib.clamp,
@@ -76,17 +73,6 @@ function initialize_module(){
         }
     }
 
-    const warningDebounce = debounce(() => {
-        lib.custom_warning("Sequencer", `Accessing the Sequencer Database through "SequencerDatabase" has been deprecated - please use "Sequencer.Database"`, true);
-    }, 50);
-
-    window.SequencerDatabase = new Proxy(window.Sequencer.Database, {
-        get: function (target, prop) {
-            warningDebounce();
-            return window.Sequencer.Database[prop];
-        }
-    });
-
     registerLayers();
     registerSettings();
     registerHotkeys();
@@ -96,9 +82,14 @@ function initialize_module(){
         registerSocket();
     })
 
-    Hooks.on("createToken", (doc) => Sequencer.EffectManager.patchCreationData(doc));
-    Hooks.on("createDrawing", (doc) => Sequencer.EffectManager.patchCreationData(doc));
-    Hooks.on("createTile", (doc) => Sequencer.EffectManager.patchCreationData(doc));
-    Hooks.on("createMeasuredTemplate", (doc) => Sequencer.EffectManager.patchCreationData(doc));
+    Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+    Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+    Hooks.on("preCreateTile", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+    Hooks.on("preCreateMeasuredTemplate", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+
+    Hooks.on("createToken", (...args) => Sequencer.EffectManager.documentCreated(...args));
+    Hooks.on("createDrawing", (...args) => Sequencer.EffectManager.documentCreated(...args));
+    Hooks.on("createTile", (...args) => Sequencer.EffectManager.documentCreated(...args));
+    Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
 
 }

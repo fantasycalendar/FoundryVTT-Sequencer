@@ -3,8 +3,10 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "./lib/lib.js";
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import flagManager from "./flag-manager.js";
+import CONSTANTS from "./constants.js";
 
 const EffectsContainer = new Map();
+const PositionContainer = new Map();
 
 export default class SequencerEffectManager {
 
@@ -114,6 +116,18 @@ export default class SequencerEffectManager {
     }
 
     /**
+     * If an effect has been named its position will be cached, which can be retrieved with this method
+     *
+     * @param {string} inName
+     * @returns {object|boolean}
+     * @private
+     */
+    static getEffectPositionByName(inName){
+        if (!(typeof inName === "string")) throw lib.custom_error("Sequencer", "EffectManager | getEffectPositionByName | inName must be of type string")
+        return PositionContainer.get(inName) ?? false;
+    }
+
+    /**
      * Filters the existing effects based on the given filter
      *
      * @param inFilter
@@ -124,13 +138,21 @@ export default class SequencerEffectManager {
         if (inFilter.name) {
             inFilter.name = new RegExp(lib.str_to_search_regex_str(inFilter.name), "gu");
         }
-        return this.effects
-            .filter(effect => !inFilter.effects || inFilter.effects.includes(effect.id))
-            .filter(effect => !inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length))
-            .filter(effect => !inFilter.source || inFilter.source === effect.data.source)
-            .filter(effect => !inFilter.target || inFilter.target === effect.data.target)
-            .filter(effect => !inFilter.sceneId || inFilter.sceneId === effect.data.sceneId)
-            .filter(effect => !inFilter.origin || inFilter.origin === effect.data.origin);
+        let effects = this.effects;
+        if(inFilter.sceneId && inFilter.sceneId !== canvas.scene.id){
+            effects = lib.get_all_documents_from_scene(inFilter.sceneId).map(doc => {
+                return getProperty(doc.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
+            }).filter(flags => !!flags).map(flags => {
+                return flags.map(flag => CanvasEffect.make(flag[1]));
+            }).deepFlatten();
+        }
+        return effects.filter(effect => {
+            return (!inFilter.effects || inFilter.effects.includes(effect.id))
+                && (!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length))
+                && (!inFilter.source || inFilter.source === effect.data.source)
+                && (!inFilter.target || inFilter.target === effect.data.target)
+                && (!inFilter.origin || inFilter.origin === effect.data.origin)
+        });
     }
 
     /**
@@ -143,7 +165,7 @@ export default class SequencerEffectManager {
      */
     static _validateObject(object, sceneId) {
 
-        if (!(object instanceof PlaceableObject || typeof object === "string")) {
+        if (!(object instanceof Document || object instanceof PlaceableObject || typeof object === "string")) {
             throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
         } else if (object instanceof PlaceableObject) {
             object = lib.get_object_identifier(object.document);
@@ -237,6 +259,14 @@ export default class SequencerEffectManager {
         }
 
         EffectsContainer.set(effect.id, effect);
+        if(effect.data.name){
+            effect._ticker.add(() => {
+                PositionContainer.set(effect.data.name, {
+                    start: effect.sourcePosition,
+                    end: effect.targetPosition
+                });
+            });
+        }
 
         if (!data.persist) {
             playData.promise.then(() => this._removeEffect(effect));
@@ -268,7 +298,7 @@ export default class SequencerEffectManager {
      */
     static async setUpPersists() {
         await this.tearDownPersists();
-        const allObjects = lib.get_all_objects();
+        const allObjects = lib.get_all_documents_from_scene();
         allObjects.push(canvas.scene);
         const promises = allObjects.map(doc => {
             const objEffects = flagManager.getFlags(doc);
@@ -313,38 +343,51 @@ export default class SequencerEffectManager {
      * Patches an object's creation data before it's created so that the effect plays on it correctly
      *
      * @param inDocument
+     * @param data
+     * @param options
      * @returns {*}
      */
-    static async patchCreationData(inDocument) {
+    static async patchCreationData(inDocument, data, options) {
+
+        inDocument.data.update({_id: randomID()});
+        options.keepId = true;
 
         const effects = flagManager.getFlags(inDocument);
 
         if(!effects?.length) return;
 
-        const newEffects = effects
-            .map(effect => {
-                let effectData = effect[1];
-
-                effectData._id = randomID();
-
-                if (lib.is_UUID(effectData.source)) {
-                    effectData.source = lib.get_object_identifier(inDocument);
+        effects.forEach(effect => {
+            const effectData = effect[1];
+            effect[0] = randomID();
+            effectData._id = effect[0];
+            if (lib.is_UUID(effectData.source)) {
+                let newUuid = lib.get_object_identifier(inDocument);
+                if(effectData.masks.includes(effectData.source)){
+                    const index = effectData.masks.indexOf(effectData.source);
+                    effectData.masks[index] = newUuid;
                 }
+                effectData.source = newUuid;
+            }
+            effectData.sceneId = inDocument.parent.id;
+        });
 
-                effectData.sceneId = canvas.scene.id;
+        return inDocument.data.update({
+            [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
+        });
 
-                effect[1] = effectData;
-                return effect;
-            });
+    }
 
-        if(game.user.isGM) {
-            flagManager.addFlags(inDocument.uuid, newEffects);
-        }
-
+    /**
+     * Plays the effects of a given document on creation
+     *
+     * @param inDocument
+     * @returns {*}
+     */
+    static async documentCreated(inDocument){
+        let effects = flagManager.getFlags(inDocument);
+        if(!effects?.length) return;
         debounceUpdateEffectViewer();
-
-        return this._playEffectMap(newEffects, inDocument);
-
+        return this._playEffectMap(effects, inDocument);
     }
 
     /**
