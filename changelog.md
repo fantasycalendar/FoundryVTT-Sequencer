@@ -17,6 +17,7 @@
 - *Sequencer* - Adjusted Database methods with more validation so that searching with empty strings won't throw hard to read errors
 - *Sequencer* - Removed bogus Effect Player warning about permissions that no longer reflects what Sequencer does
 - *Sequencer* - Fixed some issues when copying and playing effects through the Database Viewer
+- *Effects* - Fixed effects being invisible to players if the effect was created out of sight
 - *Effects* - Fixed `align` on `.attachTo()` not working as expected when an effect's scale or size was set
 - *Effects* - Fixed blur filter not taking given properties into account
 - *Effects* - The following functions now have loud deprecation warnings:
