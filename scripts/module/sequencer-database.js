@@ -268,7 +268,10 @@ const SequencerDatabase = {
      */
     _processEntries(moduleName, entries) {
         entries = foundry.utils.duplicate(entries);
-        let globalTemplate = entries?._templates ?? false;
+        let globalTemplate = entries?._templates ?? {};
+        if(!globalTemplate?.["default"]){
+            globalTemplate["default"] = [100, 0, 0];
+        }
         let entryCache = [];
         this._recurseEntries(entryCache, moduleName, entries, globalTemplate);
         return entryCache;
@@ -297,7 +300,7 @@ const SequencerDatabase = {
 
         if (typeof entries === "string" || typeof entries?.file === "string") {
 
-            entryCache.push(SequencerFile.make(entries, template, dbPath));
+            entryCache.push(SequencerFile.make(entries, template ?? globalTemplate?.["default"], dbPath));
 
         } else if (Array.isArray(entries)) {
 
@@ -313,7 +316,7 @@ const SequencerDatabase = {
             let foundDistances = Object.keys(entries).filter(entry => feetTest.test(entry)).length !== 0;
 
             if (foundDistances) {
-                entryCache.push(SequencerFile.make(entries, template, dbPath));
+                entryCache.push(SequencerFile.make(entries, template ?? globalTemplate?.["default"], dbPath));
             } else {
                 for (let entry of Object.keys(entries)) {
                     if (entry.startsWith('_')) continue;
