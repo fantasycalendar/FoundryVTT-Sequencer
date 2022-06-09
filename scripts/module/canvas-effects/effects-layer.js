@@ -6,10 +6,8 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     constructor(...args) {
         super(...args);
-
         this.active = false;
         this.isSetup = false;
-
     }
 
     static get layerOptions() {
@@ -26,14 +24,16 @@ export class BaseEffectsLayer extends CanvasLayer {
 
     deactivate() {
         super.deactivate();
+        if(!this.active) return;
         this._clearChildren();
+        this.UIContainer.destroy();
         this.active = false;
-        this.isSetup = false;
         InteractionManager.tearDown();
     }
 
     _setup() {
         if (this.isSetup) return;
+
         this.UIContainer = new PIXI.Container();
         this.UIContainer.sortableChildren = true;
         this.UIContainer.parentName = "sequencerUIContainer";
@@ -83,7 +83,7 @@ export class BaseEffectsLayer extends CanvasLayer {
     _clearChildren() {
         if (!this.UIContainer) return;
         this.UIContainer.children.forEach(child => {
-            child.clear()
+            child.clear();
         });
     }
 
