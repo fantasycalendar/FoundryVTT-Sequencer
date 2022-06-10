@@ -26,7 +26,6 @@ export class BaseEffectsLayer extends CanvasLayer {
         super.deactivate();
         if(!this.active) return;
         this._clearChildren();
-        this.UIContainer.destroy();
         this.active = false;
         InteractionManager.tearDown();
     }
