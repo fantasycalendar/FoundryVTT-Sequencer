@@ -1406,27 +1406,19 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _setupHooks(){
 
+        this.renderable = true;
+        this.spriteContainer.alpha = 1;
+
         const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
         if (attachedToSource){
-
             this._addHook(this.getSourceHook("delete"), (doc) => {
                 if (doc !== this.source.document) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
             });
-
-            if (this.data.attachTo?.bindVisibility) {
-                this._addHook("sightRefresh", () => {
-                    this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
-                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-                }, true);
-            } else {
-                this.renderable = true;
-                this.spriteContainer.alpha = 1;
-            }
 
             const document = this.source.document;
             if (this.data.attachTo?.bindAlpha && (document instanceof TokenDocument || document instanceof TileDocument)) {
@@ -1436,6 +1428,12 @@ export default class CanvasEffect extends PIXI.Container {
                 }, true);
             }
 
+            if (this.data.attachTo?.bindVisibility) {
+                this._addHook("sightRefresh", () => {
+                    this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
+                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+                }, true);
+            }
         }
 
         if (attachedToTarget){
