@@ -157,7 +157,7 @@ export class BaseEffectsLayer extends CanvasLayer {
             height: boundingBox.height * effect.sprite.scale.y
         }
 
-        const rotation = Math.normalizeRadians(effect.spriteContainer.rotation + effect.sprite.rotation);
+        const rotation = Math.normalizeRadians(effect.rotationContainer.rotation + effect.spriteContainer.rotation + effect.sprite.rotation);
 
         this._drawRectangle(graphic, effect.position, rotation, dimensions);
 
@@ -287,6 +287,15 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
         return foundry.utils.mergeObject(super.layerOptions, {
             zIndex: 95,
             name: "sequencerEffectsBelowTokens",
+        });
+    }
+}
+
+export class AboveLightingEffectsLayer extends BaseEffectsLayer {
+    static get layerOptions() {
+        return foundry.utils.mergeObject(super.layerOptions, {
+            zIndex: 500,
+            name: "sequencerEffectsAboveLighting",
         });
     }
 }

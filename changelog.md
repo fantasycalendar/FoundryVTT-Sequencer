@@ -1,5 +1,14 @@
 ## Sequencer Changelog
 
+### Version 2.1.1
+- *Sequencer* - Fixed canvas layer re-creation bug that caused performance issues for some users
+- *Sequencer* - Fixed missing default template causing some effects to not play properly
+- Added `.alwaysVisible()`, which causes the effect to always be visible, regardless of sight, fog of war, or walls.
+  - Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden
+- *Effects* - Fixed `.from()`, it now uses the object's image when the effect plays, rather than when the Sequence was first created
+- *Effects* - Fixed highlight box when hovering over effects in the Effect Manager UI not taking effect rotation into account
+- *Effects* - Fixed effects sometimes not fully following its attached object 
+
 ### Version 2.1.0
 **Additions:**
 - *Sequencer* - Added support for the Effect Manager to be able to manipulate effects on other scenes, which means you can now end effects on other scenes than the one you're on via the API

@@ -8,6 +8,7 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
+import { AboveLightingEffectsLayer } from "./effects-layer.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -837,7 +838,8 @@ export default class CanvasEffect extends PIXI.Container {
         const layer = [
             canvas.background,
             canvas.sequencerEffectsBelowTokens,
-            canvas.sequencerEffectsAboveTokens
+            canvas.sequencerEffectsAboveTokens,
+            canvas.sequencerEffectsAboveLighting
         ][this.data.layer];
 
         let container = layer.children.find(child => child?.parentName === "sequencer");
@@ -1178,15 +1180,11 @@ export default class CanvasEffect extends PIXI.Container {
                 if(changed) this._updateMaskSprite();
             });
 
-            let func = debounce(() => {
+            this._addHook("sightRefresh", debounce(() => {
                 if(this._ended) return;
                 const changed = this._handleUpdatingMask(spriteContainer, true);
                 if (changed) this._updateMaskSprite();
-            }, 100);
-
-            this._addHook("sightRefresh", () => {
-                func();
-            });
+            }, 100));
 
         }
 
@@ -1392,7 +1390,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     _setupLightingMask(){
 
-        if(this.data.xray) return;
+        if(this.data.xray || this.data.layer === 3) return;
 
         this._addHook("sightRefresh", (layer) => {
             if(this._ended) return;
@@ -1408,16 +1406,39 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _setupHooks(){
 
-        if (this.data.attachTo?.active && lib.is_UUID(this.data.source)){
+        const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
+        const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
+
+        if (attachedToSource){
+
             this._addHook(this.getSourceHook("delete"), (doc) => {
                 if (doc !== this.source.document) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
             });
+
+            if (this.data.attachTo?.bindVisibility) {
+                this._addHook("sightRefresh", () => {
+                    this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
+                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+                }, true);
+            } else {
+                this.renderable = true;
+                this.spriteContainer.alpha = 1;
+            }
+
+            const document = this.source.document;
+            if (this.data.attachTo?.bindAlpha && (document instanceof TokenDocument || document instanceof TileDocument)) {
+                this._addHook(this.getSourceHook("update"), (doc) => {
+                    if (doc !== document) return;
+                    this.rotationContainer.alpha = document.data.alpha;
+                }, true);
+            }
+
         }
 
-        if ((this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target)){
+        if (attachedToTarget){
             this._addHook(this.getTargetHook("delete"), (doc) => {
                 if (doc !== this.target.document) return;
                 this._target = this._targetPosition;
@@ -1426,34 +1447,12 @@ export default class CanvasEffect extends PIXI.Container {
             });
         }
 
-        if (this.data.attachTo?.bindVisibility && lib.is_UUID(this.data.source)) {
-            this._addHook("sightRefresh", () => {
-                this.renderable = this.source.visible;
-                this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-            });
-            this.renderable = this.source.visible;
-            this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-        } else {
-            this.renderable = true;
-            this.spriteContainer.alpha = 1;
-        }
-
-        if (this.data.attachTo?.bindAlpha && lib.is_UUID(this.data.source)) {
-            const document = this.source.document;
-            if(document instanceof TokenDocument || document instanceof TileDocument) {
-                this._addHook(this.getSourceHook("update"), (doc) => {
-                    if (doc !== this.source.document) return;
-                    this.rotationContainer.alpha = this.source.data.alpha;
-                });
-                this.rotationContainer.alpha = this.source.data.alpha;
-            }
-        }
-
     }
 
-    _addHook(hookName, callable){
+    _addHook(hookName, callable, callNow = false){
         const id = Hooks.on(hookName, callable.bind(this));
         this._hooks.push([hookName, id]);
+        if(callNow) callable();
     }
 
     _removeHooks(){
@@ -1718,52 +1717,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     _transformStretchToAttachedSprite(){
 
-        let sourceIsAnimating = false;
-        let targetIsAnimating = false;
-
-        if (lib.is_UUID(this.data.source)) {
-            const turnOff = debounce(() => {
-                sourceIsAnimating = false;
-            }, 500)
-            this._addHook(this.getSourceHook("update"), async (doc, changes, options) => {
-                if (doc !== this.source.document || (changes?.y === undefined && changes?.x === undefined && changes?.angle === undefined && changes?.direction === undefined)) return;
-                if(this.getSourceHook() !== "Token" || options?.animate === false){
-                    return this._applyDistanceScaling();
-                }
-                sourceIsAnimating = true;
-                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                    turnOff();
-                })
-            });
-        }else{
-            sourceIsAnimating = true;
-        }
-
-        if(this.data.source === this.data.target) {
-            if (lib.is_UUID(this.data.target)) {
-                const turnOff = debounce(() => {
-                    targetIsAnimating = false;
-                }, 500)
-                this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                    if (doc !== this.target.document || (changes?.y === undefined && changes?.x === undefined)) return;
-                    if (this.getTargetHook() !== "Token" || options?.animate === false) {
-                        return this._applyDistanceScaling();
-                    }
-                    setTimeout(() => {
-                        targetIsAnimating = true;
-                    }, 50);
-                    CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                        turnOff()
-                    });
-                });
-            } else {
-                targetIsAnimating = true;
-            }
-        }
-
         this._ticker.add(async () => {
-            const neitherAnimating = !sourceIsAnimating && !targetIsAnimating;
-            if(this.source.destroyed || this.target.destroyed || neitherAnimating) return;
             try{
                 await this._applyDistanceScaling();
             } catch (err){
@@ -1853,56 +1807,21 @@ export default class CanvasEffect extends PIXI.Container {
 
     async _transformAttachedNoStretchSprite(){
 
-        let sourceIsAnimating = false;
-
         const applyRotation = this.data.attachTo?.followRotation
             && (this.source.data.rotation !== undefined || this.source.data.direction !== undefined)
             && !this.data.rotateTowards
             && !this.data.stretchTo;
 
-        if (lib.is_UUID(this.data.source)) {
-            const turnOff = debounce(() => {
-                sourceIsAnimating = false;
-            }, 500);
-            this._addHook(this.getSourceHook("update"), (doc, changes, options) => {
-                if (doc !== this.source.document) return;
-
-                if(changes.rotation !== undefined && applyRotation){
-                    this.rotationContainer.rotation = changes.rotation ? Math.normalizeRadians(Math.toRadians(changes.rotation)) : 0;
-                }
-
-                if(changes.direction !== undefined && applyRotation && !(doc instanceof MeasuredTemplate && (doc.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || doc.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))){
-                    this.rotationContainer.rotation = changes.direction ? Math.normalizeRadians(Math.toRadians(changes.direction)) : 0;
-                }
-
-                if(changes?.y === undefined && changes?.x === undefined) return;
-
-                if(this.getSourceHook() !== "Token" || options?.animate === false){
-                    return this._applyAttachmentOffset();
-                }
-
-                sourceIsAnimating = true;
-                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                    turnOff();
-                });
-            });
-
-        }else if(this.isSourceTemporary){
-            sourceIsAnimating = true;
-        }
-
         this._ticker.add(async () => {
 
             if(this.source.destroyed) return;
 
-            if(applyRotation && this.isSourceTemporary) {
+            if(applyRotation) {
                 this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
                 if (!(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
                     this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
                 }
             }
-
-            if(!sourceIsAnimating) return;
 
             try {
                 this._applyAttachmentOffset();
@@ -1910,15 +1829,6 @@ export default class CanvasEffect extends PIXI.Container {
                 lib.debug_error(err);
             }
         });
-
-        await this._applyAttachmentOffset();
-
-        if(applyRotation){
-            this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
-            if(this.source.data.direction && !(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
-                this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
-            }
-        }
 
     }
 
@@ -1947,28 +1857,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     _transformRotateTowardsAttachedSprite(){
 
-        let targetIsAnimating = false;
-
-        if (lib.is_UUID(this.data.target)) {
-            const turnOff = debounce(() => {
-                targetIsAnimating = false;
-            }, 500);
-            this._addHook(this.getTargetHook("update"), (doc, changes, options) => {
-                if (doc !== this.target.document || (changes?.y !== undefined && changes?.x !== undefined && changes.direction !== undefined)) return;
-                if(this.getTargetHook() !== "Token" || options?.animate === false){
-                    return this._rotateTowards();
-                }
-                targetIsAnimating = true;
-                CanvasAnimation.getAnimation(doc.object.movementAnimationName)?.promise.then(() => {
-                    turnOff();
-                });
-            });
-        }else{
-            targetIsAnimating = true;
-        }
-
         this._ticker.add(async () => {
-            if(this.target.destroyed || !targetIsAnimating) return;
+            if(this.target.destroyed) return;
             try{
                 this._rotateTowards();
             } catch (err){

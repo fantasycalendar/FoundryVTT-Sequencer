@@ -21,7 +21,15 @@ export default class Section {
     }
 
     /**
-     * Method overwritten by inheriting classes, which runs when the section is executed by the Sequence
+     * Method overwritten by inheriting classes, which is called just before the "run" method is called (see below)
+     *
+     * @returns {Promise<void>}
+     * @protected
+     */
+    async preRun() {}
+
+    /**
+     * Method overwritten by inheriting classes, which is called when this section is executed by the Sequence
      *
      * @returns {Promise<void>}
      * @protected
@@ -163,6 +171,7 @@ export default class Section {
                 for (let i = 0; i < self._repetitions; i++) {
                     self._currentRepetition = i;
                     self._repeatDelay = i !== self._repetitions - 1 ? lib.random_float_between(self._repeatDelayMin, self._repeatDelayMax) : 0;
+                    await self.preRun();
                     if (self._shouldAsync) {
                         await self.run();
                     } else {

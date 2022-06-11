@@ -6,7 +6,7 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import { SequencerFileRangeFind } from "../sequencer-file.js";
-import { alignments } from "../lib/canvas-lib.js";
+import { AboveLightingEffectsLayer } from "../canvas-effects/effects-layer.js";
 
 export default class EffectSection extends Section {
 
@@ -18,6 +18,7 @@ export default class EffectSection extends Section {
         this._source = null;
         this._stretchTo = null;
         this._attachTo = null;
+        this._from = null;
         this._origin = null;
         this._anchor = null;
         this._spriteAnchor = null;
@@ -302,9 +303,9 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     from(inObject, inOptions = {}){
-        inObject = inObject instanceof foundry.abstract.Document ? inObject.object : inObject;
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "from", `inOptions must be of type object`);
-        if(!(inObject instanceof Token || inObject instanceof Tile)) throw this.sequence._customError(this, "from", "inObject must be of type Token or Tile");
+        if(!(inObject instanceof Token || inObject instanceof Tile || inObject instanceof TokenDocument || inObject instanceof TileDocument)) throw this.sequence._customError(this, "from", "inObject must be of type Token, Tile, TokenDocument, or TileDocument");
+        inObject = inObject instanceof foundry.abstract.Document ? inObject.object : inObject;
         if(!inObject?.data?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
@@ -312,17 +313,9 @@ export default class EffectSection extends Section {
         }, inOptions)
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
-        this.atLocation(inObject, inOptions)
-        this.file(inObject?.data?.img);
-        this.size(canvaslib.get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject));
-        if(inObject.data.mirrorX || (inObject?.tile && inObject?.tile.scale.x < 0)) this.mirrorX();
-        if(inObject.data.mirrorY || (inObject?.tile && inObject?.tile.scale.y < 0)) this.mirrorY();
-        if(inObject?.data?.rotation){
-            this.rotate(-inObject.data.rotation);
-        }
-        this._randomOffset = {
-            source: inOptions.randomOffset,
-            target: this._randomOffset?.target ?? false
+        this._from = {
+            object: inObject,
+            options: inOptions
         }
         return this;
     }
@@ -710,6 +703,18 @@ export default class EffectSection extends Section {
     }
 
     /**
+     * Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects
+     *
+     * @param {boolean} [inBool=true] inBool
+     * @returns {EffectSection}
+     */
+    aboveLighting(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTiles", "inBool must be of type boolean");
+        this._layer = inBool ? 3 : 2;
+        return this;
+    }
+
+    /**
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
      * @param {number} inZIndex
@@ -961,6 +966,47 @@ export default class EffectSection extends Section {
         if(!source && !target && !this._screenSpace){
             throw this.sequence._customError(this, "play", "Could not determine where to play the effect!");
         }
+    }
+
+    /**
+     * @OVERRIDE
+     */
+    async preRun(){
+
+        if(this._from) {
+            this._file = this._from.object?.data?.img;
+
+            if (this._source === null) {
+                this._source = this._validateLocation(this._from.object);
+            }
+
+            if(this._size === null){
+                const size = canvaslib.get_object_dimensions(this._from.object?.icon ?? this._from.object?.tile ?? this._from.object);
+                this._size = {
+                    width: size?.width ?? canvas.grid.size,
+                    height: size?.height ?? canvas.grid.size,
+                    gridUnits: false
+                };
+            }
+
+            if (this._mirrorX === null && (this._from.object.data.mirrorX || (this._from.object?.tile && this._from.object?.tile.scale.x < 0))){
+                this._mirrorX = true;
+            }
+
+            if (this._mirrorY === null && (this._from.object.data.mirrorY || (this._from.object?.tile && this._from.object?.tile.scale.y < 0))){
+                this._mirrorY = true;
+            }
+
+            if (this._angle === null && this._from.object?.data?.rotation) {
+                this._angle = -this._from.object.data.rotation;
+            }
+
+            this._randomOffset = {
+                source: this._randomOffset?.source ?? this._from.options.randomOffset,
+                target: this._randomOffset?.target ?? false
+            }
+        }
+
     }
 
     /**
