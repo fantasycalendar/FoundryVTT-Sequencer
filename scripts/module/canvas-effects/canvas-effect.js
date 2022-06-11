@@ -1409,11 +1409,6 @@ export default class CanvasEffect extends PIXI.Container {
         this.renderable = true;
         this.spriteContainer.alpha = 1;
 
-        this.renderable = true;
-        this.spriteContainer.alpha = 1;
-
-        return;
-
         const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
