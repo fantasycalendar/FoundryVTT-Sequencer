@@ -1409,6 +1409,11 @@ export default class CanvasEffect extends PIXI.Container {
         this.renderable = true;
         this.spriteContainer.alpha = 1;
 
+        this.renderable = true;
+        this.spriteContainer.alpha = 1;
+
+        return;
+
         const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
@@ -1818,7 +1823,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if(this.source.destroyed) return;
 
-            if(applyRotation) {
+            if(applyRotation && this.isSourceTemporary) {
                 this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
                 if (!(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
                     this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));

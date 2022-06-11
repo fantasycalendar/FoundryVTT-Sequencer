@@ -1147,10 +1147,10 @@ export default class EffectSection extends Section {
         const source = this._getSourceObject();
         const target = this._getTargetObject();
 
-        if(this._randomOffsetLegacy && !this._randomOffset){
+        if(this._randomOffsetLegacy){
             this._randomOffset = {
-                source: !target ? this._randomOffsetLegacy : false,
-                target: !!target ? this._randomOffsetLegacy : false
+                source: !target  && this._randomOffset?.source ? this._randomOffsetLegacy : this._randomOffset?.source,
+                target: !!target && this._randomOffset?.target ? this._randomOffsetLegacy : this._randomOffset?.target
             }
         }
 

@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.1.3
+- *Effects* - Fixed attached effects disappearing
+- *Effects* - Fixed `.randomOffset()` not randomly offsetting effects (still deprecated, see 2.1.0 release notes)
+
 ### Version 2.1.2 Hotfix
 - *Effects* - Fixed effects sometimes not becoming visible
 
