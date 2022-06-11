@@ -1413,6 +1413,7 @@ export default class CanvasEffect extends PIXI.Container {
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
         if (attachedToSource){
+
             this._addHook(this.getSourceHook("delete"), (doc) => {
                 if (doc !== this.source.document) return;
                 this._source = this._sourcePosition;
@@ -1420,20 +1421,24 @@ export default class CanvasEffect extends PIXI.Container {
                 SequencerEffectManager.objectDeleted(uuid);
             });
 
+            if (this.data.attachTo?.bindVisibility) {
+                const func = () => {
+                    this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
+                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+                };
+                this._addHook("sightRefresh", func);
+                func();
+            }
+
             const document = this.source.document;
             if (this.data.attachTo?.bindAlpha && (document instanceof TokenDocument || document instanceof TileDocument)) {
                 this._addHook(this.getSourceHook("update"), (doc) => {
                     if (doc !== document) return;
                     this.rotationContainer.alpha = document.data.alpha;
-                }, true);
+                });
+                this.rotationContainer.alpha = document.data.alpha;
             }
 
-            if (this.data.attachTo?.bindVisibility) {
-                this._addHook("sightRefresh", () => {
-                    this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
-                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
-                }, true);
-            }
         }
 
         if (attachedToTarget){
@@ -1447,10 +1452,9 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
-    _addHook(hookName, callable, callNow = false){
+    _addHook(hookName, callable){
         const id = Hooks.on(hookName, callable.bind(this));
         this._hooks.push([hookName, id]);
-        if(callNow) callable();
     }
 
     _removeHooks(){
