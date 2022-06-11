@@ -1,7 +1,7 @@
 ## Sequencer Changelog
 
 ### Version 2.1.1
-- *Sequencer* - Fixed canvas layer re-creation bug that caused performance issues for some users
+- *Sequencer* - Fixed canvas layer bug that caused performance issues for some users
 - *Sequencer* - Fixed missing default template causing some effects to not play properly
 - Added `.alwaysVisible()`, which causes the effect to always be visible, regardless of sight, fog of war, or walls.
   - Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden
