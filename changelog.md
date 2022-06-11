@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.1.2 Hotfix
+- *Effects* - Fixed effects sometimes not becoming visible
+
 ### Version 2.1.1
 - *Sequencer* - Fixed canvas layer bug that caused performance issues for some users
 - *Sequencer* - Fixed missing default template causing some effects to not play properly
