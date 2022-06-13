@@ -1939,11 +1939,6 @@ export default class CanvasEffect extends PIXI.Container {
                 animation.to *= canvas.grid.size;
             }
 
-            if (animation.propertyName.indexOf("scale") > -1) {
-                animation.from *= this.gridSizeDifference;
-                animation.to *= this.gridSizeDifference;
-            }
-
             animationsToSend = animationsToSend.concat(this._counterAnimateRotation(animation))
 
         }
@@ -1971,12 +1966,6 @@ export default class CanvasEffect extends PIXI.Container {
             if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
-                });
-            }
-
-            if (animation.propertyName.indexOf("scale") > -1) {
-                animation.values = animation.values.map(value => {
-                    return value * this.gridSizeDifference;
                 });
             }
 

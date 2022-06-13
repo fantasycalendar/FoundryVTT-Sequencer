@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.1.4
+- *Effects* - Fixed issue with hovering over persistent effects attached to objects sometimes causing Foundry's layers to crash
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` applying grid-size ratio on animated scales
+
 ### Version 2.1.3
 - *Effects* - Fixed attached effects disappearing
 - *Effects* - Fixed `.randomOffset()` not randomly offsetting effects (still deprecated, see 2.1.0 release notes)

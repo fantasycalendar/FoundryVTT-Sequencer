@@ -133,19 +133,20 @@ export class BaseEffectsLayer extends CanvasLayer {
         const effects = new Set(SelectionManager.hoveredEffects);
         if(SelectionManager.hoveredEffectUI) effects.add(SelectionManager.hoveredEffectUI)
         for (const effect of effects) {
-            if (effect === SelectionManager.selectedEffect || effect.data.screenSpace || effect._isEnding) continue;
+            if (!effect || effect === SelectionManager.selectedEffect || effect.data.screenSpace || effect._isEnding) continue;
             this._drawBoxAroundEffect(this.effectHoverBoxes, effect);
         }
     }
 
     _drawSelectedEffectElements() {
+        if(!SelectionManager.selectedEffect) return;
         this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, true);
         this._drawEffectStartEndPoints(SelectionManager.selectedEffect);
     }
 
     _drawBoxAroundEffect(graphic, effect, selected = false) {
 
-        if (effect._destroyed || !effect.spriteContainer) return;
+        if (!effect || effect._destroyed || !effect.spriteContainer) return;
 
         graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xFFFFFF, 0.9)
 
@@ -203,7 +204,7 @@ export class BaseEffectsLayer extends CanvasLayer {
      */
     _drawEffectStartEndPoints(effect) {
 
-        if (effect._destroyed || !effect.spriteContainer) return;
+        if (!effect || effect._destroyed || !effect.spriteContainer) return;
 
         if (!effect.data.stretchTo || !effect.sourcePosition || !effect.targetPosition) return;
 
