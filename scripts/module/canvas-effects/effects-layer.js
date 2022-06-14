@@ -7,7 +7,6 @@ export class BaseEffectsLayer extends CanvasLayer {
     constructor(...args) {
         super(...args);
         this.active = false;
-        this.isSetup = false;
     }
 
     static get layerOptions() {
@@ -31,40 +30,38 @@ export class BaseEffectsLayer extends CanvasLayer {
     }
 
     _setup() {
-        if (this.isSetup) return;
+        if (!this.UIContainer || this.UIContainer._destroyed) {
+            this.UIContainer = new PIXI.Container();
+            this.UIContainer.sortableChildren = true;
+            this.UIContainer.parentName = "sequencerUIContainer";
+            this.UIContainer.zIndex = 10000000000000;
+            this.addChild(this.UIContainer);
 
-        this.UIContainer = new PIXI.Container();
-        this.UIContainer.sortableChildren = true;
-        this.UIContainer.parentName = "sequencerUIContainer";
-        this.UIContainer.zIndex = 10000000000000;
-        this.addChild(this.UIContainer);
+            this.linePoint = this.UIContainer.addChild(new PIXI.Graphics());
+            this.line = this.UIContainer.addChild(new PIXI.Graphics());
+            this.lineHead = this.UIContainer.addChild(new PIXI.Graphics());
+            this.suggestionPoint = this.UIContainer.addChild(new PIXI.Graphics());
+            this.effectHoverBoxes = this.UIContainer.addChild(new PIXI.Graphics());
+            this.effectSelectionBorder = this.UIContainer.addChild(new PIXI.Graphics());
+            this.effectSourcePosition = this.UIContainer.addChild(new PIXI.Graphics());
+            this.effectTargetPosition = this.UIContainer.addChild(new PIXI.Graphics());
 
-        this.linePoint = this.UIContainer.addChild(new PIXI.Graphics());
-        this.line = this.UIContainer.addChild(new PIXI.Graphics());
-        this.lineHead = this.UIContainer.addChild(new PIXI.Graphics());
-        this.suggestionPoint = this.UIContainer.addChild(new PIXI.Graphics());
-        this.effectHoverBoxes = this.UIContainer.addChild(new PIXI.Graphics());
-        this.effectSelectionBorder = this.UIContainer.addChild(new PIXI.Graphics());
-        this.effectSourcePosition = this.UIContainer.addChild(new PIXI.Graphics());
-        this.effectTargetPosition = this.UIContainer.addChild(new PIXI.Graphics());
+            this.suggestionPoint.filters = [new PIXI.filters.AlphaFilter(0.75)];
+            this.effectSourcePosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
+            this.effectTargetPosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
 
-        this.suggestionPoint.filters = [new PIXI.filters.AlphaFilter(0.75)];
-        this.effectSourcePosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
-        this.effectTargetPosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
+            this.effectSelectionBorder.zIndex = 1;
 
-        this.effectSelectionBorder.zIndex = 1;
+            this.effectSourcePosition.interactive = true;
+            this.effectSourcePosition.pointerdown = () => {
+                SelectionManager.sourcePointSelected();
+            }
 
-        this.effectSourcePosition.interactive = true;
-        this.effectSourcePosition.pointerdown = () => {
-            SelectionManager.sourcePointSelected();
+            this.effectTargetPosition.interactive = true;
+            this.effectTargetPosition.pointerdown = () => {
+                SelectionManager.targetPointSelected();
+            }
         }
-
-        this.effectTargetPosition.interactive = true;
-        this.effectTargetPosition.pointerdown = () => {
-            SelectionManager.targetPointSelected();
-        }
-
-        this.isSetup = true;
     }
 
     render(...args) {

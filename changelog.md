@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.1.5
+- *Effects* - Fixed switching scenes would sometimes break effects
+
 ### Version 2.1.4
 - *Effects* - Fixed issue with hovering over persistent effects attached to objects sometimes causing Foundry's layers to crash
 - *Effects* - Fixed `.animateProperty()` and `.loopProperty()` applying grid-size ratio on animated scales
