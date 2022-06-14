@@ -981,7 +981,7 @@ export default class EffectSection extends Section {
             }
 
             if(this._size === null){
-                const size = canvaslib.get_object_dimensions(this._from.object?.icon ?? this._from.object?.tile ?? this._from.object);
+                const size = canvaslib.get_object_dimensions(this._from.object?.mesh ?? this._from.object?.tile ?? this._from.object);
                 this._size = {
                     width: size?.width ?? canvas.grid.size,
                     height: size?.height ?? canvas.grid.size,
@@ -989,16 +989,16 @@ export default class EffectSection extends Section {
                 };
             }
 
-            if (this._mirrorX === null && (this._from.object.data.mirrorX || (this._from.object?.tile && this._from.object?.tile.scale.x < 0))){
+            if (this._mirrorX === null && (this._from.object.mirrorX || (this._from.object?.tile && this._from.object?.tile.scale.x < 0))){
                 this._mirrorX = true;
             }
 
-            if (this._mirrorY === null && (this._from.object.data.mirrorY || (this._from.object?.tile && this._from.object?.tile.scale.y < 0))){
+            if (this._mirrorY === null && (this._from.object.mirrorY || (this._from.object?.tile && this._from.object?.tile.scale.y < 0))){
                 this._mirrorY = true;
             }
 
-            if (this._angle === null && this._from.object?.data?.rotation) {
-                this._angle = -this._from.object.data.rotation;
+            if (this._angle === null && this._from.object?.rotation) {
+                this._angle = -this._from.object.rotation;
             }
 
             this._randomOffset = {
@@ -1103,7 +1103,7 @@ export default class EffectSection extends Section {
      * @private
      */
     _sanitizeObject(inObj){
-        if(inObj && typeof inObj === "object" && !canvaslib.is_object_canvas_data(inObj)){
+        if(inObj && (inObj instanceof PlaceableObject || inObj instanceof foundry.abstract.Document)){
             inObj = lib.get_object_identifier(inObj);
         }
         return inObj;

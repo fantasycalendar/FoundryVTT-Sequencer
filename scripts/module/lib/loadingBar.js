@@ -1,4 +1,4 @@
-import { debug, isVersion9 } from "./lib.js";
+import { debug } from "./lib.js";
 
 class loading_bar {
 
@@ -6,19 +6,15 @@ class loading_bar {
         this.total = 0;
         this.current = 0;
         this.lastPct = 0;
-        this.setPercentage = false;
     }
 
     init(context, total){
-        this.setPercentage = this.setPercentage || (isVersion9()
-            ? (pct) => { SceneNavigation.displayProgressBar({ label: this.context, pct: pct }); }
-            : (pct) => { SceneNavigation._onLoadProgress(this.context, pct); });
 
         this.context = context;
         this.total = total;
         this.current = 0;
         this.lastPct = 0;
-        this.setPercentage(1)
+        SceneNavigation.displayProgressBar({ label: this.context, pct: 1 })
     }
 
     incrementProgress() {
@@ -26,7 +22,7 @@ class loading_bar {
         const pct = Math.round((this.current / this.total) * 100);
         if (pct !== this.lastPct) {
             debug(`${pct}% loaded...`)
-            this.setPercentage(pct)
+            SceneNavigation.displayProgressBar({ label: this.context, pct: pct })
         }
         this.lastPct = pct;
     }

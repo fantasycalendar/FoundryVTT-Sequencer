@@ -1,4 +1,3 @@
-import { isVersion9 } from "./module/lib/lib.js";
 import CONSTANTS from "./module/constants.js";
 import { EffectPlayer, SelectionManager } from "./module/sequencer-interaction-manager.js";
 
@@ -56,10 +55,6 @@ const hotkeys = {
 
 export default function registerHotkeys() {
 
-    if(!isVersion9()){
-        return registerHotkeysLegacy();
-    }
-
     game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-shift", {
         name: "SEQUENCER.Hotkeys.PlayTool.Shift",
         uneditable: [
@@ -108,42 +103,5 @@ export default function registerHotkeys() {
         onDown: hotkeys.selectTool.deleteDown,
     });
 
-
-}
-
-function registerHotkeysLegacy(){
-
-    window.addEventListener("keydown", (event) => {
-        switch(event.code){
-            case "ShiftLeft":
-                hotkeys.playTool.shiftDown();
-                break;
-            case "ControlLeft":
-                hotkeys.playTool.controlDown();
-                hotkeys.selectTool.controlDown();
-                break;
-            case "AltLeft":
-                hotkeys.selectTool.altDown();
-                break;
-            case "Delete":
-                hotkeys.selectTool.deleteDown();
-                break;
-        }
-    });
-
-    window.addEventListener("keyup", (event) => {
-        switch(event.code){
-            case "ShiftLeft":
-                hotkeys.playTool.shiftUp();
-                break;
-            case "ControlLeft":
-                hotkeys.playTool.controlUp();
-                hotkeys.selectTool.controlUp();
-                break;
-            case "AltLeft":
-                hotkeys.selectTool.altUp();
-                break;
-        }
-    });
 
 }

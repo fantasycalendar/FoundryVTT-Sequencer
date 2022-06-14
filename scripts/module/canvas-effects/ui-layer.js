@@ -46,7 +46,7 @@ export default class SequencerUILayer{
 
     }
 
-    get children(){
+    get effects(){
         return this.container.children;
     }
 
@@ -62,23 +62,23 @@ export default class SequencerUILayer{
 
     updateAnchoredElements(){
 
-        for(let child of this.children){
+        for(let effect of this.effects){
 
-            let screenSpaceAnchor = child.data.screenSpaceAnchor;
-            let screenSpacePosition = child.data.screenSpacePosition
+            let screenSpaceAnchor = effect.data.screenSpaceAnchor;
+            let screenSpacePosition = effect.data.screenSpacePosition
 
             if(!screenSpaceAnchor) {
-                if (!child.data.anchor) {
+                if (!effect.data.anchor) {
                     if (!screenSpaceAnchor) {
                         screenSpaceAnchor = { x: 0.5, y: 0.5 };
                     }
-                    if (child.data.screenSpace) {
-                        child.data.anchor = { ...screenSpaceAnchor };
+                    if (effect.data.screenSpace) {
+                        effect.data.anchor = { ...screenSpaceAnchor };
                     } else {
-                        child.data.anchor = { x: 0.5, y: 0.5 };
+                        effect.data.anchor = { x: 0.5, y: 0.5 };
                     }
                 } else if (!screenSpaceAnchor) {
-                    screenSpaceAnchor = { ...child.data.anchor };
+                    screenSpaceAnchor = { ...effect.data.anchor };
                 }
             }
 
@@ -86,30 +86,30 @@ export default class SequencerUILayer{
                 screenSpacePosition = { x: 0, y: 0}
             }
 
-            child.position.set(
+            effect.position.set(
                 screenSpacePosition.x + this.app.renderer.width * screenSpaceAnchor.x,
                 screenSpacePosition.y + this.app.renderer.height * screenSpaceAnchor.y
             );
 
-            if(child.data.screenSpaceScale) {
+            if(effect.data.screenSpaceScale) {
 
-                const scaleData = child.data.screenSpaceScale ?? { x: 1, y: 1 };
+                const scaleData = effect.data.screenSpaceScale ?? { x: 1, y: 1 };
 
                 let scaleX = scaleData.x;
                 let scaleY = scaleData.y;
 
                 if(scaleData.fitX){
-                    scaleX = scaleX * (this.app.renderer.width / child.sprite.width);
+                    scaleX = scaleX * (this.app.renderer.width / effect.sprite.width);
                 }
 
                 if(scaleData.fitY){
-                    scaleY = scaleY * (this.app.renderer.height / child.sprite.height);
+                    scaleY = scaleY * (this.app.renderer.height / effect.sprite.height);
                 }
 
                 scaleX = scaleData.ratioX ? scaleY : scaleX;
                 scaleY = scaleData.ratioY ? scaleX : scaleY;
 
-                child.scale.set(
+                effect.scale.set(
                     scaleX,
                     scaleY
                 )

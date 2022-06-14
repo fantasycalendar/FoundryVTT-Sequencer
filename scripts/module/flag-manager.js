@@ -29,7 +29,7 @@ const flagManager = {
      */
     getFlags(inDocument, applyFlags = true){
 
-        let effects = getProperty(inDocument.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
+        let effects = getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
 
         if(!effects?.length) return [];
 
@@ -297,7 +297,7 @@ const flagManager = {
                 [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
             });
 
-            if(object instanceof TokenDocument && object.data.actorLink){
+            if(object instanceof TokenDocument && object.actorLink){
                 const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
                 await object.actor.update({
                     [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToPrototypePersist

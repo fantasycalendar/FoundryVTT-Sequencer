@@ -141,7 +141,7 @@ export default class SequencerEffectManager {
         let effects = this.effects;
         if(inFilter.sceneId && inFilter.sceneId !== canvas.scene.id){
             effects = lib.get_all_documents_from_scene(inFilter.sceneId).map(doc => {
-                return getProperty(doc.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
+                return getProperty(doc, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
             }).filter(flags => !!flags).map(flags => {
                 return flags.map(flag => CanvasEffect.make(flag[1]));
             }).deepFlatten();
@@ -349,7 +349,7 @@ export default class SequencerEffectManager {
      */
     static async patchCreationData(inDocument, data, options) {
 
-        inDocument.data.update({_id: randomID()});
+        data["_id"] = randomID();
         options.keepId = true;
 
         const effects = flagManager.getFlags(inDocument);
@@ -371,9 +371,7 @@ export default class SequencerEffectManager {
             effectData.sceneId = inDocument.parent.id;
         });
 
-        return inDocument.data.update({
-            [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
-        });
+        data[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = effects;
 
     }
 
@@ -411,12 +409,10 @@ export default class SequencerEffectManager {
                 .then((result) => {
                     if (!result){
                         lib.debug("Error playing effect")
-                        //flagManager.removeFlags(inDocument.uuid, effect);
                     }
                 })
                 .catch((err) => {
                     lib.debug("Error playing effect:", err)
-                    //flagManager.removeFlags(inDocument.uuid, effect)
                 });
         }));
     }
@@ -425,7 +421,7 @@ export default class SequencerEffectManager {
      * Ends multiple effects by ID
      *
      * @param inEffectIds
-     * @returns {Promise<boolean|any>}
+     * @returns {Promise}
      * @private
      */
     static _endEffects(inEffectIds) {
@@ -438,7 +434,7 @@ export default class SequencerEffectManager {
      * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully _ended
      *
      * @param inEffects
-     * @returns {promise}
+     * @returns {Promise}
      * @private
      */
     static async _endManyEffects(inEffects = false) {
@@ -464,7 +460,7 @@ export default class SequencerEffectManager {
      * Removes the effect from the manager and ends it, returning a promise that resolves once the effect has fully _ended
      *
      * @param effect
-     * @returns {promise}
+     * @returns {Promise}
      * @private
      */
     static _removeEffect(effect) {

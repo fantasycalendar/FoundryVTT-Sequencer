@@ -69,12 +69,12 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
     if (obj instanceof MeasuredTemplate || obj instanceof MeasuredTemplateDocument) {
         obj = obj instanceof MeasuredTemplateDocument ? obj.object : obj;
         if (measure) {
-            if (obj.data.t === "cone" || obj.data.t === "ray") {
+            if (obj.document.t === "cone" || obj.document.t === "ray") {
                 pos.x = obj.ray.B.x;
                 pos.y = obj.ray.B.y;
             }
         }
-        if (obj.data.t === "rect") {
+        if (obj.document.t === "rect") {
             pos.x = obj.x
             pos.y = obj.y
 
@@ -86,18 +86,18 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
     } else if (obj instanceof Tile || obj instanceof TileDocument) {
         obj = obj instanceof TileDocument ? obj.object : obj;
         pos = {
-            x: obj.data.x,
-            y: obj.data.y
+            x: obj.document.x,
+            y: obj.document.y
         }
 
         if(!exact){
-            pos.x += Math.abs(obj.data.width / 2)
-            pos.y += Math.abs(obj.data.height / 2)
+            pos.x += Math.abs(obj.document.width / 2)
+            pos.y += Math.abs(obj.document.height / 2)
         }
     } else {
         pos = {
-            x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.data?.x ?? obj?.data?.position?.x ?? 0,
-            y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.data?.y ?? obj?.data?.position?.y ?? 0
+            x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.document?.x ?? obj?.document?.position?.x ?? 0,
+            y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.document?.y ?? obj?.document?.position?.y ?? 0
         }
 
         if (obj instanceof Token && !exact) {
@@ -108,8 +108,8 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
     }
 
     pos = {
-        x: pos?.x ?? obj?.x ?? obj?.data?.x,
-        y: pos?.y ?? obj?.y ?? obj?.data?.y,
+        x: pos?.x ?? obj?.x ?? obj?.document?.x,
+        y: pos?.y ?? obj?.y ?? obj?.document?.y,
     };
 
     if (!lib.is_real_number(pos.x) || !lib.is_real_number(pos.y)) {
@@ -199,7 +199,7 @@ export function get_object_canvas_data(inObject, measure = false) {
     inObject = inObject?.object ?? inObject;
     return {
         ...get_object_position(inObject, { measure }),
-        ...get_object_dimensions(inObject?.icon ?? inObject?.tile ?? inObject)
+        ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject)
     }
 }
 

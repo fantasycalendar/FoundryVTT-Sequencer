@@ -1221,28 +1221,28 @@ export default class CanvasEffect extends PIXI.Container {
         let objectWidth = 0;
         let objectHeight = 0;
         let additionalData = {
-            walledmask: getProperty(mask.placeableObject.data, "flags.walledtemplates.enabled")
+            walledmask: getProperty(mask.placeableObject, "flags.walledtemplates.enabled")
         }
 
         try {
             if (mask.documentType === "Token") {
-                objectSprite = mask.placeableObject.icon;
+                objectSprite = mask.placeableObject.mesh;
                 objectWidth = objectSprite.width / 2;
                 objectHeight = objectSprite.height / 2;
-                additionalData["img"] = mask.placeableObject.data.img;
+                additionalData["img"] = mask.placeableObject.img;
             } else if (mask.documentType === "Tile") {
                 objectSprite = mask.placeableObject.tile;
                 objectWidth = objectSprite.width / 2;
                 objectHeight = objectSprite.height / 2;
-                additionalData["img"] = mask.placeableObject.data.img;
+                additionalData["img"] = mask.placeableObject.img;
             } else if (mask.documentType === "Drawing") {
                 objectSprite = mask.placeableObject.drawing;
             } else if (mask.documentType === "MeasuredTemplate") {
                 objectSprite = mask.placeableObject.template;
-                additionalData["direction"] = mask.placeableObject.data.direction;
-                additionalData["distance"] = mask.placeableObject.data.distance;
-                additionalData["angle"] = mask.placeableObject.data.angle;
-                additionalData["width"] = mask.placeableObject.data.width;
+                additionalData["direction"] = mask.placeableObject.direction;
+                additionalData["distance"] = mask.placeableObject.distance;
+                additionalData["angle"] = mask.placeableObject.angle;
+                additionalData["width"] = mask.placeableObject.width;
             }
         }catch(err){
             return false;
@@ -1263,7 +1263,7 @@ export default class CanvasEffect extends PIXI.Container {
             && (mask.scale.y === objectSprite.scale.y)
             && (mask.texture === objectSprite.texture)
             && (mask.angle === angle)
-            && (isObjectEmpty(diffObject(mask.oldData, data)))
+            && ((diffObject(mask.oldData, data)))
             && !forced;
 
         if(noChange) return false;
@@ -1273,14 +1273,14 @@ export default class CanvasEffect extends PIXI.Container {
             mask.clear();
             mask.beginFill(0xFFFFFF, 1);
 
-            const drawingType = mask.placeableObject.data.type;
+            const drawingType = mask.placeableObject.type;
 
             if(drawingType === CONST.DRAWING_TYPES.RECTANGLE){
                 mask.drawRect(0, 0, objectSprite.width, objectSprite.height)
             }else if(drawingType === CONST.DRAWING_TYPES.ELLIPSE) {
                 mask.drawEllipse(objectSprite.width/2, objectSprite.height/2, objectSprite.width/2, objectSprite.height/2)
             }else{
-                const vertices = mask.placeableObject.data.points;
+                const vertices = mask.placeableObject.points;
 
                 if(drawingType === CONST.DRAWING_TYPES.FREEHAND) {
 
@@ -1424,7 +1424,7 @@ export default class CanvasEffect extends PIXI.Container {
             if (this.data.attachTo?.bindVisibility) {
                 const func = () => {
                     this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
-                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+                    this.spriteContainer.alpha = this.source.visible && this.source.hidden ? 0.5 : 1.0;
                 };
                 this._addHook("sightRefresh", func);
                 func();
@@ -1434,9 +1434,9 @@ export default class CanvasEffect extends PIXI.Container {
             if (this.data.attachTo?.bindAlpha && (document instanceof TokenDocument || document instanceof TileDocument)) {
                 this._addHook(this.getSourceHook("update"), (doc) => {
                     if (doc !== document) return;
-                    this.rotationContainer.alpha = document.data.alpha;
+                    this.rotationContainer.alpha = document.alpha;
                 });
-                this.rotationContainer.alpha = document.data.alpha;
+                this.rotationContainer.alpha = document.alpha;
             }
 
         }
@@ -1810,7 +1810,7 @@ export default class CanvasEffect extends PIXI.Container {
     async _transformAttachedNoStretchSprite(){
 
         const applyRotation = this.data.attachTo?.followRotation
-            && (this.source.data.rotation !== undefined || this.source.data.direction !== undefined)
+            && (this.source.rotation !== undefined || this.source.direction !== undefined)
             && !this.data.rotateTowards
             && !this.data.stretchTo;
 
@@ -1819,9 +1819,9 @@ export default class CanvasEffect extends PIXI.Container {
             if(this.source.destroyed) return;
 
             if(applyRotation && this.isSourceTemporary) {
-                this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
-                if (!(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+                this.rotationContainer.rotation = this.source.rotation ? Math.normalizeRadians(Math.toRadians(this.source.rotation)) : 0;
+                if (!(this.source instanceof MeasuredTemplate && (this.source.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
+                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.direction));
                 }
             }
 

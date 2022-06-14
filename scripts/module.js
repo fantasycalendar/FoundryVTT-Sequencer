@@ -21,6 +21,10 @@ Hooks.once('init', async function () {
     initialize_module();
 });
 
+Hooks.once("socketlib.ready", () => {
+    registerSocket();
+})
+
 Hooks.once('ready', async function () {
 
     if(!game.modules.get("socketlib")?.active){
@@ -77,10 +81,6 @@ function initialize_module(){
     registerSettings();
     registerHotkeys();
     registerLibwrappers();
-
-    Hooks.once("socketlib.ready", () => {
-        registerSocket();
-    })
 
     Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));

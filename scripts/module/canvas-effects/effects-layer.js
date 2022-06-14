@@ -2,11 +2,10 @@ import { EffectPlayer, InteractionManager, SelectionManager } from "../sequencer
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
-export class BaseEffectsLayer extends CanvasLayer {
+export class BaseEffectsLayer extends InteractionLayer {
 
     constructor(...args) {
         super(...args);
-        this.active = false;
     }
 
     static get layerOptions() {
@@ -14,11 +13,6 @@ export class BaseEffectsLayer extends CanvasLayer {
             zIndex: 180,
             name: "sequencerEffectsAboveTokens"
         });
-    }
-
-    activate() {
-        super.activate();
-        this.active = true;
     }
 
     deactivate() {
@@ -281,6 +275,7 @@ export class BaseEffectsLayer extends CanvasLayer {
 }
 
 export class BelowTokensEffectsLayer extends BaseEffectsLayer {
+
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
             zIndex: 95,
@@ -290,6 +285,7 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
 }
 
 export class AboveLightingEffectsLayer extends BaseEffectsLayer {
+
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
             zIndex: 500,

@@ -1,12 +1,12 @@
 {
   "name": "sequencer",
   "title": "Sequencer",
-  "description": "This module implements an advanced sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
-  "version": "2.0.0",
+  "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
+  "version": "10.0.0",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.8.9",
-  "compatibleCoreVersion": "9.000",
+  "minimumCoreVersion": "10",
+  "compatibleCoreVersion": "10",
   "author": "Wasp (Wasp#2005)",
   "esmodules": [
     "scripts/module.js"
@@ -54,7 +54,8 @@
   ],
   "dependencies": [
     {
-      "name": "socketlib"
+      "name": "socketlib",
+      "type": "module"
     }
   ],
   "socket": true,
