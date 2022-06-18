@@ -313,7 +313,7 @@ export function from_uuid_fast(uuid) {
 /**
  * Gets all documents from the given scene
  *
- * @param inSceneId
+ * @param inSceneId [inSceneId]
  * @returns {Array<Document>}
  */
 export function get_all_documents_from_scene(inSceneId){
@@ -439,6 +439,10 @@ export function str_to_search_regex_str(str) {
         .trim()
         .replace(/[^A-Za-z0-9 .*_-]/g, "")
         .replace(/\*+/g, ".*?");
+}
+
+export function safe_str(str){
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 export function scroll_to_element(scrollElement, scrollToElement, duration = 500) {

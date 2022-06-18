@@ -3,10 +3,6 @@
 // Then add this macro's name to the bottom of the Detect Magic spell in the "On Use Macro" field
 
 let error = false;
-if(typeof args !== 'undefined' && args.length === 0){
-    error = `You can't run this macro from the hotbar! This is a callback macro. To use this, enable MidiQOL settings in "Workflow" -> "Add macro to call on use", then add this macro's name to the bottom of the Detect Magic spell in the "On Use Macro" field.`;
-}
-
 if(!(game.modules.get("jb2a_patreon"))){
     error = `You need to have JB2A's patreon only module installed to run this macro!`;
 }
@@ -21,12 +17,16 @@ if(!game.modules.get("midi-qol")?.active){
     error = `You need to have MidiQOL ${installed} to run this macro!`;
 }
 
-const tokenD = canvas.tokens.get(args[0].tokenId);
+if(typeof args === 'undefined' || args.length === 0){
+    error = `You can't run this macro from the hotbar! This is a callback macro. To use this, enable MidiQOL settings in "Workflow" -> "Add macro to call on use", then add this macro's name to the bottom of the Detect Magic spell in the "On Use Macro" field.`;
+}
 
 if(error){
     ui.notifications.error(error);
     return;
 }
+
+const tokenD = canvas.tokens.get(args[0].tokenId);
 
 let magicalObjects = [];
 

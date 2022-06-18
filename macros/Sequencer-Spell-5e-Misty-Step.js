@@ -30,11 +30,10 @@ let range = await canvas.scene.createEmbeddedDocuments('MeasuredTemplate', [{
     direction: 0,
     distance: 30,
     borderColor: "#FF0000"
-}])
+}]);
 
 let position = await warpgate.crosshairs.show({
     size: 1,
-    interval: -1,
     tag: randomID(),
     label: "Teleport to",
     drawOutline: false,

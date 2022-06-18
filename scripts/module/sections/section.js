@@ -156,6 +156,9 @@ export default class Section {
         if (typeof inLocation === "string") {
             inLocation = lib.get_object_from_scene(inLocation) ?? inLocation;
         }
+        if (typeof inLocation === "string") {
+            inLocation = lib.safe_str(inLocation)
+        }
         return inLocation;
     }
 

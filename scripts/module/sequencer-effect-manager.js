@@ -136,7 +136,7 @@ export default class SequencerEffectManager {
      */
     static _filterEffects(inFilter) {
         if (inFilter.name) {
-            inFilter.name = new RegExp(lib.str_to_search_regex_str(inFilter.name), "gu");
+            inFilter.name = new RegExp(lib.str_to_search_regex_str(lib.safe_str(inFilter.name)), "gu");
         }
         let effects = this.effects;
         if(inFilter.sceneId && inFilter.sceneId !== canvas.scene.id){

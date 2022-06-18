@@ -67,7 +67,7 @@ export default class EffectSection extends Section {
      */
     name(inName) {
         if (typeof inName !== "string") throw this.sequence._customError(this, "name", "inName must be of type string");
-        this._name = inName;
+        this._name = lib.safe_str(inName);
         return this;
     }
 
@@ -158,7 +158,7 @@ export default class EffectSection extends Section {
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
             randomOffset: false
-        }, inOptions)
+        }, inOptions);
         inLocation = this._validateLocation(inLocation);
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "atLocation", "inOptions.cacheLocation must be of type boolean");
