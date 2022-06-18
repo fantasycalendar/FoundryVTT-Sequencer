@@ -3,10 +3,6 @@
 // Then add this macro's name to the bottom of the Faerie Fire spell in the "On Use Macro" field
 
 let error = false;
-if(typeof args !== 'undefined' && args.length === 0){
-    error = `You can't run this macro from the hotbar! This is a callback macro. To use this, enable MidiQOL settings in "Workflow" -> "Add macro to call on use", then add this macro's name to the bottom of the Misty Step spell in the "On Use Macro" field.`;
-}
-
 if(!(game.modules.get("jb2a_patreon") || game.modules.get("JB2A_DnD5e"))){
     error = `You need to have JB2A installed to run this macro!`;
 }
@@ -20,6 +16,11 @@ if(!game.modules.get("midi-qol")?.active){
     let installed = game.modules.get("midi-qol") && !game.modules.get("midi-qol").active ? "enabled" : "installed";
     error = `You need to have MidiQOL ${installed} to run this macro!`;
 }
+
+if(typeof args === 'undefined' || args.length === 0){
+    error = `You can't run this macro from the hotbar! This is a callback macro. To use this, enable MidiQOL settings in "Workflow" -> "Add macro to call on use", then add this macro's name to the bottom of the Misty Step spell in the "On Use Macro" field.`;
+}
+
 
 if(error){
     ui.notifications.error(error);

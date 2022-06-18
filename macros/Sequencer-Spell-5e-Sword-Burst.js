@@ -21,7 +21,7 @@ if(tokenD) {
             .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/magic/magic_sphere_1token_SQUARE.webm")
             .atLocation(tokenD)
             .scale(1.5)
-            .gridSize(100)
+            .template({ gridSize: 100 })
             .randomRotation()
         .play()
 }

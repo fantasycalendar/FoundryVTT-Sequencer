@@ -1818,10 +1818,11 @@ export default class CanvasEffect extends PIXI.Container {
 
             if(this.source.destroyed) return;
 
-            if(applyRotation && this.isSourceTemporary) {
-                this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
-                if (!(this.source instanceof MeasuredTemplate && (this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE || this.source.data.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE))) {
+            if(applyRotation) {
+                if (this.source instanceof MeasuredTemplate && this.source.data.t !== "rect"){
                     this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
+                }else {
+                    this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
                 }
             }
 

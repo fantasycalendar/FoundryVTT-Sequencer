@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.1.6
+- *Sequencer* - Updated compendium of Sequencer macro samples
+- *Effects* - Fixed finding effects by name with accents in them silently failing
+- *Effects* - Fixed `.attachTo()` not following the target's rotation
+
 ### Version 2.1.5
 - *Effects* - Fixed switching scenes would sometimes break effects
 
