@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.1.7
+- *Effects* - Fixed string normalization
+
 ### Version 2.1.6
 - *Sequencer* - Updated compendium of Sequencer macro samples
 - *Effects* - Fixed finding effects by name with accents in them silently failing
