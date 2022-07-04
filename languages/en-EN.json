@@ -105,6 +105,10 @@
         "Title": "Open Sequencer Database Viewer",
         "Label": "Open Database Viewer"
       },
+      "DisablePIXIFix": {
+        "Title": "Disable PIXI fix",
+        "Label": "This disables the fix for alphas on effects in Foundry - some setups (browsers, hardware, softwares, etc) seems to make this fix obsolete."
+      },
       "Debug": {
         "Title": "Enable debugging",
         "Label": "This will make the sequencer log into the console what it is doing"

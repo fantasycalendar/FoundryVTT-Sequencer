@@ -13,6 +13,15 @@ export default function registerSettings() {
         restricted: true
     });
 
+    game.settings.register(CONSTANTS.MODULE_NAME, "disable-pixi-fix", {
+        name: "SEQUENCER.Setting.DisablePIXIFix.Title",
+        hint: "SEQUENCER.Setting.DisablePIXIFix.Label",
+        scope: "client",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
     game.settings.register(CONSTANTS.MODULE_NAME, "debug", {
         name: "SEQUENCER.Setting.Debug.Title",
         hint: "SEQUENCER.Setting.Debug.Label",
