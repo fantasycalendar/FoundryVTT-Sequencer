@@ -103,7 +103,7 @@ export default class Sequence {
                     throw lib.custom_error(this.moduleName, `macro - Macro '${macro[3]}' was not found in compendium '${macro[1]}.${macro[2]}'`);
                 }
                 macro = new Macro(macroData);
-                macro.permission.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
+                macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
             }
             await macro.execute(...args);
         }, true));

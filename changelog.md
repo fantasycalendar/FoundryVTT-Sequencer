@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.1.9
+- *Sequencer* - Upgraded module to support Foundry v10
+
 ### Version 2.1.8
 - *Sequencer* - Added setting to allow clients to disable Sequencer's PIXI alpha fix for base textures
 
