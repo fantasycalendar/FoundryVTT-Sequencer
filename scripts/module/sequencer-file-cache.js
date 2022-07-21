@@ -1,3 +1,5 @@
+import CONSTANTS from "./constants.js";
+
 const SequencerFileCache = {
 
     _videos: {},
@@ -108,7 +110,10 @@ async function get_video_texture(inBlob){
             video.width = video.videoWidth;
 
             const baseTexture = PIXI.BaseTexture.from(video, { resourceOptions: { autoPlay: false } });
-            baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA;
+            
+            if(!game.settings.get(CONSTANTS.MODULE_NAME, "disable-pixi-fix")) {
+              baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA;
+            }
 
             const texture = new PIXI.Texture(baseTexture);
 

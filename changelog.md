@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.1.8
+- *Sequencer* - Added setting to allow clients to disable Sequencer's PIXI alpha fix for base textures
+
 ### Version 2.1.7
 - *Effects* - Fixed string normalization
 
