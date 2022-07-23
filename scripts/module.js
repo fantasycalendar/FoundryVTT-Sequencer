@@ -78,10 +78,6 @@ function initialize_module(){
     registerHotkeys();
     registerLibwrappers();
 
-    Hooks.once("socketlib.ready", () => {
-        registerSocket();
-    })
-
     Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateTile", (...args) => Sequencer.EffectManager.patchCreationData(...args));
@@ -93,3 +89,7 @@ function initialize_module(){
     Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
 
 }
+
+Hooks.once("socketlib.ready", () => {
+    registerSocket();
+})

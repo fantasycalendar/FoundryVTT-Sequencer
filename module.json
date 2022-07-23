@@ -54,7 +54,8 @@
   ],
   "dependencies": [
     {
-      "name": "socketlib"
+      "name": "socketlib",
+      "type": "module"
     }
   ],
   "socket": true,

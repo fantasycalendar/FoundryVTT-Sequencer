@@ -8,7 +8,7 @@ export default class Section {
         this._playIf = true;
         this._waitUntilFinished = true;
         this._async = false;
-        this._waitUntilFinishedDelay = 0;
+        this._waitUntilFinishedDelay = [0, 0];
         this._repetitions = 1;
         this._currentRepetition = 0;
         this._repeatDelayMin = 0;
@@ -91,13 +91,15 @@ export default class Section {
     /**
      * Causes the section to finish running before starting the next section.
      *
-     * @param {number} [inDelay=0] inDelay
+     * @param {number} [minDelay=0] minDelay
+     * @param {number} [maxDelay=0] maxDelay
      * @returns {Section} this
      */
-    waitUntilFinished(inDelay = 0) {
-        if (!lib.is_real_number(inDelay)) throw this.sequence._customError(this, "waitUntilFinished", "inDelay must be of type number");
+    waitUntilFinished(minDelay = 0, maxDelay = 0) {
+        if (!lib.is_real_number(minDelay)) throw this.sequence._customError(this, "waitUntilFinished", "minDelay must be of type number");
+        if (!lib.is_real_number(maxDelay)) throw this.sequence._customError(this, "waitUntilFinished", "maxDelay must be of type number");
         this._waitUntilFinished = true;
-        this._waitUntilFinishedDelay = inDelay;
+        this._waitUntilFinishedDelay = [Math.min(minDelay, maxDelay), Math.max(minDelay, maxDelay)];
         return this;
     }
 
@@ -210,14 +212,14 @@ export default class Section {
      * @protected
      */
     get shouldWaitUntilFinished() {
-        return this._waitUntilFinished || this._waitAnyway
+        return this._waitUntilFinished[0] > 0 || this._waitAnyway
     }
 
     /**
      * @protected
      */
     get _waitAnyway() {
-        return ((this._async || this._waitUntilFinished) && this._isLastRepetition)
+        return ((this._async || this._waitUntilFinished[0] > 0) && this._isLastRepetition)
             || (this._isLastRepetition && this._isLastSection);
     }
 
@@ -239,7 +241,7 @@ export default class Section {
      * @protected
      */
     get _currentWaitTime() {
-        let waitUntilFinishedDelay = this._waitAnyway ? this._waitUntilFinishedDelay : 0;
+        let waitUntilFinishedDelay = this._waitAnyway ? lib.random_int_between(...this._waitUntilFinishedDelay) : 0;
         return waitUntilFinishedDelay + this._repeatDelay;
     }
 

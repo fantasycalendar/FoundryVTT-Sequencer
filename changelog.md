@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.1.9 
+- *Effects* - Added `gridUnits` as a secondary option to both `.offset()` and `.spriteOffset()`
+- *Effects* - Fixed persistent prototype token effects not applying on every instance of its token
+- *Effects* - Fixed `.playbackRate()` only adjusting effect duration, and not the actual playback rate
+
 ### Version 2.1.8
 - *Sequencer* - Added setting to allow clients to disable Sequencer's PIXI alpha fix for base textures
 

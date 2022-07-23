@@ -63,6 +63,8 @@ export class BaseEffectsLayer extends CanvasLayer {
             }
         }
     }
+    
+    async _draw(...args){}
 
     render(...args) {
         super.render(...args);
