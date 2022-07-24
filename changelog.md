@@ -1,6 +1,8 @@
 ## Sequencer Changelog
 
 ### Version 2.1.9 
+- *Sequencer* - Unlocked keybinds so that users may configure their own keybinds for Sequencer's layers
+- *Sequencer* - Added support for `minDelay` and `maxDelay` on `.waitUntilFinished()`, so you can now have a random wait delay between sections
 - *Effects* - Added `gridUnits` as a secondary option to both `.offset()` and `.spriteOffset()`
 - *Effects* - Fixed persistent prototype token effects not applying on every instance of its token
 - *Effects* - Fixed `.playbackRate()` only adjusting effect duration, and not the actual playback rate

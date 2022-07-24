@@ -8,42 +8,44 @@ const hotkeys = {
     },
 
     playTool: {
-        controlDown: () => {
+        playManySequencedDown: () => {
             if(!hotkeys._ready) return;
             EffectPlayer.playManySequenced = true;
         },
-        controlUp: () => {
+        playManySequencedUp: () => {
             if(!hotkeys._ready) return;
             EffectPlayer.playManySequenced = false;
+            if(!EffectPlayer.isActive) return;
+            EffectPlayer.playManyUp();
         },
-        shiftDown: () => {
+        playManyDown: () => {
             if(!hotkeys._ready) return;
             EffectPlayer.playMany = true;
         },
-        shiftUp: () => {
+        playManyUp: () => {
             if(!hotkeys._ready) return;
             EffectPlayer.playMany = false;
             if(!EffectPlayer.isActive) return;
-            EffectPlayer.shiftUp();
+            EffectPlayer.playManyUp();
         }
     },
 
     selectTool: {
-        controlDown: () => {
+        snapToGridDown: () => {
             if(!hotkeys._ready) return;
             SelectionManager.snapToGrid = true;
         },
-        controlUp: () => {
+        snapToGridUp: () => {
             if(!hotkeys._ready) return;
             SelectionManager.snapToGrid = false;
         },
-        altDown: () => {
+        attachToTargetDown: () => {
             if(!hotkeys._ready) return;
             SelectionManager.attachToTarget = true;
             if(!SelectionManager.isActive) return;
-            SelectionManager.altDown()
+            SelectionManager.attachToTargetDown()
         },
-        altUp: () => {
+        attachToTargetUp: () => {
             if(!hotkeys._ready) return;
             SelectionManager.attachToTarget = false;
         },
@@ -59,50 +61,46 @@ export default function registerHotkeys() {
     if(!isVersion9()){
         return registerHotkeysLegacy();
     }
+    
+    game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-control", {
+        name: "SEQUENCER.Hotkeys.PlayTool.Control",
+        editable: [
+            { key: "ControlLeft" },
+        ],
+        onDown: hotkeys.playTool.playManySequencedDown,
+        onUp: hotkeys.playTool.playManySequencedUp
+    });
 
     game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-shift", {
         name: "SEQUENCER.Hotkeys.PlayTool.Shift",
-        uneditable: [
+        editable: [
             { key: "ShiftLeft" },
         ],
-        onDown: hotkeys.playTool.shiftDown,
-        onUp: hotkeys.playTool.shiftUp,
-        reservedModifiers: ["CONTROL"]
-    });
-
-    game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-control", {
-        name: "SEQUENCER.Hotkeys.PlayTool.Control",
-        uneditable: [
-            { key: "ControlLeft" },
-        ],
-        onDown: hotkeys.playTool.controlDown,
-        onUp: hotkeys.playTool.controlUp,
-        reservedModifiers: ["SHIFT"]
+        onDown: hotkeys.playTool.playManyDown,
+        onUp: hotkeys.playTool.playManyUp
     });
 
     game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-control", {
         name: "SEQUENCER.Hotkeys.SelectTool.Control",
-        uneditable: [
+        editable: [
             { key: "ControlLeft" },
         ],
-        onDown: hotkeys.selectTool.controlDown,
-        onUp: hotkeys.selectTool.controlUp,
-        reservedModifiers: ["SHIFT", "ALT"]
+        onDown: hotkeys.selectTool.snapToGridDown,
+        onUp: hotkeys.selectTool.snapToGridUp
     });
 
     game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-alt", {
         name: "SEQUENCER.Hotkeys.SelectTool.Alt",
-        uneditable: [
+        editable: [
             { key: "AltLeft" },
         ],
-        onDown: hotkeys.selectTool.altDown,
-        onUp: hotkeys.selectTool.altUp,
-        reservedModifiers: ["CONTROL", "SHIFT"]
+        onDown: hotkeys.selectTool.attachToTargetDown,
+        onUp: hotkeys.selectTool.attachToTargetUp
     });
 
     game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-delete", {
         name: "SEQUENCER.Hotkeys.SelectTool.Delete",
-        uneditable: [
+        editable: [
             { key: "Delete" },
         ],
         onDown: hotkeys.selectTool.deleteDown,
@@ -115,15 +113,15 @@ function registerHotkeysLegacy(){
 
     window.addEventListener("keydown", (event) => {
         switch(event.code){
-            case "ShiftLeft":
-                hotkeys.playTool.shiftDown();
-                break;
             case "ControlLeft":
-                hotkeys.playTool.controlDown();
-                hotkeys.selectTool.controlDown();
+                hotkeys.playTool.playManySequencedDown();
+                hotkeys.selectTool.snapToGridDown();
+                break;
+            case "ShiftLeft":
+                hotkeys.playTool.playManyDown();
                 break;
             case "AltLeft":
-                hotkeys.selectTool.altDown();
+                hotkeys.selectTool.attachToTargetDown();
                 break;
             case "Delete":
                 hotkeys.selectTool.deleteDown();
@@ -134,14 +132,14 @@ function registerHotkeysLegacy(){
     window.addEventListener("keyup", (event) => {
         switch(event.code){
             case "ShiftLeft":
-                hotkeys.playTool.shiftUp();
+                hotkeys.playTool.playManyUp();
                 break;
             case "ControlLeft":
-                hotkeys.playTool.controlUp();
-                hotkeys.selectTool.controlUp();
+                hotkeys.playTool.playManySequencedUp();
+                hotkeys.selectTool.snapToGridUp();
                 break;
             case "AltLeft":
-                hotkeys.selectTool.altUp();
+                hotkeys.selectTool.attachToTargetUp();
                 break;
         }
     });
