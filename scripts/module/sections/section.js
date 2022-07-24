@@ -92,14 +92,14 @@ export default class Section {
      * Causes the section to finish running before starting the next section.
      *
      * @param {number} [minDelay=0] minDelay
-     * @param {number} [maxDelay=0] maxDelay
+     * @param {number/null} [maxDelay=null] maxDelay
      * @returns {Section} this
      */
-    waitUntilFinished(minDelay = 0, maxDelay = 0) {
+    waitUntilFinished(minDelay = 0, maxDelay = null) {
         if (!lib.is_real_number(minDelay)) throw this.sequence._customError(this, "waitUntilFinished", "minDelay must be of type number");
-        if (!lib.is_real_number(maxDelay)) throw this.sequence._customError(this, "waitUntilFinished", "maxDelay must be of type number");
+        if (maxDelay !== null && !lib.is_real_number(maxDelay)) throw this.sequence._customError(this, "waitUntilFinished", "maxDelay must be of type number");
         this._waitUntilFinished = true;
-        this._waitUntilFinishedDelay = [Math.min(minDelay, maxDelay), Math.max(minDelay, maxDelay)];
+        this._waitUntilFinishedDelay = [Math.min(minDelay, maxDelay ?? minDelay), Math.max(minDelay, maxDelay ?? minDelay)];
         return this;
     }
 
@@ -212,14 +212,14 @@ export default class Section {
      * @protected
      */
     get shouldWaitUntilFinished() {
-        return this._waitUntilFinished[0] > 0 || this._waitAnyway
+        return this._waitUntilFinished || this._waitAnyway
     }
 
     /**
      * @protected
      */
     get _waitAnyway() {
-        return ((this._async || this._waitUntilFinished[0] > 0) && this._isLastRepetition)
+        return ((this._async || this._waitUntilFinished) && this._isLastRepetition)
             || (this._isLastRepetition && this._isLastSection);
     }
 
