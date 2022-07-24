@@ -1944,25 +1944,20 @@ export default class CanvasEffect extends PIXI.Container {
 
         const animations = foundry.utils.duplicate(this.data.animations);
 
-        const oneShotAnimations = animations.filter(animation => !animation.looping);
+        const oneShotAnimations = animations.filter(animation => !animation.looping && !animation.fromEnd);
 
         for (let animation of oneShotAnimations) {
 
             animation.target = foundry.utils.getProperty(this, animation.target);
 
             if (!animation.target) continue;
-
+            
             if (animation.propertyName.indexOf("rotation") > -1) {
                 animation.from = animation.from * (Math.PI / 180);
                 animation.to = animation.to * (Math.PI / 180);
             }
-
-            if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
-                animation.from *= canvas.grid.size;
-                animation.to *= canvas.grid.size;
-            }
-
-            if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
+            
+            if (["position.x", "position.y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
                 animation.from *= canvas.grid.size;
                 animation.to *= canvas.grid.size;
             }
@@ -1984,14 +1979,8 @@ export default class CanvasEffect extends PIXI.Container {
                     return angle * (Math.PI / 180);
                 });
             }
-
-            if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
-                animation.values = animation.values.map(value => {
-                    return value * canvas.grid.size;
-                });
-            }
-
-            if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
+    
+            if (["x", "y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
                 });
@@ -2000,12 +1989,52 @@ export default class CanvasEffect extends PIXI.Container {
             animationsToSend = animationsToSend.concat(this._counterAnimateRotation(animation))
 
         }
+    
+        if(!(this instanceof PersistentCanvasEffect)) {
+            animationsToSend = animationsToSend.concat(this._getFromEndCustomAnimations())
+        }
 
         SequencerAnimationEngine.addAnimation(this.id,
             animationsToSend,
             this.actualCreationTime - this.data.creationTimestamp
         );
 
+    }
+    
+    _getFromEndCustomAnimations(immediate = false){
+        
+        let fromEndAnimations = []
+        
+        const animations = foundry.utils.duplicate(this.data.animations);
+        
+        const oneShotEndingAnimations = animations.filter(animation => !animation.looping && animation.fromEnd);
+        
+        for (let animation of oneShotEndingAnimations) {
+    
+            animation.target = foundry.utils.getProperty(this, animation.target);
+    
+            if (!animation.target) continue;
+            
+            animation.delay = lib.is_real_number(immediate)
+                ? Math.max(immediate - animation.duration + animation.delay, 0)
+                : Math.max(this._animationDuration - animation.duration + animation.delay, 0);
+        
+            if (animation.propertyName.indexOf("rotation") > -1) {
+                animation.from = animation.from * (Math.PI / 180);
+                animation.to = animation.to * (Math.PI / 180);
+            }
+        
+            if (["position.x", "position.y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
+                animation.from *= canvas.grid.size;
+                animation.to *= canvas.grid.size;
+            }
+    
+            fromEndAnimations = fromEndAnimations.concat(this._counterAnimateRotation(animation))
+        
+        }
+        
+        return fromEndAnimations;
+        
     }
 
     /**
@@ -2440,13 +2469,16 @@ class PersistentCanvasEffect extends CanvasEffect {
             this.video.loop = false;
             extraEndDuration = Math.max(extraEndDuration, fullWaitDuration);
         }
+        const fromEndCustomAnimations = this._getFromEndCustomAnimations(extraEndDuration);
         const durations = [
             this._fadeOut(extraEndDuration),
             this._scaleOut(extraEndDuration),
             this._rotateOut(extraEndDuration),
             this.data.extraEndDuration,
-            fullWaitDuration
+            fullWaitDuration,
+            ...fromEndCustomAnimations.map(animation => animation.duration + animation.delay)
         ].filter(Boolean);
+        SequencerAnimationEngine.addAnimation(this.id, fromEndCustomAnimations);
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {
