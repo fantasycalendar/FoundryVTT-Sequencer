@@ -543,7 +543,7 @@ class AnimationSection extends Section {
 
         return new Promise(async (resolve) => {
             this._animate(animData, resolve);
-            setTimeout(resolve, Math.max(0, overallDuration + this._waitUntilFinishedDelay + animData.maxFPS));
+            setTimeout(resolve, Math.max(0, overallDuration + this._currentWaitTime + animData.maxFPS));
         })
 
     }

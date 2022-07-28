@@ -86,11 +86,11 @@ class SoundSection extends Section {
 
         if (this._endTime) {
             duration = !this._endPerc
-                ? this._isRange ? this._endTime - this._startTime : duration - this._endTime
+                ? Number(this._isRange ? this._endTime - this._startTime : duration - this._endTime)
                 : this._endTime * duration;
         }
 
-        duration += this._waitUntilFinishedDelay;
+        duration += this._currentWaitTime;
 
         let data = {
             play: true,
