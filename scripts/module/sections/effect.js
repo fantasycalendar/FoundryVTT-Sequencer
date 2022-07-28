@@ -83,7 +83,8 @@ export default class EffectSection extends Section {
         if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type boolean");
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "persist", `inOptions must be of type object`);
         inOptions = foundry.utils.mergeObject({
-            persistTokenPrototype: false
+            id: randomID(),
+            persistTokenPrototype: false,
         }, inOptions)
         if (typeof inOptions.persistTokenPrototype !== "boolean") throw this.sequence._customError(this, "persist", "inOptions.persistTokenPrototype must be of type boolean");
         this._persist = inBool;
@@ -340,22 +341,28 @@ export default class EffectSection extends Section {
      *  Causes the effect to be offset relative to its location based on a given vector
      *
      * @param {object} inOffset
-     * @param {object} options
+     * @param {object} inOptions
      * @returns {EffectSection}
      */
-    offset(inOffset, options = {}) {
+    offset(inOffset, inOptions = {}) {
         if (inOffset === undefined) throw this.sequence._customError(this, "offset", "inOffset must not be undefined");
-        if (typeof options !== "object") throw this.sequence._customError(this, "offset", "options must be of type object");
+        if (typeof inOptions !== "object") throw this.sequence._customError(this, "offset", "options must be of type object");
         inOffset = foundry.utils.mergeObject({
             x: 0,
             y: 0,
-            local: false
         }, inOffset);
-        inOffset = foundry.utils.mergeObject(inOffset, options);
-        if (typeof inOffset.local !== "boolean") throw this.sequence._customError(this, "offset", "options.local must be of type boolean");
+        inOptions = foundry.utils.mergeObject({
+            local: false,
+            gridUnits: false
+        }, inOptions)
+        if (typeof inOptions.local !== "boolean") throw this.sequence._customError(this, "offset", "inOptions.local must be of type boolean");
+        if (typeof inOptions.gridUnits !== "boolean") throw this.sequence._customError(this, "offset", "inOptions.gridUnits must be of type boolean");
         if (!lib.is_real_number(inOffset.x)) throw this.sequence._customError(this, "offset", `inOffset.x must be of type number!`);
         if (!lib.is_real_number(inOffset.y)) throw this.sequence._customError(this, "offset", `inOffset.y must be of type number!`);
-        this._offset = inOffset;
+        this._offset = {
+            ...inOffset,
+            ...inOptions
+        };
         return this;
     }
 
@@ -363,17 +370,26 @@ export default class EffectSection extends Section {
      *  Causes the effect's sprite to be offset relative to its location based on a given vector
      *
      * @param {object} inOffset
+     * @param {object} inOptions
      * @returns {EffectSection}
      */
-    spriteOffset(inOffset) {
+    spriteOffset(inOffset, inOptions =  {}) {
         if (inOffset === undefined) throw this.sequence._customError(this, "spriteOffset", "inOffset must not be undefined");
+        if (typeof inOptions !== "object") throw this.sequence._customError(this, "spriteOffset", "options must be of type object");
         inOffset = foundry.utils.mergeObject({
             x: 0,
             y: 0
         }, inOffset);
+        inOptions = foundry.utils.mergeObject({
+            gridUnits: false
+        }, inOptions)
+        if (typeof inOptions.gridUnits !== "boolean") throw this.sequence._customError(this, "spriteOffset", "inOptions.gridUnits must be of type boolean");
         if (!lib.is_real_number(inOffset.x)) throw this.sequence._customError(this, "spriteOffset", `inOffset.x must be of type number!`);
         if (!lib.is_real_number(inOffset.y)) throw this.sequence._customError(this, "spriteOffset", `inOffset.y must be of type number!`);
-        this._spriteOffset = inOffset;
+        this._spriteOffset = {
+            ...inOffset,
+            ...inOptions
+        };
         return this;
     }
 
@@ -1115,7 +1131,7 @@ export default class EffectSection extends Section {
     _getSourceObject(){
         if(typeof this._source !== "object") return this._source;
         return this._attachTo?.active
-            ? this._sanitizeObject(this._source)
+            ? lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source)
             : canvaslib.get_object_canvas_data(this._source);
     }
 
@@ -1126,7 +1142,7 @@ export default class EffectSection extends Section {
         if(!this._target?.target) return this._target;
         if(typeof this._target.target !== "object") return this._target.target;
         return this._target?.attachTo
-            ? this._sanitizeObject(this._target.target)
+            ? lib.get_object_identifier(this._target.target) ?? canvaslib.get_object_canvas_data(this._target.target, true)
             : canvaslib.get_object_canvas_data(this._target.target, true);
     }
 

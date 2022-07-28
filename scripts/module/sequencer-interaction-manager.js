@@ -174,7 +174,7 @@ export const EffectPlayer = {
     /**
      * Hotkeys
      */
-    shiftUp() {
+    playManyUp() {
         this._playEffects();
         this._reset();
     },
@@ -301,7 +301,7 @@ export const EffectPlayer = {
             this.sequenceBuffer.push(sequence);
         }
 
-        if (!this.playMany) this._playEffects();
+        if (!this.playMany && !this.playManySequenced) this._playEffects();
 
     },
 
@@ -394,8 +394,8 @@ export const SelectionManager = {
         await SequencerEffectManager.endEffects({ effects: this.selectedEffect });
         this.selectedEffect = false;
     },
-
-    altDown() {
+    
+    attachToTargetDown() {
         if (InteractionManager.state.LeftMouseDown && !InteractionManager.state.RightMouseDown) {
             this._evaluateEffectPositionUpdate();
         }

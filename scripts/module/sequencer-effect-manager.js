@@ -38,6 +38,11 @@ export default class SequencerEffectManager {
     static async play(data, push = true) {
         if (!lib.user_can_do("permissions-effect-create")) return;
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
+        
+        if (data?.persistOptions?.persistTokenPrototype){
+            this._playPrototypeTokenEffects(data, push);
+        }
+        
         return this._playEffect(data);
     }
 
@@ -250,13 +255,13 @@ export default class SequencerEffectManager {
 
         const effect = CanvasEffect.make(data);
 
-        if (!effect.shouldPlay) return;
-
-        const playData = await effect.play();
-
         if (data.persist && setFlags && effect.context && effect.owner && !effect.isSourceTemporary) {
             flagManager.addFlags(effect.context.uuid, effect.data);
         }
+    
+        if (!effect.shouldPlay) return;
+    
+        const playData = await effect.play();
 
         EffectsContainer.set(effect.id, effect);
         if(effect.data.name){
@@ -348,30 +353,40 @@ export default class SequencerEffectManager {
      * @returns {*}
      */
     static async patchCreationData(inDocument, data, options) {
-
-        data["_id"] = randomID();
-        options.keepId = true;
-
-        const effects = flagManager.getFlags(inDocument);
+        
+        const effects = flagManager.getFlags(inDocument, { preCreate: true });
 
         if(!effects?.length) return;
+        
+        let documentUuid = null;
+        if(!inDocument.data._id){
+            const documentId = randomID();
+            documentUuid = inDocument.uuid + documentId;
+            inDocument.data.update({
+                _id: documentId,
+            });
+        }else{
+            documentUuid = inDocument.uuid;
+        }
 
         effects.forEach(effect => {
             const effectData = effect[1];
             effect[0] = randomID();
             effectData._id = effect[0];
             if (lib.is_UUID(effectData.source)) {
-                let newUuid = lib.get_object_identifier(inDocument);
                 if(effectData.masks.includes(effectData.source)){
                     const index = effectData.masks.indexOf(effectData.source);
-                    effectData.masks[index] = newUuid;
+                    effectData.masks[index] = documentUuid;
                 }
-                effectData.source = newUuid;
+                effectData.source = documentUuid;
             }
             effectData.sceneId = inDocument.parent.id;
         });
-
-        data[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = effects;
+        
+        options.keepId = true;
+        return inDocument.data.update({
+            [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
+        });
 
     }
 
@@ -447,7 +462,37 @@ export default class SequencerEffectManager {
 
         effectsByObjectId.forEach(effects => {
             effects = effects.filter(effect => effect.data.persist)
-            if (effects.length) flagManager.removeFlags(effects[0].context.uuid, effects.map(effect => effect.data), !inEffects)
+            if (effects.length){
+                const effectData = effects.map(effect => effect.data);
+                const effectContext = effects[0].context;
+                
+                flagManager.removeFlags(effectContext.uuid, effectData, !inEffects);
+                
+                if(effectContext instanceof TokenDocument) {
+                    const persistentEffectData = effectData.filter(data => data?.persistOptions?.persistTokenPrototype)
+                    if (persistentEffectData.length) {
+                        
+                        const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
+                            return token.data.actorLink && token.actor === effectContext.actor && token !== effectContext
+                        })).deepFlatten();
+                        
+                        for (const token of tokensToUpdate) {
+                            const tokenEffects = flagManager.getFlags(token)
+                            const applicableTokenEffects = tokenEffects.filter(effect => {
+                                return effect[1]?.persistOptions?.persistTokenPrototype
+                                    && persistentEffectData.find(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id);
+                            });
+                            if(applicableTokenEffects.length) {
+                                flagManager.removeFlags(token.uuid, tokenEffects.map(effect => effect[1]))
+                                const tokenEffectsToEnd = applicableTokenEffects.map(tokenEffect => EffectsContainer.get(tokenEffect[0])).filter(Boolean);
+                                if(tokenEffectsToEnd.length){
+                                    tokenEffectsToEnd.forEach(effect => this._removeEffect(effect));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         return Promise.allSettled(...effectsByObjectId.map(
@@ -467,6 +512,30 @@ export default class SequencerEffectManager {
         EffectsContainer.delete(effect.id);
         debounceUpdateEffectViewer();
         return effect.endEffect();
+    }
+    
+    static async _playPrototypeTokenEffects(data, push){
+        
+        if(!lib.is_UUID(data.source)) return;
+        
+        const object = lib.from_uuid_fast(data.source);
+        
+        if(!(object instanceof TokenDocument)) return;
+        
+        const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
+            return token.data.actorLink && token.actor === object.actor && token !== object;
+        })).deepFlatten();
+        
+        for(const token of tokensToUpdate){
+            const duplicatedData = foundry.utils.deepClone(data);
+            duplicatedData._id = randomID();
+            duplicatedData.source = token.uuid;
+            duplicatedData.sceneId = token.uuid.split(".")[1];
+            if(CanvasEffect.checkValid(duplicatedData)) {
+                if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
+                this._playEffect(duplicatedData);
+            }
+        }
     }
 }
 

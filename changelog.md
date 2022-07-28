@@ -1,7 +1,13 @@
 ## Sequencer Changelog
 
 ### Version 2.1.9
-- *Sequencer* - Upgraded module to support Foundry v10
+- *Sequencer* - Unlocked keybinds so that users may configure their own keybinds for Sequencer's layers
+- *Sequencer* - Added support for `minDelay` and `maxDelay` on `.waitUntilFinished()`, so you can now have a random wait delay between sections
+- *Effects* - Added `fromEnd` to `.animateProperty()` which causes the animation to play at the end of the effect's duration
+- *Effects* - Added `gridUnits` support to `.animateProperty()` and `.loopProperty()` when using `position.x` or `position.y` as the animated target
+- *Effects* - Added `gridUnits` as a secondary option to both `.offset()` and `.spriteOffset()`
+- *Effects* - Fixed persistent prototype token effects not applying on every instance of its token
+- *Effects* - Fixed `.playbackRate()` only adjusting effect duration, and not the actual playback rat
 
 ### Version 2.1.8
 - *Sequencer* - Added setting to allow clients to disable Sequencer's PIXI alpha fix for base textures

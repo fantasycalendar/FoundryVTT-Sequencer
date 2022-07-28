@@ -93,3 +93,7 @@ function initialize_module(){
     Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
 
 }
+
+Hooks.once("socketlib.ready", () => {
+    registerSocket();
+})

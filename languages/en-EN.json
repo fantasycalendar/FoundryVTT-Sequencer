@@ -86,7 +86,7 @@
       "ClickDragLabel": "Play an effect stretched towards a location",
       "Shift": "Shift",
       "ShiftLabel": "Play multiple effects at the same time after releasing shift",
-      "ShiftControl": "Shift + Control",
+      "ShiftControl": "Control",
       "ShiftControlLabel": "Play multiple effects one after another, waiting between them",
       "MoreToCome": "...and more to come in future updates!"
     },

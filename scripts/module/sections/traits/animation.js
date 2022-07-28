@@ -19,6 +19,7 @@ export default {
      *      @param {Number} inOptions.delay      - inserts a delay in ms before the animation starts
      *      @param {String} inOptions.ease       - what type of easing the animation should use
      *      @param {Boolean} inOptions.gridUnits - if animating width or height, this will set it to work in the scene's grid units
+     *      @param {Boolean} inOptions.fromEnd   - makes this animation play from the end, like fadeOut, scaleOut, etc
      *
      * @returns this
      */
@@ -32,12 +33,13 @@ export default {
         if (!is_real_number(inOptions.duration)) throw this.sequence._customError(this, "animateProperty", `inOptions.duration must be of type number`);
         if (inOptions?.delay !== undefined && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateProperty", `inOptions.delay must be of type number`);
         if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateProperty", `inOptions.ease must be of type string`);
+        if (inOptions.fromEnd !== undefined && typeof inOptions.fromEnd !== "boolean") throw this.sequence._customError(this, "animateProperty", `inOptions.fromEnd must be of type boolean`);
         if (inOptions?.gridUnits !== undefined){
             if(typeof inOptions.gridUnits !== "boolean"){
                 throw this.sequence._customError(this, "animateProperty", `inOptions.gridUnits must be of type boolean`);
             }
-            if(inOptions.gridUnits && !(inPropertyName === "width" || inPropertyName === "height")){
-                throw this.sequence._customError(this, "animateProperty", `if inOptions.gridUnits is true, inPropertyName must be "width" or "height"`);
+            if(inOptions.gridUnits && !(["position.x", "position.y", "height", "width"].includes(inPropertyName))){
+                throw this.sequence._customError(this, "animateProperty", `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, width, or height`);
             }
         }
 
@@ -50,6 +52,7 @@ export default {
             delay: inOptions?.delay ?? 0,
             ease: inOptions?.ease ?? "linear",
             looping: false,
+            fromEnd: inOptions?.fromEnd ?? false,
             gridUnits: inOptions?.gridUnits ?? false
         });
 
@@ -105,8 +108,8 @@ export default {
             if(typeof inOptions.gridUnits !== "boolean"){
                 throw this.sequence._customError(this, "loopProperty", `inOptions.gridUnits must be of type boolean`);
             }
-            if(inOptions.gridUnits && !(inPropertyName === "width" || inPropertyName === "height")){
-                throw this.sequence._customError(this, "loopProperty", `if inOptions.gridUnits is true, inPropertyName must be "width" or "height"`);
+            if(inOptions.gridUnits && !(["position.x", "position.y", "height", "width"].includes(inPropertyName))){
+                throw this.sequence._customError(this, "loopProperty", `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, width, or height`);
             }
         }
 

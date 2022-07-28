@@ -86,7 +86,7 @@
       "ClickDragLabel": "ドラッグ先までに向かうようにアニメーションを再生",
       "Shift": "Shift",
       "ShiftLabel": "Shift押している間アニメーションが溜まっていき、Shiftを離したタイミングで溜まったアニメーションを再生",
-      "ShiftControl": "Shift + Control",
+      "ShiftControl": "Control",
       "ShiftControlLabel": "効果を逐次再生します、効果の間に遅延あり",
       "MoreToCome": "...今後の追加機能にご期待ください！"
     },

@@ -27,6 +27,11 @@ export default class CanvasEffect extends PIXI.Container {
         if(effectData.target && lib.is_UUID(effectData.target)){
             targetExists = lib.from_uuid_fast(effectData.target);
         }
+        if(effectData.source && lib.is_UUID(effectData.source) && effectData.target && lib.is_UUID(effectData.target)){
+            const sourceScene = effectData.source.split(".")[1];
+            const targetScene = effectData.target.split(".")[1];
+            if(sourceScene !== targetScene || sourceScene !== effectData.sceneId) return false;
+        }
         return sourceExists && targetExists;
     }
 
@@ -48,6 +53,10 @@ export default class CanvasEffect extends PIXI.Container {
         this._ended = false;
         this._isEnding = false;
 
+    }
+    
+    get context(){
+        return this.data.attachTo?.active && this.source ? this.source : game.scenes.get(this.data.sceneId);
     }
 
     static get protectedValues() {
@@ -101,7 +110,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isSourceTemporary(){
-        return this.data.attachTo?.active && this.source?.document && !lib.is_UUID(this.source?.document.uuid);
+        return this.data.attachTo?.active && this.source && !lib.is_UUID(this.source.uuid);
     }
 
     /**
@@ -132,8 +141,8 @@ export default class CanvasEffect extends PIXI.Container {
     get source() {
         if (!this._source && this.data.source) {
             this._source = this._getObjectByID(this.data.source);
+            this._source = this._source?.document ?? this._source;
         }
-
         return this._source;
     }
 
@@ -150,7 +159,7 @@ export default class CanvasEffect extends PIXI.Container {
                 this._sourcePosition = canvaslib.get_object_position(this.source);
             }
         }
-        if(this._sourcePosition instanceof MeasuredTemplate || this._sourcePosition instanceof Tile){
+        if(this._sourcePosition instanceof foundry.abstract.Document){
             return canvaslib.get_object_position(this._sourcePosition)
         }
         return this._sourcePosition?.worldPosition || this._sourcePosition?.center || this._sourcePosition || this.source;
@@ -192,6 +201,7 @@ export default class CanvasEffect extends PIXI.Container {
     get target() {
         if (!this._target && this.data.target) {
             this._target = this._getObjectByID(this.data.target);
+            this._target = this._target?.document ?? this._target;
         }
         return this._target;
     }
@@ -210,8 +220,8 @@ export default class CanvasEffect extends PIXI.Container {
                 this._targetPosition = canvaslib.get_object_position(this.target, { measure: true });
             }
         }
-
-        if(this._targetPosition instanceof MeasuredTemplate || this._targetPosition instanceof Tile){
+    
+        if(this._targetPosition instanceof foundry.abstract.Document){
             return canvaslib.get_object_position(this._targetPosition, { measure: true })
         }
 
@@ -275,8 +285,14 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.offset && (!source || !this.data.target)) {
-            offset.x += this.data.offset.x;
-            offset.y += this.data.offset.y;
+            let offsetX = this.data.offset.x;
+            let offsetY = this.data.offset.y;
+            if(this.data.offset?.gridUnits){
+                offsetX *= canvas.grid.size;
+                offsetY *= canvas.grid.size;
+            }
+            offset.x += offsetX;
+            offset.y += offsetY;
         }
 
         let offsetMap = this._nameOffsetMap?.[offsetMapName];
@@ -360,7 +376,7 @@ export default class CanvasEffect extends PIXI.Container {
     get userCanUpdate() {
         return game.user.isGM
             || this.owner
-            || (this.data.attachTo?.active && this.source.document.canUserModify(game.user, "update"));
+            || (this.data.attachTo?.active && this.source.canUserModify(game.user, "update"));
     }
 
     /**
@@ -555,10 +571,13 @@ export default class CanvasEffect extends PIXI.Container {
      */
     endEffect() {
         if (this._ended) return;
-        this._ended = true;
         Hooks.call("endedSequencerEffect", this);
-        this._destroyDependencies();
         this.destroy();
+    }
+    
+    destroy(...args){
+        this._destroyDependencies();
+        return super.destroy(...args);
     }
 
     /**
@@ -712,8 +731,6 @@ export default class CanvasEffect extends PIXI.Container {
             return [entry[0], this._setupOffsetMap(entry[1])];
         }));
 
-        this.context = this.data.attachTo?.active && this.source?.document ? this.source.document : game.scenes.get(this.data.sceneId);
-
         this._ticker = new PIXI.Ticker;
         this._ticker.start();
 
@@ -725,9 +742,12 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _destroyDependencies() {
-
+        
+        if (this._ended) return;
+        this._ended = true;
+    
         this.mask = null;
-
+    
         this._removeHooks();
 
         this._ticker.stop();
@@ -813,7 +833,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _validateObject(inObject) {
-        if (!canvaslib.is_object_canvas_data(inObject)) {
+        if (lib.is_UUID(inObject) || !canvaslib.is_object_canvas_data(inObject)) {
             inObject = lib.get_object_from_scene(inObject, this.data.sceneId);
             inObject = inObject?._object ?? inObject;
         }
@@ -880,7 +900,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (!Sequencer.Database.entryExists(this.data.file)) {
                 let texture = await SequencerFileCache.loadFile(this.data.file);
-                this._video = this.data.file.toLowerCase().endsWith(".webm")
+                this.video = this.data.file.toLowerCase().endsWith(".webm")
                     ? texture?.baseTexture?.resource?.source ?? false
                     : false;
                 this._texture = texture;
@@ -910,7 +930,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         this._template = this._file.template ?? this._template;
-        this._video = this._currentFilePath.toLowerCase().endsWith(".webm")
+        this.video = this._currentFilePath.toLowerCase().endsWith(".webm")
             ? this._texture?.baseTexture?.resource?.source
             : false;
 
@@ -1084,10 +1104,18 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.alphaFilter = new PIXI.filters.AlphaFilter(this.data.opacity);
         this.sprite.filters.push(this.alphaFilter)
+    
+    
+        let spriteOffsetX = this.data.spriteOffset?.x ?? 0;
+        let spriteOffsetY = this.data.spriteOffset?.y ?? 0;
+        if(this.data.spriteOffset?.gridUnits){
+            spriteOffsetX *= canvas.grid.size;
+            spriteOffsetY *= canvas.grid.size;
+        }
 
         this.sprite.position.set(
-            this.data.spriteOffset?.x ?? 0,
-            this.data.spriteOffset?.y ?? 0
+            spriteOffsetX,
+            spriteOffsetY
         );
 
         this.sprite.anchor.set(
@@ -1415,7 +1443,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (attachedToSource){
 
             this._addHook(this.getSourceHook("delete"), (doc) => {
-                if (doc !== this.source.document) return;
+                if (doc !== this.source) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
@@ -1430,20 +1458,20 @@ export default class CanvasEffect extends PIXI.Container {
                 func();
             }
 
-            const document = this.source.document;
-            if (this.data.attachTo?.bindAlpha && (document instanceof TokenDocument || document instanceof TileDocument)) {
+            if (this.data.attachTo?.bindAlpha && (this.source instanceof TokenDocument || this.source instanceof TileDocument)) {
                 this._addHook(this.getSourceHook("update"), (doc) => {
-                    if (doc !== document) return;
-                    this.rotationContainer.alpha = document.alpha;
-                });
                 this.rotationContainer.alpha = document.alpha;
+                    if (doc !== this.source) return;
+                    this.rotationContainer.alpha = this.source.alpha;
+                });
+                this.rotationContainer.alpha = this.source.alpha;
             }
 
         }
 
         if (attachedToTarget){
             this._addHook(this.getTargetHook("delete"), (doc) => {
-                if (doc !== this.target.document) return;
+                if (doc !== this.target) return;
                 this._target = this._targetPosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
@@ -1917,25 +1945,20 @@ export default class CanvasEffect extends PIXI.Container {
 
         const animations = foundry.utils.duplicate(this.data.animations);
 
-        const oneShotAnimations = animations.filter(animation => !animation.looping);
+        const oneShotAnimations = animations.filter(animation => !animation.looping && !animation.fromEnd);
 
         for (let animation of oneShotAnimations) {
 
             animation.target = foundry.utils.getProperty(this, animation.target);
 
             if (!animation.target) continue;
-
+            
             if (animation.propertyName.indexOf("rotation") > -1) {
                 animation.from = animation.from * (Math.PI / 180);
                 animation.to = animation.to * (Math.PI / 180);
             }
-
-            if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
-                animation.from *= canvas.grid.size;
-                animation.to *= canvas.grid.size;
-            }
-
-            if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
+            
+            if (["position.x", "position.y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
                 animation.from *= canvas.grid.size;
                 animation.to *= canvas.grid.size;
             }
@@ -1957,14 +1980,8 @@ export default class CanvasEffect extends PIXI.Container {
                     return angle * (Math.PI / 180);
                 });
             }
-
-            if (animation.propertyName.indexOf("width") > -1 && animation.gridUnits) {
-                animation.values = animation.values.map(value => {
-                    return value * canvas.grid.size;
-                });
-            }
-
-            if (animation.propertyName.indexOf("height") > -1 && animation.gridUnits) {
+    
+            if (["x", "y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
                 });
@@ -1973,12 +1990,52 @@ export default class CanvasEffect extends PIXI.Container {
             animationsToSend = animationsToSend.concat(this._counterAnimateRotation(animation))
 
         }
+    
+        if(!(this instanceof PersistentCanvasEffect)) {
+            animationsToSend = animationsToSend.concat(this._getFromEndCustomAnimations())
+        }
 
         SequencerAnimationEngine.addAnimation(this.id,
             animationsToSend,
             this.actualCreationTime - this.data.creationTimestamp
         );
 
+    }
+    
+    _getFromEndCustomAnimations(immediate = false){
+        
+        let fromEndAnimations = []
+        
+        const animations = foundry.utils.duplicate(this.data.animations);
+        
+        const oneShotEndingAnimations = animations.filter(animation => !animation.looping && animation.fromEnd);
+        
+        for (let animation of oneShotEndingAnimations) {
+    
+            animation.target = foundry.utils.getProperty(this, animation.target);
+    
+            if (!animation.target) continue;
+            
+            animation.delay = lib.is_real_number(immediate)
+                ? Math.max(immediate - animation.duration + animation.delay, 0)
+                : Math.max(this._animationDuration - animation.duration + animation.delay, 0);
+        
+            if (animation.propertyName.indexOf("rotation") > -1) {
+                animation.from = animation.from * (Math.PI / 180);
+                animation.to = animation.to * (Math.PI / 180);
+            }
+        
+            if (["position.x", "position.y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
+                animation.from *= canvas.grid.size;
+                animation.to *= canvas.grid.size;
+            }
+    
+            fromEndAnimations = fromEndAnimations.concat(this._counterAnimateRotation(animation))
+        
+        }
+        
+        return fromEndAnimations;
+        
     }
 
     /**
@@ -2413,13 +2470,16 @@ class PersistentCanvasEffect extends CanvasEffect {
             this.video.loop = false;
             extraEndDuration = Math.max(extraEndDuration, fullWaitDuration);
         }
+        const fromEndCustomAnimations = this._getFromEndCustomAnimations(extraEndDuration);
         const durations = [
             this._fadeOut(extraEndDuration),
             this._scaleOut(extraEndDuration),
             this._rotateOut(extraEndDuration),
             this.data.extraEndDuration,
-            fullWaitDuration
+            fullWaitDuration,
+            ...fromEndCustomAnimations.map(animation => animation.duration + animation.delay)
         ].filter(Boolean);
+        SequencerAnimationEngine.addAnimation(this.id, fromEndCustomAnimations);
         const waitDuration = Math.max(...durations);
         this._resolve(waitDuration);
         return new Promise(resolve => setTimeout(() => {

@@ -57,6 +57,8 @@ export class BaseEffectsLayer extends InteractionLayer {
             }
         }
     }
+    
+    async _draw(...args){}
 
     render(...args) {
         super.render(...args);

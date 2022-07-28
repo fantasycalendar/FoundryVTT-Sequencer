@@ -110,7 +110,7 @@ let sequence = new Sequence()
         .effect()
         .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
         .atLocation(tokenD)
-        .reachTowards({
+        .stretchTo({
             x: tokenD.center.x + canvas.grid.size*5,
             y: tokenD.center.y
         })
@@ -139,7 +139,7 @@ sequence.play();
 new Sequence()
     .effect()
         .atLocation(canvas.tokens.controlled[0])
-        .reachTowards(canvas.tokens.controlled[1])
+        .stretchTo(canvas.tokens.controlled[1])
         .file("jb2a.magic_missile")
         .repeats(3, 200, 300)
         .randomizeMirrorY()

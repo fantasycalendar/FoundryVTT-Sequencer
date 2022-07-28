@@ -24,19 +24,21 @@ const flagManager = {
      * Sanitizes the effect data, accounting for changes to the structure in previous versions
      *
      * @param inDocument
-     * @param applyFlags
+     * @param preCreate
      * @returns {array}
      */
-    getFlags(inDocument, applyFlags = true){
+    getFlags(inDocument, { preCreate = false }={}){
 
-        let effects = getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
-
+        const effects = preCreate && inDocument?.actor?.data?.token
+            ? getProperty(inDocument?.actor?.data?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []
+            : getProperty(inDocument.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
+        
         if(!effects?.length) return [];
 
         const changes = [];
         for(let [effectId, effectData] of effects){
 
-            let effectVersion = effectData.flagVersion || "1.0.0";
+            let effectVersion = effectData?.flagVersion ?? "1.0.0";
 
             if(effectData.flagVersion === this.latestFlagVersion) continue;
 
@@ -55,7 +57,7 @@ const flagManager = {
             changes.push(effectData)
         }
 
-        if(changes.length && applyFlags){
+        if(changes.length){
             flagManager.addFlags(inDocument.uuid, changes);
         }
 
@@ -218,7 +220,7 @@ const flagManager = {
      * @param inEffects
      * @param removeAll
      */
-    removeFlags: (inObjectUUID, inEffects, removeAll) => {
+    removeFlags: (inObjectUUID, inEffects, removeAll = false) => {
         sequencerSocket.executeAsGM(SOCKET_HANDLERS.REMOVE_FLAGS, inObjectUUID, inEffects, removeAll);
     },
 
@@ -236,7 +238,7 @@ const flagManager = {
 
     },
 
-    _removeFlags: (inObjectUUID, inEffects, removeAll) => {
+    _removeFlags: (inObjectUUID, inEffects, removeAll = false) => {
 
         if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 
@@ -257,11 +259,16 @@ const flagManager = {
 
         flagManager.flagAddBuffer.clear();
         flagManager.flagRemoveBuffer.clear();
+    
+        flagsToAdd.forEach(entry => entry[1].original = true);
+        flagsToRemove.forEach(entry => entry[1].original = true);
 
-        let objects = new Set([...flagsToAdd.map(effect => effect[0]), ...flagsToRemove.map(effect => effect[0])])
-
+        const objects = new Set([...flagsToAdd.map(effect => effect[0]), ...flagsToRemove.map(effect => effect[0])]);
+    
         flagsToAdd = new Map(flagsToAdd);
         flagsToRemove = new Map(flagsToRemove);
+        
+        const actorsToUpdate = new Map();
 
         for (let objectUUID of objects) {
 
@@ -274,14 +281,12 @@ const flagManager = {
 
             let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
             let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
-
+    
+            const existingFlags = new Map(getProperty(object.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []);
+            
             if (toRemove?.removeAll) {
-                await object.setFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME, []);
-                lib.debug(`All flags removed for object with ID: ${objectUUID}`);
-                continue;
+                toRemove.effects = Array.from(existingFlags).map(entry => entry[0]);
             }
-
-            const existingFlags = new Map(object.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME) ?? []);
 
             for (const effect of toAdd.effects) {
                 existingFlags.set(effect._id, effect);
@@ -296,16 +301,21 @@ const flagManager = {
             await object.update({
                 [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
             });
-
-            if(object instanceof TokenDocument && object.actorLink){
+            
+            if(object instanceof TokenDocument && object.data.actorLink && (toAdd.original || toRemove.original)){
                 const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
-                await object.actor.update({
-                    [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToPrototypePersist
-                });
+                actorsToUpdate.set(object.actor.uuid, flagsToPrototypePersist);
             }
 
             lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
 
+        }
+        
+        for(const [actorUuid, flags] of Array.from(actorsToUpdate)){
+            const actor = lib.from_uuid_fast(actorUuid);
+            await actor.update({
+                [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flags
+            });
         }
 
     }, 250)
