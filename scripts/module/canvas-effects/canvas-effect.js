@@ -1942,7 +1942,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         let animationsToSend = [];
 
-        const animations = foundry.utils.duplicate(this.data.animations);
+        const animations = foundry.utils.duplicate(this.data.animations) ?? [];
 
         const oneShotAnimations = animations.filter(animation => !animation.looping && !animation.fromEnd);
 
@@ -2005,7 +2005,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         let fromEndAnimations = []
         
-        const animations = foundry.utils.duplicate(this.data.animations);
+        const animations = foundry.utils.duplicate(this.data.animations) ?? [];
         
         const oneShotEndingAnimations = animations.filter(animation => !animation.looping && animation.fromEnd);
         
