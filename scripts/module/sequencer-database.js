@@ -51,7 +51,10 @@ const SequencerDatabase = {
      * @return {boolean}
      */
     async validateEntries(inModuleName) {
-        const entries = this.getEntry(inModuleName);
+        let entries = this.getEntry(inModuleName);
+        if(!Array.isArray(entries)){
+            entries = [entries]
+        }
         ui.notifications.info(`Validating paths registered to "${inModuleName}"...`)
         let isValid = true;
         LoadingBar.init(`Validating paths registered to "${inModuleName}"...`, entries.length);

@@ -19,14 +19,18 @@ export class SequencerFile {
     constructor(inData, inTemplate, inDBPath) {
         inData = foundry.utils.duplicate(inData);
         this.originalData = inData;
-        this.template = inTemplate;
+        if(!(inData instanceof String || Array.isArray(inData))){
+            for(const key of Object.keys(inData)){
+                if(key.startsWith("_")) {
+                    this[key.slice(1)] = inData[key];
+                    delete this.originalData[key];
+                }
+            }
+        }
         this.dbPath = inDBPath;
         this.moduleName = inDBPath.split('.')[0];
-        this.timeRange = inData?._timeRange;
-        this.markers = inData?._markers;
+        this.template = inTemplate;
         this.originalFile = inData?.file ?? inData;
-        delete this.originalFile["_template"];
-        delete this.originalFile["_timeRange"];
         this.file = foundry.utils.duplicate(this.originalFile);
         this.fileIndex = false;
 
