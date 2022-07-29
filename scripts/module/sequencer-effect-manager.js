@@ -473,7 +473,7 @@ export default class SequencerEffectManager {
                     if (persistentEffectData.length) {
                         
                         const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
-                            return token.data.actorLink && token.actor === effectContext.actor && token !== effectContext
+                            return token.actorLink && token.actor === effectContext.actor && token !== effectContext
                         })).deepFlatten();
                         
                         for (const token of tokensToUpdate) {
@@ -523,7 +523,7 @@ export default class SequencerEffectManager {
         if(!(object instanceof TokenDocument)) return;
         
         const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
-            return token.data.actorLink && token.actor === object.actor && token !== object;
+            return token.actorLink && token.actor === object.actor && token !== object;
         })).deepFlatten();
         
         for(const token of tokensToUpdate){

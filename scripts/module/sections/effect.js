@@ -307,7 +307,7 @@ export default class EffectSection extends Section {
         if(typeof inOptions !== "object") throw this.sequence._customError(this, "from", `inOptions must be of type object`);
         if(!(inObject instanceof Token || inObject instanceof Tile || inObject instanceof TokenDocument || inObject instanceof TileDocument)) throw this.sequence._customError(this, "from", "inObject must be of type Token, Tile, TokenDocument, or TileDocument");
         inObject = inObject instanceof foundry.abstract.Document ? inObject.object : inObject;
-        if(!inObject?.data?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
+        if(!inObject?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
             randomOffset: false
@@ -990,7 +990,7 @@ export default class EffectSection extends Section {
     async preRun(){
 
         if(this._from) {
-            this._file = this._from.object?.data?.img;
+            this._file = this._from.object?.img;
 
             if (this._source === null) {
                 this._source = this._validateLocation(this._from.object);

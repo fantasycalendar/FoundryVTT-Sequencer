@@ -166,13 +166,13 @@ class AnimationSection extends Section {
         let originLoc = canvaslib.get_object_position(origin, { exact: true });
         let targetLoc = canvaslib.get_object_position(target, { exact: true });
 
-        let originSizeWidth = (origin?.data?.width ?? 1) * canvas.grid.size;
-        let originSizeHeight = (origin?.data?.height ?? 1) * canvas.grid.size;
+        let originSizeWidth = (origin?.width ?? 1) * canvas.grid.size;
+        let originSizeHeight = (origin?.height ?? 1) * canvas.grid.size;
         let originBottom = Math.max(originSizeWidth - canvas.grid.size, canvas.grid.size);
         let originRight = Math.max(originSizeHeight - canvas.grid.size, canvas.grid.size);
 
-        let targetSizeWidth = (target?.data?.width ?? 1) * canvas.grid.size;
-        let targetSizeHeight = (target?.data?.height ?? 1) * canvas.grid.size;
+        let targetSizeWidth = (target?.width ?? 1) * canvas.grid.size;
+        let targetSizeHeight = (target?.height ?? 1) * canvas.grid.size;
 
         let ray = new Ray(originLoc, targetLoc);
 
@@ -286,7 +286,7 @@ class AnimationSection extends Section {
             overallDuration = overallDuration > fadeDuration ? overallDuration : fadeDuration;
         }
 
-        if (this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (this._fadeInAudio && this._originObject?.video?.volume !== undefined) {
 
             let to = lib.is_real_number(this._volume) ? this._volume : 1.0;
 
@@ -413,7 +413,7 @@ class AnimationSection extends Section {
             overallDuration = overallDuration > fadeOutDuration ? overallDuration : fadeOutDuration;
         }
 
-        if (this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (this._fadeOutAudio && this._originObject?.video?.volume !== undefined) {
 
             let from = lib.is_real_number(this._volume) ? this._volume : this._originObject.video.volume;
 
@@ -501,7 +501,7 @@ class AnimationSection extends Section {
             updateAttributes["alpha"] = this._opacity;
         }
 
-        if (lib.is_real_number(this._volume) && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (lib.is_real_number(this._volume) && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.video?.volume !== undefined) {
             updateAttributes["video.volume"] = this._volume;
         }
 
