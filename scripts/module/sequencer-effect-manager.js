@@ -170,10 +170,10 @@ export default class SequencerEffectManager {
      */
     static _validateObject(object, sceneId) {
 
-        if (!(object instanceof Document || object instanceof PlaceableObject || typeof object === "string")) {
+        if (!(object instanceof foundry.abstract.Document || object instanceof PlaceableObject || typeof object === "string")) {
             throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
-        } else if (object instanceof PlaceableObject) {
-            object = lib.get_object_identifier(object.document);
+        } else if (object instanceof PlaceableObject || object instanceof foundry.abstract.Document) {
+            object = lib.get_object_identifier(object?.document ?? object);
         } else if (typeof object === "string") {
             const actualObject = lib.get_object_from_scene(object, sceneId);
             if (!actualObject) {
