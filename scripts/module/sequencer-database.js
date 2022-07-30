@@ -14,7 +14,9 @@ const SequencerDatabase = {
     },
 
     get publicFlattenedEntries(){
-        return this.flattenedEntries.filter(entry => !this.privateModules.includes(entry.split('.')[0]));
+        return this.flattenedEntries.filter(entry => {
+            return this.privateModules.indexOf(entry.split('.')[0]) === -1
+        });
     },
 
     get publicFlattenedSimpleEntries(){
@@ -180,7 +182,7 @@ const SequencerDatabase = {
     searchFor(inPath, publicOnly = true){
 
         const modules = publicOnly ? this.publicModules : Object.keys(this.entries);
-        let entries = publicOnly ? this.publicFlattenedEntries : this.flattenedEntries;
+        const originalEntries = publicOnly ? this.publicFlattenedEntries : this.flattenedEntries;
 
         if((!inPath || inPath === "") && !modules.includes(inPath)) return modules;
 
@@ -195,7 +197,7 @@ const SequencerDatabase = {
         inPath = inPath.replace(/\[[0-9]+]$/, "");
         inPath = inPath.trim()
 
-        entries = entries.filter(e => e.startsWith(inPath) && e !== inPath);
+        let entries = originalEntries.filter(e => e.startsWith(inPath) && e !== inPath);
 
         if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
         let length = inPath.split('.').length+1;
@@ -208,7 +210,7 @@ const SequencerDatabase = {
             const regexString = lib.str_to_search_regex_str(inPath).replace(/\s+/g, "|");
             const searchParts = regexString.split('|').length;
             const regexSearch = new RegExp(regexString, "gu");
-            foundEntries = this.flattenedEntries.filter(e => {
+            foundEntries = originalEntries.filter(e => {
                 return e.match(regexSearch)?.length >= searchParts;
             }).map(e =>{
                 return e.split(this.feetTest)[0];

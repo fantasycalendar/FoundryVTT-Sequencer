@@ -621,7 +621,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
         this.lastSearch = input;
 
-        let results = Sequencer.Database.searchFor(input, true);
+        let results = Sequencer.Database.searchFor(input);
 
         if(this.lastResults.equals(results)) return;
 
