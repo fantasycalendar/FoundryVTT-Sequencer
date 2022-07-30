@@ -1451,8 +1451,11 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.attachTo?.bindVisibility) {
                 const func = () => {
-                    this.renderable = this.source.visible || (attachedToTarget && this.target.visible);
-                    this.spriteContainer.alpha = this.source.visible && this.source.data.hidden ? 0.5 : 1.0;
+                    const sourceVisible = this.source?.object?.visible ?? true;
+                    const sourceHidden = this.source?.data?.hidden ?? false;
+                    const targetVisible = !attachedToTarget || (this.target?.object?.visible ?? true);
+                    this.renderable = sourceVisible || targetVisible;
+                    this.spriteContainer.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
                 };
                 this._addHook("sightRefresh", func);
                 func();
