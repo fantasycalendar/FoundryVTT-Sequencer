@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.1.10
+- *Sequencer* - Fixed Sequencer Effect Manager not accepting Foundry documents as object references when filtering for effects
+- *Effects* - Fixed attached effects not showing up for non-GMs
+
 ### Version 2.1.9 
 - *Sequencer* - Unlocked keybinds so that users may configure their own keybinds for Sequencer's layers
 - *Sequencer* - Added support for `minDelay` and `maxDelay` on `.waitUntilFinished()`, so you can now have a random wait delay between sections
