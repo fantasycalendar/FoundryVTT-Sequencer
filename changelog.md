@@ -2,6 +2,7 @@
 
 ### Version 2.1.10
 - *Sequencer* - Fixed Sequencer Effect Manager not accepting Foundry documents as object references when filtering for effects
+- *Sequencer* - Fixed Sequencer Effect Player showing private database entries
 - *Effects* - Fixed attached effects not showing up for non-GMs
 
 ### Version 2.1.9 
