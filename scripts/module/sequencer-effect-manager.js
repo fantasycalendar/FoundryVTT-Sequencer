@@ -7,8 +7,17 @@ import CONSTANTS from "./constants.js";
 
 const EffectsContainer = new Map();
 const PositionContainer = new Map();
+const TemporaryPositionsContainer = new Map();
 
 export default class SequencerEffectManager {
+    
+    static _updatePosition(uuid, position){
+        TemporaryPositionsContainer.set(uuid, position);
+    }
+    
+    static getPositionForUUID(uuid){
+        return TemporaryPositionsContainer.get(uuid);
+    }
 
     /**
      * Returns all of the currently running effects on the canvas
@@ -38,11 +47,9 @@ export default class SequencerEffectManager {
     static async play(data, push = true) {
         if (!lib.user_can_do("permissions-effect-create")) return;
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
-        
         if (data?.persistOptions?.persistTokenPrototype){
             this._playPrototypeTokenEffects(data, push);
         }
-        
         return this._playEffect(data);
     }
 
@@ -255,7 +262,7 @@ export default class SequencerEffectManager {
 
         const effect = CanvasEffect.make(data);
 
-        if (data.persist && setFlags && effect.context && effect.owner && !effect.isSourceTemporary) {
+        if (data.persist && setFlags && effect.context && effect.owner && !data.temporary) {
             flagManager.addFlags(effect.context.uuid, effect.data);
         }
     
@@ -270,6 +277,27 @@ export default class SequencerEffectManager {
                     start: effect.sourcePosition,
                     end: effect.targetPosition
                 });
+            });
+        }
+        
+        if(data.temporary && effect.owner){
+            let lastSourcePosition = {};
+            let lastTargetPosition = {};
+            effect._ticker.add(() => {
+                if(effect.source){
+                    const sourceData = effect.getSourceData();
+                    if(JSON.stringify(sourceData) !== lastSourcePosition) {
+                        sequencerSocket.executeForOthers(SOCKET_HANDLERS.UPDATE_POSITION, data.source, sourceData);
+                        lastSourcePosition = JSON.stringify(sourceData);
+                    }
+                }
+                if(effect.target){
+                    const targetData = effect.getTargetData();
+                    if(JSON.stringify(targetData) !== lastTargetPosition) {
+                        sequencerSocket.executeForOthers(SOCKET_HANDLERS.UPDATE_POSITION, data.target, targetData);
+                        lastTargetPosition = JSON.stringify(targetData);
+                    }
+                }
             });
         }
 
@@ -463,7 +491,7 @@ export default class SequencerEffectManager {
         if (!effectsByObjectId.length) return true;
 
         effectsByObjectId.forEach(effects => {
-            effects = effects.filter(effect => effect.data.persist)
+            effects = effects.filter(effect => effect.data.persist && lib.is_UUID(effect.data.source));
             if (effects.length){
                 const effectData = effects.map(effect => effect.data);
                 const effectContext = effects[0].context;
@@ -512,6 +540,9 @@ export default class SequencerEffectManager {
      */
     static _removeEffect(effect) {
         EffectsContainer.delete(effect.id);
+        console.log(TemporaryPositionsContainer)
+        TemporaryPositionsContainer.delete(effect.data.source);
+        TemporaryPositionsContainer.delete(effect.data.target);
         debounceUpdateEffectViewer();
         return effect.endEffect();
     }

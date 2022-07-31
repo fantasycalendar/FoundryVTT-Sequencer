@@ -8,7 +8,6 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
-import { AboveLightingEffectsLayer } from "./effects-layer.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -52,11 +51,13 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._ended = false;
         this._isEnding = false;
+        
+        this._isDestroyed = false;
 
     }
     
     get context(){
-        return this.data.attachTo?.active && this.source ? this.source : game.scenes.get(this.data.sceneId);
+        return this.data.attachTo?.active && this.source?.document ? this.source?.document : game.scenes.get(this.data.sceneId);
     }
 
     static get protectedValues() {
@@ -110,7 +111,16 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isSourceTemporary(){
-        return this.data.attachTo?.active && this.source && !lib.is_UUID(this.source.uuid);
+        return this.data.attachTo?.active && this.source && this.source?.document && !lib.is_UUID(this.source.document.uuid);
+    }
+    
+    /**
+     * Whether the source of this effect has been destroyed
+     *
+     * @returns {boolean}
+     */
+    get isSourceDestroyed(){
+        return this.source && (this.source?.destroyed || this.source?.document?._destroyed);
     }
 
     /**
@@ -120,6 +130,16 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get isTargetTemporary(){
         return (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && this.target?.document && !lib.is_UUID(this.target?.document.uuid);
+    }
+    
+    
+    /**
+     * Whether the target of this effect has been destroyed
+     *
+     * @returns {boolean}
+     */
+    get isTargetDestroyed(){
+        return this.target && (this.target?.destroyed || this.target?.document?._destroyed);
     }
 
     /**
@@ -141,7 +161,7 @@ export default class CanvasEffect extends PIXI.Container {
     get source() {
         if (!this._source && this.data.source) {
             this._source = this._getObjectByID(this.data.source);
-            this._source = this._source?.document ?? this._source;
+            this._source = this._source?._object ?? this._source;
         }
         return this._source;
     }
@@ -151,18 +171,28 @@ export default class CanvasEffect extends PIXI.Container {
      *
      * @returns {boolean|object}
      */
-    get originalSourcePosition() {
-        if (!this._sourcePosition && this.source) {
-            if (this.data.attachTo) {
-                this._sourcePosition = this.source;
-            } else {
-                this._sourcePosition = canvaslib.get_object_position(this.source);
-            }
+    getSourceData() {
+        
+        if(this.data.temporary && !this.owner){
+            return SequencerEffectManager.getPositionForUUID(this.data.source);
         }
-        if(this._sourcePosition instanceof foundry.abstract.Document){
-            return canvaslib.get_object_position(this._sourcePosition)
-        }
-        return this._sourcePosition?.worldPosition || this._sourcePosition?.center || this._sourcePosition || this.source;
+        
+        const position = this.source instanceof PlaceableObject && !this.isSourceTemporary
+            ? canvaslib.get_object_position(this.source)
+            : (this.source?.worldPosition || this.source?.center || this.source);
+        
+        const rotation = this.source instanceof MeasuredTemplate && this.source?.data?.t !== "rect"
+            ? Math.normalizeRadians(Math.toRadians(this.source?.data?.direction))
+            : this.source?.data?.rotation ? Math.normalizeRadians(Math.toRadians(this.source?.data?.rotation)) : 0;
+    
+        const alpha = (this.source instanceof TokenDocument || this.source instanceof TileDocument) ? this.source?.data?.alpha ?? 1.0 : 1.0;
+
+        return {
+            position,
+            rotation,
+            alpha,
+            ...canvaslib.get_object_dimensions(this.source)
+        };
     }
 
     /**
@@ -172,7 +202,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get sourcePosition() {
 
-        const position = this.originalSourcePosition;
+        const position = this.getSourceData().position;
         this._sourceOffset = this._sourceOffset || this._getOffset(this.data.source, true);
 
         return {
@@ -201,7 +231,7 @@ export default class CanvasEffect extends PIXI.Container {
     get target() {
         if (!this._target && this.data.target) {
             this._target = this._getObjectByID(this.data.target);
-            this._target = this._target?.document ?? this._target;
+            this._target = this._target?._object ?? this._target;
         }
         return this._target;
     }
@@ -211,21 +241,28 @@ export default class CanvasEffect extends PIXI.Container {
      *
      * @returns {boolean|object}
      */
-    get originalTargetPosition() {
-
-        if (!this._targetPosition && this.target) {
-            if (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) {
-                this._targetPosition = this.target;
-            } else {
-                this._targetPosition = canvaslib.get_object_position(this.target, { measure: true });
-            }
+    getTargetData() {
+    
+        if(this.data.temporary && !this.owner){
+            return SequencerEffectManager.getPositionForUUID(this.data.target);
         }
     
-        if(this._targetPosition instanceof foundry.abstract.Document){
-            return canvaslib.get_object_position(this._targetPosition, { measure: true })
-        }
-
-        return this._targetPosition?.worldPosition || this._targetPosition?.center || this._targetPosition || this.target;
+        const position = this.target instanceof PlaceableObject && !this.isTargetTemporary
+            ? canvaslib.get_object_position(this.target)
+            : (this.target?.worldPosition || this.target?.center || this.target);
+    
+        const rotation = this.target instanceof MeasuredTemplate && this.target?.data?.t !== "rect"
+            ? Math.normalizeRadians(Math.toRadians(this.target?.data?.direction))
+            : this.target?.data?.rotation ? Math.normalizeRadians(Math.toRadians(this.target?.data?.rotation)) : 0;
+    
+        const alpha = (this.target instanceof TokenDocument || this.target instanceof TileDocument) ? this.target?.data?.alpha ?? 1.0 : 1.0;
+    
+        return {
+            position,
+            rotation,
+            alpha,
+            ...canvaslib.get_object_dimensions(this.target)
+        };
     }
 
     /**
@@ -235,7 +272,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get targetPosition() {
 
-        const position = this.originalTargetPosition;
+        const position = this.getTargetData().position;
         this._targetOffset = this._targetOffset || this._getOffset(this.data.target);
 
         return {
@@ -1032,18 +1069,22 @@ export default class CanvasEffect extends PIXI.Container {
     _contextLostCallback() {
         if (this.isSourceTemporary) {
             this._ticker.add(() => {
-                if (!this.source || this.source._destroyed) {
+                if (this.isSourceDestroyed) {
+                    this._isDestroyed = true;
                     this._ticker.stop();
-                    this._source = this._sourcePosition;
+                    this._source = this.sourcePosition;
+                    this._sourcePosition = false;
                     SequencerEffectManager.endEffects({ effects: this });
                 }
             });
         }
         if (this.isTargetTemporary) {
             this._ticker.add(() => {
-                if (!this.target || this.target._destroyed) {
+                if (this.isTargetDestroyed) {
+                    this._isDestroyed = true;
                     this._ticker.stop();
-                    this._source = this._sourcePosition;
+                    this._target = this.targetPosition;
+                    this._targetPosition = false;
                     SequencerEffectManager.endEffects({ effects: this });
                 }
             });
@@ -1443,7 +1484,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (attachedToSource){
 
             this._addHook(this.getSourceHook("delete"), (doc) => {
-                if (doc !== this.source) return;
+                if (doc !== this.source?.document) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
@@ -1451,22 +1492,22 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.attachTo?.bindVisibility) {
                 const func = () => {
-                    const sourceVisible = this.source?.object?.visible ?? true;
+                    const sourceVisible = this.source?.visible ?? true;
                     const sourceHidden = this.source?.data?.hidden ?? false;
-                    const targetVisible = !attachedToTarget || (this.target?.object?.visible ?? true);
+                    const targetVisible = !attachedToTarget || (this.target?.visible ?? true);
                     this.renderable = sourceVisible || targetVisible;
                     this.spriteContainer.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
                 };
                 this._addHook("sightRefresh", func);
                 func();
             }
-
-            if (this.data.attachTo?.bindAlpha && (this.source instanceof TokenDocument || this.source instanceof TileDocument)) {
+    
+            if(this.data.attachTo?.bindAlpha) {
                 this._addHook(this.getSourceHook("update"), (doc) => {
-                    if (doc !== this.source) return;
-                    this.rotationContainer.alpha = this.source.data.alpha;
+                    if (doc !== this.source?.document) return;
+                    this.spriteContainer.alpha = this.getSourceData().alpha;
                 });
-                this.rotationContainer.alpha = this.source.data.alpha;
+                this.spriteContainer.alpha = this.getSourceData().alpha;
             }
 
         }
@@ -1773,10 +1814,10 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         if (this.data.scaleToObject) {
-
+            
             let { width, height } = this.target
-                ? canvaslib.get_object_dimensions(this.target)
-                : canvaslib.get_object_dimensions(this.source);
+                ? this.getTargetData()
+                : this.getSourceData();
 
             if(this.data.scaleToObject?.uniform){
                 let newWidth = Math.max(width, height);
@@ -1838,22 +1879,18 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     async _transformAttachedNoStretchSprite(){
-
+        
         const applyRotation = this.data.attachTo?.followRotation
-            && (this.source.data.rotation !== undefined || this.source.data.direction !== undefined)
+            && (this.source?.data?.rotation !== undefined || this.source?.data?.direction !== undefined)
             && !this.data.rotateTowards
             && !this.data.stretchTo;
 
-        this._ticker.add(async () => {
+        this._ticker.add(() => {
 
-            if(this.source.destroyed) return;
+            if(this._isDestroyed) return;
 
             if(applyRotation) {
-                if (this.source instanceof MeasuredTemplate && this.source.data.t !== "rect"){
-                    this.rotationContainer.rotation = Math.normalizeRadians(Math.toRadians(this.source.data.direction));
-                }else {
-                    this.rotationContainer.rotation = this.source.data.rotation ? Math.normalizeRadians(Math.toRadians(this.source.data.rotation)) : 0;
-                }
+                this.rotationContainer.rotation = this.getSourceData().rotation;
             }
 
             try {
@@ -1891,7 +1928,7 @@ export default class CanvasEffect extends PIXI.Container {
     _transformRotateTowardsAttachedSprite(){
 
         this._ticker.add(async () => {
-            if(this.target.destroyed) return;
+            if(this._isDestroyed) return;
             try{
                 this._rotateTowards();
             } catch (err){
@@ -2299,7 +2336,7 @@ export default class CanvasEffect extends PIXI.Container {
             duration: duration,
             ease: moves.ease,
             delay: moves.delay
-        }], this.data.creationTimestamp - this.actualCreationTime);
+        }]);
 
         return duration + moves.delay;
 

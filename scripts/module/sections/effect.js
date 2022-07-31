@@ -53,6 +53,7 @@ export default class EffectSection extends Section {
         this._screenSpaceScale = null;
         this._masks = [];
         this._selfMask = false;
+        this._temporaryEffect = false;
 
         this._isRangedEffect = null;
         this._randomOffsetLegacy = null;
@@ -235,7 +236,7 @@ export default class EffectSection extends Section {
             bindAlpha: inOptions.bindAlpha,
             followRotation: inOptions.followRotation
         };
-        if(!validatedObject?.id) this.locally();
+        this._temporaryEffect = !validatedObject?.id;
         return this;
     }
 
@@ -1191,6 +1192,7 @@ export default class EffectSection extends Section {
             index: this.sequence.effectIndex,
             repetition: this._currentRepetition,
             private: this._private,
+            temporary: this._temporaryEffect,
 
             /**
              * Source/target properties

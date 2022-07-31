@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.1.11
+- *Effects* - Fixed effects attached to temporary templates causing errors in core Foundry code
+- *Effects* - Effects attached to temporary objects (like warpgate cursors) are now propagated to other clients (call `.locally()` to make it only appear for the creator)
+
 ### Version 2.1.10
 - *Sequencer* - Fixed Sequencer Effect Manager not accepting Foundry documents as object references when filtering for effects
 - *Sequencer* - Fixed Sequencer Effect Player showing private database entries
