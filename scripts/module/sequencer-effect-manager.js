@@ -491,7 +491,7 @@ export default class SequencerEffectManager {
         if (!effectsByObjectId.length) return true;
 
         effectsByObjectId.forEach(effects => {
-            effects = effects.filter(effect => effect.data.persist && lib.is_UUID(effect.data.source));
+            effects = effects.filter(effect => effect.data.persist && !effect.data.temporary);
             if (effects.length){
                 const effectData = effects.map(effect => effect.data);
                 const effectContext = effects[0].context;

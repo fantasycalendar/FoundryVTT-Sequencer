@@ -29,6 +29,7 @@ export function registerSocket() {
     sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) => Sequencer.Preloader.handleResponse(...args))
     sequencerSocket.register(SOCKET_HANDLERS.UPDATE_DOCUMENT, (...args) => updateDocument(...args))
     sequencerSocket.register(SOCKET_HANDLERS.ADD_FLAGS, (...args) => FlagManager._addFlags(...args))
+    sequencerSocket.register(SOCKET_HANDLERS.REMOVE_FLAGS, (...args) => FlagManager._removeFlags(...args))
     sequencerSocket.register(SOCKET_HANDLERS.UPDATE_POSITION, (...args) => Sequencer.EffectManager._updatePosition(...args))
 }
 
