@@ -1,6 +1,6 @@
 ## Sequencer Changelog
 
-### Version 2.1.11
+### Version 2.1.12
 - *Effects* - Fixed `.strechTo()` with parameter `attachTo: true` resulting in no stretching
 
 ### Version 2.1.11
