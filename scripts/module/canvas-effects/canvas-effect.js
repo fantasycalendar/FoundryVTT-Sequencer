@@ -244,11 +244,11 @@ export default class CanvasEffect extends PIXI.Container {
     getTargetData() {
     
         if(this.data.temporary && !this.owner){
-            return SequencerEffectManager.getPositionForUUID(this.data.target);
+            return SequencerEffectManager.getPositionForUUID(this.data.target) ?? this.getSourceData();
         }
     
         const position = this.target instanceof PlaceableObject && !this.isTargetTemporary
-            ? canvaslib.get_object_position(this.target)
+            ? canvaslib.get_object_position(this.target, { measure: true })
             : (this.target?.worldPosition || this.target?.center || this.target);
     
         const rotation = this.target instanceof MeasuredTemplate && this.target?.data?.t !== "rect"

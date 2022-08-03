@@ -1,6 +1,9 @@
 ## Sequencer Changelog
 
 ### Version 2.1.11
+- *Effects* - Fixed `.strechTo()` with parameter `attachTo: true` resulting in no stretching
+
+### Version 2.1.11
 - *Effects* - Fixed effects attached to temporary templates causing errors in core Foundry code
 - *Effects* - Effects attached to temporary objects (like warpgate cursors) are now propagated to other clients (call `.locally()` to make it only appear for the creator)
 
