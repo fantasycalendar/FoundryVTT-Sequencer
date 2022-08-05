@@ -2,6 +2,7 @@
 
 ### Version 2.1.13
 - *Sequencer* - Removed stray `console.log`
+- *Sequencer* - Fixed Ouija board macro error, slightly improved effect positioning
 - *Effects* - Added `.spriteRotation()` which allows you set the rotation of the effect in place - this differs from `.rotate()` in the sense that this is applied only locally to the sprite, after any other offsets or transformations
 
 ### Version 2.1.12
