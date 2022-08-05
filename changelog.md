@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.1.13
+- *Sequencer* - Removed stray `console.log`
+- *Effects* - Added `.spriteRotation()` which allows you set the rotation of the effect in place - this differs from `.rotate()` in the sense that this is applied only locally to the sprite, after any other offsets or transformations
+
 ### Version 2.1.12
 - *Effects* - Fixed `.strechTo()` with parameter `attachTo: true` resulting in no stretching
 

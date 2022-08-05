@@ -54,6 +54,7 @@ export default class EffectSection extends Section {
         this._masks = [];
         this._selfMask = false;
         this._temporaryEffect = false;
+        this._spriteRotation = 0;
 
         this._isRangedEffect = null;
         this._randomOffsetLegacy = null;
@@ -63,7 +64,7 @@ export default class EffectSection extends Section {
      * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
      * and .rotateTowards() to refer to previous effects' locations
      *
-     * @param {string} inName
+     * @param {String} inName
      * @returns {EffectSection}
      */
     name(inName) {
@@ -76,8 +77,8 @@ export default class EffectSection extends Section {
      * Causes the effect to persist indefinitely on the canvas until _ended via SequencerEffectManager.endAllEffects() or
      * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
      *
-     * @param {boolean} [inBool=true] inBool
-     * @param {object} [inOptions={}] inOptions
+     * @param {Boolean} [inBool=true] inBool
+     * @param {Object} [inOptions={}] inOptions
      * @returns {EffectSection}
      */
     persist(inBool = true, inOptions={}) {
@@ -97,7 +98,7 @@ export default class EffectSection extends Section {
      * Sets the effect's playback rate. A playback rate of 2.0 would make it play 2x as fast, 0.5 would make
      * it play half as fast.
      *
-     * @param {number} inNumber
+     * @param {Number} inNumber
      * @returns {EffectSection}
      */
     playbackRate(inNumber = 1.0) {
@@ -109,7 +110,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to target a location close to the .stretchTowards() location, but not on it.
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     missed(inBool = true) {
@@ -123,7 +124,7 @@ export default class EffectSection extends Section {
      * modifications of effect's data. For example, it could be manipulated to change which file will be used based
      * on the distance to the target.
      *
-     * @param {function} inFunc
+     * @param {Function} inFunc
      * @returns {EffectSection}
      */
     addOverride(inFunc) {
@@ -137,7 +138,7 @@ export default class EffectSection extends Section {
      * modifications of effect's data. For example, it could be manipulated to change which file will be used based
      * on the distance to the target.
      *
-     * @param {function} inFunc
+     * @param {Function} inFunc
      * @returns {EffectSection}
      */
     addPostOverride(inFunc) {
@@ -151,8 +152,8 @@ export default class EffectSection extends Section {
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {object|string} inLocation
-     * @param {object} inOptions
+     * @param {Object|String} inLocation
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     atLocation(inLocation, inOptions = {}) {
@@ -177,8 +178,8 @@ export default class EffectSection extends Section {
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
-     * @param {object|string} inObject
-     * @param {object} inOptions
+     * @param {Object|String} inObject
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     attachTo(inObject, inOptions={}) {
@@ -243,8 +244,8 @@ export default class EffectSection extends Section {
     /**
      *  DEPRECATED IN FAVOR OF .stretchTo()
      *
-     * @param {object|string} inLocation
-     * @param {object} inOptions
+     * @param {Object|String} inLocation
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     reachTowards(inLocation, inOptions = {}) {
@@ -256,8 +257,8 @@ export default class EffectSection extends Section {
      *  Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
-     * @param {object|string} inLocation
-     * @param {object} inOptions
+     * @param {Object|String} inLocation
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     stretchTo(inLocation, inOptions = {}) {
@@ -300,8 +301,8 @@ export default class EffectSection extends Section {
     /**
      *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
      *
-     * @param {object} inObject
-     * @param {object} inOptions
+     * @param {Object} inObject
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     from(inObject, inOptions = {}){
@@ -326,8 +327,8 @@ export default class EffectSection extends Section {
      *  Creates a text element, attached to the sprite. The options for the text are available here:
      *  https://pixijs.io/pixi-text-style/
      *
-     * @param {string} inText
-     * @param {object} inOptions
+     * @param {String} inText
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     text(inText, inOptions={}){
@@ -341,8 +342,8 @@ export default class EffectSection extends Section {
     /**
      *  Causes the effect to be offset relative to its location based on a given vector
      *
-     * @param {object} inOffset
-     * @param {object} inOptions
+     * @param {Object} inOffset
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     offset(inOffset, inOptions = {}) {
@@ -370,8 +371,8 @@ export default class EffectSection extends Section {
     /**
      *  Causes the effect's sprite to be offset relative to its location based on a given vector
      *
-     * @param {object} inOffset
-     * @param {object} inOptions
+     * @param {Object} inOffset
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     spriteOffset(inOffset, inOptions =  {}) {
@@ -397,7 +398,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the final effect location to be snapped to the grid
      *
-     * @param {boolean} inBool
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     snapToGrid(inBool = true) {
@@ -409,8 +410,8 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be scaled to the target object's width
      *
-     * @param {number} inScale
-     * @param {object} inOptions
+     * @param {Number} inScale
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     scaleToObject(inScale = 1.0, inOptions={}){
@@ -427,8 +428,8 @@ export default class EffectSection extends Section {
     /**
      * Sets the width and the height of the effect in pixels, this size is set before any scaling
      *
-     * @param {number|object} inSize
-     * @param {object} inOptions
+     * @param {Number|Object<{width: {Number}, height: {Number}}>} inSize
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     size(inSize, inOptions= {}) {
@@ -441,12 +442,12 @@ export default class EffectSection extends Section {
             }
         }
 
-        if((inSize?.width === undefined) ^ (inSize?.height === undefined)){
-            if(inSize?.width){
-                if (!lib.is_real_number(inSize?.width)) throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
+        if((inSize.width === undefined) ^ (inSize.height === undefined)){
+            if(inSize.width){
+                if (!lib.is_real_number(inSize.width)) throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
                 inSize['height'] = "auto"
             }else{
-                if (!lib.is_real_number(inSize?.height)) throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
+                if (!lib.is_real_number(inSize.height)) throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
                 inSize['width'] = "auto"
             }
         }
@@ -455,13 +456,13 @@ export default class EffectSection extends Section {
             gridUnits: false
         }, inOptions)
 
-        if (!lib.is_real_number(inSize?.width) && inSize?.width !== "auto") throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
-        if (!lib.is_real_number(inSize?.height) && inSize?.height !== "auto") throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
+        if (!lib.is_real_number(inSize.width) && inSize.width !== "auto") throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
+        if (!lib.is_real_number(inSize.height) && inSize.height !== "auto") throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
         if (typeof inOptions.gridUnits !== "boolean") throw this.sequence._customError(this, "size", "inOptions.gridUnits must be of type boolean");
 
         this._size = {
-            width: inSize?.width ?? canvas.grid.size,
-            height: inSize?.height ?? canvas.grid.size,
+            width: inSize.width ?? canvas.grid.size,
+            height: inSize.height ?? canvas.grid.size,
             ...inOptions
         };
         return this;
@@ -471,7 +472,7 @@ export default class EffectSection extends Section {
      * Sets the grid size of the file loaded in the Effect. Some files have an established internal
      * grid, so this will make the effect scale up or down to match the active scene's grid size
      *
-     * @param {number} inGridSize
+     * @param {Number} inGridSize
      * @returns {EffectSection}
      */
     gridSize(inGridSize) {
@@ -487,7 +488,7 @@ export default class EffectSection extends Section {
      *  would be a given number of `200` - means that the sprite will consider 200 pixels into the sprite as the
      *  'anchor point'
      *
-     * @param {number} inStartPoint
+     * @param {Number} inStartPoint
      * @returns {EffectSection}
      */
     startPoint(inStartPoint) {
@@ -501,7 +502,7 @@ export default class EffectSection extends Section {
     /**
      *  The same as the start point, except from the right and how many pixels to offset the target from
      *
-     * @param {number} inEndPoint
+     * @param {Number} inEndPoint
      * @returns {EffectSection}
      */
     endPoint(inEndPoint) {
@@ -516,9 +517,9 @@ export default class EffectSection extends Section {
      * This defines the internal padding of this effect. Gridsize determines the internal grid size of this effect which will determine how big it is on the canvas
      * relative to the canvas's grid size. Start and end point defines padding at the left and right of the effect
      *
-     * @param {number} gridSize
-     * @param {number} startPoint
-     * @param {number} endPoint
+     * @param {Number} gridSize
+     * @param {Number} startPoint
+     * @param {Number} endPoint
      * @returns {EffectSection}
      */
     template({ gridSize, startPoint, endPoint }={}){
@@ -536,8 +537,8 @@ export default class EffectSection extends Section {
     /**
      * This makes the texture of the effect tile, effectively repeat itself within the sprite's dimensions
      *
-     * @param {object/number} scale
-     * @param {object} position
+     * @param {Object|Number} scale
+     * @param {Object} position
      * @returns {EffectSection}
      */
     tilingTexture(scale = { x: 1.0, y: 1.0 }, position = { x: 0, y: 0 }){
@@ -567,7 +568,7 @@ export default class EffectSection extends Section {
     /**
      *  Anchors the sprite's container according to the given x and y coordinates, or uniformly based on a single number
      *
-     * @param {number|object} inAnchor
+     * @param {Number|Object} inAnchor
      * @returns {EffectSection}
      */
     anchor(inAnchor) {
@@ -593,7 +594,7 @@ export default class EffectSection extends Section {
     /**
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number
      *
-     * @param {number|object} inAnchor
+     * @param {Number|Object} inAnchor
      * @returns {EffectSection}
      */
     spriteAnchor(inAnchor) {
@@ -633,7 +634,7 @@ export default class EffectSection extends Section {
      * The sprite gets a random offset on its target location, usually within the object's bounds. The optional parameter
      * scales how much offset should be added. Defaults to 1.0, which covers the entire target position, 0.5 would cover half.
      *
-     * @param {number} [inOffsetScale=1.0] inOffsetScale
+     * @param {Number} inOffsetScale
      * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
@@ -647,7 +648,7 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped X scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its horizontal axis
      *
-     * @param {boolean} inBool
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     randomizeMirrorX(inBool = true) {
@@ -660,7 +661,7 @@ export default class EffectSection extends Section {
      * The sprite gets a randomized flipped Y scale. If the scale on that axis was 1, it can
      * become 1 or -1, effectively mirroring the sprite on its vertical axis
      *
-     * @param {boolean} inBool
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     randomizeMirrorY(inBool = true) {
@@ -673,7 +674,7 @@ export default class EffectSection extends Section {
      * The sprite gets a flipped X scale. If the scale on that axis was 1, it will become become 1 or -1, effectively
      * mirroring the sprite on its horizontal axis
      *
-     * @param {boolean} inBool
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     mirrorX(inBool = true) {
@@ -686,7 +687,7 @@ export default class EffectSection extends Section {
      * The sprite gets a flipped Y scale. If the scale on that axis was 1, it will become become 1 or -1, effectively
      * mirroring the sprite on its vertical axis
      *
-     * @param {boolean} inBool
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     mirrorY(inBool = true) {
@@ -698,7 +699,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played below tokens
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     belowTokens(inBool = true) {
@@ -710,7 +711,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played below tiles
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     belowTiles(inBool = true) {
@@ -722,7 +723,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     aboveLighting(inBool = true) {
@@ -734,7 +735,7 @@ export default class EffectSection extends Section {
     /**
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
-     * @param {number} inZIndex
+     * @param {Number} inZIndex
      * @returns {EffectSection}
      */
     zIndex(inZIndex) {
@@ -746,7 +747,7 @@ export default class EffectSection extends Section {
     /**
      * Sets the zIndex of the effect, potentially displaying it on top of other effects
      *
-     * @param {number} inExtraDuration
+     * @param {Number} inExtraDuration
      * @returns {EffectSection}
      */
     extraEndDuration(inExtraDuration) {
@@ -754,11 +755,22 @@ export default class EffectSection extends Section {
         this._extraEndDuration = inExtraDuration;
         return this;
     }
+    
+    /**
+     * 
+     * @param {Number} inAngle
+     * @returns {EffectSection}
+     */
+    spriteRotation(inAngle){
+        if (!lib.is_real_number(inAngle)) throw this.sequence._customError(this, "spriteRotation", "inAngle must be of type number");
+        this._spriteRotation = inAngle;
+        return this;
+    }
 
     /**
      * Causes the effect to not rotate should its container rotate
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     zeroSpriteRotation(inBool = true) {
@@ -770,7 +782,7 @@ export default class EffectSection extends Section {
     /**
      * If the effect would loop due to its duration or persistence, this causes it not to
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     noLoop(inBool = true) {
@@ -794,7 +806,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played in screen space instead of world space (where tokens are)
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     screenSpace(inBool = true){
@@ -806,7 +818,7 @@ export default class EffectSection extends Section {
     /**
      * Causes the effect to be played above all of the UI elements
      *
-     * @param {boolean} [inBool=true] inBool
+     * @param {Boolean} [inBool=true] inBool
      * @returns {EffectSection}
      */
     screenSpaceAboveUI(inBool = true){
@@ -818,7 +830,7 @@ export default class EffectSection extends Section {
     /**
      *  Positions the effect in a screen space position, offset from its .screenSpaceAnchor()
      *
-     * @param {object} inPosition
+     * @param {Object} inPosition
      * @returns {EffectSection}
      */
     screenSpacePosition(inPosition) {
@@ -835,7 +847,7 @@ export default class EffectSection extends Section {
     /**
      *  Anchors the sprite according to the given x and y coordinates, or uniformly based on a single number in screen space
      *
-     * @param {number|object} inAnchor
+     * @param {Number|Object} inAnchor
      * @returns {EffectSection}
      */
     screenSpaceAnchor(inAnchor) {
@@ -861,7 +873,7 @@ export default class EffectSection extends Section {
     /**
      *  Sets up various properties relating to scale of the effect on the screen
      *
-     * @param {object} inOptions
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
     screenSpaceScale(inOptions) {
@@ -1243,6 +1255,7 @@ export default class EffectSection extends Section {
             filters: this._filters,
             layer: this._layer,
             noLoop: this._noLoop,
+            spriteRotation: this._spriteRotation,
             tint: this._tint?.decimal,
             flipX: (this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)),
             flipY: (this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)),

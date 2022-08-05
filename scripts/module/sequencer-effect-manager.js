@@ -540,7 +540,6 @@ export default class SequencerEffectManager {
      */
     static _removeEffect(effect) {
         EffectsContainer.delete(effect.id);
-        console.log(TemporaryPositionsContainer)
         TemporaryPositionsContainer.delete(effect.data.source);
         TemporaryPositionsContainer.delete(effect.data.target);
         debounceUpdateEffectViewer();
