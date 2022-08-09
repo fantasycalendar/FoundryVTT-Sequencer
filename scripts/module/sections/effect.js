@@ -991,6 +991,10 @@ export default class EffectSection extends Section {
 
         const source = this._getSourceObject();
         const target = this._getTargetObject();
+        
+        if(!this._screenSpace && this._persistOptions?.persistTokenPrototype && this._masks.filter(uuid => uuid !== source.uuid).length > 0){
+            this.sequence._showWarning(this, "persist", "You have applied persistTokenPrototype with multiple masks from objects in the scene - these will not be persisted to token prototype");
+        }
 
         if(!source && !target && !this._screenSpace){
             throw this.sequence._customError(this, "play", "Could not determine where to play the effect!");
@@ -1003,7 +1007,8 @@ export default class EffectSection extends Section {
     async preRun(){
 
         if(this._from) {
-            this._file = this._from.object?.data?.img;
+          
+            this._file = this._file || this._from.object?.data?.img;
 
             if (this._source === null) {
                 this._source = this._validateLocation(this._from.object);

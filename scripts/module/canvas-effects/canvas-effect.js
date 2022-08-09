@@ -57,7 +57,7 @@ export default class CanvasEffect extends PIXI.Container {
     }
     
     get context(){
-        return this.data.attachTo?.active && this.source?.document ? this.source?.document : game.scenes.get(this.data.sceneId);
+        return this.data.attachTo?.active && this.sourceDocument ? this.sourceDocument : game.scenes.get(this.data.sceneId);
     }
 
     static get protectedValues() {
@@ -111,7 +111,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isSourceTemporary(){
-        return this.data.attachTo?.active && this.source && this.source?.document && !lib.is_UUID(this.source.document.uuid);
+        return this.data.attachTo?.active && this.sourceDocument && !lib.is_UUID(this.sourceDocument?.uuid);
     }
     
     /**
@@ -120,7 +120,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isSourceDestroyed(){
-        return this.source && (this.source?.destroyed || this.source?.document?._destroyed);
+        return this.source && (this.source?.destroyed || this.sourceDocument?._destroyed);
     }
 
     /**
@@ -129,7 +129,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isTargetTemporary(){
-        return (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && this.target?.document && !lib.is_UUID(this.target?.document.uuid);
+        return (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && this.targetDocument && !lib.is_UUID(this.targetDocument.uuid);
     }
     
     
@@ -139,7 +139,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {boolean}
      */
     get isTargetDestroyed(){
-        return this.target && (this.target?.destroyed || this.target?.document?._destroyed);
+        return this.target && (this.target?.destroyed || this.targetDocument?._destroyed);
     }
 
     /**
@@ -164,6 +164,15 @@ export default class CanvasEffect extends PIXI.Container {
             this._source = this._source?._object ?? this._source;
         }
         return this._source;
+    }
+    
+    /**
+     * Retrieves the source document
+     *
+     * @returns {Document|PlaceableObject}
+     */
+    get sourceDocument() {
+        return this.source?.document ?? this.source;
     }
 
     /**
@@ -234,6 +243,15 @@ export default class CanvasEffect extends PIXI.Container {
             this._target = this._target?._object ?? this._target;
         }
         return this._target;
+    }
+    
+    /**
+     * Retrieves the document of the target
+     *
+     * @returns {Document|PlaceableObject}
+     */
+    get targetDocument() {
+        return this.target?.document ?? this.target;
     }
 
     /**
@@ -782,14 +800,15 @@ export default class CanvasEffect extends PIXI.Container {
         
         if (this._ended) return;
         this._ended = true;
-    
+        
         this.mask = null;
     
         this._removeHooks();
-
-        this._ticker.stop();
-
-        this._ticker.destroy();
+    
+        try {
+            this._ticker.stop();
+            this._ticker.destroy();
+        }catch(err){}
 
         this._ticker = null;
 
@@ -799,8 +818,10 @@ export default class CanvasEffect extends PIXI.Container {
 
         if(this._maskContainer) this._maskContainer.destroy({ children: true })
         if(this._maskSprite){
-            this._maskSprite.texture.destroy(true);
-            this._maskSprite.destroy()
+            try {
+                this._maskSprite.texture.destroy(true);
+                this._maskSprite.destroy();
+            }catch(err){}
         }
 
         if (this._file instanceof SequencerFile) {
@@ -1211,7 +1232,7 @@ export default class CanvasEffect extends PIXI.Container {
 
             const documentType = uuid.split('.')[2];
             const documentObj = await fromUuid(uuid);
-            if(!documentObj) continue;
+            if(!documentObj || documentObj.parent !== this.sourceDocument.parent) continue;
 
             const placeableObject = documentObj.object;
             const objMaskSprite = (documentType === "Token" || documentType === "Tile") ? new PIXI.Sprite() : new PIXI.Graphics();
@@ -1486,7 +1507,7 @@ export default class CanvasEffect extends PIXI.Container {
         if (attachedToSource){
 
             this._addHook(this.getSourceHook("delete"), (doc) => {
-                if (doc !== this.source?.document) return;
+                if (doc !== this.sourceDocument) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
@@ -1506,7 +1527,7 @@ export default class CanvasEffect extends PIXI.Container {
     
             if(this.data.attachTo?.bindAlpha) {
                 this._addHook(this.getSourceHook("update"), (doc) => {
-                    if (doc !== this.source?.document) return;
+                    if (doc !== this.sourceDocument) return;
                     this.spriteContainer.alpha = this.getSourceData().alpha;
                 });
                 this.spriteContainer.alpha = this.getSourceData().alpha;

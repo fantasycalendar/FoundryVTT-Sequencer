@@ -1,5 +1,11 @@
 ## Sequencer Changelog
 
+### Version 2.1.14
+- *Effects* - Fixed fatal canvas errors when `persistTokenPrototype` was active and masked to the target of the effect
+- *Effects* - Added warning when using `persistTokenPrototype` with masks _other_ than masks applied to the source target
+- *Effects* - Added support for `.file()` to override `.from()`'s file while keeping the other settings intact
+- *Effects* - Improved robustness of placeable object document retrieval
+
 ### Version 2.1.13
 - *Sequencer* - Removed stray `console.log`
 - *Sequencer* - Fixed Ouija board macro error, slightly improved effect positioning

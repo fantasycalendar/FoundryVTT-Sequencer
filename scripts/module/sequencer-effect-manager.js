@@ -561,8 +561,11 @@ export default class SequencerEffectManager {
         for(const token of tokensToUpdate){
             const duplicatedData = foundry.utils.deepClone(data);
             duplicatedData._id = randomID();
-            duplicatedData.source = token.uuid;
             duplicatedData.sceneId = token.uuid.split(".")[1];
+            duplicatedData.masks = duplicatedData.masks
+                .map(uuid => uuid.replace(duplicatedData.source, token.uuid))
+                .filter(uuid => uuid.includes(duplicatedData.sceneId));
+            duplicatedData.source = token.uuid;
             if(CanvasEffect.checkValid(duplicatedData)) {
                 if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
                 this._playEffect(duplicatedData);
