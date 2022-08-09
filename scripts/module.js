@@ -1,6 +1,5 @@
 import registerSettings from "./settings.js";
 import registerLayers from "./layers.js";
-import registerLibwrappers from "./libwrapper.js";
 import registerHotkeys from "./hotkeys.js";
 import { registerSocket } from "./sockets.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
@@ -76,7 +75,6 @@ function initialize_module(){
     registerLayers();
     registerSettings();
     registerHotkeys();
-    registerLibwrappers();
 
     Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));

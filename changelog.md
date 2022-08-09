@@ -1,6 +1,8 @@
 ## Sequencer Changelog
 
 ### Version 2.1.14
+- *Sequencer* - Removed PIXI fix for Foundry .webm tiles to apply premultiplied alpha, native Foundry behavior is now active
+- *Effects* - Effects now take token scale into account when using `.scaleToObject()`
 - *Effects* - Fixed fatal canvas errors when `persistTokenPrototype` was active and masked to the target of the effect
 - *Effects* - Added warning when using `persistTokenPrototype` with masks _other_ than masks applied to the source target
 - *Effects* - Added support for `.file()` to override `.from()`'s file while keeping the other settings intact
