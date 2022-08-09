@@ -1848,8 +1848,8 @@ export default class CanvasEffect extends PIXI.Container {
                 width = newWidth;
             }
 
-            this.sprite.width = width * (this.data.scale.x ?? 1.0) * (this.source?.scale?.x ?? 1.0);
-            this.sprite.height = height * (this.data.scale.y ?? 1.0) * (this.source?.scale?.x ?? 1.0);
+            this.sprite.width = width * (this.data.scale.x ?? 1.0) * (this.source?.data?.scale ?? 1.0);
+            this.sprite.height = height * (this.data.scale.y ?? 1.0) * (this.source?.data?.scale ?? 1.0);
 
             this.sprite.scale.x *= this.flipX;
             this.sprite.scale.y *= this.flipY;
