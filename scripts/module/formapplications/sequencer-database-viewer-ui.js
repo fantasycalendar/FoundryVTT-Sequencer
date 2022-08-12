@@ -238,23 +238,35 @@ export default class SequencerDatabaseViewer extends FormApplication {
         player.src = entry;
     }
 
-    copyText(button, entry, getFilepath) {
+    copyText(button, dbPath, getFilepath) {
+        
+        const tempInput = document.createElement("input");
+        tempInput.value = `${dbPath}`;
+        
+        let entry;
         if (getFilepath) {
-            entry = Sequencer.Database.getEntry(entry);
+            
+            entry = Sequencer.Database.getEntry(dbPath);
 
             if(entry instanceof SequencerFile){
-                const files = entry.getAllFiles();
-                if(Array.isArray(files)) {
-                    const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
-                    entry = files[index];
+                
+                const specificFt = dbPath.match(Sequencer.Database.feetTest);
+                if(specificFt){
+                    const ft = specificFt[0].replaceAll('.', '');
+                    entry = entry.getFile(ft);
+                }else {
+                    const files = entry.getAllFiles();
+                    if (Array.isArray(files)) {
+                        const index = Math.floor(lib.interpolate(0, files.length - 1, 0.5));
+                        entry = files[index];
+                    }
                 }
             }
 
-            entry = entry?.file ?? entry;
+            tempInput.value = `${entry?.file ?? entry}`;
+            
         }
-
-        const tempInput = document.createElement("input");
-        tempInput.value = `${entry}`;
+        
         document.body.appendChild(tempInput);
         tempInput.select();
         document.execCommand("copy");

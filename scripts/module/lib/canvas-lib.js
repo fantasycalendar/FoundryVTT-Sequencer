@@ -288,3 +288,13 @@ export function getBezierControlPoints(factor, previous, point, next) {
         }
     }
 }
+
+
+export function rotateAroundPoint(cx, cy, x, y, angle) {
+    let radians = (Math.PI / 180) * angle,
+        cos = Math.cos(radians),
+        sin = Math.sin(radians),
+        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
+        ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
+    return { x: nx, y: ny };
+}

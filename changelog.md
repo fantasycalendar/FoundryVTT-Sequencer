@@ -1,5 +1,21 @@
 ## Sequencer Changelog
 
+### Version 2.1.15
+**Additions:**
+- *Effects* - Added `.tieToDocuments()` which allows you to tie an effect to Foundry documents - such as Active Effects or Tokens. When these are deleted, the effect is automatically ended.
+- *Effects* - Added secondary `offset` parameter to `.atLocation()`, `.attachTo()`, `.rotateTowards()`, `.from()`, and `.stretchTo()` which can be used to offset the location of the source or target
+  - Note: This means that `.offset()` is becoming deprecated - it will remain for a few versions with a silent warning
+- *Effects* - Added `.spriteScale()` which can be used to scale the sprite of the effect separately from `.scale()`
+
+**Tweaks:**
+- *Animations* - Renamed `.rotateTowards()`'s secondary parameter's `offset` property to be more accurately named `rotationOffset`
+- *Effects* - Upgraded `.animateProperty()` and `.loopProperty()` to be additive, which means two animations can now target the same property on the same effect
+- *Effects* - Renamed `.rotateTowards()`'s secondary parameter's `offset` property to be more accurately named `rotationOffset`
+
+**Fixes:**
+- *Sequencer* - Fixed issue where copying the file path of a Database entry that has multiple ranges would always copy the file path for the middle-most range
+- *Effects* - Fixed `randomOffset` secondary option on `.attachTo()` not working 
+
 ### Version 2.1.14
 - *Sequencer* - Removed PIXI fix for Foundry .webm tiles to apply premultiplied alpha, native Foundry behavior is now active
 - *Effects* - Fixed fatal canvas errors when `persistTokenPrototype` was active and masked to the target of the effect

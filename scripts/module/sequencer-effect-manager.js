@@ -361,7 +361,7 @@ export default class SequencerEffectManager {
      * @returns {Promise}
      */
     static objectDeleted(inUUID){
-        const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID)
+        const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1)
         return Promise.allSettled(effectsToEnd.map(effect => {
             EffectsContainer.delete(effect.id);
             if(effect.data?.source !== inUUID && inUUID === effect.data.target){

@@ -56,6 +56,9 @@ const SequencerAnimationEngine = {
 
     endAnimations(target){
         this._animations = this._animations.filter(animation => animation.origin !== target);
+        const originId = this._valueOwner[target];
+        delete this._valueOwner[target];
+        delete this._modifiedValues[originId];
     },
 
     start(){
@@ -80,6 +83,9 @@ const SequencerAnimationEngine = {
         this._applyDeltas();
 
     },
+    
+    _modifiedValues: {},
+    _valueOwner: {},
 
     _applyDeltas() {
 
@@ -98,12 +104,22 @@ const SequencerAnimationEngine = {
                 let delta = deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
 
                 if (!delta) {
+    
+                    let defaultValue = lib.deep_get(attribute.target, attribute.propertyName);
+                    const targetIdentifier = lib.get_object_identifier(attribute.target);
+                    this._valueOwner[animation.origin] = targetIdentifier;
+                    if(this._modifiedValues?.[targetIdentifier]?.[attribute.propertyName]){
+                        defaultValue -= this._modifiedValues?.[targetIdentifier]?.[attribute.propertyName];
+                    }
+                    
                     deltas.push({
                         target: attribute.target,
                         propertyName: attribute.propertyName,
-                        value: 0
+                        value: 0,
+                        defaultValue,
                     })
                     delta = deltas[deltas.length - 1];
+                    
                 }
 
                 delta.value += attribute.value;
@@ -113,11 +129,20 @@ const SequencerAnimationEngine = {
         }
 
         for (let delta of deltas) {
+            
+            const targetIdentifier = lib.get_object_identifier(delta.target);
+            
+            if(!this._modifiedValues[targetIdentifier]){
+                this._modifiedValues[targetIdentifier] = {};
+            }
+    
+            this._modifiedValues[targetIdentifier][delta.propertyName] = delta.value;
+            
             try {
                 lib.deep_set(
                     delta.target,
                     delta.propertyName,
-                    delta.value
+                    delta.defaultValue + delta.value
                 )
             } catch (err) { }
         }

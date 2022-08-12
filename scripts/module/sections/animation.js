@@ -52,6 +52,35 @@ class AnimationSection extends Section {
         this._teleportTo = options;
         return this;
     }
+    
+    /**
+     * Sets the location to rotate the object to
+     *
+     * @param {object|string} inLocation
+     * @param {object} options
+     * @returns this
+     */
+    rotateTowards(inLocation, options = {}) {
+        options = foundry.utils.mergeObject({
+            duration: 0,
+            ease: "linear",
+            delay: 0,
+            rotationOffset: 0,
+            towardsCenter: true,
+            cacheLocation: false
+        }, options);
+        if (!lib.is_real_number(options.duration)) throw this.sequence._customError(this, "rotateTowards", "options.duration must be of type number");
+        if (typeof options.ease !== "string") throw this.sequence._customError(this, "rotateTowards", "options.ease must be of type string");
+        if (!lib.is_real_number(options.delay)) throw this.sequence._customError(this, "rotateTowards", "options.delay must be of type number");
+        if (!lib.is_real_number(options.rotationOffset)) throw this.sequence._customError(this, "rotateTowards", "options.rotationOffset must be of type number");
+        if (typeof options.towardsCenter !== "boolean") throw this.sequence._customError(this, "rotateTowards", "options.towardsCenter must be of type boolean");
+        if (typeof options.cacheLocation !== "boolean") throw this.sequence._customError(this, "rotateTowards", "options.cacheLocation must be of type boolean");
+        options.target = this._validateLocation(inLocation);
+        if (!options.target) throw this.sequence._customError(this, "rotateTowards", "could not find position of given object");
+        options.target = options.cacheLocation ? canvaslib.get_object_position(options.target, { measure: true }) : options.target;
+        this._rotateTowards = options;
+        return this;
+    }
 
     /**
      * Causes the movement or teleportation to be offset in the X and/or Y axis

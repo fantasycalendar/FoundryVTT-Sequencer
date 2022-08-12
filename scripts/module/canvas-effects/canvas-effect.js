@@ -44,15 +44,24 @@ export default class CanvasEffect extends PIXI.Container {
         this.data = inData;
 
         this._resolve = null;
-        this._reject = null;
-
         this._durationResolve = null;
-        this._durationReject = null;
 
         this._ended = false;
         this._isEnding = false;
         
         this._isDestroyed = false;
+        
+        // Responsible for rotating the sprite
+        this.rotationContainer = this.addChild(new PIXI.Container());
+        this.rotationContainer.id = this.id + randomID();
+    
+        // An offset container for the sprite
+        this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
+        this.spriteContainer.id = this.id + randomID();
+        
+        // The sprite itself
+        this.sprite = this.spriteContainer.addChild(new PIXI.Sprite());
+        this.sprite.id = this.id + randomID();
 
     }
     
@@ -100,7 +109,7 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get uuid() {
         if(!lib.is_UUID(this.context.uuid)){
-            return "";
+            return this.id;
         }
         return this.context.uuid + ".data.flags.sequencer.effects." + this.id;
     }
@@ -212,11 +221,11 @@ export default class CanvasEffect extends PIXI.Container {
     get sourcePosition() {
 
         const position = this.getSourceData().position;
-        this._sourceOffset = this._sourceOffset || this._getOffset(this.data.source, true);
+        const offset = this._getOffset(this.data.source, true);
 
         return {
-            x: position.x - this._sourceOffset.x,
-            y: position.y - this._sourceOffset.y
+            x: position.x - offset.x,
+            y: position.y - offset.y
         };
 
     }
@@ -291,11 +300,11 @@ export default class CanvasEffect extends PIXI.Container {
     get targetPosition() {
 
         const position = this.getTargetData().position;
-        this._targetOffset = this._targetOffset || this._getOffset(this.data.target);
+        const offset = this._getOffset(this.data.target);
 
         return {
-            x: position.x - this._targetOffset.x,
-            y: position.y - this._targetOffset.y
+            x: position.x - offset.x,
+            y: position.y - offset.y
         };
 
     }
@@ -309,7 +318,13 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _getOffset(offsetMapName, source = false) {
-
+        
+        const key = source ? "source" : "target";
+        
+        if(!this._offsetCache[key]){
+            this._offsetCache[key] = {};
+        }
+        
         const offset = {
             x: 0,
             y: 0
@@ -323,9 +338,10 @@ export default class CanvasEffect extends PIXI.Container {
             twister = nameOffsetMap.twister;
         }
 
-        // If the effect is missing, and it's not the source we're offsetting OR it is the source but we don't have a target (it's playing on the spot)
+        // If the effect is missing, and it's not the source we're offsetting OR it is the source, but we don't have a target (it's playing on the spot)
         if (this.data.missed && (!source || !this.data.target)) {
-            let missedOffset = canvaslib.calculate_missed_position(this.source, this.target, twister);
+            let missedOffset = this._offsetCache[key]?.missedOffset || canvaslib.calculate_missed_position(this.source, this.target, twister);
+            this._offsetCache[key].missedOffset = missedOffset;
             offset.x -= missedOffset.x;
             offset.y -= missedOffset.y;
         }
@@ -334,28 +350,40 @@ export default class CanvasEffect extends PIXI.Container {
         const multiplier = source ? this.data.randomOffset?.source : this.data.randomOffset?.target;
 
         if (obj && multiplier) {
-            let randomOffset = canvaslib.get_random_offset(obj, multiplier, twister);
+            let randomOffset = this._offsetCache[key]?.randomOffset || canvaslib.get_random_offset(obj, multiplier, twister);
+            this._offsetCache[key].missedOffset = randomOffset;
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
-
-        if (this.data.offset && (!source || !this.data.target)) {
-            let offsetX = this.data.offset.x;
-            let offsetY = this.data.offset.y;
-            if(this.data.offset?.gridUnits){
-                offsetX *= canvas.grid.size;
-                offsetY *= canvas.grid.size;
+        
+        let extraOffset = this.data?.offset?.[key];
+        if (extraOffset) {
+            let newOffset = {
+                x: extraOffset.x,
+                y: extraOffset.y
             }
-            offset.x += offsetX;
-            offset.y += offsetY;
+            if(extraOffset.gridUnits){
+                newOffset.x *= canvas.grid.size;
+                newOffset.y *= canvas.grid.size;
+            }
+            if(extraOffset.local){
+                newOffset = canvaslib.rotateAroundPoint(0, 0, newOffset.x, newOffset.y, -this.rotationContainer.angle);
+            }
+            offset.x -= newOffset.x;
+            offset.y -= newOffset.y;
         }
 
         let offsetMap = this._nameOffsetMap?.[offsetMapName];
+        
+        if(!this._offsetCache[key][offsetMapName]){
+            this._offsetCache[key][offsetMapName] = {};
+        }
 
         if (offsetMap) {
 
             if (offsetMap.missed) {
-                const missedOffset = canvaslib.calculate_missed_position(offsetMap.sourceObj, offsetMap.targetObj, offsetMap.twister);
+                const missedOffset = this._offsetCache[key][offsetMapName]?.missedOffset || canvaslib.calculate_missed_position(offsetMap.sourceObj, offsetMap.targetObj, offsetMap.twister);
+                this._offsetCache[key][offsetMapName].missedOffset = missedOffset;
                 offset.x -= missedOffset.x;
                 offset.y -= missedOffset.y;
             }
@@ -364,7 +392,8 @@ export default class CanvasEffect extends PIXI.Container {
             const multiplier = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.target;
 
             if (obj && multiplier) {
-                let randomOffset = canvaslib.get_random_offset(obj, multiplier, twister);
+                let randomOffset = this._offsetCache[key][offsetMapName]?.randomOffset || canvaslib.get_random_offset(obj, multiplier, twister);
+                this._offsetCache[key][offsetMapName].randomOffset = randomOffset;
                 offset.x -= randomOffset.x;
                 offset.y -= randomOffset.y;
             }
@@ -752,13 +781,11 @@ export default class CanvasEffect extends PIXI.Container {
     _initializeVariables() {
         this._template = this.data.template;
         this._ended = null;
-        this.spriteContainer = null;
-        this.sprite = null;
         this._maskContainer = null;
         this._maskSprite = null;
         this._file = null;
         this._loopOffset = 0;
-        this.filters = {};
+        this.effectFilters = {};
         this._animationDuration = 0;
         this._animationTimes = {};
         this._twister = new MersenneTwister(this.data.creationTimestamp);
@@ -777,10 +804,9 @@ export default class CanvasEffect extends PIXI.Container {
 
         this._source = false;
         this._sourcePosition = false;
-        this._sourceOffset = false;
         this._target = false;
         this._targetPosition = false;
-        this._targetOffset = false;
+        this._offsetCache = {};
 
         this._nameOffsetMap = Object.fromEntries(Object.entries(foundry.utils.duplicate(this.data.nameOffsetMap ?? {})).map(entry => {
             return [entry[0], this._setupOffsetMap(entry[1])];
@@ -814,7 +840,7 @@ export default class CanvasEffect extends PIXI.Container {
 
         Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy({ children: true, texture: true }));
 
-        SequencerAnimationEngine.endAnimations(this);
+        SequencerAnimationEngine.endAnimations(this.id);
 
         if(this._maskContainer) this._maskContainer.destroy({ children: true })
         if(this._maskSprite){
@@ -977,7 +1003,9 @@ export default class CanvasEffect extends PIXI.Container {
         this._isRangeFind = this._file instanceof SequencerFileRangeFind;
 
         if (this.data.stretchTo) {
-            const ray = new Ray(this.sourcePosition, this.targetPosition);
+            let ray = new Ray(this.sourcePosition, this.targetPosition);
+            this._rotateTowards(ray);
+            ray = new Ray(this.sourcePosition, this.targetPosition);
             let { filePath, texture } = await this._getTextureForDistance(ray.distance);
             this._currentFilePath = filePath;
             this._texture = texture;
@@ -1121,17 +1149,6 @@ export default class CanvasEffect extends PIXI.Container {
 
         this.renderable = false;
 
-        // Responsible for rotating the sprite
-        this.rotationContainer = this.addChild(new PIXI.Container());
-
-        // An offset container for the sprite
-        this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
-
-        const sprite = new PIXI.Sprite();
-
-        // The sprite itself
-        this.sprite = this.spriteContainer.addChild(sprite);
-
         this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
 
         let textSprite;
@@ -1160,7 +1177,7 @@ export default class CanvasEffect extends PIXI.Container {
                 const filter = new filters[filterData.className](filterData.data);
                 this.sprite.filters.push(filter);
                 const filterKeyName = filterData.name || filterData.className;
-                this.filters[filterKeyName] = filter;
+                this.effectFilters[filterKeyName] = filter;
             }
         }
 
@@ -1498,9 +1515,6 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _setupHooks(){
 
-        this.renderable = true;
-        this.spriteContainer.alpha = 1;
-
         const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
@@ -1522,7 +1536,9 @@ export default class CanvasEffect extends PIXI.Container {
                     this.spriteContainer.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
                 };
                 this._addHook("sightRefresh", func);
-                func();
+                setTimeout(() => {
+                    func();
+                }, 20);
             }
     
             if(this.data.attachTo?.bindAlpha) {
@@ -1543,6 +1559,19 @@ export default class CanvasEffect extends PIXI.Container {
                 SequencerEffectManager.objectDeleted(uuid);
             });
         }
+        
+        for(let uuid of (this.data?.tiedDocuments ?? [])){
+            const tiedDocument = lib.from_uuid_fast(uuid)
+            this._addHook("delete" + tiedDocument.documentName, (doc) => {
+                if(tiedDocument !== doc) return;
+                SequencerEffectManager.objectDeleted(uuid);
+            })
+        }
+        
+        setTimeout(() => {
+            this.renderable = true;
+            this.spriteContainer.alpha = 1;
+        }, 20)
 
     }
 
@@ -1736,7 +1765,7 @@ export default class CanvasEffect extends PIXI.Container {
             ray = new Ray(sourcePosition, targetPosition);
         }
 
-        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle);
+        this.rotationContainer.rotation = Math.normalizeRadians(ray.angle + Math.toRadians(this.data.rotateTowards?.rotationOffset?.rotationOffset ?? 0));
 
     }
 
@@ -1835,6 +1864,9 @@ export default class CanvasEffect extends PIXI.Container {
             this.sprite.tilePosition = this.data.tilingTexture.position;
 
         }
+        
+        const baseScaleX = (this.data.scale?.x ?? 1.0) * (this.data.spriteScale?.x ?? 1.0) * this.flipX;
+        const baseScaleY = (this.data.scale?.y ?? 1.0) * (this.data.spriteScale?.y ?? 1.0) * this.flipY;
 
         if (this.data.scaleToObject) {
             
@@ -1848,12 +1880,9 @@ export default class CanvasEffect extends PIXI.Container {
                 width = newWidth;
             }
 
-            this.sprite.width = width * (this.data.scale.x ?? 1.0);
-            this.sprite.height = height * (this.data.scale.y ?? 1.0);
-
-            this.sprite.scale.x *= this.flipX;
-            this.sprite.scale.y *= this.flipY;
-
+            this.sprite.width = width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
+            this.sprite.height = height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
+            
         } else if (this.data.size) {
 
             const ratio = this.sprite.height / this.sprite.width;
@@ -1884,17 +1913,14 @@ export default class CanvasEffect extends PIXI.Container {
                 width *= canvas.grid.size;
             }
 
-            this.sprite.width = width * (this.data.scale.x ?? 1.0);
-            this.sprite.height = height * (this.data.scale.y ?? 1.0);
-
-            this.sprite.scale.x *= this.flipX;
-            this.sprite.scale.y *= this.flipY;
+            this.sprite.width = width * baseScaleX;
+            this.sprite.height = height * baseScaleY;
 
         } else {
 
             this.sprite.scale.set(
-                (this.data.scale?.x ?? 1.0) * this.flipX * this.gridSizeDifference,
-                (this.data.scale?.y ?? 1.0) * this.flipY * this.gridSizeDifference
+                baseScaleX * this.flipX * this.gridSizeDifference,
+                baseScaleY * this.flipY * this.gridSizeDifference
             );
 
         }
@@ -2043,7 +2069,7 @@ export default class CanvasEffect extends PIXI.Container {
                 });
             }
     
-            if (["x", "y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
+            if (["position.x", "position.y", "height", "width"].includes(animation.propertyName) && animation.gridUnits) {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
                 });
@@ -2053,15 +2079,17 @@ export default class CanvasEffect extends PIXI.Container {
 
         }
     
-        if(!(this instanceof PersistentCanvasEffect)) {
+        if (!(this instanceof PersistentCanvasEffect)) {
             animationsToSend = animationsToSend.concat(this._getFromEndCustomAnimations())
         }
-
-        SequencerAnimationEngine.addAnimation(this.id,
-            animationsToSend,
-            this.actualCreationTime - this.data.creationTimestamp
-        );
-
+    
+        setTimeout(() => {
+            SequencerAnimationEngine.addAnimation(this.id,
+                animationsToSend,
+                this.actualCreationTime - this.data.creationTimestamp
+            );
+        }, 20);
+        
     }
     
     _getFromEndCustomAnimations(immediate = false){
