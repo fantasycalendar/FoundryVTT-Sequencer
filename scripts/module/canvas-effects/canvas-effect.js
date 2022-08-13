@@ -53,15 +53,15 @@ export default class CanvasEffect extends PIXI.Container {
         
         // Responsible for rotating the sprite
         this.rotationContainer = this.addChild(new PIXI.Container());
-        this.rotationContainer.id = this.id + randomID();
+        this.rotationContainer.id = this.id + "-rotationContainer";
     
         // An offset container for the sprite
         this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
-        this.spriteContainer.id = this.id + randomID();
+        this.spriteContainer.id = this.id + "-spriteContainer";
         
         // The sprite itself
         this.sprite = this.spriteContainer.addChild(new PIXI.Sprite());
-        this.sprite.id = this.id + randomID();
+        this.sprite.id = this.id + "-sprite";
 
     }
     
@@ -1173,8 +1173,10 @@ export default class CanvasEffect extends PIXI.Container {
         this.sprite.filters = [];
 
         if(this.data.filters) {
-            for (let filterData of this.data.filters) {
+            for (let index = 0; index < this.data.filters.length; index++) {
+                const filterData = this.data.filters[index];
                 const filter = new filters[filterData.className](filterData.data);
+                filter.id = this.id + "-" + filterData.className + '-' + index.toString();
                 this.sprite.filters.push(filter);
                 const filterKeyName = filterData.name || filterData.className;
                 this.effectFilters[filterKeyName] = filter;
@@ -1182,6 +1184,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
 
         this.alphaFilter = new PIXI.filters.AlphaFilter(this.data.opacity);
+        this.alphaFilter.id = this.id + "-alphaFilter";
         this.sprite.filters.push(this.alphaFilter)
     
     
@@ -2150,7 +2153,8 @@ export default class CanvasEffect extends PIXI.Container {
             to: this.data.opacity,
             duration: fadeIn.duration,
             ease: fadeIn.ease,
-            delay: fadeIn.delay
+            delay: fadeIn.delay,
+            absolute: true
         })
 
         return fadeIn.duration + fadeIn.delay;

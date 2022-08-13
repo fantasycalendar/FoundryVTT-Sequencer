@@ -107,9 +107,9 @@ const SequencerAnimationEngine = {
     
                     let defaultValue = lib.deep_get(attribute.target, attribute.propertyName);
                     const targetIdentifier = lib.get_object_identifier(attribute.target);
-                    this._valueOwner[animation.origin] = targetIdentifier;
-                    if(this._modifiedValues?.[targetIdentifier]?.[attribute.propertyName]){
-                        defaultValue -= this._modifiedValues?.[targetIdentifier]?.[attribute.propertyName];
+                    this._valueOwner[attribute.origin] = targetIdentifier;
+                    if(this._modifiedValues[targetIdentifier + "-" + attribute.propertyName]){
+                        defaultValue -= this._modifiedValues[targetIdentifier + "-" + attribute.propertyName];
                     }
                     
                     deltas.push({
@@ -132,13 +132,10 @@ const SequencerAnimationEngine = {
             
             const targetIdentifier = lib.get_object_identifier(delta.target);
             
-            if(!this._modifiedValues[targetIdentifier]){
-                this._modifiedValues[targetIdentifier] = {};
-            }
-    
-            this._modifiedValues[targetIdentifier][delta.propertyName] = delta.value;
+            this._modifiedValues[targetIdentifier + "-" + delta.propertyName] = delta.value;
             
             try {
+                
                 lib.deep_set(
                     delta.target,
                     delta.propertyName,
