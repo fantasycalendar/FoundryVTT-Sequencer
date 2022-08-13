@@ -14,7 +14,8 @@
 
 **Fixes:**
 - *Sequencer* - Fixed issue where copying the file path of a Database entry that has multiple ranges would always copy the file path for the middle-most range
-- *Effects* - Fixed `randomOffset` secondary option on `.attachTo()` not working 
+- *Effects* - Fixed `randomOffset` secondary option on `.attachTo()` not working
+- *Effects* - Fixed `.scaleToObject()` and `.scale()` not playing nicely together
 
 ### Version 2.1.14
 - *Sequencer* - Removed PIXI fix for Foundry .webm tiles to apply premultiplied alpha, native Foundry behavior is now active
