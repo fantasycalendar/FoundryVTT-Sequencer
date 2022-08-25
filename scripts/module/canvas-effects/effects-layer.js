@@ -319,7 +319,6 @@ export class UIEffectsLayer extends BaseEffectsLayer {
 class ScreenSpaceContainer extends PIXI.Container {
     constructor() {
         super();
-        this.parentName = "sequencer";
         this.interactive = false;
         this.interactiveChildren = false;
         this.accessible = false;
