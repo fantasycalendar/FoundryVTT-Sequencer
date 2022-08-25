@@ -12,7 +12,6 @@ import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import { EffectPlayer, InteractionManager } from "./module/sequencer-interaction-manager.js";
 import Section from "./module/sections/section.js";
-import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import * as lib from "./module/lib/lib.js";
 
 Hooks.once('init', async function () {
@@ -57,7 +56,6 @@ function initialize_module(){
         SectionManager: new SequencerSectionManager(),
         registerEase: registerEase,
         BaseSection: Section,
-        UILayers: SequencerUILayer.setup(),
         Helpers: {
             wait: lib.wait,
             clamp: lib.clamp,

@@ -218,7 +218,7 @@ const SequencerAnimationEngine = {
             attribute.value = lib.interpolate(
                 attribute.values[attribute.index],
                 attribute.values[attribute.nextIndex],
-                attribute.progress - 1.0,
+                attribute.progress % 1.0,
                 attribute.ease
             );
 

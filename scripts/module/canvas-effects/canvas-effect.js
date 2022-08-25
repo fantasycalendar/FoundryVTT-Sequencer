@@ -861,14 +861,6 @@ export default class CanvasEffect extends PIXI.Container {
         } catch (err) {
         }
 
-        try {
-            if (this.data.screenSpace) {
-                Sequencer.UILayers.above.removeContainerByEffect(this);
-                Sequencer.UILayers.below.removeContainerByEffect(this);
-            }
-        } catch (err) {
-        }
-
         this.removeChildren().forEach(child => child.destroy({ children: true, texture: true }));
 
     }
@@ -930,23 +922,17 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _addToContainer() {
-
-        if (this.data.screenSpace) {
-            if(this.data.screenSpaceAboveUI) {
-                return Sequencer.UILayers.above.container.addChild(this);
-            }
-
-            return Sequencer.UILayers.below.container.addChild(this);
-        }
-
-        const layer = [
+    
+        const layer = this.data.screenSpace ? canvas.uiEffectsLayer : [
             canvas.background,
             canvas.sequencerEffectsBelowTokens,
             canvas.sequencerEffectsAboveTokens,
             canvas.sequencerEffectsAboveLighting
         ][this.data.layer];
-
+    
+        // dev7355608: 3. This is where the canvas effect is added to the layer's container (notice the name, from the effects-layer.js file)
         let container = layer.children.find(child => child?.parentName === "sequencer");
+        console.log(container);
 
         if (!container) {
             if (layer === canvas.background) {

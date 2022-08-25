@@ -1,7 +1,8 @@
 import {
     BaseEffectsLayer,
     BelowTokensEffectsLayer,
-    AboveLightingEffectsLayer
+    AboveLightingEffectsLayer,
+    UIEffectsLayer
 } from "./module/canvas-effects/effects-layer.js";
 import { isVersion9 } from "./module/lib/lib.js";
 
@@ -20,12 +21,18 @@ export default function registerLayers() {
             sequencerEffectsAboveLighting: {
                 layerClass: AboveLightingEffectsLayer,
                 group: "effects"
+            },
+            // dev7355608: 2. This is where the layer is instantiated onto the canvas
+            uiEffectsLayer: {
+                layerClass: UIEffectsLayer,
+                group: "interface"
             }
         }
         : {
             sequencerEffectsBelowTokens: BelowTokensEffectsLayer,
             sequencerEffectsAboveTokens: BaseEffectsLayer,
-            sequencerEffectsAboveLighting: AboveLightingEffectsLayer
+            sequencerEffectsAboveLighting: AboveLightingEffectsLayer,
+            uiEffectsLayer: UIEffectsLayer
         }
 
     CONFIG.Canvas.layers = foundry.utils.mergeObject(Canvas.layers, layers);
