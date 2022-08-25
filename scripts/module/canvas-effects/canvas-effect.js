@@ -925,7 +925,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         if(this.data.screenSpace){
             // dev7355608: 3. This is where the canvas effect is added to the layer's container
-            return canvas.uiEffectsLayer.container;
+            return canvas.uiEffectsLayer.container.addChild(this);
         }
     
         const layer = [
@@ -936,7 +936,6 @@ export default class CanvasEffect extends PIXI.Container {
         ][this.data.layer];
     
         let container = layer.children.find(child => child?.parentName === "sequencer");
-        console.log(container);
 
         if (!container) {
             if (layer === canvas.background) {

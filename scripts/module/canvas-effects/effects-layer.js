@@ -333,6 +333,7 @@ class ScreenSpaceContainer extends PIXI.Container {
         this._boundsID++;
         
         this.transform.updateTransform(PIXI.Transform.IDENTITY);
+        this.worldAlpha = this.alpha;
         
         for(let child of this.children){
             if (child.visible) {
