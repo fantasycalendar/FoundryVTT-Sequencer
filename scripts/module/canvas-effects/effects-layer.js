@@ -302,29 +302,6 @@ export class AboveLightingEffectsLayer extends BaseEffectsLayer {
 
 export class UIEffectsLayer extends BaseEffectsLayer {
     
-    constructor() {
-        super();
-        // dev7355608: 1. This is where the container is added
-        this.container = new ScreenSpaceContainer();
-    }
-    
-    static get layerOptions() {
-        return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 999999999999999,
-            name: "sequencerEffectsAboveLighting",
-        });
-    }
-}
-
-class ScreenSpaceContainer extends PIXI.Container {
-    constructor() {
-        super();
-        this.interactive = false;
-        this.interactiveChildren = false;
-        this.accessible = false;
-        this.accessibleChildren = false;
-    }
-    
     updateTransform() {
         if (this.sortableChildren && this.sortDirty) {
             this.sortChildren();
@@ -340,5 +317,12 @@ class ScreenSpaceContainer extends PIXI.Container {
                 child.updateTransform();
             }
         }
+    }
+    
+    static get layerOptions() {
+        return foundry.utils.mergeObject(super.layerOptions, {
+            zIndex: 999999999999999,
+            name: "sequencerEffectsAboveEverything",
+        });
     }
 }

@@ -948,6 +948,7 @@ export default class EffectSection extends Section {
     screenSpace(inBool = true) {
         if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpace", "inBool must be of type boolean");
         this._screenSpace = inBool;
+        this._screenSpaceAnchor = this._screenSpaceAnchor ?? { x: 0.5, y: 0.5 };
         return this;
     }
     
@@ -958,9 +959,8 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     screenSpaceAboveUI(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpaceAboveUI", "inBool must be of type boolean");
-        this._screenSpaceAboveUI = inBool;
-        return this;
+        this.sequence._showWarning(self, "screenSpaceAboveUI", "This method has been deprecated due to its severe performance impact. Please use .screenSpace() instead.", true)
+        return this.screenSpace(inBool)
     }
     
     /**
@@ -1324,9 +1324,7 @@ export default class EffectSection extends Section {
      */
     _getSourceObject() {
         if (typeof this._source !== "object") return this._source;
-        return this._attachTo?.active
-            ? lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source)
-            : canvaslib.get_object_canvas_data(this._source);
+        return lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source);
     }
     
     /**
@@ -1335,9 +1333,7 @@ export default class EffectSection extends Section {
     _getTargetObject() {
         if (!this._target?.target) return this._target;
         if (typeof this._target.target !== "object") return this._target.target;
-        return this._target?.attachTo
-            ? lib.get_object_identifier(this._target.target) ?? canvaslib.get_object_canvas_data(this._target.target, true)
-            : canvaslib.get_object_canvas_data(this._target.target, true);
+        return lib.get_object_identifier(this._target.target) ?? canvaslib.get_object_canvas_data(this._target.target, true);
     }
     
     /**

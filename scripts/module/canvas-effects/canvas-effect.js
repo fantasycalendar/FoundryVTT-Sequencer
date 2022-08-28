@@ -925,7 +925,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         if(this.data.screenSpace){
             // dev7355608: 3. This is where the canvas effect is added to the layer's container
-            return canvas.uiEffectsLayer.container.addChild(this);
+            return canvas.uiEffectsLayer.addChild(this);
         }
     
         const layer = [
@@ -1218,6 +1218,44 @@ export default class CanvasEffect extends PIXI.Container {
             ];
         }
 
+    }
+    
+    updateTransform(){
+        super.updateTransform();
+        if(this.data.screenSpace){
+            
+            const [screenWidth, screenHeight] = canvas.screenDimensions;
+            
+            this.position.set(
+                (this.screenSpacePosition?.x ?? 0) + screenWidth * (this.data.screenSpaceAnchor.x ?? this.data.anchor.x ?? 0.5),
+                (this.screenSpacePosition?.y ?? 0) + screenHeight * (this.data.screenSpaceAnchor.y ?? this.data.anchor.y ?? 0.5),
+            )
+    
+            if(this.data.screenSpaceScale) {
+    
+                const scaleData = this.data.screenSpaceScale ?? { x: 1, y: 1 };
+    
+                let scaleX = scaleData.x;
+                let scaleY = scaleData.y;
+    
+                if(scaleData.fitX){
+                    scaleX = scaleX * (screenWidth / this.sprite.width);
+                }
+    
+                if(scaleData.fitY){
+                    scaleY = scaleY * (screenHeight / this.sprite.height);
+                }
+    
+                scaleX = scaleData.ratioX ? scaleY : scaleX;
+                scaleY = scaleData.ratioY ? scaleX : scaleY;
+    
+                this.scale.set(
+                    scaleX,
+                    scaleY
+                )
+                
+            }
+        }
     }
 
     async _setupMasks(){
