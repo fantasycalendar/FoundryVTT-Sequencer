@@ -303,8 +303,6 @@ const SequencerDatabase = {
                 metadata.template = allTemplates?.[metadata.template] ?? allTemplates?.["default"];
             }
     
-            if(wholeDBPath === "jb2a.arrow.cold.blue") debugger;
-    
             let data = getProperty(entries, dbPath.join('.'));
             if(!Array.isArray(data) && !(typeof data === "string")){
                 data = this.getCleanData(data, { metadata: false });
