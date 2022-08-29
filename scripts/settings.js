@@ -19,6 +19,17 @@ export default function registerSettings() {
         scope: "client",
         config: true,
         default: false,
+        onChange: debouncedReload,
+        type: Boolean
+    });
+
+    game.settings.register(CONSTANTS.MODULE_NAME, "disable-above-ui-screenspace", {
+        name: "SEQUENCER.Setting.DisableAboveUIScreenspace.Title",
+        hint: "SEQUENCER.Setting.DisableAboveUIScreenspace.Label",
+        scope: "client",
+        config: true,
+        default: false,
+        onChange: debouncedReload,
         type: Boolean
     });
 

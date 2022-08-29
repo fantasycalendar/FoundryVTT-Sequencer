@@ -8,6 +8,7 @@ import SequencerFileCache from "../sequencer-file-cache.js";
 import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
+import { SequencerAboveUILayer } from "./effects-layer.js";
 
 export default class CanvasEffect extends PIXI.Container {
 
@@ -860,6 +861,13 @@ export default class CanvasEffect extends PIXI.Container {
             this.video.load();
         } catch (err) {
         }
+        
+        try {
+            if (this.data.screenSpace) {
+                SequencerAboveUILayer.removeContainerByEffect(this);
+            }
+        } catch (err) {
+        }
 
         this.removeChildren().forEach(child => child.destroy({ children: true, texture: true }));
 
@@ -923,8 +931,11 @@ export default class CanvasEffect extends PIXI.Container {
      */
     _addToContainer() {
         
+        if(this.data.screenSpaceAboveUI){
+            return SequencerAboveUILayer.getLayer().addChild(this);
+        }
+        
         if(this.data.screenSpace){
-            // dev7355608: 3. This is where the canvas effect is added to the layer's container
             return canvas.uiEffectsLayer.addChild(this);
         }
     
@@ -1222,13 +1233,13 @@ export default class CanvasEffect extends PIXI.Container {
     
     updateTransform(){
         super.updateTransform();
-        if(this.data.screenSpace){
+        if(this.data.screenSpace || this.data.screenSpaceAboveUI){
             
             const [screenWidth, screenHeight] = canvas.screenDimensions;
             
             this.position.set(
-                (this.screenSpacePosition?.x ?? 0) + screenWidth * (this.data.screenSpaceAnchor.x ?? this.data.anchor.x ?? 0.5),
-                (this.screenSpacePosition?.y ?? 0) + screenHeight * (this.data.screenSpaceAnchor.y ?? this.data.anchor.y ?? 0.5),
+                (this.screenSpacePosition?.x ?? 0) + screenWidth * (this.data.screenSpaceAnchor?.x ?? this.data.anchor?.x ?? 0.5),
+                (this.screenSpacePosition?.y ?? 0) + screenHeight * (this.data.screenSpaceAnchor?.y ?? this.data.anchor?.y ?? 0.5),
             )
     
             if(this.data.screenSpaceScale) {

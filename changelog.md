@@ -1,6 +1,6 @@
 ## Sequencer Changelog
 
-### Version 2.1.15
+### Version 2.2.0
 **Additions:**
 - *Effects* - Added `.tieToDocuments()` which allows you to tie an effect to Foundry documents - such as Active Effects or Tokens. When these are deleted, the effect is automatically ended.
 - *Effects* - Added secondary `offset` parameter to `.atLocation()`, `.attachTo()`, `.rotateTowards()`, `.from()`, and `.stretchTo()` which can be used to offset the location of the source or target
@@ -14,8 +14,11 @@
 
 **Fixes:**
 - *Sequencer* - Fixed issue where copying the file path of a Database entry that has multiple ranges would always copy the file path for the middle-most range
+- *Sequencer* - Rewrote the database traversal method to be more robust and carry metadata down to lower children
+- *Effects* - Fixed long-running issue with lag and performance impact from Sequencer on some computers - the cause was the `.screenSpace()` layers, which have now been reworked. A setting to disable the Above UI Screenspace effects layer has been added to further support impacted individuals.
 - *Effects* - Fixed `randomOffset` secondary option on `.attachTo()` not working
 - *Effects* - Fixed `.scaleToObject()` and `.scale()` not playing nicely together
+- *Effects* - Fixed loop markers not properly working
 
 ### Version 2.1.14
 - *Sequencer* - Removed PIXI fix for Foundry .webm tiles to apply premultiplied alpha, native Foundry behavior is now active

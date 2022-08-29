@@ -13,6 +13,7 @@ import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import { EffectPlayer, InteractionManager } from "./module/sequencer-interaction-manager.js";
 import Section from "./module/sections/section.js";
 import * as lib from "./module/lib/lib.js";
+import { SequencerAboveUILayer } from "./module/canvas-effects/effects-layer.js";
 
 Hooks.once('init', async function () {
     if(!game.modules.get("socketlib")?.active) return;
@@ -45,7 +46,7 @@ Hooks.once('ready', async function () {
  * Creation & delete hooks for persistent effects
  */
 function initialize_module(){
-
+    
     window.Sequence = Sequence;
     window.Sequencer = {
         Player: EffectPlayer,
@@ -69,10 +70,12 @@ function initialize_module(){
             from_uuid: lib.from_uuid_fast
         }
     }
-
-    registerLayers();
+    
     registerSettings();
+    registerLayers();
     registerHotkeys();
+    
+    Sequencer.AboveUILayer = SequencerAboveUILayer.setup();
 
     Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));

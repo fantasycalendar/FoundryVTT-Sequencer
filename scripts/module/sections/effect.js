@@ -959,8 +959,9 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     screenSpaceAboveUI(inBool = true) {
-        this.sequence._showWarning(self, "screenSpaceAboveUI", "This method has been deprecated due to its severe performance impact. Please use .screenSpace() instead.", true)
-        return this.screenSpace(inBool)
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpaceAboveUI", "inBool must be of type boolean");
+        this._screenSpaceAboveUI = inBool;
+        return this;
     }
     
     /**

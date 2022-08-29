@@ -326,3 +326,81 @@ export class UIEffectsLayer extends BaseEffectsLayer {
         });
     }
 }
+
+let layer = false;
+
+export class SequencerAboveUILayer{
+    
+    static setup(){
+        if(game.settings.get("sequencer", "disable-above-ui-screenspace")) return;
+        layer = new this("sequencerUILayerAbove", 10000);
+    }
+    
+    static getLayer(){
+        if(game.settings.get("sequencer", "disable-above-ui-screenspace")){
+            return canvas.uiEffectsLayer;
+        }
+        return layer.app.stage;
+    }
+    
+    static removeContainerByEffect(inEffect){
+        const child = this.getLayer().children.find(child => child === inEffect);
+        if(!child) return;
+        this.getLayer().removeChild(child);
+    }
+    
+    constructor(name, zIndex = 0.1) {
+        
+        this.canvas = document.createElement("canvas");
+        this.canvas.id = name;
+        
+        this.canvas.style.cssText = `
+            position:absolute;
+            touch-action: none;
+            pointer-events: none;
+            width:100%;
+            height:100%;
+            z-index:${zIndex};
+            padding: 0;
+            margin: 0;
+        `;
+        
+        document.body.appendChild(this.canvas);
+        
+        this.app = new PIXI.Application({
+            width: window.innerWidth,
+            height: window.innerHeight,
+            view: this.canvas,
+            antialias: true,
+            backgroundAlpha: 0.0,
+            sharedTicker: true
+        });
+        
+        this.app.resizeTo = window;
+        
+    }
+    
+    get children(){
+        return this.app.stage.children;
+    }
+    
+    updateTransform(){
+        
+        if (this.app.stage.sortableChildren && this.app.stage.sortDirty) {
+            this.app.stage.sortChildren();
+        }
+    
+        this.app.stage._boundsID++;
+    
+        this.app.stage.transform.updateTransform(PIXI.Transform.IDENTITY);
+        this.app.stage.worldAlpha = this.app.stage.alpha;
+    
+        for(let child of this.app.stage.children){
+            if (child.visible) {
+                child.updateTransform();
+            }
+        }
+        
+    }
+    
+}

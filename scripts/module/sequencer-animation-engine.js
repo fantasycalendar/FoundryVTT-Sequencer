@@ -26,32 +26,11 @@ const SequencerAnimationEngine = {
                     attribute.complete = false;
                     attribute.progress = 0;
                     attribute.value = 0;
-    
-                    if (!this._startingValues[attribute.targetId]){
-                        this._startingValues[attribute.targetId] = lib.deep_get(
-                            attribute.target,
-                            attribute.propertyName
-                        );
-                    }
-    
-                    if (attribute.from === undefined) {
-                        attribute.from = lib.deep_get(
-                            attribute.target,
-                            attribute.propertyName
-                        );
-                    }else{
-                        attribute.from += this._startingValues[attribute.targetId];
-                    }
-                    
-                    attribute.previousValue = attribute.from;
 
                     attribute.duration = attribute.duration ?? 0;
                     attribute.durationDone = timeDifference ?? 0;
 
                     if (attribute?.looping) {
-                        attribute.values = attribute.values.map(value => {
-                            return value + this._startingValues[attribute.targetId];
-                        })
                         attribute.loopDuration = attribute.loopDuration ?? attribute.duration ?? 0;
                         attribute.loopDurationDone = timeDifference % attribute.loopDuration ?? 0;
                         attribute.loops = attribute.loops ?? 0;
@@ -181,7 +160,30 @@ const SequencerAnimationEngine = {
     _animateAttribute(totalDt, attribute) {
 
         if (totalDt < attribute.delay) return;
-
+    
+        if(!attribute.started){
+            
+            if (!this._startingValues[attribute.targetId]){
+                this._startingValues[attribute.targetId] = lib.deep_get(
+                    attribute.target,
+                    attribute.propertyName
+                );
+            }
+    
+            attribute.previousValue = this._startingValues[attribute.targetId];
+            
+            if (attribute?.looping) {
+                attribute.values = attribute.values.map(value => {
+                    return value + this._startingValues[attribute.targetId];
+                })
+            }else{
+                attribute.from = lib.deep_get(
+                    attribute.target,
+                    attribute.propertyName
+                );
+            }
+        }
+    
         attribute.started = true;
 
         if (attribute?.looping && attribute?.indefinite) {
