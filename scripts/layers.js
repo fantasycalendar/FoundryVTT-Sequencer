@@ -22,7 +22,6 @@ export default function registerLayers() {
                 layerClass: AboveLightingEffectsLayer,
                 group: "effects"
             },
-            // dev7355608: 2. This is where the layer is instantiated onto the canvas, through the interface group
             uiEffectsLayer: {
                 layerClass: UIEffectsLayer,
                 group: "interface"

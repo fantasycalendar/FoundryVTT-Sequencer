@@ -171,10 +171,8 @@ export default class EffectSection extends Section {
         if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "atLocation", "inOptions.cacheLocation must be of type boolean");
         if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "atLocation", "inOptions.randomOffset must be of type boolean or number");
-        
-        this._temporaryEffect = inLocation instanceof foundry.abstract.Document
-            ? (this._temporaryEffect || !inLocation?.id)
-            : false;
+    
+        this._temporaryEffect = this._temporaryEffect || (inLocation instanceof foundry.abstract.Document ? !lib.is_UUID(inLocation?.uuid) : false);
     
         if (inOptions.offset) {
             const offsetData = this._validateOffset("atLocation", inOptions.offset, inOptions);
@@ -248,9 +246,7 @@ export default class EffectSection extends Section {
         
         this._source = validatedObject;
     
-        this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document
-            ? !validatedObject?.id
-            : false);
+        this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document ? !lib.is_UUID(validatedObject?.uuid) : false);
         
         if (inOptions.offset) {
             const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
@@ -322,9 +318,7 @@ export default class EffectSection extends Section {
         
         if (inOptions.tiling) this.tilingTexture();
         
-        this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document && inOptions.attachTo
-            ? !validatedObject?.id
-            : false);
+        this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document ? !lib.is_UUID(validatedObject?.uuid) : false);
     
         if (inOptions.offset) {
             const offsetData = this._validateOffset("stretchTo", inOptions.offset, inOptions);
@@ -368,12 +362,10 @@ export default class EffectSection extends Section {
         if (!lib.is_real_number(inOptions.rotationOffset)) throw this.sequence._customError(this, "rotateTowards", "inOptions.rotationOffset must be of type number");
         if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "rotateTowards", "inOptions.attachTo must be of type boolean");
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "rotateTowards", "inOptions.cacheLocation must be of type boolean");
-        const target = this._validateLocation(inLocation);
-        if (!target) throw this.sequence._customError(this, "rotateTowards", "could not find position of given object");
-    
-        this._temporaryEffect = this._temporaryEffect || (target instanceof foundry.abstract.Document
-            ? !target?.id
-            : false);
+        const validatedObject = this._validateLocation(inLocation);
+        if (!validatedObject) throw this.sequence._customError(this, "rotateTowards", "could not find position of given object");
+        
+        this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document ? !lib.is_UUID(validatedObject?.uuid) : false);
     
         if (inOptions.offset) {
             const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
@@ -389,7 +381,7 @@ export default class EffectSection extends Section {
         }
         
         this._rotateTowards = {
-            target: inOptions.cacheLocation ? canvaslib.get_object_position(target, { measure: true }) : target,
+            target: inOptions.cacheLocation ? canvaslib.get_object_position(validatedObject, { measure: true }) : validatedObject,
             rotationOffset: inOptions.rotationOffset,
             cacheLocation: inOptions.cacheLocation,
             attachTo: inOptions.attachTo,
@@ -420,9 +412,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
         
-        this._temporaryEffect = this._temporaryEffect || (inObject instanceof foundry.abstract.Document
-            ? !inObject?.id
-            : false);
+        this._temporaryEffect = this._temporaryEffect || (inObject.document instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.uuid) : false);
     
         if (inOptions.offset) {
             const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);

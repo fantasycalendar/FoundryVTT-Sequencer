@@ -282,7 +282,7 @@ export class BaseEffectsLayer extends CanvasLayer {
 
 }
 
-export class BelowTokensEffectsLayer extends BaseEffectsLayer {
+export class BelowTokensEffectsLayer extends CanvasLayer {
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
             zIndex: 95,
@@ -291,7 +291,7 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
     }
 }
 
-export class AboveLightingEffectsLayer extends BaseEffectsLayer {
+export class AboveLightingEffectsLayer extends CanvasLayer {
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
             zIndex: 500,
@@ -300,7 +300,14 @@ export class AboveLightingEffectsLayer extends BaseEffectsLayer {
     }
 }
 
-export class UIEffectsLayer extends BaseEffectsLayer {
+export class UIEffectsLayer extends CanvasLayer {
+    
+    static get layerOptions() {
+        return foundry.utils.mergeObject(super.layerOptions, {
+            zIndex: 999999999999999,
+            name: "sequencerEffectsAboveEverything",
+        });
+    }
     
     updateTransform() {
         if (this.sortableChildren && this.sortDirty) {
@@ -317,13 +324,6 @@ export class UIEffectsLayer extends BaseEffectsLayer {
                 child.updateTransform();
             }
         }
-    }
-    
-    static get layerOptions() {
-        return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 999999999999999,
-            name: "sequencerEffectsAboveEverything",
-        });
     }
 }
 
@@ -378,10 +378,6 @@ export class SequencerAboveUILayer{
         
         this.app.resizeTo = window;
         
-    }
-    
-    get children(){
-        return this.app.stage.children;
     }
     
     updateTransform(){
