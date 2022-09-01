@@ -37,6 +37,9 @@ export default class CanvasEffect extends PIXI.Container {
         return sourceExists && targetExists;
     }
     
+    #elevation = 0;
+    #sort = 0;
+    
     constructor(inData) {
         super();
         
@@ -77,7 +80,14 @@ export default class CanvasEffect extends PIXI.Container {
         this.#elevation = value;
     }
     
-    #elevation = 0;
+    /** @type {number} */
+    get sort() {
+        return this.#sort;
+    }
+    
+    set sort(value) {
+        this.#sort = value;
+    }
     
     get context() {
         return this.data.attachTo?.active && this.sourceDocument ? this.sourceDocument : game.scenes.get(this.data.sceneId);
@@ -1146,9 +1156,9 @@ export default class CanvasEffect extends PIXI.Container {
     
         this.elevation = this.data.elevation ?? canvaslib.get_object_elevation(this.source) + 1;
         
+        this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
         
-        
-        this.zIndex = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.parent.sortChildren();
         
         let textSprite;
         
