@@ -103,7 +103,7 @@ export default {
         if (inOptions?.delay !== undefined && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateLoop", `inOptions.delay must be of type number`);
         if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateLoop", `inOptions.ease must be of type string`);
         if (inOptions?.loops !== undefined && !is_real_number(inOptions.loops)) throw this.sequence._customError(this, "animateLoop", `inOptions.loops must be of type number`);
-        if (inOptions?.pingPong !== undefined && typeof inOptions.pingPong !== "boolean") throw this.sequence._customError(this, "animateLoop", `inOptions.loops must be of type boolean`);
+        if (inOptions?.pingPong !== undefined && typeof inOptions.pingPong !== "boolean") throw this.sequence._customError(this, "animateLoop", `inOptions.pingPong must be of type boolean`);
         if (inOptions?.gridUnits !== undefined){
             if(typeof inOptions.gridUnits !== "boolean"){
                 throw this.sequence._customError(this, "loopProperty", `inOptions.gridUnits must be of type boolean`);

@@ -3,7 +3,7 @@ import SequencerFileCache from "./sequencer-file-cache.js";
 
 export class SequencerFile {
 
-    static make(inData, inTemplate, inDBPath) {
+    static make(inData, inDBPath, inMetadata) {
 
         const originalFile = inData?.file ?? inData;
         const file = foundry.utils.duplicate(originalFile);
@@ -12,24 +12,20 @@ export class SequencerFile {
             : false;
 
         return isRangeFind
-            ? new SequencerFileRangeFind(inData, inTemplate, inDBPath)
-            : new SequencerFile(inData, inTemplate, inDBPath)
+            ? new SequencerFileRangeFind(inData, inDBPath, inMetadata)
+            : new SequencerFile(inData, inDBPath, inMetadata)
     }
 
-    constructor(inData, inTemplate, inDBPath) {
+    constructor(inData, inDBPath, inMetadata) {
         inData = foundry.utils.duplicate(inData);
+        inMetadata = foundry.utils.duplicate(inMetadata);
         this.originalData = inData;
-        if(!(inData instanceof String || Array.isArray(inData))){
-            for(const key of Object.keys(inData)){
-                if(key.startsWith("_")) {
-                    this[key.slice(1)] = inData[key];
-                    delete this.originalData[key];
-                }
-            }
+        this.originalMetadata = inMetadata;
+        for(let [key, value] of Object.entries(inMetadata)){
+            this[key] = value;
         }
         this.dbPath = inDBPath;
         this.moduleName = inDBPath.split('.')[0];
-        this.template = inTemplate;
         this.originalFile = inData?.file ?? inData;
         this.file = foundry.utils.duplicate(this.originalFile);
         this.fileIndex = false;
@@ -42,7 +38,7 @@ export class SequencerFile {
     }
 
     clone() {
-        return SequencerFile.make(this.originalData, this.template, this.dbPath);
+        return SequencerFile.make(this.originalData, this.dbPath, this.originalMetadata);
     }
 
     async validate() {

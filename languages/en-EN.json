@@ -109,6 +109,10 @@
         "Title": "Disable PIXI fix",
         "Label": "This disables the fix for alphas on effects in Foundry - some setups (browsers, hardware, softwares, etc) seems to make this fix obsolete."
       },
+      "DisableAboveUIScreenspace": {
+        "Title": "Disable Above UI Screenspace Layer",
+        "Label": "This disables the layer for playing effects above all UI elements in Foundry - some users have reported this layer causes a significant performance hit, so disable this if so."
+      },
       "Debug": {
         "Title": "Enable debugging",
         "Label": "This will make the sequencer log into the console what it is doing"

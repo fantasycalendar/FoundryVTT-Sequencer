@@ -1,13 +1,57 @@
 ## Sequencer Changelog
 
-### Version 2.1.9
+### Version 2.2.0
+**Additions:**
+- *Effects* - Added `.tieToDocuments()` which allows you to tie an effect to Foundry documents - such as Active Effects or Tokens. When these are deleted, the effect is automatically ended.
+- *Effects* - Added secondary `offset` parameter to `.atLocation()`, `.attachTo()`, `.rotateTowards()`, `.from()`, and `.stretchTo()` which can be used to offset the location of the source or target
+  - Note: This means that `.offset()` is becoming deprecated - it will remain for a few versions with a silent warning
+- *Effects* - Added `.spriteScale()` which can be used to scale the sprite of the effect separately from `.scale()`
+
+**Tweaks:**
+- *Animations* - Renamed `.rotateTowards()`'s secondary parameter's `offset` property to be more accurately named `rotationOffset`
+- *Effects* - Upgraded `.animateProperty()` and `.loopProperty()` to be additive, which means two animations can now target the same property on the same effect
+- *Effects* - Renamed `.rotateTowards()`'s secondary parameter's `offset` property to be more accurately named `rotationOffset`
+
+**Fixes:**
+- *Sequencer* - Fixed issue where copying the file path of a Database entry that has multiple ranges would always copy the file path for the middle-most range
+- *Sequencer* - Rewrote the database traversal method to be more robust and carry metadata down to lower children
+- *Effects* - Fixed long-running issue with lag and performance impact from Sequencer on some computers - the cause was the `.screenSpace()` layers, which have now been reworked. A setting to disable the Above UI Screenspace effects layer has been added to further support impacted individuals.
+- *Effects* - Fixed `randomOffset` secondary option on `.attachTo()` not working
+- *Effects* - Fixed `.scaleToObject()` and `.scale()` not playing nicely together
+- *Effects* - Fixed loop markers not properly working
+
+### Version 2.1.14
+- *Sequencer* - Removed PIXI fix for Foundry .webm tiles to apply premultiplied alpha, native Foundry behavior is now active
+- *Effects* - Fixed fatal canvas errors when `persistTokenPrototype` was active and masked to the target of the effect
+- *Effects* - Added warning when using `persistTokenPrototype` with masks _other_ than masks applied to the source target
+- *Effects* - Added support for `.file()` to override `.from()`'s file while keeping the other settings intact
+- *Effects* - Improved robustness of placeable object document retrieval
+
+### Version 2.1.13
+- *Sequencer* - Removed stray `console.log`
+- *Sequencer* - Fixed Ouija board macro error, slightly improved effect positioning
+- *Effects* - Added `.spriteRotation()` which allows you set the rotation of the effect in place - this differs from `.rotate()` in the sense that this is applied only locally to the sprite, after any other offsets or transformations
+
+### Version 2.1.12
+- *Effects* - Fixed `.strechTo()` with parameter `attachTo: true` resulting in no stretching
+
+### Version 2.1.11
+- *Effects* - Fixed effects attached to temporary templates causing errors in core Foundry code
+- *Effects* - Effects attached to temporary objects (like warpgate cursors) are now propagated to other clients (call `.locally()` to make it only appear for the creator)
+
+### Version 2.1.10
+- *Sequencer* - Fixed Sequencer Effect Manager not accepting Foundry documents as object references when filtering for effects
+- *Sequencer* - Fixed Sequencer Effect Player showing private database entries
+- *Effects* - Fixed attached effects not showing up for non-GMs
+
+### Version 2.1.9 
 - *Sequencer* - Unlocked keybinds so that users may configure their own keybinds for Sequencer's layers
 - *Sequencer* - Added support for `minDelay` and `maxDelay` on `.waitUntilFinished()`, so you can now have a random wait delay between sections
 - *Effects* - Added `fromEnd` to `.animateProperty()` which causes the animation to play at the end of the effect's duration
 - *Effects* - Added `gridUnits` support to `.animateProperty()` and `.loopProperty()` when using `position.x` or `position.y` as the animated target
 - *Effects* - Added `gridUnits` as a secondary option to both `.offset()` and `.spriteOffset()`
 - *Effects* - Fixed persistent prototype token effects not applying on every instance of its token
-- *Effects* - Fixed `.playbackRate()` only adjusting effect duration, and not the actual playback rat
+- *Effects* - Fixed `.playbackRate()` only adjusting effect duration, and not the actual playback rate
 
 ### Version 2.1.8
 - *Sequencer* - Added setting to allow clients to disable Sequencer's PIXI alpha fix for base textures

@@ -14,7 +14,9 @@ const SequencerDatabase = {
     },
 
     get publicFlattenedEntries(){
-        return this.flattenedEntries.filter(entry => !this.privateModules.includes(entry.split('.')[0]));
+        return this.flattenedEntries.filter(entry => {
+            return this.privateModules.indexOf(entry.split('.')[0]) === -1
+        });
     },
 
     get publicFlattenedSimpleEntries(){
@@ -180,7 +182,7 @@ const SequencerDatabase = {
     searchFor(inPath, publicOnly = true){
 
         const modules = publicOnly ? this.publicModules : Object.keys(this.entries);
-        let entries = publicOnly ? this.publicFlattenedEntries : this.flattenedEntries;
+        const originalEntries = publicOnly ? this.publicFlattenedEntries : this.flattenedEntries;
 
         if((!inPath || inPath === "") && !modules.includes(inPath)) return modules;
 
@@ -195,7 +197,7 @@ const SequencerDatabase = {
         inPath = inPath.replace(/\[[0-9]+]$/, "");
         inPath = inPath.trim()
 
-        entries = entries.filter(e => e.startsWith(inPath) && e !== inPath);
+        let entries = originalEntries.filter(e => e.startsWith(inPath) && e !== inPath);
 
         if(inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
         let length = inPath.split('.').length+1;
@@ -208,7 +210,7 @@ const SequencerDatabase = {
             const regexString = lib.str_to_search_regex_str(inPath).replace(/\s+/g, "|");
             const searchParts = regexString.split('|').length;
             const regexSearch = new RegExp(regexString, "gu");
-            foundEntries = this.flattenedEntries.filter(e => {
+            foundEntries = originalEntries.filter(e => {
                 return e.match(regexSearch)?.length >= searchParts;
             }).map(e =>{
                 return e.split(this.feetTest)[0];
@@ -270,67 +272,57 @@ const SequencerDatabase = {
      * @private
      */
     _processEntries(moduleName, entries) {
-        entries = foundry.utils.duplicate(entries);
-        let globalTemplate = entries?._templates ?? {};
-        if(!globalTemplate?.["default"]){
-            globalTemplate["default"] = [100, 0, 0];
+        const allPaths = new Set(this.flattenedEntries
+            .filter(e => e.startsWith(moduleName))
+            .map(e => e.split(this.feetTest)[0]))
+        
+        const allTemplates = foundry.utils.mergeObject(entries?._templates ?? {}, { "default": [100, 0, 0] });
+        
+        if(entries?._templates){
+            delete entries?._templates;
         }
-        let entryCache = [];
-        this._recurseEntries(entryCache, moduleName, entries, globalTemplate);
-        return entryCache;
-    },
-
-    /**
-     * The main meat of the previous method, which handles individual types of entries within the object itself
-     *
-     * @param entryCache
-     * @param dbPath
-     * @param entries
-     * @param globalTemplate
-     * @param template
-     * @returns {object}
-     * @private
-     */
-    _recurseEntries(entryCache, dbPath, entries, globalTemplate, template) {
-
-        if (entries?._template) {
-            if(Array.isArray(entries?._template) && entries?._template.length === 3){
-                template = entries?._template;
-            }else {
-                template = globalTemplate?.[entries._template] ?? template ?? globalTemplate?.["default"];
-            }
-        }
-
-        if (typeof entries === "string" || typeof entries?.file === "string") {
-
-            entryCache.push(SequencerFile.make(entries, template ?? globalTemplate?.["default"], dbPath));
-
-        } else if (Array.isArray(entries)) {
-
-            for (let i = 0; i < entries.length; i++) {
-                let recurseDBPath = dbPath + "." + i;
-                this._recurseEntries(entryCache, recurseDBPath, entries[i], globalTemplate, template);
-            }
-
-        } else {
-
-            let feetTest = new RegExp(/^[0-9]+ft$/g);
-
-            let foundDistances = Object.keys(entries).filter(entry => feetTest.test(entry)).length !== 0;
-
-            if (foundDistances) {
-                entryCache.push(SequencerFile.make(entries, template ?? globalTemplate?.["default"], dbPath));
-            } else {
-                for (let entry of Object.keys(entries)) {
-                    if (entry.startsWith('_')) continue;
-                    let recurseDBPath = dbPath + "." + entry;
-                    this._recurseEntries(entryCache, recurseDBPath, entries[entry], globalTemplate, template);
+        
+        const moduleEntries = [];
+        
+        for(let wholeDBPath of allPaths){
+            let metadata = this.getCleanData(entries);
+            let dbPath = wholeDBPath.split(".");
+            dbPath.shift();
+            let combinedPath = "";
+            for(let part of dbPath){
+                combinedPath = combinedPath ? combinedPath + "." + part : part;
+                const entry = getProperty(entries, combinedPath);
+                if(Array.isArray(entry) || typeof entry === "string" || entry?.file){
+                    break;
                 }
+                metadata = this.getCleanData(entry, { existingData: metadata });
             }
+            
+            if(!metadata.template) metadata.template = "default";
+            if(typeof metadata.template === "string"){
+                metadata.template = allTemplates?.[metadata.template] ?? allTemplates?.["default"];
+            }
+    
+            let data = getProperty(entries, dbPath.join('.'));
+            if(!Array.isArray(data) && !(typeof data === "string")){
+                data = this.getCleanData(data, { metadata: false });
+            }
+            
+            moduleEntries.push(SequencerFile.make(data, wholeDBPath, metadata));
+            
         }
-
-        return entries;
+    
+        return moduleEntries;
+    },
+    
+    getCleanData(data, { existingData = {}, metadata = true }={}){
+        data = Object.entries(data).filter(entry => metadata === entry[0].startsWith("_"))
+        if(metadata) {
+            data = data.map(entry => [entry[0].slice(1), entry[1]]);
+        }
+        return foundry.utils.mergeObject(existingData, Object.fromEntries(data));
     }
+    
 }
 
 export default SequencerDatabase;

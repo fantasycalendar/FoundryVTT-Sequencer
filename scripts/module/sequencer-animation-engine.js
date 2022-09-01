@@ -19,11 +19,13 @@ const SequencerAnimationEngine = {
             this._animations.push({
                 origin,
                 attributes: attributes.map(attribute => {
+                    attribute.targetId = lib.get_object_identifier(attribute.target) + "-" + attribute.propertyName;
                     attribute.started = false;
                     attribute.initialized = false;
                     attribute.finishing = false;
                     attribute.complete = false;
                     attribute.progress = 0;
+                    attribute.value = 0;
 
                     attribute.duration = attribute.duration ?? 0;
                     attribute.durationDone = timeDifference ?? 0;
@@ -72,18 +74,26 @@ const SequencerAnimationEngine = {
         if(this._animations.length === 0){
             lib.debug(`Animation Engine Paused`);
             this.ticker.stop();
+            this._startingValues = {};
             return;
         }
 
         this._animations.forEach(animation => this._animate(animation));
         this._animations = this._animations.filter(animation => !animation.complete);
         this._applyDeltas();
+        for(const targetId of Object.keys(this._startingValues)){
+            if(!this._animations.some(_a => _a.attributes.some(_b => _b.targetId === targetId))){
+                delete this._startingValues[targetId];
+            }
+        }
 
     },
+    
+    _startingValues: {},
 
     _applyDeltas() {
 
-        let deltas = [];
+        const deltas = [];
 
         for(const animation of this._animations){
 
@@ -98,31 +108,37 @@ const SequencerAnimationEngine = {
                 let delta = deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
 
                 if (!delta) {
+                    
                     deltas.push({
+                        targetId: attribute.targetId,
                         target: attribute.target,
                         propertyName: attribute.propertyName,
                         value: 0
                     })
+                    
                     delta = deltas[deltas.length - 1];
+                    
                 }
 
-                delta.value += attribute.value;
+                delta.value += attribute.delta;
 
             }
 
         }
 
         for (let delta of deltas) {
+            
+            const finalValue = lib.deep_get(delta.target, delta.propertyName) + delta.value;
+            
             try {
+                
                 lib.deep_set(
                     delta.target,
                     delta.propertyName,
-                    delta.value
+                    finalValue
                 )
             } catch (err) { }
         }
-
-        deltas = [];
 
     },
 
@@ -144,7 +160,30 @@ const SequencerAnimationEngine = {
     _animateAttribute(totalDt, attribute) {
 
         if (totalDt < attribute.delay) return;
-
+    
+        if(!attribute.started){
+            
+            if (!this._startingValues[attribute.targetId]){
+                this._startingValues[attribute.targetId] = lib.deep_get(
+                    attribute.target,
+                    attribute.propertyName
+                );
+            }
+    
+            attribute.previousValue = this._startingValues[attribute.targetId];
+            
+            if (attribute?.looping) {
+                attribute.values = attribute.values.map(value => {
+                    return value + this._startingValues[attribute.targetId];
+                })
+            }else{
+                attribute.from = lib.deep_get(
+                    attribute.target,
+                    attribute.propertyName
+                );
+            }
+        }
+    
         attribute.started = true;
 
         if (attribute?.looping && attribute?.indefinite) {
@@ -154,6 +193,10 @@ const SequencerAnimationEngine = {
         } else {
             this._handleDefault(attribute);
         }
+        
+        attribute.delta = attribute.value - attribute.previousValue;
+    
+        attribute.previousValue = attribute.value;
 
     },
 
@@ -196,7 +239,7 @@ const SequencerAnimationEngine = {
             attribute.value = lib.interpolate(
                 attribute.values[attribute.index],
                 attribute.values[attribute.nextIndex],
-                attribute.progress - 1.0,
+                attribute.progress % 1.0,
                 attribute.ease
             );
 
@@ -229,13 +272,6 @@ const SequencerAnimationEngine = {
     },
 
     _handleDefault(attribute) {
-
-        if (attribute.from === undefined) {
-            attribute.from = lib.deep_get(
-                attribute.target,
-                attribute.propertyName
-            );
-        }
 
         attribute.durationDone += this.ticker.deltaMS;
         attribute.progress = attribute.durationDone / attribute.duration;

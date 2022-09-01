@@ -276,7 +276,7 @@ export class BaseEffectsLayer extends InteractionLayer {
 
 }
 
-export class BelowTokensEffectsLayer extends BaseEffectsLayer {
+export class BelowTokensEffectsLayer extends InteractionLayer {
 
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
@@ -286,7 +286,7 @@ export class BelowTokensEffectsLayer extends BaseEffectsLayer {
     }
 }
 
-export class AboveLightingEffectsLayer extends BaseEffectsLayer {
+export class AboveLightingEffectsLayer extends InteractionLayer {
 
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
@@ -294,4 +294,105 @@ export class AboveLightingEffectsLayer extends BaseEffectsLayer {
             name: "sequencerEffectsAboveLighting",
         });
     }
+}
+
+export class UIEffectsLayer extends InteractionLayer {
+    
+    static get layerOptions() {
+        return foundry.utils.mergeObject(super.layerOptions, {
+            zIndex: 999999999999999,
+            name: "sequencerEffectsAboveEverything",
+        });
+    }
+    
+    updateTransform() {
+        if (this.sortableChildren && this.sortDirty) {
+            this.sortChildren();
+        }
+        
+        this._boundsID++;
+        
+        this.transform.updateTransform(PIXI.Transform.IDENTITY);
+        this.worldAlpha = this.alpha;
+        
+        for(let child of this.children){
+            if (child.visible) {
+                child.updateTransform();
+            }
+        }
+    }
+}
+
+let layer = false;
+
+export class SequencerAboveUILayer{
+    
+    static setup(){
+        if(game.settings.get("sequencer", "disable-above-ui-screenspace")) return;
+        layer = new this("sequencerUILayerAbove", 10000);
+    }
+    
+    static getLayer(){
+        if(game.settings.get("sequencer", "disable-above-ui-screenspace")){
+            return canvas.uiEffectsLayer;
+        }
+        return layer.app.stage;
+    }
+    
+    static removeContainerByEffect(inEffect){
+        const child = this.getLayer().children.find(child => child === inEffect);
+        if(!child) return;
+        this.getLayer().removeChild(child);
+    }
+    
+    constructor(name, zIndex = 0.1) {
+        
+        this.canvas = document.createElement("canvas");
+        this.canvas.id = name;
+        
+        this.canvas.style.cssText = `
+            position:absolute;
+            touch-action: none;
+            pointer-events: none;
+            width:100%;
+            height:100%;
+            z-index:${zIndex};
+            padding: 0;
+            margin: 0;
+        `;
+        
+        document.body.appendChild(this.canvas);
+        
+        this.app = new PIXI.Application({
+            width: window.innerWidth,
+            height: window.innerHeight,
+            view: this.canvas,
+            antialias: true,
+            backgroundAlpha: 0.0,
+            sharedTicker: true
+        });
+        
+        this.app.resizeTo = window;
+        
+    }
+    
+    updateTransform(){
+        
+        if (this.app.stage.sortableChildren && this.app.stage.sortDirty) {
+            this.app.stage.sortChildren();
+        }
+    
+        this.app.stage._boundsID++;
+    
+        this.app.stage.transform.updateTransform(PIXI.Transform.IDENTITY);
+        this.app.stage.worldAlpha = this.app.stage.alpha;
+    
+        for(let child of this.app.stage.children){
+            if (child.visible) {
+                child.updateTransform();
+            }
+        }
+        
+    }
+    
 }

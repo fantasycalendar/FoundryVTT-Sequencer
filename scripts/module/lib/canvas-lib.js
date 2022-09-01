@@ -136,7 +136,7 @@ export function get_random_offset(target, randomOffset, twister = false) {
 
 export function get_object_dimensions(inObj, half = false) {
 
-    inObj = inObj?.object ?? inObj;
+    inObj = inObj?.object ?? inObj?._object ?? inObj;
 
     const width = inObj?.hitArea?.width
         ?? inObj?.w
@@ -287,4 +287,14 @@ export function getBezierControlPoints(factor, previous, point, next) {
             y: point[1] + (vector.y * cp1d)
         }
     }
+}
+
+
+export function rotateAroundPoint(cx, cy, x, y, angle) {
+    let radians = (Math.PI / 180) * angle,
+        cos = Math.cos(radians),
+        sin = Math.sin(radians),
+        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
+        ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
+    return { x: nx, y: ny };
 }

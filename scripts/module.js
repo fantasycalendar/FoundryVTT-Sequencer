@@ -1,6 +1,5 @@
 import registerSettings from "./settings.js";
 import registerLayers from "./layers.js";
-import registerLibwrappers from "./libwrapper.js";
 import registerHotkeys from "./hotkeys.js";
 import { registerSocket } from "./sockets.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
@@ -13,8 +12,8 @@ import SequencerEffectManager from "./module/sequencer-effect-manager.js";
 import SequencerSectionManager from "./module/sequencer-section-manager.js";
 import { EffectPlayer, InteractionManager } from "./module/sequencer-interaction-manager.js";
 import Section from "./module/sections/section.js";
-import SequencerUILayer from "./module/canvas-effects/ui-layer.js";
 import * as lib from "./module/lib/lib.js";
+import { SequencerAboveUILayer } from "./module/canvas-effects/effects-layer.js";
 
 Hooks.once('init', async function () {
     if(!game.modules.get("socketlib")?.active) return;
@@ -51,7 +50,7 @@ Hooks.once('ready', async function () {
  * Creation & delete hooks for persistent effects
  */
 function initialize_module(){
-
+    
     window.Sequence = Sequence;
     window.Sequencer = {
         Player: EffectPlayer,
@@ -62,7 +61,6 @@ function initialize_module(){
         SectionManager: new SequencerSectionManager(),
         registerEase: registerEase,
         BaseSection: Section,
-        UILayers: SequencerUILayer.setup(),
         Helpers: {
             wait: lib.wait,
             clamp: lib.clamp,
@@ -76,11 +74,12 @@ function initialize_module(){
             from_uuid: lib.from_uuid_fast
         }
     }
-
-    registerLayers();
+    
     registerSettings();
+    registerLayers();
     registerHotkeys();
-    registerLibwrappers();
+    
+    Sequencer.AboveUILayer = SequencerAboveUILayer.setup();
 
     Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));
