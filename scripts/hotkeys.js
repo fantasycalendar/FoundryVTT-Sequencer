@@ -3,7 +3,7 @@ import { EffectPlayer, SelectionManager } from "./module/sequencer-interaction-m
 
 const hotkeys = {
     get _ready(){
-        return canvas.ready && canvas.sequencerEffectsAboveTokens.active;
+        return canvas.ready && canvas.sequencerEffects.active;
     },
 
     playTool: {

@@ -22,7 +22,7 @@ export const InteractionManager = {
     },
 
     get isLayerActive() {
-        return canvas.sequencerEffectsAboveTokens.active;
+        return canvas.sequencerEffects.active;
     },
 
     initialize() {
@@ -136,7 +136,7 @@ export const EffectPlayer = {
     },
 
     initialize() {
-        this.layer = canvas.sequencerEffectsAboveTokens;
+        this.layer = canvas.sequencerEffects;
     },
 
     tearDown() {
@@ -332,7 +332,7 @@ export const SelectionManager = {
     },
 
     initialize() {
-        this.layer = canvas.sequencerEffectsAboveTokens;
+        this.layer = canvas.sequencerEffects;
     },
 
     tearDown() {

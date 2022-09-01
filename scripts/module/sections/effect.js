@@ -32,7 +32,6 @@ export default class EffectSection extends Section {
         this._template = null;
         this._overrides = [];
         this._name = null;
-        this._layer = 2;
         this._zIndex = null;
         this._offset = null;
         this._spriteOffset = null;
@@ -50,6 +49,7 @@ export default class EffectSection extends Section {
         this._screenSpaceAnchor = null;
         this._screenSpacePosition = null;
         this._screenSpaceScale = null;
+        this._elevation = null;
         this._masks = [];
         this._tiedDocuments = [];
         this._selfMask = false;
@@ -136,21 +136,6 @@ export default class EffectSection extends Section {
     }
 
     /**
-     * Adds a function that will run at the end of the effect serialization step, but before it is played. Allows direct
-     * modifications of effect's data. For example, it could be manipulated to change which file will be used based
-     * on the distance to the target.
-     *
-     * @param {Function} inFunc
-     * @returns {EffectSection}
-     */
-    addPostOverride(inFunc) {
-        this.sequence._showWarning(self, "addPostOverride", "This method has been deprecated, please use .addOverride() instead.", true)
-        if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addPostOverride", "The given function needs to be an actual function.");
-        this._overrides.push(inFunc);
-        return this;
-    }
-
-    /**
      *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
      *  or a string reference (see .name())
      *
@@ -187,7 +172,7 @@ export default class EffectSection extends Section {
             target: this._randomOffset?.target ?? false
         }
         
-        this._source = inOptions.cacheLocation ? canvaslib.get_object_position(inLocation) : inLocation;
+        this._source = inOptions.cacheLocation ? canvaslib.get_object_canvas_data(inLocation) : inLocation;
         return this;
     }
     
@@ -273,18 +258,6 @@ export default class EffectSection extends Section {
     }
     
     /**
-     *  DEPRECATED IN FAVOR OF .stretchTo()
-     *
-     * @param {Object|String} inLocation
-     * @param {Object} inOptions
-     * @returns {EffectSection}
-     */
-    reachTowards(inLocation, inOptions = {}) {
-        this.sequence._showWarning(self, "reachTowards", "This method has been deprecated, please use .stretchTo() instead", true);
-        return this.stretchTo(inLocation, inOptions);
-    }
-    
-    /**
      *  Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
      *  This effectively calculates the proper X scale for the effect to reach the target
      *
@@ -334,7 +307,7 @@ export default class EffectSection extends Section {
         }
         
         this._stretchTo = {
-            target: inOptions.cacheLocation ? canvaslib.get_object_position(validatedObject, { measure: true }) : validatedObject,
+            target: inOptions.cacheLocation ? canvaslib.get_object_canvas_data(validatedObject, { measure: true }) : validatedObject,
             attachTo: inOptions.attachTo,
             onlyX: inOptions.onlyX
         };
@@ -381,7 +354,7 @@ export default class EffectSection extends Section {
         }
         
         this._rotateTowards = {
-            target: inOptions.cacheLocation ? canvaslib.get_object_position(validatedObject, { measure: true }) : validatedObject,
+            target: inOptions.cacheLocation ? canvaslib.get_object_canvas_data(validatedObject, { measure: true }) : validatedObject,
             rotationOffset: inOptions.rotationOffset,
             cacheLocation: inOptions.cacheLocation,
             attachTo: inOptions.attachTo,
@@ -477,7 +450,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     offset(inOffset, inOptions = {}) {
-        this.sequence._showWarning(this, "offset", "This method is becoming deprecated, please use the secondary offset option in atLocation, attachTo, stretchTo instead.")
+        this.sequence._showWarning(this, "offset", "This method is becoming deprecated, please use the secondary offset option in atLocation, attachTo, stretchTo instead.", true)
         if (inOffset === undefined) throw this.sequence._customError(this, "offset", "inOffset must not be undefined");
         if (typeof inOptions !== "object") throw this.sequence._customError(this, "offset", "options must be of type object");
         this._offsetLegacy = this._validateOffset("offset", inOffset, inOptions);
@@ -591,51 +564,6 @@ export default class EffectSection extends Section {
         }
         this._spriteScaleMin = inScaleMin;
         this._spriteScaleMax = inScaleMax ?? false;
-        return this;
-    }
-    
-    /**
-     * Sets the grid size of the file loaded in the Effect. Some files have an established internal
-     * grid, so this will make the effect scale up or down to match the active scene's grid size
-     *
-     * @param {Number} inGridSize
-     * @returns {EffectSection}
-     */
-    gridSize(inGridSize) {
-        this.sequence._showWarning(this, "gridSize", "This method has been deprecated, please use .template(gridSize, startPoint, endPoint) instead.", true)
-        if (!lib.is_real_number(inGridSize)) throw this.sequence._customError(this, "gridSize", "inGridSize must be of type number");
-        if (!this._template) this._template = {};
-        this._template["gridSize"] = inGridSize;
-        return this;
-    }
-    
-    /**
-     *  Defines the start point within the given sprite, starting from the left of the sprite. An example
-     *  would be a given number of `200` - means that the sprite will consider 200 pixels into the sprite as the
-     *  'anchor point'
-     *
-     * @param {Number} inStartPoint
-     * @returns {EffectSection}
-     */
-    startPoint(inStartPoint) {
-        this.sequence._showWarning(this, "startPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.", true)
-        if (!lib.is_real_number(inStartPoint)) throw this.sequence._customError(this, "startPoint", "inStartPoint must be of type number");
-        if (!this._template) this._template = {};
-        this._template["startPoint"] = inStartPoint;
-        return this;
-    }
-    
-    /**
-     *  The same as the start point, except from the right and how many pixels to offset the target from
-     *
-     * @param {Number} inEndPoint
-     * @returns {EffectSection}
-     */
-    endPoint(inEndPoint) {
-        this.sequence._showWarning(this, "endPoint", "This method has been deprecated, please use .template({ gridSize, startPoint, endPoint }) instead.", true)
-        if (!lib.is_real_number(inEndPoint)) throw this.sequence._customError(this, "endPoint", "inEndPoint must be of type number");
-        if (!this._template) this._template = {};
-        this._template["endPoint"] = inEndPoint;
         return this;
     }
     
@@ -764,7 +692,7 @@ export default class EffectSection extends Section {
      * @returns {EffectSection}
      */
     randomOffset(inOffsetScale = 1.0) {
-        this.sequence._showWarning(self, "randomOffset", "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.")
+        this.sequence._showWarning(this, "randomOffset", "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.", true)
         if (!lib.is_real_number(inOffsetScale)) throw this.sequence._customError(this, "randomOffset", "inBool must be of type number");
         this._randomOffsetLegacy = inOffsetScale;
         return this;
@@ -823,39 +751,45 @@ export default class EffectSection extends Section {
     }
     
     /**
-     * Causes the effect to be played below tokens
-     *
-     * @param {Boolean} [inBool=true] inBool
+     * @deprecated
      * @returns {EffectSection}
      */
-    belowTokens(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTokens", "inBool must be of type boolean");
-        this._layer = inBool ? 1 : 2;
+    belowTokens() {
+        this.sequence._showWarning(this, "belowTokens", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        this._elevation = 0;
         return this;
     }
     
     /**
-     * Causes the effect to be played below tiles
-     *
-     * @param {Boolean} [inBool=true] inBool
+     * @deprecated
      * @returns {EffectSection}
      */
-    belowTiles(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTiles", "inBool must be of type boolean");
-        this._layer = inBool ? 0 : 2;
+    belowTiles() {
+        this.sequence._showWarning(this, "belowTiles", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        this._elevation = -1;
         return this;
     }
     
     /**
-     * Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects
-     *
-     * @param {Boolean} [inBool=true] inBool
+     * @deprecated
      * @returns {EffectSection}
      */
-    aboveLighting(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTiles", "inBool must be of type boolean");
-        this._layer = inBool ? 3 : 2;
+    aboveLighting() {
+        this.sequence._showWarning(this, "aboveLighting", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        this._elevation = 1000000;
         return this;
+    }
+    
+    /**
+     * Changes the effect's elevation
+     *
+     * @param {Number} inElevation
+     * @returns {EffectSection}
+     */
+    elevation(inElevation) {
+      if (typeof inElevation !== "number") throw this.sequence._customError(this, "elevation", "inElevation must be of type number");
+      this._elevation = inElevation;
+      return this;
     }
     
     /**
@@ -1433,12 +1367,12 @@ export default class EffectSection extends Section {
             randomOffset: this._randomOffset,
             randomRotation: this._randomRotation,
             scaleToObject: this._scaleToObject,
+            elevation: this._elevation,
             
             // Appearance
             zIndex: this._zIndex,
             opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
             filters: this._filters,
-            layer: this._layer,
             noLoop: this._noLoop,
             spriteRotation: this._spriteRotation,
             tint: this._tint?.decimal,

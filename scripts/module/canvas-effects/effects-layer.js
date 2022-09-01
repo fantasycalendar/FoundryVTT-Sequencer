@@ -10,8 +10,8 @@ export class BaseEffectsLayer extends InteractionLayer {
 
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 180,
-            name: "sequencerEffectsAboveTokens"
+            elevation: 100000000,
+            name: "sequencerEffects"
         });
     }
 
@@ -274,26 +274,6 @@ export class BaseEffectsLayer extends InteractionLayer {
         )
     }
 
-}
-
-export class BelowTokensEffectsLayer extends InteractionLayer {
-
-    static get layerOptions() {
-        return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 95,
-            name: "sequencerEffectsBelowTokens",
-        });
-    }
-}
-
-export class AboveLightingEffectsLayer extends InteractionLayer {
-
-    static get layerOptions() {
-        return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 500,
-            name: "sequencerEffectsAboveLighting",
-        });
-    }
 }
 
 export class UIEffectsLayer extends InteractionLayer {

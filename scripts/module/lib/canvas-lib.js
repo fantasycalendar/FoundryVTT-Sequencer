@@ -199,8 +199,13 @@ export function get_object_canvas_data(inObject, measure = false) {
     inObject = inObject?.object ?? inObject;
     return {
         ...get_object_position(inObject, { measure }),
-        ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject)
+        ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject),
+        elevation: get_object_elevation(inObject)
     }
+}
+
+export function get_object_elevation(inObject){
+    return inObject?.document?.elevation ?? inObject?.elevation ?? 0;
 }
 
 export function get_mouse_position(snapToGrid = false, gridSnap = 2) {
