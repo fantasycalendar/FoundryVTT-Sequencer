@@ -2,7 +2,7 @@
 
 ### Version 2.3.0 (V10 only)
 - *Effects* - Deprecated `.belowTokens()`, `.belowTiles()`, and `.aboveLighting()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
-- *Effects* - Removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
+- *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
 
 ### Version 2.2.0 (last V9 update)
 **Additions:**

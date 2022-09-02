@@ -313,10 +313,7 @@ export class SequencerAboveUILayer{
     }
     
     static getLayer(){
-        if(game.settings.get("sequencer", "disable-above-ui-screenspace")){
-            return canvas.uiEffectsLayer;
-        }
-        return layer.app.stage;
+        return layer ? layer.app.stage : canvas.uiEffectsLayer;
     }
     
     static removeContainerByEffect(inEffect){
