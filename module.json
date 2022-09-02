@@ -1,12 +1,12 @@
 {
     "name": "sequencer",
     "title": "Sequencer",
-    "description": "This module implements an advanced sequencer that can be used for managing a flow of a pipeline, like sequencing a set of actions or animations",
-    "version": "2.1.!15.5",
+    "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
+    "version": "2.2.!1",
     "library": "false",
     "manifestPlusVersion": "1.0.0",
-    "minimumCoreVersion": "0.8.9",
-    "compatibleCoreVersion": "9.000",
+    "minimumCoreVersion": "10",
+    "compatibleCoreVersion": "10",
     "author": "Wasp (Wasp#2005)",
     "esmodules": [
         "scripts/module.js"
@@ -67,7 +67,7 @@
     "socket": true,
     "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
     "manifest": "https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json",
-    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.1.!15.5/module.zip",
+    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.2.!1/module.zip",
     "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
     "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
 }
