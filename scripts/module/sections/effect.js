@@ -58,6 +58,7 @@ export default class EffectSection extends Section {
         this._isRangedEffect = null;
         this._offsetLegacy = null;
         this._randomOffsetLegacy = null;
+        this._aboveLighting = null;
         this._spriteScaleMin = 1.0;
         this._spriteScaleMax = null;
     }
@@ -752,31 +753,37 @@ export default class EffectSection extends Section {
     
     /**
      * @deprecated
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
-    belowTokens() {
+    belowTokens(inBool = true) {
         this.sequence._showWarning(this, "belowTokens", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        if(!inBool) return this;
         this._elevation = 0;
         return this;
     }
     
     /**
      * @deprecated
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
-    belowTiles() {
+    belowTiles(inBool = true) {
         this.sequence._showWarning(this, "belowTiles", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        if(!inBool) return this;
         this._elevation = -1;
         return this;
     }
     
     /**
-     * @deprecated
+     * Causes the effect to be played on top of the vision mask
+     *
+     * @param {Boolean} inBool
      * @returns {EffectSection}
      */
-    aboveLighting() {
-        this.sequence._showWarning(this, "aboveLighting", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
-        this._elevation = 1000000;
+    aboveLighting(inBool = true) {
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "aboveLighting", "inBool must be of type boolean");
+        this._aboveLighting = inBool;
         return this;
     }
     
@@ -1048,14 +1055,11 @@ export default class EffectSection extends Section {
     }
     
     /**
-     * Causes the effect to be visible through walls
-     *
-     * @param inBool
+     * @deprecated
      * @returns {EffectSection}
      */
     xray(inBool = true) {
-        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "xray", "inBool must be of type boolean");
-        this._xray = inBool;
+        this.sequence._showWarning(this, "xray", "This method has been deprecated due to fundamental changes in Foundry's V10 update.", true)
         return this;
     }
     
@@ -1351,7 +1355,6 @@ export default class EffectSection extends Section {
             text: this._text,
             tilingTexture: this._tilingTexture,
             masks: Array.from(new Set(this._masks)),
-            xray: this._xray,
             
             // Transforms
             scale: this._getCalculatedScale("scale"),
@@ -1368,6 +1371,7 @@ export default class EffectSection extends Section {
             randomRotation: this._randomRotation,
             scaleToObject: this._scaleToObject,
             elevation: this._elevation,
+            aboveLighting: this._aboveLighting,
             
             // Appearance
             zIndex: this._zIndex,

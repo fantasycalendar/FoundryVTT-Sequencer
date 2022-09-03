@@ -10,8 +10,6 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 
-
-
 export default class CanvasEffect extends PIXI.Container {
     
     static make(inData) {
@@ -771,7 +769,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._addToContainer();
         this._createSprite();
         await this._setupMasks();
-        this._setupLightingMask();
         await this._transformSprite();
         this._playCustomAnimations();
         this._playPresetAnimations();
@@ -960,7 +957,9 @@ export default class CanvasEffect extends PIXI.Container {
         if (this.data.screenSpaceAboveUI) {
             layer = SequencerAboveUILayer.getLayer();
         }else if (this.data.screenSpace) {
-            layer = canvas.uiEffectsLayer;
+            layer = canvas.sequencerEffectsUILayer;
+        }else if (this.data.aboveLighting) {
+            layer = canvas.sequencerEffectsAboveLighting;
         }else{
             layer = canvas.primary;
         }
@@ -1154,7 +1153,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         this.renderable = false;
     
-        this.elevation = this.data.elevation ?? canvaslib.get_object_elevation(this.source) + 1;
+        this.elevation = this.data.elevation ?? Math.max(canvaslib.get_object_elevation(this.source ?? {}), canvaslib.get_object_elevation(this.target ?? {})) + 1;
         
         this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
         
@@ -1338,12 +1337,6 @@ export default class CanvasEffect extends PIXI.Container {
                 const changed = this._handleUpdatingMask(mask);
                 if (changed) this._updateMaskSprite();
             });
-            
-            this._addHook("sightRefresh", debounce(() => {
-                if (this._ended) return;
-                const changed = this._handleUpdatingMask(spriteContainer, true);
-                if (changed) this._updateMaskSprite();
-            }, 100));
             
         }
         
@@ -1544,17 +1537,6 @@ export default class CanvasEffect extends PIXI.Container {
         
         this._maskSprite.texture.destroy(true);
         this._maskSprite.texture = canvas.app.renderer.generateTexture(this._maskContainer);
-        
-    }
-    
-    _setupLightingMask() {
-        
-        if (this.data.xray || this.data.layer === 3) return;
-        
-        this._addHook("sightRefresh", (layer) => {
-            if (this._ended) return;
-            this.mask = layer.visible ? canvas.sight.los : null;
-        });
         
     }
     

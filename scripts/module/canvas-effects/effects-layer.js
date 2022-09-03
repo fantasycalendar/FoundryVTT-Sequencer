@@ -276,6 +276,16 @@ export class BaseEffectsLayer extends InteractionLayer {
 
 }
 
+export class AboveLightingLayer extends WeatherEffects {
+    
+    static get layerOptions() {
+        return foundry.utils.mergeObject(super.layerOptions, {
+            zIndex: 999999999999999,
+            name: "sequencerEffectsAboveLighting",
+        });
+    }
+}
+
 export class UIEffectsLayer extends InteractionLayer {
     
     static get layerOptions() {

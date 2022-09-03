@@ -38,8 +38,8 @@ export default {
             if(typeof inOptions.gridUnits !== "boolean"){
                 throw this.sequence._customError(this, "animateProperty", `inOptions.gridUnits must be of type boolean`);
             }
-            if(inOptions.gridUnits && !(["position.x", "position.y", "height", "width"].includes(inPropertyName))){
-                throw this.sequence._customError(this, "animateProperty", `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, width, or height`);
+            if(inOptions.gridUnits && !(["position.x", "position.y", "scale.x", "scale.y", "height", "width"].includes(inPropertyName))){
+                throw this.sequence._customError(this, "animateProperty", `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`);
             }
         }
 
@@ -108,8 +108,8 @@ export default {
             if(typeof inOptions.gridUnits !== "boolean"){
                 throw this.sequence._customError(this, "loopProperty", `inOptions.gridUnits must be of type boolean`);
             }
-            if(inOptions.gridUnits && !(["position.x", "position.y", "height", "width"].includes(inPropertyName))){
-                throw this.sequence._customError(this, "loopProperty", `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, width, or height`);
+            if(inOptions.gridUnits && !(["position.x", "position.y", "scale.x", "scale.y", "height", "width"].includes(inPropertyName))){
+                throw this.sequence._customError(this, "loopProperty", `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`);
             }
         }
 
