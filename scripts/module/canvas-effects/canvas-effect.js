@@ -849,8 +849,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._ticker = new PIXI.Ticker();
         this._ticker.maxFPS = maxPerformance && maxFPS === 60 ? 0 : maxFPS;
         this._ticker.start();
-    
-        console.warn(this._ticker);
         
     }
     
@@ -1397,12 +1395,12 @@ export default class CanvasEffect extends PIXI.Container {
                 objectSprite = mask.placeableObject.mesh;
                 objectWidth = objectSprite.width / 2;
                 objectHeight = objectSprite.height / 2;
-                additionalData["img"] = mask.placeableObject.img;
+                additionalData["img"] = mask.placeableObject.document.texture.src;
             } else if (mask.documentType === "Tile") {
                 objectSprite = mask.placeableObject.tile;
                 objectWidth = objectSprite.width / 2;
                 objectHeight = objectSprite.height / 2;
-                additionalData["img"] = mask.placeableObject.img;
+                additionalData["img"] = mask.placeableObject.document.texture.src;
             } else if (mask.documentType === "Drawing") {
                 objectSprite = mask.placeableObject.drawing;
             } else if (mask.documentType === "MeasuredTemplate") {

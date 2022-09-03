@@ -282,7 +282,7 @@ const flagManager = {
             let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
             let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
     
-            const existingFlags = new Map(getProperty(object.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []);
+            const existingFlags = new Map(getProperty(object, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []);
             
             if (toRemove?.removeAll) {
                 toRemove.effects = Array.from(existingFlags).map(entry => entry[0]);

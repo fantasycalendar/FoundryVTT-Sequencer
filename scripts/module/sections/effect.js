@@ -375,8 +375,8 @@ export default class EffectSection extends Section {
     from(inObject, inOptions = {}) {
         if (typeof inOptions !== "object") throw this.sequence._customError(this, "from", `inOptions must be of type object`);
         if (!(inObject instanceof Token || inObject instanceof Tile || inObject instanceof TokenDocument || inObject instanceof TileDocument)) throw this.sequence._customError(this, "from", "inObject must be of type Token, Tile, TokenDocument, or TileDocument");
-        inObject = inObject instanceof foundry.abstract.Document ? inObject.object : inObject;
-        if (!inObject?.img) throw this.sequence._customError(this, "from", "could not find the image for the given object");
+        inObject = inObject.document ?? inObject;
+        if (!inObject?.texture?.src) throw this.sequence._customError(this, "from", "could not find the image for the given object");
         inOptions = foundry.utils.mergeObject({
             cacheLocation: false,
             offset: false,
@@ -387,7 +387,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
         
-        this._temporaryEffect = this._temporaryEffect || (inObject.document instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.uuid) : false);
+        this._temporaryEffect = this._temporaryEffect || (inObject instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.uuid) : false);
     
         if (inOptions.offset) {
             const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
@@ -1105,15 +1105,15 @@ export default class EffectSection extends Section {
     async preRun() {
         
         if (this._from) {
-            
-            this._file = this._file || this._from.object?.img;
+          
+            this._file = this._file || this._from.object?.texture?.src;
             
             if (this._source === null) {
                 this._source = this._validateLocation(this._from.object);
             }
             
             if (this._size === null) {
-                const size = canvaslib.get_object_dimensions(this._from.object?.mesh ?? this._from.object?.tile ?? this._from.object);
+                const size = canvaslib.get_object_dimensions(this._from.object);
                 this._size = {
                     width: size?.width ?? canvas.grid.size,
                     height: size?.height ?? canvas.grid.size,
