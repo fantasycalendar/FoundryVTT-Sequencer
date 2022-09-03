@@ -1,0 +1,163 @@
+{
+  "SEQUENCER": {
+    "OK": "OK",
+    "Cancel": "Cancelar",
+
+    "Effects": "Effectos de Sequencer",
+
+    "PlayerPermissionsWarning": "¡Hola! Como DJ puedes crear efectos, pero por defecto <strong>también lo pueden hacer tus jugadores</strong>. Si no es lo que quieres, puedes configurar los permisos haciendo click en este botón:",
+
+    "Error": {
+      "CouldNotPlay": "No se pudo reproducir"
+    },
+
+    "Player": {
+      "Title": "Reproductor",
+      "SwitchToLayer": "Cambiar a la capa",
+      "PathInput": "Introduce la ruta del archivo o base de datos",
+      "AllUsers": "Todos los Usuarios",
+      "Presets": "Presets:",
+      "PresetsDefault": "Por defecto",
+      "ApplyPresetTitle": "Aplicar preset",
+      "ApplyPresetContent": "¿Quieres aplicar el preset \"{preset_name}\"? Los cambios no guardados se perderán.",
+      "CreateNewPresetTitle": "Crear nuevo preset de efectos en Sequencer",
+      "CreateNewPresetInputLabel": "Introduce el nombre del nuevo preset",
+      "CopyPresetTitle": "Copiar el preset de efectos en Sequencer",
+      "CopyPresetInputLabel": "Introduce el nombre del nuevo preset",
+      "DefaultErrorTitle": "Error",
+      "DefaultErrorContent": "Lamentablemente no puedes utilizar el nombre \"default\", ya que lo usa el propio Sequencer.",
+      "OverwritePresetTitle": "¿Sobreescribir preset?",
+      "OverwritePresetContent": "¿Quieres sobreescribir el preset \"{preset_name}\"?",
+      "DeletePresetTitle": "¿Eliminar preset?",
+      "DeletePresetContent": "¿Quieres eliminar el preset \"{preset_name}\"?",
+
+      "Option": {
+        "Scale": "Escala",
+        "BelowTokens": "Bajo los iconos",
+        "SnapToGrid":  "Fijar a la rejilla",
+        "RandomRotation": "Rotación aleatoria",
+        "RandomMirrorY":  "Eje Y invertido aleatorio",
+        "RandomOffset": "Desviación aleatoria",
+        "Repetitions":  "Repeticiones",
+        "DelayMin": "Retardo (min)",
+        "DelayMax":  "Retardo (max)",
+        "Preload": "Precargar",
+        "DragBehavior":  "Comportamiento al arrastrar:<br>Estirar o Mover",
+        "MoveSpeed": "Velocidad de movimiento",
+        "AttachTo": "Fijar al punto de partida",
+        "StretchToAttach": "Fijar al punto final",
+        "Persist": "Persistente"
+      }
+    },
+
+    "Hotkeys": {
+      "PlayTool": {
+        "Shift": "Reproductor - Reproduce varios efectos al mismo tiempo",
+        "Control": "Reproductor - Reproduce varios efectos de manera secuencial"
+      },
+      "SelectTool": {
+        "Control": "Seleccionar - Fijar a la rejilla",
+        "Alt": "Seleccionar - Fijar a objetos en el tablero",
+        "Delete": "Seleccionar - Eliminar el efecto seleccionado"
+      }
+    },
+
+    "Manager": {
+      "Title": "Gestor",
+      "NoEffects": "No hay efectos en curso...",
+      "PersistentEffects": "Efectos persistentes:",
+      "TemporaryEffects": "Efectos temporales:",
+      "PlayersEffect": "Efectos de {user_name}",
+      "UnknownEffect": "Efectos de Usuario Desconocido",
+      "EndAllEffects": "Finalizar todos los efectos"
+    },
+
+    "HowTo": {
+      "Title": "Tutorial",
+      "Welcome": "¡Bienvenido a Sequencer Effects!",
+      "Explanation": "Con el Reproductor <i class=\"fas fa-play-circle\"></i> puedes reproducir efectos en el tablero de manera rápida, y con el Gestor <i class=\"fas fa-film\"></i> puedes finalizar los efectos persistentes cuando quieras.",
+      "PermissionsExplanation": "Como DJ puedes crear efectos, y por defecto también lo pueden hacer los jugadores. Puedes configurar este ajuste haciendo click en este botón:",
+      "PlayerExplanation": "Al usar el Reproductor <i class=\"fas fa-play-circle\"></i>, debes escoger qué efecto reproducir. Haz click en la <strong>entrada de archivos</strong> para ver las rutas de bases de datos que tienes, o escribe para empezar a buscar. Puedes hacer click en el botón <i class=\"fas fa-file-import\"></i> al lado para buscar un archivo directamente.",
+      "LayerExplanation": "Una vez escogido un archivo, puedes realizar las siguientes acciones mientras estés en la Capa de Sequencer <i class=\"fas fa-list-ol\"></i>.",
+      "OpenModuleSettings": "Abrir los ajustes del módulo",
+      "Click": "Hacer Click",
+      "ClickLabel": "Reproduce un efecto en ese lugar",
+      "ClickDrag": "Mantener Click + Arrastrar",
+      "ClickDragLabel": "Reproduce un efecto estirado hacia una dirreción",
+      "Shift": "Mayus",
+      "ShiftLabel": "Reproduce varios efectos al mismo tiempo tras soltar Mayus",
+      "ShiftControl": "Control",
+      "ShiftControlLabel": "Reproduce varios efectos de manera secuencial, esperando a que acabe el anterior",
+      "MoreToCome": "...y más en futuras actualizaciones!"
+    },
+
+    "Database": {
+      "Title": "Visor de bases de datos de Sequencer",
+      "AllPacks": "Todos los packs",
+      "Search": "Buscar...",
+      "ButtonFilepath": "Ruta de archivo",
+      "ButtonDatabasePath": "Base de datos",
+      "ShowAllRanges": "Mostrar todos los rangos"
+    },
+
+    "Setting": {
+      "DatabaseViewer":{
+        "Title": "Abrir visor de base de datos de Sequencer",
+        "Label": "Abrir visor de base de datos"
+      },
+      "DisablePIXIFix": {
+        "Title": "Desactivar el arreglo de PIXI",
+        "Label": "Desactiva el arreglo del alpha para efectos en Foundry - algunas configuraciones (navegadores, hardware, software, etc.) parece que hacen este arreglo obsoleto."
+      },
+      "Debug": {
+        "Title": "Activar depuración",
+        "Label": "Esto hace que Sequencer registre en la consola lo que está haciendo"
+      },
+      "ShowTools": {
+        "Title": "Mostrar las Herramientas de Sequencer",
+        "Label": "Muestra u oculta las Herramientas de Sequencer en la barra lateral."
+      },
+      "EnableEffects": {
+        "Title": "Activar Efectos",
+        "Label": "Activa la reproducción de efectos en este cliente"
+      },
+      "EnableSounds": {
+        "Title": "Activar sonidos",
+        "Label": "Activa la reproducción de sonidos en este cliente"
+      },
+      "ExternalEffectOpacity": {
+        "Title": "Opacidad de efectos externos",
+        "Label": "Si creas efectos destinados a ser reproducidos por otros jugadores pero no por tí, establecer esto a cualquier valor que no sea 0 hará que el efecto se muestre para tí también, pero atenuado. Todos los efectos se muestran siempre para los DJ."
+      },
+      "Permission": {
+        "EffectCreate": {
+          "Title": "Sequencer: Reproducir Efectos",
+          "Label": "Permite que los jugadores con el rol seleccionado (y superiores) reproduzcan efectos por medio de macros y el Reproductor de Efectos Sequencer."
+        },
+        "EffectDelete": {
+          "Title": "Sequencer: Borrar todos los Efectos",
+          "Label": "Permite que los jugadores con el rol seleccionado (y superiores) eliminen cualquier efecto por medio del Gestor de Efectos Sequencer."
+        },
+        "SoundCreate": {
+          "Title": "Sequencer: Reproducir Sonidos",
+          "Label": "Permite que los jugadores con el rol seleccionado (y superiores) reproduzcan sonidos."
+        },
+        "PreloadClients": {
+          "Title": "Sequencer: Precargar para otros",
+          "Label": "Permite que los jugadores con el rol seleccionado (y superiores) precarguen efectos y sonidos para otros jugadores."
+        },
+        "UseSidebarTools": {
+          "Title": "Sequencer: Usar herramientas de la barra lateral",
+          "Label": "Permite que los jugadores con el rol seleccionado (y superiores) usen las herramientas de la barra lateral (también tienen que poder reproducir efectos)."
+        }
+      }
+    },
+
+    "Permission": {
+      "Player": "Jugador y superior",
+      "Trusted": "Confianza y superior",
+      "Assistant": "Asistente y superior",
+      "GM": "Solo Gamemaster"
+    }
+  }
+}

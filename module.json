@@ -24,6 +24,11 @@
       "lang": "ja",
       "name": "日本語",
       "path": "languages/ja.json"
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "languages/es-ES.json"
     }
   ],
   "packs": [
