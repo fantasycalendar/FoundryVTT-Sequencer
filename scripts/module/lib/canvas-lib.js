@@ -63,11 +63,10 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
         return obj.worldPosition;
     }
 
-    obj = obj?._object ?? obj;
+    obj = obj?._object ?? obj.object ?? obj;
 
     let pos = {};
-    if (obj instanceof MeasuredTemplate || obj instanceof MeasuredTemplateDocument) {
-        obj = obj instanceof MeasuredTemplateDocument ? obj.object : obj;
+    if (obj instanceof MeasuredTemplate) {
         if (measure) {
             if (obj.document.t === "cone" || obj.document.t === "ray") {
                 pos.x = obj.ray.B.x;
@@ -83,8 +82,7 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
                 pos.y += Math.abs(obj.shape.height / 2) + (obj.shape.y)
             }
         }
-    } else if (obj instanceof Tile || obj instanceof TileDocument) {
-        obj = obj instanceof TileDocument ? obj.object : obj;
+    } else if (obj instanceof Tile) {
         pos = {
             x: obj.document.x,
             y: obj.document.y
@@ -94,23 +92,23 @@ export function get_object_position(obj, { measure = false, exact = false }={}) 
             pos.x += Math.abs(obj.document.width / 2)
             pos.y += Math.abs(obj.document.height / 2)
         }
-    } else {
+    } else if (obj instanceof Token) {
         pos = {
-            x: obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.document?.x ?? obj?.document?.position?.x ?? 0,
-            y: obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.document?.y ?? obj?.document?.position?.y ?? 0
+            x: obj.mesh.x,
+            y: obj.mesh.y
         }
 
-        if (obj instanceof Token && !exact) {
+        if (exact) {
             const halfSize = get_object_dimensions(obj, true);
-            pos.x += halfSize.width;
-            pos.y += halfSize.height;
+            pos.x -= halfSize.width;
+            pos.y -= halfSize.height;
         }
     }
 
     pos = {
-        x: pos?.x ?? obj?.x ?? obj?.document?.x,
-        y: pos?.y ?? obj?.y ?? obj?.document?.y,
-    };
+        x: pos.x ?? obj?.x ?? obj?.position?.x ?? obj?.position?._x ?? obj?.document?.x ?? obj?.document?.position?.x ?? 0,
+        y: pos.y ?? obj?.y ?? obj?.position?.y ?? obj?.position?._y ?? obj?.document?.y ?? obj?.document?.position?.y ?? 0
+    }
 
     if (!lib.is_real_number(pos.x) || !lib.is_real_number(pos.y)) {
         return false;

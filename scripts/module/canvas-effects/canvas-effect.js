@@ -843,8 +843,14 @@ export default class CanvasEffect extends PIXI.Container {
             return [entry[0], this._setupOffsetMap(entry[1])];
         }));
         
-        this._ticker = new PIXI.Ticker;
+        const maxPerformance = game.settings.get("core", "performanceMode") === 3;
+        const maxFPS = game.settings.get("core", "maxFPS");
+        
+        this._ticker = new PIXI.Ticker();
+        this._ticker.maxFPS = maxPerformance && maxFPS === 60 ? 0 : maxFPS;
         this._ticker.start();
+    
+        console.warn(this._ticker);
         
     }
     
