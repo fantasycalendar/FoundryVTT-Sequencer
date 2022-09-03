@@ -1,33 +1,52 @@
-export default class VisionMaskFilter extends AbstractBaseMaskFilter {
-    
+export default class VisionSamplerShader extends BaseSamplerShader {
     /** @override */
+    static classPluginName = null;
+    
+    /** @inheritdoc */
+    static vertexShader = `
+      precision ${PIXI.settings.PRECISION_VERTEX} float;
+      attribute vec2 aVertexPosition;
+      attribute vec2 aTextureCoord;
+      uniform mat3 projectionMatrix;
+      uniform vec2 screenDimensions;
+      varying vec2 vUvsMask;
+      varying vec2 vUvs;
+      void main() {
+        vUvs = aTextureCoord;
+        vUvsMask = aVertexPosition / screenDimensions;
+        gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
+      }
+    `;
+    
+    /** @inheritdoc */
     static fragmentShader = `
-    precision mediump float;
-    varying vec2 vTextureCoord;
-    varying vec2 vMaskTextureCoord;
-    uniform sampler2D uSampler;
-    uniform sampler2D uMaskSampler;
-    void main() {
-      float mask = texture2D(uMaskSampler, vMaskTextureCoord).r;
-      gl_FragColor = texture2D(uSampler, vTextureCoord) * mask;
-    }`;
+      precision ${PIXI.settings.PRECISION_FRAGMENT} float;
+      varying vec2 vUvs;
+      varying vec2 vUvsMask;
+      uniform vec4 tintAlpha;
+      uniform sampler2D sampler;
+      uniform sampler2D maskSampler;
+      uniform bool enableVisionMasking;
+      void main() {
+        float mask = enableVisionMasking ? texture2D(maskSampler, vUvsMask).r : 1.0;
+        gl_FragColor = texture2D(sampler, vUvs) * tintAlpha * mask;
+      }
+    `;
     
-    /** @override */
+    /** @inheritdoc */
     static defaultUniforms = {
-        uMaskSampler: null
+        tintAlpha: [1, 1, 1, 1],
+        sampler: 0,
+        maskSampler: 0,
+        screenDimensions: [1, 1],
+        enableVisionMasking: false
     };
     
     /** @override */
-    static create() {
-        return super.create({
-            uMaskSampler: canvas.masks.vision.renderTexture
-        });
+    _preRender(mesh) {
+        super._preRender(mesh);
+        this.uniforms.maskSampler = canvas.masks.vision.renderTexture;
+        this.uniforms.screenDimensions = canvas.screenDimensions;
+        this.uniforms.enableVisionMasking = canvas.effects.visibility.visible;
     }
-    
-    /** @override */
-    get enabled() {
-        return canvas.effects.visibility.visible;
-    }
-    
-    set enabled(value) { }
 }

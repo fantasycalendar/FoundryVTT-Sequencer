@@ -9,7 +9,7 @@ import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
-import VisionMaskFilter from "../lib/filters/vision-mask-filter.js";
+import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
 
 export default class CanvasEffect extends PIXI.Container {
     
@@ -55,18 +55,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._isEnding = false;
         
         this._isDestroyed = false;
-        
-        // Responsible for rotating the sprite
-        this.rotationContainer = this.addChild(new PIXI.Container());
-        this.rotationContainer.id = this.id + "-rotationContainer";
-        
-        // An offset container for the sprite
-        this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
-        this.spriteContainer.id = this.id + "-spriteContainer";
-        
-        // The sprite itself
-        this.sprite = this.spriteContainer.addChild(new SpriteMesh());
-        this.sprite.id = this.id + "-sprite";
         
     }
     
@@ -801,6 +789,27 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _initializeVariables() {
+    
+        // Responsible for rotating the sprite
+        this.rotationContainer = this.addChild(new PIXI.Container());
+        this.rotationContainer.id = this.id + "-rotationContainer";
+    
+        // An offset container for the sprite
+        this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
+        this.spriteContainer.id = this.id + "-spriteContainer";
+    
+        // The sprite itself
+    
+        let sprite;
+        if(!this.data.xray && !this.data.aboveLighting) {
+            sprite = new SpriteMesh(null, VisionSamplerShader);
+        }else{
+            sprite = new SpriteMesh();
+        }
+        
+        this.sprite = this.spriteContainer.addChild(sprite);
+        this.sprite.id = this.id + "-sprite";
+        
         this._template = this.data.template;
         this._ended = null;
         this._maskContainer = null;
@@ -1279,10 +1288,6 @@ export default class CanvasEffect extends PIXI.Container {
     }
     
     async _setupMasks() {
-        
-        if(!this.data.xray && !this.data.aboveLighting) {
-            this.filters = [VisionMaskFilter.create()];
-        }
         
         if (!this.data?.masks?.length) return;
         
