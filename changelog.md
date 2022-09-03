@@ -3,7 +3,6 @@
 ### Version 2.3.0 (V10 only)
 - *Effects* - Re-enabled `scale.x` and `scale.y` on `.animateProperty()` and `.loopProperty()` 
 - *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
-- *Effects* - Deprecated `.xray()` as it is no longer compatible with Foundry V10's method of rendering
 - *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
 
 ### Version 2.2.0 (last V9 update, except maybe some bug fixes)

@@ -9,6 +9,7 @@ import flagManager from "../flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
 import SequencerEffectManager from "../sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
+import VisionMaskFilter from "../lib/filters/vision-mask-filter.js";
 
 export default class CanvasEffect extends PIXI.Container {
     
@@ -64,7 +65,7 @@ export default class CanvasEffect extends PIXI.Container {
         this.spriteContainer.id = this.id + "-spriteContainer";
         
         // The sprite itself
-        this.sprite = this.spriteContainer.addChild(new PIXI.Sprite());
+        this.sprite = this.spriteContainer.addChild(new SpriteMesh());
         this.sprite.id = this.id + "-sprite";
         
     }
@@ -1278,6 +1279,10 @@ export default class CanvasEffect extends PIXI.Container {
     }
     
     async _setupMasks() {
+        
+        if(!this.data.xray && !this.data.aboveLighting) {
+            this.filters = [VisionMaskFilter.create()];
+        }
         
         if (!this.data?.masks?.length) return;
         

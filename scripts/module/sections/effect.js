@@ -61,6 +61,7 @@ export default class EffectSection extends Section {
         this._aboveLighting = null;
         this._spriteScaleMin = 1.0;
         this._spriteScaleMax = null;
+        this._xray = null;
     }
 
     /**
@@ -1055,11 +1056,14 @@ export default class EffectSection extends Section {
     }
     
     /**
-     * @deprecated
+     * Causes the effect to be visible through walls
+     *
+     * @param inBool
      * @returns {EffectSection}
      */
     xray(inBool = true) {
-        this.sequence._showWarning(this, "xray", "This method has been deprecated due to fundamental changes in Foundry's V10 update.", true)
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "xray", "inBool must be of type boolean");
+        this._xray = inBool;
         return this;
     }
     
@@ -1372,6 +1376,7 @@ export default class EffectSection extends Section {
             scaleToObject: this._scaleToObject,
             elevation: this._elevation,
             aboveLighting: this._aboveLighting,
+            xray: this._xray,
             
             // Appearance
             zIndex: this._zIndex,
