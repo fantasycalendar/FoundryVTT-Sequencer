@@ -1,6 +1,12 @@
 ## Sequencer Changelog
 
-### Version 2.2.0
+### Version 2.3.0 (V10 only)
+- *Sequencer* - Added Spanish localization (thanks to Git-GoR!)
+- *Effects* - Re-enabled `scale.x` and `scale.y` on `.animateProperty()` and `.loopProperty()` 
+- *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
+- *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
+
+### Version 2.2.0 (last V9 update, except maybe some bug fixes)
 **Additions:**
 - *Effects* - Added `.tieToDocuments()` which allows you to tie an effect to Foundry documents - such as Active Effects or Tokens. When these are deleted, the effect is automatically ended.
 - *Effects* - Added secondary `offset` parameter to `.atLocation()`, `.attachTo()`, `.rotateTowards()`, `.from()`, and `.stretchTo()` which can be used to offset the location of the source or target

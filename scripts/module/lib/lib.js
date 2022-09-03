@@ -2,16 +2,6 @@ import CONSTANTS from "../constants.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 
 /**
- *  This function is a backwards compatible method for both 0.8.9 and 9.224 that returns a boolean whether
- *  you're on version 8 or 9
- *
- * @return {boolean}                    If the user is on version 9
- */
-export function isVersion9() {
-    return isNewerVersion((game?.version ?? game.data.version), "9.00");
-}
-
-/**
  *  This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
  * @param  {string}         inFile      The start value
@@ -39,7 +29,6 @@ export async function getFiles(inFile, { applyWildCard = false, softFail = false
         throw custom_error("Sequencer", `getFiles | ${err}`);
     }
 }
-
 
 /**
  *  This function interpolates between p1 and p2 based on a normalized value of t, determined by the ease provided (string or function)

@@ -98,12 +98,12 @@ export default class Sequence {
 
         const func = lib.section_proxy_wrap(new FunctionSection(this, async () => {
             if(compendium){
-                const macroData = (await compendium.getDocuments()).find((i) => i.data.name === macro[3])?.toObject();
+                const macroData = (await compendium.getDocuments()).find((i) => i.name === macro[3])?.toObject();
                 if (!macroData) {
                     throw lib.custom_error(this.moduleName, `macro - Macro '${macro[3]}' was not found in compendium '${macro[1]}.${macro[2]}'`);
                 }
                 macro = new Macro(macroData);
-                macro.data.permission.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
+                macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
             }
             await macro.execute(...args);
         }, true));

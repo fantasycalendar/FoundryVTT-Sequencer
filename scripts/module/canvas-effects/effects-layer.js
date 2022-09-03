@@ -2,23 +2,17 @@ import { EffectPlayer, InteractionManager, SelectionManager } from "../sequencer
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
-export class BaseEffectsLayer extends CanvasLayer {
+export class BaseEffectsLayer extends InteractionLayer {
 
     constructor(...args) {
         super(...args);
-        this.active = false;
     }
 
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 180,
-            name: "sequencerEffectsAboveTokens"
+            elevation: 100000000,
+            name: "sequencerEffects"
         });
-    }
-
-    activate() {
-        super.activate();
-        this.active = true;
     }
 
     deactivate() {
@@ -282,25 +276,17 @@ export class BaseEffectsLayer extends CanvasLayer {
 
 }
 
-export class BelowTokensEffectsLayer extends CanvasLayer {
+export class AboveLightingLayer extends WeatherEffects {
+    
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 95,
-            name: "sequencerEffectsBelowTokens",
-        });
-    }
-}
-
-export class AboveLightingEffectsLayer extends CanvasLayer {
-    static get layerOptions() {
-        return foundry.utils.mergeObject(super.layerOptions, {
-            zIndex: 500,
+            zIndex: 999999999999999,
             name: "sequencerEffectsAboveLighting",
         });
     }
 }
 
-export class UIEffectsLayer extends CanvasLayer {
+export class UIEffectsLayer extends InteractionLayer {
     
     static get layerOptions() {
         return foundry.utils.mergeObject(super.layerOptions, {
@@ -337,10 +323,7 @@ export class SequencerAboveUILayer{
     }
     
     static getLayer(){
-        if(game.settings.get("sequencer", "disable-above-ui-screenspace")){
-            return canvas.uiEffectsLayer;
-        }
-        return layer.app.stage;
+        return layer ? layer.app.stage : canvas.uiEffectsLayer;
     }
     
     static removeContainerByEffect(inEffect){

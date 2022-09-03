@@ -195,13 +195,13 @@ class AnimationSection extends Section {
         let originLoc = canvaslib.get_object_position(origin, { exact: true });
         let targetLoc = canvaslib.get_object_position(target, { exact: true });
 
-        let originSizeWidth = (origin?.data?.width ?? 1) * canvas.grid.size;
-        let originSizeHeight = (origin?.data?.height ?? 1) * canvas.grid.size;
+        let originSizeWidth = (origin?.width ?? 1) * canvas.grid.size;
+        let originSizeHeight = (origin?.height ?? 1) * canvas.grid.size;
         let originBottom = Math.max(originSizeWidth - canvas.grid.size, canvas.grid.size);
         let originRight = Math.max(originSizeHeight - canvas.grid.size, canvas.grid.size);
 
-        let targetSizeWidth = (target?.data?.width ?? 1) * canvas.grid.size;
-        let targetSizeHeight = (target?.data?.height ?? 1) * canvas.grid.size;
+        let targetSizeWidth = (target?.width ?? 1) * canvas.grid.size;
+        let targetSizeHeight = (target?.height ?? 1) * canvas.grid.size;
 
         let ray = new Ray(originLoc, targetLoc);
 
@@ -229,28 +229,6 @@ class AnimationSection extends Section {
             y: originLoc.y + dy
         };
 
-    }
-
-    /**
-     * @private
-     */
-    _getCleanPosition(obj, measure = false) {
-
-        let pos = {
-            x: obj?.data?.x ?? obj?.x ?? 0,
-            y: obj?.data?.y ?? obj?.y ?? 0
-        }
-
-        if (obj instanceof MeasuredTemplate) {
-            if (measure) {
-                if (obj.data.t === "cone" || obj.data.t === "ray") {
-                    pos.x = obj.ray.B.x;
-                    pos.y = obj.ray.B.y;
-                }
-            }
-        }
-
-        return pos;
     }
 
     /**
@@ -337,7 +315,7 @@ class AnimationSection extends Section {
             overallDuration = overallDuration > fadeDuration ? overallDuration : fadeDuration;
         }
 
-        if (this._fadeInAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (this._fadeInAudio && this._originObject?.video?.volume !== undefined) {
 
             let to = lib.is_real_number(this._volume) ? this._volume : 1.0;
 
@@ -361,7 +339,7 @@ class AnimationSection extends Section {
 
         if (this._rotateIn) {
 
-            let from = this._angle ? this._angle : this._originObject.data.rotation;
+            let from = this._angle ? this._angle : this._originObject.rotation;
             let to = this._rotateIn.value;
 
             if (Math.abs(from - to) > 180) {
@@ -445,7 +423,7 @@ class AnimationSection extends Section {
 
         if (this._fadeOut) {
 
-            let from = lib.is_real_number(this._opacity) ? this._opacity : (this._originObject.data.alpha ?? 1.0);
+            let from = lib.is_real_number(this._opacity) ? this._opacity : (this._originObject.alpha ?? 1.0);
 
             animData.attributes.push({
                 name: "alpha",
@@ -464,9 +442,9 @@ class AnimationSection extends Section {
             overallDuration = overallDuration > fadeOutDuration ? overallDuration : fadeOutDuration;
         }
 
-        if (this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (this._fadeOutAudio && this._originObject?.video?.volume !== undefined) {
 
-            let from = lib.is_real_number(this._volume) ? this._volume : this._originObject.data.video.volume;
+            let from = lib.is_real_number(this._volume) ? this._volume : this._originObject.video.volume;
 
             animData.attributes.push({
                 name: "video.volume",
@@ -488,7 +466,7 @@ class AnimationSection extends Section {
         if (this._rotateOut) {
 
             let from = this._rotateOut.value;
-            let to = this._angle ? this._angle : this._originObject.data.rotation;
+            let to = this._angle ? this._angle : this._originObject.rotation;
 
             if (this._rotateIn) from += this._rotateIn.value;
 
@@ -552,7 +530,7 @@ class AnimationSection extends Section {
             updateAttributes["alpha"] = this._opacity;
         }
 
-        if (lib.is_real_number(this._volume) && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.data?.video?.volume !== undefined) {
+        if (lib.is_real_number(this._volume) && !this._fadeInAudio && !this._fadeOutAudio && this._originObject?.video?.volume !== undefined) {
             updateAttributes["video.volume"] = this._volume;
         }
 

@@ -208,7 +208,7 @@ export default function registerSettings() {
             name: CONSTANTS.MODULE_NAME,
             title: "Sequencer Layer",
             icon: "fas fa-list-ol",
-            layer: "sequencerEffectsAboveTokens",
+            layer: "sequencerEffects",
             visible: user_can_do("permissions-effect-create") && user_can_do("permissions-sidebar-tools"),
             activeTool: "select-effect",
             tools: [

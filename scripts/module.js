@@ -20,6 +20,10 @@ Hooks.once('init', async function () {
     initialize_module();
 });
 
+Hooks.once("socketlib.ready", () => {
+    registerSocket();
+})
+
 Hooks.once('ready', async function () {
 
     if(!game.modules.get("socketlib")?.active){

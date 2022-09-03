@@ -29,10 +29,10 @@ const flagManager = {
      */
     getFlags(inDocument, { preCreate = false }={}){
 
-        const effects = preCreate && inDocument?.actor?.data?.token
-            ? getProperty(inDocument?.actor?.data?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []
-            : getProperty(inDocument.data, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
-
+        const effects = preCreate && inDocument?.actor?.token
+            ? getProperty(inDocument?.actor?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []
+            : getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
+        
         if(!effects?.length) return [];
 
         const changes = [];
@@ -302,7 +302,7 @@ const flagManager = {
                 [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
             });
             
-            if(object instanceof TokenDocument && object.data.actorLink && (toAdd.original || toRemove.original)){
+            if(object instanceof TokenDocument && object.actorLink && (toAdd.original || toRemove.original)){
                 const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
                 actorsToUpdate.set(object.actor.uuid, flagsToPrototypePersist);
             }

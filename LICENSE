@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2021 Adam Oresten
+Copyright (c) 2022 Fantasy Computerworks Ltd.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,3 +45,10 @@ materials provided with the distribution.
 3. Neither the name of the copyright holder nor the names of its contributors may
 be used to endorse or promote products derived from this software without specific
 prior written permission.
+
+Contributors:
+- BrotherSharp for the Japanese localization
+- Git-GoR for the Spanish localization
+- ghost91 for his sound socket implementation
+- laquasicinque for the database viewer's scroll virtualization magic
+- dev7355608 for his amazing ongoing support with everything pixi
