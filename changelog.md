@@ -1,6 +1,7 @@
 ## Sequencer Changelog
 
 ### Version 2.3.0 (V10 only)
+- *Sequencer* - Added Spanish localization (thanks to Git-GoR!)
 - *Effects* - Re-enabled `scale.x` and `scale.y` on `.animateProperty()` and `.loopProperty()` 
 - *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
 - *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
