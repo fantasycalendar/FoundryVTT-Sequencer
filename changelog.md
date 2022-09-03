@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.1
+- *Effects* - Fixed `.from()` and `.mask()` throwing errors about missing files
+
 ### Version 2.3.0 (V10 only)
 - *Sequencer* - Added Spanish localization (thanks to Git-GoR!)
 - *Effects* - Re-enabled `scale.x` and `scale.y` on `.animateProperty()` and `.loopProperty()` 
