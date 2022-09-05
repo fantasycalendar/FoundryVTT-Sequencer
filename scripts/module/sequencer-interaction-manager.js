@@ -151,6 +151,7 @@ export const EffectPlayer = {
     },
 
     mouseLeftUp() {
+        if(!this.startPos) return;
         this._playEffect();
         this.startPos = false;
         this.endPos = false;
@@ -265,28 +266,24 @@ export const EffectPlayer = {
 
         const attachToObject = settings.attachTo ? canvaslib.get_closest_token(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
         if(attachToObject){
-            effect.attachTo(attachToObject);
+            effect.attachTo(attachToObject, { randomOffset: settings.randomOffset ? 0.75 : false });
         }else{
-            effect.atLocation(settings.startPos);
+            effect.atLocation(settings.startPos, { randomOffset: settings.randomOffset && !settings.Dragging ? 0.75 : false });
         }
 
         if (settings.persist && settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new") {
             effect.name("Preset: " + settings.name)
         }
 
-        if (settings.randomOffset) {
-            effect.randomOffset(0.75);
-        }
-
         if (settings.Dragging) {
             if (settings.moveTowards) {
-                effect.moveTowards(settings.endPos)
+                effect.moveTowards(settings.endPos, { randomOffset: settings.randomOffset ? 0.75 : false })
                 if (settings.moveSpeed) {
                     effect.moveSpeed(settings.moveSpeed)
                 }
             } else {
                 //let target = settings.stretchToAttach ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
-                effect.stretchTo(settings.endPos)
+                effect.stretchTo(settings.endPos, { randomOffset: settings.randomOffset ? 0.75 : false })
             }
         } else {
             effect.scale(settings.scale)
