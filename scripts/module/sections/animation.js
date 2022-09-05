@@ -276,7 +276,7 @@ class AnimationSection extends Section {
                 offset: offset,
                 origin: this._originObject,
                 originLocation: targetLoc,
-                target: this._rotateTowards.target,
+                target: this._rotateTowards.target?.object ?? this._rotateTowards.target,
                 towardsCenter: this._rotateTowards.towardsCenter,
                 from: false,
                 to: false,

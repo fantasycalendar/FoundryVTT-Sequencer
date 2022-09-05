@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.3.2 (Both Foundry V9 and V10)
+- *Animation* - Fixed `.rotateTowards()` throwing errors
+- *Effects* - Fixed `.loopProperty()` with property `scale` would incorrectly scale effect
+
 ### Version 2.3.1
 - *Effects* - Fixed `.from()` and `.mask()` throwing errors about missing files
 
