@@ -13,6 +13,10 @@
 - *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
 - *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
 
+### Version 2.2.1
+- *Animation* - Fixed `.rotateTowards()` throwing errors
+- *Effects* - Fixed `.loopProperty()` with property `scale` would incorrectly scale effect
+- 
 ### Version 2.2.0 (last V9 update, except maybe some bug fixes)
 **Additions:**
 - *Effects* - Added `.tieToDocuments()` which allows you to tie an effect to Foundry documents - such as Active Effects or Tokens. When these are deleted, the effect is automatically ended.
