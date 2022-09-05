@@ -412,8 +412,8 @@ export default class EffectSection extends Section {
         if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
         if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
         
-        this._temporaryEffect = this._temporaryEffect || (inObject.document instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.uuid) : false);
-    
+        this._temporaryEffect = this._temporaryEffect || (inObject.document instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.document?.uuid) : false);
+        
         if (inOptions.offset) {
             const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
             this._offset = {
