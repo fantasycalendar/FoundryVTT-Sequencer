@@ -321,7 +321,7 @@ export function get_all_documents_from_scene(inSceneId){
         ? game.scenes.get(inSceneId)
         : game.scenes.get(game.user?.viewedScene);
     return [
-        ...canvas.templates.preview.children,
+        ...canvas.templates?.preview?.children ?? [],
         ...Array.from(scene.tokens),
         ...Array.from(scene.lights),
         ...Array.from(scene.sounds),

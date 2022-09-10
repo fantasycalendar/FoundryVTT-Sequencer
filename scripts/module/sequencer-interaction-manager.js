@@ -259,10 +259,13 @@ export const EffectPlayer = {
         const effect = sequence.effect()
             .file(settings.file)
             .forUsers(settings.users)
-            .belowTokens(settings.belowTokens)
             .repeats(settings.repetitions, settings.repeatDelayMin, settings.repeatDelayMax)
             .randomizeMirrorY(settings.randomMirrorY)
             //.persist(settings.persist)
+      
+        if(settings.belowTokens){
+          effect.elevation(0);
+        }
 
         const attachToObject = settings.attachTo ? canvaslib.get_closest_token(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
         if(attachToObject){

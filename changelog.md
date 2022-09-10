@@ -1,5 +1,12 @@
 ## Sequencer Changelog
 
+### Version 2.3.3
+- *Effects* - Fixed code to remove deprecation warning when both `.mask()` and `.persist()` was used
+- *Effects* - Fixed rare issue where the temporary template layer would not be initialized and would cause Sequencer to error and stop working 
+- *Effects* - Fixed Sequencer Effects Player deprecation warnings
+- *Effects* - Added warning to console for players trying to play effects when they do not have permission to do so
+  - I realize warnings is not desired in most cases, but this has been an ongoing point of support, so to preserve my own sanity, this is just how it is now.
+
 ### Version 2.3.2 (Both Foundry V9 and V10)
 - *Animation* - Fixed `.rotateTowards()` throwing errors
 - *Effects* - Fixed `.loopProperty()` with property `scale` would incorrectly scale effect

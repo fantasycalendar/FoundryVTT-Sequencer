@@ -1141,11 +1141,21 @@ export default class EffectSection extends Section {
         
     }
     
+    static debounceWarning(){
+      lib.custom_warning("Sequencer", "Effect | This user does not have permissions to play effects. This can be configured in Sequencer's module settings.")
+    }
+    
     /**
      * @OVERRIDE
      * @returns {Promise<void>}
      */
     async run() {
+        if (!lib.user_can_do("permissions-effect-create")){
+          debounce(EffectSection.debounceWarning, 1000);
+          return new Promise((resolve) => {
+            resolve();
+          });
+        }
         this._expressWarnings();
         const data = await this._sanitizeEffectData();
         if (Hooks.call("preCreateSequencerEffect", data) === false) return;

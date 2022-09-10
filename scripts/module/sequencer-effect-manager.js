@@ -45,7 +45,10 @@ export default class SequencerEffectManager {
      * @returns {CanvasEffect} A CanvasEffect object
      */
     static async play(data, push = true) {
-        if (!lib.user_can_do("permissions-effect-create")) return;
+        if (!lib.user_can_do("permissions-effect-create")){
+          lib.custom_warning("Sequencer", "EffectManager | play | Players do not have permissions to play effects. This can be configured in Sequencer's module settings.")
+          return;
+        }
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
         if (data?.persistOptions?.persistTokenPrototype){
             this._playPrototypeTokenEffects(data, push);
