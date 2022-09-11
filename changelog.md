@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.5
+- *Effects* - Fixed `.mask()` not working with tiles or measurable templates
+
 ### Version 2.3.4
 - *Animations* - Fixed `.rotateTowards()` throwing update error
 

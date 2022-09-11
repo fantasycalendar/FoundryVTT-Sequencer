@@ -210,11 +210,11 @@ export default class CanvasEffect extends PIXI.Container {
             ? canvaslib.get_object_position(this.source)
             : (this.source?.worldPosition || this.source?.center || this.source);
         
-        const rotation = this.source instanceof MeasuredTemplate && this.source?.t !== "rect"
-            ? Math.normalizeRadians(Math.toRadians(this.source?.direction))
-            : this.source?.rotation ? Math.normalizeRadians(Math.toRadians(this.source?.rotation)) : 0;
+        const rotation = this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect"
+            ? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.direction))
+            : this.sourceDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.rotation)) : 0;
         
-        const alpha = (this.source instanceof TokenDocument || this.source instanceof TileDocument) ? this.source?.alpha ?? 1.0 : 1.0;
+        const alpha = (this.source instanceof TokenDocument || this.source instanceof TileDocument) ? this.sourceDocument?.alpha ?? 1.0 : 1.0;
         
         return {
             position,
@@ -289,11 +289,11 @@ export default class CanvasEffect extends PIXI.Container {
             ? canvaslib.get_object_position(this.target, { measure: true })
             : (this.target?.worldPosition || this.target?.center || this.target);
         
-        const rotation = this.target instanceof MeasuredTemplate && this.target?.t !== "rect"
-            ? Math.normalizeRadians(Math.toRadians(this.target?.direction))
-            : this.target?.rotation ? Math.normalizeRadians(Math.toRadians(this.target?.rotation)) : 0;
+        const rotation = this.target instanceof MeasuredTemplate && this.targetDocument?.t !== "rect"
+            ? Math.normalizeRadians(Math.toRadians(this.targetDocument?.direction))
+            : this.targetDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.targetDocument?.rotation)) : 0;
         
-        const alpha = (this.target instanceof TokenDocument || this.target instanceof TileDocument) ? this.target?.alpha ?? 1.0 : 1.0;
+        const alpha = (this.target instanceof TokenDocument || this.target instanceof TileDocument) ? this.targetDocument?.alpha ?? 1.0 : 1.0;
         
         return {
             position,
@@ -471,7 +471,7 @@ export default class CanvasEffect extends PIXI.Container {
     get userCanUpdate() {
         return game.user.isGM
             || this.owner
-            || (this.data.attachTo?.active && this.source.canUserModify(game.user, "update"));
+            || (this.data.attachTo?.active && this.sourceDocument.canUserModify(game.user, "update"));
     }
     
     /**
@@ -1389,7 +1389,6 @@ export default class CanvasEffect extends PIXI.Container {
         let additionalData = {
             walledmask: getProperty(mask.placeableObject, "flags.walledtemplates.enabled")
         }
-        
         try {
             if (mask.documentType === "Token") {
                 objectSprite = mask.placeableObject.mesh;
@@ -1397,12 +1396,12 @@ export default class CanvasEffect extends PIXI.Container {
                 objectHeight = objectSprite.height / 2;
                 additionalData["img"] = mask.placeableObject.document.texture.src;
             } else if (mask.documentType === "Tile") {
-                objectSprite = mask.placeableObject.tile;
+                objectSprite = mask.placeableObject.mesh;
                 objectWidth = objectSprite.width / 2;
                 objectHeight = objectSprite.height / 2;
                 additionalData["img"] = mask.placeableObject.document.texture.src;
             } else if (mask.documentType === "Drawing") {
-                objectSprite = mask.placeableObject.drawing;
+                objectSprite = mask.placeableObject.shape;
             } else if (mask.documentType === "MeasuredTemplate") {
                 objectSprite = mask.placeableObject.template;
                 additionalData["direction"] = mask.placeableObject.direction;
@@ -1442,9 +1441,9 @@ export default class CanvasEffect extends PIXI.Container {
             const drawingType = mask.placeableObject.type;
             
             if (drawingType === CONST.DRAWING_TYPES.RECTANGLE) {
-                mask.drawRect(0, 0, objectSprite.width, objectSprite.height)
+                mask.drawRect(objectSprite.width / -2, objectSprite.height / -2, objectSprite.width, objectSprite.height)
             } else if (drawingType === CONST.DRAWING_TYPES.ELLIPSE) {
-                mask.drawEllipse(objectSprite.width / 2, objectSprite.height / 2, objectSprite.width / 2, objectSprite.height / 2)
+                mask.drawEllipse(objectSprite.width / -2, objectSprite.height / -2, objectSprite.width / 2, objectSprite.height / 2)
             } else {
                 const vertices = mask.placeableObject.points;
                 
@@ -1576,7 +1575,7 @@ export default class CanvasEffect extends PIXI.Container {
             if (this.data.attachTo?.bindVisibility) {
                 const func = () => {
                     const sourceVisible = this.source?.visible ?? true;
-                    const sourceHidden = this.source?.hidden ?? false;
+                    const sourceHidden = this.sourceDocument?.hidden ?? false;
                     const targetVisible = !attachedToTarget || (this.target?.visible ?? true);
                     this.renderable = sourceVisible || targetVisible;
                     this.spriteContainer.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
@@ -1984,7 +1983,7 @@ export default class CanvasEffect extends PIXI.Container {
     async _transformAttachedNoStretchSprite() {
         
         const applyRotation = this.data.attachTo?.followRotation
-            && (this.source?.rotation !== undefined || this.source?.direction !== undefined)
+            && (this.sourceDocument?.rotation !== undefined || this.sourceDocument?.direction !== undefined)
             && !this.data.rotateTowards
             && !this.data.stretchTo;
         
