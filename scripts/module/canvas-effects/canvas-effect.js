@@ -1972,8 +1972,8 @@ export default class CanvasEffect extends PIXI.Container {
         } else {
             
             this.sprite.scale.set(
-                baseScaleX * this.flipX * this.gridSizeDifference,
-                baseScaleY * this.flipY * this.gridSizeDifference
+                baseScaleX * this.gridSizeDifference,
+                baseScaleY * this.gridSizeDifference
             );
             
         }
