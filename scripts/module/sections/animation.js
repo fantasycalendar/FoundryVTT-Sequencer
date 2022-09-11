@@ -258,7 +258,7 @@ class AnimationSection extends Section {
 
         if (this._rotateTowards) {
 
-            let offset = (this._angle ? this._angle : 0) + this._rotateTowards.offset;
+            let offset = (this._angle ? this._angle : 0) + this._rotateTowards.rotationOffset;
 
             let targetLoc = this._moveTowards?.target || this._teleportTo?.target || this._originObject;
 
@@ -607,7 +607,7 @@ class AnimationSection extends Section {
                             let ray = new Ray(attribute.originLocation, target)
                             let angle = (ray.angle * 180 / Math.PI) - 90;
                             angle += attribute.offset;
-                            attribute.from = attribute.origin.data.rotation;
+                            attribute.from = attribute.origin.rotation;
                             attribute.to = angle;
                             if (Math.abs(attribute.from - attribute.to) > 180) {
                                 if (attribute.to < 0) {

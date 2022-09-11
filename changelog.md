@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.4
+- *Animations* - Fixed `.rotateTowards()` throwing update error
+
 ### Version 2.3.3
 - *Effects* - Fixed code to remove deprecation warning when both `.mask()` and `.persist()` was used
 - *Effects* - Fixed rare issue where the temporary template layer would not be initialized and would cause Sequencer to error and stop working 
