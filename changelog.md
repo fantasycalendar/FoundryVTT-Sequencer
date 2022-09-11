@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.6
+- *Effects* - Fixed mirror and random mirror X/Y not actually flipping the effect
+
 ### Version 2.3.5
 - *Effects* - Fixed `.mask()` not working with tiles or measurable templates
 
