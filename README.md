@@ -84,50 +84,57 @@ To start the sequence off, you simply call `play()` on the sequence.
 
 ## Teleportation Usage Example
 
-### This example uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
+### Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
 
 ![Animation showing the Sequencer](images/Animation2.gif)
 
-To get the following result:
-
-* Plays an effect on a token's location
-* Wait for 400 milliseconds
-* Play a sound
-* Wait for 600 milliseconds
-* Play another effect pointing towards 5 squares to the left of the token
-* Wait for 100 milliseconds
-* Teleport the token 5 squares to the left
-* Play another effect on the token's location
-
 ```js
-let tokenD = canvas.tokens.controlled[0];
-let sequence = new Sequence()
-    .effect()
-        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electrivity_blast_CIRCLE.webm")
-        .atLocation(tokenD)
-        .scale(0.35)
-    .wait(1000)
+let position = await warpgate.crosshairs.show({
+    size: 1,
+    tag: randomID(),
+    label: "Teleport to",
+    drawOutline: false,
+    drawIcon: false
+}, { show: async (crosshair) => {
+
+    new Sequence()
         .effect()
-        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/lightning_bolt_RECTANGLE_05.webm")
-        .atLocation(tokenD)
-        .stretchTo({
-            x: tokenD.center.x + canvas.grid.size*5,
-            y: tokenD.center.y
-        })
+            .from(token)
+            .attachTo(crosshair)
+            .persist()
+            .opacity(0.5)
+        .play();
+
+}})
+
+new Sequence()
+    .effect()
+        .file("jb2a.chain_lightning.primary.blue")
+        .atLocation(token)
+    .wait(300)
+    .effect()
+        .from(token)
+        .fadeIn(50)
+        .duration(550)
+        .fadeOut(250)
+        .filter("Blur")
+        .elevation(0)
+    .effect()
+        .file("jb2a.chain_lightning.secondary.blue")
+        .atLocation(token)
+        .stretchTo(position)
+        .elevation(0)
     .wait(100)
     .animation()
         .on(tokenD)
-        .teleportTo({
-            x: tokenD.x + canvas.grid.size*5,
-            y: tokenD.y
-        })
+        .teleportTo(position)
+        .snapToGrid()
         .waitUntilFinished()
     .effect()
-        .file("modules/animated-spell-effects-cartoon/spell-effects/cartoon/electricity/electric_ball_CIRCLE_06.webm")
-        .atLocation(tokenD)
-        .scale(0.5)
-
-sequence.play();
+        .file("jb2a.static_electricity.03.blue")
+        .atLocation(token)
+        .scaleToObject()
+    .play();
 ```
 
 ## Magic Missile
