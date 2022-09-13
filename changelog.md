@@ -1,7 +1,7 @@
 ## Sequencer Changelog
 
 ### Version 2.3.5
-- *Sequencer* - Removed Ouija Board example macros, this is now a separate module, check it out!
+- *Sequencer* - Removed Ouija Board example macros, this is now a separate module made by md-mention2reply, check it out!
     - <https://foundryvtt.com/packages/ouija-board-for-sequencer>
 - *Sequencer* - Updated module manifest to be more V10 compatible
 - *Effects* - Fixed ColorMatrix `hue` property to be able to be animated with `animateProperty()` and `.loopProperty()`
