@@ -105,15 +105,16 @@ const SequencerAnimationEngine = {
                     attribute.complete = true;
                 }
 
-                let delta = deltas.find(delta => attribute.target === delta.target && attribute.propertyName === delta.propertyName);
+                let delta = deltas.find(delta => attribute.target === delta.target && attribute.setPropertyName === delta.setPropertyName);
 
                 if (!delta) {
                     
                     deltas.push({
                         targetId: attribute.targetId,
                         target: attribute.target,
-                        propertyName: attribute.propertyName,
-                        value: 0
+                        getPropertyName: attribute.getPropertyName ?? attribute.propertyName,
+                        setPropertyName: attribute.propertyName,
+                        value: attribute.target instanceof PIXI.filters.ColorMatrixFilter ? attribute.previousValue : 0
                     })
                     
                     delta = deltas[deltas.length - 1];
@@ -128,13 +129,12 @@ const SequencerAnimationEngine = {
 
         for (let delta of deltas) {
             
-            const finalValue = lib.deep_get(delta.target, delta.propertyName) + delta.value;
+            const finalValue = lib.deep_get(delta.target, delta.getPropertyName) + delta.value;
             
             try {
-                
                 lib.deep_set(
                     delta.target,
-                    delta.propertyName,
+                    delta.setPropertyName,
                     finalValue
                 )
             } catch (err) { }
@@ -166,7 +166,7 @@ const SequencerAnimationEngine = {
             if (!this._startingValues[attribute.targetId]){
                 this._startingValues[attribute.targetId] = lib.deep_get(
                     attribute.target,
-                    attribute.propertyName
+                    attribute.getPropertyName ?? attribute.propertyName
                 );
             }
     

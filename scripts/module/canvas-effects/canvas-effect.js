@@ -2103,6 +2103,10 @@ export default class CanvasEffect extends PIXI.Container {
                 animation.from *= canvas.grid.size;
                 animation.to *= canvas.grid.size;
             }
+    
+            if(["hue"].includes(animation.propertyName)){
+                animation.getPropertyName = "values." + animation.propertyName;
+            }
             
             animationsToSend = animationsToSend.concat(this._counterAnimateRotation(animation))
             
@@ -2126,6 +2130,10 @@ export default class CanvasEffect extends PIXI.Container {
                 animation.values = animation.values.map(value => {
                     return value * canvas.grid.size;
                 });
+            }
+    
+            if(["hue"].includes(animation.propertyName)){
+                animation.getPropertyName = "values." + animation.propertyName;
             }
             
             animationsToSend = animationsToSend.concat(this._counterAnimateRotation(animation))

@@ -1,10 +1,12 @@
 ## Sequencer Changelog
 
-### Version 2.3.6
-- *Effects* - Fixed mirror and random mirror X/Y not actually flipping the effect
-
 ### Version 2.3.5
+- *Sequencer* - Removed Ouija Board example macros, this is now a separate module, check it out!
+    - <https://foundryvtt.com/packages/ouija-board-for-sequencer>
+- *Sequencer* - Updated module manifest to be more V10 compatible
+- *Effects* - Fixed ColorMatrix `hue` property to be able to be animated with `animateProperty()` and `.loopProperty()`
 - *Effects* - Fixed `.mask()` not working with tiles or measurable templates
+- *Effects* - Fixed mirror and random mirror X/Y not actually flipping the effect
 
 ### Version 2.3.4
 - *Animations* - Fixed `.rotateTowards()` throwing update error
