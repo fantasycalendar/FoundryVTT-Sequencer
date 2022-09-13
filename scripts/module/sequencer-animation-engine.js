@@ -174,13 +174,10 @@ const SequencerAnimationEngine = {
             
             if (attribute?.looping) {
                 attribute.values = attribute.values.map(value => {
-                    return value + this._startingValues[attribute.targetId] - (attribute.propertyName.includes("scale") ? 1.0 : 0);
+                    return value + attribute.previousValue - (attribute.propertyName.includes("scale") ? 1.0 : 0);
                 })
             }else{
-                attribute.from = lib.deep_get(
-                    attribute.target,
-                    attribute.propertyName
-                );
+                attribute.from = attribute.previousValue
             }
         }
     
