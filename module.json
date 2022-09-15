@@ -1,13 +1,22 @@
 {
-    "name": "sequencer",
+    "id": "sequencer",
     "title": "Sequencer",
     "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
-    "version": "2.2.!4",
+    "version": "2.3.!6",
     "library": "false",
     "manifestPlusVersion": "1.0.0",
     "minimumCoreVersion": "10",
-    "compatibleCoreVersion": "10",
-    "author": "Wasp (Wasp#2005)",
+    "compatibility": {
+        "minimum": "10",
+        "verified": "10"
+    },
+    "authors": [
+        {
+            "name": "Wasp",
+            "discord": "Wasp#2005",
+            "website": "http://fantasycomputer.works/"
+        }
+    ],
     "esmodules": [
         "scripts/module.js"
     ],
@@ -37,42 +46,24 @@
             "label": "Sequencer Sample Macros",
             "path": "./packs/sequencer-sample-macros.db",
             "module": "world",
-            "entity": "Macro",
-            "lang": [
-                "en"
-            ]
-        },
-        {
-            "name": "sequencer-sample-scenes",
-            "label": "Sequencer Sample Scenes",
-            "path": "./packs/sequencer-sample-scenes.db",
-            "module": "world",
-            "entity": "Scene",
-            "lang": [
-                "en"
-            ]
-        },
-        {
-            "name": "sequencer-oujia-board",
-            "label": "Sequencer Oujia Board",
-            "path": "./packs/sequencer-oujia-board.db",
-            "module": "world",
-            "entity": "JournalEntry",
+            "type": "Macro",
             "lang": [
                 "en"
             ]
         }
     ],
-    "dependencies": [
-        {
-            "name": "socketlib",
-            "type": "module"
-        }
-    ],
+    "relationships": {
+        "requires": [
+            {
+                "id": "socketlib",
+                "type": "module"
+            }
+        ]
+    },
     "socket": true,
     "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
     "manifest": "https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json",
-    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.2.!4/module.zip",
+    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.3.!6/module.zip",
     "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
     "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
 }
