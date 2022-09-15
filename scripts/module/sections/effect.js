@@ -1255,16 +1255,6 @@ export default class EffectSection extends Section {
     /**
      * @private
      */
-    _sanitizeObject(inObj){
-        if (inObj && typeof inObj === "object" && !canvaslib.is_object_canvas_data(inObj)) {
-            inObj = lib.get_object_identifier(inObj);
-        }
-        return inObj;
-    }
-    
-    /**
-     * @private
-     */
     _getSourceObject() {
         if (typeof this._source !== "object") return this._source;
         return lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source);
@@ -1319,7 +1309,7 @@ export default class EffectSection extends Section {
         }
         
         if (this._selfMask) {
-            this._masks.push(this._sanitizeObject(this._source));
+            this._masks.push(lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source));
         }
         
         let data = foundry.utils.duplicate({

@@ -866,12 +866,12 @@ export default class CanvasEffect extends PIXI.Container {
         
         this._removeHooks();
         
-        try {
+        try{
             this._ticker.stop();
             this._ticker.destroy();
         } catch (err) {
         }
-        
+
         this._ticker = null;
         
         Object.values(this._relatedSprites).forEach((sprite) => sprite.destroy({ children: true, texture: true }));
@@ -1031,6 +1031,33 @@ export default class CanvasEffect extends PIXI.Container {
             const { filePath, texture } = await this._file.getTexture();
             this._currentFilePath = filePath;
             this._texture = texture;
+        }
+        
+        if(this._isRangeFind && (this.data.stretchTo?.attachTo?.active || this.data.attachTo?.active)){
+    
+            const sprite = this.data.tilingTexture
+                ? new PIXI.TilingSprite(this._texture)
+                : new PIXI.Sprite(this._texture);
+            this._relatedSprites[this._currentFilePath] = sprite;
+            this.sprite.addChild(sprite);
+            
+            new Promise(async (resolve) => {
+                for (let filePath of this._file.getAllFiles()) {
+        
+                    if (filePath === this._currentFilePath) continue;
+                    
+                    let texture = await this._file._getTexture(filePath);
+                    
+                    const sprite = this.data.tilingTexture
+                        ? new PIXI.TilingSprite(texture)
+                        : new PIXI.Sprite(texture);
+                    sprite.renderable = false;
+                    this._relatedSprites[filePath] = sprite;
+                    this.sprite.addChild(sprite);
+                }
+                
+                resolve();
+            });
         }
         
         this._template = this._file.template ?? this._template;
@@ -1574,7 +1601,7 @@ export default class CanvasEffect extends PIXI.Container {
             
             if (this.data.attachTo?.bindVisibility) {
                 const func = () => {
-                    const sourceVisible = this.source?.visible ?? true;
+                    const sourceVisible = this.source.mesh.visible ?? true;
                     const sourceHidden = this.sourceDocument?.hidden ?? false;
                     const targetVisible = !attachedToTarget || (this.target?.visible ?? true);
                     this.renderable = sourceVisible || targetVisible;
@@ -1583,7 +1610,7 @@ export default class CanvasEffect extends PIXI.Container {
                 this._addHook("sightRefresh", func);
                 setTimeout(() => {
                     func();
-                }, 20);
+                }, 100);
             }
             
             if (this.data.attachTo?.bindAlpha) {
@@ -1743,9 +1770,6 @@ export default class CanvasEffect extends PIXI.Container {
             
             if (this._relatedSprites[filePath]) {
                 this._relatedSprites[filePath].renderable = true;
-                if (this.video && !canvaslib.is_video_playing(this.video)) {
-                    await this.video.play();
-                }
             } else {
                 const sprite = this.data.tilingTexture
                     ? new PIXI.TilingSprite(texture)
@@ -1757,10 +1781,11 @@ export default class CanvasEffect extends PIXI.Container {
         }
         
         try {
-            texture?.baseTexture?.resource?.source.play().then(() => {
-                texture.update();
+            this._relatedSprites[filePath].texture?.baseTexture?.resource?.source.play().then(() => {
+                this._relatedSprites[filePath].texture.update();
             });
-        } catch (err) {
+        }catch(err){
+        
         }
         
         if (this._relatedSprites[filePath]) {
@@ -1894,12 +1919,12 @@ export default class CanvasEffect extends PIXI.Container {
     }
     
     _transformStretchToAttachedSprite() {
-        
+    
         this._ticker.add(async () => {
             try {
                 await this._applyDistanceScaling();
             } catch (err) {
-                lib.debug_error(err);
+                //lib.debug_error(err);
             }
         });
         

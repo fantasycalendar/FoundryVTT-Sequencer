@@ -1,6 +1,7 @@
 ## Sequencer Changelog
 
 ### Version 2.3.6
+- *Effects* - Fixed multiple `.attachTo()` and `.strechTo()` with `attach: true` sometimes causing crashes due to overloading Foundry's tick function
 - *Effects* - Fixed ColorMatrix `hue` and `.animateProperty()` not working well together
 
 ### Version 2.3.5
