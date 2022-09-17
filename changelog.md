@@ -1,11 +1,9 @@
 ## Sequencer Changelog
 
-### Version 2.3.7
-- *Effects* - Fixed `.atLocation()` with `randomOffset: true` would cause weird effects with `.stretchTo()`
-
 ### Version 2.3.6
 - *Effects* - Fixed multiple `.attachTo()` and `.strechTo()` with `attach: true` sometimes causing crashes due to overloading Foundry's tick function
 - *Effects* - Fixed ColorMatrix `hue` and `.animateProperty()` not working well together
+- *Effects* - Fixed `.atLocation()` with `randomOffset: true` would cause weird effects with `.stretchTo()`
 
 ### Version 2.3.5
 - *Sequencer* - Removed Ouija Board example macros, this is now a separate module made by md-mention2reply, check it out!
