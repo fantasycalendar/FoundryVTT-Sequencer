@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.7
+- *Effects* - Fixed `.atLocation()` with `randomOffset: true` would cause weird effects with `.stretchTo()`
+
 ### Version 2.3.6
 - *Effects* - Fixed multiple `.attachTo()` and `.strechTo()` with `attach: true` sometimes causing crashes due to overloading Foundry's tick function
 - *Effects* - Fixed ColorMatrix `hue` and `.animateProperty()` not working well together
@@ -34,6 +37,11 @@
 - *Effects* - Re-enabled `scale.x` and `scale.y` on `.animateProperty()` and `.loopProperty()` 
 - *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
 - *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
+
+### Version 2.2.2
+- *Animation* - Fixed `.rotateTowards()` throwing errors (again)
+- *Effects* - Fixed `.atLocation()` with `randomOffset: true` would cause weird effects with `.stretchTo()`
+- *Effects* - Fixed error that would sometimes pop up during startup if the template layer has not been initialized
 
 ### Version 2.2.1
 - *Animation* - Fixed `.rotateTowards()` throwing errors

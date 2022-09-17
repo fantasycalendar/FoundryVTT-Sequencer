@@ -362,7 +362,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         if (obj && multiplier) {
             let randomOffset = this._offsetCache[key]?.randomOffset || canvaslib.get_random_offset(obj, multiplier, twister);
-            this._offsetCache[key].missedOffset = randomOffset;
+            this._offsetCache[key].randomOffset = randomOffset;
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
