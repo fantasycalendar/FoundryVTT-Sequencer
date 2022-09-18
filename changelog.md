@@ -36,6 +36,9 @@
 - *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
 - *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
 
+### Version 2.2.3
+- Re-released 2.2.2, git pulled a fast one and the changes in that version never got out
+
 ### Version 2.2.2
 - *Animation* - Fixed `.rotateTowards()` throwing errors (again)
 - *Effects* - Fixed `.atLocation()` with `randomOffset: true` would cause weird effects with `.stretchTo()`
