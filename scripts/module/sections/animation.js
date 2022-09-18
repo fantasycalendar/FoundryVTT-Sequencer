@@ -280,7 +280,7 @@ class AnimationSection extends Section {
 
         if (this._rotateTowards) {
 
-            let offset = (this._angle ? this._angle : 0) + this._rotateTowards.offset;
+            let offset = (this._angle ? this._angle : 0) + this._rotateTowards.rotationOffset;
 
             let targetLoc = this._moveTowards?.target || this._teleportTo?.target || this._originObject;
 
