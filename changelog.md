@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.7
+- *Effects* - Fixed `.rotateTowards()`'s `rotationOffset` parameter not working properly
+
 ### Version 2.3.6
 - *Effects* - Fixed multiple `.attachTo()` and `.strechTo()` with `attach: true` sometimes causing crashes due to overloading Foundry's tick function
 - *Effects* - Fixed ColorMatrix `hue` and `.animateProperty()` not working well together
@@ -36,6 +39,9 @@
 - *Effects* - Deprecated `.belowTokens()` and `.belowTiles()` in favor of `.elevation()` due to fundamental changes in Foundry's V10 update. These methods will be removed in a future update
 - *Effects* - Fully removed deprecated methods: `.addPostOverride()`, `.reachTowards()`, `.gridSize()`, `.startPoint()`, `.endPoint()`
 
+### Version 2.2.4
+- *Effects* - Fixed `.rotateTowards()`'s `rotationOffset` parameter not working properly
+- 
 ### Version 2.2.3
 - Re-released 2.2.2, git pulled a fast one and the changes in that version never got out
 
