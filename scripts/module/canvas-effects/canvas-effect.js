@@ -1559,6 +1559,9 @@ export default class CanvasEffect extends PIXI.Container {
         const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
+        let renderable = true;
+        let alpha = 1.0;
+        
         if (attachedToSource){
 
             this._addHook(this.getSourceHook("delete"), (doc) => {
@@ -1570,11 +1573,12 @@ export default class CanvasEffect extends PIXI.Container {
 
             if (this.data.attachTo?.bindVisibility) {
                 const func = () => {
-                    const sourceVisible = this.source?.visible ?? true;
-                    const sourceHidden = this.source?.data?.hidden ?? false;
-                    const targetVisible = !attachedToTarget || (this.target?.visible ?? true);
+                    const sourceVisible = this.source && (this.source?.visible ?? true);
+                    const sourceHidden = this.source  && (this.source?.data?.hidden ?? false);
+                    const targetVisible = this.target && (!attachedToTarget || (this.target?.visible ?? true));
                     this.renderable = sourceVisible || targetVisible;
-                    this.spriteContainer.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
+                    renderable = this.renderable;
+                    this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
                 };
                 this._addHook("sightRefresh", func);
                 setTimeout(() => {
@@ -1588,6 +1592,7 @@ export default class CanvasEffect extends PIXI.Container {
                     this.spriteContainer.alpha = this.getSourceData().alpha;
                 });
                 this.spriteContainer.alpha = this.getSourceData().alpha;
+                alpha = this.spriteContainer.alpha;
             }
 
         }
@@ -1610,9 +1615,9 @@ export default class CanvasEffect extends PIXI.Container {
         }
         
         setTimeout(() => {
-            this.renderable = true;
-            this.spriteContainer.alpha = 1;
-        }, 20)
+            this.renderable = renderable;
+            this.spriteContainer.alpha = alpha;
+        }, 30)
 
     }
 
