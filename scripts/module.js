@@ -79,7 +79,7 @@ function initialize_module(){
     registerLayers();
     registerHotkeys();
     
-    Sequencer.AboveUILayer = SequencerAboveUILayer.setup();
+    SequencerAboveUILayer.setup();
 
     Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
     Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));
@@ -92,7 +92,3 @@ function initialize_module(){
     Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
 
 }
-
-Hooks.once("socketlib.ready", () => {
-    registerSocket();
-})

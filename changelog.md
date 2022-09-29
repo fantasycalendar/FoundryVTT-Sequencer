@@ -1,5 +1,11 @@
 ## Sequencer Changelog
 
+### Version 2.3.8
+- *Sequencer* - Removed double declaration of socketlib hook
+- *Effects* - Fixed error if no scenes has been created yet
+- *Effects* - Fixed screenspace effects not working without setting its location
+- *Effects* - Fixed `.animateProperty()`
+
 ### Version 2.3.7
 - *Effects* - Fixed `.rotateTowards()`'s `rotationOffset` parameter not working properly
 

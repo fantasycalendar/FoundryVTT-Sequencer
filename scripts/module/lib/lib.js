@@ -320,15 +320,16 @@ export function get_all_documents_from_scene(inSceneId){
     const scene = inSceneId
         ? game.scenes.get(inSceneId)
         : game.scenes.get(game.user?.viewedScene);
+    if(!scene) return [];
     return [
         ...canvas.templates?.preview?.children ?? [],
-        ...Array.from(scene.tokens),
-        ...Array.from(scene.lights),
-        ...Array.from(scene.sounds),
-        ...Array.from(scene.templates),
-        ...Array.from(scene.tiles),
-        ...Array.from(scene.walls),
-        ...Array.from(scene.drawings),
+        ...Array.from(scene?.tokens ?? []),
+        ...Array.from(scene?.lights ?? []),
+        ...Array.from(scene?.sounds ?? []),
+        ...Array.from(scene?.templates ?? []),
+        ...Array.from(scene?.tiles ?? []),
+        ...Array.from(scene?.walls ?? []),
+        ...Array.from(scene?.drawings ?? []),
     ].deepFlatten().filter(Boolean);
 }
 

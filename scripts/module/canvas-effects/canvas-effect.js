@@ -11,6 +11,51 @@ import SequencerEffectManager from "../sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
 
+const hooksManager = {
+
+    _hooks: {},
+    _hooksRegistered: new Set(),
+
+    addHook(effectUuid, hookName, callable, callNow = false) {
+
+        if(!this._hooksRegistered.has(hookName)){
+            this._hooksRegistered.add(hookName);
+            Hooks.on(hookName, (...args) => {
+                this._hookCalled(hookName, ...args);
+            });
+        }
+
+        if(this._hooks[effectUuid] === undefined){
+            this._hooks[effectUuid] = {};
+        }
+
+        if(this._hooks[effectUuid][hookName] === undefined){
+            this._hooks[effectUuid][hookName] = [];
+        }
+
+        this._hooks[effectUuid][hookName].push(callable);
+
+        if(callNow){
+            callable();
+        }
+
+    },
+
+    _hookCalled(hookName, ...args){
+        const callbacks = Object.values(this._hooks).find(hooks => hooks[hookName])?.[hookName] ?? [];
+        for(const callback of callbacks){
+            callback(...args);
+        }
+    },
+
+    removeHooks(effectUuid){
+        if(this._hooks[effectUuid] !== undefined){
+            delete this._hooks[effectUuid];
+        }
+    }
+
+};
+
 export default class CanvasEffect extends PIXI.Container {
     
     static make(inData) {
@@ -863,8 +908,8 @@ export default class CanvasEffect extends PIXI.Container {
         this._ended = true;
         
         this.mask = null;
-        
-        this._removeHooks();
+
+        hooksManager.removeHooks(this.uuid);
         
         try{
             this._ticker.stop();
@@ -1358,7 +1403,7 @@ export default class CanvasEffect extends PIXI.Container {
             
             this._maskContainer.addChild(spriteContainer);
             
-            this._addHook("delete" + documentType, (doc) => {
+            hooksManager.addHook(this.uuid, "delete" + documentType, (doc) => {
                 if (doc !== documentObj) return
                 const mask = this._maskContainer.children.find(mask => mask.maskSprite.uuid === doc.uuid);
                 if (!mask) return;
@@ -1371,7 +1416,7 @@ export default class CanvasEffect extends PIXI.Container {
                 }
             });
             
-            this._addHook("update" + documentType, (doc) => {
+            hooksManager.addHook(this.uuid, "update" + documentType, (doc) => {
                 if (doc !== documentObj) return;
                 const mask = this._maskContainer.children.find(mask => mask.maskSprite.uuid === doc.uuid);
                 if (!mask) return;
@@ -1595,7 +1640,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         if (attachedToSource) {
             
-            this._addHook(this.getSourceHook("delete"), (doc) => {
+            hooksManager.addHook(this.uuid, this.getSourceHook("delete"), (doc) => {
                 if (doc !== this.sourceDocument) return;
                 this._source = this._sourcePosition;
                 const uuid = doc.uuid;
@@ -1611,14 +1656,14 @@ export default class CanvasEffect extends PIXI.Container {
                     this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
                     renderable = this.renderable;
                 };
-                this._addHook("sightRefresh", func);
+                hooksManager.addHook(this.uuid, "sightRefresh", func);
                 setTimeout(() => {
                     func();
                 }, 20);
             }
             
             if (this.data.attachTo?.bindAlpha) {
-                this._addHook(this.getSourceHook("update"), (doc) => {
+                hooksManager.addHook(this.uuid, this.getSourceHook("update"), (doc) => {
                     if (doc !== this.sourceDocument) return;
                     this.spriteContainer.alpha = this.getSourceData().alpha;
                 });
@@ -1628,7 +1673,7 @@ export default class CanvasEffect extends PIXI.Container {
         }
         
         if (attachedToTarget) {
-            this._addHook(this.getTargetHook("delete"), (doc) => {
+            hooksManager.addHook(this.uuid, this.getTargetHook("delete"), (doc) => {
                 if (doc !== this.target) return;
                 this._target = this._targetPosition;
                 const uuid = doc.uuid;
@@ -1638,7 +1683,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         for (let uuid of (this.data?.tiedDocuments ?? [])) {
             const tiedDocument = lib.from_uuid_fast(uuid)
-            this._addHook("delete" + tiedDocument.documentName, (doc) => {
+            hooksManager.addHook(this.uuid, "delete" + tiedDocument.documentName, (doc) => {
                 if (tiedDocument !== doc) return;
                 SequencerEffectManager.objectDeleted(uuid);
             })
@@ -1649,16 +1694,6 @@ export default class CanvasEffect extends PIXI.Container {
             this.spriteContainer.alpha = alpha;
         }, 30);
         
-    }
-    
-    _addHook(hookName, callable) {
-        const id = Hooks.on(hookName, callable.bind(this));
-        this._hooks.push([hookName, id]);
-    }
-    
-    _removeHooks() {
-        this._hooks.forEach(hookData => Hooks.off(...hookData));
-        this._hooks = [];
     }
     
     /**

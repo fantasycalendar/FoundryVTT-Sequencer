@@ -390,10 +390,10 @@ export default class SequencerEffectManager {
         if(!effects?.length) return;
         
         let documentUuid = null;
-        if(!inDocument.data._id){
+        if(!inDocument._id){
             const documentId = randomID();
             documentUuid = inDocument.uuid + documentId;
-            inDocument.data.update({
+            inDocument.updateSource({
                 _id: documentId,
             });
         }else{
@@ -415,7 +415,7 @@ export default class SequencerEffectManager {
         });
         
         options.keepId = true;
-        return inDocument.data.update({
+        return inDocument.updateSource({
             [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
         });
 

@@ -164,10 +164,16 @@ const SequencerAnimationEngine = {
         if(!attribute.started){
             
             if (!this._startingValues[attribute.targetId]){
-                this._startingValues[attribute.targetId] = lib.deep_get(
+
+                this._startingValues[attribute.targetId] = attribute.propertyName.includes("scale") || attribute.from === undefined ? lib.deep_get(
                     attribute.target,
                     attribute.getPropertyName ?? attribute.propertyName
-                );
+                ) : attribute.from;
+
+                if(!attribute.propertyName.includes("scale")) {
+                    lib.deep_set(attribute.target, attribute.propertyName, this._startingValues[attribute.targetId]);
+                }
+
             }
     
             attribute.previousValue = this._startingValues[attribute.targetId];
@@ -176,7 +182,7 @@ const SequencerAnimationEngine = {
                 attribute.values = attribute.values.map(value => {
                     return value + attribute.previousValue - (attribute.propertyName.includes("scale") ? 1.0 : 0);
                 })
-            }else{
+            } else if (attribute.from === undefined) {
                 attribute.from = attribute.previousValue
             }
         }
@@ -192,7 +198,7 @@ const SequencerAnimationEngine = {
         }
         
         attribute.delta = attribute.value - attribute.previousValue;
-    
+
         attribute.previousValue = attribute.value;
 
     },
