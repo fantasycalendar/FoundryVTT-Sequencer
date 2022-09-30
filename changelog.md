@@ -4,7 +4,8 @@
 - *Sequencer* - Removed double declaration of socketlib hook
 - *Effects* - Fixed error if no scenes has been created yet
 - *Effects* - Fixed screenspace effects not working without setting its location
-- *Effects* - Fixed `.animateProperty()`
+- *Effects* - Fixed `.animateProperty()` not working very well with `width` and `height`
+- *Effects* - Improved the way effects interacts with Foundry hooks (it is more efficient)
 
 ### Version 2.3.7
 - *Effects* - Fixed `.rotateTowards()`'s `rotationOffset` parameter not working properly

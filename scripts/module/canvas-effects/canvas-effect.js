@@ -36,7 +36,9 @@ const hooksManager = {
         this._hooks[effectUuid][hookName].push(callable);
 
         if(callNow){
-            callable();
+            setTimeout(() => {
+                callable();
+            }, 20);
         }
 
     },
@@ -239,6 +241,15 @@ export default class CanvasEffect extends PIXI.Container {
     get sourceDocument() {
         return this.source?.document ?? this.source;
     }
+
+    /**
+     * Retrieves the PIXI object for the source object
+     *
+     * @returns {*|PIXI.Sprite|TileHUD<Application.Options>}
+     */
+    get sourceMesh() {
+        return this.source?.mesh ?? this.source?.template;
+    }
     
     /**
      * The source object's current position, or its current position
@@ -317,6 +328,15 @@ export default class CanvasEffect extends PIXI.Container {
      */
     get targetDocument() {
         return this.target?.document ?? this.target;
+    }
+
+    /**
+     * Retrieves the PIXI object for the target object
+     *
+     * @returns {*|PIXI.Sprite|TileHUD<Application.Options>}
+     */
+    get targetMesh() {
+        return this.target?.mesh ?? this.target?.template;
     }
     
     /**
@@ -1648,18 +1668,14 @@ export default class CanvasEffect extends PIXI.Container {
             });
             
             if (this.data.attachTo?.bindVisibility) {
-                const func = () => {
-                    const sourceVisible = this.source && (this.source.mesh.visible ?? true);
+                hooksManager.addHook(this.uuid, "sightRefresh", () => {
+                    const sourceVisible = this.source && (this.sourceMesh.visible ?? true);
                     const sourceHidden = this.sourceDocument && (this.sourceDocument?.hidden ?? false);
-                    const targetVisible = this.target && (!attachedToTarget || (this.target?.mesh?.visible ?? true));
+                    const targetVisible = this.target && (!attachedToTarget || (this.targetMesh?.visible ?? true));
                     this.renderable = sourceVisible || targetVisible;
                     this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
                     renderable = this.renderable;
-                };
-                hooksManager.addHook(this.uuid, "sightRefresh", func);
-                setTimeout(() => {
-                    func();
-                }, 20);
+                }, true);
             }
             
             if (this.data.attachTo?.bindAlpha) {
