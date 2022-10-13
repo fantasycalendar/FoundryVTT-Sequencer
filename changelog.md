@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.10
+- *Effects* - Fixed race condition when deleting multiple attached effects in a row would leave some lingering effects
+
 ### Version 2.3.9
 - *Effects* - Fixed effects sticking around after deleting the document they were attached to
 - *Effects* - Fixed error when deleting documents relating to named effects

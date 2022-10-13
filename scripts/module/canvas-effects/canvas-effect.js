@@ -13,7 +13,7 @@ import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
 
 const hooksManager = {
 
-    _hooks: {},
+    _hooks: new Map(),
     _hooksRegistered: new Set(),
 
     addHook(effectUuid, hookName, callable, callNow = false) {
@@ -25,15 +25,13 @@ const hooksManager = {
             });
         }
 
-        if(this._hooks[effectUuid] === undefined){
-            this._hooks[effectUuid] = {};
+        const key = hookName+"-"+effectUuid;
+
+        if(!this._hooks.has(key)){
+            this._hooks.set(key, []);
         }
 
-        if(this._hooks[effectUuid][hookName] === undefined){
-            this._hooks[effectUuid][hookName] = [];
-        }
-
-        this._hooks[effectUuid][hookName].push(callable);
+        this._hooks.get(key).push(callable);
 
         if(callNow){
             setTimeout(() => {
@@ -44,16 +42,17 @@ const hooksManager = {
     },
 
     _hookCalled(hookName, ...args){
-        const callbacks = Object.values(this._hooks).find(hooks => hooks[hookName])?.[hookName] ?? [];
-        for(const callback of callbacks){
-            callback(...args);
-        }
+        Array.from(this._hooks)
+            .filter(entry => entry[0].startsWith(hookName + "-"))
+            .map(hooks => hooks[1])
+            .deepFlatten()
+            .forEach(callback => callback(...args));
     },
 
     removeHooks(effectUuid){
-        if(this._hooks[effectUuid] !== undefined){
-            delete this._hooks[effectUuid];
-        }
+        Array.from(this._hooks)
+            .filter(entry => entry[0].endsWith("-" + effectUuid))
+            .forEach(entry => this._hooks.delete(entry[0]));
     }
 
 };
@@ -1691,15 +1690,15 @@ export default class CanvasEffect extends PIXI.Container {
         if (attachedToSource) {
             
             hooksManager.addHook(this.uuid, this.getSourceHook("delete"), (doc) => {
+                const uuid = doc.uuid;
                 if (doc !== this.sourceDocument) return;
                 this._source = this._cachedSourceData.position;
-                const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
             });
             
             if (this.data.attachTo?.bindVisibility) {
                 hooksManager.addHook(this.uuid, "sightRefresh", () => {
-                    const sourceVisible = this.source && (this.sourceMesh.visible ?? true);
+                    const sourceVisible = this.source && (this.sourceMesh?.visible ?? true);
                     const sourceHidden = this.sourceDocument && (this.sourceDocument?.hidden ?? false);
                     const targetVisible = this.target && (!attachedToTarget || (this.targetMesh?.visible ?? true));
                     this.renderable = sourceVisible || targetVisible;
