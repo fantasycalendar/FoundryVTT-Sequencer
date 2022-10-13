@@ -276,6 +276,7 @@ export default class SequencerEffectManager {
         EffectsContainer.set(effect.id, effect);
         if(effect.data.name){
             effect._ticker.add(() => {
+                if(effect.isDestroyed) return;
                 PositionContainer.set(effect.data.name, {
                     start: effect.sourcePosition,
                     end: effect.targetPosition
@@ -287,14 +288,14 @@ export default class SequencerEffectManager {
             let lastSourcePosition = {};
             let lastTargetPosition = {};
             effect._ticker.add(() => {
-                if(effect.source){
+                if(effect.source && !effect.isSourceDestroyed){
                     const sourceData = effect.getSourceData();
                     if(JSON.stringify(sourceData) !== lastSourcePosition) {
                         sequencerSocket.executeForOthers(SOCKET_HANDLERS.UPDATE_POSITION, data.source, sourceData);
                         lastSourcePosition = JSON.stringify(sourceData);
                     }
                 }
-                if(effect.target){
+                if(effect.target && !effect.isTargetDestroyed){
                     const targetData = effect.getTargetData();
                     if(JSON.stringify(targetData) !== lastTargetPosition) {
                         sequencerSocket.executeForOthers(SOCKET_HANDLERS.UPDATE_POSITION, data.target, targetData);
@@ -364,7 +365,7 @@ export default class SequencerEffectManager {
      * @returns {Promise}
      */
     static objectDeleted(inUUID){
-        const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1)
+        const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1);
         return Promise.allSettled(effectsToEnd.map(effect => {
             EffectsContainer.delete(effect.id);
             if(effect.data?.source !== inUUID && inUUID === effect.data.target){

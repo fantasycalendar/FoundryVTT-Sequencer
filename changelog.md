@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.3.9
+- *Effects* - Fixed effects sticking around after deleting the document they were attached to
+- *Effects* - Fixed error when deleting documents relating to named effects
+- *Effects* - Fixed setting the position of screenspace effects would not working
+
 ### Version 2.3.8
 - *Sequencer* - Removed double declaration of socketlib hook
 - *Effects* - Fixed error if no scenes has been created yet
