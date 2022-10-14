@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: "[BUG] - TYPE BRIEF DESCRIPTION HERE"
 labels: ''
 assignees: ''
 
@@ -23,16 +23,16 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Setup:**
+ - Foundry Version: [e.g. 9.238]
+ - System Version: [e.g. DND5e 1.5.7]
+ - Sequencer Version: [e.g. 1.0.0]
+ - Browser & version [e.g. Google Chrome 98.0.4758.82]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Active modules:**
+ - Sequencer
+ - socketlib
+ - [insert more modules here]
 
 **Additional context**
 Add any other context about the problem here.
