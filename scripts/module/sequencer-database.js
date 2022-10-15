@@ -1,11 +1,12 @@
 import * as lib from './lib/lib.js';
 import LoadingBar from "./lib/loadingBar.js";
-import { SequencerFile } from "./sequencer-file.js";
+import { SequencerFile, SequencerFileRangeFind } from "./sequencer-file.js";
 
 const SequencerDatabase = {
 
     entries: {},
     flattenedEntries: [],
+    inverseFlattenedEntries: new Map(),
     privateModules: [],
     feetTest: new RegExp(/\.[0-9]+ft\.*/g),
 
@@ -23,6 +24,28 @@ const SequencerDatabase = {
         return lib.make_array_unique(this.publicFlattenedEntries.map(entry => {
             return entry.split(this.feetTest)[0];
         }));
+    },
+
+    /**
+     *  Retrieves an object of every public entry
+     *
+     * @return {object}
+     */
+    get filePathDatabasePaths(){
+        const fileDatabaseObject = {};
+        Object.entries(this.entries)
+            .map(entry => entry[1])
+            .deepFlatten()
+            .forEach(sequencerFile => {
+                if(sequencerFile instanceof SequencerFileRangeFind){
+                    Object.entries(sequencerFile.file).forEach(entry => {
+                        fileDatabaseObject[entry[1]] = sequencerFile.dbPath + "." + entry[0];
+                    })
+                }else{
+                    fileDatabaseObject[sequencerFile.file] = sequencerFile.dbPath;
+                }
+            })
+        return fileDatabaseObject;
     },
 
     /**
@@ -261,6 +284,8 @@ const SequencerDatabase = {
     _flatten(entries, inModule) {
         let flattened = lib.flatten_object(foundry.utils.duplicate({ [inModule]: entries }));
         this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened)));
+        this.inverseFlattenedEntries = Object.keys(flattened)
+            .reduce((acc, entry) => acc.set(flattened[entry], entry), this.inverseFlattenedEntries);
     },
 
     /**
@@ -285,7 +310,7 @@ const SequencerDatabase = {
         const moduleEntries = [];
         
         for(let wholeDBPath of allPaths){
-            let metadata = this.getCleanData(entries);
+            let metadata = this._getCleanData(entries);
             let dbPath = wholeDBPath.split(".");
             dbPath.shift();
             let combinedPath = "";
@@ -295,7 +320,7 @@ const SequencerDatabase = {
                 if(Array.isArray(entry) || typeof entry === "string" || entry?.file){
                     break;
                 }
-                metadata = this.getCleanData(entry, { existingData: metadata });
+                metadata = this._getCleanData(entry, { existingData: metadata });
             }
             
             if(!metadata.template) metadata.template = "default";
@@ -305,7 +330,7 @@ const SequencerDatabase = {
     
             let data = getProperty(entries, dbPath.join('.'));
             if(!Array.isArray(data) && !(typeof data === "string")){
-                data = this.getCleanData(data, { metadata: false });
+                data = this._getCleanData(data, { metadata: false });
             }
             
             moduleEntries.push(SequencerFile.make(data, wholeDBPath, metadata));
@@ -315,7 +340,7 @@ const SequencerDatabase = {
         return moduleEntries;
     },
     
-    getCleanData(data, { existingData = {}, metadata = true }={}){
+    _getCleanData(data, { existingData = {}, metadata = true }={}){
         data = Object.entries(data).filter(entry => metadata === entry[0].startsWith("_"))
         if(metadata) {
             data = data.map(entry => [entry[0].slice(1), entry[1]]);

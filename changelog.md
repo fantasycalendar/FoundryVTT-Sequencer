@@ -1,5 +1,11 @@
 ## Sequencer Changelog
 
+### Version 2.3.11
+- *Sequencer* - Added `Sequencer.Database.inverseFlattenedEntries` which is a map object with the key being the file path and the value being the database path for that file
+- *Effects* - Added `bindElevation` (default `true`) as a secondary argument to `.attachTo()` which can be used to make effects not follow the target's elevation
+- *Effects* - Made `.elevation()` be relative to the target of the effect by default, you can pass a secondary object with `absolute: true` to make it absolutely elevated on the scene
+- *Effects* - Improved internal logic when trying to play effects on clients who have disabled them - previously it had a chance to throw an error when clients with effects disabled would run sequences that included effects (as they would not know the duration of the effect)
+
 ### Version 2.3.10
 - *Effects* - Fixed race condition when deleting multiple attached effects in a row would leave some lingering effects
 

@@ -677,11 +677,10 @@ export default class CanvasEffect extends PIXI.Container {
     /**
      * Whether this effect should play at all, depending on a multitude of factors
      *
-     * @returns {*|boolean}
+     * @returns {boolean}
      */
     get shouldPlay() {
         return (
-            game.settings.get('sequencer', 'effectsEnabled') &&
             game.user.viewedScene === this.data.sceneId &&
             (
                 game.user.isGM ||
@@ -691,6 +690,10 @@ export default class CanvasEffect extends PIXI.Container {
                 this.data.creatorUserId === game.userId
             )
         );
+    }
+
+    get shouldPlayVisible() {
+        return this.shouldPlay && game.settings.get('sequencer', 'effectsEnabled');
     }
     
     /**
@@ -731,18 +734,16 @@ export default class CanvasEffect extends PIXI.Container {
      * Plays the effect, returning two promises; one that resolves once the duration has been established, and another
      * when the effect has finished playing
      *
-     * @returns {Promise}
+     * @returns {Object}
      */
-    async play() {
+    play() {
         
         const durationPromise = new Promise((resolve, reject) => {
             this._durationResolve = resolve;
-            this._durationReject = reject;
         });
         
         const finishPromise = new Promise(async (resolve, reject) => {
             this._resolve = resolve;
-            this._reject = reject;
             Hooks.call("createSequencerEffect", this);
             lib.debug(`Playing effect:`, this.data);
             this._initialize();
@@ -1287,12 +1288,8 @@ export default class CanvasEffect extends PIXI.Container {
     _createSprite() {
         
         this.renderable = false;
-    
-        this.elevation = this.data.elevation ?? Math.max(canvaslib.get_object_elevation(this.source ?? {}), canvaslib.get_object_elevation(this.target ?? {})) + 1;
-        
-        this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
-        
-        this.parent.sortChildren();
+
+        this.updateElevation();
         
         let textSprite;
         
@@ -1372,6 +1369,17 @@ export default class CanvasEffect extends PIXI.Container {
             ];
         }
         
+    }
+
+    updateElevation() {
+        const targetElevation = Math.max(canvaslib.get_object_elevation(this.source ?? {}), canvaslib.get_object_elevation(this.target ?? {})) + 1;
+        let effectElevation = this.data.elevation?.elevation ?? 0;
+        if(!this.data.elevation?.absolute){
+            effectElevation += targetElevation;
+        }
+        this.elevation = effectElevation;
+        this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
+        this.parent.sortChildren();
     }
     
     updateTransform() {
@@ -1684,7 +1692,7 @@ export default class CanvasEffect extends PIXI.Container {
         const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
         const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
         
-        let renderable = true;
+        let renderable = this.shouldPlayVisible;
         let alpha = 1.0;
         
         if (attachedToSource) {
@@ -1706,12 +1714,19 @@ export default class CanvasEffect extends PIXI.Container {
                     renderable = this.renderable;
                 }, true);
             }
-            
-            if (this.data.attachTo?.bindAlpha) {
+
+            if (this.data.attachTo?.bindAlpha || this.data.attachTo?.bindElevation) {
                 hooksManager.addHook(this.uuid, this.getSourceHook("update"), (doc) => {
                     if (doc !== this.sourceDocument) return;
-                    this.spriteContainer.alpha = this._cachedSourceData.alpha;
+                    if (this.data.attachTo?.bindAlpha) {
+                        this.spriteContainer.alpha = this._cachedSourceData.alpha;
+                    }
+                    if (this.data.attachTo?.bindElevation) {
+                        this.updateElevation();
+                    }
                 });
+            }
+            if (this.data.attachTo?.bindAlpha) {
                 alpha = this.spriteContainer.alpha;
             }
             
@@ -1723,6 +1738,10 @@ export default class CanvasEffect extends PIXI.Container {
                 this._target = this._cachedTargetData.position;
                 const uuid = doc.uuid;
                 SequencerEffectManager.objectDeleted(uuid);
+            });
+            hooksManager.addHook(this.uuid, this.getTargetHook("update"), (doc) => {
+                if (doc !== this.target) return;
+                this.updateElevation();
             });
         }
         

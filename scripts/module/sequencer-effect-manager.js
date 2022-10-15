@@ -271,7 +271,7 @@ export default class SequencerEffectManager {
     
         if (!effect.shouldPlay) return;
     
-        const playData = await effect.play();
+        const playData = effect.play();
 
         EffectsContainer.set(effect.id, effect);
         if(effect.data.name){

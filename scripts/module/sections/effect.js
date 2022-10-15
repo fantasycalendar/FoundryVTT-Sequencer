@@ -193,6 +193,7 @@ export default class EffectSection extends Section {
             edge: "on",
             bindVisibility: true,
             bindAlpha: true,
+            bindElevation: true,
             followRotation: true,
             offset: false,
             randomOffset: false,
@@ -229,6 +230,7 @@ export default class EffectSection extends Section {
         if (typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
         if (typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
         if (typeof inOptions.bindAlpha !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindAlpha must be of type boolean");
+        if (typeof inOptions.bindElevation !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindElevation must be of type boolean");
         if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "attachTo", "inOptions.randomOffset must be of type boolean or number");
         
         this._source = validatedObject;
@@ -254,6 +256,7 @@ export default class EffectSection extends Section {
             edge: inOptions.edge,
             bindVisibility: inOptions.bindVisibility,
             bindAlpha: inOptions.bindAlpha,
+            bindElevation: inOptions.bindElevation,
             followRotation: inOptions.followRotation
         };
         return this;
@@ -753,27 +756,27 @@ export default class EffectSection extends Section {
     }
     
     /**
-     * @deprecated
+     * Causes the effect to play beneath most tokens
+     *
      * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     belowTokens(inBool = true) {
-        this.sequence._showWarning(this, "belowTokens", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTokens", "inBool must be of type boolean");
         if(!inBool) return this;
-        this._elevation = 0;
-        return this;
+        return this.elevation(0, { absolute: true });
     }
     
     /**
-     * @deprecated
+     * Causes the effect to play beneath most tiles
+     *
      * @param {Boolean} inBool
      * @returns {EffectSection}
      */
     belowTiles(inBool = true) {
-        this.sequence._showWarning(this, "belowTiles", "This method has been deprecated due to fundamental changes in Foundry's V10 update, please use .elevation() instead.")
+        if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTokens", "inBool must be of type boolean");
         if(!inBool) return this;
-        this._elevation = -1;
-        return this;
+        return this.elevation(-1, { absolute: true });
     }
     
     /**
@@ -792,11 +795,23 @@ export default class EffectSection extends Section {
      * Changes the effect's elevation
      *
      * @param {Number} inElevation
+     * @param {Object} inOptions
      * @returns {EffectSection}
      */
-    elevation(inElevation) {
+    elevation(inElevation, inOptions={}) {
       if (typeof inElevation !== "number") throw this.sequence._customError(this, "elevation", "inElevation must be of type number");
-      this._elevation = inElevation;
+      if (typeof inOptions !== "object") throw this.sequence._customError(this, "elevation", `inOptions must be of type object`);
+
+      inOptions = foundry.utils.mergeObject({
+          elevation: 1,
+          absolute: false
+      }, inOptions);
+
+      if (typeof inOptions.absolute !== "boolean") throw this.sequence._customError(this, "elevation", "inOptions.absolute must be of type boolean");
+      this._elevation = {
+          elevation: inElevation,
+          absolute: inOptions.absolute
+      };
       return this;
     }
     
