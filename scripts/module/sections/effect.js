@@ -173,8 +173,8 @@ export default class EffectSection extends Section {
             source: inOptions.randomOffset,
             target: this._randomOffset?.target ?? false
         }
-        
-        this._source = inOptions.cacheLocation ? canvaslib.get_object_canvas_data(inLocation) : inLocation;
+
+        this._source = inOptions.cacheLocation && typeof inLocation !== "string" ? canvaslib.get_object_canvas_data(inLocation) : inLocation;
         return this;
     }
     

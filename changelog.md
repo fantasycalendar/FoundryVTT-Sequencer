@@ -1,5 +1,9 @@
 ## Sequencer Changelog
 
+### Version 2.3.12
+- *Effects* - Fixed `.missed()` and `.stretchTo()`'s `randomOffset` having weird interactions when `.name()` was used to play effects at target locations
+- *Effects* - Fixed `.tieToDocuments()` throwing errors and not removing effects when the tied documents were deleted 
+
 ### Version 2.3.11
 - *Sequencer* - Added `Sequencer.Database.inverseFlattenedEntries` which is a map object with the key being the file path and the value being the database path for that file
 - *Effects* - Added `bindElevation` (default `true`) as a secondary argument to `.attachTo()` which can be used to make effects not follow the target's elevation

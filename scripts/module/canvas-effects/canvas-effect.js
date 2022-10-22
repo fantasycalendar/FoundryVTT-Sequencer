@@ -205,6 +205,11 @@ export default class CanvasEffect extends PIXI.Container {
     get isTargetDestroyed() {
         return this.target && (this.target?.destroyed || this.targetDocument?._destroyed);
     }
+
+    getHook(type, uuid){
+      if (!lib.is_UUID(uuid)) return false;
+      return type + uuid.split('.')[2];
+    }
     
     /**
      * Gets the source hook name
@@ -213,8 +218,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {string|boolean}
      */
     getSourceHook(type = "") {
-        if (!lib.is_UUID(this.data.source)) return false;
-        return type + this.data.source.split('.')[2];
+        return this.getHook(type, this.data.source);
     }
     
     /**
@@ -317,8 +321,7 @@ export default class CanvasEffect extends PIXI.Container {
      * @returns {string|boolean}
      */
     getTargetHook(type = "") {
-        if (!lib.is_UUID(this.data.target)) return false;
-        return type + this.data.target.split('.')[2];
+        return this.getHook(type, this.data.target);
     }
     
     /**
@@ -423,26 +426,22 @@ export default class CanvasEffect extends PIXI.Container {
      * @private
      */
     _getOffset(offsetMapName, source = false) {
-        
+
         const key = source ? "source" : "target";
-        
-        if (!this._offsetCache[key]) {
-            this._offsetCache[key] = {};
-        }
-        
+
         const offset = {
             x: 0,
             y: 0
         }
-        
+
         let twister = this._twister;
-        
+
         let nameOffsetMap = this._nameOffsetMap?.[this.data.name];
-        
+
         if (nameOffsetMap) {
             twister = nameOffsetMap.twister;
         }
-        
+
         // If the effect is missing, and it's not the source we're offsetting OR it is the source, but we don't have a target (it's playing on the spot)
         if (this.data.missed && (!source || !this.data.target)) {
             let missedOffset = this._offsetCache[key]?.missedOffset || canvaslib.calculate_missed_position(this.source, this.target, twister);
@@ -450,17 +449,17 @@ export default class CanvasEffect extends PIXI.Container {
             offset.x -= missedOffset.x;
             offset.y -= missedOffset.y;
         }
-        
+
         const obj = source ? this.source : this.target;
         const multiplier = source ? this.data.randomOffset?.source : this.data.randomOffset?.target;
-        
+
         if (obj && multiplier) {
             let randomOffset = this._offsetCache[key]?.randomOffset || canvaslib.get_random_offset(obj, multiplier, twister);
             this._offsetCache[key].randomOffset = randomOffset;
             offset.x -= randomOffset.x;
             offset.y -= randomOffset.y;
         }
-        
+
         let extraOffset = this.data?.offset?.[key];
         if (extraOffset) {
             let newOffset = {
@@ -477,41 +476,41 @@ export default class CanvasEffect extends PIXI.Container {
             offset.x -= newOffset.x;
             offset.y -= newOffset.y;
         }
-        
+
         let offsetMap = this._nameOffsetMap?.[offsetMapName];
-        
-        if (!this._offsetCache[key][offsetMapName]) {
-            this._offsetCache[key][offsetMapName] = {};
+
+        if (!this._offsetCache[key]['nameCache'][offsetMapName]) {
+            this._offsetCache[key]['nameCache'][offsetMapName] = {};
         }
-        
+
         if (offsetMap) {
-            
+
             if (offsetMap.missed) {
-                const missedOffset = this._offsetCache[key][offsetMapName]?.missedOffset || canvaslib.calculate_missed_position(offsetMap.sourceObj, offsetMap.targetObj, offsetMap.twister);
-                this._offsetCache[key][offsetMapName].missedOffset = missedOffset;
+                const missedOffset = this._offsetCache[key]['nameCache'][offsetMapName]?.missedOffset || canvaslib.calculate_missed_position(offsetMap.sourceObj, offsetMap.targetObj, offsetMap.twister);
+                this._offsetCache[key]['nameCache'][offsetMapName].missedOffset = missedOffset;
                 offset.x -= missedOffset.x;
                 offset.y -= missedOffset.y;
             }
-            
-            const obj = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.targetObj;
-            const multiplier = source ? offsetMap.randomOffset?.sourceObj : offsetMap.randomOffset?.target;
-            
+
+            const obj = offsetMap.targetObj || offsetMap.sourceObj;
+            const multiplier = offsetMap.randomOffset?.source || offsetMap.randomOffset?.target;
+
             if (obj && multiplier) {
-                let randomOffset = this._offsetCache[key][offsetMapName]?.randomOffset || canvaslib.get_random_offset(obj, multiplier, twister);
-                this._offsetCache[key][offsetMapName].randomOffset = randomOffset;
+                let randomOffset = this._offsetCache[key]['nameCache'][offsetMapName]?.randomOffset || canvaslib.get_random_offset(obj, multiplier, offsetMap.twister);
+                this._offsetCache[key]['nameCache'][offsetMapName].randomOffset = randomOffset;
                 offset.x -= randomOffset.x;
                 offset.y -= randomOffset.y;
             }
-            
+
             if (offsetMap.offset) {
                 offset.x += offsetMap.offset.x;
                 offset.y += offsetMap.offset.y;
             }
-            
+
         }
-        
+
         return offset;
-        
+
     }
     
     /**
@@ -932,7 +931,7 @@ export default class CanvasEffect extends PIXI.Container {
         this._sourcePosition = false;
         this._target = false;
         this._targetPosition = false;
-        this._offsetCache = {};
+        this._offsetCache = { source: { nameCache: {} }, target: { nameCache: {} } };
         
         this._nameOffsetMap = Object.fromEntries(Object.entries(foundry.utils.duplicate(this.data.nameOffsetMap ?? {})).map(entry => {
             return [entry[0], this._setupOffsetMap(entry[1])];
@@ -1747,7 +1746,7 @@ export default class CanvasEffect extends PIXI.Container {
         
         for (let uuid of (this.data?.tiedDocuments ?? [])) {
             const tiedDocument = lib.from_uuid_fast(uuid)
-            hooksManager.addHook(this.uuid, "delete" + tiedDocument.documentName, (doc) => {
+            hooksManager.addHook(this.uuid, this.getHook("delete", tiedDocument.uuid), (doc) => {
                 if (tiedDocument !== doc) return;
                 SequencerEffectManager.objectDeleted(uuid);
             })
