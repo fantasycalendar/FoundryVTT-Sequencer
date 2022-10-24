@@ -368,8 +368,8 @@ export default class SequencerEffectManager {
         const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1);
         return Promise.allSettled(effectsToEnd.map(effect => {
             EffectsContainer.delete(effect.id);
-            if(effect.data?.source !== inUUID && inUUID === effect.data.target){
-                flagManager.removeFlags(effect.data.source, effect);
+            if((effect.data?.source !== inUUID && inUUID === effect.data.target) || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1){
+                flagManager.removeFlags(effect.data.source, effect.data);
             }
             debounceUpdateEffectViewer();
             return effect.endEffect();

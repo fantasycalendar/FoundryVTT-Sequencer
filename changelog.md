@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.14
+- *Effects* - ACTUALLY fixed `.tiedDocuments()` (send help)
+
 ### Version 2.3.13
 - *Effects* - Fixed deeper issue with `.tieToDocuments()` as it was not recognizing actors or items as parents in respect to UUIDs
 
