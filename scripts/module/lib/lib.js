@@ -253,7 +253,7 @@ export function clamp(num, min, max) {
  */
 export function is_UUID(inId) {
     return typeof inId === "string"
-        && inId.startsWith("Scene")
+        && (inId.startsWith("Scene") || inId.startsWith("Actor") || inId.startsWith("Item"))
         && (inId.match(/\./g) || []).length
         && !inId.endsWith(".");
 }

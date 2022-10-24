@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.13
+- *Effects* - Fixed deeper issue with `.tieToDocuments()` as it was not recognizing actors or items as parents in respect to UUIDs
+
 ### Version 2.3.12
 - *Effects* - Fixed `.missed()` and `.stretchTo()`'s `randomOffset` having weird interactions when `.name()` was used to play effects at target locations
 - *Effects* - Fixed `.tieToDocuments()` throwing errors and not removing effects when the tied documents were deleted 

@@ -18,6 +18,8 @@ const hooksManager = {
 
     addHook(effectUuid, hookName, callable, callNow = false) {
 
+        console.log("registering hook for: " + hookName)
+
         if(!this._hooksRegistered.has(hookName)){
             this._hooksRegistered.add(hookName);
             Hooks.on(hookName, (...args) => {
@@ -207,8 +209,8 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     getHook(type, uuid){
-      if (!lib.is_UUID(uuid)) return false;
-      return type + uuid.split('.')[2];
+        if (!lib.is_UUID(uuid)) return false;
+        return type + uuid.split('.')[2];
     }
     
     /**
@@ -1745,11 +1747,13 @@ export default class CanvasEffect extends PIXI.Container {
         }
         
         for (let uuid of (this.data?.tiedDocuments ?? [])) {
-            const tiedDocument = lib.from_uuid_fast(uuid)
-            hooksManager.addHook(this.uuid, this.getHook("delete", tiedDocument.uuid), (doc) => {
-                if (tiedDocument !== doc) return;
-                SequencerEffectManager.objectDeleted(uuid);
-            })
+            const tiedDocument = lib.from_uuid_fast(uuid);
+            if(tiedDocument) {
+                hooksManager.addHook(this.uuid, this.getHook("delete", tiedDocument.uuid), (doc) => {
+                    if (tiedDocument !== doc) return;
+                    SequencerEffectManager.objectDeleted(doc.uuid);
+                });
+            }
         }
         
         setTimeout(() => {
