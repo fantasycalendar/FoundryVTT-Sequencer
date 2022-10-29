@@ -298,7 +298,7 @@ const SequencerDatabase = {
      */
     _processEntries(moduleName, entries) {
         const allPaths = new Set(this.flattenedEntries
-            .filter(e => e.startsWith(moduleName))
+            .filter(e => e.split('.')[0] === moduleName)
             .map(e => e.split(this.feetTest)[0]))
         
         const allTemplates = foundry.utils.mergeObject(entries?._templates ?? {}, { "default": [100, 0, 0] });
@@ -341,7 +341,9 @@ const SequencerDatabase = {
     },
     
     _getCleanData(data, { existingData = {}, metadata = true }={}){
-        data = Object.entries(data).filter(entry => metadata === entry[0].startsWith("_"))
+        data = Object.entries(data).filter(entry => {
+            return metadata === entry[0].startsWith("_")
+        })
         if(metadata) {
             data = data.map(entry => [entry[0].slice(1), entry[1]]);
         }

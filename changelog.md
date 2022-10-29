@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.15
+- *Sequencer* - Fixed registering similar named modules in the database would cause the second to not register properly 
+
 ### Version 2.3.14
 - *Effects* - ACTUALLY fixed `.tiedDocuments()` (send help)
 
