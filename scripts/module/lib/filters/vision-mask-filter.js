@@ -1,9 +1,9 @@
 export default class VisionSamplerShader extends BaseSamplerShader {
-    /** @override */
-    static classPluginName = null;
-    
-    /** @inheritdoc */
-    static vertexShader = `
+  /** @override */
+  static classPluginName = null;
+
+  /** @inheritdoc */
+  static vertexShader = `
       precision ${PIXI.settings.PRECISION_VERTEX} float;
       attribute vec2 aVertexPosition;
       attribute vec2 aTextureCoord;
@@ -17,9 +17,9 @@ export default class VisionSamplerShader extends BaseSamplerShader {
         gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
       }
     `;
-    
-    /** @inheritdoc */
-    static fragmentShader = `
+
+  /** @inheritdoc */
+  static fragmentShader = `
       precision ${PIXI.settings.PRECISION_FRAGMENT} float;
       varying vec2 vUvs;
       varying vec2 vUvsMask;
@@ -32,21 +32,21 @@ export default class VisionSamplerShader extends BaseSamplerShader {
         gl_FragColor = texture2D(sampler, vUvs) * tintAlpha * mask;
       }
     `;
-    
-    /** @inheritdoc */
-    static defaultUniforms = {
-        tintAlpha: [1, 1, 1, 1],
-        sampler: 0,
-        maskSampler: 0,
-        screenDimensions: [1, 1],
-        enableVisionMasking: false
-    };
-    
-    /** @override */
-    _preRender(mesh) {
-        super._preRender(mesh);
-        this.uniforms.maskSampler = canvas.masks.vision.renderTexture;
-        this.uniforms.screenDimensions = canvas.screenDimensions;
-        this.uniforms.enableVisionMasking = canvas.effects.visibility.visible;
-    }
+
+  /** @inheritdoc */
+  static defaultUniforms = {
+    tintAlpha: [1, 1, 1, 1],
+    sampler: 0,
+    maskSampler: 0,
+    screenDimensions: [1, 1],
+    enableVisionMasking: false
+  };
+
+  /** @override */
+  _preRender(mesh) {
+    super._preRender(mesh);
+    this.uniforms.maskSampler = canvas.masks.vision.renderTexture;
+    this.uniforms.screenDimensions = canvas.screenDimensions;
+    this.uniforms.enableVisionMasking = canvas.effects.visibility.visible;
+  }
 }

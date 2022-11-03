@@ -11,17 +11,17 @@ import filter from "./filter.js";
 import tint from "./tint.js";
 
 const traits = {
-    animation,
-    audio,
-    files,
-    moves,
-    opacity,
-    rotation,
-    scale,
-    time,
-    users,
-    filter,
-    tint
+  animation,
+  audio,
+  files,
+  moves,
+  opacity,
+  rotation,
+  scale,
+  time,
+  users,
+  filter,
+  tint
 };
 
 export default traits;

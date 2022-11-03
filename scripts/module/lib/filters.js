@@ -5,11 +5,11 @@ import GlowFilter from "./filters/glow-filter.js";
 import ClipFilter from "./filters/clip-filter.js";
 
 const filters = {
-    "ColorMatrix": ColorMatrixFilter,
-    "Blur": BlurFilter,
-    "Noise": NoiseFilter,
-    "Glow": GlowFilter,
-    "Clip": ClipFilter,
+  "ColorMatrix": ColorMatrixFilter,
+  "Blur": BlurFilter,
+  "Noise": NoiseFilter,
+  "Glow": GlowFilter,
+  "Clip": ClipFilter,
 }
 
 export default filters;

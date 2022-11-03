@@ -5,320 +5,306 @@ import CONSTANTS from "./constants.js";
 
 const flagManager = {
 
-    flagAddBuffer: new Map(),
-    flagRemoveBuffer: new Map(),
-    _latestFlagVersion: false,
+  flagAddBuffer: new Map(), flagRemoveBuffer: new Map(), _latestFlagVersion: false,
 
-    get latestFlagVersion(){
-        if(!this._latestFlagVersion){
-            const versions = Object.keys(this.migrations);
-            versions.sort((a,b) => {
-                return isNewerVersion(a, b) ? -1 : 1;
-            })
-            this._latestFlagVersion = versions[0];
+  get latestFlagVersion() {
+    if (!this._latestFlagVersion) {
+      const versions = Object.keys(this.migrations);
+      versions.sort((a, b) => {
+        return isNewerVersion(a, b) ? -1 : 1;
+      })
+      this._latestFlagVersion = versions[0];
+    }
+    return this._latestFlagVersion;
+  },
+
+  /**
+   * Sanitizes the effect data, accounting for changes to the structure in previous versions
+   *
+   * @param inDocument
+   * @param preCreate
+   * @returns {array}
+   */
+  getFlags(inDocument, { preCreate = false } = {}) {
+
+    const effects = preCreate && inDocument?.actor?.token ? getProperty(inDocument?.actor?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [] : getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
+
+    if (!effects?.length) return [];
+
+    const changes = [];
+    for (let [effectId, effectData] of effects) {
+
+      let effectVersion = effectData?.flagVersion ?? "1.0.0";
+
+      if (effectData.flagVersion === this.latestFlagVersion) continue;
+
+      for (let [version, migration] of Object.entries(this.migrations)) {
+
+        if (!isNewerVersion(version, effectVersion)) continue;
+
+        effectData = migration(inDocument, effectData);
+
+      }
+
+      lib.debug(`Migrated effect with ID ${effectId} from version ${effectVersion} to version ${this.latestFlagVersion}`)
+
+      effectData.flagVersion = this.latestFlagVersion;
+
+      changes.push(effectData)
+    }
+
+    if (changes.length) {
+      flagManager.addFlags(inDocument.uuid, changes);
+    }
+
+    return effects;
+
+  },
+
+  migrations: {
+    "2.0.0": (inDocument, effectData) => {
+
+      effectData._id = effectData.id;
+      effectData.creationTimestamp = effectData.timestamp;
+
+      if (effectData.template) {
+        effectData.template = {
+          gridSize: effectData.template[0], startPoint: effectData.template[1], endPoint: effectData.template[2]
         }
-        return this._latestFlagVersion;
-    },
+      }
 
-    /**
-     * Sanitizes the effect data, accounting for changes to the structure in previous versions
-     *
-     * @param inDocument
-     * @param preCreate
-     * @returns {array}
-     */
-    getFlags(inDocument, { preCreate = false }={}){
-
-        const effects = preCreate && inDocument?.actor?.token
-            ? getProperty(inDocument?.actor?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []
-            : getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
-        
-        if(!effects?.length) return [];
-
-        const changes = [];
-        for(let [effectId, effectData] of effects){
-
-            let effectVersion = effectData?.flagVersion ?? "1.0.0";
-
-            if(effectData.flagVersion === this.latestFlagVersion) continue;
-
-            for(let [version, migration] of Object.entries(this.migrations)){
-
-                if(!isNewerVersion(version, effectVersion)) continue;
-
-                effectData = migration(inDocument, effectData);
-
-            }
-
-            lib.debug(`Migrated effect with ID ${effectId} from version ${effectVersion} to version ${this.latestFlagVersion}`)
-
-            effectData.flagVersion = this.latestFlagVersion;
-
-            changes.push(effectData)
+      if (effectData.attachTo) {
+        effectData.attachTo = {
+          active: true, align: "center", rotation: true, bindVisibility: true, bindAlpha: true
+        };
+        effectData.source = inDocument.uuid;
+        const objectSize = canvaslib.get_object_dimensions(inDocument, true);
+        effectData.offset = {
+          x: (effectData.position.x) - objectSize.width, y: (effectData.position.y) - objectSize.height,
         }
+      } else if (effectData.position) {
+        effectData.source = effectData.position;
+      }
 
-        if(changes.length){
-            flagManager.addFlags(inDocument.uuid, changes);
+      if (effectData.reachTowards) {
+        effectData.stretchTo = {
+          attachTo: false, onlyX: false
         }
+      }
 
-        return effects;
-        
+      if (effectData.filters) {
+        effectData.filters = Object.entries(effectData.filters)
+          .map(entry => {
+            return {
+              className: entry[0], ...entry[1]
+            }
+          })
+      }
+
+      effectData.moveSpeed = effectData.speed;
+
+      effectData.target = null;
+      effectData.forcedIndex = null;
+      effectData.flipX = false;
+      effectData.flipY = false;
+      effectData.nameOffsetMap = {};
+      effectData.sequenceId = 0;
+
+      delete effectData.id;
+      delete effectData.timestamp;
+      delete effectData.position;
+      delete effectData.reachTowards;
+      delete effectData.speed;
+      delete effectData.audioVolume;
+      delete effectData.gridSizeDifference;
+      delete effectData.template;
+
+      if (effectData.animatedProperties) {
+        delete effectData.animatedProperties.fadeInAudio;
+        delete effectData.animatedProperties.fadeOutAudio;
+      }
+
+      effectData = foundry.utils.mergeObject(effectData, effectData.animatedProperties)
+
+      delete effectData.animatedProperties;
+
+      return effectData;
+
     },
 
-    migrations: {
-        "2.0.0": (inDocument, effectData) => {
+    "2.0.6": (inDocument, effectData) => {
 
-            effectData._id = effectData.id;
-            effectData.creationTimestamp = effectData.timestamp;
+      effectData.private = null;
 
-            if(effectData.template){
-                effectData.template = {
-                    gridSize: effectData.template[0],
-                    startPoint: effectData.template[1],
-                    endPoint: effectData.template[2]
-                }
-            }
+      return effectData;
+    },
 
-            if(effectData.attachTo) {
-                effectData.attachTo = {
-                    active: true,
-                    align: "center",
-                    rotation: true,
-                    bindVisibility: true,
-                    bindAlpha: true
-                };
-                effectData.source = inDocument.uuid;
-                const objectSize = canvaslib.get_object_dimensions(inDocument, true);
-                effectData.offset = {
-                    x: (effectData.position.x) - objectSize.width,
-                    y: (effectData.position.y) - objectSize.height,
-                }
-            }else if(effectData.position){
-                effectData.source = effectData.position;
-            }
+    "2.0.8": (inDocument, effectData) => {
 
-            if(effectData.reachTowards){
-                effectData.stretchTo = {
-                    attachTo: false,
-                    onlyX: false
-                }
-            }
+      if (effectData.stretchTo) {
+        effectData.stretchTo.tiling = false;
+      }
 
-            if(effectData.filters){
-                effectData.filters = Object.entries(effectData.filters)
-                    .map(entry => {
-                        return {
-                            className: entry[0],
-                            ...entry[1]
-                        }
-                    })
-            }
+      return effectData;
+    },
 
-            effectData.moveSpeed = effectData.speed;
+    "2.0.9": (inDocument, effectData) => {
 
-            effectData.target = null;
-            effectData.forcedIndex = null;
-            effectData.flipX = false;
-            effectData.flipY = false;
-            effectData.nameOffsetMap = {};
-            effectData.sequenceId = 0;
+      effectData.tilingTexture = false;
 
-            delete effectData.id;
-            delete effectData.timestamp;
-            delete effectData.position;
-            delete effectData.reachTowards;
-            delete effectData.speed;
-            delete effectData.audioVolume;
-            delete effectData.gridSizeDifference;
-            delete effectData.template;
-
-            if(effectData.animatedProperties) {
-                delete effectData.animatedProperties.fadeInAudio;
-                delete effectData.animatedProperties.fadeOutAudio;
-            }
-
-            effectData = foundry.utils.mergeObject(effectData, effectData.animatedProperties)
-
-            delete effectData.animatedProperties;
-
-            return effectData;
-            
-        },
-
-        "2.0.6": (inDocument, effectData) => {
-
-            effectData.private = null;
-
-            return effectData;
-        },
-
-        "2.0.8": (inDocument, effectData) => {
-
-            if(effectData.stretchTo){
-                effectData.stretchTo.tiling = false;
-            }
-
-            return effectData;
-        },
-
-        "2.0.9": (inDocument, effectData) => {
-
-            effectData.tilingTexture = false;
-
-            if(effectData.stretchTo?.tiling !== undefined){
-                if(effectData.stretchTo.tiling){
-                    effectData.tilingTexture = {
-                        scale: { x: 1, y: 1 },
-                        position: { x: 0, y: 0 }
-                    }
-                }
-                delete effectData.stretchTo.tiling;
-            }
-
-            return effectData;
-        },
-
-        "2.1.0": (inDocument, effectData) => {
-
-            if(effectData.randomOffset){
-                effectData.randomOffset = {
-                    source: !effectData.target ? effectData.randomOffset : false,
-                    target: !!effectData.target ? effectData.randomOffset : false
-                };
-            }
-
-            if(effectData.nameOffsetMap){
-                Object.values(effectData.nameOffsetMap).forEach(offsetMap => {
-                    if(offsetMap.randomOffset){
-                        offsetMap.randomOffset = {
-                            source: !offsetMap.target ? offsetMap.randomOffset : false,
-                            target: !!offsetMap.target ? offsetMap.randomOffset : false
-                        };
-                    }
-                })
-            }
-
-            return effectData;
+      if (effectData.stretchTo?.tiling !== undefined) {
+        if (effectData.stretchTo.tiling) {
+          effectData.tilingTexture = {
+            scale: { x: 1, y: 1 }, position: { x: 0, y: 0 }
+          }
         }
+        delete effectData.stretchTo.tiling;
+      }
+
+      return effectData;
     },
 
-    /**
-     * Adds effects to a given document
-     *
-     * @param inObjectUUID
-     * @param inEffects
-     */
-    addFlags: (inObjectUUID, inEffects) => {
-        if (!Array.isArray(inEffects)) inEffects = [inEffects];
-        sequencerSocket.executeAsGM(SOCKET_HANDLERS.ADD_FLAGS, inObjectUUID, inEffects);
-    },
+    "2.1.0": (inDocument, effectData) => {
 
-    /**
-     * Removes effects from a given document
-     *
-     * @param inObjectUUID
-     * @param inEffects
-     * @param removeAll
-     */
-    removeFlags: (inObjectUUID, inEffects, removeAll = false) => {
-        sequencerSocket.executeAsGM(SOCKET_HANDLERS.REMOVE_FLAGS, inObjectUUID, inEffects, removeAll);
-    },
+      if (effectData.randomOffset) {
+        effectData.randomOffset = {
+          source: !effectData.target ? effectData.randomOffset : false,
+          target: !!effectData.target ? effectData.randomOffset : false
+        };
+      }
 
-    _addFlags: (inObjectUUID, inEffects) => {
+      if (effectData.nameOffsetMap) {
+        Object.values(effectData.nameOffsetMap).forEach(offsetMap => {
+          if (offsetMap.randomOffset) {
+            offsetMap.randomOffset = {
+              source: !offsetMap.target ? offsetMap.randomOffset : false,
+              target: !!offsetMap.target ? offsetMap.randomOffset : false
+            };
+          }
+        })
+      }
 
-        if (!Array.isArray(inEffects)) inEffects = [inEffects];
+      return effectData;
+    }
+  },
 
-        let flagsToSet = flagManager.flagAddBuffer.get(inObjectUUID) ?? { effects: [] };
+  /**
+   * Adds effects to a given document
+   *
+   * @param inObjectUUID
+   * @param inEffects
+   */
+  addFlags: (inObjectUUID, inEffects) => {
+    if (!Array.isArray(inEffects)) inEffects = [inEffects];
+    sequencerSocket.executeAsGM(SOCKET_HANDLERS.ADD_FLAGS, inObjectUUID, inEffects);
+  },
 
-        flagsToSet.effects.push(...inEffects);
+  /**
+   * Removes effects from a given document
+   *
+   * @param inObjectUUID
+   * @param inEffects
+   * @param removeAll
+   */
+  removeFlags: (inObjectUUID, inEffects, removeAll = false) => {
+    sequencerSocket.executeAsGM(SOCKET_HANDLERS.REMOVE_FLAGS, inObjectUUID, inEffects, removeAll);
+  },
 
-        flagManager.flagAddBuffer.set(inObjectUUID, flagsToSet);
+  _addFlags: (inObjectUUID, inEffects) => {
 
-        flagManager.updateFlags();
+    if (!Array.isArray(inEffects)) inEffects = [inEffects];
 
-    },
+    let flagsToSet = flagManager.flagAddBuffer.get(inObjectUUID) ?? { effects: [] };
 
-    _removeFlags: (inObjectUUID, inEffects, removeAll = false) => {
+    flagsToSet.effects.push(...inEffects);
 
-        if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
+    flagManager.flagAddBuffer.set(inObjectUUID, flagsToSet);
 
-        let flagsToSet = flagManager.flagRemoveBuffer.get(inObjectUUID) ?? { effects: [], removeAll: removeAll };
+    flagManager.updateFlags();
 
-        if (inEffects) flagsToSet.effects.push(...inEffects);
+  },
 
-        flagManager.flagRemoveBuffer.set(inObjectUUID, flagsToSet);
+  _removeFlags: (inObjectUUID, inEffects, removeAll = false) => {
 
-        flagManager.updateFlags();
+    if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
 
-    },
+    let flagsToSet = flagManager.flagRemoveBuffer.get(inObjectUUID) ?? { effects: [], removeAll: removeAll };
 
-    updateFlags: debounce(async () => {
+    if (inEffects) flagsToSet.effects.push(...inEffects);
 
-        let flagsToAdd = Array.from(flagManager.flagAddBuffer);
-        let flagsToRemove = Array.from(flagManager.flagRemoveBuffer);
+    flagManager.flagRemoveBuffer.set(inObjectUUID, flagsToSet);
 
-        flagManager.flagAddBuffer.clear();
-        flagManager.flagRemoveBuffer.clear();
-    
-        flagsToAdd.forEach(entry => entry[1].original = true);
-        flagsToRemove.forEach(entry => entry[1].original = true);
+    flagManager.updateFlags();
 
-        const objects = new Set([...flagsToAdd.map(effect => effect[0]), ...flagsToRemove.map(effect => effect[0])]);
-    
-        flagsToAdd = new Map(flagsToAdd);
-        flagsToRemove = new Map(flagsToRemove);
-        
-        const actorsToUpdate = new Map();
+  },
 
-        for (let objectUUID of objects) {
+  updateFlags: debounce(async () => {
 
-            let object = lib.from_uuid_fast(objectUUID);
+    let flagsToAdd = Array.from(flagManager.flagAddBuffer);
+    let flagsToRemove = Array.from(flagManager.flagRemoveBuffer);
 
-            if(!object){
-                lib.custom_warning("Sequencer", `Failed to set flags on non-existent object with UUID: ${objectUUID}`);
-                continue;
-            }
+    flagManager.flagAddBuffer.clear();
+    flagManager.flagRemoveBuffer.clear();
 
-            let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
-            let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
-    
-            const existingFlags = new Map(getProperty(object, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []);
-            
-            if (toRemove?.removeAll) {
-                toRemove.effects = Array.from(existingFlags).map(entry => entry[0]);
-            }
+    flagsToAdd.forEach(entry => entry[1].original = true);
+    flagsToRemove.forEach(entry => entry[1].original = true);
 
-            for (const effect of toAdd.effects) {
-                existingFlags.set(effect._id, effect);
-            }
+    const objects = new Set([...flagsToAdd.map(effect => effect[0]), ...flagsToRemove.map(effect => effect[0])]);
 
-            for (const effect of toRemove.effects) {
-                existingFlags.delete(effect._id);
-            }
+    flagsToAdd = new Map(flagsToAdd);
+    flagsToRemove = new Map(flagsToRemove);
 
-            const flagsToSet = Array.from(existingFlags);
+    const actorsToUpdate = new Map();
 
-            await object.update({
-                [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
-            });
-            
-            if(object instanceof TokenDocument && object.actorLink && (toAdd.original || toRemove.original)){
-                const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
-                actorsToUpdate.set(object.actor.uuid, flagsToPrototypePersist);
-            }
+    for (let objectUUID of objects) {
 
-            lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
+      let object = lib.from_uuid_fast(objectUUID);
 
-        }
-        
-        for(const [actorUuid, flags] of Array.from(actorsToUpdate)){
-            const actor = lib.from_uuid_fast(actorUuid);
-            await actor.update({
-                [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flags
-            });
-        }
+      if (!object) {
+        lib.custom_warning("Sequencer", `Failed to set flags on non-existent object with UUID: ${objectUUID}`);
+        continue;
+      }
 
-    }, 250)
+      let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
+      let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
+
+      const existingFlags = new Map(getProperty(object, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []);
+
+      if (toRemove?.removeAll) {
+        toRemove.effects = Array.from(existingFlags).map(entry => entry[0]);
+      }
+
+      for (const effect of toAdd.effects) {
+        existingFlags.set(effect._id, effect);
+      }
+
+      for (const effect of toRemove.effects) {
+        existingFlags.delete(effect._id);
+      }
+
+      const flagsToSet = Array.from(existingFlags);
+
+      await object.update({
+        [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+      });
+
+      if (object instanceof TokenDocument && object.actorLink && (toAdd.original || toRemove.original)) {
+        const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
+        actorsToUpdate.set(object.actor.uuid, flagsToPrototypePersist);
+      }
+
+      lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
+
+    }
+
+    for (const [actorUuid, flags] of Array.from(actorsToUpdate)) {
+      const actor = lib.from_uuid_fast(actorUuid);
+      await actor.update({
+        [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flags
+      });
+    }
+
+  }, 250)
 
 };
 
