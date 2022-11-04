@@ -484,8 +484,8 @@ export default class SequencerEffectManager {
               const tokenEffects = flagManager.getFlags(token)
               const applicableTokenEffects = tokenEffects.filter(effect => {
                 return effect[1]?.persistOptions?.persistTokenPrototype && (
-                       persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
-                  );
+                  persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
+                );
               });
               if (applicableTokenEffects.length) {
                 flagManager.removeFlags(token.uuid, tokenEffects.map(effect => effect[1]))
@@ -504,6 +504,12 @@ export default class SequencerEffectManager {
 
   }
 
+  static _effectContextFilter(inUUID, effectData) {
+    return effectData?.source === inUUID
+      || effectData?.target === inUUID
+      || (effectData?.tiedDocuments ?? []).indexOf(inUUID) > -1;
+  }
+
   /**
    * Handles the deletion of objects that effects are attached to
    *
@@ -517,26 +523,21 @@ export default class SequencerEffectManager {
 
     const documentEffectsToEnd = documentsToCheck.map(obj => {
       const objEffects = flagManager.getFlags(obj);
-      const effectsToEnd = objEffects.filter(([effectId, effectData]) => {
-        return effectData?.source === inUUID
-          || effectData?.target === inUUID
-          || (effectData?.tiedDocuments ?? []).indexOf(inUUID) > -1;
-      });
-      return [obj.uuid, effectsToEnd.map(effect => effect[0])];
-    }).filter(([obj, effects]) => effects.length);
+      const effectsToEnd = objEffects.filter(([effectId, effectData]) => this._effectContextFilter(inUUID, effectData));
+      return {
+        document: obj,
+        effects: effectsToEnd.map(effect => effect[0])
+      };
+    }).filter(obj => obj.effects.length);
 
-    lib.debug(`Ending ${documentEffectsToEnd.reduce((acc, obj) => acc + obj[1].length, 0)} effects`)
+    const visibleEffectsToEnd = this.effects.filter(effect => this._effectContextFilter(inUUID, effect.data));
 
-    const visibleEffectsToEnd = this.effects.filter(effect => {
-      return effect.data?.source === inUUID
-        || effect.data?.target === inUUID
-        || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1
-    });
-
-    return Promise.allSettled([this._endManyEffects(visibleEffectsToEnd), ...documentEffectsToEnd.map(([obj, effects]) => {
-      return flagManager.removeFlags(obj, effects);
-    })]);
-
+    return Promise.allSettled([
+      this._endManyEffects(visibleEffectsToEnd),
+      ...documentEffectsToEnd.map(obj => {
+        return flagManager.removeFlags(obj.document.uuid, obj.effects);
+      })
+    ]);
   }
 
   /**

@@ -27,7 +27,9 @@ const flagManager = {
    */
   getFlags(inDocument, { preCreate = false } = {}) {
 
-    const effects = preCreate && inDocument?.actor?.token ? getProperty(inDocument?.actor?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [] : getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
+    const effects = preCreate && inDocument?.actor?.token
+      ? getProperty(inDocument?.actor?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []
+      : getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
 
     if (!effects?.length) return [];
 
