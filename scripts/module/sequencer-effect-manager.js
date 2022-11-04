@@ -349,17 +349,6 @@ export default class SequencerEffectManager {
   }
 
   /**
-   * Handles the deletion of objects that effects are attached to
-   *
-   * @param inUUID
-   * @returns {Promise}
-   */
-  static objectDeleted(inUUID) {
-    const effectsToEnd = this.effects.filter(effect => effect.data?.source === inUUID || effect.data?.target === inUUID || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1);
-    return this._endManyEffects(effectsToEnd);
-  }
-
-  /**
    * Patches an object's creation data before it's created so that the effect plays on it correctly
    *
    * @param inDocument
@@ -373,18 +362,19 @@ export default class SequencerEffectManager {
 
     if (!effects?.length) return;
 
+    const updates = {};
+
     let documentUuid = null;
     if (!inDocument._id) {
       const documentId = randomID();
       documentUuid = inDocument.uuid + documentId;
-      inDocument.updateSource({
-        _id: documentId,
-      });
+      updates["_id"] = documentId;
+      options.keepId = true;
     } else {
       documentUuid = inDocument.uuid;
     }
 
-    effects.forEach(effect => {
+    updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = effects.map(effect => {
       const effectData = effect[1];
       effect[0] = randomID();
       effectData._id = effect[0];
@@ -396,12 +386,10 @@ export default class SequencerEffectManager {
         effectData.source = documentUuid;
       }
       effectData.sceneId = inDocument.parent.id;
+      return effect;
     });
 
-    options.keepId = true;
-    return inDocument.updateSource({
-      [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
-    });
+    return inDocument.updateSource(updates);
 
   }
 
@@ -495,7 +483,9 @@ export default class SequencerEffectManager {
             for (const token of tokensToUpdate) {
               const tokenEffects = flagManager.getFlags(token)
               const applicableTokenEffects = tokenEffects.filter(effect => {
-                return effect[1]?.persistOptions?.persistTokenPrototype && persistentEffectData.find(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id);
+                return effect[1]?.persistOptions?.persistTokenPrototype && (
+                       persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
+                  );
               });
               if (applicableTokenEffects.length) {
                 flagManager.removeFlags(token.uuid, tokenEffects.map(effect => effect[1]))
@@ -511,6 +501,41 @@ export default class SequencerEffectManager {
     });
 
     return Promise.allSettled(...effectsByObjectId.map(effects => effects.map(effect => this._removeEffect(effect))));
+
+  }
+
+  /**
+   * Handles the deletion of objects that effects are attached to
+   *
+   * @param inUUID
+   * @returns {Promise}
+   */
+  static objectDeleted(inUUID) {
+    const documentsToCheck = game.scenes.filter(scene => scene.id !== game.user.viewedScene)
+      .map(scene => [scene, ...lib.get_all_documents_from_scene(scene.id)])
+      .deepFlatten();
+
+    const documentEffectsToEnd = documentsToCheck.map(obj => {
+      const objEffects = flagManager.getFlags(obj);
+      const effectsToEnd = objEffects.filter(([effectId, effectData]) => {
+        return effectData?.source === inUUID
+          || effectData?.target === inUUID
+          || (effectData?.tiedDocuments ?? []).indexOf(inUUID) > -1;
+      });
+      return [obj.uuid, effectsToEnd.map(effect => effect[0])];
+    }).filter(([obj, effects]) => effects.length);
+
+    lib.debug(`Ending ${documentEffectsToEnd.reduce((acc, obj) => acc + obj[1].length)} effects`)
+
+    const visibleEffectsToEnd = this.effects.filter(effect => {
+      return effect.data?.source === inUUID
+        || effect.data?.target === inUUID
+        || (effect.data?.tiedDocuments ?? []).indexOf(inUUID) > -1
+    });
+
+    return Promise.allSettled([this._endManyEffects(visibleEffectsToEnd), ...documentEffectsToEnd.map(([obj, effects]) => {
+      return flagManager.removeFlags(obj, effects);
+    })]);
 
   }
 

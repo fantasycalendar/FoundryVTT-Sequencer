@@ -249,7 +249,10 @@ const flagManager = {
     flagsToAdd.forEach(entry => entry[1].original = true);
     flagsToRemove.forEach(entry => entry[1].original = true);
 
-    const objects = new Set([...flagsToAdd.map(effect => effect[0]), ...flagsToRemove.map(effect => effect[0])]);
+    const objects = new Set([
+      ...flagsToAdd.map(effect => effect[0]).filter(Boolean),
+      ...flagsToRemove.map(effect => effect[0]).filter(Boolean)
+    ]);
 
     flagsToAdd = new Map(flagsToAdd);
     flagsToRemove = new Map(flagsToRemove);
@@ -274,11 +277,19 @@ const flagManager = {
         toRemove.effects = Array.from(existingFlags).map(entry => entry[0]);
       }
 
-      for (const effect of toAdd.effects) {
+      for (let effect of toAdd.effects) {
+        if(typeof effect === "string"){
+          effect = existingFlags.get(effect);
+          if(!effect) continue;
+        }
         existingFlags.set(effect._id, effect);
       }
 
-      for (const effect of toRemove.effects) {
+      for (let effect of toRemove.effects) {
+        if(typeof effect === "string"){
+          effect = existingFlags.get(effect);
+          if(!effect) continue;
+        }
         existingFlags.delete(effect._id);
       }
 

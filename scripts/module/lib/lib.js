@@ -316,7 +316,7 @@ export function from_uuid_fast(uuid) {
  * @param inSceneId [inSceneId]
  * @returns {Array<Document>}
  */
-export function get_all_documents_from_scene(inSceneId) {
+export function get_all_documents_from_scene(inSceneId = false) {
   const scene = inSceneId
     ? game.scenes.get(inSceneId)
     : game.scenes.get(game.user?.viewedScene);

@@ -18,9 +18,8 @@ const hooksManager = {
 
   addHook(effectUuid, hookName, callable, callNow = false) {
 
-    console.log("registering hook for: " + hookName)
-
     if (!this._hooksRegistered.has(hookName)) {
+      lib.debug("registering hook for: " + hookName);
       this._hooksRegistered.add(hookName);
       Hooks.on(hookName, (...args) => {
         this._hookCalled(hookName, ...args);
@@ -2743,10 +2742,10 @@ class PersistentCanvasEffect extends CanvasEffect {
     this._isEnding = true;
     let fullWaitDuration = 0;
     let extraEndDuration = this.data.extraEndDuration ?? 0;
-    if (this._animationTimes.forcedEnd) {
+    if (this._animationTimes?.forcedEnd) {
       this.video.currentTime = this._animationTimes.forcedEnd;
       fullWaitDuration = (this.video.duration - (this._animationTimes?.forcedEnd ?? 0)) * 1000;
-    } else if (this._animationTimes.loopEnd) {
+    } else if (this._animationTimes?.loopEnd) {
       fullWaitDuration = (this.video.duration - this.video.currentTime) * 1000;
       this.video.loop = false;
       extraEndDuration = Math.max(extraEndDuration, fullWaitDuration);
