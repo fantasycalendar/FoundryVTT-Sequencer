@@ -1,5 +1,8 @@
 ## Sequencer Changelog
 
+### Version 2.3.17
+- *Effects* - Fixed `.tieToDocuments()` not working on some 
+
 ### Version 2.3.16
 - *Effects* - Adjusted approach when ending effects when using `.tieToDocuments()`
 

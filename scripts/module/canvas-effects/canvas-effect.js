@@ -499,7 +499,8 @@ export default class CanvasEffect extends PIXI.Container {
 
   getHook(type, uuid) {
     if (!lib.is_UUID(uuid)) return false;
-    return type + uuid.split('.')[2];
+    const parts = uuid.split('.');
+    return type + parts[parts.length-2];
   }
 
   /**
