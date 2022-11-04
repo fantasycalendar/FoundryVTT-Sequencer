@@ -525,7 +525,7 @@ export default class SequencerEffectManager {
       return [obj.uuid, effectsToEnd.map(effect => effect[0])];
     }).filter(([obj, effects]) => effects.length);
 
-    lib.debug(`Ending ${documentEffectsToEnd.reduce((acc, obj) => acc + obj[1].length)} effects`)
+    lib.debug(`Ending ${documentEffectsToEnd.reduce((acc, obj) => acc + obj[1].length, 0)} effects`)
 
     const visibleEffectsToEnd = this.effects.filter(effect => {
       return effect.data?.source === inUUID

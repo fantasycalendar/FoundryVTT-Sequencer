@@ -1,10 +1,13 @@
 ## Sequencer Changelog
 
+### Version 2.3.16
+- *Effects* - Adjusted approach when ending effects when using `.tieToDocuments()`
+
 ### Version 2.3.15
 - *Sequencer* - Fixed registering similar named modules in the database would cause the second to not register properly 
 
 ### Version 2.3.14
-- *Effects* - ACTUALLY fixed `.tiedDocuments()` (send help)
+- *Effects* - ACTUALLY fixed `.tieToDocuments()` (send help)
 
 ### Version 2.3.13
 - *Effects* - Fixed deeper issue with `.tieToDocuments()` as it was not recognizing actors or items as parents in respect to UUIDs
