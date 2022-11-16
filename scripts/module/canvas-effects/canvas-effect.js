@@ -437,7 +437,9 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   get shouldPlayVisible() {
-    return this.shouldPlay && game.settings.get('sequencer', 'effectsEnabled');
+    return this.shouldPlay
+      && game.settings.get('sequencer', 'effectsEnabled')
+      && !(isNewerVersion(game.version, "10.289") && game.settings.get("core", "photosensitiveMode"));
   }
 
   /**
@@ -1073,7 +1075,7 @@ export default class CanvasEffect extends PIXI.Container {
     } else if (this.data.screenSpace) {
       layer = canvas.sequencerEffectsUILayer;
     } else if (this.data.aboveLighting) {
-      layer = canvas.sequencerEffectsAboveLighting;
+      layer = canvas.weather;
     } else {
       layer = canvas.primary;
     }

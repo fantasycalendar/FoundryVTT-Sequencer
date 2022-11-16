@@ -1,5 +1,10 @@
 ## Sequencer Changelog
 
+### Version 2.3.18
+- *Sequencer* - Added support for Foundry's photosensitive setting, which disables all effects without impacting other functionality 
+- *Sequencer* - Fixed incompatibility with the Foundry team's ***A House Divided*** adventure, the scenes should no longer appear to have a dark overlay
+- *Sequencer* - Updated `.macro()` to work with the latest version of the ***Advanced Macros*** module
+
 ### Version 2.3.17
 - *Effects* - Fixed `.tieToDocuments()` not working for embedded documents on unlinked tokens
 

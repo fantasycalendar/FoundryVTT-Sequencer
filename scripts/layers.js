@@ -1,4 +1,4 @@
-import { AboveLightingLayer, BaseEffectsLayer, UIEffectsLayer } from "./module/canvas-effects/effects-layer.js";
+import { BaseEffectsLayer, UIEffectsLayer } from "./module/canvas-effects/effects-layer.js";
 
 export default function registerLayers() {
 
@@ -6,10 +6,6 @@ export default function registerLayers() {
     sequencerEffects: {
       layerClass: BaseEffectsLayer,
       group: "primary"
-    },
-    sequencerEffectsAboveLighting: {
-      layerClass: AboveLightingLayer,
-      group: "interface"
     },
     sequencerEffectsUILayer: {
       layerClass: UIEffectsLayer,
