@@ -48,7 +48,7 @@
 <div id="app"></div>
 <script>
   window.$docsify = {
-    loadSidebar: "/docs/_sidebar.md",
+    loadSidebar: "_sidebar.md",
     auto2top: true,
     autoHeader: true,
     mergeNavbar: true,
@@ -63,6 +63,7 @@
         '/': 'Search'
       }
     },
+    alias: { '/.*/_sidebar.md': '/_sidebar.md' },
     name: "Item Piles Wiki",
     logo: "./images/fantasycomputerworks.png"
   }
