@@ -35,6 +35,10 @@
           padding-top: 0.5rem;
           border-top: 1px solid var(--sidebar-border-color);
       }
+
+      summary:hover {
+          cursor: pointer;
+      }
   </style>
 
 </head>
@@ -44,11 +48,12 @@
 <div id="app"></div>
 <script>
   window.$docsify = {
-    loadSidebar: "sidebar.md",
-    alias: {
-      '/.*/sidebar.md': './docs/sidebar.md'
-    },
+    loadSidebar: "_sidebar.md",
     auto2top: true,
+    autoHeader: true,
+    mergeNavbar: true,
+    maxLevel: 5,
+    subMaxLevel: 2,
     search: {
       noData: {
         '/': 'No results!'

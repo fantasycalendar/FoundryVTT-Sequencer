@@ -1,0 +1,94 @@
+# API
+
+## Creating A New Sequence
+
+You can start a new Sequence by simply calling:
+```js
+new Sequence()
+```
+Any other methods you call on this will continue to work on the same sequence, like so:
+```js
+new Sequence()
+     .thenDo(function(){
+          console.log("I'm in here.")
+     })
+     .thenDo(function(){
+          console.log("But now, I'm in here!")
+     })
+```
+
+For module developers, by putting your module name in the Sequence like this:
+```js
+new Sequence("myModuleName")
+```
+Means that any errors will show up like this:
+
+![Sequencer module error example](../images/error-example.jpg)
+
+This will help you and your module's users to get to the bottom of the issue.
+
+## Core Methods
+
+### Animation
+
+`.animation()` or `.animation(inToken)` or `.animation(inTile)`
+
+Creates an animation section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the Animation section.
+
+### Effect
+
+`.effect()` or `.effect(inFile)`
+
+Creates an effect section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the Effect section.
+
+### Sound
+
+`.sound()` or `.sound(inFile)`
+
+Creates a sound section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the Sound section.
+
+### Then do
+
+```js
+.thenDo(function(){
+    //do Stuff
+})
+```
+
+Creates a section that will run a function. Remember that if you want your function to be asynchronous, and you want it to properly wait, you'll want to make the function into an `async` function:
+
+```js
+.thenDo(async function(){
+    //do Stuff
+})
+```
+
+### Macro
+
+`.macro("MacroName")` or `.macro(macroReference)`
+
+Creates a section that will run a macro based on a name or a direct reference to a macro. If the macro is not found, Sequencer will complain. Loudly.
+
+If you have [Advanced Macros](https://foundryvtt.com/packages/advanced-macros) installed, you may also pass any number of parameters to the method that will then be passed through to the macro:
+
+`.macro("New Macro", true, "fire-bolt", token.id)`
+
+### Wait
+
+`.wait(1000)` or `.wait(500, 1000)`
+
+Causes the sequence to wait after the last section for as many milliseconds as you pass to this method. If given a second number, a random wait time between the two given numbers will be generated.
+
+### Add Sequence
+
+`.addSequence(inSequence)`
+
+Adds the sections from a given Sequence to this Sequence. This is useful if you have sequences you wish to combine at runtime.
+
+### Play
+
+`.play()`
+
+Returns `Promise`
+
+Causes the Sequence to play through all of its sections. Returns a `Promise` which resolves when all sections have played.

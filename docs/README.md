@@ -1,110 +1,33 @@
-![Item Piles in a nutshell](images/intro.jpg)
+![Item Piles in a nutshell](images/Animation2.gif)
 
-## What is Item Piles?
+## What is Sequencer?
 
-Have you ever wished you could represent items in your scenes? A pile of items, something to interact with - or perhaps
-chests whose appearance changes depending on what happens to it, whether it's open, closed, full, or empty. Do you want
-an easy way to split loot between players? Do you want easy to use merchants with great UIs?
+Sequencer is a powerful module that lets you play visual effects in your scenes, attaching them to tokens or other elements, animating them, ending them easily and quickly, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
 
-Then you need **Item Piles**!
+## Effects shown on this wiki
+* [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.patreon.com/JB2A))
+* [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
+* [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
-This module features:
-
-* Dropping items on the canvas to create piles of items
-* Item piles acting as containers with the ability to switch its token image depending on its open/closed/empty state,
-  and play sounds accordingly
-* Turn characters into fully featured merchants, with complex item pricing, item quantity management, and more
-* Robust player-to-player trading features
-* Incredibly intuitive API and documentation
-
-Chest sprites used on this page is from Forgotten Adventures*
-
-**not included in this module*
-
----
 
 ## Installation
 
-It's always easiest to install modules from the in game add-on browser.
+You can install it through the Foundry module installer, or by copy-pasting this link into the module installer:
 
-To install this module manually:
+[https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json](https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json)
 
-1. Inside the Foundry "Configuration and Setup" screen, click "Add-on Modules"
-2. Click "Install Module"
-3. In the "Manifest URL" field, paste the following url:
-   `https://github.com/fantasycalendar/FoundryVTT-ItemPiles/releases/latest/download/module.json`
-4. Click 'Install' and wait for installation to complete
-5. Don't forget to enable the module in game using the "Manage Module" button
-
-## [Changelog](https://github.com/fantasycalendar/FoundryVTT-ItemPiles/blob/master/changelog.md)
-
-## Required Modules
-
-### socketlib
-
-This module uses the [socketlib](https://github.com/manuelVo/foundryvtt-socketlib/) library so that players can modify
-the contents and the look of item piles without having to have full ownership of the item piles. Without it, they could
-only drop items and create item piles using pile actors they own.
-
-### libwrapper
-
-This module uses the [libwrapper](https://github.com/ruipin/fvtt-lib-wrapper) library for wrapping core methods. It is a
-hard dependency, and it is recommended for the best experience and compatibility with other modules.
-
-## Optional Modules
-
-### Advanced Macros
-
-This module leverages the [Advanced Macros](https://github.com/League-of-Foundry-Developers/fvtt-advanced-macros) module
-so that any macros can use extra data provided by the Item Piles module. This is an optional install, but highly
-recommended.
-
-## Requesting Support for System
-
-Item Piles works in any system, but requires setup. If you wish to request native support for a system, please create a
-new [system request here](https://github.com/fantasycalendar/FoundryVTT-ItemPiles/issues/new?assignees=Haxxer&labels=enhancement&template=system-request.md&title=%5BSYSTEM%5D+-+Write+the+system%27s+name+here)
-
-Fill in _all_ of the information, and ask in the system's discord channel if you don't know what something means.
-
-Incomplete requests will be rejected.
-
-## Natively Supported Systems
-
-Item Piles is designed to work in all systems, but may require some setup for it to fully function. Please refer to the
-module settings to configure that.
-
-- [Dungeons & Dragons 5e](https://foundryvtt.com/packages/dnd5e)
-- [Pathfinder 1e](https://foundryvtt.com/packages/pf1)
-- [Dungeon Slayers 4](https://foundryvtt.com/packages/ds4)
-- [D&D 3.5e SRD](https://foundryvtt.com/packages/D35E)
-- [Savage Worlds Adventure Edition](https://foundryvtt.com/packages/swade)
-- [Tormenta20](https://foundryvtt.com/packages/tormenta20)
-- [Warhammer Fantasy Roleplay 4th Ed](https://foundryvtt.com/packages/wfrp4e)
-- [Splittermond](https://foundryvtt.com/packages/splittermond)
-- [Starfinder](https://foundryvtt.com/packages/sfrpg)
-- [Star Wars FFG](https://foundryvtt.com/packages/starwarsffg)
-- [Index Card RPG](https://foundryvtt.com/packages/icrpg)
-- [Forbidden Lands](https://foundryvtt.com/packages/forbidden-lands)
-- [Fallout 2d20](https://foundryvtt.com/packages/fallout)
-
-## Semi-supported systems
-
-- [Pathfinder 2e](https://foundryvtt.com/packages/pf2e) - Major features for Item Piles does not work in this system, such as dropping items on scenes to create item piles, and dropping items on tokens to give it to them. Merchants and existing piles still work, but it is not a However, it is not strictly needed as PF2e already has a loot actor.
-
-## Issues
-
-Any issues, bugs, or feature requests are always welcome to be reported directly to
-the [Issue Tracker](https://github.com/fantasycalendar/FoundryVTT-ItemPiles/issues), or using
-the [Bug Reporter Module](https://foundryvtt.com/packages/bug-reporter/).
-
-## License
-
-This package is under an [MIT](LICENSE) and
-the [Foundry Virtual Tabletop Limited License Agreement for module development](https://foundryvtt.com/article/license/)
+If you want to test the beta track, you can install it from this link - **NOT RECOMMENDED FOR NOVICE USERS**:
+[https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json](https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json)
 
 ## Credits
+### Feedback and amazing help
+* U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
+* Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
+* ghost (ghost#2000 on discord) for his fixes to the audio sections
+* Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects
+* Naito (Naito#1235 on discord) for his assistance with improving the Database Viewer's speed
+* League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
+* Foundry VTT Core code for heaps of inspiration
 
-- Manuel Vögele for his "isResponsibleGM" function implementation and wonderful SocketLib module
-- Otigon, Zhell, Gazkhan, and MrVauxs for their collective efforts surrounding macro evaluation and execution
-- Forgotten Adventures for their amazing chest sprites (not included in the module)
-- Caeora for their great maps and tokens (not included in this module)
+### Other Attributions
+- [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev

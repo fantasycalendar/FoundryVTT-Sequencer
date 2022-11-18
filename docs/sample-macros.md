@@ -1,60 +1,136 @@
 # Sample Macros
 
-This page contains a few different macros that you may find useful in your game.
+## Acid Splash
 
-### Show interface of Item Pile or Merchant for all active players
+Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
-Replace `ACTOR_NAME_HERE` with the actor name of the item pile or merchant you wish to show the interface for.
-
-Remove the `userIds` portion to only show the interface for yourself.
+![Acid splash hitting two tokens with random rotation and scales](images/acid_splash.gif)
 
 ```js
-game.itempiles.API.renderItemPileInterface(game.actors.getName("ACTOR_NAME_HERE"), {
-  userIds: game.users.map(user => user.id)
-});
+new Sequence()
+    .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
+        .atLocation(canvas.tokens.controlled[0])
+        .scale(0.3, 0.6)
+        .randomRotation()
+    .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
+        .atLocation(canvas.tokens.controlled[1])
+        .scale(0.3, 0.6)
+        .randomRotation()
+    .play();
 ```
 
-### Make tokens lootable
+## Lightning Teleport
 
-Select tokens, run macro. They can now be looted.
+Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e), requires the [Warp Gate](https://foundryvtt.com/packages/warpgate) module
+
+![Animation showing the Sequencer](images/Animation2.gif)
 
 ```js
-if (!canvas.tokens.controlled.length) return;
-game.itempiles.API.turnTokensIntoItemPiles(canvas.tokens.controlled)
+let position = await warpgate.crosshairs.show({
+    size: 1,
+    tag: randomID(),
+    label: "Teleport to",
+    drawOutline: false,
+    drawIcon: false
+}, { show: async (crosshair) => {
+
+    new Sequence()
+        .effect()
+            .from(token)
+            .attachTo(crosshair)
+            .persist()
+            .opacity(0.5)
+        .play();
+
+}})
+
+new Sequence()
+    .effect()
+        .file("jb2a.chain_lightning.primary.blue")
+        .atLocation(token)
+    .wait(300)
+    .effect()
+        .from(token)
+        .fadeIn(50)
+        .duration(550)
+        .fadeOut(250)
+        .filter("Blur")
+        .elevation(0)
+    .effect()
+        .file("jb2a.chain_lightning.secondary.blue")
+        .atLocation(token)
+        .stretchTo(position)
+        .elevation(0)
+    .wait(100)
+    .animation()
+        .on(token)
+        .teleportTo(position)
+        .snapToGrid()
+        .waitUntilFinished()
+    .effect()
+        .file("jb2a.static_electricity.03.blue")
+        .atLocation(token)
+        .scaleToObject()
+    .play();
 ```
 
-### Revert tokens from being lootable
+## Magic Missile
 
-Select tokens, run macro. They can not be looted anymore.
+Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
+
+![One token firing three magic missiles on another token](images/magic_missile.gif)
+```js
+new Sequence()
+    .effect()
+        .atLocation(canvas.tokens.controlled[0])
+        .stretchTo(canvas.tokens.controlled[1])
+        .file("jb2a.magic_missile")
+        .repeats(3, 200, 300)
+        .randomizeMirrorY()
+    .play();
+```
+
+## Magic Circle
+
+![A magic circle fading, rotating, and scaling in, then fading, rotating, and scaling out](images/scalerotationfade.gif)
 
 ```js
-if (!canvas.tokens.controlled.length) return;
-game.itempiles.API.revertTokensFromItemPiles(canvas.tokens.controlled)
+new Sequence()
+    .effect()
+        .file("modules/jb2a_patreon/Library/Generic/Magic_Signs/Abjuration_01_Blue_Circle_800x800.webm")
+        .atLocation(canvas.tokens.controlled[0])
+        .scaleToObject(2)
+        .belowTokens()
+        .fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+        .fadeOut(1500)
+        .rotateIn(90, 2500, {ease: "easeInOutCubic"})
+        .rotateOut(350, 1500, {ease: "easeInCubic"})
+        .scaleIn(2, 2500, {ease: "easeInOutCubic"})
+        .scaleOut(0, 1500, {ease: "easeInCubic"})
+    .play()
 ```
 
-### Populate loot via table
+*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
 
-This macro rolls on a table you choose (see `MY_TABLE_NAME_HERE`), gathers the items from rolling on the table and
-adds it to the selected tokens. Each selected token will gets its own rolls and unique items.
+## Lightning Strike
 
-Change `MY_TABLE_NAME_HERE` to be the name of the table you want to roll on. You can change the `timesToRoll` to flat
-number or a roll formula, and you can change `removeExistingActorItems` to be `true` to make this macro clear all of
-that character's items.
+Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
 
-**Note:** The macro only deletes items that could be looted. Features and other things are
-preserved.
-
-**The deletion of items is not undoable.**
+![Random lightning strikes on a token](images/lightning_strike.gif)
 
 ```js
-if (!canvas.tokens.controlled.length) return;
-for (const selected_token of canvas.tokens.controlled) {
-  await game.itempiles.API.rollItemTable("MY_TABLE_NAME_HERE", {
-    timesToRoll: "1d4+1",
-    targetActor: selected_token.actor,
-    removeExistingActorItems: false
-  });
-}
-await game.itempiles.API.turnTokensIntoItemPiles(canvas.tokens.controlled);
+new Sequence()
+    .effect()
+        .atLocation(canvas.tokens.controlled[0])
+        .file('Images/Effects/Lightning/LightningStrike_01{{letter}}_800x800.webm')
+        .setMustache({
+            // random letter between a to f
+            "letter": () => {
+                const letters = ['a', 'b', 'c', 'd', 'e', 'f']; 
+                return letters[Math.floor(Math.random() * letters.length)];
+            }
+        })
+        .scale(2)
+        .randomizeMirrorX()
+    .play();
 ```
-
