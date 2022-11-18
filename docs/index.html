@@ -48,7 +48,6 @@
 <div id="app"></div>
 <script>
   window.$docsify = {
-    loadSidebar: "_sidebar.md",
     auto2top: true,
     autoHeader: true,
     mergeNavbar: true,
@@ -63,7 +62,10 @@
         '/': 'Search'
       }
     },
-    alias: { '/.*/_sidebar.md': '/_sidebar.md' },
+    loadSidebar: "sidebar.md",
+    alias: {
+      '/.*/sidebar.md': './docs/sidebar.md'
+    },
     name: "Sequencer Wiki",
     logo: "./images/fantasycomputerworks.png"
   }
