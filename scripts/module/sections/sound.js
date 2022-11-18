@@ -44,8 +44,8 @@ class SoundSection extends Section {
   async run() {
 
     if((!this._file && this._silentlyFail)){
-      return new Promise(resolve => {
-        resolve();
+      return new Promise((reject) => {
+        reject();
       });
     }
 
@@ -59,7 +59,7 @@ class SoundSection extends Section {
     if (Hooks.call("preCreateSequencerSound", playData.data) === false) return;
 
     let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId));
-    return SequencerAudioHelper.play(playData.data, push);
+    return SequencerAudioHelper.play(playData, push);
   }
 
   /**

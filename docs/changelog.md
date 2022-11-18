@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 2.3.20
+- *Sounds* - Fixed sounds not working
+
 ### Version 2.3.19
 - *Sequencer* - Created a new wiki for Sequencer:
   - <https://fantasycomputer.works/FoundryVTT-Sequencer/> 
