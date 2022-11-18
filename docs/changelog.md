@@ -1,4 +1,4 @@
-## Sequencer Changelog
+## Changelog
 
 ### Version 2.3.19
 - *Sequencer* - Created a new wiki for Sequencer:

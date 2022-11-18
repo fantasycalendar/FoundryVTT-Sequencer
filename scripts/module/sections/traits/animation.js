@@ -33,7 +33,7 @@ export default {
     if (!is_real_number(inOptions.duration)) throw this.sequence._customError(this, "animateProperty", `inOptions.duration must be of type number`);
     if (inOptions?.delay !== undefined && !is_real_number(inOptions.delay)) throw this.sequence._customError(this, "animateProperty", `inOptions.delay must be of type number`);
     if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") throw this.sequence._customError(this, "animateProperty", `inOptions.ease must be of type string`);
-    if (inOptions.fromEnd !== undefined && typeof inOptions.fromEnd !== "boolean") throw this.sequence._customError(this, "animateProperty", `inOptions.fromEnd must be of type boolean`);
+    if (inOptions?.fromEnd !== undefined && typeof inOptions.fromEnd !== "boolean") throw this.sequence._customError(this, "animateProperty", `inOptions.fromEnd must be of type boolean`);
     if (inOptions?.gridUnits !== undefined) {
       if (typeof inOptions.gridUnits !== "boolean") {
         throw this.sequence._customError(this, "animateProperty", `inOptions.gridUnits must be of type boolean`);

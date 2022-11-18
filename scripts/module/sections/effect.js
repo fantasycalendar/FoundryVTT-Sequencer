@@ -190,7 +190,7 @@ export default class EffectSection extends Section {
   }
 
   /**
-   *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
+   *  A smart method that can take a reference to an object, or a direct on the canvas to attach an effect to,
    *  or a string reference (see .name())
    *
    * @param {Object|String} inObject
@@ -741,7 +741,7 @@ export default class EffectSection extends Section {
   }
 
   /**
-   * The sprite gets a flipped X scale. If the scale on that axis was 1, it will become become 1 or -1, effectively
+   * The sprite gets a flipped X scale. If the scale on that axis was 1, it will become 1 or -1, effectively
    * mirroring the sprite on its horizontal axis
    *
    * @param {Boolean} inBool
@@ -754,7 +754,7 @@ export default class EffectSection extends Section {
   }
 
   /**
-   * The sprite gets a flipped Y scale. If the scale on that axis was 1, it will become become 1 or -1, effectively
+   * The sprite gets a flipped Y scale. If the scale on that axis was 1, it will become 1 or -1, effectively
    * mirroring the sprite on its vertical axis
    *
    * @param {Boolean} inBool
@@ -827,7 +827,7 @@ export default class EffectSection extends Section {
   }
 
   /**
-   * Sets the zIndex of the effect, potentially displaying it on top of other effects
+   * Sets the zIndex of the effect, potentially displaying it on top of other effects the same elevation
    *
    * @param {Number} inZIndex
    * @returns {EffectSection}
@@ -839,7 +839,7 @@ export default class EffectSection extends Section {
   }
 
   /**
-   * Sets the zIndex of the effect, potentially displaying it on top of other effects
+   * This method only modifies .persist()ed effects and causes them to not immediately end, but stick around for the given duration passed to this method.
    *
    * @param {Number} inExtraDuration
    * @returns {EffectSection}
@@ -851,6 +851,7 @@ export default class EffectSection extends Section {
   }
 
   /**
+   * Rotates the sprite
    *
    * @param {Number} inAngle
    * @returns {EffectSection}

@@ -1,5 +1,3 @@
-# Sample Macros
-
 ## Acid Splash
 
 Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)

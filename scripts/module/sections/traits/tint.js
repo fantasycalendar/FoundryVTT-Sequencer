@@ -4,6 +4,12 @@ export default {
 
   _tint: null,
 
+  /**
+   * Tints the target of this section by the color given to the
+   *
+   * @param {number|string} inColor
+   * @returns this
+   */
   tint(inColor) {
 
     let hexadecimal = "";

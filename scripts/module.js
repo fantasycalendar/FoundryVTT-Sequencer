@@ -1,6 +1,7 @@
 import registerSettings from "./settings.js";
 import registerLayers from "./layers.js";
 import registerHotkeys from "./hotkeys.js";
+import registerTypes from "./typings/typings.js";
 import { registerSocket } from "./sockets.js";
 import { registerEase } from "./module/canvas-effects/ease.js";
 
@@ -70,8 +71,7 @@ function initialize_module() {
       shuffle_array: lib.shuffle_array,
       random_array_element: lib.random_array_element,
       random_object_element: lib.random_object_element,
-      make_array_unique: lib.make_array_unique,
-      from_uuid: lib.from_uuid_fast
+      make_array_unique: lib.make_array_unique
     }
   }
 
@@ -92,3 +92,5 @@ function initialize_module() {
   Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
 
 }
+
+Hooks.once('monaco-editor.ready', registerTypes)

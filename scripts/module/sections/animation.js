@@ -42,7 +42,6 @@ class AnimationSection extends Section {
   teleportTo(inTarget, options = {}) {
     options = foundry.utils.mergeObject({
       delay: 0,
-      target: { x: 0, y: 0 },
       relativeToCenter: false
     }, options);
     if (!lib.is_real_number(options.delay)) throw this.sequence._customError(this, "teleportTo", "options.delay must be of type number");

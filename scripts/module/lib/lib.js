@@ -121,7 +121,7 @@ export function random_array_element(inArray, { recurse = false, twister = false
 }
 
 /**
- *  Returns a random element in the given array
+ *  Returns a random element in the given object
  *
  * @param  {object}   inObject                  An object
  * @param  {boolean}  recurse                   Whether to recurse if the randomly chosen element is also an object

@@ -40,16 +40,6 @@
       "path": "languages/es-ES.json"
     }
   ],
-  "packs": [
-    {
-      "name": "sequencer-sample-macros",
-      "label": "Sequencer Sample Macros",
-      "path": "./packs/sequencer-sample-macros.db",
-      "module": "world",
-      "type": "Macro",
-      "lang": ["en"]
-    }
-  ],
   "relationships": {
     "requires": [
       {

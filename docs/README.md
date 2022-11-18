@@ -2,13 +2,12 @@
 
 ## What is Sequencer?
 
-Sequencer is a powerful module that lets you play visual effects in your scenes, attaching them to tokens or other elements, animating them, ending them easily and quickly, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
+Sequencer is a powerful module that lets you play visual effects in your scenes, attaching them to tokens or other elements, animating them, quickly and easily removing them, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
 
 ## Effects shown on this wiki
 * [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.patreon.com/JB2A))
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
-
 
 ## Installation
 
@@ -18,6 +17,8 @@ You can install it through the Foundry module installer, or by copy-pasting this
 
 If you want to test the beta track, you can install it from this link - **NOT RECOMMENDED FOR NOVICE USERS**:
 [https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json](https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json)
+
+## [Changelog](changelog.md)
 
 ## Credits
 ### Feedback and amazing help

@@ -39,7 +39,7 @@ export default {
   /**
    * Causes the section to be executed for only a set of users.
    *
-   * @param {string|array} inUsers
+   * @param {string|User|array<string|User>} inUsers
    * @returns this
    */
   forUsers(inUsers) {

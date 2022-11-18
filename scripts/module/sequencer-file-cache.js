@@ -5,6 +5,7 @@ const SequencerFileCache = {
   _videos: {},
   _preloadedFiles: new Set(),
   _totalCacheSize: 0,
+  _validTypes: ['video/webm', 'application/octet-stream'],
 
   async loadVideo(inSrc) {
 
@@ -16,7 +17,7 @@ const SequencerFileCache = {
           console.error(err)
         });
 
-      if (blob?.type !== "video/webm") return false;
+      if (this._validTypes.indexOf(blob?.type) === -1) return false;
 
       while ((this._totalCacheSize + blob.size) > 524288000) {
 

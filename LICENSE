@@ -47,8 +47,6 @@ be used to endorse or promote products derived from this software without specif
 prior written permission.
 
 Contributors:
-- BrotherSharp for the Japanese localization
-- Git-GoR for the Spanish localization
-- ghost91 for his sound socket implementation
-- laquasicinque for the database viewer's scroll virtualization magic
-- dev7355608 for his amazing ongoing support with everything pixi
+- ghost91 for their sound socket implementation
+- laquasicinque for the database viewer's scroll virtualization magic, and their initial typings implementation
+- dev7355608 for their amazing ongoing support with everything pixi

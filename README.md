@@ -2,7 +2,7 @@
 
 ![Latest Release Download Count](https://img.shields.io/github/downloads/fantasycalendar/FoundryVTT-Sequencer/latest/module.zip?color=2b82fc&label=DOWNLOADS&style=for-the-badge) [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fsequencer&colorB=006400&style=for-the-badge)](https://forge-vtt.com/bazaar#package=sequencer) ![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fgithub.com%2Ffantasycalendar%2FFoundryVTT-Sequencer%2Freleases%2Flatest%2Fdownload%2Fmodule.json&label=Foundry%20Version&query=$.compatibility.minimum&colorB=orange&style=for-the-badge) ![Latest Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fgithub.com%2Ffantasycalendar%2FFoundryVTT-Sequencer%2Freleases%2Flatest%2Fdownload%2Fmodule.json&label=Latest%20Release&prefix=v&query=$.version&colorB=red&style=for-the-badge)
 
-![Animation showing the Sequencer](images/Animation2.gif)
+![Animation showing the Sequencer](docs/images/Animation2.gif)
 
 ---
 
@@ -23,204 +23,27 @@ Like what we've done? Buy us a coffee!
 
 ---
 
-## What Is Sequencer?
+## What is Sequencer?
 
-Sequencer is a powerful module that allows you and other module creators to quickly and easily play visual effects in your scenes, attaching them to tokens or other objects, animating them, ending them easily and quickly, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
+Sequencer is a powerful module that lets you play visual effects in your scenes, attaching them to tokens or other elements, animating them, quickly and easily removing them, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
 
-## Effects shown in this readme
+## The new wiki can be found at [https://fantasycomputer.works/FoundryVTT-Sequencer/](https://fantasycomputer.works/FoundryVTT-Sequencer/)
+
+## Effects shown on this wiki
 * [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (Full paid version [here](https://www.patreon.com/JB2A))
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
-## Download here:
-[https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json](https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json)
+## Installation
 
+You can install it through the Foundry module installer, or by copy-pasting this link into the module installer:
+
+[https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json](https://github.com/FantasyCalendar/FoundryVTT-Sequencer/releases/latest/download/module.json)
 
 If you want to test the beta track, you can install it from this link - **NOT RECOMMENDED FOR NOVICE USERS**:
 [https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json](https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json)
 
-## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation & Guides](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
-Click the link above to go to the documentation where each feature is listed.
-
-## How to use
-First you have to define a sequence:
-
-```js
-let sequence = new Sequence()
-```
-
-Then, you can add functions and effects to it.
-
-```js
-let sequence = new Sequence()
-
-sequence.thenDo(function(){
-    do_something();
-})
-
-sequence.wait(200)
-
-sequence.thenDo(async function(){
-    do_something_else();
-})
-```
-
-The Sequencer uses a method-chaining fluent interface, meaning you can continuously call functions on the sequence object, like so:
-
-```js
-let sequence = new Sequence()
-    .thenDo(function(){
-        do_something();
-    })
-    .wait(200)
-    .thenDo(async function(){
-        do_something_else();
-    })
-```
-
-To start the sequence off, you simply call `play()` on the sequence.
-
-# Advanced examples
-
-## Teleportation Usage Example
-
-### Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
-
-![Animation showing the Sequencer](images/Animation2.gif)
-
-```js
-let position = await warpgate.crosshairs.show({
-    size: 1,
-    tag: randomID(),
-    label: "Teleport to",
-    drawOutline: false,
-    drawIcon: false
-}, { show: async (crosshair) => {
-
-    new Sequence()
-        .effect()
-            .from(token)
-            .attachTo(crosshair)
-            .persist()
-            .opacity(0.5)
-        .play();
-
-}})
-
-new Sequence()
-    .effect()
-        .file("jb2a.chain_lightning.primary.blue")
-        .atLocation(token)
-    .wait(300)
-    .effect()
-        .from(token)
-        .fadeIn(50)
-        .duration(550)
-        .fadeOut(250)
-        .filter("Blur")
-        .elevation(0)
-    .effect()
-        .file("jb2a.chain_lightning.secondary.blue")
-        .atLocation(token)
-        .stretchTo(position)
-        .elevation(0)
-    .wait(100)
-    .animation()
-        .on(token)
-        .teleportTo(position)
-        .snapToGrid()
-        .waitUntilFinished()
-    .effect()
-        .file("jb2a.static_electricity.03.blue")
-        .atLocation(token)
-        .scaleToObject()
-    .play();
-```
-
-## Magic Missile
-
-### Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
-
-![One token firing three magic missiles on another token](images/magic_missile.gif)
-```js
-new Sequence()
-    .effect()
-        .atLocation(canvas.tokens.controlled[0])
-        .stretchTo(canvas.tokens.controlled[1])
-        .file("jb2a.magic_missile")
-        .repeats(3, 200, 300)
-        .randomizeMirrorY()
-    .play();
-```
-
-## Magic Circle
-
-![A magic circle fading, rotating, and scaling in, then fading, rotating, and scaling out](images/scalerotationfade.gif)
-
-```js
-new Sequence()
-    .effect()
-        .file("modules/jb2a_patreon/Library/Generic/Magic_Signs/Abjuration_01_Blue_Circle_800x800.webm")
-        .atLocation(canvas.tokens.controlled[0])
-        .scaleToObject(2)
-        .belowTokens()
-        .fadeIn(1500, {ease: "easeOutCubic", delay: 500})
-        .fadeOut(1500)
-        .rotateIn(90, 2500, {ease: "easeInOutCubic"})
-        .rotateOut(350, 1500, {ease: "easeInCubic"})
-        .scaleIn(2, 2500, {ease: "easeInOutCubic"})
-        .scaleOut(0, 1500, {ease: "easeInCubic"})
-    .play()
-```
-
-*Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)*
-
-## Lightning Strike
-
-### Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
-
-![Random lightning strikes on a token](images/lightning_strike.gif)
-
-```js
-new Sequence()
-    .effect()
-        .atLocation(canvas.tokens.controlled[0])
-        .file('Images/Effects/Lightning/LightningStrike_01{{letter}}_800x800.webm')
-        .setMustache({
-            // random letter between a to f
-            "letter": () => {
-                const letters = ['a', 'b', 'c', 'd', 'e', 'f']; 
-                return letters[Math.floor(Math.random() * letters.length)];
-            }
-        })
-        .scale(2)
-        .randomizeMirrorX()
-    .play();
-```
-
-## Acid Splash
-
-### Uses [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
-
-![Acid splash hitting two tokens with random rotation and scales](images/acid_splash.gif)
-
-```js
-new Sequence()
-    .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
-        .atLocation(canvas.tokens.controlled[0])
-        .scale(0.3, 0.6)
-        .randomRotation()
-    .effect("modules/animated-spell-effects-cartoon/spell-effects/cartoon/water/acid_splash_CIRCLE_01.webm")
-        .atLocation(canvas.tokens.controlled[1])
-        .scale(0.3, 0.6)
-        .randomRotation()
-    .play();
-```
-
-## <img src="images/siren.gif" width="18px" height="18px" alt="Siren"> [Documentation & Guides](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki) <img src="images/siren.gif" width="18px" height="18px" alt="Siren">
-Click the link above to go to the documentation where each feature is listed.
-
-## [Changelog](./changelog.md)
+## [Changelog](docs/changelog.md)
 
 ## Credits
 ### Feedback and amazing help
@@ -231,12 +54,6 @@ Click the link above to go to the documentation where each feature is listed.
 * Naito (Naito#1235 on discord) for his assistance with improving the Database Viewer's speed
 * League of Extraordinary FoundryVTT Developers for their ongoing support and suggestions
 * Foundry VTT Core code for heaps of inspiration
-
-### Oujia Board Scene
-- Code - Copyright © 2020 md-mention2reply
-- Art - Copyright © 2020 Matheus Moreno Mota
-- Sound - https://99sounds.org/license/
-- Image - https://pixabay.com/service/license/
 
 ### Other Attributions
 - [Easing Functions Cheat Sheet](https://easings.net/) ([GitHub](https://github.com/ai/easings.net)) - Copyright © 2020 Andrey Sitnik and Ivan Solovev

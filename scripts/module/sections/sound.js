@@ -16,8 +16,7 @@ class SoundSection extends Section {
 
   /**
    * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
-   * modifications of sound's data. For example, it could be manipulated to change which file will be used based
-   * on the distance to the target.
+   * modifications of sound's data.
    *
    * @param {function} inFunc
    * @returns {SoundSection}
@@ -43,17 +42,24 @@ class SoundSection extends Section {
    * @returns {Promise}
    */
   async run() {
-    let { play, ...data } = await this._sanitizeSoundData();
 
-    if (!play) {
-      this.sequence._showWarning(this, "Play", `File not found: ${data.src}`);
+    if((!this._file && this._silentlyFail)){
+      return new Promise(resolve => {
+        resolve();
+      });
+    }
+
+    const playData = await this._sanitizeSoundData();
+
+    if (!playData?.play) {
+      this.sequence._showWarning(this, "Play", `File not found: ${playData.data.src}`);
       return new Promise((reject) => reject());
     }
 
-    if (Hooks.call("preCreateSequencerSound", data) === false) return;
+    if (Hooks.call("preCreateSequencerSound", playData.data) === false) return;
 
-    let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
-    return SequencerAudioHelper.play(data, push);
+    let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId));
+    return SequencerAudioHelper.play(playData.data, push);
   }
 
   /**

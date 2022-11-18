@@ -19,7 +19,7 @@ export default function registerSettings() {
     scope: "client",
     config: true,
     default: false,
-    onChange: debouncedReload,
+    requiresReload: true,
     type: Boolean
   });
 
@@ -29,7 +29,7 @@ export default function registerSettings() {
     scope: "client",
     config: true,
     default: false,
-    onChange: debouncedReload,
+    requiresReload: true,
     type: Boolean
   });
 
@@ -48,7 +48,7 @@ export default function registerSettings() {
     scope: "client",
     config: true,
     default: true,
-    onChange: debouncedReload,
+    requiresReload: true,
     type: Boolean
   });
 
@@ -58,7 +58,7 @@ export default function registerSettings() {
     scope: "client",
     config: true,
     default: true,
-    onChange: debouncedReload,
+    requiresReload: true,
     type: Boolean
   });
 
@@ -68,7 +68,7 @@ export default function registerSettings() {
     scope: "client",
     config: true,
     default: true,
-    onChange: debouncedReload,
+    requiresReload: true,
     type: Boolean
   });
 
@@ -101,7 +101,7 @@ export default function registerSettings() {
     default: 0,
     type: Number,
     choices: permissionLevels,
-    onChange: debouncedReload
+    requiresReload: true
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-delete", {
@@ -112,7 +112,7 @@ export default function registerSettings() {
     default: 2,
     type: Number,
     choices: permissionLevels,
-    onChange: debouncedReload
+    requiresReload: true
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sound-create", {
@@ -123,7 +123,7 @@ export default function registerSettings() {
     default: 0,
     type: Number,
     choices: permissionLevels,
-    onChange: debouncedReload
+    requiresReload: true
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-preload", {
@@ -134,7 +134,7 @@ export default function registerSettings() {
     default: 1,
     type: Number,
     choices: permissionLevels,
-    onChange: debouncedReload
+    requiresReload: true
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sidebar-tools", {
@@ -145,7 +145,7 @@ export default function registerSettings() {
     default: 0,
     type: Number,
     choices: permissionLevels,
-    onChange: debouncedReload
+    requiresReload: true
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "hyperspace-deprecation-warning", {

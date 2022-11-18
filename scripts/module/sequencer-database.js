@@ -163,6 +163,7 @@ const SequencerDatabase = {
 
     return foundEntry;
   },
+
   /**
    *  Gets all files under a database path
    *
