@@ -79,7 +79,7 @@ export function random_int_between(min, max, twister = false) {
  * @return {array}
  */
 export function shuffle_array(inArray, twister = false) {
-  let shuffled = foundry.utils.duplicate(inArray);
+  let shuffled = [...inArray];
   const randomMethod = twister?.random ?? Math.random;
   for (let i = shuffled.length - 1; i > 0; i--) {
     let j = Math.floor(randomMethod() * (i + 1));

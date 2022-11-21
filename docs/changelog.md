@@ -1,5 +1,10 @@
 ## Changelog
 
+### Version 2.3.21
+- *Sequencer* - Fixed interaction with the `Advanced Macros` module past version 1.19.2 (Thanks MrVaux!)
+- *Sequencer* - Fixed issue with `Sequencer.Helpers.shuffle_array` not handling complex arrays very well
+- *Effects* - Fixed `.from()` not taking token scale into account
+
 ### Version 2.3.20
 - *Sounds* - Fixed sounds not working
 

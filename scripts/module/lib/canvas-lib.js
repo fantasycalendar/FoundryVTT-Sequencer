@@ -136,19 +136,24 @@ export function get_object_dimensions(inObj, half = false) {
 
   inObj = inObj?.object ?? inObj?._object ?? inObj;
 
-  const width = inObj?.hitArea?.width
+  let width = inObj?.hitArea?.width
     ?? inObj?.w
     ?? inObj?.shape?.width
     ?? (inObj?.shape?.radius ? inObj?.shape?.radius * 2 : undefined)
     ?? inObj?.width
     ?? canvas.grid.size;
 
-  const height = inObj?.hitArea?.height
+  let height = inObj?.hitArea?.height
     ?? inObj?.h
     ?? inObj?.shape?.height
     ?? (inObj?.shape?.radius ? inObj?.shape?.radius * 2 : undefined)
     ?? inObj?.height
     ?? canvas.grid.size;
+
+  if(inObj instanceof Token){
+    width *= inObj?.document?.texture?.scaleX ?? 1;
+    height *= inObj?.document?.texture?.scaleY ?? 1;
+  }
 
   return {
     width: width / (half ? 2 : 1),
