@@ -107,9 +107,10 @@ export default class Sequence {
       }
 
       const version = game.modules.get("advanced-macros")?.version;
-      const newAdvancedMacros = game.modules.get("advanced-macros")?.active
-        && isNewerVersion(version.startsWith('v') ? version.slice(1) : version, "1.18.2");
-      if(newAdvancedMacros) {
+      const bugAdvancedMacros = game.modules.get("advanced-macros")?.active
+        && isNewerVersion(version.startsWith('v') ? version.slice(1) : version, "1.18.2")
+        && !isNewerVersion(version.startsWith('v') ? version.slice(1) : version, "1.19.2");
+      if(bugAdvancedMacros) {
         await macro.execute([...args]);
       }else{
         await macro.execute(...args);
