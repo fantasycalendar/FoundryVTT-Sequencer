@@ -65,7 +65,7 @@ So now we know which images to use, but not which one to switch to. Using this c
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 ```
 
 This means that if the currently selected token's image is the same as `notTransformed` (the token has not yet transformed), we assign `systems/dnd5e/tokens/humanoid/Werebear.webp` into the variable called `img`.
