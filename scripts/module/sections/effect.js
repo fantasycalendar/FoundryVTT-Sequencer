@@ -6,6 +6,8 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../flag-manager.js";
 import SequencerFileCache from "../sequencer-file-cache.js";
 import { SequencerFileRangeFind } from "../sequencer-file.js";
+import { is_real_number } from "../lib/lib.js";
+import CONSTANTS from "../constants.js";
 
 export default class EffectSection extends Section {
 
@@ -61,6 +63,7 @@ export default class EffectSection extends Section {
     this._aboveLighting = null;
     this._spriteScaleMin = 1.0;
     this._spriteScaleMax = null;
+    this._shapes = [];
     this._xray = null;
   }
 
@@ -246,7 +249,12 @@ export default class EffectSection extends Section {
 
     this._source = validatedObject;
 
-    this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document ? !lib.is_UUID(validatedObject?.uuid) : false);
+    this._temporaryEffect = this._temporaryEffect ||
+      (
+        validatedObject instanceof foundry.abstract.Document || validatedObject instanceof MeasuredTemplate
+        ? !lib.is_UUID(validatedObject?.uuid)
+        : false
+      );
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
@@ -436,6 +444,99 @@ export default class EffectSection extends Section {
     this._text = foundry.utils.mergeObject({
       text: inText
     }, inOptions);
+    return this;
+  }
+
+  shape(inType, inOptions = {}){
+    if (typeof inType !== "string") throw this.sequence._customError(this, "shape", "type must be of type string");
+
+    if(!Object.values(CONSTANTS.SHAPES).includes(inType)){
+      throw this.sequence._customError(this, "shape", "type must be one of: " + Object.values(CONSTANTS.SHAPES).join(", "));
+    }
+
+    if(inType === CONSTANTS.SHAPES.POLY){
+      if (!Array.isArray(inOptions.points)){
+        throw this.sequence._customError(this, "shape", "if creating polygon, inOptions.points must be of type array");
+      }
+      inOptions.points = inOptions.points.map(point => {
+        if(Array.isArray(point)){
+          if(!is_real_number(point[0]) || !is_real_number(point[1])){
+            throw this.sequence._customError(this, "shape", "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties");
+          }
+          return point;
+        }
+        if(typeof point === "object"){
+          if(!is_real_number(point?.x) || !is_real_number(point?.y)) {
+            throw this.sequence._customError(this, "shape", "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties");
+          }
+          return [point.x, point.y];
+        }
+      });
+    }else if(inType === CONSTANTS.SHAPES.CIRC){
+      if (typeof inOptions.radius !== "number"){
+        throw this.sequence._customError(this, "shape", "if creating circle, inOptions.radius must be of type number");
+      }
+    }else if(inType === CONSTANTS.SHAPES.RECT || inType === CONSTANTS.SHAPES.RREC || inType === CONSTANTS.SHAPES.ELIP){
+      if(inOptions.width ^ inOptions.height){
+        inOptions.width = inOptions.width ?? inOptions.height;
+        inOptions.height = inOptions.height ?? inOptions.width;
+      }
+      if (typeof inOptions.width !== "number"){
+        throw this.sequence._customError(this, "shape", `if creating rectangle, rounded rectangle, or an ellipse, inOptions.width must be of type number`);
+      }
+      if (typeof inOptions.height !== "number"){
+        throw this.sequence._customError(this, "shape", "if creating rectangle, rounded rectangle, or an ellipse, inOptions.height must be of type number");
+      }
+      if(inType === CONSTANTS.SHAPES.RREC && typeof inOptions.radius !== "number"){
+        throw this.sequence._customError(this, "shape", "if creating rounded border rectangle, inOptions.radius must be of type number");
+      }
+    }
+
+    if (inOptions.gridUnits !== undefined && typeof inOptions.gridUnits !== "boolean"){
+      throw this.sequence._customError(this, "shape", "inOptions.gridUnits must be of type boolean");
+    }
+
+    if (inOptions.name && typeof inOptions.name !== "string"){
+      throw this.sequence._customError(this, "shape", "inOptions.name must be of type string");
+    }
+
+    if (inOptions.fillColor && !is_real_number(inOptions.fillColor) && typeof inOptions.fillColor !== "string"){
+      throw this.sequence._customError(this, "shape", "inOptions.fillColor must be of type string (hexadecimal) or number (decimal)");
+    }else{
+      inOptions.fillColor = lib.parseColor(inOptions.fillColor).decimal;
+    }
+
+    if (inOptions.fillAlpha && !is_real_number(inOptions.fillAlpha)){
+      throw this.sequence._customError(this, "shape", "inOptions.fillAlpha must be of type number");
+    }
+
+    if (inOptions.alpha && !is_real_number(inOptions.alpha)){
+      throw this.sequence._customError(this, "shape", "inOptions.alpha must be of type number");
+    }
+
+    if (inOptions.lineSize && !is_real_number(inOptions.lineSize)){
+      throw this.sequence._customError(this, "shape", "inOptions.lineSize must be of type number");
+    }
+
+    if (inOptions.lineColor && !is_real_number(inOptions.lineColor) && typeof inOptions.lineColor !== "string"){
+      throw this.sequence._customError(this, "shape", "inOptions.lineColor must be of type string (hexadecimal) or number (decimal)");
+    }else{
+      inOptions.lineColor = lib.parseColor(inOptions.lineColor).decimal;
+    }
+
+    if (inOptions.offset){
+      inOptions.offset = this._validateOffset("shape", inOptions.offset, inOptions.offset)
+    }
+
+    if (inOptions.isMask !== undefined && typeof inOptions.isMask !== "boolean"){
+      throw this.sequence._customError(this, "shape", "inOptions.isMask must be of type boolean");
+    }
+
+    this._shapes.push({
+      ...inOptions,
+      type: inType,
+    });
+
     return this;
   }
 
@@ -1375,6 +1476,7 @@ export default class EffectSection extends Section {
       text: this._text,
       tilingTexture: this._tilingTexture,
       masks: Array.from(new Set(this._masks)),
+      shapes: this._shapes,
 
       // Transforms
       scale: this._getCalculatedScale("scale"),
@@ -1455,8 +1557,8 @@ export default class EffectSection extends Section {
       data = await override(this, data);
     }
 
-    if ((typeof data.file !== "string" || data.file === "") && !data.text && !data.customRange) {
-      throw this.sequence._customError(this, "file", "an effect must have a file or have text configured!");
+    if ((typeof data.file !== "string" || data.file === "") && !data.text && !data.shapes && !data.customRange) {
+      throw this.sequence._customError(this, "file", "an effect must have a file, text, or have a shape!");
     }
 
     // TODO: Revisit this at some point?

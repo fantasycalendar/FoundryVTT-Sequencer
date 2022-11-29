@@ -237,9 +237,17 @@ export default class SequencerEffectsUI extends FormApplication {
 
   createEffectElement(effect) {
 
-    let fileName = effect.data.file.split('\\').pop().split('/').pop();
-    fileName = fileName !== "" ? fileName : "Text: " + effect.data.text.text;
-    let effectName = effect.data.name ? `${effect.data.name} (${fileName})` : fileName;
+    let effectName = "Unknown effect";
+    if(effect.data.file){
+      effectName = effect.data.file.split('\\').pop().split('/').pop();
+    }else if(effect.data.text){
+      effectName = "Text: " + effect.data.text.text;
+    }else{
+      effectName = "Shape: " + effect.data.shapes[0].type
+    }
+
+    effectName = effect.data.name ? `${effect.data.name} (${effectName})` : effectName;
+
     if (effect.data.creatorUserId !== game.userId) {
       let user_name = game.users.get(effect.data.creatorUserId)?.name;
       let formattedUsername = (user_name

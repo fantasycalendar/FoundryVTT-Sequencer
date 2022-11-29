@@ -1,6 +1,7 @@
 import CONSTANTS from "../constants.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 
+
 /**
  *  This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
@@ -474,4 +475,15 @@ export function get_hash(input) {
     hash |= 0; // to 32bit integer
   }
   return hash;
+}
+
+export function parseColor(inColor) {
+  return {
+    hexadecimal: is_real_number(inColor)
+      ? inColor.toString(16)
+      : inColor,
+    decimal: (typeof inColor === "string" && inColor.startsWith("#"))
+      ? parseInt(inColor.slice(1), 16)
+      : inColor
+  }
 }

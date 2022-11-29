@@ -1,5 +1,49 @@
 import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
+import CONSTANTS from "../constants.js";
+
+export function createShape(shape, gridSizeDifference = 1) {
+
+  const graphic = new PIXI.Graphics();
+
+  graphic.beginFill(shape?.fillColor ?? 0xFFFFFF, shape?.fillColor ? (shape?.fillAlpha ?? 1) : 0)
+
+  if(shape?.lineSize){
+    graphic.lineStyle(shape.lineSize, shape?.lineColor ?? 0xFFFFFF)
+  }
+
+  const offsetX = (shape.offset?.x ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
+  const offsetY = (shape.offset?.y ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
+  const sizeMultiplier = (shape.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
+
+  switch(shape.type){
+    case CONSTANTS.SHAPES.CIRC:
+      graphic.drawCircle(offsetX, offsetY, shape.radius * sizeMultiplier);
+      break;
+    case CONSTANTS.SHAPES.RECT:
+      graphic.drawRect(offsetX, offsetY, shape.width * sizeMultiplier, shape.height * sizeMultiplier);
+      break;
+    case CONSTANTS.SHAPES.ELIP:
+      graphic.drawEllipse(offsetX, offsetY, shape.width * sizeMultiplier, shape.height * sizeMultiplier);
+      break;
+    case CONSTANTS.SHAPES.RREC:
+      graphic.drawRoundedRect(offsetX, offsetY, shape.width * sizeMultiplier, shape.height * sizeMultiplier, shape.radius * sizeMultiplier);
+      break;
+    case CONSTANTS.SHAPES.POLY:
+      graphic.drawPolygon(shape.points.map((point, index) => {
+        return new PIXI.Point((point[0] * sizeMultiplier) + offsetX, (point[1] * sizeMultiplier) + offsetY);
+      }))
+      break;
+  }
+
+  graphic.alpha = shape.alpha ?? 1.0;
+
+  graphic.endFill();
+
+  return graphic;
+
+}
+
 
 export function calculate_missed_position(source, target, twister) {
 

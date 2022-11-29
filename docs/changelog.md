@@ -1,5 +1,12 @@
 ## Changelog
 
+### Version 2.4.0
+- *Sequencer* - Added `Seqencer.EffectManager` to the autocomplete types
+- *Sequencer* - Fixed minor issue with the Effect Manager sometimes trying to load non-existent effect data
+- *Effects* - Added `.shape()`, which allows you to create simple shapes on the canvas
+  - See: <https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/effect?id=shape>
+- *Effects* - Fixed `.attachTo()` would attempt to apply flags on temporary templates such as warpgate crosshairs
+
 ### Version 2.3.21
 - *Sequencer* - Fixed interaction with the `Advanced Macros` module past version 1.19.2 (Thanks MrVaux!)
 - *Sequencer* - Fixed issue with `Sequencer.Helpers.shuffle_array` not handling complex arrays very well

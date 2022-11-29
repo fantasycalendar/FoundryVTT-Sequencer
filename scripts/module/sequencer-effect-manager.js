@@ -63,7 +63,6 @@ export default class SequencerEffectManager {
    *                             - object: An ID or a PlaceableObject
    *                             - name: The name of the effect
    *                             - sceneId: the ID of the scene to search within
-   *                             - effects: a single CanvasEffect or its ID, or an array of such
    * @returns {Array} An array containing effects that match the given filter
    */
   static getEffects(inFilter = {}) {
@@ -104,7 +103,7 @@ export default class SequencerEffectManager {
    *                             - sceneId: the ID of the scene to search within
    *                             - effects: a single CanvasEffect or its ID, or an array of such
    * @param {boolean} [push=true] A flag indicating whether or not to make other clients end the effects
-   * @returns {promise} A promise that resolves when the effects have _ended
+   * @returns {promise} A promise that resolves when the effects have ended
    */
   static async endEffects(inFilter = {}, push = true) {
     inFilter = this._validateFilters(inFilter);
@@ -327,9 +326,15 @@ export default class SequencerEffectManager {
     await this.tearDownPersists();
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
-    const promises = allObjects.map(doc => {
-      const objEffects = flagManager.getFlags(doc);
-      return this._playEffectMap(objEffects, doc);
+    const docEffectsMap = allObjects.reduce((acc, doc) => {
+      const effects = flagManager.getFlags(doc);
+      if(effects.length) {
+        acc[doc.uuid] = flagManager.getFlags(doc)
+      }
+      return acc;
+    }, {});
+    const promises = Object.entries(docEffectsMap).map(([uuid, effects]) => {
+      return this._playEffectMap(effects, fromUuidSync(uuid));
     }).flat();
     debounceUpdateEffectViewer();
     return Promise.all(promises).then(() => {

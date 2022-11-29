@@ -496,7 +496,6 @@ export default class CanvasEffect extends PIXI.Container {
         throw lib.custom_error("Sequencer", `CanvasEffect | update | target must be of type document UUID or object with X and Y coordinates`)
       }
     }
-
   }
 
   getHook(type, uuid) {
@@ -855,6 +854,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._calculateDuration();
     this._addToContainer();
     this._createSprite();
+    this._createShapes();
     await this._setupMasks();
     await this._transformSprite();
     this._playCustomAnimations();
@@ -1371,6 +1371,20 @@ export default class CanvasEffect extends PIXI.Container {
         new PIXI.filters.AlphaFilter(game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100)
       ];
     }
+  }
+
+  _createShapes(){
+
+    const nonMaskShapes = this.data.shapes.filter(shape => !shape.isMask);
+
+    for(const shape of nonMaskShapes){
+      const graphic = canvaslib.createShape(shape, this.gridSizeDifference);
+      this.sprite.addChild(graphic);
+      if(shape.name){
+        if(!this.shapes) this.shapes = {};
+        this.shapes[shape.name] = graphic;
+      }
+    }
 
   }
 
@@ -1425,7 +1439,9 @@ export default class CanvasEffect extends PIXI.Container {
 
   async _setupMasks() {
 
-    if (!this.data?.masks?.length) return;
+    const maskShapes = this.data.shapes.filter(shape => shape.isMask);
+
+    if (!this.data?.masks?.length && !maskShapes.length) return;
 
     this.masksReady = false;
 
@@ -1460,6 +1476,7 @@ export default class CanvasEffect extends PIXI.Container {
 
       spriteContainer.addChild(objMaskSprite);
       spriteContainer.maskSprite = objMaskSprite;
+      spriteContainer.exclude = false;
 
       this._maskContainer.addChild(spriteContainer);
 
@@ -1486,6 +1503,28 @@ export default class CanvasEffect extends PIXI.Container {
 
     }
 
+    let anyMaskChanged = false;
+
+    for(const maskShape of maskShapes){
+
+      const graphic = canvaslib.createShape(maskShape)
+
+      const clipFilter = new filters.Clip();
+      const blurFilter = new filters.Blur({ strength: 1 });
+      graphic.filters = [blurFilter, clipFilter];
+
+      const spriteContainer = new PIXI.Container();
+
+      spriteContainer.addChild(graphic);
+      spriteContainer.maskSprite = graphic;
+      spriteContainer.exclude = true;
+
+      this._maskContainer.addChild(spriteContainer);
+
+      anyMaskChanged = true;
+
+    }
+
     if (!this._maskContainer.children.length) {
       if (this.sprite) {
         this.sprite.mask = null;
@@ -1495,10 +1534,10 @@ export default class CanvasEffect extends PIXI.Container {
 
     this._ticker.add(() => {
 
-      let anyMaskChanged = false;
-
       for (let container of this._maskContainer.children) {
-        anyMaskChanged = this._handleUpdatingMask(container) || anyMaskChanged;
+        if(!container.exclude){
+          anyMaskChanged = anyMaskChanged || this._handleUpdatingMask(container);
+        }
       }
 
       if (anyMaskChanged) {
@@ -1511,7 +1550,7 @@ export default class CanvasEffect extends PIXI.Container {
 
   }
 
-  _handleUpdatingMask(container, forced = false) {
+  _handleUpdatingMask(container) {
 
     const mask = container.maskSprite;
 
@@ -1669,13 +1708,25 @@ export default class CanvasEffect extends PIXI.Container {
     if (!this.masksReady) return;
 
     const smallestX = this._maskContainer.children.reduce((acc, container) => {
-      let bounds = container.getBounds();
-      return acc >= bounds.x ? bounds.x : acc;
+      let x;
+      const bounds = container.getBounds();
+      if(container.exclude){
+        x = this.x - bounds.width/2;
+      }else{
+        x = bounds.x;
+      }
+      return acc >= x ? x : acc;
     }, Infinity);
 
     const smallestY = this._maskContainer.children.reduce((acc, container) => {
-      let bounds = container.getBounds(true);
-      return acc >= bounds.y ? bounds.y : acc;
+      let y;
+      const bounds = container.getBounds(true);
+      if(container.exclude){
+        y = this.y - bounds.height/2;
+      }else{
+        y = bounds.y;
+      }
+      return acc >= y ? y : acc;
     }, Infinity);
 
     this._maskSprite.position.set(smallestX, smallestY);

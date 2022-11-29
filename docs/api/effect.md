@@ -958,6 +958,54 @@ Creates a text element, attached to the effect. The options for the text are ava
 
 Use the JSON object as the options parameter for `.text()`
 
+
+## Shape
+
+`.shape(inType, inOptions)`
+
+```js
+
+new Sequence()
+    .effect()
+        .attachTo(token)
+        .persist()
+        .shape("circle", {
+            lineSize: 4,
+            lineColor: "#FF0000",
+            radius: 1.5,
+            gridUnits: true,
+            name: "test"
+        })
+        .loopProperty("shapes.test", "scale.x", { from: 0.9, to: 1.1, duration: 1000, pingPong: true, ease: "easeInOutSine" })
+        .loopProperty("shapes.test", "scale.y", { from: 0.9, to: 1.1, duration: 1000, pingPong: true, ease: "easeInOutSine" })
+    .play()
+
+```
+
+Creates a graphics element, attached to the effect.
+
+The supported shapes (`inType`) are:
+- "polygon"
+- "rectangle"
+- "circle"
+- "ellipse"
+- "roundedRect"
+
+The optional options are as follows:
+- `radius`: `number` - The radius of `circle` shapes, and the radius of the `roundedRect` edges
+- `width`: `number` - The width of `rectangle`, `ellipse`, and `roundedRect` shapes
+- `height`: `number` - The height of `rectangle`, `ellipse`, and `roundedRect` shapes
+- `points`: `Array<[number, number]|{ x: number, y: number}>` - The points of a `polygon` object 
+- `gridUnits`: `boolean` - Whether the positions or height/width should be considered grid units (1 = one grid on the canvas grid)
+- `name`: `string` - What name to give this shape, which can be used with `.animateProperty()` and `.loopProperty()` through `shapes.[name]`
+- `fillColor`: `string|number` - The fill color of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)  
+- `fillAlpha`: `number` - The alpha of the fill color
+- `alpha`: `number` - The alpha of the entire shape
+- `lineSize`: `number` - The size of the outline of the shape (in pixels)
+- `lineColor`: `string|number` - The color of the outline of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)
+- `offset`: `object` - An object containing the offset of this shape, with `x` and `y` determining the offset. You can set this to be based on grid units by supplying `offset.gridUnits` to it.
+- `isMask`: `boolean` - Whether this shape should be considered a mask. This will make it invisible, and `options.name` will not be considered (animating masks is VERY expensive, thus a no-go).
+
 ## XRay
 
 `.xray()` or `.xray(boolean)`

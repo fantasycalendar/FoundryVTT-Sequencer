@@ -23,6 +23,8 @@ type Size = {
   height: number;
 };
 
+type Shapes = "polygon"|"rectangle"|"circle"|"ellipse"|"roundedRect";
+
 type VisibleFoundryTypes = Token|TokenDocument|Tile|TileDocument|Drawing|DrawingDocument|MeasuredTemplate|MeasuredTemplateDocument;
 
 declare class CoreMethods {
@@ -74,6 +76,11 @@ declare interface Sequence extends CoreMethods {
 }
 
 declare class Sequence {
+  /**
+   * Declaring the module name when using new Sequence() will make every error or warning caught during the runtime also
+   * include the module name, which lets you and other users know which module caused the error
+   */
+  constructor(inModuleName?: string);
 }
 
 declare abstract class Section<T> {
@@ -231,12 +238,12 @@ declare abstract class HasScale<T> {
   /**
    * Causes the effect to scale when it starts playing
    */
-  scaleIn(durationMs: number, options?: EasingOptions): T;
+  scaleIn(inScale: number, durationMs: number, options?: EasingOptions): T;
 
   /**
    * Causes the effect to scale at the end of the effect's duration
    */
-  scaleOut(durationMs: number, options?: EasingOptions): T;
+  scaleOut(inScale: number, durationMs: number, options?: EasingOptions): T;
 
 }
 
@@ -528,6 +535,29 @@ declare abstract class EffectSection {
   text(inText: string, inOptions?: object): this;
 
   /**
+   * Creates a graphical element, attached to the sprite.
+   */
+  shape(inType: Shapes, inOptions?: {
+    radius?: number,
+    width?: number,
+    height?: number,
+    points?: Array<[number, number]|{ x: number, y: number}>,
+    gridUnits?: boolean,
+    name?: string,
+    fillColor?: string|number,
+    fillAlpha?: number,
+    alpha?: number,
+    lineSize?: number,
+    lineColor?: string|number,
+    offset?: {
+      x?: number,
+      y?: number,
+      gridUnits?: boolean
+    },
+    isMask?: boolean,
+  })
+
+  /**
    * Causes the effect's sprite to be offset relative to its location based on a given vector
    */
   spriteOffset(inOffset: Vector2, inOptions?: {
@@ -703,13 +733,11 @@ declare abstract class EffectSection {
    *
    * The method accepts a string or a Document that has an UUID.
    */
-  // @ts-ignore
   origin(inOrigin: string | foundry.abstract.Document): this;
 
   /**
    * Ties the effect to any number of documents in Foundry - if those get deleted, the effect is ended.
    */
-  // @ts-ignore
   tieToDocuments(inOrigin: string | foundry.abstract.Document | Array<string | foundry.abstract.Document>): this;
 
   /**
@@ -717,7 +745,6 @@ declare abstract class EffectSection {
    *
    * The method accepts a string or a Document that has an UUID.
    */
-  // @ts-ignore
   mask(inObject: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
 
   /**
@@ -878,6 +905,56 @@ declare abstract class SequencerEffectPlayer {
 
 }
 
+declare abstract class SequencerEffectManager {
+
+  /**
+   * Opens the Sequencer Effects UI with the effects tab open
+   */
+  show(): Promise<void>
+
+  /**
+   * Returns all of the currently running effects on the canvas
+   */
+  get effects(): Array<any>
+
+  /**
+   * Get effects that are playing on the canvas based on a set of filters
+   */
+  getEffects(options: { object?: string|PlaceableObject, name?: string, sceneId?: string }): Array<any>
+
+
+  /**
+   * Updates effects based on a set of filters
+   */
+  updateEffects(options: {
+    object?: string|PlaceableObject,
+    name?: string,
+    sceneId?: string,
+    effects: string|CanvasEffect|Array<string>|Array<CanvasEffect>
+  }): Promise<Array<any>>
+
+  /**
+   * End effects that are playing on the canvas based on a set of filters
+   */
+  endEffects(options: {
+    object?: string|PlaceableObject,
+    name?: string,
+    sceneId?: string,
+    effects: string|CanvasEffect|Array<string>|Array<CanvasEffect>
+  }): Promise<void>
+
+  /**
+   * End all effects that are playing on the canvas
+   */
+  endAllEffects(inSceneId?: string, push?: boolean): Promise<void>
+
+  /**
+   * If an effect has been named its position will be cached, which can be retrieved with this method
+   */
+  getEffectPositionByName(inName: string): Vector2
+
+}
+
 declare namespace Sequencer {
 
   const Database: SequencerDatabase;
@@ -886,7 +963,7 @@ declare namespace Sequencer {
   const DatabaseViewer: SequencerDatabaseViewer;
   const Player: SequencerEffectPlayer;
   const SectionManager: SequencerSectionManager;
+  const EffectManager: SequencerEffectManager;
   function registerEase(easeName: string, easeFunction: Function, overwrite?: boolean);
-
 
 }
