@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 2.4.1
+- *Effects* - Fixed minor typo in `.mask()`
+
 ### Version 2.4.0
 - *Sequencer* - Added `Seqencer.EffectManager` to the autocomplete types
 - *Sequencer* - Fixed minor issue with the Effect Manager sometimes trying to load non-existent effect data

@@ -964,7 +964,6 @@ Use the JSON object as the options parameter for `.text()`
 `.shape(inType, inOptions)`
 
 ```js
-
 new Sequence()
     .effect()
         .attachTo(token)
@@ -979,7 +978,6 @@ new Sequence()
         .loopProperty("shapes.test", "scale.x", { from: 0.9, to: 1.1, duration: 1000, pingPong: true, ease: "easeInOutSine" })
         .loopProperty("shapes.test", "scale.y", { from: 0.9, to: 1.1, duration: 1000, pingPong: true, ease: "easeInOutSine" })
     .play()
-
 ```
 
 Creates a graphics element, attached to the effect.

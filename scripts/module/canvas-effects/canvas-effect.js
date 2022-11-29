@@ -1599,8 +1599,7 @@ export default class CanvasEffect extends PIXI.Container {
       && (mask.scale.y === objectSprite.scale.y)
       && (mask.texture === objectSprite.texture)
       && (mask.angle === angle)
-      && (foundry.utils.isEmpty(foundry.utils.diffObject(mask.oldData, data)))
-      && !forced;
+      && (foundry.utils.isEmpty(foundry.utils.diffObject(mask.oldData, data)));
 
     if (noChange) return false;
 
