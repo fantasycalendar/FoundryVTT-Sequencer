@@ -2,7 +2,7 @@
     "id": "sequencer",
     "title": "Sequencer",
     "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
-    "version": "2.3.!18",
+    "version": "2.4.!2",
     "library": "false",
     "manifestPlusVersion": "1.0.0",
     "minimumCoreVersion": "10",
@@ -21,7 +21,7 @@
         "scripts/module.js"
     ],
     "scripts": [
-        "scripts/module/lib/ext/pixi-filters.js"
+        "scripts/lib/ext/pixi-filters.js"
     ],
     "languages": [
         {
@@ -40,18 +40,6 @@
             "path": "languages/es-ES.json"
         }
     ],
-    "packs": [
-        {
-            "name": "sequencer-sample-macros",
-            "label": "Sequencer Sample Macros",
-            "path": "./packs/sequencer-sample-macros.db",
-            "module": "world",
-            "type": "Macro",
-            "lang": [
-                "en"
-            ]
-        }
-    ],
     "relationships": {
         "requires": [
             {
@@ -63,7 +51,7 @@
     "socket": true,
     "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
     "manifest": "https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json",
-    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.3.!18/module.zip",
+    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/2.4.!2/module.zip",
     "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
     "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
 }
