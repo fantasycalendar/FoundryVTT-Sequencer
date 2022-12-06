@@ -1,4 +1,6 @@
 import * as lib from "../lib/lib.js";
+import SequencerPresets from "../modules/sequencer-presets.js";
+import { custom_error } from "../lib/lib.js";
 
 export default class Section {
 
@@ -247,6 +249,18 @@ export default class Section {
     return new Promise((resolve) => {
       setTimeout(resolve, self._repeatDelay)
     });
+  }
+
+  preset(presetName, ...args){
+    if(typeof presetName !== "string"){
+      throw this.sequence._customError(this, "name", `inName must be of type string`);
+    }
+    const preset = SequencerPresets.get(presetName);
+    if(!preset){
+      lib.custom_warning("Sequencer", `preset | Could not find preset with name "${presetName}"`)
+      return this;
+    }
+    return preset(this, ...args);
   }
 
 }

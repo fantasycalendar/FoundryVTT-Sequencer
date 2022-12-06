@@ -1,4 +1,4 @@
-import { BaseEffectsLayer, UIEffectsLayer } from "./module/canvas-effects/effects-layer.js";
+import { BaseEffectsLayer, UIEffectsLayer } from "./canvas-effects/effects-layer.js";
 
 export default function registerLayers() {
 

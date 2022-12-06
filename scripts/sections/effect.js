@@ -3,9 +3,9 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
-import flagManager from "../flag-manager.js";
-import SequencerFileCache from "../sequencer-file-cache.js";
-import { SequencerFileRangeFind } from "../sequencer-file.js";
+import flagManager from "../utils/flag-manager.js";
+import SequencerFileCache from "../modules/sequencer-file-cache.js";
+import { SequencerFileRangeFind } from "../modules/sequencer-file.js";
 import { is_real_number } from "../lib/lib.js";
 import CONSTANTS from "../constants.js";
 

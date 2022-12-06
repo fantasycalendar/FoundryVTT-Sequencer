@@ -1,7 +1,7 @@
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
-import LoadingBar from "./lib/loadingBar.js";
-import * as lib from './lib/lib.js';
+import LoadingBar from "../utils/loadingBar.js";
+import * as lib from '../lib/lib.js';
 
 const SequencerPreloader = {
 

@@ -1,6 +1,6 @@
 import { cache } from "../lib/cache.js";
 import { reactiveEl as html } from "../lib/html.js";
-import { SequencerFile } from "../sequencer-file.js";
+import { SequencerFile } from "../modules/sequencer-file.js";
 import * as lib from "../lib/lib.js";
 
 const MAX_NODES = 24;

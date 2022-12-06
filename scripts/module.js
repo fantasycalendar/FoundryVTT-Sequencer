@@ -3,18 +3,19 @@ import registerLayers from "./layers.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "./typings/typings.js";
 import { registerSocket } from "./sockets.js";
-import { registerEase } from "./module/canvas-effects/ease.js";
+import { registerEase } from "./canvas-effects/ease.js";
 
-import Sequence from "./module/sequencer.js";
-import SequencerDatabase from "./module/sequencer-database.js";
-import SequencerDatabaseViewer from "./module/formapplications/sequencer-database-viewer-ui.js";
-import SequencerPreloader from "./module/sequencer-preloader.js";
-import SequencerEffectManager from "./module/sequencer-effect-manager.js";
-import SequencerSectionManager from "./module/sequencer-section-manager.js";
-import { EffectPlayer, InteractionManager } from "./module/sequencer-interaction-manager.js";
-import Section from "./module/sections/section.js";
-import * as lib from "./module/lib/lib.js";
-import { SequencerAboveUILayer } from "./module/canvas-effects/effects-layer.js";
+import Sequence from "./modules/sequencer.js";
+import SequencerDatabase from "./modules/sequencer-database.js";
+import SequencerDatabaseViewer from "./formapplications/sequencer-database-viewer-ui.js";
+import SequencerPreloader from "./modules/sequencer-preloader.js";
+import SequencerEffectManager from "./modules/sequencer-effect-manager.js";
+import SequencerSectionManager from "./modules/sequencer-section-manager.js";
+import { EffectPlayer, InteractionManager } from "./modules/sequencer-interaction-manager.js";
+import Section from "./sections/section.js";
+import * as lib from "./lib/lib.js";
+import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
+import SequencerPresets from "./modules/sequencer-presets.js";
 
 Hooks.once('init', async function () {
   if (!game.modules.get("socketlib")?.active) return;
@@ -55,6 +56,7 @@ function initialize_module() {
   window.Sequence = Sequence;
   window.Sequencer = {
     Player: EffectPlayer,
+    Presets: SequencerPresets,
     Database: SequencerDatabase,
     DatabaseViewer: SequencerDatabaseViewer,
     Preloader: SequencerPreloader,

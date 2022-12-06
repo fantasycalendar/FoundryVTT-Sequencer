@@ -1,5 +1,5 @@
-import Section from "./sections/section.js";
-import * as lib from "./lib/lib.js";
+import Section from "../sections/section.js";
+import * as lib from "../lib/lib.js";
 
 export default class SequencerSectionManager {
 

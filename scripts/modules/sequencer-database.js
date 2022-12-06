@@ -1,5 +1,5 @@
-import * as lib from './lib/lib.js';
-import LoadingBar from "./lib/loadingBar.js";
+import * as lib from '../lib/lib.js';
+import LoadingBar from "../utils/loadingBar.js";
 import { SequencerFile, SequencerFileRangeFind } from "./sequencer-file.js";
 
 const SequencerDatabase = {

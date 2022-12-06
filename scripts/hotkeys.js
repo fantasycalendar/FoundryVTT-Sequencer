@@ -1,5 +1,5 @@
-import CONSTANTS from "./module/constants.js";
-import { EffectPlayer, SelectionManager } from "./module/sequencer-interaction-manager.js";
+import CONSTANTS from "./constants.js";
+import { EffectPlayer, SelectionManager } from "./modules/sequencer-interaction-manager.js";
 
 const hotkeys = {
   get _ready() {

@@ -1,8 +1,8 @@
-import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
-import * as lib from './lib/lib.js';
-import * as canvaslib from "./lib/canvas-lib.js";
+import SequencerEffectsUI from "../formapplications/sequencer-effects-ui.js";
+import * as lib from '../lib/lib.js';
+import * as canvaslib from "../lib/canvas-lib.js";
 import SequencerEffectManager from "./sequencer-effect-manager.js";
-import CONSTANTS from "./constants.js";
+import CONSTANTS from "../constants.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
 
 /**

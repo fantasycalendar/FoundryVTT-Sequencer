@@ -1,6 +1,6 @@
-import SequencerEffectsUI from "./module/formapplications/sequencer-effects-ui.js";
-import CONSTANTS from "./module/constants.js";
-import { user_can_do } from "./module/lib/lib.js";
+import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
+import CONSTANTS from "./constants.js";
+import { user_can_do } from "./lib/lib.js";
 
 export default function registerSettings() {
 

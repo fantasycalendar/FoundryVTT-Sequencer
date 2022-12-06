@@ -1,6 +1,6 @@
-import SequencerAudioHelper from "./module/sequencer-audio-helper.js";
-import CONSTANTS from "./module/constants.js";
-import FlagManager from "./module/flag-manager.js";
+import SequencerAudioHelper from "./modules/sequencer-audio-helper.js";
+import CONSTANTS from "./constants.js";
+import FlagManager from "./utils/flag-manager.js";
 
 export const SOCKET_HANDLERS = {
   PLAY_EFFECT: "playEffect",

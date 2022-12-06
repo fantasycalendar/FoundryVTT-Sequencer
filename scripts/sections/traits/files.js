@@ -1,5 +1,5 @@
 import * as lib from "../../lib/lib.js";
-import { SequencerFileRangeFind } from "../../sequencer-file.js";
+import { SequencerFileRangeFind } from "../../modules/sequencer-file.js";
 
 export default {
 

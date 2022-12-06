@@ -1,8 +1,8 @@
 import * as lib from "../lib/lib.js";
-import SequencerAudioHelper from "../sequencer-audio-helper.js";
+import SequencerAudioHelper from "../modules/sequencer-audio-helper.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { SequencerFile } from "../sequencer-file.js";
+import { SequencerFile } from "../modules/sequencer-file.js";
 
 class SoundSection extends Section {
 

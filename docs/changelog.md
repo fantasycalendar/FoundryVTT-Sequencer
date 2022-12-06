@@ -1,5 +1,9 @@
 ## Changelog
 
+### Version 2.4.2
+- *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences
+- *Sequencer* - Added `.preset()` which allows you to use the aforementioned presets
+
 ### Version 2.4.1
 - *Effects* - Fixed minor typo in `.mask()`
 

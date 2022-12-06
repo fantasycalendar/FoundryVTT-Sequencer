@@ -1,4 +1,4 @@
-import * as lib from "./lib/lib.js";
+import * as lib from "../lib/lib.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
 
 export class SequencerFile {

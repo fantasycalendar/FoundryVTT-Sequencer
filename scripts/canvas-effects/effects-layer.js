@@ -1,4 +1,4 @@
-import { EffectPlayer, InteractionManager, SelectionManager } from "../sequencer-interaction-manager.js";
+import { EffectPlayer, InteractionManager, SelectionManager } from "../modules/sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 

@@ -21,7 +21,7 @@
     "scripts/module.js"
   ],
   "scripts": [
-    "scripts/module/lib/ext/pixi-filters.js"
+    "scripts/lib/ext/pixi-filters.js"
   ],
   "languages": [
     {

@@ -2,7 +2,7 @@ import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 
 class AnimationSection extends Section {
 

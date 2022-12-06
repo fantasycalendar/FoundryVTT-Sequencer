@@ -2,12 +2,12 @@ import CONSTANTS from "../constants.js";
 import filters from "../lib/filters.js";
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
-import { SequencerFile, SequencerFileRangeFind } from "../sequencer-file.js";
-import SequencerAnimationEngine from "../sequencer-animation-engine.js";
-import SequencerFileCache from "../sequencer-file-cache.js";
-import flagManager from "../flag-manager.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../../sockets.js";
-import SequencerEffectManager from "../sequencer-effect-manager.js";
+import { SequencerFile, SequencerFileRangeFind } from "../modules/sequencer-file.js";
+import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
+import SequencerFileCache from "../modules/sequencer-file-cache.js";
+import flagManager from "../utils/flag-manager.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
 

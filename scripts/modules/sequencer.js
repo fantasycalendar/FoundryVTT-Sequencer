@@ -1,9 +1,10 @@
-import * as lib from './lib/lib.js';
-import FunctionSection from './sections/func.js';
-import EffectSection from './sections/effect.js';
-import SoundSection from './sections/sound.js';
-import AnimationSection from './sections/animation.js';
-import Section from "./sections/section.js";
+import * as lib from '../lib/lib.js';
+import FunctionSection from '../sections/func.js';
+import EffectSection from '../sections/effect.js';
+import SoundSection from '../sections/sound.js';
+import AnimationSection from '../sections/animation.js';
+import Section from "../sections/section.js";
+import SequencerPresets from "./sequencer-presets.js";
 
 export default class Sequence {
 
@@ -172,6 +173,18 @@ export default class Sequence {
     const section = lib.section_proxy_wrap(this._createWaitSection(wait));
     this.sections.push(section);
     return this;
+  }
+
+  preset(presetName, ...args){
+    if(typeof presetName !== "string"){
+      throw this._customError(this, "name", `inName must be of type string`);
+    }
+    const preset = SequencerPresets.get(presetName);
+    if(!preset){
+      lib.custom_warning("Sequencer", `preset | Could not find preset with name "${presetName}"`)
+      return this;
+    }
+    return preset(this, ...args);
   }
 
   /**

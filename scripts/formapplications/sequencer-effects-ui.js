@@ -1,7 +1,7 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
-import { EffectPlayer, SelectionManager } from "../sequencer-interaction-manager.js";
-import SequencerFileCache from "../sequencer-file-cache.js";
+import { EffectPlayer, SelectionManager } from "../modules/sequencer-interaction-manager.js";
+import SequencerFileCache from "../modules/sequencer-file-cache.js";
 
 export default class SequencerEffectsUI extends FormApplication {
 

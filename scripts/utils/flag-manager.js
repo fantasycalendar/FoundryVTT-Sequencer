@@ -1,7 +1,7 @@
-import * as lib from "./lib/lib.js";
-import * as canvaslib from "./lib/canvas-lib.js";
+import * as lib from "../lib/lib.js";
+import * as canvaslib from "../lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import CONSTANTS from "./constants.js";
+import CONSTANTS from "../constants.js";
 
 const flagManager = {
 

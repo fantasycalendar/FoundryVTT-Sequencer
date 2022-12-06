@@ -1,4 +1,4 @@
-import { debug } from "./lib.js";
+import { debug } from "../lib/lib.js";
 
 class loading_bar {
 
