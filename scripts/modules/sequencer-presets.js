@@ -4,6 +4,14 @@ const presetMap = new Map();
 
 export default class SequencerPresets {
 
+  /**
+   * Adds a preset that can then be used in sequences
+   *
+   * @param {string} inName
+   * @param {Function} inFunction
+   * @param {boolean} [overwrite=false] overwrite
+   * @returns {Map<string, Function>}
+   */
   static add(inName, inFunction, overwrite = false){
 
     if(typeof inName !== "string"){
@@ -25,8 +33,19 @@ export default class SequencerPresets {
   }
 
   /**
+   * Retrieves all presets
+   *
+   * @returns {Map<string, Function>}
+   */
+  static getAll(){
+    return presetMap;
+  }
+
+  /**
+   * Retrieves preset based on its name
+   *
    * @param {string} name
-   * @returns {function}
+   * @returns {Function}
    */
   static get(name){
     return presetMap.get(name);

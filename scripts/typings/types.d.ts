@@ -62,9 +62,14 @@ declare class CoreMethods {
   /**
    * Adds the sections from a given Sequence to this Sequence
    */
-  sequence(
+  addSequence(
     inSequence: Sequence | EffectSection | AnimationSection | SoundSection
   ): Sequence;
+
+  /**
+   * Appends a preset to the current sequence in place
+   */
+  preset(presetName: string, args?: any): T;
 
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
@@ -122,6 +127,11 @@ declare abstract class Section<T> {
    * random delay between the two numbers will be generated.
    */
   delay(msMin: number, msMax?: number): T;
+
+  /**
+   * Appends a preset to the current sequence in place
+   */
+  preset(presetName: string, args?: any): T;
 
 }
 
@@ -955,9 +965,30 @@ declare abstract class SequencerEffectManager {
 
 }
 
+declare abstract class SequencerPresets {
+
+  /**
+   * Adds a preset that can then be used in sequences
+   */
+  add(inName: string, inFunction: Function, overwrite?: boolean): Map<string, Function>;
+
+  /**
+   * Retrieves all presets
+   */
+  getAll(): Map<string, Function>;
+
+  /**
+   * Retrieves preset based on its name
+   */
+  get(name: string): Function;
+
+}
+
+
 declare namespace Sequencer {
 
   const Database: SequencerDatabase;
+  const Presets: SequencerPresets;
   const Preloader: SequencerPreloader;
   const Helpers: SequencerHelpers;
   const DatabaseViewer: SequencerDatabaseViewer;

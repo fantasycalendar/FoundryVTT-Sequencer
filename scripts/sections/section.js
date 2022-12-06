@@ -194,6 +194,25 @@ export default class Section {
   }
 
   /**
+   * Applies a preset to the current section
+   *
+   * @param {string} presetName
+   * @param {*} args
+   * @returns {FunctionSection|EffectSection|AnimationSection|SoundSection}
+   */
+  preset(presetName, ...args){
+    if(typeof presetName !== "string"){
+      throw this.sequence._customError(this, "name", `inName must be of type string`);
+    }
+    const preset = SequencerPresets.get(presetName);
+    if(!preset){
+      lib.custom_warning("Sequencer", `preset | Could not find preset with name "${presetName}"`)
+      return this;
+    }
+    return preset(this, ...args);
+  }
+
+  /**
    * @protected
    */
   async _shouldPlay() {
@@ -249,18 +268,6 @@ export default class Section {
     return new Promise((resolve) => {
       setTimeout(resolve, self._repeatDelay)
     });
-  }
-
-  preset(presetName, ...args){
-    if(typeof presetName !== "string"){
-      throw this.sequence._customError(this, "name", `inName must be of type string`);
-    }
-    const preset = SequencerPresets.get(presetName);
-    if(!preset){
-      lib.custom_warning("Sequencer", `preset | Could not find preset with name "${presetName}"`)
-      return this;
-    }
-    return preset(this, ...args);
   }
 
 }

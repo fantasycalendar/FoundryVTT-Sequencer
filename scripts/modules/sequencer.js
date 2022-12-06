@@ -175,6 +175,13 @@ export default class Sequence {
     return this;
   }
 
+  /**
+   * Applies a preset to the sequence
+   *
+   * @param {string} presetName
+   * @param {*} args
+   * @returns {Sequence|FunctionSection|EffectSection|AnimationSection|SoundSection}
+   */
   preset(presetName, ...args){
     if(typeof presetName !== "string"){
       throw this._customError(this, "name", `inName must be of type string`);
