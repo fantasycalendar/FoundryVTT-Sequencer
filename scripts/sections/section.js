@@ -198,7 +198,7 @@ export default class Section {
    *
    * @param {string} presetName
    * @param {*} args
-   * @returns {FunctionSection|EffectSection|AnimationSection|SoundSection}
+   * @returns {Section|FunctionSection|EffectSection|AnimationSection|SoundSection}
    */
   preset(presetName, ...args){
     if(typeof presetName !== "string"){
