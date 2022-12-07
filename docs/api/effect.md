@@ -77,6 +77,12 @@ Below is an example of a function used in this method, which would cause this ef
 
 This will delay the effect from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
 
+## Preset
+
+`.preset("name")`
+
+Applies a preset to the current effect - read the [Sequencer Presets article](docs/presets.md) for more information.
+
 ## Opacity
 
 `.opacity(0.5)`

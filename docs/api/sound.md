@@ -64,6 +64,12 @@ Below is an example of a function used in this method, which would cause this so
 
 This will delay the sound from being played for a set amount of milliseconds. If given a second number, a random delay between the two numbers will be generated.
 
+## Preset
+
+`.preset("name")`
+
+Applies a preset to the current sound - read the [Sequencer Presets article](docs/presets.md) for more information.
+
 ## Duration
 
 `.duration(500)`
