@@ -1,6 +1,9 @@
 ## Changelog
 
 ### Version 2.4.2
+- *Sequencer* - Added optional `options` parameter to `.scaleToObject()`, you can set `ignoreTokenScale` to `false` to not scale the effect with the token scale
+
+### Version 2.4.2
 - *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences
 - *Sequencer* - Added `.preset()` which allows you to use the aforementioned presets
 
