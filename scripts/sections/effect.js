@@ -612,6 +612,7 @@ export default class EffectSection extends Section {
     if (typeof inOptions !== "object") throw this.sequence._customError(this, "scaleToObject", "inOptions must be of type object");
     inOptions = foundry.utils.mergeObject({
       scale: inScale,
+      ignoreTokenScale: false,
       uniform: false
     }, inOptions);
     if (typeof inOptions.uniform !== "boolean") throw this.sequence._customError(this, "scaleToObject", "inBool must be of type boolean");

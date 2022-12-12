@@ -600,10 +600,9 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (alpha !== undefined) {
       this._cachedTargetData.alpha = alpha;
-      1
     }
 
-    const { width, height } = canvaslib.get_object_dimensions(this.target)
+    const { width, height } = canvaslib.get_object_dimensions(this.target);
 
     if (width !== undefined && height !== undefined) {
       this._cachedTargetData.width = width;
@@ -2107,6 +2106,12 @@ export default class CanvasEffect extends PIXI.Container {
       let { width, height } = this.target
         ? this.getTargetData()
         : this.getSourceData();
+
+      const target = this.target || this.source;
+      if(target instanceof TokenDocument && !this.data.scaleToObject?.ignoreTokenScale){
+        width /= target?.texture?.scaleX ?? 1;
+        height /= target?.texture?.scaleY ?? 1;
+      }
 
       if (this.data.scaleToObject?.uniform) {
         let newWidth = Math.max(width, height);
