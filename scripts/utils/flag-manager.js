@@ -296,15 +296,20 @@ const flagManager = {
       }
 
       const flagsToSet = Array.from(existingFlags);
-
-      await object.update({
-        [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
-      });
+      const options = {};
 
       if (object instanceof TokenDocument && object.actorLink && (toAdd.original || toRemove.original)) {
         const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
         actorsToUpdate.set(object.actor.uuid, flagsToPrototypePersist);
+
+        if(game.modules.get("multilevel-tokens")?.active && getProperty(object, "flags.multilevel-tokens.stoken")){
+          options["mlt_bypass"] = true;
+        }
       }
+
+      await object.update({
+        [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+      }, options);
 
       lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
 

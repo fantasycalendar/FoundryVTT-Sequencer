@@ -584,7 +584,8 @@ declare abstract class EffectSection {
    * Causes the effect to be scaled to the target object's width
    */
   scaleToObject(inScale?: number, inOptions?: {
-    uniform?: boolean
+    uniform?: boolean,
+    ignoreTokenScale?: boolean
   }): this;
 
   /**

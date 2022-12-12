@@ -2,6 +2,7 @@
 
 ### Version 2.4.2
 - *Sequencer* - Added optional `options` parameter to `.scaleToObject()`, you can set `ignoreTokenScale` to `false` to not scale the effect with the token scale
+- *Sequencer* - Added support for persistent effects on "fake" tokens created by Multilevel Tokens 
 
 ### Version 2.4.2
 - *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences
