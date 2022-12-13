@@ -69,7 +69,7 @@ declare class CoreMethods {
   /**
    * Appends a preset to the current sequence in place
    */
-  preset(presetName: string, args?: any): T;
+  preset(presetName: string, args?: any): Sequence | EffectSection | AnimationSection | SoundSection;
 
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
@@ -585,7 +585,7 @@ declare abstract class EffectSection {
    */
   scaleToObject(inScale?: number, inOptions?: {
     uniform?: boolean,
-    ignoreTokenScale?: boolean
+    considerTokenScale?: boolean
   }): this;
 
   /**
@@ -969,7 +969,7 @@ declare abstract class SequencerEffectManager {
 declare abstract class SequencerPresets {
 
   /**
-   * Adds a preset that can then be used in sequences
+   * Adds a preset that can then be used in sequences through .preset()
    */
   add(inName: string, inFunction: Function, overwrite?: boolean): Map<string, Function>;
 

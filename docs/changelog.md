@@ -1,8 +1,9 @@
 ## Changelog
 
 ### Version 2.4.2
-- *Sequencer* - Added optional `options` parameter to `.scaleToObject()`, you can set `ignoreTokenScale` to `false` to not scale the effect with the token scale
-- *Sequencer* - Added support for persistent effects on "fake" tokens created by Multilevel Tokens 
+- *Sequencer* - Added optional `considerTokenScale` to the optional `options` parameter to `.scaleToObject()`, you can set it to `true` in order for the visual effect to also consider the token scale
+- *Sequencer* - Added support for persistent visual effects on "fake" tokens created by Multilevel Tokens 
+- *Sequencer* - Slightly improved the speed of document updates when visual effects are first applied
 
 ### Version 2.4.2
 - *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences

@@ -2107,8 +2107,8 @@ export default class CanvasEffect extends PIXI.Container {
         ? this.getTargetData()
         : this.getSourceData();
 
-      const target = this.target || this.source;
-      if(target instanceof TokenDocument && !this.data.scaleToObject?.ignoreTokenScale){
+      const target = this.targetDocument || this.sourceDocument;
+      if(target instanceof TokenDocument && !this.data.scaleToObject?.considerTokenScale){
         width /= target?.texture?.scaleX ?? 1;
         height /= target?.texture?.scaleY ?? 1;
       }

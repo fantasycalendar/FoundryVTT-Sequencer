@@ -261,6 +261,8 @@ const flagManager = {
 
     const actorsToUpdate = new Map();
 
+    const sceneObjectsToUpdate = {};
+
     for (let objectUUID of objects) {
 
       let object = lib.from_uuid_fast(objectUUID);
@@ -307,12 +309,32 @@ const flagManager = {
         }
       }
 
-      await object.update({
-        [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
-      }, options);
+      if(object.parent.documentName === "Scene"){
+        const sceneId = object.parent.id;
+        const docName = object.documentName;
+        sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? [];
+        sceneObjectsToUpdate[sceneId][docName] = sceneObjectsToUpdate[sceneId][docName] ?? {
+          context: options,
+          updates: []
+        };
+        sceneObjectsToUpdate[sceneId][docName].updates.push({
+          _id: object.id,
+          [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+        })
+      } else {
+        await object.update({
+          [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+        }, options);
+      }
 
-      lib.debug(`Flags set for object with ID "${objectUUID}":\n`, flagsToSet)
+    }
 
+    for(const [sceneId, documentTypes] of Object.entries(sceneObjectsToUpdate)){
+      const scene = game.scenes.get(sceneId);
+      for(const [documentType, documentData] of Object.entries(documentTypes)) {
+        await scene.updateEmbeddedDocuments(documentType, documentData.updates, documentData.context);
+        lib.debug(`Flags set for documents of type "${documentType}" in scene with ID "${sceneId}"`)
+      }
     }
 
     for (const [actorUuid, flags] of Array.from(actorsToUpdate)) {
