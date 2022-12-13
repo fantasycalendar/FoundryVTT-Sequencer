@@ -437,9 +437,15 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   get shouldPlayVisible() {
-    return this.shouldPlay
-      && game.settings.get('sequencer', 'effectsEnabled')
-      && !(isNewerVersion(game.version, "10.289") && game.settings.get("core", "photosensitiveMode"));
+    let playVisible = this.shouldPlay
+      && game.settings.get('sequencer', 'effectsEnabled');
+
+    if(isNewerVersion(game.version, "10.289") && game.settings.get("core", "photosensitiveMode")){
+      playVisible = false;
+      lib.throttled_custom_warning(this.data.moduleName, "Photosensitive Mode is turned on, so Sequencer's visual effects aren't being rendered");
+    }
+
+    return playVisible;
   }
 
   /**

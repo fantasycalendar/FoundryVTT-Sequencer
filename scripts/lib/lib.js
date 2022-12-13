@@ -389,6 +389,19 @@ export function custom_warning(inClassName, warning, notify = false) {
   console.warn(warning.replace("<br>", "\n"));
 }
 
+const throttledWarnings = {};
+export function throttled_custom_warning(inClassName, warning, delay = 10000, notify = false){
+  inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+  warning = `${inClassName} | ${warning}`;
+  if(throttledWarnings[warning]) return;
+  throttledWarnings[warning] = true;
+  if (notify) ui.notifications.warn(warning);
+  console.warn(warning.replace("<br>", "\n"));
+  setTimeout(() => {
+    delete throttledWarnings[warning];
+  }, delay)
+}
+
 export function custom_error(inClassName, error, notify = true) {
   inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
   error = `${inClassName} | ${error}`;
