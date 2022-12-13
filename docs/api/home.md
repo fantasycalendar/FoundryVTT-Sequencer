@@ -93,10 +93,10 @@ Returns `Promise`
 
 Causes the Sequence to play through all of its sections. Returns a `Promise` which resolves when all sections have played.
 
-#### Preset
+### Preset
 
 `.preset("name")`
 
-Applies a preset to the sequence - read the [Sequencer Presets article](docs/presets.md) for more information.
+Applies a preset to the sequence - read the [Sequencer Presets article](../docs/presets.md) for more information.
 
 Please note that some presets may require this to be called on an effect, sound, or animation section, rather than directly on the sequence.

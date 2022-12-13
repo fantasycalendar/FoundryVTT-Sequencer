@@ -28,3 +28,4 @@
   * [Effect Player](player.md)
   * [Preloader](preloader.md)
   * [Section Manager](section-manager.md)
+  * [Presets](presets.md)
