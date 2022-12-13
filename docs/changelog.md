@@ -1,15 +1,13 @@
 ## Changelog
 
-### Version 2.4.3
+### Version 2.4.2
+- *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences
+- *Sequencer* - Added `.preset()` which allows you to use the aforementioned presets
 - *Sequencer* - Added optional `considerTokenScale` to the optional `options` parameter to `.scaleToObject()`, you can set it to `true` in order for the visual effect to also consider the token scale
 - *Sequencer* - Added support for persistent visual effects on "fake" tokens created by Multilevel Tokens 
 - *Sequencer* - Slightly improved the speed of document updates when visual effects are first applied
 - *Sequencer* - Added a throttled console warning when the Photosensitive Mode is enabled and a client is trying to play effects (only warns once every 10 seconds when effects are played)
 - *Effects* - Fixed `.scaleToObject()` always taking token scale into account, which it shouldn't do by default
-
-### Version 2.4.2
-- *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences
-- *Sequencer* - Added `.preset()` which allows you to use the aforementioned presets
 
 ### Version 2.4.1
 - *Effects* - Fixed minor typo in `.mask()`
