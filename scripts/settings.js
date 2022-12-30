@@ -2,7 +2,7 @@ import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./constants.js";
 import { user_can_do } from "./lib/lib.js";
 
-export default function registerSettings() {
+export function registerSettings() {
 
   // Define a settings submenu which handles advanced configuration needs
   game.settings.registerMenu(CONSTANTS.MODULE_NAME, "openSequencerDatabaseViewer", {
@@ -13,9 +13,19 @@ export default function registerSettings() {
     restricted: true
   });
 
-  game.settings.register(CONSTANTS.MODULE_NAME, "disable-pixi-fix", {
-    name: "SEQUENCER.Setting.DisablePIXIFix.Title",
-    hint: "SEQUENCER.Setting.DisablePIXIFix.Label",
+  game.settings.register(CONSTANTS.MODULE_NAME, "enable-pixi-fix", {
+    name: "SEQUENCER.Setting.EnablePixiFix.Title",
+    hint: "SEQUENCER.Setting.EnablePixiFix.Label",
+    scope: "client",
+    config: true,
+    default: true,
+    requiresReload: true,
+    type: Boolean
+  });
+
+  game.settings.register(CONSTANTS.MODULE_NAME, "enable-global-pixi-fix", {
+    name: "SEQUENCER.Setting.EnableGlobalPixiFix.Title",
+    hint: "SEQUENCER.Setting.EnableGlobalPixiFix.Label",
     scope: "client",
     config: true,
     default: false,
@@ -23,12 +33,12 @@ export default function registerSettings() {
     type: Boolean
   });
 
-  game.settings.register(CONSTANTS.MODULE_NAME, "disable-above-ui-screenspace", {
-    name: "SEQUENCER.Setting.DisableAboveUIScreenspace.Title",
-    hint: "SEQUENCER.Setting.DisableAboveUIScreenspace.Label",
+  game.settings.register(CONSTANTS.MODULE_NAME, "enable-above-ui-screenspace", {
+    name: "SEQUENCER.Setting.EnableAboveUIScreenspace.Title",
+    hint: "SEQUENCER.Setting.EnableAboveUIScreenspace.Label",
     scope: "client",
     config: true,
-    default: false,
+    default: true,
     requiresReload: true,
     type: Boolean
   });
@@ -229,6 +239,21 @@ export default function registerSettings() {
 
 }
 
-const debouncedReload = debounce(() => {
-  window.location.reload()
-}, 100)
+export async function migrateSettings(){
+
+  const oldPixiFixSetting = game.settings.storage.get('client').getItem('sequencer.disable-pixi-fix');
+
+  if(oldPixiFixSetting){
+    const value = oldPixiFixSetting === "true";
+    game.settings.storage.get('client').removeItem('sequencer.disable-pixi-fix')
+    await game.settings.set(CONSTANTS.MODULE_NAME, 'enable-pixi-fix', !value);
+  }
+
+  const oldScreenspaceSetting = game.settings.storage.get('client').getItem('sequencer.disable-above-ui-screenspace');
+  if(oldScreenspaceSetting){
+    const value = oldScreenspaceSetting === "true";
+    game.settings.storage.get('client').removeItem('sequencer.disable-above-ui-screenspace')
+    await game.settings.set(CONSTANTS.MODULE_NAME, 'enable-above-ui-screenspace', !value);
+  }
+
+}

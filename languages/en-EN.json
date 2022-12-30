@@ -105,13 +105,17 @@
         "Title": "Open Sequencer Database Viewer",
         "Label": "Open Database Viewer"
       },
-      "DisablePIXIFix": {
-        "Title": "Disable PIXI fix",
-        "Label": "This disables the fix for alphas on effects in Foundry - some setups (browsers, hardware, softwares, etc) seems to make this fix obsolete."
+      "EnablePixiFix": {
+        "Title": "Enable PIXI fix",
+        "Label": "This enables a fix for alphas on Sequencer effects in Foundry - some setups (browsers, hardware, softwares, etc) seems to make this fix obsolete."
       },
-      "DisableAboveUIScreenspace": {
-        "Title": "Disable Above UI Screenspace Layer",
-        "Label": "This disables the layer for playing effects above all UI elements in Foundry - some users have reported this layer causes a significant performance hit, so disable this if so."
+      "EnableGlobalPixiFix": {
+        "Title": "Enable Global PIXI fix",
+        "Label": "This enables a fix for alphas on all animated .webms files in Foundry. Use with caution."
+      },
+      "EnableAboveUIScreenspace": {
+        "Title": "Enable Above UI Screenspace Layer",
+        "Label": "This enables the layer for playing effects above all UI elements in Foundry - some users have reported this layer causes a significant performance hit, so disable this if so."
       },
       "Debug": {
         "Title": "Enable debugging",

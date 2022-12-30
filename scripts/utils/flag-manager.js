@@ -259,8 +259,7 @@ const flagManager = {
     flagsToAdd = new Map(flagsToAdd);
     flagsToRemove = new Map(flagsToRemove);
 
-    const actorsToUpdate = new Map();
-
+    const actorUpdates = {};
     const sceneObjectsToUpdate = {};
 
     for (let objectUUID of objects) {
@@ -282,17 +281,17 @@ const flagManager = {
       }
 
       for (let effect of toAdd.effects) {
-        if(typeof effect === "string"){
+        if (typeof effect === "string") {
           effect = existingFlags.get(effect);
-          if(!effect) continue;
+          if (!effect) continue;
         }
         existingFlags.set(effect._id, effect);
       }
 
       for (let effect of toRemove.effects) {
-        if(typeof effect === "string"){
+        if (typeof effect === "string") {
           effect = existingFlags.get(effect);
-          if(!effect) continue;
+          if (!effect) continue;
         }
         existingFlags.delete(effect._id);
       }
@@ -301,48 +300,53 @@ const flagManager = {
       const options = {};
 
       if (object instanceof TokenDocument && object.actorLink && (toAdd.original || toRemove.original)) {
-        const flagsToPrototypePersist = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
-        actorsToUpdate.set(object.actor.uuid, flagsToPrototypePersist);
-
-        if(game.modules.get("multilevel-tokens")?.active && getProperty(object, "flags.multilevel-tokens.stoken")){
+        actorUpdates[object.actor.id] = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
+        if (game.modules.get("multilevel-tokens")?.active && getProperty(object, "flags.multilevel-tokens.stoken")) {
           options["mlt_bypass"] = true;
         }
       }
 
-      if(object.parent.documentName === "Scene"){
+      if (object?.documentName === "Scene") {
+        const sceneId = object.id;
+        sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? {
+          updates: {},
+          documents: {}
+        };
+        sceneObjectsToUpdate[sceneId].updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = flagsToSet;
+      } else {
         const sceneId = object.parent.id;
         const docName = object.documentName;
-        sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? [];
-        sceneObjectsToUpdate[sceneId][docName] = sceneObjectsToUpdate[sceneId][docName] ?? {
-          context: options,
+        sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? {
+          updates: {},
+          documents: {}
+        };
+        sceneObjectsToUpdate[sceneId].documents[docName] = sceneObjectsToUpdate[sceneId].documents[docName] ?? {
+          options: {},
           updates: []
         };
-        sceneObjectsToUpdate[sceneId][docName].updates.push({
+        sceneObjectsToUpdate[sceneId].documents[docName].options = options;
+        sceneObjectsToUpdate[sceneId].documents[docName].updates.push({
           _id: object.id,
           [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
         })
-      } else {
-        await object.update({
-          [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
-        }, options);
       }
-
     }
 
-    for(const [sceneId, documentTypes] of Object.entries(sceneObjectsToUpdate)){
+    for (const [sceneId, sceneData] of Object.entries(sceneObjectsToUpdate)) {
       const scene = game.scenes.get(sceneId);
-      for(const [documentType, documentData] of Object.entries(documentTypes)) {
-        await scene.updateEmbeddedDocuments(documentType, documentData.updates, documentData.context);
+      if(!foundry.utils.isEmpty(sceneData.updates)) {
+        await scene.update(sceneData.updates)
+      }
+      for (const [documentType, documentData] of Object.entries(sceneData.documents)) {
+        await scene.updateEmbeddedDocuments(documentType, documentData.updates, documentData.options);
         lib.debug(`Flags set for documents of type "${documentType}" in scene with ID "${sceneId}"`)
       }
     }
 
-    for (const [actorUuid, flags] of Array.from(actorsToUpdate)) {
-      const actor = lib.from_uuid_fast(actorUuid);
-      await actor.update({
-        [`token.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flags
-      });
-    }
+    await Actor.updateDocuments(Object.entries(actorUpdates).map(entry => ({
+      _id: entry[0],
+      [`prototypeToken.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: entry[1]
+    })));
 
   }, 250)
 

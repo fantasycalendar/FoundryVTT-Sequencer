@@ -1,5 +1,12 @@
 ## Changelog
 
+### Version 2.4.3
+- *Sequencer* - Switched `Disable Pixi Fix` to `Enable Pixi Fix` to make it more consistent with other settings
+- *Sequencer* - Added `Enable Global Pixi Fix` which fixes the alpha on animated tiles if enabled (use with caution) 
+- *Effects* - Fixed `.atLocation()` and `.persist()` throwing errors and thus failing to persist the effect on the scene
+- *Effects* - Slight tweaks to visibility logic of effects to be more consistent
+- *Effects* - Tweaked `.attachTo()`'s `align` and `edge` to not consider token scale when determining the edge of the token
+
 ### Version 2.4.2
 - *Sequencer* - Added `Sequencer.Presets` which allows you to create and save reusable bits of sequences
 - *Sequencer* - Added `.preset()` which allows you to use the aforementioned presets

@@ -340,7 +340,7 @@ export class SequencerAboveUILayer {
   }
 
   static setup() {
-    if (game.settings.get("sequencer", "disable-above-ui-screenspace")) return;
+    if (!game.settings.get("sequencer", "enable-above-ui-screenspace")) return;
     layer = new this("sequencerUILayerAbove", 10000);
   }
 

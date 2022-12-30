@@ -194,11 +194,6 @@ export function get_object_dimensions(inObj, half = false) {
     ?? inObj?.height
     ?? canvas.grid.size;
 
-  if(inObj instanceof Token){
-    width *= inObj?.document?.texture?.scaleX ?? 1;
-    height *= inObj?.document?.texture?.scaleY ?? 1;
-  }
-
   return {
     width: width / (half ? 2 : 1),
     height: height / (half ? 2 : 1)

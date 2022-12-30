@@ -693,7 +693,7 @@ declare abstract class EffectSection {
   spriteRotation(inAngle: number): this;
 
   /**
-   * Causes the effect to not rotate should its container rotate
+   * Causes the effect to not rotate should its containers rotate
    */
   zeroSpriteRotation(inBool?: boolean): this;
 

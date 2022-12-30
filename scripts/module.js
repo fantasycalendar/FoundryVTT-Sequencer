@@ -1,4 +1,4 @@
-import registerSettings from "./settings.js";
+import { registerSettings, migrateSettings } from "./settings.js";
 import registerLayers from "./layers.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "./typings/typings.js";
@@ -16,6 +16,7 @@ import Section from "./sections/section.js";
 import * as lib from "./lib/lib.js";
 import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
+import registerLibwrappers from "./libwrapper.js";
 
 Hooks.once('init', async function () {
   if (!game.modules.get("socketlib")?.active) return;
@@ -44,6 +45,8 @@ Hooks.once('ready', async function () {
     Hooks.on("canvasReady", () => {
       SequencerEffectManager.setUpPersists();
     });
+
+    migrateSettings();
 
   }, 100);
 });
@@ -80,6 +83,7 @@ function initialize_module() {
   registerSettings();
   registerLayers();
   registerHotkeys();
+  registerLibwrappers();
 
   SequencerAboveUILayer.setup();
 

@@ -1750,7 +1750,8 @@ export default class CanvasEffect extends PIXI.Container {
     const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
     const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
-    let renderable = this.shouldPlayVisible;
+    const baseRenderable = this.shouldPlayVisible;
+    let renderable = baseRenderable;
     let alpha = 1.0;
 
     if (attachedToSource) {
@@ -1767,9 +1768,9 @@ export default class CanvasEffect extends PIXI.Container {
           const sourceVisible = this.source && (this.sourceMesh?.visible ?? true);
           const sourceHidden = this.sourceDocument && (this.sourceDocument?.hidden ?? false);
           const targetVisible = this.target && (!attachedToTarget || (this.targetMesh?.visible ?? true));
-          this.renderable = sourceVisible || targetVisible;
+          this.renderable = baseRenderable && (sourceVisible || targetVisible);
           this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
-          renderable = this.renderable;
+          renderable = baseRenderable && this.renderable;
         }, true);
       }
 
@@ -2114,9 +2115,9 @@ export default class CanvasEffect extends PIXI.Container {
         : this.getSourceData();
 
       const target = this.targetDocument || this.sourceDocument;
-      if(target instanceof TokenDocument && !this.data.scaleToObject?.considerTokenScale){
-        width /= target?.texture?.scaleX ?? 1;
-        height /= target?.texture?.scaleY ?? 1;
+      if(target instanceof TokenDocument && this.data.scaleToObject?.considerTokenScale){
+        width *= target?.texture?.scaleX ?? 1;
+        height *= target?.texture?.scaleY ?? 1;
       }
 
       if (this.data.scaleToObject?.uniform) {
