@@ -65,6 +65,7 @@ export default class EffectSection extends Section {
     this._spriteScaleMax = null;
     this._shapes = [];
     this._xray = null;
+		this._playEffect = true;
   }
 
   /**
@@ -1275,8 +1276,10 @@ export default class EffectSection extends Section {
    * @returns {Promise<void>}
    */
   async run() {
-    if (!lib.user_can_do("permissions-effect-create")) {
-      debounce(EffectSection.debounceWarning, 1000);
+    if (!lib.user_can_do("permissions-effect-create") || !this._playEffect) {
+			if(!lib.user_can_do("permissions-effect-create")) {
+				debounce(EffectSection.debounceWarning, 1000);
+			}
       return new Promise((resolve) => {
         resolve();
       });
@@ -1353,7 +1356,8 @@ export default class EffectSection extends Section {
       }
     }
 
-    if ((!this._file && this._silentlyFail) || (!this._file && this._text)) {
+    if ((!this._file && this.sequence.softFail) || (!this._file && this._text)) {
+	    this._playEffect = false;
       return;
     }
 
@@ -1373,7 +1377,13 @@ export default class EffectSection extends Section {
     } catch (err) {
     }
 
-    if (!exists) throw this.sequence._customError(this, "Play", `Could not find file:<br>${fileData.file}`);
+    if (!exists){
+			if(this.sequence.softFail){
+				this._playEffect = false;
+				return;
+			}
+			throw this.sequence._customError(this, "Play", `Could not find file:<br>${fileData.file}`);
+    }
 
   }
 
@@ -1403,7 +1413,7 @@ export default class EffectSection extends Section {
       file,
       forcedIndex,
       customRange
-    } = this._file ? (await this._determineFile(this._file)) : {
+    } = this._file && this._playEffect ? (await this._determineFile(this._file)) : {
       file: this._file,
       forcedIndex: false,
       customRange: false

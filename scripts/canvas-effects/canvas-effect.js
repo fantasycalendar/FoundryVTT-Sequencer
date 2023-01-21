@@ -1384,7 +1384,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     for(const shape of nonMaskShapes){
       const graphic = canvaslib.createShape(shape, this.gridSizeDifference);
-      this.sprite.addChild(graphic);
+			graphic.filters = this.sprite.filters;
+      this.spriteContainer.addChild(graphic);
       if(shape.name){
         if(!this.shapes) this.shapes = {};
         this.shapes[shape.name] = graphic;
@@ -1715,7 +1716,7 @@ export default class CanvasEffect extends PIXI.Container {
       let x;
       const bounds = container.getBounds();
       if(container.exclude){
-        x = this.x - bounds.width/2;
+        x = this.x - bounds.width/2 + container.maskSprite.offset.x;
       }else{
         x = bounds.x;
       }
@@ -1726,7 +1727,7 @@ export default class CanvasEffect extends PIXI.Container {
       let y;
       const bounds = container.getBounds(true);
       if(container.exclude){
-        y = this.y - bounds.height/2;
+        y = this.y - bounds.height/2 + container.maskSprite.offset.y;
       }else{
         y = bounds.y;
       }
@@ -2757,13 +2758,8 @@ class PersistentCanvasEffect extends CanvasEffect {
     let loopWaitTime = 0;
     if (this._animationTimes.loopStart) {
       if (this._isEnding) return;
-      if (this._loopOffset > 0) {
-        this.video.currentTime = this._animationTimes.loopStart + this._loopOffset;
-        loopWaitTime = (this._animationTimes.loopEnd - (this.video.currentTime)) * 1000;
-      } else {
-        this.video.currentTime = firstLoop ? 0 : this._animationTimes.loopStart;
-        loopWaitTime = (this._animationTimes.loopEnd - this._animationTimes.loopStart) * 1000;
-      }
+      this.video.currentTime = (firstLoop ? 0 : this._animationTimes.loopStart) + (this._loopOffset > 0 ? this._loopOffset : 0);
+      loopWaitTime = (this._animationTimes.loopEnd - (this.video.currentTime)) * 1000;
     } else {
       this.video.currentTime = this._startTime + this._loopOffset;
       loopWaitTime = this._animationDuration - (this._loopOffset * 1000);

@@ -10,7 +10,6 @@ export default {
   _fileOptions: false,
   _baseFolder: "",
   _mustache: null,
-  _silentlyFail: true,
 
   /**
    * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
@@ -20,9 +19,11 @@ export default {
    * @param {boolean} silentlyFail
    * @returns this
    */
-  file(inFile, silentlyFail = false) {
+  file(inFile, silentlyFail) {
     this._file = inFile;
-    this._silentlyFail = silentlyFail;
+		if(silentlyFail !== undefined) {
+			this.sequence.softFail = silentlyFail;
+		}
     return this;
   },
 

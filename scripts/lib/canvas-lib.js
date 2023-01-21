@@ -16,22 +16,27 @@ export function createShape(shape, gridSizeDifference = 1) {
   const offsetY = (shape.offset?.y ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
   const sizeMultiplier = (shape.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
 
+	graphic.offset = {
+		x: offsetX,
+		y: offsetY
+	}
+
   switch(shape.type){
     case CONSTANTS.SHAPES.CIRC:
-      graphic.drawCircle(offsetX, offsetY, shape.radius * sizeMultiplier);
+      graphic.drawCircle(graphic.offset.x, graphic.offset.y, shape.radius * sizeMultiplier);
       break;
     case CONSTANTS.SHAPES.RECT:
-      graphic.drawRect(offsetX, offsetY, shape.width * sizeMultiplier, shape.height * sizeMultiplier);
+      graphic.drawRect(graphic.offset.x, graphic.offset.y, shape.width * sizeMultiplier, shape.height * sizeMultiplier);
       break;
     case CONSTANTS.SHAPES.ELIP:
-      graphic.drawEllipse(offsetX, offsetY, shape.width * sizeMultiplier, shape.height * sizeMultiplier);
+      graphic.drawEllipse(graphic.offset.x, graphic.offset.y, shape.width * sizeMultiplier, shape.height * sizeMultiplier);
       break;
     case CONSTANTS.SHAPES.RREC:
-      graphic.drawRoundedRect(offsetX, offsetY, shape.width * sizeMultiplier, shape.height * sizeMultiplier, shape.radius * sizeMultiplier);
+      graphic.drawRoundedRect(graphic.offset.x, graphic.offset.y, shape.width * sizeMultiplier, shape.height * sizeMultiplier, shape.radius * sizeMultiplier);
       break;
     case CONSTANTS.SHAPES.POLY:
       graphic.drawPolygon(shape.points.map((point, index) => {
-        return new PIXI.Point((point[0] * sizeMultiplier) + offsetX, (point[1] * sizeMultiplier) + offsetY);
+        return new PIXI.Point((point[0] * sizeMultiplier) + graphic.offset.x, (point[1] * sizeMultiplier) + graphic.offset.y);
       }))
       break;
   }

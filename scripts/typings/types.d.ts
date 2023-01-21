@@ -83,9 +83,10 @@ declare interface Sequence extends CoreMethods {
 declare class Sequence {
   /**
    * Declaring the module name when using new Sequence() will make every error or warning caught during the runtime also
-   * include the module name, which lets you and other users know which module caused the error
+   * include the module name, which lets you and other users know which module caused the error. The secondary argument
+   * is an object that can contain a number of optional arguments.
    */
-  constructor(inModuleName?: string);
+  constructor(inOptions?: { inModuleName?: string, softFail?: boolean });
 }
 
 declare abstract class Section<T> {
@@ -160,7 +161,7 @@ declare abstract class HasFiles<T> {
    * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
    * time the section is played.
    */
-  file(inFile: string | string[], silentlyFail?: boolean): T;
+  file(inFile: string | string[]): T;
 
   /**
    * Defines the base folder that will prepend to the file path. This is mainly just useful to make the file

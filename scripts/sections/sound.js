@@ -43,7 +43,7 @@ class SoundSection extends Section {
    */
   async run() {
 
-    if((!this._file && this._silentlyFail)){
+    if((!this._file && this.sequence.softFail)){
       return new Promise((reject) => {
         reject();
       });

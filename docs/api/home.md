@@ -19,13 +19,21 @@ new Sequence()
 
 For module developers, by putting your module name in the Sequence like this:
 ```js
-new Sequence("myModuleName")
+new Sequence({ moduleName: "myModuleName" })
 ```
 Means that any errors will show up like this:
 
 ![Sequencer module error example](../images/error-example.jpg)
 
 This will help you and your module's users to get to the bottom of the issue.
+
+In addition, you can also add `softFail` like so:
+
+```js
+new Sequence({ moduleName: "myModuleName", softFail: true })
+```
+
+This will make sequencer consider all failures to find an effect file, sound file, or a macro a non-issue and simply continues executing the sequence, rather than halt the execution. 
 
 ## Core Methods
 

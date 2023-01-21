@@ -1,5 +1,12 @@
 ## Changelog
 
+### Version 2.4.4
+- *Sequencer* - Tweaked the arguments to `new Sequence("moduleName")` to `new Sequence(inOptions)` - it now takes a single object that can contain:
+  - `moduleName` <string> - The name of the module that is creating this sequence - this is for other users to know which module used Sequencer
+  - `softFail` <boolean> - Setting this to `true` causes any failures to find files for effects, sounds, or macros to softly fail, rather than halt the entire sequence
+- *Effects* - Tweaked `.shape()`s parent to be the `spriteContainer` rather than the `sprite`, so that animations to the sprite doesn't affect the shapes
+- *Effects* - Fixed `.shape()` not considering their offset with `isMask` enabled  
+
 ### Version 2.4.3
 - *Sequencer* - Switched `Disable Pixi Fix` to `Enable Pixi Fix` to make it more consistent with other settings
 - *Sequencer* - Added `Enable Global Pixi Fix` which fixes the alpha on animated tiles if enabled (use with caution) 
