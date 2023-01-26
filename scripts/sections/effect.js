@@ -65,6 +65,7 @@ export default class EffectSection extends Section {
     this._spriteScaleMax = null;
     this._shapes = [];
     this._xray = null;
+    this._perspectiveRatio = 1;
 		this._playEffect = true;
   }
 
@@ -413,7 +414,7 @@ export default class EffectSection extends Section {
     this._temporaryEffect = this._temporaryEffect || (inObject instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.uuid) : false);
 
     if (inOptions.offset) {
-      const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
+      const offsetData = this._validateOffset("from", inOptions.offset, inOptions);
       this._offset = {
         source: offsetData,
         target: this._offset?.target ?? false
@@ -1197,6 +1198,11 @@ export default class EffectSection extends Section {
     return this;
   }
 
+	perspective(ratio = 2) {
+		this._perspectiveRatio = ratio;
+		return this;
+	}
+
   /**
    * @private
    */
@@ -1244,6 +1250,10 @@ export default class EffectSection extends Section {
 
       if (this._size === null) {
         const size = canvaslib.get_object_dimensions(this._from.object);
+				if(this._from.object instanceof TokenDocument){
+					size.width *= this._from.object?.texture?.scaleX ?? 1;
+					size.height *= this._from.object?.texture?.scaleY ?? 1;
+				}
         this._size = {
           width: size?.width ?? canvas.grid.size,
           height: size?.height ?? canvas.grid.size,
@@ -1440,6 +1450,13 @@ export default class EffectSection extends Section {
       this._masks.push(lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source));
     }
 
+    let sceneId = game.user.viewedScene;
+    if(lib.is_UUID(source)){
+      sceneId = source.split(".")[1];
+    }else if(lib.is_UUID(target)){
+      sceneId = target.split(".")[1];
+    }
+
     let data = foundry.utils.duplicate({
       /**
        * Core properties
@@ -1448,7 +1465,7 @@ export default class EffectSection extends Section {
       flagVersion: flagManager.latestFlagVersion,
       sequenceId: this.sequence.id,
       creationTimestamp: (+new Date()),
-      sceneId: game.user.viewedScene,
+      sceneId: sceneId,
       creatorUserId: game.userId,
       moduleName: this.sequence.moduleName,
       users: this._users ? Array.from(this._users) : false,
@@ -1488,6 +1505,7 @@ export default class EffectSection extends Section {
       tilingTexture: this._tilingTexture,
       masks: Array.from(new Set(this._masks)),
       shapes: this._shapes,
+      perspectiveRatio: this._perspectiveRatio,
 
       // Transforms
       scale: this._getCalculatedScale("scale"),

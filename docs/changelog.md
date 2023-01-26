@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 2.4.5
+- *Effects* - Fixed `.from()` not considering token scale
+
 ### Version 2.4.4
 - *Sequencer* - Tweaked the arguments to `new Sequence("moduleName")` to `new Sequence(inOptions)` - it now takes a single object that can contain:
   - `moduleName` <string> - The name of the module that is creating this sequence - this is for other users to know which module used Sequencer
