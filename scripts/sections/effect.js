@@ -1,4 +1,5 @@
 import * as lib from "../lib/lib.js";
+import { is_real_number } from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
@@ -6,7 +7,6 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../utils/flag-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import { SequencerFileRangeFind } from "../modules/sequencer-file.js";
-import { is_real_number } from "../lib/lib.js";
 import CONSTANTS from "../constants.js";
 
 export default class EffectSection extends Section {
@@ -65,7 +65,7 @@ export default class EffectSection extends Section {
     this._spriteScaleMax = null;
     this._shapes = [];
     this._xray = null;
-		this._playEffect = true;
+    this._playEffect = true;
   }
 
   /**
@@ -161,6 +161,9 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   atLocation(inLocation, inOptions = {}) {
+    if (!(typeof inLocation === "object" || typeof inLocation === "string")){
+      throw this.sequence._customError(this, "atLocation", `inLocation is invalid, and must be of type of object, string, placeable object, or document`);
+    }
     if (typeof inOptions !== "object") throw this.sequence._customError(this, "atLocation", `inOptions must be of type object`);
     inOptions = foundry.utils.mergeObject({
       cacheLocation: false,
@@ -202,6 +205,9 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   attachTo(inObject, inOptions = {}) {
+    if (!(typeof inObject === "object" || typeof inObject === "string")){
+      throw this.sequence._customError(this, "attachTo", `inObject is invalid, and must be of type of object, string, placeable object, or document`);
+    }
     if (typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
     inOptions = foundry.utils.mergeObject({
       align: "center",
@@ -253,8 +259,8 @@ export default class EffectSection extends Section {
     this._temporaryEffect = this._temporaryEffect ||
       (
         validatedObject instanceof foundry.abstract.Document || validatedObject instanceof MeasuredTemplate
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : false
+          ? !lib.is_UUID(validatedObject?.uuid)
+          : false
       );
 
     if (inOptions.offset) {
@@ -291,6 +297,9 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   stretchTo(inLocation, inOptions = {}) {
+    if (!(typeof inLocation === "object" || typeof inLocation === "string")){
+      throw this.sequence._customError(this, "stretchTo", `inLocation is invalid, and must be of type of object, string, placeable object, or document`);
+    }
     if (typeof inOptions !== "object") throw this.sequence._customError(this, "stretchTo", `inOptions must be of type object`);
     inOptions = foundry.utils.mergeObject({
       cacheLocation: false,
@@ -348,6 +357,9 @@ export default class EffectSection extends Section {
    * @returns this
    */
   rotateTowards(inLocation, inOptions = {}) {
+    if (!(typeof inLocation === "object" || typeof inLocation === "string")){
+      throw this.sequence._customError(this, "inLocation", `inLocation is invalid, and must be of type of object, string, placeable object, or document`);
+    }
     inOptions = foundry.utils.mergeObject({
       rotationOffset: 0,
       cacheLocation: false,
@@ -396,8 +408,10 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   from(inObject, inOptions = {}) {
+    if (!(inObject instanceof Token || inObject instanceof Tile || inObject instanceof TokenDocument || inObject instanceof TileDocument)){
+      throw this.sequence._customError(this, "from", "inObject must be of type Token, Tile, TokenDocument, or TileDocument");
+    }
     if (typeof inOptions !== "object") throw this.sequence._customError(this, "from", `inOptions must be of type object`);
-    if (!(inObject instanceof Token || inObject instanceof Tile || inObject instanceof TokenDocument || inObject instanceof TileDocument)) throw this.sequence._customError(this, "from", "inObject must be of type Token, Tile, TokenDocument, or TileDocument");
     inObject = inObject.document ?? inObject;
     if (!inObject?.texture?.src) throw this.sequence._customError(this, "from", "could not find the image for the given object");
     inOptions = foundry.utils.mergeObject({
@@ -448,88 +462,88 @@ export default class EffectSection extends Section {
     return this;
   }
 
-  shape(inType, inOptions = {}){
+  shape(inType, inOptions = {}) {
     if (typeof inType !== "string") throw this.sequence._customError(this, "shape", "type must be of type string");
 
-    if(!Object.values(CONSTANTS.SHAPES).includes(inType)){
+    if (!Object.values(CONSTANTS.SHAPES).includes(inType)) {
       throw this.sequence._customError(this, "shape", "type must be one of: " + Object.values(CONSTANTS.SHAPES).join(", "));
     }
 
-    if(inType === CONSTANTS.SHAPES.POLY){
-      if (!Array.isArray(inOptions.points)){
+    if (inType === CONSTANTS.SHAPES.POLY) {
+      if (!Array.isArray(inOptions.points)) {
         throw this.sequence._customError(this, "shape", "if creating polygon, inOptions.points must be of type array");
       }
       inOptions.points = inOptions.points.map(point => {
-        if(Array.isArray(point)){
-          if(!is_real_number(point[0]) || !is_real_number(point[1])){
+        if (Array.isArray(point)) {
+          if (!is_real_number(point[0]) || !is_real_number(point[1])) {
             throw this.sequence._customError(this, "shape", "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties");
           }
           return point;
         }
-        if(typeof point === "object"){
-          if(!is_real_number(point?.x) || !is_real_number(point?.y)) {
+        if (typeof point === "object") {
+          if (!is_real_number(point?.x) || !is_real_number(point?.y)) {
             throw this.sequence._customError(this, "shape", "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties");
           }
           return [point.x, point.y];
         }
       });
-    }else if(inType === CONSTANTS.SHAPES.CIRC){
-      if (typeof inOptions.radius !== "number"){
+    } else if (inType === CONSTANTS.SHAPES.CIRC) {
+      if (typeof inOptions.radius !== "number") {
         throw this.sequence._customError(this, "shape", "if creating circle, inOptions.radius must be of type number");
       }
-    }else if(inType === CONSTANTS.SHAPES.RECT || inType === CONSTANTS.SHAPES.RREC || inType === CONSTANTS.SHAPES.ELIP){
-      if(inOptions.width ^ inOptions.height){
+    } else if (inType === CONSTANTS.SHAPES.RECT || inType === CONSTANTS.SHAPES.RREC || inType === CONSTANTS.SHAPES.ELIP) {
+      if (inOptions.width ^ inOptions.height) {
         inOptions.width = inOptions.width ?? inOptions.height;
         inOptions.height = inOptions.height ?? inOptions.width;
       }
-      if (typeof inOptions.width !== "number"){
+      if (typeof inOptions.width !== "number") {
         throw this.sequence._customError(this, "shape", `if creating rectangle, rounded rectangle, or an ellipse, inOptions.width must be of type number`);
       }
-      if (typeof inOptions.height !== "number"){
+      if (typeof inOptions.height !== "number") {
         throw this.sequence._customError(this, "shape", "if creating rectangle, rounded rectangle, or an ellipse, inOptions.height must be of type number");
       }
-      if(inType === CONSTANTS.SHAPES.RREC && typeof inOptions.radius !== "number"){
+      if (inType === CONSTANTS.SHAPES.RREC && typeof inOptions.radius !== "number") {
         throw this.sequence._customError(this, "shape", "if creating rounded border rectangle, inOptions.radius must be of type number");
       }
     }
 
-    if (inOptions.gridUnits !== undefined && typeof inOptions.gridUnits !== "boolean"){
+    if (inOptions.gridUnits !== undefined && typeof inOptions.gridUnits !== "boolean") {
       throw this.sequence._customError(this, "shape", "inOptions.gridUnits must be of type boolean");
     }
 
-    if (inOptions.name && typeof inOptions.name !== "string"){
+    if (inOptions.name && typeof inOptions.name !== "string") {
       throw this.sequence._customError(this, "shape", "inOptions.name must be of type string");
     }
 
-    if (inOptions.fillColor && !is_real_number(inOptions.fillColor) && typeof inOptions.fillColor !== "string"){
+    if (inOptions.fillColor && !is_real_number(inOptions.fillColor) && typeof inOptions.fillColor !== "string") {
       throw this.sequence._customError(this, "shape", "inOptions.fillColor must be of type string (hexadecimal) or number (decimal)");
-    }else{
+    } else {
       inOptions.fillColor = lib.parseColor(inOptions.fillColor).decimal;
     }
 
-    if (inOptions.fillAlpha && !is_real_number(inOptions.fillAlpha)){
+    if (inOptions.fillAlpha && !is_real_number(inOptions.fillAlpha)) {
       throw this.sequence._customError(this, "shape", "inOptions.fillAlpha must be of type number");
     }
 
-    if (inOptions.alpha && !is_real_number(inOptions.alpha)){
+    if (inOptions.alpha && !is_real_number(inOptions.alpha)) {
       throw this.sequence._customError(this, "shape", "inOptions.alpha must be of type number");
     }
 
-    if (inOptions.lineSize && !is_real_number(inOptions.lineSize)){
+    if (inOptions.lineSize && !is_real_number(inOptions.lineSize)) {
       throw this.sequence._customError(this, "shape", "inOptions.lineSize must be of type number");
     }
 
-    if (inOptions.lineColor && !is_real_number(inOptions.lineColor) && typeof inOptions.lineColor !== "string"){
+    if (inOptions.lineColor && !is_real_number(inOptions.lineColor) && typeof inOptions.lineColor !== "string") {
       throw this.sequence._customError(this, "shape", "inOptions.lineColor must be of type string (hexadecimal) or number (decimal)");
-    }else{
+    } else {
       inOptions.lineColor = lib.parseColor(inOptions.lineColor).decimal;
     }
 
-    if (inOptions.offset){
+    if (inOptions.offset) {
       inOptions.offset = this._validateOffset("shape", inOptions.offset, inOptions.offset)
     }
 
-    if (inOptions.isMask !== undefined && typeof inOptions.isMask !== "boolean"){
+    if (inOptions.isMask !== undefined && typeof inOptions.isMask !== "boolean") {
       throw this.sequence._customError(this, "shape", "inOptions.isMask must be of type boolean");
     }
 
@@ -1277,9 +1291,9 @@ export default class EffectSection extends Section {
    */
   async run() {
     if (!lib.user_can_do("permissions-effect-create") || !this._playEffect) {
-			if(!lib.user_can_do("permissions-effect-create")) {
-				debounce(EffectSection.debounceWarning, 1000);
-			}
+      if (!lib.user_can_do("permissions-effect-create")) {
+        debounce(EffectSection.debounceWarning, 1000);
+      }
       return new Promise((resolve) => {
         resolve();
       });
@@ -1356,8 +1370,8 @@ export default class EffectSection extends Section {
       }
     }
 
-    if ((!this._file && this.sequence.softFail) || (!this._file && this._text)) {
-	    this._playEffect = false;
+    if (!this._file && !this._from && !this._text && this.sequence.softFail) {
+      this._playEffect = false;
       return;
     }
 
@@ -1377,12 +1391,12 @@ export default class EffectSection extends Section {
     } catch (err) {
     }
 
-    if (!exists){
-			if(this.sequence.softFail){
-				this._playEffect = false;
-				return;
-			}
-			throw this.sequence._customError(this, "Play", `Could not find file:<br>${fileData.file}`);
+    if (!exists) {
+      if (this.sequence.softFail) {
+        this._playEffect = false;
+        return;
+      }
+      throw this.sequence._customError(this, "Play", `Could not find file:<br>${fileData.file}`);
     }
 
   }
@@ -1440,6 +1454,19 @@ export default class EffectSection extends Section {
       this._masks.push(lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source));
     }
 
+    let sceneId = game.user.viewedScene;
+    if (lib.is_UUID(source)) {
+      const potentialSceneId = source.split(".")[1];
+      if (game.scenes.get(potentialSceneId)) {
+        sceneId = potentialSceneId;
+      }
+    } else if (lib.is_UUID(target)) {
+      const potentialSceneId = target.split(".")[1];
+      if (game.scenes.get(potentialSceneId)) {
+        sceneId = potentialSceneId;
+      }
+    }
+
     let data = foundry.utils.duplicate({
       /**
        * Core properties
@@ -1448,7 +1475,7 @@ export default class EffectSection extends Section {
       flagVersion: flagManager.latestFlagVersion,
       sequenceId: this.sequence.id,
       creationTimestamp: (+new Date()),
-      sceneId: game.user.viewedScene,
+      sceneId,
       creatorUserId: game.userId,
       moduleName: this.sequence.moduleName,
       users: this._users ? Array.from(this._users) : false,

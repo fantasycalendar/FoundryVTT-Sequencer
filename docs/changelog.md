@@ -1,5 +1,10 @@
 ## Changelog
 
+### Version 2.4.5
+- *Effects* - Fixed effects playing on the same scene as the user's current scene, even if the target of the effect was on another scene
+- *Effects* - Fixed `.from()` not working with the new `softFail` sequence parameter
+- *Effects* - Fixed being able to pass non-valid parameters to `.atLocation()` and similar functions without errors
+
 ### Version 2.4.4
 - *Sequencer* - Tweaked the arguments to `new Sequence("moduleName")` to `new Sequence(inOptions)` - it now takes a single object that can contain:
   - `moduleName` <string> - The name of the module that is creating this sequence - this is for other users to know which module used Sequencer

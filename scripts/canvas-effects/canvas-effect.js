@@ -425,20 +425,24 @@ export default class CanvasEffect extends PIXI.Container {
    */
   get shouldPlay() {
     return (
-      game.user.viewedScene === this.data.sceneId &&
+      (
+        game.user.viewedScene === this.data.sceneId ||
+        this.data.creatorUserId === game.userId
+      )
+      &&
       (
         game.user.isGM ||
         !this.data.users ||
         this.data.users.length === 0 ||
-        this.data.users.includes(game.userId) ||
-        this.data.creatorUserId === game.userId
+        this.data.users.includes(game.userId)
       )
     );
   }
 
   get shouldPlayVisible() {
     let playVisible = this.shouldPlay
-      && game.settings.get('sequencer', 'effectsEnabled');
+      && game.settings.get('sequencer', 'effectsEnabled')
+      && game.user.viewedScene === this.data.sceneId;
 
     if(isNewerVersion(game.version, "10.289") && game.settings.get("core", "photosensitiveMode")){
       playVisible = false;
