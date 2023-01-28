@@ -1370,7 +1370,7 @@ export default class EffectSection extends Section {
       }
     }
 
-    if (!this._file && !this._from && !this._text && !this._shapes && this.sequence.softFail) {
+    if (!this._file && !this._from && !this._text && !this._shapes.length && this.sequence.softFail) {
       this._playEffect = false;
       return;
     }
