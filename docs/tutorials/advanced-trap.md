@@ -256,22 +256,20 @@ Hooks.once("midi-qol.RollComplete", async function(result) {
     new Sequence()
         .effect()
             .file("jb2a.arrow.physical.white.01")
-            .atLocation(leftTile)
-            .stretchTo(rightTile)
-            .randomOffset()
+            .atLocation(leftTile, { randomOffset: true })
+            .stretchTo(rightTile, { randomOffset: true })
             .repeats(5, 30, 60)
         .effect()
             .file("jb2a.arrow.physical.white.01")
-            .atLocation(rightTile)
-            .stretchTo(leftTile)
-            .randomOffset()
+            .atLocation(rightTile, { randomOffset: true })
+            .stretchTo(leftTile, { randomOffset: true })
             .repeats(5, 30, 60)
         .play();
 
 });
 ```
 
-As you can see, we're playing two `.effect()`s, both of the them are using the JB2A white arrow `.file()` in the Sequencer Database. These are being spawned at the left tile and attacking the right tile, and vice versa, but also targeting a random space within the opposite tile with `.randomOffset()`. Each side `.repeats()` 5 times, with a random delay between 30 and 60 milliseconds.
+As you can see, we're playing two `.effect()`s, both of the them are using the JB2A white arrow `.file()` in the Sequencer Database. These are being spawned at the left tile and attacking the right tile, and vice versa, but also targeting a random space within the opposite tile with a `randomOffset`. Each side `.repeats()` 5 times, with a random delay between 30 and 60 milliseconds.
 
 ![Token walking over an arrow pressure plate and then arrows fly from the left and right.](../images/trap-tutorial/dungeon-trap-triggered.gif)
 
@@ -308,15 +306,13 @@ Hooks.once("midi-qol.RollComplete", async function(result) {
     new Sequence()
         .effect()
             .file("jb2a.arrow.physical.white.01")
-            .atLocation(leftTile)
-            .stretchTo(rightTarget) // <----------------------- Right here
-            .randomOffset()
+            .atLocation(leftTile, { randomOffset: true })
+            .stretchTo(rightTarget, { randomOffset: true }) // <----------------------- Right here
             .repeats(5, 30, 60)
         .effect()
             .file("jb2a.arrow.physical.white.01")
-            .atLocation(rightTile)
-            .stretchTo(leftTarget) // <---------------------- and right here
-            .randomOffset()
+            .atLocation(rightTile, { randomOffset: true })
+            .stretchTo(leftTarget, { randomOffset: true }) // <---------------------- and right here
             .repeats(5, 30, 60)
         .play();
 });
