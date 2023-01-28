@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 2.4.7
+- *Effects* - Actually fixed shapes
+
 ### Version 2.4.6
 - *Effects* - Fixed effects with only shapes would not play properly
 - *Effects* - Fixed error when users tried to play effects even when `softFail` was set to `true`
