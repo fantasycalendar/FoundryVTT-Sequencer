@@ -117,7 +117,7 @@ export default {
     if (!inFile.includes("*")) return inFile;
     if (Array.isArray(inFile)) return inFile.map(async (file) => await this._applyWildcard(file));
     inFile = this._applyBaseFolder(inFile);
-    return lib.getFiles(inFile, { applyWildCard: true });
+    return lib.getFiles(inFile, { applyWildCard: true, softFail: this.sequence.softFail });
   }
 
 }

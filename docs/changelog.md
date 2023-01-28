@@ -1,5 +1,9 @@
 ## Changelog
 
+### Version 2.4.6
+- *Effects* - Fixed effects with only shapes would not play properly
+- *Effects* - Fixed error when users tried to play effects even when `softFail` was set to `true`
+
 ### Version 2.4.5
 - *Effects* - Fixed effects playing on the same scene as the user's current scene, even if the target of the effect was on another scene
 - *Effects* - Fixed `.from()` not working with the new `softFail` sequence parameter
