@@ -543,9 +543,12 @@ export default class CanvasEffect extends PIXI.Container {
       this._cachedSourceData.position = position;
     }
 
-    const rotation = this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect"
-      ? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.direction))
-      : this.sourceDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.rotation)) : 0;
+    let rotation = 0;
+    if(this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect"){
+      rotation = Math.normalizeRadians(Math.toRadians(this.sourceDocument?.direction));
+    }else if(!(this.source instanceof MeasuredTemplate)){
+      rotation = this.sourceDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.rotation)) : 0;
+    }
 
     if (rotation !== undefined) {
       this._cachedSourceData.rotation = rotation;
@@ -598,9 +601,12 @@ export default class CanvasEffect extends PIXI.Container {
       this._cachedTargetData.position = position;
     }
 
-    const rotation = this.target instanceof MeasuredTemplate && this.targetDocument?.t !== "rect"
-      ? Math.normalizeRadians(Math.toRadians(this.targetDocument?.direction))
-      : this.targetDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.targetDocument?.rotation)) : 0;
+    let rotation = 0;
+    if(this.target instanceof MeasuredTemplate && this.targetDocument?.t !== "rect"){
+      rotation = Math.normalizeRadians(Math.toRadians(this.targetDocument?.direction));
+    }else if(!(this.target instanceof MeasuredTemplate)){
+      rotation = this.targetDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.targetDocument?.rotation)) : 0;
+    }
 
     if (rotation !== undefined) {
       this._cachedTargetData.rotation = rotation;
