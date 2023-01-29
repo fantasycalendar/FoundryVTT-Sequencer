@@ -947,9 +947,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._resetTimeout = null;
 
     this._source = false;
-    this._sourcePosition = false;
     this._target = false;
-    this._targetPosition = false;
     this._offsetCache = { source: { nameCache: {} }, target: { nameCache: {} } };
 
     this._nameOffsetMap = Object.fromEntries(Object.entries(foundry.utils.duplicate(this.data.nameOffsetMap ?? {})).map(entry => {
@@ -964,7 +962,7 @@ export default class CanvasEffect extends PIXI.Container {
     const maxFPS = game.settings.get("core", "maxFPS");
 
     this._ticker = new PIXI.Ticker();
-    this._ticker.maxFPS = maxPerformance && maxFPS === 60 ? 0 : maxFPS;
+    this._ticker.maxFPS = maxPerformance && maxFPS === 60 ? 60 : maxFPS;
     this._ticker.start();
 
   }
