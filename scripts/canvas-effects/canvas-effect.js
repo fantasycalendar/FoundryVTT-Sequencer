@@ -1377,6 +1377,9 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     if (textSprite) {
+      if(this.data.tint) {
+        textSprite.tint = this.data.tint;
+      }
       this.sprite.addChild(textSprite);
     }
 
@@ -1948,6 +1951,9 @@ export default class CanvasEffect extends PIXI.Container {
           ? new PIXI.TilingSprite(texture)
           : new PIXI.Sprite(texture);
         this._relatedSprites[filePath] = sprite;
+        if(this.data.tint) {
+          sprite.tint = this.data.tint;
+        }
         this.sprite.addChild(sprite);
       }
 
