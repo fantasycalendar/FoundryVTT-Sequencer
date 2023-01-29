@@ -2187,6 +2187,7 @@ export default class CanvasEffect extends PIXI.Container {
   async _transformAttachedNoStretchSprite() {
 
     const applyRotation = this.data.attachTo?.followRotation
+      && !(this.sourceDocument instanceof TokenDocument && this.sourceDocument.lockRotation)
       && (this.sourceDocument?.rotation !== undefined || this.sourceDocument?.direction !== undefined)
       && !this.data.rotateTowards
       && !this.data.stretchTo;

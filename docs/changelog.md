@@ -2,6 +2,7 @@
 
 ### Version 2.4.8
 - *Effects* - Fixed rectangle measurable templates would be off by 45 degrees
+- *Effects* - Fixed tokens with locked rotation would cause attached effects to be rotated anyway
 
 ### Version 2.4.7
 - *Effects* - Actually fixed shapes
