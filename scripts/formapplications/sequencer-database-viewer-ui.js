@@ -209,7 +209,6 @@ export default class SequencerDatabaseViewer extends FormApplication {
     const { player, image, audio } = this;
 
     let entry = Sequencer.Database.getEntry(entryText);
-    let lowercaseEntry = entry.toLowerCase();
 
     if (entry instanceof SequencerFile) {
       entry = entry.clone();
@@ -217,13 +216,15 @@ export default class SequencerDatabaseViewer extends FormApplication {
     }
 
     entry = entry?.file ?? entry;
+    let lowercaseEntry = entry.toLowerCase();
 
-    const isAudio = lowercaseEntry.endsWith("ogg") || lowercaseEntry.endsWith("mp3");
-    const isImage = !lowercaseEntry.endsWith("webm");
+    const isAudio = lowercaseEntry.endsWith("ogg") || lowercaseEntry.endsWith("mp3") || lowercaseEntry.endsWith("wav");
+    const isImage = (!lowercaseEntry.endsWith("webm")) && !isAudio;
+    const isVideo = !isAudio && !isImage;
 
-    player.classList.toggle("hidden", isImage);
     audio.classList.toggle("hidden", !isAudio);
     image.classList.toggle("hidden", !isImage);
+    player.classList.toggle("hidden", !isVideo);
 
     if (isImage) {
       image.src = entry;
