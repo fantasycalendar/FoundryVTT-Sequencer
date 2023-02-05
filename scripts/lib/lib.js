@@ -422,14 +422,18 @@ export function group_by(xs, key) {
   }, {});
 }
 
+function objHasProperty(obj, prop){
+  return obj.constructor.prototype.hasOwnProperty(prop);
+}
+
 export function sequence_proxy_wrap(inSequence) {
   return new Proxy(inSequence, {
     get: function (target, prop) {
-      if (target[prop] === undefined) {
+      if (!objHasProperty(target, prop)) {
         if (Sequencer.SectionManager.externalSections[prop] === undefined){
           const section = target.sections[target.sections.length-1];
-          if(section !== undefined){
-            let targetProperty = Reflect.get(section, prop);
+          if(section && objHasProperty(section, prop)){
+            const targetProperty = Reflect.get(section, prop);
             return is_function(targetProperty)
               ? targetProperty.bind(section)
               : targetProperty;
@@ -447,8 +451,8 @@ export function sequence_proxy_wrap(inSequence) {
 export function section_proxy_wrap(inClass) {
   return new Proxy(inClass, {
     get: function (target, prop) {
-      if (target[prop] === undefined) {
-        let targetProperty = Reflect.get(target.sequence, prop);
+      if (!objHasProperty(target, prop) && objHasProperty(target.sequence, prop)) {
+        const targetProperty = Reflect.get(target.sequence, prop);
         return is_function(targetProperty)
           ? targetProperty.bind(target.sequence)
           : targetProperty;

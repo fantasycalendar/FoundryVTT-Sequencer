@@ -1,5 +1,9 @@
 ## Changelog
 
+### Version 2.411
+- *Sequencer* - Fixed infinite recursion when using `.waitUntilFinished()` in the middle of a sequence
+- *Sequencer* - Undid some minor issues in the database viewer
+
 ### Version 2.410
 - *Sequencer* - Added support for playing sounds in the Sequencer Database (thank you ZotyDev for the pull request!)
 - *Sequencer* - Calling methods on the sequence that it does not have will be attempted to be cast to the last section

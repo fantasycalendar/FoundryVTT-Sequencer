@@ -35,14 +35,16 @@ export default class SequencerDatabaseViewer extends FormApplication {
 						<button type="button" class="btn_copy_databasepath">
 							<i class="fas fa-database"></i>
 						</button>
-            <div style="flex: 0; min-width: 1.5rem;" title="{{ title }}">
-              <i class="fas {{ icon }}"></i>
-						</div>
+            
 						<div class="database-entry-text" title="{{entry}}">
 							<div class="database-entry-text-highlight"></div>
 							{{ entry }}
 						</div>
 					</div>`;
+
+        /*<div style="flex: 0; min-width: 1.5rem;" data-tooltip="{{ title }}">
+              <i class="fas {{ icon }}"></i>
+						</div>*/
 
         const highlight = el.querySelector(
           ".database-entry-text-highlight"
@@ -63,7 +65,6 @@ export default class SequencerDatabaseViewer extends FormApplication {
         el.addEventListener("click", (e) => {
           const entry = e.currentTarget.dataset.id;
           const target = e.target.className.includes("fas") ? e.target.parentElement : e.target;
-          console.log(target);
           switch (target.className) {
             case "btn_play":
               this.playAsset(entry);
@@ -137,9 +138,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
           part.entry.match(this.getSearchRegex())?.length >=
           searchParts.length)
       );
-    }).map((entry) => {
-      return { ...this.getFileData(entry.entry), ...entry };
-    })
+    });
   }
 
   /* -------------------------------------------- */
@@ -205,13 +204,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
     allRanges.addEventListener("change", filterDebounce);
   }
 
-  _cachedFileData = {};
-
   getFileData(entryText) {
-
-    if (this._cachedFileData[entryText]) {
-      return this._cachedFileData[entryText];
-    }
 
     let entry = Sequencer.Database.getEntry(entryText);
 
@@ -221,25 +214,24 @@ export default class SequencerDatabaseViewer extends FormApplication {
     }
 
     entry = entry?.file ?? entry;
-    let lowercaseEntry = entry.toLowerCase();
 
-    const isAudio = lowercaseEntry.endsWith("ogg") || lowercaseEntry.endsWith("mp3") || lowercaseEntry.endsWith("wav");
-    const isImage = (!lowercaseEntry.endsWith("webm")) && !isAudio;
+    let lowerCaseEntry = entry ? entry.toLowerCase() : "unknown.jpg";
+
+    const isAudio = lowerCaseEntry.endsWith("ogg") || lowerCaseEntry.endsWith("mp3") || lowerCaseEntry.endsWith("wav");
+    const isImage = (!lowerCaseEntry.endsWith("webm")) && !isAudio;
     const isVideo = !isAudio && !isImage;
-    const icon = isVideo ? "fa-film" : (isAudio ? "fa-volume-high" : "fa-image");
-    const title = isVideo ? "animated webm" : (isAudio ? "audio" : "image")
+    const icon = entry ? (isVideo ? "fa-film" : (isAudio ? "fa-volume-high" : "fa-image")) : "fa-question-mark";
+    const title = entry ? (isVideo ? "Animated WebM" : (isAudio ? "Audio" : "Image")) : "Unknown";
 
-    this._cachedFileData[entryText] = {
+    return {
       entry: entryText,
-      file: entry,
+      file: entry ?? "unknown.jpg",
       icon,
       title,
       isAudio,
       isImage,
       isVideo
     };
-
-    return this._cachedFileData[entryText];
 
   }
 
