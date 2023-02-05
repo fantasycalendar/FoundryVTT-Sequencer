@@ -109,15 +109,19 @@ const SequencerAnimationEngine = {
 
         if (!delta) {
 
-          deltas.push({
+          delta = {
             targetId: attribute.targetId,
             target: attribute.target,
             getPropertyName: attribute.getPropertyName ?? attribute.propertyName,
             setPropertyName: attribute.propertyName,
-            value: attribute.target instanceof PIXI.filters.ColorMatrixFilter ? attribute.previousValue : 0
-          })
+            value: 0
+          };
 
-          delta = deltas[deltas.length - 1];
+          if(attribute.target instanceof PIXI.filters.ColorMatrixFilter){
+            delta.value = attribute.previousValue;
+          }
+
+          deltas.push(delta)
 
         }
 
@@ -138,6 +142,7 @@ const SequencerAnimationEngine = {
           finalValue
         )
       } catch (err) {
+        //console.log(err)
       }
     }
 
@@ -164,12 +169,15 @@ const SequencerAnimationEngine = {
 
     if (!attribute.started) {
 
+      const funkyProperty = attribute.propertyName.includes("scale") || attribute.propertyName.includes("alpha");
+
       if (!this._startingValues[attribute.targetId]) {
 
-        this._startingValues[attribute.targetId] = attribute.propertyName.includes("scale") || attribute.from === undefined ? lib.deep_get(
-          attribute.target,
-          attribute.getPropertyName ?? attribute.propertyName
-        ) : attribute.from;
+        const getProperty = funkyProperty || attribute.from === undefined;
+
+        this._startingValues[attribute.targetId] = getProperty
+          ? lib.deep_get(attribute.target, attribute.getPropertyName ?? attribute.propertyName)
+          : attribute.from;
 
         if (!attribute.propertyName.includes("scale")) {
           lib.deep_set(attribute.target, attribute.propertyName, this._startingValues[attribute.targetId]);
@@ -181,7 +189,7 @@ const SequencerAnimationEngine = {
 
       if (attribute?.looping) {
         attribute.values = attribute.values.map(value => {
-          return value + attribute.previousValue - (attribute.propertyName.includes("scale") ? 1.0 : 0);
+          return value + attribute.previousValue - (funkyProperty ? 1.0 : 0);
         })
       } else if (attribute.from === undefined) {
         attribute.from = attribute.previousValue

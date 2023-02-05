@@ -1,6 +1,5 @@
 import * as lib from "../lib/lib.js";
 import SequencerPresets from "../modules/sequencer-presets.js";
-import { custom_error } from "../lib/lib.js";
 
 export default class Section {
 
@@ -8,7 +7,7 @@ export default class Section {
     this.sequence = inSequence;
     this._applyTraits();
     this._playIf = true;
-    this._waitUntilFinished = true;
+    this._waitUntilFinished = false;
     this._async = false;
     this._waitUntilFinishedDelay = [0, 0];
     this._repetitions = 1;
@@ -141,11 +140,12 @@ export default class Section {
   /**
    * Causes the section to finish running before starting the next section.
    *
-   * @param {number} [minDelay=0] minDelay
+   * @param {number|boolean} [minDelay=0] minDelay
    * @param {number/null} [maxDelay=null] maxDelay
    * @returns {Section} this
    */
   waitUntilFinished(minDelay = 0, maxDelay = null) {
+    if(minDelay === false) return this;
     if (!lib.is_real_number(minDelay)) throw this.sequence._customError(this, "waitUntilFinished", "minDelay must be of type number");
     if (maxDelay !== null && !lib.is_real_number(maxDelay)) throw this.sequence._customError(this, "waitUntilFinished", "maxDelay must be of type number");
     this._waitUntilFinished = true;

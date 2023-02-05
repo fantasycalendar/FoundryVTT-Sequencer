@@ -12,8 +12,7 @@ import CONSTANTS from "../constants.js";
 export default class EffectSection extends Section {
 
   constructor(inSequence, inFile = "") {
-    super(inSequence)
-    this._waitUntilFinished = null;
+    super(inSequence);
     this._file = inFile;
     this._text = null;
     this._source = null;

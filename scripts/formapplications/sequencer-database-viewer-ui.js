@@ -22,24 +22,27 @@ export default class SequencerDatabaseViewer extends FormApplication {
       { length: Math.min(this.getFilteredEntries().length, MAX_NODES) },
       () => {
         const el = html`
-          <div
-            class="database-entry"
-            data-id="{{ entry }}"
-          >
-            <button type="button" class="btn_play">
-              <i class="fas fa-play"></i>
-            </button>
-            <button type="button" class="btn_copy_filepath">
-              <i class="fas fa-copy"></i> {{ fileButton }}
-            </button>
-            <button type="button" class="btn_copy_databasepath">
-              <i class="fas fa-copy"></i> {{ dbButton }}
-            </button>
-            <div class="database-entry-text" title="{{entry}}">
-              <div class="database-entry-text-highlight"></div>
-              {{ entry }}
-            </div>
-          </div>`;
+					<div
+						class="database-entry"
+						data-id="{{ entry }}"
+					>
+						<button type="button" class="btn_play">
+							<i class="fas fa-play"></i>
+						</button>
+						<button type="button" class="btn_copy_filepath">
+							<i class="fas fa-file"></i>
+						</button>
+						<button type="button" class="btn_copy_databasepath">
+							<i class="fas fa-database"></i>
+						</button>
+            <div style="flex: 0; min-width: 1.5rem;" title="{{ title }}">
+              <i class="fas {{ icon }}"></i>
+						</div>
+						<div class="database-entry-text" title="{{entry}}">
+							<div class="database-entry-text-highlight"></div>
+							{{ entry }}
+						</div>
+					</div>`;
 
         const highlight = el.querySelector(
           ".database-entry-text-highlight"
@@ -59,15 +62,17 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
         el.addEventListener("click", (e) => {
           const entry = e.currentTarget.dataset.id;
-          switch (e.target.className) {
+          const target = e.target.className.includes("fas") ? e.target.parentElement : e.target;
+          console.log(target);
+          switch (target.className) {
             case "btn_play":
               this.playAsset(entry);
               break;
             case "btn_copy_filepath":
-              this.copyText($(e.target), entry, true);
+              this.copyText($(target), entry, true);
               break;
             case "btn_copy_databasepath":
-              this.copyText($(e.target), entry, false);
+              this.copyText($(target), entry, false);
               break;
           }
         });
@@ -99,16 +104,11 @@ export default class SequencerDatabaseViewer extends FormApplication {
       ? Sequencer.Database.publicFlattenedEntries
       : Sequencer.Database.publicFlattenedSimpleEntries;
 
-    let localizedFilepathButton = game.i18n.localize("SEQUENCER.Database.ButtonFilepath");
-    let localizedDatabaseButton = game.i18n.localize("SEQUENCER.Database.ButtonDatabasePath");
-
     return entries.map(
       (entry) => {
         return {
           pack: entry.split(".")[0],
-          entry: entry,
-          fileButton: localizedFilepathButton,
-          dbButton: localizedDatabaseButton,
+          entry: entry
         };
       }
     );
@@ -137,7 +137,9 @@ export default class SequencerDatabaseViewer extends FormApplication {
           part.entry.match(this.getSearchRegex())?.length >=
           searchParts.length)
       );
-    });
+    }).map((entry) => {
+      return { ...this.getFileData(entry.entry), ...entry };
+    })
   }
 
   /* -------------------------------------------- */
@@ -203,10 +205,13 @@ export default class SequencerDatabaseViewer extends FormApplication {
     allRanges.addEventListener("change", filterDebounce);
   }
 
-  playAsset(entryText) {
+  _cachedFileData = {};
 
-    if (!this.autoplay) return;
-    const { player, image, audio } = this;
+  getFileData(entryText) {
+
+    if (this._cachedFileData[entryText]) {
+      return this._cachedFileData[entryText];
+    }
 
     let entry = Sequencer.Database.getEntry(entryText);
 
@@ -221,31 +226,53 @@ export default class SequencerDatabaseViewer extends FormApplication {
     const isAudio = lowercaseEntry.endsWith("ogg") || lowercaseEntry.endsWith("mp3") || lowercaseEntry.endsWith("wav");
     const isImage = (!lowercaseEntry.endsWith("webm")) && !isAudio;
     const isVideo = !isAudio && !isImage;
+    const icon = isVideo ? "fa-film" : (isAudio ? "fa-volume-high" : "fa-image");
+    const title = isVideo ? "animated webm" : (isAudio ? "audio" : "image")
+
+    this._cachedFileData[entryText] = {
+      entry: entryText,
+      file: entry,
+      icon,
+      title,
+      isAudio,
+      isImage,
+      isVideo
+    };
+
+    return this._cachedFileData[entryText];
+
+  }
+
+  playAsset(entryText) {
+
+    if (!this.autoplay) return;
+    const { player, image, audio } = this;
+
+    const { file, isAudio, isImage, isVideo } = this.getFileData(entryText);
 
     audio.classList.toggle("hidden", !isAudio);
     image.classList.toggle("hidden", !isImage);
     player.classList.toggle("hidden", !isVideo);
 
     if (isImage) {
-      image.src = entry;
-      return;
-    } else if (isAudio) {
-      audio.src = entry;
-      audio.play();
+      image.src = file;
       return;
     }
 
-    player.onerror = () => {
-      const error = `Sequencer Database Viewer | Could not play file: ${entry}`;
+    const element = isAudio ? audio : player;
+
+    element.onerror = () => {
+      const error = `Sequencer Database Viewer | Could not play file: ${file}`;
       ui.notifications.error(error);
       console.error(error);
     };
 
-    player.oncanplay = () => {
-      player.play();
+    element.oncanplay = () => {
+      element.play();
     };
 
-    player.src = entry;
+    element.src = file;
+
   }
 
   copyText(button, dbPath, getFilepath) {

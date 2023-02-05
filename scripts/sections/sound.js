@@ -8,7 +8,6 @@ class SoundSection extends Section {
 
   constructor(inSequence, inFile = "") {
     super(inSequence);
-    this._waitUntilFinished = false;
     this._file = inFile;
     this._volume = 0.8;
     this._overrides = [];

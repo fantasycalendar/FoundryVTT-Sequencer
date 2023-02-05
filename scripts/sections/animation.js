@@ -8,7 +8,6 @@ class AnimationSection extends Section {
 
   constructor(inSequence, inTarget) {
     super(inSequence);
-    this._waitUntilFinished = false;
     this._teleportTo = false;
     this._originObject = false;
     this._moveSpeed = 23;

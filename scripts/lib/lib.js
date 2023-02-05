@@ -426,7 +426,16 @@ export function sequence_proxy_wrap(inSequence) {
   return new Proxy(inSequence, {
     get: function (target, prop) {
       if (target[prop] === undefined) {
-        if (Sequencer.SectionManager.externalSections[prop] === undefined) return Reflect.get(target, prop);
+        if (Sequencer.SectionManager.externalSections[prop] === undefined){
+          const section = target.sections[target.sections.length-1];
+          if(section !== undefined){
+            let targetProperty = Reflect.get(section, prop);
+            return is_function(targetProperty)
+              ? targetProperty.bind(section)
+              : targetProperty;
+          }
+          return Reflect.get(target, prop);
+        }
         target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
         return Reflect.get(target, "_createCustomSection");
       }
