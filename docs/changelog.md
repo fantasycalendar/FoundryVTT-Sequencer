@@ -1,10 +1,13 @@
 ## Changelog
 
-### Version 2.4.9
+### Version 2.410
 - *Sequencer* - Added support for playing sounds in the Sequencer Database (thank you ZotyDev for the pull request!)
 - *Sequencer* - Calling methods on the sequence that it does not have will be attempted to be cast to the last section
 - *Sequencer* - You can now provide `false` as an argument to `.waitUntilFinished()`, which will negate its call
 - *Effects* - Fixed animations on `alphaFilter`'s `alpha` not working
+
+### Version 2.49
+- We don't talk about this version
 
 ### Version 2.4.8
 - *Effects* - Fixed rectangle measurable templates would be off by 45 degrees
