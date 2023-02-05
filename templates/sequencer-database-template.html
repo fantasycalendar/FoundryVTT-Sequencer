@@ -31,13 +31,23 @@
             flex: 1 0 auto;
         }
 
+				select, input {
+						color: black !important;
+						background: rgba(255, 255, 255, 0.5) !important;
+						margin-right: 0.25rem;
+				}
+
         .database-entry > button{
             flex: 0;
-            font-size: 0.7rem;
+            font-size: 0.7rem !important;
             height: 1.25rem;
             line-height: normal;
-            margin-right: 5px;
+            margin-right: 5px !important;
         }
+
+        .database-entry > button > i {
+            font-size: 0.7rem !important;
+				}
 
         .btn_play{
             min-width: 1.5rem;
@@ -110,7 +120,7 @@
     </style>
 
     <div class="top-row flex mb-2">
-        <select name="pack-select" class="w-15" onsubmit="event.preventDefault();">
+        <select class="pack-select" name="pack-select" class="w-15" onsubmit="event.preventDefault();">
             <option value="all">{{ localize "SEQUENCER.Database.AllPacks" }}</option>
             {{#each packs as |pack index|}}
                 <option>{{ pack }}</option>
