@@ -2,7 +2,7 @@ import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
 
-export function createShape(shape, gridSizeDifference = 1) {
+export function createShape(shape) {
 
   const graphic = new PIXI.Graphics();
 
@@ -12,9 +12,9 @@ export function createShape(shape, gridSizeDifference = 1) {
     graphic.lineStyle(shape.lineSize, shape?.lineColor ?? 0xFFFFFF)
   }
 
-  const offsetX = (shape.offset?.x ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
-  const offsetY = (shape.offset?.y ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
-  const sizeMultiplier = (shape.gridUnits ? canvas.grid.size : 1) / gridSizeDifference;
+  const offsetX = (shape.offset?.x ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1);
+  const offsetY = (shape.offset?.y ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1);
+  const sizeMultiplier = (shape.gridUnits ? canvas.grid.size : 1);
 
 	graphic.offset = {
 		x: offsetX,

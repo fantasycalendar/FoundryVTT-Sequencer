@@ -1394,7 +1394,7 @@ export default class CanvasEffect extends PIXI.Container {
     const nonMaskShapes = this.data.shapes.filter(shape => !shape.isMask);
 
     for(const shape of nonMaskShapes){
-      const graphic = canvaslib.createShape(shape, this.gridSizeDifference);
+      const graphic = canvaslib.createShape(shape);
 			graphic.filters = this.sprite.filters;
       this.spriteContainer.addChild(graphic);
       if(shape.name){

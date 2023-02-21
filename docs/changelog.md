@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 2.412
+- *Effects* - Fixed `.shape()` taking grid size into account multiple times
+
 ### Version 2.411
 - *Sequencer* - Fixed infinite recursion when using `.waitUntilFinished()` in the middle of a sequence
 - *Sequencer* - Undid some minor issues in the database viewer
