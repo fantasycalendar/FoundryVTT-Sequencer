@@ -62,6 +62,16 @@ export function registerSettings() {
     type: Boolean
   });
 
+  game.settings.register(CONSTANTS.MODULE_NAME, "showTokenSidebarTools", {
+    name: "SEQUENCER.Setting.ShowTokenTools.Title",
+    hint: "SEQUENCER.Setting.ShowTokenTools.Label",
+    scope: "client",
+    config: true,
+    default: true,
+    requiresReload: true,
+    type: Boolean
+  });
+
   game.settings.register(CONSTANTS.MODULE_NAME, "effectsEnabled", {
     name: "SEQUENCER.Setting.EnableEffects.Title",
     hint: "SEQUENCER.Setting.EnableEffects.Label",
@@ -228,6 +238,8 @@ export function registerSettings() {
         database
       ]
     })
+
+    if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools")) return;
 
     const bar = controls.find(c => c.name === "token");
     bar.tools.push(database);

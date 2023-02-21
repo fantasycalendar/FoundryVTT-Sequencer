@@ -125,6 +125,10 @@
         "Title": "Show Sequencer Tools",
         "Label": "Shows or hides the Sequencer tools on the sidebar."
       },
+      "ShowTokenTools": {
+        "Title": "Show Sequencer Tools In Token Controls",
+        "Label": "Shows or hides the Sequencer tools on the sidebar in the Token Controls."
+      },
       "EnableEffects": {
         "Title": "Enable Effects",
         "Label": "Enables effects to be played on this client"

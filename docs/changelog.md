@@ -1,6 +1,7 @@
 ## Changelog
 
 ### Version 2.412
+- *Sequencer* - Added setting to hide/show the Sequencer buttons in the left sidebar when in the token controls
 - *Animation* - Fixed `.moveTowards()` going into infinite loop if the source and targets are on top of each other
 - *Effects* - Fixed `.shape()` taking grid size into account multiple times
 - *Effects* - Fixed `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()` not working on webms with embedded audio 
