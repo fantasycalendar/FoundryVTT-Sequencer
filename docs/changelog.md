@@ -3,6 +3,7 @@
 ### Version 2.412
 - *Animation* - Fixed `.moveTowards()` going into infinite loop if the source and targets are on top of each other
 - *Effects* - Fixed `.shape()` taking grid size into account multiple times
+- *Effects* - Fixed `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()` not working on webms with embedded audio 
 
 ### Version 2.411
 - *Sequencer* - Fixed infinite recursion when using `.waitUntilFinished()` in the middle of a sequence

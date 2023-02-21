@@ -1514,6 +1514,7 @@ export default class EffectSection extends Section {
       tilingTexture: this._tilingTexture,
       masks: Array.from(new Set(this._masks)),
       shapes: this._shapes,
+      volume: this._volume,
 
       // Transforms
       scale: this._getCalculatedScale("scale"),

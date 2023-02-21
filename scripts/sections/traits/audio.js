@@ -5,7 +5,7 @@ export default {
   /**
    * Base properties
    */
-  _volume: 0.8,
+  _volume: null,
   _fadeInAudio: null,
   _fadeOutAudio: null,
 

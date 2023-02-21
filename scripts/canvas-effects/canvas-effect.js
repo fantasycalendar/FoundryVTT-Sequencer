@@ -365,6 +365,8 @@ export default class CanvasEffect extends PIXI.Container {
     if (!inVideo) return;
 
     inVideo.playbackRate = this.data.playbackRate ? this.data.playbackRate : 1.0;
+    inVideo.muted = !this.data.volume;
+    inVideo.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
 
     if (!this._video) {
       this._video = inVideo;
@@ -1033,10 +1035,12 @@ export default class CanvasEffect extends PIXI.Container {
     this._moveTowards();
 
     this._fadeIn();
+    this._fadeInAudio();
     this._scaleIn();
     this._rotateIn();
 
     this._fadeOut();
+    this._fadeOutAudio();
     this._scaleOut();
     this._rotateOut();
   }
@@ -2427,6 +2431,35 @@ export default class CanvasEffect extends PIXI.Container {
 
   }
 
+  /**
+   * Fades in the effect's audio at the start of the effect
+   *
+   * @returns {number|*}
+   * @private
+   */
+  _fadeInAudio() {
+
+    if (!this.data.fadeInAudio || !this.sprite) return 0;
+
+    let fadeInAudio = this.data.fadeInAudio;
+
+    if (this.actualCreationTime - (this.data.creationTimestamp + fadeInAudio.duration + fadeInAudio.delay) > 0) return;
+
+    this.video.volume = 0.0;
+
+    SequencerAnimationEngine.addAnimation(this.id, {
+      target: this,
+      propertyName: "video.volume",
+      to: (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume"),
+      duration: fadeInAudio.duration,
+      ease: fadeInAudio.ease,
+      delay: fadeInAudio.delay
+    })
+
+    return fadeInAudio.duration + fadeInAudio.delay;
+
+  }
+
 
   /**
    * Fades out the effect at the end of the effect's duration
@@ -2454,6 +2487,36 @@ export default class CanvasEffect extends PIXI.Container {
     })
 
     return fadeOut.duration + fadeOut.delay;
+
+  }
+
+
+  /**
+   * Fades out the effect at the end of the effect's duration
+   *
+   * @returns {number|*}
+   * @private
+   */
+  _fadeOutAudio(immediate = false) {
+
+    if (!this.data.fadeOutAudio || !this.sprite) return 0;
+
+    let fadeOutAudio = this.data.fadeOutAudio;
+
+    fadeOutAudio.delay = lib.is_real_number(immediate)
+      ? Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0)
+      : Math.max(this._animationDuration - fadeOutAudio.duration + fadeOutAudio.delay, 0);
+
+    SequencerAnimationEngine.addAnimation(this.id, {
+      target: this,
+      propertyName: "video.volume",
+      to: 0.0,
+      duration: fadeOutAudio.duration,
+      ease: fadeOutAudio.ease,
+      delay: fadeOutAudio.delay
+    })
+
+    return fadeOutAudio.duration + fadeOutAudio.delay;
 
   }
 
@@ -2829,6 +2892,7 @@ class PersistentCanvasEffect extends CanvasEffect {
     const fromEndCustomAnimations = this._getFromEndCustomAnimations(extraEndDuration);
     const durations = [
       this._fadeOut(extraEndDuration),
+      this._fadeOutAudio(extraEndDuration),
       this._scaleOut(extraEndDuration),
       this._rotateOut(extraEndDuration),
       this.data.extraEndDuration,
