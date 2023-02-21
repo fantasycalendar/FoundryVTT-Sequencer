@@ -2439,7 +2439,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   _fadeInAudio() {
 
-    if (!this.data.fadeInAudio || !this.sprite) return 0;
+    if (!this.data.fadeInAudio || !this.sprite || !this.video) return 0;
 
     let fadeInAudio = this.data.fadeInAudio;
 
@@ -2499,7 +2499,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   _fadeOutAudio(immediate = false) {
 
-    if (!this.data.fadeOutAudio || !this.sprite) return 0;
+    if (!this.data.fadeOutAudio || !this.sprite || !this.video) return 0;
 
     let fadeOutAudio = this.data.fadeOutAudio;
 
