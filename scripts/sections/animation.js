@@ -403,19 +403,21 @@ class AnimationSection extends Section {
       if (!this._duration && !this._moveSpeed && this._moveTowards.ease === "linear") {
         await this._updateObject(this._originObject, targetLocation, true);
       } else {
-        animData.attributes.push({
-          name: "position",
-          origin: originLocation,
-          target: targetLocation,
-          originalDistance: originalDistance,
-          currentDistance: 0,
-          progress: 0,
-          speed: 0,
-          duration: duration,
-          done: false,
-          ease: this._moveTowards.ease,
-          delay: this._moveTowards.delay
-        })
+        if(!(duration === 0 || originalDistance === 0)){
+          animData.attributes.push({
+            name: "position",
+            origin: originLocation,
+            target: targetLocation,
+            originalDistance: originalDistance,
+            currentDistance: 0,
+            progress: 0,
+            speed: 0,
+            duration: duration,
+            done: false,
+            ease: this._moveTowards.ease,
+            delay: this._moveTowards.delay
+          })
+        }
       }
     }
 
