@@ -1,2 +1,7 @@
 .idea/*
 node_modules/*
+.vite-cache/*
+module.js
+module.js.map
+style.css
+!./src/module.js

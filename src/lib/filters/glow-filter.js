@@ -1,4 +1,6 @@
-export default class GlowFilter extends PIXI.filters.GlowFilter {
+import * as filters from "pixi-filters";
+
+export default class GlowFilter extends filters.GlowFilter {
 
   /**
    * Properties & default values:

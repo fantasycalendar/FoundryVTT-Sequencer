@@ -1,3 +1,5 @@
+import "./styles/module.scss";
+
 import { registerSettings, migrateSettings } from "./settings.js";
 import registerLayers from "./layers.js";
 import registerHotkeys from "./hotkeys.js";

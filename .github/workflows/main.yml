@@ -2,13 +2,15 @@ name: Release Creation
 
 on:
   release:
-    types: [published]
+    types: [ published ]
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Substitute the Manifest and Download URLs in the module.json
       # for a FULL RELEASE
@@ -39,14 +41,20 @@ jobs:
           manifest: https://raw.githubusercontent.com/${{github.repository}}/next/module.json
           download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
 
+      # Install packages.
+      - run: npm install
+
+      # Build distribution.
+      - run: npm run build
+
       # Create a zip file with all files required by the module to add to the release
-      - run: zip -r ./module.zip module.json LICENSE scripts/ packs/ samples/ templates/ languages/
+      - run: zip -r ./module.zip module.json LICENSE module.js module.js.map style.css samples/ languages/
 
       # Create a release for this specific version
       - name: Update Release with Files
         if: "!github.event.release.prerelease"
         id: create_version_release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.12.0
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
           name: ${{ github.event.release.name }}
@@ -61,7 +69,7 @@ jobs:
       - name: Update Release with Files
         if: "github.event.release.prerelease"
         id: create_version_prerelease
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.12.0
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
           name: ${{ github.event.release.name }}

@@ -1,4 +1,4 @@
-export default class NoiseFilter extends PIXI.filters.NoiseFilter {
+export default class NoiseFilter extends globalThis.PIXI.filters.NoiseFilter {
 
   /**
    * Properties & default values:

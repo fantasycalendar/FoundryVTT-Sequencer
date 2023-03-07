@@ -18,10 +18,10 @@
     }
   ],
   "esmodules": [
-    "scripts/module.js"
+    "module.js"
   ],
-  "scripts": [
-    "scripts/lib/ext/pixi-filters.js"
+  "styles": [
+    "style.css"
   ],
   "languages": [
     {

@@ -1,4 +1,4 @@
-export default class BlurFilter extends PIXI.filters.BlurFilter {
+export default class BlurFilter extends globalThis.PIXI.filters.BlurFilter {
 
   /**
    * Properties & default values:
