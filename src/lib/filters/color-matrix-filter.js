@@ -1,6 +1,4 @@
-import * as filters from "pixi-filters";
-
-export default class ColorMatrixFilter extends filters.ColorMatrixFilter {
+export default class ColorMatrixFilter extends globalThis.PIXI.filters.ColorMatrixFilter {
 
   /**
    * Properties & default values:

@@ -1,6 +1,4 @@
-import * as filters from "pixi-filters";
-
-export default class GlowFilter extends filters.GlowFilter {
+export default class GlowFilter extends globalThis.PIXI.filters.GlowFilter {
 
   /**
    * Properties & default values:
