@@ -12,7 +12,8 @@ const CONSTANTS = {
     CIRC: "circle",
     ELIP: "ellipse",
     RREC: "roundedRect",
-  }
+  },
+  FEET_REGEX: new RegExp(/\.[0-9]+ft\.*/g)
 }
 
 export default CONSTANTS;

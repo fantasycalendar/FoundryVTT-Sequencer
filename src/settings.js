@@ -1,17 +1,9 @@
 import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./constants.js";
 import { user_can_do } from "./lib/lib.js";
+import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
 
 export function registerSettings() {
-
-  // Define a settings submenu which handles advanced configuration needs
-  game.settings.registerMenu(CONSTANTS.MODULE_NAME, "openSequencerDatabaseViewer", {
-    name: "SEQUENCER.Setting.DatabaseViewer.Title",
-    label: "SEQUENCER.Setting.DatabaseViewer.Label",
-    icon: "fas fa-bars",
-    type: Sequencer.DatabaseViewer,
-    restricted: true
-  });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "enable-pixi-fix", {
     name: "SEQUENCER.Setting.EnablePixiFix.Title",
@@ -220,7 +212,7 @@ export function registerSettings() {
       button: true,
       visible: user_can_do('permissions-sidebar-tools'),
       onClick: () => {
-        Sequencer.DatabaseViewer.show(true);
+        DatabaseViewerApp.show();
       }
     };
 

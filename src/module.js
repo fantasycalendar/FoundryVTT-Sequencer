@@ -9,7 +9,6 @@ import { registerEase } from "./canvas-effects/ease.js";
 
 import Sequence from "./modules/sequencer.js";
 import SequencerDatabase from "./modules/sequencer-database.js";
-import SequencerDatabaseViewer from "./formapplications/sequencer-database-viewer-ui.js";
 import SequencerPreloader from "./modules/sequencer-preloader.js";
 import SequencerEffectManager from "./modules/sequencer-effect-manager.js";
 import SequencerSectionManager from "./modules/sequencer-section-manager.js";
@@ -19,6 +18,7 @@ import * as lib from "./lib/lib.js";
 import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
+import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
 
 Hooks.once('init', async function () {
   if (!game.modules.get("socketlib")?.active) return;
@@ -63,7 +63,7 @@ function initialize_module() {
     Player: EffectPlayer,
     Presets: SequencerPresets,
     Database: SequencerDatabase,
-    DatabaseViewer: SequencerDatabaseViewer,
+    DatabaseViewer: DatabaseViewerApp,
     Preloader: SequencerPreloader,
     EffectManager: SequencerEffectManager,
     SectionManager: new SequencerSectionManager(),

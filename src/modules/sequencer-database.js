@@ -1,30 +1,42 @@
 import * as lib from '../lib/lib.js';
 import LoadingBar from "../utils/loadingBar.js";
 import { SequencerFile, SequencerFileRangeFind } from "./sequencer-file.js";
+import { writable, get } from "svelte/store";
+import CONSTANTS from "../constants.js";
 
-const SequencerDatabase = {
+class Database {
 
-  entries: {},
-  flattenedEntries: [],
-  inverseFlattenedEntries: new Map(),
-  privateModules: [],
-  feetTest: new RegExp(/\.[0-9]+ft\.*/g),
+  #entriesStore = writable({})
+
+  privateModules = []
+  flattenedEntries = [];
+  inverseFlattenedEntries = new Map()
+
+  get entries(){
+    return get(this.#entriesStore);
+  }
+  set entries(entries){
+    this.#entriesStore.set(entries);
+  }
+  get entriesStore(){
+    return this.#entriesStore;
+  }
 
   get publicModules() {
     return Object.keys(this.entries).filter(module => !this.privateModules.includes(module));
-  },
+  }
 
   get publicFlattenedEntries() {
     return this.flattenedEntries.filter(entry => {
       return this.privateModules.indexOf(entry.split('.')[0]) === -1
     });
-  },
+  }
 
   get publicFlattenedSimpleEntries() {
     return lib.make_array_unique(this.publicFlattenedEntries.map(entry => {
-      return entry.split(this.feetTest)[0];
+      return entry.split(CONSTANTS.FEET_REGEX)[0];
     }));
-  },
+  }
 
   /**
    *  Retrieves an object of every public entry
@@ -46,7 +58,7 @@ const SequencerDatabase = {
         }
       })
     return fileDatabaseObject;
-  },
+  }
 
   /**
    *  Registers a set of entries to the database on the given module name
@@ -67,7 +79,7 @@ const SequencerDatabase = {
     if (isPrivate) this.privateModules.push(inModuleName);
     console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
     return true;
-  },
+  }
 
   /**
    *  Validates the entries under a certain module name, checking whether paths to assets are correct or not
@@ -93,7 +105,7 @@ const SequencerDatabase = {
     } else {
       ui.notifications.info(`Validation of paths registered to "${inModuleName}" complete! No errors found!`)
     }
-  },
+  }
 
   /**
    *  Quickly checks if the entry exists in the database
@@ -107,7 +119,7 @@ const SequencerDatabase = {
     if (inString === "") return this._throwError("entryExists", "inString cannot be empty")
     inString = inString.replace(/\[[0-9]+]$/, "");
     return this.flattenedEntries.find(entry => entry.startsWith(inString));
-  },
+  }
 
   /**
    *  Gets the entry in the database by a dot-notated string
@@ -128,8 +140,8 @@ const SequencerDatabase = {
 
     let ft = false;
     let index = false;
-    if (this.feetTest.test(inString)) {
-      ft = inString.match(this.feetTest)[0];
+    if (CONSTANTS.FEET_REGEX.test(inString)) {
+      ft = inString.match(CONSTANTS.FEET_REGEX)[0];
       const split = inString.split(ft).filter(str => str !== "");
       if (split.length > 1) {
         index = split[1].split('.')[0];
@@ -162,7 +174,7 @@ const SequencerDatabase = {
     }
 
     return foundEntry;
-  },
+  }
 
   /**
    *  Gets all files under a database path
@@ -177,7 +189,7 @@ const SequencerDatabase = {
     if (!this.entryExists(inDBPath)) return this._throwError("getAllFileEntries", `Could not find ${inDBPath} in database`);
     const entries = this._recurseGetFilePaths(inDBPath);
     return lib.make_array_unique(entries.flat());
-  },
+  }
 
   /**
    *  Get all valid entries under a certain path
@@ -194,7 +206,7 @@ const SequencerDatabase = {
     let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
     if (entries.length === 0) return [];
     return lib.make_array_unique(entries.map(e => e.split(inPath)[1].split('.')[1]));
-  },
+  }
 
   /**
    *  Get all valid entries under a certain path
@@ -226,7 +238,7 @@ const SequencerDatabase = {
     if (inPath.endsWith(".")) inPath = inPath.substring(0, inPath.length - 1);
     let length = inPath.split('.').length + 1;
     let foundEntries = entries.map(e => {
-      let path = e.split(this.feetTest)[0];
+      let path = e.split(CONSTANTS.FEET_REGEX)[0];
       return path.split('.').slice(0, length).join('.');
     });
 
@@ -237,12 +249,12 @@ const SequencerDatabase = {
       foundEntries = originalEntries.filter(e => {
         return e.match(regexSearch)?.length >= searchParts;
       }).map(e => {
-        return e.split(this.feetTest)[0];
+        return e.split(CONSTANTS.FEET_REGEX)[0];
       });
     }
 
     return lib.make_array_unique(foundEntries);
-  },
+  }
 
   /**
    * Throws an error without THROWING one. Duh.
@@ -257,7 +269,7 @@ const SequencerDatabase = {
     ui.notifications.error(error);
     console.error(error);
     return false;
-  },
+  }
 
   /**
    * Gets all file paths from the entirety of
@@ -273,7 +285,7 @@ const SequencerDatabase = {
       .map(entry => {
         return entry.getAllFiles();
       }).flat();
-  },
+  }
 
   /**
    * Flattens a given object to just their db path and file path
@@ -287,7 +299,7 @@ const SequencerDatabase = {
     this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened)));
     this.inverseFlattenedEntries = Object.keys(flattened)
       .reduce((acc, entry) => acc.set(flattened[entry], entry), this.inverseFlattenedEntries);
-  },
+  }
 
   /**
    * Processes and recurse into a large object containing file paths at any given depth
@@ -300,7 +312,7 @@ const SequencerDatabase = {
   _processEntries(moduleName, entries) {
     const allPaths = new Set(this.flattenedEntries
       .filter(e => e.split('.')[0] === moduleName)
-      .map(e => e.split(this.feetTest)[0]))
+      .map(e => e.split(CONSTANTS.FEET_REGEX)[0]))
 
     const allTemplates = foundry.utils.mergeObject(entries?._templates ?? {}, { "default": [100, 0, 0] });
 
@@ -339,7 +351,7 @@ const SequencerDatabase = {
     }
 
     return moduleEntries;
-  },
+  }
 
   _getCleanData(data, { existingData = {}, metadata = true } = {}) {
     data = Object.entries(data).filter(entry => {
@@ -352,5 +364,7 @@ const SequencerDatabase = {
   }
 
 }
+
+const SequencerDatabase = new Database();
 
 export default SequencerDatabase;
