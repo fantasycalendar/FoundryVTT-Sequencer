@@ -78,6 +78,7 @@ class Database {
     );
     if (isPrivate) this.privateModules.push(inModuleName);
     console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
+    console.log(this.flattenedEntries.find(e => e.startsWith("jb2a.impact.heart")))
     return true;
   }
 
@@ -195,17 +196,26 @@ class Database {
    *  Get all valid entries under a certain path
    *
    * @param  {string}             inPath      The database path to get entries under
-   * @return {array}                          An array containing the next layer of valid paths
+   * @return {array|boolean}                  An array containing the next layer of valid paths
    */
-  getPathsUnder(inPath) {
+  getPathsUnder(inPath, { ranges = false, arrays = false, match = false }={}) {
     if (typeof inPath !== "string") return this._throwError("getPathsUnder", "inPath must be of type string")
     inPath = inPath.trim();
     if (inPath === "") return this._throwError("getPathsUnder", "inPath cannot be empty")
     inPath = inPath.replace(/\[[0-9]+]$/, "");
     if (!this.entryExists(inPath)) return this._throwError("getPathsUnder", `Could not find ${inPath} in database`);
-    let entries = this.flattenedEntries.filter(e => e.startsWith(inPath) && e !== inPath);
+    let entries = this.flattenedEntries.filter(e => {
+      return (e.startsWith(inPath + ".") || e === inPath) && (!match || (match && e.match(match)));
+    });
     if (entries.length === 0) return [];
-    return lib.make_array_unique(entries.map(e => e.split(inPath)[1].split('.')[1]));
+    return lib.make_array_unique(
+      entries
+        .map(e => !arrays ? e.split(CONSTANTS.ARRAY_REGEX)[0] : e)
+        .map(e => !ranges ? e.split(CONSTANTS.FEET_REGEX)[0] : e)
+        .map(e => e.split(inPath)[1])
+        .map(e => e ? e.split('.')[1] : "")
+        .filter(Boolean)
+    );
   }
 
   /**

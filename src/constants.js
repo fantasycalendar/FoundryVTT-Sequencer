@@ -13,7 +13,8 @@ const CONSTANTS = {
     ELIP: "ellipse",
     RREC: "roundedRect",
   },
-  FEET_REGEX: new RegExp(/\.[0-9]+ft\.*/g)
+  FEET_REGEX: new RegExp(/\.[0-9]+ft\.*/g),
+  ARRAY_REGEX: new RegExp(/\.[0-9]$/g)
 }
 
 export default CONSTANTS;

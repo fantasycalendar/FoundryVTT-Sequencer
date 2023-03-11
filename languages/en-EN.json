@@ -97,7 +97,8 @@
       "Search": "Search...",
       "ButtonFilepath": "Filepath",
       "ButtonDatabasePath": "Database",
-      "ShowAllRanges": "Show all ranges"
+      "ShowAllRanges": "Show all ranges",
+      "ShowSubLists": "Show sub lists"
     },
 
     "Setting": {

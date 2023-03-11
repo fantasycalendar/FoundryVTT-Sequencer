@@ -2,26 +2,19 @@
 
 
   import { createEventDispatcher } from "svelte";
+  import { databaseStore } from "./DatabaseStore.js";
 
   const dispatch = createEventDispatcher();
 
 	export let entry;
-  export let searchRegex;
+
+  const searchRegex = databaseStore.searchRegex;
 
   let flashFilePath = false;
   let flashDBPath = false;
 
-  function blink(node, { duration }) {
-    return {
-      duration,
-      css: t => {
-        return `opacity: ${t};`
-      }
-    };
-  }
-
   $: highlight = entry.replace(
-    searchRegex,
+    $searchRegex,
 		"<mark>$&</mark>"
 	);
 
@@ -32,12 +25,12 @@
 	data-id="{entry}"
 >
 	<button type="button" class="btn_play" on:click={() => {
-    dispatch("play");
+    databaseStore.playFile(entry)
   }}>
 		<i class="fas fa-play"></i>
 	</button>
-	<button type="button" class="btn_copy_filepath" on:click={() => {
-    dispatch("copy-file-path");
+	<button type="button" class="btn_copy_filepath" on:click={(e) => {
+    databaseStore.copyPath(entry, true, e.ctrlKey)
     flashFilePath = true;
     setTimeout(() => {
       flashFilePath = false
@@ -45,8 +38,8 @@
     }}>
 		<i class:flash-it={flashFilePath} class="fas fa-file"></i>
 	</button>
-	<button type="button" class="btn_copy_databasepath" on:click={() => {
-    dispatch("copy-db-path");
+	<button type="button" class="btn_copy_databasepath" on:click={(e) => {
+    databaseStore.copyPath(entry, false, e.ctrlKey)
     flashDBPath = true;
     setTimeout(() => {
       flashDBPath = false

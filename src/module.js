@@ -3,7 +3,7 @@ import "./styles/module.scss";
 import { registerSettings, migrateSettings } from "./settings.js";
 import registerLayers from "./layers.js";
 import registerHotkeys from "./hotkeys.js";
-import registerTypes from "./typings/typings.js";
+import registerTypes from "../typings/typings.js";
 import { registerSocket } from "./sockets.js";
 import { registerEase } from "./canvas-effects/ease.js";
 
@@ -47,6 +47,10 @@ Hooks.once('ready', async function () {
     Hooks.on("canvasReady", () => {
       SequencerEffectManager.setUpPersists();
     });
+
+    setTimeout(() => {
+      // window.Sequencer.DatabaseViewer.show();
+    }, 200)
 
     migrateSettings();
 
