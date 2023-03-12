@@ -8,7 +8,7 @@
   "minimumCoreVersion": "10",
   "compatibility": {
     "minimum": "10",
-    "verified": "10"
+    "verified": "11"
   },
   "authors": [
     {
@@ -19,6 +19,9 @@
   ],
   "esmodules": [
     "scripts/module.js"
+  ],
+  "styles": [
+    "style.css"
   ],
   "scripts": [
     "scripts/lib/ext/pixi-filters.js"

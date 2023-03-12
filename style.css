@@ -1,0 +1,210 @@
+.sequencer-database .top-row {
+  display: flex;
+}
+.sequencer-database .database-entries-container {
+  max-height: calc(424px - 5rem);
+  display: flex;
+}
+.sequencer-database .database-entries {
+  padding: 5px 0;
+  max-height: calc(425px - 5rem);
+  overflow-x: hidden;
+  overflow-y: scroll;
+  flex: 1;
+  flex-direction: row;
+}
+.sequencer-database .database-entries-wrapper {
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.sequencer-database .database-entry {
+  display: flex;
+  flex: 1 0 auto;
+}
+.sequencer-database .database-entries-container select, .sequencer-database .database-entries-container input {
+  color: black !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  margin-right: 0.25rem;
+}
+.sequencer-database .database-entry > button {
+  flex: 0;
+  font-size: 0.7rem !important;
+  height: 1.25rem;
+  line-height: normal;
+  margin-right: 5px !important;
+}
+.sequencer-database .database-entry > button > i {
+  font-size: 0.7rem !important;
+}
+.sequencer-database .btn_play {
+  min-width: 1.5rem;
+}
+.sequencer-database .btn_play * {
+  pointer-events: none;
+}
+.sequencer-database .btn_copy_filepath, .sequencer-database .btn_copy_databasepath {
+  min-width: 1.5rem;
+  padding: 0;
+}
+.sequencer-database .database-entry > div {
+  flex: 1;
+  line-height: 1.25rem;
+}
+.sequencer-database .database-entry-text {
+  position: relative;
+}
+.sequencer-database .database-entry-text-highlight {
+  pointer-events: none;
+  color: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.sequencer-database .database-player-container {
+  padding: 5px;
+  width: 345px;
+  height: 345px;
+}
+.sequencer-database .database-player {
+  background-color: #999999;
+  padding: 10px;
+}
+.sequencer-database .database-image {
+  width: 345px;
+}
+.sequencer-database .database-audio {
+  width: 345px;
+  position: absolute;
+  bottom: 0;
+}
+.sequencer-database .database-entries-container .hidden {
+  display: none;
+}
+.sequencer-database .ml-2 {
+  margin-left: 1rem;
+}
+.sequencer-database .all-ranges-label {
+  flex: 1 0 auto;
+  margin-right: 0.5rem;
+  line-height: 2;
+}
+
+.sequencer-effects-manager .effects-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+.sequencer-effects-manager .howto-container {
+  max-width: 300px;
+}
+.sequencer-effects-manager .howto-container li {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+.sequencer-effects-manager .effects {
+  padding: 5px 0;
+  max-height: calc(425px - 5rem);
+  overflow-y: scroll;
+  overflow-x: hidden;
+  flex: 1;
+  flex-direction: row;
+}
+.sequencer-effects-manager .effect {
+  display: flex;
+  flex: 1 0 auto;
+}
+.sequencer-effects-manager .effect > button {
+  flex: 0;
+  font-size: 0.7rem;
+  height: 1.25rem;
+  line-height: normal;
+  margin-right: 5px;
+}
+.sequencer-effects-manager .btn_end {
+  min-width: 1.5rem;
+}
+.sequencer-effects-manager .effect > div {
+  flex: 1;
+  line-height: 1.25rem;
+}
+.sequencer-effects-manager .hover-highlight:hover > .hover-text {
+  color: #000;
+  text-shadow: 0 0 10px red;
+}
+.sequencer-effects-manager .column {
+  display: inline-flex;
+  flex-direction: column;
+}
+.sequencer-effects-manager .row {
+  display: inline-flex;
+  flex-direction: row;
+}
+.sequencer-effects-manager .flex-grow {
+  flex: 1;
+}
+.sequencer-effects-manager .flex-shrink {
+  flex: 0;
+}
+.sequencer-effects-manager .settings {
+  display: flex;
+  flex-direction: row;
+  align-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+.sequencer-effects-manager .input-column, .sequencer-effects-manager .label-column {
+  display: inline-flex;
+  flex-direction: column;
+}
+.sequencer-effects-manager .input-column {
+  flex: 0 1 25%;
+  align-items: flex-end;
+}
+.sequencer-effects-manager .input-row, .sequencer-effects-manager .label-row {
+  display: inline-flex;
+  flex: 0 1 1.666rem;
+}
+.sequencer-effects-manager .label-row {
+  padding-left: 0.2rem;
+  align-items: center;
+}
+.sequencer-effects-manager .settings input {
+  max-width: 40px;
+}
+.sequencer-effects-manager .user-select option:checked {
+  background: #1e90ff;
+  color: white;
+}
+.sequencer-effects-manager .file-settings label, .sequencer-effects-manager .user-settings label {
+  flex: 0 1 15%;
+  align-self: center;
+}
+.sequencer-effects-manager .file-settings input, .sequencer-effects-manager .user-settings select {
+  flex: 1;
+}
+.sequencer-effects-manager .small-button {
+  flex: 0 0 24px;
+  line-height: 24px;
+  margin: -1px 0 -1px 4px;
+  order: 99;
+}
+.sequencer-effects-manager .activate-layer {
+  margin: 0;
+}
+.sequencer-effects-manager .w-100 {
+  width: 100%;
+}
+.sequencer-effects-manager .mb-1 {
+  margin-bottom: 0.25rem;
+}
+.sequencer-effects-manager .mb-2 {
+  margin-bottom: 0.5rem;
+}
+.sequencer-effects-manager .sheet-tabs {
+  min-width: 230px;
+}
+
+/*# sourceMappingURL=style.css.map */
