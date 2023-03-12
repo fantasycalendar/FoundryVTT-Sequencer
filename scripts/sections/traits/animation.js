@@ -122,7 +122,7 @@ export default {
       ease: inOptions?.ease ?? "linear",
       looping: true,
       loops: inOptions?.loops,
-      indefinite: inOptions?.loops === undefined,
+      indefinite: inOptions?.loops === undefined || !is_real_number(inOptions?.loops),
       pingPong: inOptions?.pingPong ?? false,
       gridUnits: inOptions?.gridUnits ?? false
     });

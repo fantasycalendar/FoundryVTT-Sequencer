@@ -254,9 +254,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
     const element = isAudio ? audio : player;
 
     element.onerror = () => {
-      const error = `Sequencer Database Viewer | Could not play file: ${file}`;
-      ui.notifications.error(error);
-      console.error(error);
+      ui.notifications.error(`Sequencer Database Viewer | Could not play file: ${file}`);
     };
 
     element.oncanplay = () => {

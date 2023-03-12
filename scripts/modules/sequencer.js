@@ -27,7 +27,7 @@ export default class Sequence {
    * @returns {Promise}
    */
   async play() {
-    Hooks.call("createSequencerSequence");
+    Hooks.callAll("createSequencerSequence");
     lib.debug("Initializing sections")
     for (let section of this.sections) {
       await section._initialize();
@@ -47,7 +47,7 @@ export default class Sequence {
     }
 
     return Promise.allSettled(promises).then(() => {
-      Hooks.call("endedSequencerSequence");
+      Hooks.callAll("endedSequencerSequence");
       lib.debug("Finished playing sections")
     });
   }

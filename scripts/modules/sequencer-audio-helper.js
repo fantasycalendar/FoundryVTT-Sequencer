@@ -29,7 +29,7 @@ export default class SequencerAudioHelper {
       return new Promise(resolve => setTimeout(resolve, data.duration));
     }
 
-    Hooks.call("createSequencerSound", data);
+    Hooks.callAll("createSequencerSound", data);
 
     lib.debug(`Playing sound:`, data);
 
@@ -75,7 +75,7 @@ export default class SequencerAudioHelper {
       sound.on("stop", resolve);
       sound.on("end", resolve);
     }).then(() => {
-      Hooks.call("endedSequencerSound", data);
+      Hooks.callAll("endedSequencerSound", data);
     });
   }
 }

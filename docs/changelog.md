@@ -1,8 +1,12 @@
 ## Changelog
 
 ### Version 2.413
-- *Sequencer* - Isolated Sequencer's styling so that it doesn't leak out into other modules or systems
 - *Sequencer* - Added support for database paths that resolve to other database paths
+- *Sequencer* - Isolated Sequencer's styling so that it doesn't leak out into other modules or systems
+- *Effects* - Fixed `.loopProperty()` not respecting `loops: 0`
+- *Effects* - Fixed `.animateProperty()` not keeping track of relative values when animating the same property multiple times
+- *Effects* - Fixed named screenspace effects without a specific location not playing and throwing errors
+- *Sounds* - Fixed `softFail` not allowing sounds to softly fail
 
 ### Version 2.412
 - *Sequencer* - Added setting to hide/show the Sequencer buttons in the left sidebar when in the token controls

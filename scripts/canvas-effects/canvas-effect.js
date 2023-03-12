@@ -739,8 +739,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (!inOffsetMap.setup) {
       inOffsetMap.setup = true;
-      inOffsetMap.sourceObj = this._validateObject(inOffsetMap.source);
-      inOffsetMap.targetObj = this._validateObject(inOffsetMap.target);
+      inOffsetMap.sourceObj = inOffsetMap.source ? this._validateObject(inOffsetMap.source) : false;
+      inOffsetMap.targetObj = inOffsetMap.target ? this._validateObject(inOffsetMap.target) : false;
       const repetition = this.data.repetition % inOffsetMap.repetitions;
       const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
       inOffsetMap.twister = new MersenneTwister(seed);
@@ -763,7 +763,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     const finishPromise = new Promise(async (resolve, reject) => {
       this._resolve = resolve;
-      Hooks.call("createSequencerEffect", this);
+      Hooks.callAll("createSequencerEffect", this);
       lib.debug(`Playing effect:`, this.data);
       this._initialize();
     });
@@ -780,7 +780,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   endEffect() {
     if (this._ended) return;
-    Hooks.call("endedSequencerEffect", this);
+    Hooks.callAll("endedSequencerEffect", this);
     this.destroy();
   }
 
@@ -841,7 +841,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   _update(inUpdates) {
     this.data = inUpdates;
-    Hooks.call("updateSequencerEffect", this);
+    Hooks.callAll("updateSequencerEffect", this);
     this._destroyDependencies();
     return this._reinitialize();
   }

@@ -338,7 +338,7 @@ export default class SequencerEffectManager {
     }).flat();
     debounceUpdateEffectViewer();
     return Promise.all(promises).then(() => {
-      Hooks.call("sequencerEffectManagerReady");
+      Hooks.callAll("sequencerEffectManagerReady");
     });
   }
 

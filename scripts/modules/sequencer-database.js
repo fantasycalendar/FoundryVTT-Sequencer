@@ -66,6 +66,7 @@ const SequencerDatabase = {
     );
     if (isPrivate) this.privateModules.push(inModuleName);
     console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
+    Hooks.callAll('registerSequencerDatabaseEntries', inModuleName);
     return true;
   },
 
@@ -106,7 +107,7 @@ const SequencerDatabase = {
     inString = inString.trim()
     if (inString === "") return this._throwError("entryExists", "inString cannot be empty")
     inString = inString.replace(/\[[0-9]+]$/, "");
-    return this.flattenedEntries.find(entry => entry.startsWith(inString));
+    return this.flattenedEntries.some(entry => entry.startsWith(inString));
   },
 
   /**
@@ -122,7 +123,9 @@ const SequencerDatabase = {
     if (inString === "") return this._throwError("getEntry", "inString cannot be empty")
     inString = inString.replace(/\[[0-9]+]$/, "");
     if (!this.entryExists(inString)) {
-      if (softFail) return false;
+      if (softFail) {
+        return false;
+      }
       return this._throwError("getEntry", `Could not find ${inString} in database`);
     }
 
@@ -253,9 +256,7 @@ const SequencerDatabase = {
    * @private
    */
   _throwError(inFunctionName, inError) {
-    let error = `Sequencer | Database | ${inFunctionName} - ${inError}`;
-    ui.notifications.error(error);
-    console.error(error);
+    ui.notifications.error(`Sequencer | Database | ${inFunctionName} - ${inError}`);
     return false;
   },
 
@@ -338,16 +339,23 @@ const SequencerDatabase = {
         data = this._getCleanData(data, { metadata: false });
       }
 
-      let extension = "";
       if(typeof data === "string"){
-        extension = data.split('.')[data.split('.').length - 1].toLowerCase();
+
+        const existingEntry = this.entryExists(data);
+        const extension = data.split('.')[data.split('.').length - 1].toLowerCase();
+
+        if(!existingEntry && extension && !mediaFileExtensions.includes(extension)){
+          console.warn(`Sequencer | Database | registerEntries - failed to register ${wholeDBPath} to ${data}!`);
+          this.flattenedEntries.splice(this.flattenedEntries.indexOf(wholeDBPath), 1);
+          continue;
+        }else if(existingEntry){
+          moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
+          continue;
+        }
+
       }
 
-      if(extension && !mediaFileExtensions.includes(extension)){
-        moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
-      }else {
-        moduleEntries.push(SequencerFileBase.make(data, wholeDBPath, metadata));
-      }
+      moduleEntries.push(SequencerFileBase.make(data, wholeDBPath, metadata));
 
     }
 

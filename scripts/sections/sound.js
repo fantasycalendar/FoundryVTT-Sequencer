@@ -42,13 +42,13 @@ class SoundSection extends Section {
    */
   async run() {
 
-    if((!this._file && this.sequence.softFail)){
+    const playData = await this._sanitizeSoundData();
+
+    if((!playData.src && this.sequence.softFail)){
       return new Promise((reject) => {
         reject();
       });
     }
-
-    const playData = await this._sanitizeSoundData();
 
     if (!playData?.play) {
       this.sequence._showWarning(this, "Play", `File not found: ${playData.data.src}`);
@@ -67,7 +67,21 @@ class SoundSection extends Section {
    */
   async _sanitizeSoundData() {
 
-    let { file, forcedIndex } = await this._determineFile(this._file)
+    if(!this._file){
+      return {
+        play: false,
+        src: false
+      };
+    }
+
+    let { file, forcedIndex } = await this._determineFile(this._file);
+
+    if (!file) {
+      return {
+        play: false,
+        src: false
+      };
+    }
 
     if (file instanceof SequencerFileBase) {
       file.forcedIndex = forcedIndex;
