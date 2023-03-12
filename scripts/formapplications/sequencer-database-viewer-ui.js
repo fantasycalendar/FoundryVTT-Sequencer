@@ -1,6 +1,6 @@
 import { cache } from "../lib/cache.js";
 import { reactiveEl as html } from "../lib/html.js";
-import { SequencerFile } from "../modules/sequencer-file.js";
+import { SequencerFileBase } from "../modules/sequencer-file.js";
 import * as lib from "../lib/lib.js";
 
 const MAX_NODES = 24;
@@ -208,7 +208,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
     let entry = Sequencer.Database.getEntry(entryText);
 
-    if (entry instanceof SequencerFile) {
+    if (entry instanceof SequencerFileBase) {
       entry = entry.clone();
       entry = entry.getPreviewFile(entryText);
     }
@@ -277,7 +277,7 @@ export default class SequencerDatabaseViewer extends FormApplication {
 
       entry = Sequencer.Database.getEntry(dbPath);
 
-      if (entry instanceof SequencerFile) {
+      if (entry instanceof SequencerFileBase) {
 
         const specificFt = dbPath.match(Sequencer.Database.feetTest);
         if (specificFt) {

@@ -1,0 +1,152 @@
+.ml-2 {
+  margin-left: 1rem;
+}
+
+.all-ranges-label {
+  flex: 1 0 auto;
+  margin-right: 0.5rem;
+  line-height: 2;
+}
+
+.effects-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+.howto-container {
+  max-width: 300px;
+}
+
+.howto-container li {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+
+.effects {
+  padding: 5px 0;
+  max-height: calc(425px - 5rem);
+  overflow-y: scroll;
+  overflow-x: hidden;
+  flex: 1;
+  flex-direction: row;
+}
+
+.effect {
+  display: flex;
+  flex: 1 0 auto;
+}
+
+.effect > button {
+  flex: 0;
+  font-size: 0.7rem;
+  height: 1.25rem;
+  line-height: normal;
+  margin-right: 5px;
+}
+
+.btn_end {
+  min-width: 1.5rem;
+}
+
+.effect > div {
+  flex: 1;
+  line-height: 1.25rem;
+}
+
+.hover-highlight:hover > .hover-text {
+  color: #000;
+  text-shadow: 0 0 10px red;
+}
+
+.column {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.row {
+  display: inline-flex;
+  flex-direction: row;
+}
+
+.flex-grow {
+  flex: 1;
+}
+
+.flex-shrink {
+  flex: 0;
+}
+
+.settings {
+  display: flex;
+  flex-direction: row;
+  align-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.input-column, .label-column {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.input-column {
+  flex: 0 1 25%;
+  align-items: flex-end;
+}
+
+.input-row, .label-row {
+  display: inline-flex;
+  flex: 0 1 1.666rem;
+}
+
+.label-row {
+  padding-left: 0.2rem;
+  align-items: center;
+}
+
+.settings input {
+  max-width: 40px;
+}
+
+.user-select option:checked {
+  background: #1e90ff;
+  color: white;
+}
+
+.file-settings label, .user-settings label {
+  flex: 0 1 15%;
+  align-self: center;
+}
+
+.file-settings input, .user-settings select {
+  flex: 1;
+}
+
+.small-button {
+  flex: 0 0 24px;
+  line-height: 24px;
+  margin: -1px 0 -1px 4px;
+  order: 99;
+}
+
+.activate-layer {
+  margin: 0;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.sheet-tabs {
+  min-width: 230px;
+}
+
+/*# sourceMappingURL=module.css.map */

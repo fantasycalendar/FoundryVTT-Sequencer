@@ -2,7 +2,7 @@ import CONSTANTS from "../constants.js";
 import filters from "../lib/filters.js";
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
-import { SequencerFile, SequencerFileRangeFind } from "../modules/sequencer-file.js";
+import { SequencerFileBase } from "../modules/sequencer-file.js";
 import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import flagManager from "../utils/flag-manager.js";
@@ -1004,7 +1004,7 @@ export default class CanvasEffect extends PIXI.Container {
       }
     }
 
-    if (this._file instanceof SequencerFile) {
+    if (this._file instanceof SequencerFileBase) {
       this._file.destroy();
     }
 
@@ -1115,7 +1115,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (this.data.customRange) {
 
-      this._file = SequencerFile.make(this.data.file, Object.values(this.template), "temporary.range.file");
+      this._file = SequencerFileBase.make(this.data.file, Object.values(this.template), "temporary.range.file");
 
     } else {
 
@@ -1137,7 +1137,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._file.forcedIndex = this.data.forcedIndex;
     this._file.twister = this._twister;
 
-    this._isRangeFind = this._file instanceof SequencerFileRangeFind;
+    this._isRangeFind = this._file?.rangeFind;
 
     if (this.data.stretchTo) {
       let ray = new Ray(this.sourcePosition, this.targetPosition);
@@ -1840,7 +1840,7 @@ export default class CanvasEffect extends PIXI.Container {
   /**
    * Calculates the padding and scale to stretch an effect across the given distance
    *
-   * If the file is a SequencerFile instance, it will also pick the appropriate file for the right distance
+   * If the file is a SequencerFileBase instance, it will also pick the appropriate file for the right distance
    *
    * @param distance
    * @returns {Object}
@@ -1856,7 +1856,7 @@ export default class CanvasEffect extends PIXI.Container {
       let filePath;
       let spriteAnchor = this.data.anchor?.x ?? 1.0;
 
-      if (this._file instanceof SequencerFile) {
+      if (this._file instanceof SequencerFileBase) {
 
         const scaledDistance = distance / (this.data.scale.x ?? 1.0);
         const result = await this._file.getTexture(scaledDistance);

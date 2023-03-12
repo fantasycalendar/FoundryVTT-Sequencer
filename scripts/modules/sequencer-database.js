@@ -1,6 +1,6 @@
 import * as lib from '../lib/lib.js';
 import LoadingBar from "../utils/loadingBar.js";
-import { SequencerFile, SequencerFileProxy, SequencerFileRangeFind } from "./sequencer-file.js";
+import { SequencerFileBase, SequencerFileProxy } from "./sequencer-file.js";
 
 const SequencerDatabase = {
 
@@ -37,7 +37,7 @@ const SequencerDatabase = {
       .map(entry => entry[1])
       .deepFlatten()
       .forEach(sequencerFile => {
-        if (sequencerFile instanceof SequencerFileRangeFind) {
+        if (sequencerFile?.rangeFind) {
           Object.entries(sequencerFile.file).forEach(entry => {
             fileDatabaseObject[entry[1]] = sequencerFile.dbPath + "." + entry[0];
           })
@@ -346,7 +346,7 @@ const SequencerDatabase = {
       if(extension && !mediaFileExtensions.includes(extension)){
         moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
       }else {
-        moduleEntries.push(SequencerFile.make(data, wholeDBPath, metadata));
+        moduleEntries.push(SequencerFileBase.make(data, wholeDBPath, metadata));
       }
 
     }

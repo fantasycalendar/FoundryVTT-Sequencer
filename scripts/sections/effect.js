@@ -1380,7 +1380,7 @@ export default class EffectSection extends Section {
       customRange: false
     };
 
-    this._isRangedEffect = fileData?.file instanceof SequencerFileRangeFind || fileData?.customRange;
+    this._isRangedEffect = fileData?.file?.rangeFind;
 
     if (fileData.customRange || fileData.file?.dbPath) return;
 
