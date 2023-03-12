@@ -1350,7 +1350,7 @@ export default class EffectSection extends Section {
     if(this._deserializedData){
       this._deserializedData.users = [game.userId];
       this._deserializedData.creationTimestamp = (+new Date());
-      this._deserializedData.temporary = true;
+      this._deserializedData.remote = true;
       return this._deserializedData;
     }
 

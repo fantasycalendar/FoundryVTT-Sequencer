@@ -33,7 +33,7 @@ export default class Sequence {
     if(remote){
       this.localOnly = true;
       const data = await this.toJSON();
-      sequencerSocket.executeForOthers(SOCKET_HANDLERS.RUN_LOCAL_SEQUENCE, data);
+      sequencerSocket.executeForOthers(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, data);
     }
     Hooks.callAll("createSequencerSequence");
     lib.debug("Initializing sections")

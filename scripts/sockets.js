@@ -16,7 +16,7 @@ export const SOCKET_HANDLERS = {
   REMOVE_FLAGS: "removeFlags",
   UPDATE_POSITION: "updatePosition",
   CREATE_SCROLLING_TEXT: "createScrollingText",
-  RUN_LOCAL_SEQUENCE: "runLocalSequence"
+  RUN_SEQUENCE_LOCALLY: "runSequenceLocally"
 };
 
 export let sequencerSocket;
@@ -35,8 +35,7 @@ export function registerSocket() {
   sequencerSocket.register(SOCKET_HANDLERS.REMOVE_FLAGS, (...args) => FlagManager._removeFlags(...args))
   sequencerSocket.register(SOCKET_HANDLERS.UPDATE_POSITION, (...args) => Sequencer.EffectManager._updatePosition(...args))
   sequencerSocket.register(SOCKET_HANDLERS.CREATE_SCROLLING_TEXT, (data) => SequencerScrollingTextHelper.play(data));
-  sequencerSocket.register(SOCKET_HANDLERS.RUN_LOCAL_SEQUENCE, (data) => {
-    console.log("remote!")
+  sequencerSocket.register(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, (data) => {
     new Sequence().fromJSON(data).play();
   });
 }

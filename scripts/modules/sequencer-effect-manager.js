@@ -255,7 +255,7 @@ export default class SequencerEffectManager {
 
     const effect = CanvasEffect.make(data);
 
-    if (data.persist && setFlags && effect.context && effect.owner && !data.temporary) {
+    if (data.persist && setFlags && effect.context && effect.owner && !data.temporary && !data.remote) {
       flagManager.addFlags(effect.context.uuid, effect.data);
     }
 
