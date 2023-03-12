@@ -91,7 +91,6 @@ export default class ScrollingTextSection extends Section {
   async _sanitizeTextData(){
 
     if(this._deserializedData){
-      this._deserializedData.users = [game.userId]
       return this._deserializedData;
     }
 

@@ -68,7 +68,6 @@ class SoundSection extends Section {
   async _sanitizeSoundData() {
 
     if(this._deserializedData){
-      this._deserializedData.users = [game.userId];
       return this._deserializedData;
     }
 
