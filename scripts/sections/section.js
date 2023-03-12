@@ -88,6 +88,33 @@ export default class Section {
   }
 
   /**
+   * Method overwritten by inheriting classes, which is called when this section is serialized by the Sequence
+   *
+   * @returns {object}
+   * @private
+   */
+  async _serialize(){
+    return {
+      async: this._async,
+      delay: [this._delayMin, this._delayMax],
+      waitUntilFinished: this._waitUntilFinished,
+      waitUntilFinishedDelay: this._waitUntilFinishedDelay,
+      repetitions: this._repetitions,
+      repetitionsDelay: [this._repeatDelayMin, this._repeatDelayMax]
+    };
+  }
+
+  _deserialize(data){
+    this._async = data.async;
+    this._waitUntilFinished = data.waitUntilFinished;
+    this._waitUntilFinishedDelay = data.waitUntilFinishedDelay;
+    this._repetitions = data.repetitions;
+    this._repeatDelayMin = data.repetitionsDelay[0];
+    this._repeatDelayMax = data.repetitionsDelay[1];
+    return this;
+  }
+
+  /**
    * Method overwritten by inheriting classes, which stores data or prepares data before the Sequence executes it (see EffectsSection)
    *
    * @protected
@@ -182,7 +209,7 @@ export default class Section {
   }
 
   /**
-   * Overrides the duration of an effect or sound
+   * Overrides the duration of this section
    *
    * @param {number} inDuration
    * @returns {Section} this

@@ -1,6 +1,7 @@
 import SequencerAudioHelper from "./modules/sequencer-audio-helper.js";
 import CONSTANTS from "./constants.js";
 import FlagManager from "./utils/flag-manager.js";
+import SequencerScrollingTextHelper from "./modules/sequencer-scrolling-text-helper.js";
 
 export const SOCKET_HANDLERS = {
   PLAY_EFFECT: "playEffect",
@@ -13,7 +14,9 @@ export const SOCKET_HANDLERS = {
   UPDATE_DOCUMENT: "updateDocument",
   ADD_FLAGS: "addFlags",
   REMOVE_FLAGS: "removeFlags",
-  UPDATE_POSITION: "updatePosition"
+  UPDATE_POSITION: "updatePosition",
+  CREATE_SCROLLING_TEXT: "createScrollingText",
+  RUN_LOCAL_SEQUENCE: "runLocalSequence"
 };
 
 export let sequencerSocket;
@@ -31,6 +34,11 @@ export function registerSocket() {
   sequencerSocket.register(SOCKET_HANDLERS.ADD_FLAGS, (...args) => FlagManager._addFlags(...args))
   sequencerSocket.register(SOCKET_HANDLERS.REMOVE_FLAGS, (...args) => FlagManager._removeFlags(...args))
   sequencerSocket.register(SOCKET_HANDLERS.UPDATE_POSITION, (...args) => Sequencer.EffectManager._updatePosition(...args))
+  sequencerSocket.register(SOCKET_HANDLERS.CREATE_SCROLLING_TEXT, (data) => SequencerScrollingTextHelper.play(data));
+  sequencerSocket.register(SOCKET_HANDLERS.RUN_LOCAL_SEQUENCE, (data) => {
+    console.log("remote!")
+    new Sequence().fromJSON(data).play();
+  });
 }
 
 async function updateDocument(documentUuid, updates, animate) {
