@@ -1,5 +1,9 @@
 ## Changelog
 
+### Version 2.413
+- *Sequencer* - Isolated Sequencer's styling so that it doesn't leak out into other modules or systems
+- *Sequencer* - Added support for database paths that resolve to other database paths
+
 ### Version 2.412
 - *Sequencer* - Added setting to hide/show the Sequencer buttons in the left sidebar when in the token controls
 - *Animation* - Fixed `.moveTowards()` going into infinite loop if the source and targets are on top of each other

@@ -1,6 +1,6 @@
 import * as lib from '../lib/lib.js';
 import LoadingBar from "../utils/loadingBar.js";
-import { SequencerFile, SequencerFileRangeFind } from "./sequencer-file.js";
+import { SequencerFile, SequencerFileProxy, SequencerFileRangeFind } from "./sequencer-file.js";
 
 const SequencerDatabase = {
 
@@ -310,6 +310,10 @@ const SequencerDatabase = {
 
     const moduleEntries = [];
 
+    const mediaFileExtensions = Object.keys(CONST.FILE_CATEGORIES.IMAGE)
+      .concat(Object.keys(CONST.FILE_CATEGORIES.VIDEO))
+      .concat(Object.keys(CONST.FILE_CATEGORIES.AUDIO));
+
     for (let wholeDBPath of allPaths) {
       let metadata = this._getCleanData(entries);
       let dbPath = wholeDBPath.split(".");
@@ -334,7 +338,16 @@ const SequencerDatabase = {
         data = this._getCleanData(data, { metadata: false });
       }
 
-      moduleEntries.push(SequencerFile.make(data, wholeDBPath, metadata));
+      let extension = "";
+      if(typeof data === "string"){
+        extension = data.split('.')[data.split('.').length - 1].toLowerCase();
+      }
+
+      if(extension && !mediaFileExtensions.includes(extension)){
+        moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
+      }else {
+        moduleEntries.push(SequencerFile.make(data, wholeDBPath, metadata));
+      }
 
     }
 
