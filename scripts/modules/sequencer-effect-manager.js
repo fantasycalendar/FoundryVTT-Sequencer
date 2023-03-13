@@ -108,7 +108,7 @@ export default class SequencerEffectManager {
   static async endEffects(inFilter = {}, push = true) {
     inFilter = this._validateFilters(inFilter);
     if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided")
-    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.id);
+    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.data.tokenPrototypeId || effect.id);
     if (!effectsToEnd.length) return;
     if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
     return this._endEffects(effectsToEnd);
@@ -123,7 +123,7 @@ export default class SequencerEffectManager {
    */
   static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
     const inFilter = this._validateFilters({ sceneId: inSceneId });
-    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.id);
+    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.data.tokenPrototypeId || effect.id);
     if (!effectsToEnd.length) return;
     if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
     return this._endEffects(effectsToEnd);
@@ -327,9 +327,22 @@ export default class SequencerEffectManager {
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
     const docEffectsMap = allObjects.reduce((acc, doc) => {
-      const effects = flagManager.getFlags(doc);
+      let effects = flagManager.getFlags(doc);
+      if(!effects.length && doc instanceof TokenDocument && doc?.actorLink){
+        effects = flagManager.getFlags(doc?.actor)
+        effects.forEach(e => {
+          if(lib.is_UUID(e[1].source) && fromUuidSync(e[1].source)?.actor === doc?.actor){
+            e[1].source = doc.uuid;
+            e[1].sceneId = doc.parent.id;
+          }
+          if(lib.is_UUID(e[1].target) && fromUuidSync(e[1].target)?.actor === doc?.actor){
+            e[1].target = doc.uuid;
+            e[1].sceneId = doc.parent.id;
+          }
+        });
+      }
       if(effects.length) {
-        acc[doc.uuid] = flagManager.getFlags(doc)
+        acc[doc.uuid] = effects;
       }
       return acc;
     }, {});
@@ -363,7 +376,7 @@ export default class SequencerEffectManager {
    */
   static async patchCreationData(inDocument, data, options) {
 
-    const effects = flagManager.getFlags(inDocument, { preCreate: true });
+    const effects = flagManager.getFlags(inDocument);
 
     if (!effects?.length) return;
 
@@ -406,7 +419,10 @@ export default class SequencerEffectManager {
    */
   static async documentCreated(inDocument) {
     let effects = flagManager.getFlags(inDocument);
-    if (!effects?.length) return;
+    if (!effects?.length && inDocument instanceof TokenDocument && inDocument?.actorLink){
+      effects = flagManager.getFlags(inDocument.actor);
+    }
+    if(!effects?.length) return;
     debounceUpdateEffectViewer();
     return this._playEffectMap(effects, inDocument);
   }
@@ -448,9 +464,11 @@ export default class SequencerEffectManager {
    * @private
    */
   static _endEffects(inEffectIds) {
-    const effects = inEffectIds.map(id => EffectsContainer.get(id)).filter(Boolean);
-    if (!effects.length) return;
-    return this._endManyEffects(effects);
+    const effects = Array.from(EffectsContainer);
+    const effectsToEnd = effects.filter(e => inEffectIds.some(id => e[0] === id || e[1].data.tokenPrototypeId === id))
+      .map(e => e[1]);
+    if (!effectsToEnd.length) return;
+    return this._endManyEffects(effectsToEnd);
   }
 
   /**
@@ -476,30 +494,20 @@ export default class SequencerEffectManager {
 
         flagManager.removeFlags(effectContext.uuid, effectData, !inEffects);
 
-        if (effectContext instanceof TokenDocument) {
+        if (effectContext instanceof TokenDocument && effectContext.actorLink && effectContext.actor.prototypeToken.actorLink) {
 
-          const persistentEffectData = effectData.filter(data => data?.persistOptions?.persistTokenPrototype)
+          const persistentEffectData = effectData.filter(data => data?.persistOptions?.persistTokenPrototype);
           if (persistentEffectData.length) {
 
-            const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
-              return token.actorLink && token.actor === effectContext.actor && token !== effectContext
-            })).deepFlatten();
+            const actorEffects = flagManager.getFlags(effectContext.actor);
+            const applicableActorEffects = actorEffects.filter(effect => {
+              return effect[1]?.persistOptions?.persistTokenPrototype && (
+                persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
+              );
+            });
 
-            for (const token of tokensToUpdate) {
-              const tokenEffects = flagManager.getFlags(token)
-              const applicableTokenEffects = tokenEffects.filter(effect => {
-                return effect[1]?.persistOptions?.persistTokenPrototype && (
-                  persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
-                );
-              });
-              if (applicableTokenEffects.length) {
-                flagManager.removeFlags(token.uuid, tokenEffects.map(effect => effect[1]))
-                const tokenEffectsToEnd = applicableTokenEffects.map(tokenEffect => EffectsContainer.get(tokenEffect[0])).filter(Boolean);
-                if (tokenEffectsToEnd.length) {
-                  tokenEffectsToEnd.forEach(effect => this._removeEffect(effect));
-                }
-              }
-            }
+            flagManager.removeFlags(effectContext.actor.uuid, applicableActorEffects.map(e => e[0]), !inEffects);
+
           }
         }
       }
@@ -582,7 +590,9 @@ export default class SequencerEffectManager {
       duplicatedData.source = token.uuid;
       if (CanvasEffect.checkValid(duplicatedData)) {
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
-        this._playEffect(duplicatedData);
+        if(duplicatedData.sceneId === game.user.viewedScene) {
+          this._playEffect(duplicatedData);
+        }
       }
     }
   }

@@ -1591,6 +1591,10 @@ export default class EffectSection extends Section {
       nameOffsetMap: this.sequence.nameOffsetMap
     });
 
+    if(this._persistOptions?.persistTokenPrototype){
+      data.tokenPrototypeId = randomID();
+    }
+
     for (let override of this._overrides) {
       data = await override(this, data);
     }
