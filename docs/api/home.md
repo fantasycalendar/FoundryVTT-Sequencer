@@ -55,6 +55,12 @@ Creates an effect section. Until you call any of the [core methods](#sequencer-c
 
 Creates a sound section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the Sound section.
 
+### Scrolling Text
+
+`.scrollingText()` or `.scrollingText(inToken, inText, inTextStyles)`
+
+Creates a scrolling text section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the scrolling text section.
+
 ### Then do
 
 ```js

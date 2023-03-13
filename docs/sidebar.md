@@ -20,6 +20,7 @@
   * [Effect](api/effect.md)
     * [Filters](api/filter.md)
   * [Sound](api/sound.md)
+  * [Scrolling Text](api/scrolling-text.md)
 
 * Global
   * [Database](database.md)
