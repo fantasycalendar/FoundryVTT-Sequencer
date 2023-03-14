@@ -25,7 +25,7 @@ export function registerSocket() {
   console.log("Sequencer | Registered sequencerSocket");
   sequencerSocket = socketlib.registerModule(CONSTANTS.MODULE_NAME);
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) => Sequencer.EffectManager._playEffect(...args))
-  sequencerSocket.register(SOCKET_HANDLERS.END_EFFECTS, (...args) => Sequencer.EffectManager._endEffects(...args))
+  sequencerSocket.register(SOCKET_HANDLERS.END_EFFECTS, (...args) => Sequencer.EffectManager._endManyEffects(...args))
   sequencerSocket.register(SOCKET_HANDLERS.UPDATE_EFFECT, (...args) => Sequencer.EffectManager._updateEffect(...args))
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) => SequencerAudioHelper.play(...args))
   sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) => Sequencer.Preloader.respond(...args))

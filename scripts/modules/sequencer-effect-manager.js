@@ -108,10 +108,12 @@ export default class SequencerEffectManager {
   static async endEffects(inFilter = {}, push = true) {
     inFilter = this._validateFilters(inFilter);
     if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided")
-    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.id);
+    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => {
+      return effect.data?.persistOptions?.persistTokenPrototype ? effect.data?.persistOptions?.id ?? effect.id : effect.id;
+    });
     if (!effectsToEnd.length) return;
     if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
-    return this._endEffects(effectsToEnd);
+    return this._endManyEffects(effectsToEnd);
   }
 
   /**
@@ -123,10 +125,12 @@ export default class SequencerEffectManager {
    */
   static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
     const inFilter = this._validateFilters({ sceneId: inSceneId });
-    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => effect.id);
+    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => {
+      return effect.data?.persistOptions?.persistTokenPrototype ? effect.data?.persistOptions?.id ?? effect.id : effect.id;
+    });
     if (!effectsToEnd.length) return;
     if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
-    return this._endEffects(effectsToEnd);
+    return this._endManyEffects(effectsToEnd);
   }
 
   /**
@@ -327,9 +331,22 @@ export default class SequencerEffectManager {
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
     const docEffectsMap = allObjects.reduce((acc, doc) => {
-      const effects = flagManager.getFlags(doc);
+      let effects = flagManager.getFlags(doc);
+      if(!effects.length && doc instanceof TokenDocument && doc?.actorLink){
+        effects = flagManager.getFlags(doc?.actor)
+        effects.forEach(e => {
+          if(lib.is_UUID(e[1].source) && fromUuidSync(e[1].source)?.actor === doc?.actor){
+            e[1].source = doc.uuid;
+            e[1].sceneId = doc.parent.id;
+          }
+          if(lib.is_UUID(e[1].target) && fromUuidSync(e[1].target)?.actor === doc?.actor){
+            e[1].target = doc.uuid;
+            e[1].sceneId = doc.parent.id;
+          }
+        });
+      }
       if(effects.length) {
-        acc[doc.uuid] = flagManager.getFlags(doc)
+        acc[doc.uuid] = effects;
       }
       return acc;
     }, {});
@@ -363,13 +380,13 @@ export default class SequencerEffectManager {
    */
   static async patchCreationData(inDocument, data, options) {
 
-    const effects = flagManager.getFlags(inDocument, { preCreate: true });
+    const effects = flagManager.getFlags(inDocument);
 
     if (!effects?.length) return;
 
     const updates = {};
 
-    let documentUuid = null;
+    let documentUuid;
     if (!inDocument._id) {
       const documentId = randomID();
       documentUuid = inDocument.uuid + documentId;
@@ -379,23 +396,27 @@ export default class SequencerEffectManager {
       documentUuid = inDocument.uuid;
     }
 
-    updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = effects.map(effect => {
+    updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = this.patchEffectDataForDocument(documentUuid, effects)
+
+    return inDocument.updateSource(updates);
+
+  }
+
+  static patchEffectDataForDocument(inDocumentUuid, effects){
+    return effects.map(effect => {
       const effectData = effect[1];
       effect[0] = randomID();
       effectData._id = effect[0];
       if (lib.is_UUID(effectData.source)) {
         if (effectData.masks.includes(effectData.source)) {
           const index = effectData.masks.indexOf(effectData.source);
-          effectData.masks[index] = documentUuid;
+          effectData.masks[index] = inDocumentUuid;
         }
-        effectData.source = documentUuid;
+        effectData.source = inDocumentUuid;
       }
-      effectData.sceneId = inDocument.parent.id;
+      effectData.sceneId = inDocumentUuid.split('.')[1];
       return effect;
     });
-
-    return inDocument.updateSource(updates);
-
   }
 
   /**
@@ -406,7 +427,14 @@ export default class SequencerEffectManager {
    */
   static async documentCreated(inDocument) {
     let effects = flagManager.getFlags(inDocument);
-    if (!effects?.length) return;
+    if (inDocument instanceof TokenDocument && inDocument?.actorLink){
+      let actorEffects = flagManager.getFlags(inDocument.actor);
+      if(actorEffects.length){
+        actorEffects = this.patchEffectDataForDocument(inDocument.uuid, actorEffects);
+      }
+      effects = effects.concat(actorEffects);
+    }
+    if(!effects?.length) return;
     debounceUpdateEffectViewer();
     return this._playEffectMap(effects, inDocument);
   }
@@ -441,71 +469,55 @@ export default class SequencerEffectManager {
   }
 
   /**
-   * Ends multiple effects by ID
+   * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully ended
    *
    * @param inEffectIds
    * @returns {Promise}
    * @private
    */
-  static _endEffects(inEffectIds) {
-    const effects = inEffectIds.map(id => EffectsContainer.get(id)).filter(Boolean);
-    if (!effects.length) return;
-    return this._endManyEffects(effects);
-  }
+  static async _endManyEffects(inEffectIds = false) {
 
-  /**
-   * Ends one or many effects at the same time, returning a promise that resolves once every effect has fully _ended
-   *
-   * @param inEffects
-   * @returns {Promise}
-   * @private
-   */
-  static async _endManyEffects(inEffects = false) {
+    const actorEffectsToEnd = this.effects.filter(effect => {
+      return inEffectIds.includes(effect.data?.persistOptions?.id)
+    });
+    const regularEffectsToEnd = this.effects.filter(effect => inEffectIds.includes(effect.id));
 
-    const effectsToEnd = (inEffects || this.effects);
+    const effectsByContextUuid = Object.values(lib.group_by(regularEffectsToEnd, "context.uuid"));
+    const effectsByActorUuid = Object.values(lib.group_by(actorEffectsToEnd, "context.actor.uuid"));
 
-    const effectsByObjectId = Object.values(lib.group_by(effectsToEnd, "context.uuid"));
-
-    if (!effectsByObjectId.length) return true;
-
-    effectsByObjectId.forEach(effects => {
+    effectsByContextUuid.forEach(effects => {
       effects = effects.filter(effect => effect.data.persist && !effect.data.temporary);
-      if (effects.length) {
-        const effectData = effects.map(effect => effect.data);
-        const effectContext = effects[0].context;
-
-        flagManager.removeFlags(effectContext.uuid, effectData, !inEffects);
-
-        if (effectContext instanceof TokenDocument) {
-
-          const persistentEffectData = effectData.filter(data => data?.persistOptions?.persistTokenPrototype)
-          if (persistentEffectData.length) {
-
-            const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
-              return token.actorLink && token.actor === effectContext.actor && token !== effectContext
-            })).deepFlatten();
-
-            for (const token of tokensToUpdate) {
-              const tokenEffects = flagManager.getFlags(token)
-              const applicableTokenEffects = tokenEffects.filter(effect => {
-                return effect[1]?.persistOptions?.persistTokenPrototype && (
-                  persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
-                );
-              });
-              if (applicableTokenEffects.length) {
-                flagManager.removeFlags(token.uuid, tokenEffects.map(effect => effect[1]))
-                const tokenEffectsToEnd = applicableTokenEffects.map(tokenEffect => EffectsContainer.get(tokenEffect[0])).filter(Boolean);
-                if (tokenEffectsToEnd.length) {
-                  tokenEffectsToEnd.forEach(effect => this._removeEffect(effect));
-                }
-              }
-            }
-          }
-        }
-      }
+      if (!effects.length) return;
+      const effectData = effects.map(effect => effect.data);
+      flagManager.removeFlags(effects[0].context.uuid, effectData, !inEffectIds);
     });
 
-    return Promise.allSettled(...effectsByObjectId.map(effects => effects.map(effect => this._removeEffect(effect))));
+    effectsByActorUuid.forEach(effects => {
+      effects = effects.filter(effect => effect.data.persist && !effect.data.temporary);
+      if (!effects.length) return;
+
+      const effectContext = effects[0].context;
+      const effectData = effects.map(effect => effect.data);
+
+      if (!(effectContext instanceof TokenDocument && effectContext.actorLink && effectContext.actor.prototypeToken.actorLink)) return;
+
+      const persistentEffectData = effectData.filter(data => data?.persistOptions?.persistTokenPrototype);
+      if (!persistentEffectData.length) return;
+
+      const actorEffects = flagManager.getFlags(effectContext.actor);
+      const applicableActorEffects = actorEffects.filter(effect => {
+        return effect[1]?.persistOptions?.persistTokenPrototype && (
+          persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
+        );
+      }).map(e => e[0]);
+
+      flagManager.removeFlags(effectContext.actor.uuid, applicableActorEffects, !inEffectIds);
+
+    });
+
+    const effectsToEnd = effectsByContextUuid.concat(effectsByActorUuid);
+
+    return Promise.allSettled(...effectsToEnd.map(effects => effects.map(effect => this._removeEffect(effect))));
 
   }
 
@@ -535,7 +547,7 @@ export default class SequencerEffectManager {
       };
     }).filter(obj => obj.effects.length);
 
-    const visibleEffectsToEnd = this.effects.filter(effect => this._effectContextFilter(inUUID, effect.data));
+    const visibleEffectsToEnd = this.effects.filter(effect => this._effectContextFilter(inUUID, effect.data)).map(e => e.id);
 
     return Promise.allSettled([
       this._endManyEffects(visibleEffectsToEnd),
@@ -568,21 +580,23 @@ export default class SequencerEffectManager {
 
     if (!(object instanceof TokenDocument)) return;
 
-    const tokensToUpdate = game.scenes.map(scene => scene.tokens.filter(token => {
+    const tokenEffectsToPlay = game.scenes.map(scene => scene.tokens.filter(token => {
       return token.actorLink && token.actor === object.actor && token !== object;
     })).deepFlatten();
 
-    for (const token of tokensToUpdate) {
+    for (const tokenDocument of tokenEffectsToPlay) {
       const duplicatedData = foundry.utils.deepClone(data);
       duplicatedData._id = randomID();
-      duplicatedData.sceneId = token.uuid.split(".")[1];
+      duplicatedData.sceneId = tokenDocument.uuid.split(".")[1];
       duplicatedData.masks = duplicatedData.masks
-        .map(uuid => uuid.replace(duplicatedData.source, token.uuid))
+        .map(uuid => uuid.replace(duplicatedData.source, tokenDocument.uuid))
         .filter(uuid => uuid.includes(duplicatedData.sceneId));
-      duplicatedData.source = token.uuid;
+      duplicatedData.source = tokenDocument.uuid;
       if (CanvasEffect.checkValid(duplicatedData)) {
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
-        this._playEffect(duplicatedData);
+        if(duplicatedData.sceneId === game.user.viewedScene) {
+          this._playEffect(duplicatedData);
+        }
       }
     }
   }
