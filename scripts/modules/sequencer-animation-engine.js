@@ -171,7 +171,7 @@ const SequencerAnimationEngine = {
 
       const funkyProperty = attribute.propertyName.includes("scale") || attribute.propertyName.includes("alpha");
 
-      if (this._startingValues[attribute.targetId] === undefined) {
+      if (this._startingValues[attribute.targetId] === undefined || attribute.absolute) {
 
         const getProperty = funkyProperty || attribute.from === undefined;
 

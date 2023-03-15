@@ -107,10 +107,8 @@ export default class SequencerEffectManager {
    */
   static async endEffects(inFilter = {}, push = true) {
     inFilter = this._validateFilters(inFilter);
-    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided")
-    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => {
-      return effect.data?.persistOptions?.persistTokenPrototype ? effect.data?.persistOptions?.id ?? effect.id : effect.id;
-    });
+    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided");
+    const effectsToEnd = this._getEffectsByFilter(inFilter);
     if (!effectsToEnd.length) return;
     if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
     return this._endManyEffects(effectsToEnd);
@@ -125,12 +123,17 @@ export default class SequencerEffectManager {
    */
   static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
     const inFilter = this._validateFilters({ sceneId: inSceneId });
-    const effectsToEnd = this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => {
-      return effect.data?.persistOptions?.persistTokenPrototype ? effect.data?.persistOptions?.id ?? effect.id : effect.id;
-    });
+    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endAllEffects | Incorrect or incomplete parameters provided");
+    const effectsToEnd = this._getEffectsByFilter(inFilter);
     if (!effectsToEnd.length) return;
     if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
     return this._endManyEffects(effectsToEnd);
+  }
+
+  static _getEffectsByFilter(inFilter){
+    return lib.make_array_unique(this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => {
+      return effect.data?.persistOptions?.persistTokenPrototype ? effect.data?.persistOptions?.id ?? effect.id : effect.id;
+    }));
   }
 
   /**
@@ -259,7 +262,7 @@ export default class SequencerEffectManager {
 
     const effect = CanvasEffect.make(data);
 
-    if (data.persist && setFlags && effect.context && effect.owner && !data.temporary) {
+    if (data.persist && setFlags && effect.context && effect.owner && !data.temporary && !data.remote) {
       flagManager.addFlags(effect.context.uuid, effect.data);
     }
 
@@ -404,8 +407,8 @@ export default class SequencerEffectManager {
 
   static patchEffectDataForDocument(inDocumentUuid, effects){
     return effects.map(effect => {
-      const effectData = effect[1];
       effect[0] = randomID();
+      const effectData = effect[1];
       effectData._id = effect[0];
       if (lib.is_UUID(effectData.source)) {
         if (effectData.masks.includes(effectData.source)) {
@@ -477,9 +480,7 @@ export default class SequencerEffectManager {
    */
   static async _endManyEffects(inEffectIds = false) {
 
-    const actorEffectsToEnd = this.effects.filter(effect => {
-      return inEffectIds.includes(effect.data?.persistOptions?.id)
-    });
+    const actorEffectsToEnd = this.effects.filter(effect => inEffectIds.includes(effect.data?.persistOptions?.id));
     const regularEffectsToEnd = this.effects.filter(effect => inEffectIds.includes(effect.id));
 
     const effectsByContextUuid = Object.values(lib.group_by(regularEffectsToEnd, "context.uuid"));
@@ -515,9 +516,9 @@ export default class SequencerEffectManager {
 
     });
 
-    const effectsToEnd = effectsByContextUuid.concat(effectsByActorUuid);
+    const effectsToEnd = effectsByContextUuid.concat(effectsByActorUuid).deepFlatten();
 
-    return Promise.allSettled(...effectsToEnd.map(effects => effects.map(effect => this._removeEffect(effect))));
+    return Promise.allSettled(effectsToEnd.map(effect => this._removeEffect(effect)));
 
   }
 
@@ -595,7 +596,7 @@ export default class SequencerEffectManager {
       if (CanvasEffect.checkValid(duplicatedData)) {
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
         if(duplicatedData.sceneId === game.user.viewedScene) {
-          this._playEffect(duplicatedData);
+          await this._playEffect(duplicatedData, false);
         }
       }
     }

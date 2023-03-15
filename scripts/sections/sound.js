@@ -57,7 +57,7 @@ class SoundSection extends Section {
 
     if (Hooks.call("preCreateSequencerSound", playData.data) === false) return;
 
-    let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId));
+    let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId)) && !this.sequence.localOnly;
     return SequencerAudioHelper.play(playData, push);
   }
 
@@ -66,6 +66,10 @@ class SoundSection extends Section {
    * @private
    */
   async _sanitizeSoundData() {
+
+    if(this._deserializedData){
+      return this._deserializedData;
+    }
 
     if(!this._file){
       return {
@@ -133,6 +137,21 @@ class SoundSection extends Section {
     }
 
     return data;
+  }
+
+  async _serialize() {
+    const data = await super._serialize();
+    const sectionData = await this._sanitizeSoundData();
+    return {
+      ...data,
+      type: "sound",
+      sectionData
+    };
+  }
+
+  async _deserialize(data) {
+    this._deserializedData = data.sectionData;
+    return super._deserialize(data);
   }
 }
 
