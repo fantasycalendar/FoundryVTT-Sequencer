@@ -1,5 +1,25 @@
 ## Changelog
 
+### Version 3.0.0 - Not released yet
+- *Sequencer* - Updated Sequencer Database Viewer:
+  - Improved UI and added nested tree view
+  - Added ctrl modifier to buttons that copy paths, which adds quotes around the copied paths 
+- *Sequencer* - Added `.scrollingText()` which allows to play scrolling text on the canvas for users
+- *Sequencer* - Added `.toJSON()` and `.fromJSON()` to Sequences to be able to be serialized and deserialized; only sequences with effects, sounds, and scrolling texts can be serialized
+- *Sequencer* - Added options to `.play()`, which may contain an object; currently supports `{ remote: true/false }` which will serialize the sequence (see above), and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed 
+- *Effects* - Improved how effects are replicated on linked tokens when `.persist()`'s `persistPrototypeToken` is enabled
+- 
+### Version 2.414
+- *Sequencer* - Included missing CSS file
+
+### Version 2.413
+- *Sequencer* - Added support for database paths that resolve to other database paths
+- *Sequencer* - Isolated Sequencer's styling so that it doesn't leak out into other modules or systems
+- *Effects* - Fixed `.loopProperty()` not respecting `loops: 0`
+- *Effects* - Fixed `.animateProperty()` not keeping track of relative values when animating the same property multiple times
+- *Effects* - Fixed named screenspace effects without a specific location not playing and throwing errors
+- *Sounds* - Fixed `softFail` not allowing sounds to softly fail
+
 ### Version 2.412
 - *Sequencer* - Added setting to hide/show the Sequencer buttons in the left sidebar when in the token controls
 - *Animation* - Fixed `.moveTowards()` going into infinite loop if the source and targets are on top of each other

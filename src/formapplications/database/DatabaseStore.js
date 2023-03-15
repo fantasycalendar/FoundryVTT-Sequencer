@@ -1,5 +1,5 @@
 import SequencerDatabase from "../../modules/sequencer-database.js";
-import { SequencerFile } from "../../modules/sequencer-file.js";
+import { SequencerFileBase } from "../../modules/sequencer-file.js";
 import CONSTANTS from "../../constants.js";
 import * as lib from "../../lib/lib.js";
 import { writable, get } from "svelte/store";
@@ -21,7 +21,7 @@ function getFileData(entryText) {
   }
 
   let previewFile = entry?.file ?? entry;
-  if (entry instanceof SequencerFile) {
+  if (entry instanceof SequencerFileBase) {
     previewFile = entry.clone().getPreviewFile(entryText);
   }
 
@@ -55,7 +55,7 @@ function copyPath(dbPath, getFilepath, quotes = false) {
 
     entry = Sequencer.Database.getEntry(dbPath);
 
-    if (entry instanceof SequencerFile) {
+    if (entry instanceof SequencerFileBase) {
 
       const specificFt = dbPath.match(CONSTANTS.FEET_REGEX);
       if (specificFt) {
@@ -141,7 +141,7 @@ const databaseStore = {
   metadata: writable(false),
   allRanges: writable(false),
   subLists: writable(false),
-  treeView: writable(true),
+  treeView: writable(false),
   packStore: packStore,
   selectedPackStore: selectedPackStore,
   visibleTreeStore: visibleTreeStore,

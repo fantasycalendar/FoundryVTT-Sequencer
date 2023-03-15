@@ -385,7 +385,7 @@ export function debug_error(msg, args) {
 export function custom_warning(inClassName, warning, notify = false) {
   inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
   warning = `${inClassName} | ${warning}`;
-  if (notify) ui.notifications.warn(warning);
+  if (notify) ui.notifications.warn(warning, { console: false });
   console.warn(warning.replace("<br>", "\n"));
 }
 
@@ -395,7 +395,7 @@ export function throttled_custom_warning(inClassName, warning, delay = 10000, no
   warning = `${inClassName} | ${warning}`;
   if(throttledWarnings[warning]) return;
   throttledWarnings[warning] = true;
-  if (notify) ui.notifications.warn(warning);
+  if (notify) ui.notifications.warn(warning, { console: false });
   console.warn(warning.replace("<br>", "\n"));
   setTimeout(() => {
     delete throttledWarnings[warning];
@@ -405,7 +405,7 @@ export function throttled_custom_warning(inClassName, warning, delay = 10000, no
 export function custom_error(inClassName, error, notify = true) {
   inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
   error = `${inClassName} | ${error}`;
-  if (notify) ui.notifications.error(error);
+  if (notify) ui.notifications.error(error, { console: false });
   return new Error(error.replace("<br>", "\n"));
 }
 

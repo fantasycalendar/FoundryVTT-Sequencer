@@ -22,14 +22,11 @@ const flagManager = {
    * Sanitizes the effect data, accounting for changes to the structure in previous versions
    *
    * @param inDocument
-   * @param preCreate
    * @returns {array}
    */
-  getFlags(inDocument, { preCreate = false } = {}) {
+  getFlags(inDocument) {
 
-    const effects = preCreate && inDocument?.actor?.token
-      ? getProperty(inDocument?.actor?.token, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []
-      : getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? [];
+    const effects = getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? false;
 
     if (!effects?.length) return [];
 
@@ -296,12 +293,17 @@ const flagManager = {
         existingFlags.delete(effect._id);
       }
 
-      const flagsToSet = Array.from(existingFlags);
+      let flagsToSet = Array.from(existingFlags);
       const options = {};
 
-      if (object instanceof TokenDocument && object.actorLink && (toAdd.original || toRemove.original)) {
-        actorUpdates[object.actor.id] = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
-        if (game.modules.get("multilevel-tokens")?.active && getProperty(object, "flags.multilevel-tokens.stoken")) {
+      const isLinkedToken = (object instanceof TokenDocument && object.actorLink);
+      const isLinkedActor = (object instanceof Actor && object.prototypeToken.actorLink);
+
+      if ((isLinkedToken || isLinkedActor) && (toAdd.original || toRemove.original)) {
+        const actor = isLinkedActor ? object : object.actor;
+        actorUpdates[actor.id] = flagsToSet.filter(effect => effect[1]?.persistOptions?.persistTokenPrototype);
+        flagsToSet = flagsToSet.filter(effect => !effect[1]?.persistOptions?.persistTokenPrototype);
+        if (isLinkedToken && game.modules.get("multilevel-tokens")?.active && getProperty(object, "flags.multilevel-tokens.stoken")) {
           options["mlt_bypass"] = true;
         }
       }
@@ -313,7 +315,7 @@ const flagManager = {
           documents: {}
         };
         sceneObjectsToUpdate[sceneId].updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = flagsToSet;
-      } else {
+      } else if (!(object instanceof Actor)){
         const sceneId = object.parent.id;
         const docName = object.documentName;
         sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? {
@@ -343,9 +345,9 @@ const flagManager = {
       }
     }
 
-    await Actor.updateDocuments(Object.entries(actorUpdates).map(entry => ({
-      _id: entry[0],
-      [`prototypeToken.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: entry[1]
+    await Actor.updateDocuments(Object.entries(actorUpdates).map(([actorId, effects]) => ({
+      _id: actorId,
+      [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
     })));
 
   }, 250)

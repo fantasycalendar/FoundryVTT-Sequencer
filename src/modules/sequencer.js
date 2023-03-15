@@ -5,6 +5,8 @@ import SoundSection from '../sections/sound.js';
 import AnimationSection from '../sections/animation.js';
 import Section from "../sections/section.js";
 import SequencerPresets from "./sequencer-presets.js";
+import ScrollingTextSection from "../sections/scrollingText.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 
 export default class Sequence {
 
@@ -18,6 +20,7 @@ export default class Sequence {
     this.nameOffsetMap = false;
     this.effectIndex = 0;
     this.sectionToCreate = undefined;
+    this.localOnly = false;
     return lib.sequence_proxy_wrap(this);
   }
 
@@ -26,8 +29,13 @@ export default class Sequence {
    *
    * @returns {Promise}
    */
-  async play() {
-    Hooks.call("createSequencerSequence");
+  async play({ remote = false }={}) {
+    if(remote){
+      this.localOnly = true;
+      const data = await this.toJSON();
+      sequencerSocket.executeForOthers(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, data);
+    }
+    Hooks.callAll("createSequencerSequence");
     lib.debug("Initializing sections")
     for (let section of this.sections) {
       await section._initialize();
@@ -47,7 +55,7 @@ export default class Sequence {
     }
 
     return Promise.allSettled(promises).then(() => {
-      Hooks.call("endedSequencerSequence");
+      Hooks.callAll("endedSequencerSequence");
       lib.debug("Finished playing sections")
     });
   }
@@ -169,6 +177,20 @@ export default class Sequence {
   }
 
   /**
+   * Creates a scrolling text. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Scrolling Text section.
+   *
+   * @param {Object|String|Boolean} [inTarget=false] inTarget
+   * @param {String|Boolean} [inText=false] inText
+   * @param {Object} [inTextOptions={}] inTextOptions
+   * @returns {AnimationSection}
+   */
+  scrollingText(inTarget = false, inText = false, inTextOptions = {}) {
+    const scrolling = lib.section_proxy_wrap(new ScrollingTextSection(this, inTarget, inText, inTextOptions));
+    this.sections.push(scrolling);
+    return scrolling;
+  }
+
+  /**
    * Causes the sequence to wait after the last section for as many milliseconds as you pass to this method. If given
    * a second number, a random wait time between the two given numbers will be generated.
    *
@@ -216,6 +238,25 @@ export default class Sequence {
       throw lib.custom_error(this.moduleName, `addSequence - could not find the sequence from the given parameter`);
     }
     this.sections = this.sections.concat(inSequence.sections);
+    return this;
+  }
+
+  async toJSON() {
+    const data = [];
+    for(const section of this.sections){
+      const sectionData = await section._serialize();
+      if(!sectionData.type){
+        throw new Error(`Sequencer | toJson | ${section.constructor.name} does not support serialization!`);
+      }
+      data.push(sectionData);
+    }
+    return data;
+  }
+
+  fromJSON(data){
+    for(const section of data){
+      this[section.type]()._deserialize(section);
+    }
     return this;
   }
 

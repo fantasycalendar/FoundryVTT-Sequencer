@@ -32,14 +32,14 @@ Hooks.once("socketlib.ready", () => {
 Hooks.once('ready', async function () {
 
   if (!game.modules.get("socketlib")?.active) {
-    ui.notifications.error("Sequencer requires the SocketLib module to be active and will not work without it!");
+    ui.notifications.error("Sequencer requires the SocketLib module to be active and will not work without it!", { console: false });
     throw new Error("Sequencer requires the SocketLib module to be active and will not work without it!");
   }
 
   setTimeout(() => {
     console.log("Sequencer | Ready to go!")
-    Hooks.call('sequencer.ready')
-    Hooks.call('sequencerReady')
+    Hooks.callAll('sequencer.ready')
+    Hooks.callAll('sequencerReady')
 
     SequencerEffectManager.setUpPersists();
     InteractionManager.initialize();

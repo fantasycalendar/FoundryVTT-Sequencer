@@ -1,6 +1,6 @@
 import * as lib from '../lib/lib.js';
 import LoadingBar from "../utils/loadingBar.js";
-import { SequencerFile, SequencerFileRangeFind } from "./sequencer-file.js";
+import { SequencerFile, SequencerFileBase } from "./sequencer-file.js";
 import { writable, get } from "svelte/store";
 import CONSTANTS from "../constants.js";
 
@@ -49,7 +49,7 @@ class Database {
       .map(entry => entry[1])
       .deepFlatten()
       .forEach(sequencerFile => {
-        if (sequencerFile instanceof SequencerFileRangeFind) {
+        if (sequencerFile?.rangeFind) {
           Object.entries(sequencerFile.file).forEach(entry => {
             fileDatabaseObject[entry[1]] = sequencerFile.dbPath + "." + entry[0];
           })
@@ -78,7 +78,7 @@ class Database {
     );
     if (isPrivate) this.privateModules.push(inModuleName);
     console.log(`Sequencer | Database | Entries for "${inModuleName}" registered`);
-    console.log(this.flattenedEntries.find(e => e.startsWith("jb2a.impact.heart")))
+    Hooks.callAll('registerSequencerDatabaseEntries', inModuleName);
     return true;
   }
 
@@ -277,7 +277,6 @@ class Database {
   _throwError(inFunctionName, inError) {
     let error = `Sequencer | Database | ${inFunctionName} - ${inError}`;
     ui.notifications.error(error);
-    console.error(error);
     return false;
   }
 
@@ -332,6 +331,10 @@ class Database {
 
     const moduleEntries = [];
 
+    const mediaFileExtensions = Object.keys(CONST.FILE_CATEGORIES.IMAGE)
+      .concat(Object.keys(CONST.FILE_CATEGORIES.VIDEO))
+      .concat(Object.keys(CONST.FILE_CATEGORIES.AUDIO));
+
     for (let wholeDBPath of allPaths) {
       let metadata = this._getCleanData(entries);
       let dbPath = wholeDBPath.split(".");
@@ -356,7 +359,23 @@ class Database {
         data = this._getCleanData(data, { metadata: false });
       }
 
-      moduleEntries.push(SequencerFile.make(data, wholeDBPath, metadata));
+      if(typeof data === "string"){
+
+        const existingEntry = this.entryExists(data);
+        const extension = data.split('.')[data.split('.').length - 1].toLowerCase();
+
+        if(!existingEntry && extension && !mediaFileExtensions.includes(extension)){
+          console.warn(`Sequencer | Database | registerEntries - failed to register ${wholeDBPath} to ${data}!`);
+          this.flattenedEntries.splice(this.flattenedEntries.indexOf(wholeDBPath), 1);
+          continue;
+        }else if(existingEntry){
+          moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
+          continue;
+        }
+
+      }
+
+      moduleEntries.push(SequencerFileBase.make(data, wholeDBPath, metadata));
 
     }
 

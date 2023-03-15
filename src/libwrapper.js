@@ -2,7 +2,10 @@ import CONSTANTS from "./constants.js";
 import { libWrapper } from "./lib/libWrapper/shim.js";
 
 export default function registerLibwrappers(){
-  libWrapper.register(CONSTANTS.MODULE_NAME, "PIXI.resources.BaseImageResource.prototype.upload", PIXIUPLOAD);
+  const override = isNewerVersion(game.version, "11")
+    ? "PIXI.BaseImageResource.prototype.upload"
+    : "PIXI.resources.BaseImageResource.prototype.upload";
+  libWrapper.register(CONSTANTS.MODULE_NAME, override, PIXIUPLOAD);
 }
 
 function PIXIUPLOAD(wrapped, ...args){
@@ -16,7 +19,7 @@ function PIXIUPLOAD(wrapped, ...args){
   source = source || this.source;
   const isVideo = !!source.videoWidth
   if(isVideo) {
-    baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLY_ALPHA;
+    baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA;
     baseTexture.sequencer_patched = true;
   }
   return wrapped(...args);

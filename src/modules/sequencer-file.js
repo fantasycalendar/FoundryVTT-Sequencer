@@ -1,9 +1,27 @@
 import * as lib from "../lib/lib.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
 
-export class SequencerFile {
+export class SequencerFileBase {
+  static make(inData, inDBPath, inMetadata) {
+
+    const originalFile = inData?.file ?? inData;
+    const file = foundry.utils.duplicate(originalFile);
+    const isRangeFind = typeof file !== "string" && !Array.isArray(originalFile)
+      ? Object.keys(originalFile).filter(key => key.endsWith("ft")).length > 0
+      : false;
+
+    return isRangeFind
+      ? new SequencerFileRangeFind(inData, inDBPath, inMetadata)
+      : new SequencerFile(inData, inDBPath, inMetadata)
+  }
+}
+
+export class SequencerFile extends SequencerFileBase {
+
+  rangeFind = false
 
   constructor(inData, inDBPath, inMetadata) {
+    super();
     inData = foundry.utils.duplicate(inData);
     inMetadata = foundry.utils.duplicate(inMetadata);
     this.originalData = inData;
@@ -22,19 +40,6 @@ export class SequencerFile {
     }))
 
     this.twister = false;
-  }
-
-  static make(inData, inDBPath, inMetadata) {
-
-    const originalFile = inData?.file ?? inData;
-    const file = foundry.utils.duplicate(originalFile);
-    const isRangeFind = typeof file !== "string" && !Array.isArray(originalFile)
-      ? Object.keys(originalFile).filter(key => key.endsWith("ft")).length > 0
-      : false;
-
-    return isRangeFind
-      ? new SequencerFileRangeFind(inData, inDBPath, inMetadata)
-      : new SequencerFile(inData, inDBPath, inMetadata)
   }
 
   clone() {
@@ -146,6 +151,8 @@ export class SequencerFile {
 
 export class SequencerFileRangeFind extends SequencerFile {
 
+  rangeFind = true
+
   constructor(...args) {
     super(...args);
     this._fileDistanceMap = false;
@@ -255,5 +262,26 @@ export class SequencerFileRangeFind extends SequencerFile {
     const filePath = this._rangeFind(distance);
     const texture = await this._getTexture(filePath);
     return { filePath, texture }
+  }
+}
+
+export class SequencerFileProxy extends SequencerFileBase {
+  constructor(dbPath, entry) {
+    super();
+    let sequencerEntry = false;
+    return new Proxy(this, {
+      get(target, prop) {
+        // Return the proxy's property if it has it
+        if(prop === "dbPath") return dbPath;
+        if(!sequencerEntry){
+          sequencerEntry = Sequencer.Database.getEntry(entry);
+        }
+        // If the path results in an array, grab a random element every time
+        if(Array.isArray(this.entry)){
+          return Reflect.get(lib.random_array_element(sequencerEntry), prop);
+        }
+        return Reflect.get(sequencerEntry, prop);
+      }
+    })
   }
 }

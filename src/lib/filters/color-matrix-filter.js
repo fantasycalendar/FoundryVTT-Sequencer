@@ -22,9 +22,7 @@ export default class ColorMatrixFilter extends globalThis.PIXI.filters.ColorMatr
       this.values[key] = value;
       this[key](value, true);
     } catch (err) {
-      let warning = `Sequencer | ${this.constructor.name} | Could not set property ${key}`;
-      ui.notifications.warn(warning);
-      console.warn(warning)
+      ui.notifications.warn(`Sequencer | ${this.constructor.name} | Could not set property ${key}`);
     }
   }
 }

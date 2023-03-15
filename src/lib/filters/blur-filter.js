@@ -26,9 +26,7 @@ export default class BlurFilter extends globalThis.PIXI.filters.BlurFilter {
       try {
         this[key] = value;
       } catch (err) {
-        let warning = `Sequencer | ${this.constructor.name} | Could not set property ${key}`;
-        ui.notifications.warn(warning);
-        console.warn(warning)
+        ui.notifications.warn(`Sequencer | ${this.constructor.name} | Could not set property ${key}`);
         this.isValid = false;
       }
     }

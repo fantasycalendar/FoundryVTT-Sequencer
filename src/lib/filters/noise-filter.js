@@ -18,9 +18,7 @@ export default class NoiseFilter extends globalThis.PIXI.filters.NoiseFilter {
       try {
         this[key] = value;
       } catch (err) {
-        let warning = `Sequencer | ${this.constructor.name} | Could not set property ${key}`;
-        ui.notifications.warn(warning);
-        console.warn(warning)
+        ui.notifications.warn(`Sequencer | ${this.constructor.name} | Could not set property ${key}`);
         this.isValid = false;
       }
     }

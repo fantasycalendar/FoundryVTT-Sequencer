@@ -9,8 +9,11 @@ import time from "./time.js";
 import users from "./users.js";
 import filter from "./filter.js";
 import tint from "./tint.js";
+import location from "./location.js";
+import offset from "./offset.js";
+import text from "./text.js";
 
-const traits = {
+export default {
   animation,
   audio,
   files,
@@ -21,7 +24,8 @@ const traits = {
   time,
   users,
   filter,
-  tint
+  tint,
+  location,
+  offset,
+  text
 };
-
-export default traits;

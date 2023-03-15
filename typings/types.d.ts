@@ -1,3 +1,7 @@
+import {
+  CoreFlags
+} from "@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs/activeEffectData";
+
 type EasingOptions = {
   ease?: string;
   delay?: number;
@@ -47,7 +51,7 @@ declare class CoreMethods {
   /**
    * Creates an animation. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Animation section.
    */
-  animation(inTokenOrInTile?: Token | Tile): AnimationSection;
+  animation(inTokenOrInTile?: VisibleFoundryTypes): AnimationSection;
 
   /**
    * Creates an effect section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Effect section.
@@ -58,6 +62,11 @@ declare class CoreMethods {
    * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
    */
   sound(filePath?: string): SoundSection;
+
+  /**
+   * Creates a scrolling text. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Scrolling Text section.
+   */
+  scrollingText(inTarget?: VisibleFoundryTypes|Vector2, inText?: string, inTextStyle?: object): ScrollingTextSection;
 
   /**
    * Adds the sections from a given Sequence to this Sequence
@@ -74,7 +83,17 @@ declare class CoreMethods {
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
    */
-  play(): Promise<Sequence>;
+  play(inOptions?: { remote?: boolean }): Promise<Sequence>;
+
+  /**
+   * Turns the sequence into an array of objects to be reconstructed later
+   */
+  toJSON(): Array<Object>;
+
+  /**
+   * Takes the serialized sequence array and returns a sequence ready to be played
+   */
+  fromJSON(inJSON: Array<Object>): Sequence;
 }
 
 declare interface Sequence extends CoreMethods {
@@ -130,6 +149,11 @@ declare abstract class Section<T> {
   delay(msMin: number, msMax?: number): T;
 
   /**
+   * Overrides the duration of this section
+   */
+  duration(inDuration: number): T;
+
+  /**
    * Appends a preset to the current sequence in place
    */
   preset(presetName: string, args?: any): T;
@@ -182,7 +206,7 @@ declare abstract class HasMovement<T> {
    * Sets the rotation of the effect or animation, which is added on top of the calculated rotation after .rotateTowards() or .randomRotation()
    */
   moveTowards(
-    inTarget: PlaceableObject | Vector2 | string,
+    inTarget: VisibleFoundryTypes | Vector2 | string,
     options?: EasingOptionsWithTarget
   ): this;
 
@@ -352,6 +376,32 @@ declare abstract class HasFilters<T> {
 
 }
 
+declare abstract class HasLocation<T> {
+
+  /**
+   *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
+   *  or a string reference (see .name())
+   */
+  atLocation(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
+    cacheLocation?: boolean,
+    offset?: Vector2,
+    randomOffset?: number,
+    gridUnits?: boolean,
+    local?: boolean
+  }): this;
+
+}
+
+declare abstract class HasText<T> {
+
+  /**
+   * Creates a text element, attached to the sprite. The options for the text are available here:
+   * https://pixijs.io/pixi-text-style/
+   */
+  text(inText: string, inOptions?: object): this;
+
+}
+
 
 interface AnimatedSection<T> {}
 
@@ -370,13 +420,13 @@ declare abstract class AnimationSection {
   /**
    * Sets the target object to be animated
    */
-  on(inTarget: PlaceableObject | string): this;
+  on(inTarget: VisibleFoundryTypes | string): this;
 
   /**
    * Sets the location to teleport the target object to
    */
   teleportTo(
-    inTarget: PlaceableObject | Vector2 | string,
+    inTarget: VisibleFoundryTypes | Vector2 | string,
     options?: { delay: number; relativeToCenter: boolean }
   ): this;
 
@@ -384,7 +434,7 @@ declare abstract class AnimationSection {
    * Sets the location to rotate the object to
    */
   rotateTowards(
-    inTarget: PlaceableObject | Vector2 | string,
+    inTarget: VisibleFoundryTypes | Vector2 | string,
     options?: {
       duration: Number,
       ease: string,
@@ -436,6 +486,8 @@ declare interface EffectSection
     HasAnimations<EffectSection>,
     HasFilters<EffectSection>,
     HasTint<EffectSection>,
+    HasLocation<EffectSection>,
+    HasText<EffectSection>,
     AnimatedSection<EffectSection> {
 }
 
@@ -472,22 +524,10 @@ declare abstract class EffectSection {
   addOverride(inFunc: Function): this;
 
   /**
-   *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
-   *  or a string reference (see .name())
-   */
-  atLocation(inLocation: PlaceableObject | Vector2 | string, inOptions?: {
-    cacheLocation?: boolean,
-    offset?: Vector2,
-    randomOffset?: number,
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
-
-  /**
    * A smart method that can take a reference to an object, or a direct on the canvas to attach an effect to,
    * or a string reference (see .name())
    */
-  attachTo(inLocation: PlaceableObject | Vector2 | string, inOptions?: {
+  attachTo(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
     align?: string,
     edge?: string,
     bindVisibility?: boolean,
@@ -504,7 +544,7 @@ declare abstract class EffectSection {
    * Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
    * This effectively calculates the proper X scale for the effect to reach the target
    */
-  stretchTo(inLocation: PlaceableObject | Vector2 | string, inOptions?: {
+  stretchTo(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
     cacheLocation?: boolean,
     attachTo?: boolean,
     onlyX?: boolean,
@@ -518,7 +558,7 @@ declare abstract class EffectSection {
   /**
    * Sets the location to rotate the object to
    */
-  rotateTowards(inLocation: PlaceableObject | Vector2 | string, inOptions?: {
+  rotateTowards(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
     rotationOffset?: number,
     cacheLocation?: boolean,
     attachTo?: boolean,
@@ -538,12 +578,6 @@ declare abstract class EffectSection {
     gridUnits?: boolean,
     local?: boolean
   }): this;
-
-  /**
-   * Creates a text element, attached to the sprite. The options for the text are available here:
-   * https://pixijs.io/pixi-text-style/
-   */
-  text(inText: string, inOptions?: object): this;
 
   /**
    * Creates a graphical element, attached to the sprite.
@@ -783,6 +817,33 @@ declare abstract class SoundSection {
 
 }
 
+declare interface ScrollingTextSection
+  extends CoreMethods,
+    Section<ScrollingTextSection>,
+    HasLocation<EffectSection>,
+    HasText<EffectSection>,
+    HasUsers<EffectSection>{}
+
+
+declare abstract class ScrollingTextSection {
+
+  /**
+   * The original anchor point where the text appears
+   */
+  anchor(inAnchor: string|number): this;
+
+  /**
+   * The direction in which the text scrolls
+   */
+  direction(inDirection: string|number): this;
+
+  /**
+   * An amount of randomization between [0, 1] applied to the initial position
+   */
+  jitter(inDirection: number): this;
+
+}
+
 declare abstract class SequencerFile {}
 
 declare abstract class SequencerDatabase {
@@ -932,14 +993,14 @@ declare abstract class SequencerEffectManager {
   /**
    * Get effects that are playing on the canvas based on a set of filters
    */
-  getEffects(options: { object?: string|PlaceableObject, name?: string, sceneId?: string }): Array<any>
+  getEffects(options: { object?: string|VisibleFoundryTypes, name?: string, sceneId?: string }): Array<any>
 
 
   /**
    * Updates effects based on a set of filters
    */
   updateEffects(options: {
-    object?: string|PlaceableObject,
+    object?: string|VisibleFoundryTypes,
     name?: string,
     sceneId?: string,
     effects: string|CanvasEffect|Array<string>|Array<CanvasEffect>
@@ -949,7 +1010,7 @@ declare abstract class SequencerEffectManager {
    * End effects that are playing on the canvas based on a set of filters
    */
   endEffects(options: {
-    object?: string|PlaceableObject,
+    object?: string|VisibleFoundryTypes,
     name?: string,
     sceneId?: string,
     effects: string|CanvasEffect|Array<string>|Array<CanvasEffect>

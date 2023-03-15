@@ -2,7 +2,7 @@ import * as lib from "../lib/lib.js";
 import SequencerAudioHelper from "../modules/sequencer-audio-helper.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { SequencerFile } from "../modules/sequencer-file.js";
+import { SequencerFile, SequencerFileBase } from "../modules/sequencer-file.js";
 
 class SoundSection extends Section {
 
@@ -42,13 +42,13 @@ class SoundSection extends Section {
    */
   async run() {
 
-    if((!this._file && this.sequence.softFail)){
+    const playData = await this._sanitizeSoundData();
+
+    if((!playData.src && this.sequence.softFail)){
       return new Promise((reject) => {
         reject();
       });
     }
-
-    const playData = await this._sanitizeSoundData();
 
     if (!playData?.play) {
       this.sequence._showWarning(this, "Play", `File not found: ${playData.data.src}`);
@@ -57,7 +57,7 @@ class SoundSection extends Section {
 
     if (Hooks.call("preCreateSequencerSound", playData.data) === false) return;
 
-    let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId));
+    let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId)) && !this.sequence.localOnly;
     return SequencerAudioHelper.play(playData, push);
   }
 
@@ -67,9 +67,27 @@ class SoundSection extends Section {
    */
   async _sanitizeSoundData() {
 
-    let { file, forcedIndex } = await this._determineFile(this._file)
+    if(this._deserializedData){
+      return this._deserializedData;
+    }
 
-    if (file instanceof SequencerFile) {
+    if(!this._file){
+      return {
+        play: false,
+        src: false
+      };
+    }
+
+    let { file, forcedIndex } = await this._determineFile(this._file);
+
+    if (!file) {
+      return {
+        play: false,
+        src: false
+      };
+    }
+
+    if (file instanceof SequencerFileBase) {
       file.forcedIndex = forcedIndex;
       if (file.timeRange) {
         [this._startTime, this._endTime] = file.timeRange;
@@ -119,6 +137,21 @@ class SoundSection extends Section {
     }
 
     return data;
+  }
+
+  async _serialize() {
+    const data = await super._serialize();
+    const sectionData = await this._sanitizeSoundData();
+    return {
+      ...data,
+      type: "sound",
+      sectionData
+    };
+  }
+
+  async _deserialize(data) {
+    this._deserializedData = data.sectionData;
+    return super._deserialize(data);
   }
 }
 

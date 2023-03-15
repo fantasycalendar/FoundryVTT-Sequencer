@@ -2,7 +2,7 @@ import CONSTANTS from "../constants.js";
 import filters from "../lib/filters.js";
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
-import { SequencerFile, SequencerFileRangeFind } from "../modules/sequencer-file.js";
+import { SequencerFileBase } from "../modules/sequencer-file.js";
 import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import flagManager from "../utils/flag-manager.js";
@@ -739,8 +739,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (!inOffsetMap.setup) {
       inOffsetMap.setup = true;
-      inOffsetMap.sourceObj = this._validateObject(inOffsetMap.source);
-      inOffsetMap.targetObj = this._validateObject(inOffsetMap.target);
+      inOffsetMap.sourceObj = inOffsetMap.source ? this._validateObject(inOffsetMap.source) : false;
+      inOffsetMap.targetObj = inOffsetMap.target ? this._validateObject(inOffsetMap.target) : false;
       const repetition = this.data.repetition % inOffsetMap.repetitions;
       const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
       inOffsetMap.twister = new MersenneTwister(seed);
@@ -763,7 +763,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     const finishPromise = new Promise(async (resolve, reject) => {
       this._resolve = resolve;
-      Hooks.call("createSequencerEffect", this);
+      Hooks.callAll("createSequencerEffect", this);
       lib.debug(`Playing effect:`, this.data);
       this._initialize();
     });
@@ -780,7 +780,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   endEffect() {
     if (this._ended) return;
-    Hooks.call("endedSequencerEffect", this);
+    Hooks.callAll("endedSequencerEffect", this);
     this.destroy();
   }
 
@@ -841,7 +841,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   _update(inUpdates) {
     this.data = inUpdates;
-    Hooks.call("updateSequencerEffect", this);
+    Hooks.callAll("updateSequencerEffect", this);
     this._destroyDependencies();
     return this._reinitialize();
   }
@@ -1004,7 +1004,7 @@ export default class CanvasEffect extends PIXI.Container {
       }
     }
 
-    if (this._file instanceof SequencerFile) {
+    if (this._file instanceof SequencerFileBase) {
       this._file.destroy();
     }
 
@@ -1115,7 +1115,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (this.data.customRange) {
 
-      this._file = SequencerFile.make(this.data.file, Object.values(this.template), "temporary.range.file");
+      this._file = SequencerFileBase.make(this.data.file, Object.values(this.template), "temporary.range.file");
 
     } else {
 
@@ -1137,7 +1137,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._file.forcedIndex = this.data.forcedIndex;
     this._file.twister = this._twister;
 
-    this._isRangeFind = this._file instanceof SequencerFileRangeFind;
+    this._isRangeFind = this._file?.rangeFind;
 
     if (this.data.stretchTo) {
       let ray = new Ray(this.sourcePosition, this.targetPosition);
@@ -1840,7 +1840,7 @@ export default class CanvasEffect extends PIXI.Container {
   /**
    * Calculates the padding and scale to stretch an effect across the given distance
    *
-   * If the file is a SequencerFile instance, it will also pick the appropriate file for the right distance
+   * If the file is a SequencerFileBase instance, it will also pick the appropriate file for the right distance
    *
    * @param distance
    * @returns {Object}
@@ -1856,7 +1856,7 @@ export default class CanvasEffect extends PIXI.Container {
       let filePath;
       let spriteAnchor = this.data.anchor?.x ?? 1.0;
 
-      if (this._file instanceof SequencerFile) {
+      if (this._file instanceof SequencerFileBase) {
 
         const scaledDistance = distance / (this.data.scale.x ?? 1.0);
         const result = await this._file.getTexture(scaledDistance);
@@ -2424,7 +2424,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: this.data.opacity,
       duration: fadeIn.duration,
       ease: fadeIn.ease,
-      delay: fadeIn.delay
+      delay: fadeIn.delay,
+      absolute: true
     })
 
     return fadeIn.duration + fadeIn.delay;
@@ -2453,7 +2454,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume"),
       duration: fadeInAudio.duration,
       ease: fadeInAudio.ease,
-      delay: fadeInAudio.delay
+      delay: fadeInAudio.delay,
+      absolute: true
     })
 
     return fadeInAudio.duration + fadeInAudio.delay;
@@ -2483,7 +2485,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: 0.0,
       duration: fadeOut.duration,
       ease: fadeOut.ease,
-      delay: fadeOut.delay
+      delay: fadeOut.delay,
+      absolute: true
     })
 
     return fadeOut.duration + fadeOut.delay;
@@ -2513,7 +2516,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: 0.0,
       duration: fadeOutAudio.duration,
       ease: fadeOutAudio.ease,
-      delay: fadeOutAudio.delay
+      delay: fadeOutAudio.delay,
+      absolute: true
     })
 
     return fadeOutAudio.duration + fadeOutAudio.delay;
@@ -2572,7 +2576,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: toScale.x,
       duration: scaleIn.duration,
       ease: scaleIn.ease,
-      delay: scaleIn.delay
+      delay: scaleIn.delay,
+      absolute: true
     }, {
       target: this.sprite,
       propertyName: "scale.y",
@@ -2580,7 +2585,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: toScale.y,
       duration: scaleIn.duration,
       ease: scaleIn.ease,
-      delay: scaleIn.delay
+      delay: scaleIn.delay,
+      absolute: true
     }])
 
     return scaleIn.duration + scaleIn.delay;
@@ -2610,14 +2616,16 @@ export default class CanvasEffect extends PIXI.Container {
       to: scale.x,
       duration: scaleOut.duration,
       ease: scaleOut.ease,
-      delay: scaleOut.delay
+      delay: scaleOut.delay,
+      absolute: true
     }, {
       target: this.sprite,
       propertyName: "scale.y",
       to: scale.y,
       duration: scaleOut.duration,
       ease: scaleOut.ease,
-      delay: scaleOut.delay
+      delay: scaleOut.delay,
+      absolute: true
     }])
 
     return scaleOut.duration + scaleOut.delay;
@@ -2647,7 +2655,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: original_radians,
       duration: rotateIn.duration,
       ease: rotateIn.ease,
-      delay: rotateIn.delay
+      delay: rotateIn.delay,
+      absolute: true
     }))
 
     return rotateIn.duration + rotateIn.delay;
@@ -2675,7 +2684,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: rotateOut.value * (Math.PI / 180),
       duration: rotateOut.duration,
       ease: rotateOut.ease,
-      delay: rotateOut.delay
+      delay: rotateOut.delay,
+      absolute: true
     }))
 
     return rotateOut.duration + rotateOut.delay;

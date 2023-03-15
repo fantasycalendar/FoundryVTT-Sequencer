@@ -6,13 +6,13 @@ import traits from "./traits/_traits.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../utils/flag-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
-import { SequencerFileRangeFind } from "../modules/sequencer-file.js";
 import CONSTANTS from "../constants.js";
 
 export default class EffectSection extends Section {
 
   constructor(inSequence, inFile = "") {
     super(inSequence);
+    this._deserializedData = null;
     this._file = inFile;
     this._text = null;
     this._source = null;
@@ -148,50 +148,6 @@ export default class EffectSection extends Section {
   addOverride(inFunc) {
     if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addOverride", "The given function needs to be an actual function.");
     this._overrides.push(inFunc);
-    return this;
-  }
-
-  /**
-   *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
-   *  or a string reference (see .name())
-   *
-   * @param {Object|String} inLocation
-   * @param {Object} inOptions
-   * @returns {EffectSection}
-   */
-  atLocation(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")){
-      throw this.sequence._customError(this, "atLocation", `inLocation is invalid, and must be of type of object, string, placeable object, or document`);
-    }
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "atLocation", `inOptions must be of type object`);
-    inOptions = foundry.utils.mergeObject({
-      cacheLocation: false,
-      offset: false,
-      randomOffset: false,
-      gridUnits: false,
-      local: false
-    }, inOptions);
-    inLocation = this._validateLocation(inLocation);
-    if (inLocation === undefined) throw this.sequence._customError(this, "atLocation", "could not find position of given object");
-    if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "atLocation", "inOptions.cacheLocation must be of type boolean");
-    if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "atLocation", "inOptions.randomOffset must be of type boolean or number");
-
-    this._temporaryEffect = this._temporaryEffect || (inLocation instanceof foundry.abstract.Document ? !lib.is_UUID(inLocation?.uuid) : false);
-
-    if (inOptions.offset) {
-      const offsetData = this._validateOffset("atLocation", inOptions.offset, inOptions);
-      this._offset = {
-        source: offsetData,
-        target: this._offset?.target ?? false
-      }
-    }
-
-    this._randomOffset = {
-      source: inOptions.randomOffset,
-      target: this._randomOffset?.target ?? false
-    }
-
-    this._source = inOptions.cacheLocation && typeof inLocation !== "string" ? canvaslib.get_object_canvas_data(inLocation) : inLocation;
     return this;
   }
 
@@ -445,22 +401,6 @@ export default class EffectSection extends Section {
     return this;
   }
 
-  /**
-   *  Creates a text element, attached to the sprite. The options for the text are available here:
-   *  https://pixijs.io/pixi-text-style/
-   *
-   * @param {String} inText
-   * @param {Object} inOptions
-   * @returns {EffectSection}
-   */
-  text(inText, inOptions = {}) {
-    if (typeof inText !== "string") throw this.sequence._customError(this, "text", "inText must be of type string");
-    this._text = foundry.utils.mergeObject({
-      text: inText
-    }, inOptions);
-    return this;
-  }
-
   shape(inType, inOptions = {}) {
     if (typeof inType !== "string") throw this.sequence._customError(this, "shape", "type must be of type string");
 
@@ -552,25 +492,6 @@ export default class EffectSection extends Section {
     });
 
     return this;
-  }
-
-  _validateOffset(functionName, inOffset, inOptions = {}) {
-    inOffset = foundry.utils.mergeObject({
-      x: 0,
-      y: 0,
-    }, inOffset);
-    inOptions = foundry.utils.mergeObject({
-      gridUnits: false,
-      local: false
-    }, inOptions)
-    if (typeof inOptions.gridUnits !== "boolean") throw this.sequence._customError(this, functionName, "inOptions.gridUnits must be of type boolean");
-    if (typeof inOptions.local !== "boolean") throw this.sequence._customError(this, functionName, "inOptions.local must be of type boolean");
-    if (!lib.is_real_number(inOffset.x)) throw this.sequence._customError(this, functionName, `inOffset.x must be of type number!`);
-    if (!lib.is_real_number(inOffset.y)) throw this.sequence._customError(this, functionName, `inOffset.y must be of type number!`);
-    return {
-      ...inOffset,
-      ...inOptions
-    };
   }
 
   /**
@@ -1297,10 +1218,10 @@ export default class EffectSection extends Section {
         resolve();
       });
     }
-    this._expressWarnings();
+    if(!this._deserializedData) this._expressWarnings();
     const data = await this._sanitizeEffectData();
     if (Hooks.call("preCreateSequencerEffect", data) === false) return;
-    let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
+    let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId)) && !this.sequence.localOnly;
     let canvasEffectData = await Sequencer.EffectManager.play(data, push);
     let totalDuration = this._currentWaitTime;
     if (this._persist) {
@@ -1326,6 +1247,9 @@ export default class EffectSection extends Section {
     Object.assign(this.constructor.prototype, traits.animation);
     Object.assign(this.constructor.prototype, traits.filter);
     Object.assign(this.constructor.prototype, traits.tint);
+    Object.assign(this.constructor.prototype, traits.location);
+    Object.assign(this.constructor.prototype, traits.offset);
+    Object.assign(this.constructor.prototype, traits.text);
   }
 
   /**
@@ -1380,7 +1304,7 @@ export default class EffectSection extends Section {
       customRange: false
     };
 
-    this._isRangedEffect = fileData?.file instanceof SequencerFileRangeFind || fileData?.customRange;
+    this._isRangedEffect = fileData?.file?.rangeFind;
 
     if (fileData.customRange || fileData.file?.dbPath) return;
 
@@ -1421,6 +1345,12 @@ export default class EffectSection extends Section {
    * @private
    */
   async _sanitizeEffectData() {
+
+    if(this._deserializedData){
+      this._deserializedData.creationTimestamp = (+new Date());
+      this._deserializedData.remote = true;
+      return this._deserializedData;
+    }
 
     const {
       file,
@@ -1604,6 +1534,22 @@ export default class EffectSection extends Section {
 
     return data;
 
+  }
+
+  async _serialize() {
+    const data = await super._serialize();
+    await this.preRun();
+    const sectionData = await this._sanitizeEffectData();
+    return {
+      ...data,
+      type: "effect",
+      sectionData
+    };
+  }
+
+  async _deserialize(data) {
+    this._deserializedData = data.sectionData;
+    return super._deserialize(data);
   }
 
   /**

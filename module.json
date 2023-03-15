@@ -8,7 +8,7 @@
   "minimumCoreVersion": "10",
   "compatibility": {
     "minimum": "10",
-    "verified": "10"
+    "verified": "11"
   },
   "authors": [
     {
