@@ -2424,7 +2424,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: this.data.opacity,
       duration: fadeIn.duration,
       ease: fadeIn.ease,
-      delay: fadeIn.delay
+      delay: fadeIn.delay,
+      absolute: true
     })
 
     return fadeIn.duration + fadeIn.delay;
@@ -2453,7 +2454,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume"),
       duration: fadeInAudio.duration,
       ease: fadeInAudio.ease,
-      delay: fadeInAudio.delay
+      delay: fadeInAudio.delay,
+      absolute: true
     })
 
     return fadeInAudio.duration + fadeInAudio.delay;
@@ -2483,7 +2485,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: 0.0,
       duration: fadeOut.duration,
       ease: fadeOut.ease,
-      delay: fadeOut.delay
+      delay: fadeOut.delay,
+      absolute: true
     })
 
     return fadeOut.duration + fadeOut.delay;
@@ -2513,7 +2516,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: 0.0,
       duration: fadeOutAudio.duration,
       ease: fadeOutAudio.ease,
-      delay: fadeOutAudio.delay
+      delay: fadeOutAudio.delay,
+      absolute: true
     })
 
     return fadeOutAudio.duration + fadeOutAudio.delay;
@@ -2572,7 +2576,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: toScale.x,
       duration: scaleIn.duration,
       ease: scaleIn.ease,
-      delay: scaleIn.delay
+      delay: scaleIn.delay,
+      absolute: true
     }, {
       target: this.sprite,
       propertyName: "scale.y",
@@ -2580,7 +2585,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: toScale.y,
       duration: scaleIn.duration,
       ease: scaleIn.ease,
-      delay: scaleIn.delay
+      delay: scaleIn.delay,
+      absolute: true
     }])
 
     return scaleIn.duration + scaleIn.delay;
@@ -2610,14 +2616,16 @@ export default class CanvasEffect extends PIXI.Container {
       to: scale.x,
       duration: scaleOut.duration,
       ease: scaleOut.ease,
-      delay: scaleOut.delay
+      delay: scaleOut.delay,
+      absolute: true
     }, {
       target: this.sprite,
       propertyName: "scale.y",
       to: scale.y,
       duration: scaleOut.duration,
       ease: scaleOut.ease,
-      delay: scaleOut.delay
+      delay: scaleOut.delay,
+      absolute: true
     }])
 
     return scaleOut.duration + scaleOut.delay;
@@ -2647,7 +2655,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: original_radians,
       duration: rotateIn.duration,
       ease: rotateIn.ease,
-      delay: rotateIn.delay
+      delay: rotateIn.delay,
+      absolute: true
     }))
 
     return rotateIn.duration + rotateIn.delay;
@@ -2675,7 +2684,8 @@ export default class CanvasEffect extends PIXI.Container {
       to: rotateOut.value * (Math.PI / 180),
       duration: rotateOut.duration,
       ease: rotateOut.ease,
-      delay: rotateOut.delay
+      delay: rotateOut.delay,
+      absolute: true
     }))
 
     return rotateOut.duration + rotateOut.delay;
