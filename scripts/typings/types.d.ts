@@ -83,7 +83,17 @@ declare class CoreMethods {
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
    */
-  play(): Promise<Sequence>;
+  play(inOptions?: { remote?: boolean }): Promise<Sequence>;
+
+  /**
+   * Turns the sequence into an array of objects to be reconstructed later
+   */
+  toJSON(): Array<Object>;
+
+  /**
+   * Takes the serialized sequence array and returns a sequence ready to be played
+   */
+  fromJSON(inJSON: Array<Object>): Sequence;
 }
 
 declare interface Sequence extends CoreMethods {
