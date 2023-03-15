@@ -596,7 +596,7 @@ export default class SequencerEffectManager {
       if (CanvasEffect.checkValid(duplicatedData)) {
         if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
         if(duplicatedData.sceneId === game.user.viewedScene) {
-          this._playEffect(duplicatedData);
+          await this._playEffect(duplicatedData, false);
         }
       }
     }
