@@ -35,15 +35,31 @@
         "Scale": "Scale",
         "BelowTokens": "Below Tokens",
         "SnapToGrid":  "Snap To Grid",
-        "RandomRotation": "Random Rotation",
-        "RandomMirrorY":  "Random Mirror Y",
-        "RandomOffset": "Random Offset",
+        "Rotation": "Rotation",
+        "Randomize": "Randomize",
+        "FadeIn": "Fade In",
+        "FadeOut": "Fade Out",
+        "ScaleIn": "Scale In",
+        "ScaleOut": "Scale Out",
+
+        "MirrorX":  "Mirror X",
+        "MirrorY":  "Mirror Y",
+
+        "OffsetX":  "Offset X",
+        "OffsetY":  "Offset Y",
+        "GridUnits":  "Grid Units",
+
+        "Repeat":  "Repeat",
         "Repetitions":  "Repetitions",
-        "DelayMin": "Delay (min)",
-        "DelayMax":  "Delay (max)",
-        "Preload": "Preload",
-        "DragBehavior":  "Drag Behavior:<br>Stretch or Move",
+        "DelayMin": "(ms)",
+        "DelayMax":  "",
+
+        "DragBehavior":  "Drag Behavior",
+        "DragStretch":  "Stretch",
+        "DragMove":  "Move",
         "MoveSpeed": "Move speed",
+
+        "Preload": "Preload",
         "AttachTo": "Attach to start point",
         "StretchToAttach": "Attach to end point",
         "Persist": "Persistent"

@@ -19,6 +19,8 @@ import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
+import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
+import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 
 Hooks.once('init', async function () {
   if (!game.modules.get("socketlib")?.active) return;
@@ -49,7 +51,7 @@ Hooks.once('ready', async function () {
     });
 
     setTimeout(() => {
-      // window.Sequencer.DatabaseViewer.show();
+      //EffectsUIApp.show({ tab: "player" });
     }, 200)
 
     migrateSettings();

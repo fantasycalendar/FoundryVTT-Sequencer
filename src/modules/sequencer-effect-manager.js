@@ -1,11 +1,11 @@
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "../lib/lib.js";
-import SequencerEffectsUI from "../formapplications/sequencer-effects-ui.js";
 import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
+import { VisibleEffects } from "./sequencer-visible-effects-store.js";
+import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 
-const EffectsContainer = new Map();
 const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
 
@@ -17,7 +17,7 @@ export default class SequencerEffectManager {
    * @returns {Array}
    */
   static get effects() {
-    return Array.from(EffectsContainer.values());
+    return Array.from(VisibleEffects.values());
   }
 
   static _updatePosition(uuid, position) {
@@ -30,11 +30,9 @@ export default class SequencerEffectManager {
 
   /**
    * Opens the Sequencer Effects UI with the effects tab open
-   *
-   * @returns {SequencerEffectsUI}
    */
   static show() {
-    return SequencerEffectsUI.show({ tab: "manager" });
+    return EffectsUIApp.show({ tab: "manager" });
   }
 
   /**
@@ -270,7 +268,7 @@ export default class SequencerEffectManager {
 
     const playData = effect.play();
 
-    EffectsContainer.set(effect.id, effect);
+    VisibleEffects.add(effect.id, effect);
     if (effect.data.name) {
       effect._ticker.add(() => {
         if (effect.isDestroyed) return;
@@ -305,8 +303,6 @@ export default class SequencerEffectManager {
       playData.promise.then(() => this._removeEffect(effect));
     }
 
-    debounceUpdateEffectViewer();
-
     return playData;
   }
 
@@ -319,7 +315,7 @@ export default class SequencerEffectManager {
    * @private
    */
   static _updateEffect(inEffectId, inUpdates) {
-    const effect = EffectsContainer.get(inEffectId);
+    const effect = VisibleEffects.get(inEffectId);
     if (!effect) return false;
     return effect._update(inUpdates);
   }
@@ -356,7 +352,6 @@ export default class SequencerEffectManager {
     const promises = Object.entries(docEffectsMap).map(([uuid, effects]) => {
       return this._playEffectMap(effects, fromUuidSync(uuid));
     }).flat();
-    debounceUpdateEffectViewer();
     return Promise.all(promises).then(() => {
       Hooks.callAll("sequencerEffectManagerReady");
     });
@@ -367,8 +362,7 @@ export default class SequencerEffectManager {
    */
   static tearDownPersists() {
     return Promise.allSettled(this.effects.map(effect => {
-      EffectsContainer.delete(effect.id);
-      debounceUpdateEffectViewer();
+      VisibleEffects.delete(effect.id);
       return effect.destroy();
     }));
   }
@@ -438,7 +432,6 @@ export default class SequencerEffectManager {
       effects = effects.concat(actorEffects);
     }
     if(!effects?.length) return;
-    debounceUpdateEffectViewer();
     return this._playEffectMap(effects, inDocument);
   }
 
@@ -566,10 +559,9 @@ export default class SequencerEffectManager {
    * @private
    */
   static _removeEffect(effect) {
-    EffectsContainer.delete(effect.id);
+    VisibleEffects.delete(effect.id);
     TemporaryPositionsContainer.delete(effect.data.source);
     TemporaryPositionsContainer.delete(effect.data.target);
-    debounceUpdateEffectViewer();
     return effect.endEffect();
   }
 
@@ -602,8 +594,3 @@ export default class SequencerEffectManager {
     }
   }
 }
-
-const debounceUpdateEffectViewer = debounce(async () => {
-  if (!SequencerEffectsUI.isVisible) return;
-  SequencerEffectsUI.activeInstance.updateEffects();
-}, 100);

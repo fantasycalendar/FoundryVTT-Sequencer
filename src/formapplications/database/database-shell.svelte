@@ -9,7 +9,6 @@
 
   import SequencerDatabase from "../../modules/sequencer-database.js";
   import { databaseStore } from "./DatabaseStore.js";
-  import TreeViewEntry from "./TreeViewEntry.svelte";
   import * as lib from "../../lib/lib.js";
 
   const { application } = getContext("#external");

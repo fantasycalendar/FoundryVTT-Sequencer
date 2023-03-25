@@ -1,9 +1,12 @@
 <form id="sequencer-effects-form" class="sequencer-effects-manager dialog-content" onsubmit="event.preventDefault();" autocomplete="off">
 
     <nav class="sheet-tabs tabs mb-1" data-group="effect-manager">
-        {{#if canCreateEffects}} <a class="item active effect-player-tab" data-tab="player"><i class="fas fa-play-circle"></i> {{ localize "SEQUENCER.Player.Title" }}</a> {{/if}}
-        <a class="item" data-tab="manager"><i class="fas fa-film"></i> {{ localize "SEQUENCER.Manager.Title" }}</a>
-        <a class="item" data-tab="howto"><i class="fas fa-chalkboard-teacher"></i> {{ localize "SEQUENCER.HowTo.Title" }}</a>
+        {{#if canCreateEffects}} <a class="item active effect-player-tab" data-tab="player">
+			<i class="fas fa-play-circle"></i> {{ localize "SEQUENCER.Player.Title" }}</a> {{/if}}
+        <a class="item" data-tab="manager">
+					<i class="fas fa-film"></i> {{ localize "SEQUENCER.Manager.Title" }}</a>
+        <a class="item" data-tab="howto">
+					<i class="fas fa-chalkboard-teacher"></i> {{ localize "SEQUENCER.HowTo.Title" }}</a>
     </nav>
 
     <hr>

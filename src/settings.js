@@ -1,7 +1,7 @@
-import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import CONSTANTS from "./constants.js";
 import { user_can_do } from "./lib/lib.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
+import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 
 export function registerSettings() {
 
@@ -190,7 +190,7 @@ export function registerSettings() {
       title: "Play Effect",
       visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
       onClick: () => {
-        SequencerEffectsUI.show({ inFocus: true, tab: "player" });
+        EffectsUIApp.show({ inFocus: true, tab: "player" });
       }
     };
 
@@ -201,7 +201,7 @@ export function registerSettings() {
       button: true,
       visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
       onClick: () => {
-        SequencerEffectsUI.show({ inFocus: true, tab: "manager" });
+        EffectsUIApp.show({ inFocus: true, tab: "manager" });
       }
     };
 

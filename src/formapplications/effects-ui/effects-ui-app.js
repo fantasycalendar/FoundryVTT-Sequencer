@@ -1,16 +1,19 @@
 import { SvelteApplication } from '@typhonjs-fvtt/runtime/svelte/application';
-import DatabaseShell from "./database-shell.svelte";
+import EffectsUIShell from "./effects-ui-shell.svelte";
 
-export class DatabaseViewerApp extends SvelteApplication {
+export class EffectsUIApp extends SvelteApplication {
 
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      title: game.i18n.localize("SEQUENCER.Database.Title"),
+      title: game.i18n.localize("SEQUENCER.Effects"),
       classes: ["dialog"],
-      width: 900,
-      height: 425,
+      width: "auto",
+      height: "auto",
+      top: 65,
+      left: 120,
+      resizable: false,
       svelte: {
-        class: DatabaseShell,
+        class: EffectsUIShell,
         target: document.body
       },
     });
@@ -28,7 +31,7 @@ export class DatabaseViewerApp extends SvelteApplication {
     return new Promise((resolve) => {
       options.resolve = resolve;
       new this(options).render(true, { focus: true });
-    })
+    });
   }
 
 }

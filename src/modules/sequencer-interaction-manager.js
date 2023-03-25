@@ -1,9 +1,12 @@
-import SequencerEffectsUI from "../formapplications/sequencer-effects-ui.js";
 import * as lib from '../lib/lib.js';
 import * as canvaslib from "../lib/canvas-lib.js";
 import SequencerEffectManager from "./sequencer-effect-manager.js";
 import CONSTANTS from "../constants.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
+import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
+import { get } from "svelte/store";
+import { PlayerSettings } from "../formapplications/effects-ui/effect-player-store.js";
+import Player from "../formapplications/effects-ui/Player.svelte";
 
 /**
  * -------------------------------------------------------------
@@ -115,11 +118,19 @@ export const EffectPlayer = {
   startPos: false,
   endPos: false,
 
-  snapLocationToGrid: false,
+  get snapLocationToGrid(){
+    return get(PlayerSettings.snapToGrid.value);
+  },
 
-  sourceAttach: false,
+  get sourceAttach(){
+    return get(PlayerSettings.attachTo.value)
+  },
+
+  get targetAttach(){
+    return get(PlayerSettings.stretchToAttach.value)
+  },
+
   sourceAttachFound: false,
-  targetAttach: false,
   targetAttachFound: false,
 
   get isActive() {
@@ -128,11 +139,9 @@ export const EffectPlayer = {
 
   /**
    * Opens the Sequencer Effects UI with the player tab open
-   *
-   * @returns {SequencerEffectsUI}
    */
   show() {
-    return SequencerEffectsUI.show({ tab: "player" });
+    return EffectsUIApp.show({ tab: "player" });
   },
 
   initialize() {
@@ -187,7 +196,9 @@ export const EffectPlayer = {
 
     let position = canvaslib.get_mouse_position(this.snapLocationToGrid)
 
-    const attachToObject = attach ? canvaslib.get_closest_token(position, { minimumDistance: canvas.grid.size }) : false;
+    const attachToObject = attach
+      ? canvaslib.get_closest_token(position, { minimumDistance: canvas.grid.size })
+      : false;
 
     let attachFound = false;
     if (attachToObject) {
@@ -236,7 +247,7 @@ export const EffectPlayer = {
 
   async _playEffect() {
 
-    const settings = foundry.utils.mergeObject(SequencerEffectsUI.activeSettings, {
+    const settings = foundry.utils.mergeObject({  }, {
       ...InteractionManager.state,
       startPos: this.startPos,
       endPos: this.endPos
@@ -320,7 +331,14 @@ export const SelectionManager = {
   dragOffset: false,
   hoveredEffectUI: false,
 
-  snapToGrid: false,
+  get snapToGrid(){
+    return get(PlayerSettings.snapToGrid.store);
+  },
+
+  set snapToGrid(bool){
+    PlayerSettings.snapToGrid.store.set(bool);
+  },
+
   attachToTarget: false,
 
   get isActive() {
