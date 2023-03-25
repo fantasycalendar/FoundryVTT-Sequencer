@@ -446,7 +446,7 @@ export default class CanvasEffect extends PIXI.Container {
       && game.settings.get('sequencer', 'effectsEnabled')
       && game.user.viewedScene === this.data.sceneId;
 
-    if(isNewerVersion(game.version, "10.289") && game.settings.get("core", "photosensitiveMode")){
+    if (isNewerVersion(game.version, "10.289") && game.settings.get("core", "photosensitiveMode")) {
       playVisible = false;
       lib.throttled_custom_warning(this.data.moduleName, "Photosensitive Mode is turned on, so Sequencer's visual effects aren't being rendered");
     }
@@ -513,7 +513,7 @@ export default class CanvasEffect extends PIXI.Container {
   getHook(type, uuid) {
     if (!lib.is_UUID(uuid)) return false;
     const parts = uuid.split('.');
-    return type + parts[parts.length-2];
+    return type + parts[parts.length - 2];
   }
 
   /**
@@ -546,9 +546,9 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     let rotation = 0;
-    if(this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect"){
+    if (this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect") {
       rotation = Math.normalizeRadians(Math.toRadians(this.sourceDocument?.direction));
-    }else if(!(this.source instanceof MeasuredTemplate)){
+    } else if (!(this.source instanceof MeasuredTemplate)) {
       rotation = this.sourceDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.rotation)) : 0;
     }
 
@@ -604,9 +604,9 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     let rotation = 0;
-    if(this.target instanceof MeasuredTemplate && this.targetDocument?.t !== "rect"){
+    if (this.target instanceof MeasuredTemplate && this.targetDocument?.t !== "rect") {
       rotation = Math.normalizeRadians(Math.toRadians(this.targetDocument?.direction));
-    }else if(!(this.target instanceof MeasuredTemplate)){
+    } else if (!(this.target instanceof MeasuredTemplate)) {
       rotation = this.targetDocument?.rotation ? Math.normalizeRadians(Math.toRadians(this.targetDocument?.rotation)) : 0;
     }
 
@@ -1379,7 +1379,7 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     if (textSprite) {
-      if(this.data.tint) {
+      if (this.data.tint) {
         textSprite.tint = this.data.tint;
       }
       this.sprite.addChild(textSprite);
@@ -1393,16 +1393,16 @@ export default class CanvasEffect extends PIXI.Container {
     }
   }
 
-  _createShapes(){
+  _createShapes() {
 
     const nonMaskShapes = this.data.shapes.filter(shape => !shape.isMask);
 
-    for(const shape of nonMaskShapes){
+    for (const shape of nonMaskShapes) {
       const graphic = canvaslib.createShape(shape);
-			graphic.filters = this.sprite.filters;
+      graphic.filters = this.sprite.filters;
       this.spriteContainer.addChild(graphic);
-      if(shape.name){
-        if(!this.shapes) this.shapes = {};
+      if (shape.name) {
+        if (!this.shapes) this.shapes = {};
         this.shapes[shape.name] = graphic;
       }
     }
@@ -1526,7 +1526,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     let anyMaskChanged = false;
 
-    for(const maskShape of maskShapes){
+    for (const maskShape of maskShapes) {
 
       const graphic = canvaslib.createShape(maskShape)
 
@@ -1556,7 +1556,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._ticker.add(() => {
 
       for (let container of this._maskContainer.children) {
-        if(!container.exclude){
+        if (!container.exclude) {
           anyMaskChanged = anyMaskChanged || this._handleUpdatingMask(container);
         }
       }
@@ -1587,6 +1587,7 @@ export default class CanvasEffect extends PIXI.Container {
         objectWidth = objectSprite.width / 2;
         objectHeight = objectSprite.height / 2;
         additionalData["img"] = mask.placeableObject.document.texture.src;
+        additionalData["elevation"] = mask.placeableObject.document.elevation;
       } else if (mask.documentType === "Tile") {
         objectSprite = mask.placeableObject.mesh;
         objectWidth = objectSprite.width / 2;
@@ -1715,8 +1716,30 @@ export default class CanvasEffect extends PIXI.Container {
     mask.oldData = additionalData;
 
     if (mask instanceof PIXI.Sprite) {
+
       mask.anchor.set(0.5, 0.5);
       mask.position.set(mask.width / 2, mask.height / 2)
+
+      if (game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) {
+
+        const elevation = game.settings.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME, 'token_elevation') && mask.placeableObject.document?.elevation
+          ? (canvas.scene.grid.distance / mask.placeableObject.document.elevation * mask.placeableObject.document.height)
+          : Infinity;
+
+        const isometricType = getProperty(mask.placeableObject.document, CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_FLAG);
+
+        switch (isometricType) {
+          case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.TOPDOWN:
+            break;
+          case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.DIAMETRIC:
+            mask.anchor.set(0.5, 0.75 + (0.505 / elevation))
+            break;
+          default:
+            mask.anchor.set(0.5, 0.69 + (0.63 / elevation))
+            break;
+        }
+      }
+
     }
 
     return true;
@@ -1730,9 +1753,9 @@ export default class CanvasEffect extends PIXI.Container {
     const smallestX = this._maskContainer.children.reduce((acc, container) => {
       let x;
       const bounds = container.getBounds();
-      if(container.exclude){
-        x = this.x - bounds.width/2 + container.maskSprite.offset.x;
-      }else{
+      if (container.exclude) {
+        x = this.x - bounds.width / 2 + container.maskSprite.offset.x;
+      } else {
         x = bounds.x;
       }
       return acc >= x ? x : acc;
@@ -1741,9 +1764,9 @@ export default class CanvasEffect extends PIXI.Container {
     const smallestY = this._maskContainer.children.reduce((acc, container) => {
       let y;
       const bounds = container.getBounds(true);
-      if(container.exclude){
-        y = this.y - bounds.height/2 + container.maskSprite.offset.y;
-      }else{
+      if (container.exclude) {
+        y = this.y - bounds.height / 2 + container.maskSprite.offset.y;
+      } else {
         y = bounds.y;
       }
       return acc >= y ? y : acc;
@@ -1953,7 +1976,7 @@ export default class CanvasEffect extends PIXI.Container {
           ? new PIXI.TilingSprite(texture)
           : new PIXI.Sprite(texture);
         this._relatedSprites[filePath] = sprite;
-        if(this.data.tint) {
+        if (this.data.tint) {
           sprite.tint = this.data.tint;
         }
         this.sprite.addChild(sprite);
@@ -2134,7 +2157,7 @@ export default class CanvasEffect extends PIXI.Container {
         : this.getSourceData();
 
       const target = this.targetDocument || this.sourceDocument;
-      if(target instanceof TokenDocument && this.data.scaleToObject?.considerTokenScale){
+      if (target instanceof TokenDocument && this.data.scaleToObject?.considerTokenScale) {
         width = target?.object?.mesh?.width;
         height = target?.object?.mesh?.height;
       }

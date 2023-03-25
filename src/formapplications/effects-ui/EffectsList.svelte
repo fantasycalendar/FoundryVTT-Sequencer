@@ -1,38 +1,80 @@
 <script>
   import { localize } from '@typhonjs-fvtt/runtime/svelte/helper';
   import { VisibleEffects } from "../../modules/sequencer-visible-effects-store.js";
+  import EffectEntry from "./components/EffectEntry.svelte";
 
-  $: effects = Object.values($VisibleEffects).map(effect => effect.data.name);
+  $: effects = Object.values($VisibleEffects);
+  $: persistentEffects = effects.filter(effect => effect.data.persist);
+  $: temporaryEffects = effects.filter(effect => !effect.data.persist);
+
+  function endAllEffects() {
+		Sequencer.EffectManager.endEffects({ effects: effects.filter(effect => effect.userCanDelete && !effect.data.private) });
+	}
 
 </script>
 
 <div class="effects-container">
 
-	<button type="button" class="w-100 end-all-effects mb-2">{localize("SEQUENCER.Manager.EndAllEffects")}</button>
+	<button class="w-100 end-all-effects mb-2" type="button" on:click={endAllEffects}>
+		{localize("SEQUENCER.Manager.EndAllEffects")}
+	</button>
 
-	<h2 class="no-effects">{localize("SEQUENCER.Manager.NoEffects")}</h2>
+	{#if !effects.length}
 
-	<div class="effects" style="display: none">
+		<div class="no-effects">
+			<h2>{localize("SEQUENCER.Manager.NoEffects")}</h2>
+		</div>
 
-		<h2>{localize("SEQUENCER.Manager.PersistentEffects")}</h2>
-		<div class="persistent-effects"></div>
+	{:else}
 
-		<hr>
+		<div class="effects">
 
-		<h2>{localize("SEQUENCER.Manager.TemporaryEffects")}</h2>
-		<div class="temporary-effects"></div>
+			{#if persistentEffects.length}
+			<h2>{localize("SEQUENCER.Manager.PersistentEffects")}</h2>
+			<div>
+				{#each persistentEffects as effect (effect.id)}
+					<EffectEntry {effect}/>
+				{/each}
+			</div>
+			{/if}
 
-	</div>
+			{#if temporaryEffects.length && persistentEffects.length}
+				<hr/>
+			{/if}
+
+			{#if temporaryEffects.length}
+				<h2>{localize("SEQUENCER.Manager.TemporaryEffects")}</h2>
+				<div>
+					{#each temporaryEffects as effect (effect.id)}
+						<EffectEntry {effect}/>
+					{/each}
+				</div>
+			{/if}
+
+		</div>
+
+	{/if}
 
 </div>
 
 <style lang="scss">
 
-  .effects-container{
+  .effects-container {
     height: 100%;
     width: 100%;
-    display:flex;
-		flex-direction: column;
+    min-width: 300px;
+		min-height: 563px;
+    display: flex;
+    flex-direction: column;
+
+		& > div {
+      padding: 5px 0;
+      max-height: calc(425px - 5rem);
+      overflow-y: scroll;
+      overflow-x: hidden;
+      flex: 1;
+      flex-direction: row;
+		}
   }
 
 </style>

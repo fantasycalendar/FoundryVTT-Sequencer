@@ -39,7 +39,9 @@
 <style lang="scss">
 
   .howto-container{
+    min-width: 300px;
     max-width: 300px;
+    min-height: 563px;
 
     li{
       list-style: none;

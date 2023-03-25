@@ -142,9 +142,12 @@ export function get_object_position(obj, { measure = false, exact = false } = {}
       pos.y += Math.abs(obj.document.height / 2)
     }
   } else if (obj instanceof Token) {
+
+    const adjusted = adjust_token_for_isometric(obj);
+
     pos = {
-      x: obj.mesh.x,
-      y: obj.mesh.y
+      x: obj.mesh.x + adjusted.x,
+      y: obj.mesh.y - adjusted.y
     }
 
     if (exact) {
@@ -165,6 +168,29 @@ export function get_object_position(obj, { measure = false, exact = false } = {}
 
   return pos;
 
+}
+
+export function adjust_token_for_isometric(inObj) {
+
+  let { width, height } = get_object_dimensions(inObj);
+
+  if(!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active || !(inObj.document instanceof TokenDocument)) {
+    return { x: 0, y: 0 };
+  }
+
+  const isometricType = getProperty(inObj.document, CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_FLAG);
+
+  switch (isometricType) {
+    case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.TOPDOWN:
+      return { x: 0, y: 0 };
+    case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.DIAMETRIC:
+      return { x: width * 2, y: height * 2 };
+    default:
+      return {
+        x: width * CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION * 0.3,
+        y: height * CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION * 0.3
+      };
+  }
 }
 
 export function get_random_offset(target, randomOffset, twister = false) {
