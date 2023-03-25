@@ -247,13 +247,13 @@ export const EffectPlayer = {
 
   async _playEffect() {
 
-    const settings = foundry.utils.mergeObject({  }, {
+    const settings = foundry.utils.mergeObject(PlayerSettings.export(), {
       ...InteractionManager.state,
       startPos: this.startPos,
       endPos: this.endPos
     });
 
-    if (settings.users[0] === "all") settings.users = [];
+    if (!settings.users.length || settings.users?.[0] === "all") settings.users = [];
 
     if (settings.file === "") return;
 

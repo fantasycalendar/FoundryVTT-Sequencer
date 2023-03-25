@@ -541,7 +541,7 @@ export default class CanvasEffect extends PIXI.Container {
       ? canvaslib.get_object_position(this.source)
       : (this.source?.worldPosition || this.source?.center || this.source);
 
-    if (this.source && this.target) {
+    if (this.source && this.target instanceof PlaceableObject) {
       const adjustment = canvaslib.adjust_token_for_isometric(this.source);
       position.x += adjustment.x;
       position.y -= adjustment.y;
@@ -605,7 +605,7 @@ export default class CanvasEffect extends PIXI.Container {
       ? canvaslib.get_object_position(this.target, { measure: true })
       : (this.target?.worldPosition || this.target?.center || this.target);
 
-    if (this.targetDocument instanceof TokenDocument) {
+    if (this.target instanceof PlaceableObject) {
       const adjustment = canvaslib.adjust_token_for_isometric(this.target);
       position.x += adjustment.x;
       position.y -= adjustment.y;
@@ -2075,9 +2075,9 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) return;
 
-    if(this._isRangeFind && this.target) {
+    if(this.data.stretchTo) {
 
-      let skew = this.rotationContainer.rotation - Math.PI / 4;
+      let skew = Math.normalizeRadians(this.rotationContainer.rotation - Math.PI / 4);
 
       if (Math.abs(skew) >= ((Math.PI / 2) - 0.5) && Math.abs(skew) <= ((Math.PI / 2) + 0.5)) {
         skew -= Math.PI / 2;

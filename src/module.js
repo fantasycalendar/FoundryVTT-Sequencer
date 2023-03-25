@@ -50,9 +50,9 @@ Hooks.once('ready', async function () {
       SequencerEffectManager.setUpPersists();
     });
 
-    setTimeout(() => {
-      //EffectsUIApp.show({ tab: "player" });
-    }, 200)
+    // setTimeout(() => {
+    //   EffectsUIApp.show({ tab: "player" });
+    // }, 200)
 
     migrateSettings();
 

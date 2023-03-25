@@ -172,7 +172,7 @@ export function adjust_token_for_isometric(inObj) {
 
   let { width, height } = get_object_dimensions(inObj);
 
-  if(!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) {
+  if(!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active || !(inObj instanceof PlaceableObject)) {
     return { x: 0, y: 0 };
   }
 

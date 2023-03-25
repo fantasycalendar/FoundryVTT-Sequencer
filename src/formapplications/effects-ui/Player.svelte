@@ -10,6 +10,7 @@
 
   const fileStore = PlayerSettings.file.store;
   const users = game.users.filter(user => user.active);
+  const userStore = PlayerSettings.users.store;
 
   let lastInput = "";
   let lastResults = [];
@@ -57,7 +58,7 @@
 
 		<div class="user-settings flexcol">
 			<label for="user-select">Play for users:</label>
-			<select class="user-select" id="user-select" multiple>
+			<select class="user-select" id="user-select" multiple bind:value={$userStore}>
 				<option selected value="all">{localize("SEQUENCER.Player.AllUsers")}</option>
 				{#each users as user (user.id)}
 					<option value="{user.id}">{user.name}</option>

@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { EffectPlayer } from "../../modules/sequencer-interaction-manager.js";
 
 const PlayerSettings = {
@@ -9,6 +9,10 @@ const PlayerSettings = {
   scale: {
     label: "SEQUENCER.Player.Option.Scale",
     store: writable(1.0),
+  },
+  users: {
+    label: "SEQUENCER.Player.Option.ForUsers",
+    store: writable([]),
   },
   belowTokens: {
     label: "SEQUENCER.Player.Option.BelowTokens",
@@ -136,6 +140,12 @@ const PlayerSettings = {
     store: writable(400),
   },
 
+}
+
+PlayerSettings.export = () => {
+  return Object.fromEntries(Object.entries(PlayerSettings).map(entry => {
+    return [entry[0], get(entry[1].store)]
+  }));
 }
 
 export { PlayerSettings };
