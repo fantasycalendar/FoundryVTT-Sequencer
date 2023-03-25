@@ -541,6 +541,12 @@ export default class CanvasEffect extends PIXI.Container {
       ? canvaslib.get_object_position(this.source)
       : (this.source?.worldPosition || this.source?.center || this.source);
 
+    if (this.source && this.target) {
+      const adjustment = canvaslib.adjust_token_for_isometric(this.source);
+      position.x += adjustment.x;
+      position.y -= adjustment.y;
+    }
+
     if (position !== undefined) {
       this._cachedSourceData.position = position;
     }
@@ -598,6 +604,12 @@ export default class CanvasEffect extends PIXI.Container {
     const position = this.target instanceof PlaceableObject && !this.isTargetTemporary
       ? canvaslib.get_object_position(this.target, { measure: true })
       : (this.target?.worldPosition || this.target?.center || this.target);
+
+    if (this.targetDocument instanceof TokenDocument) {
+      const adjustment = canvaslib.adjust_token_for_isometric(this.target);
+      position.x += adjustment.x;
+      position.y -= adjustment.y;
+    }
 
     if (position !== undefined) {
       this._cachedTargetData.position = position;
@@ -909,8 +921,11 @@ export default class CanvasEffect extends PIXI.Container {
     this.rotationContainer = this.addChild(new PIXI.Container());
     this.rotationContainer.id = this.id + "-rotationContainer";
 
+    this.isometricContainer = this.rotationContainer.addChild(new PIXI.Container());
+    this.isometricContainer.id = this.id + "-isometricContainer";
+
     // An offset container for the sprite
-    this.spriteContainer = this.rotationContainer.addChild(new PIXI.Container());
+    this.spriteContainer = this.isometricContainer.addChild(new PIXI.Container());
     this.spriteContainer.id = this.id + "-spriteContainer";
 
     // The sprite itself
@@ -1373,6 +1388,10 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     this.spriteContainer.rotation = -Math.normalizeRadians(Math.toRadians(this._customAngle));
+
+    if(game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active){
+      this.isometricContainer.rotation = Math.PI/4;
+    }
 
     if (this.data.tint) {
       this.sprite.tint = this.data.tint;
@@ -2048,6 +2067,32 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     this.rotationContainer.rotation = Math.normalizeRadians(ray.angle + Math.toRadians(this.data.rotateTowards?.rotationOffset ?? 0));
+    this._tweakRotationForIsometric();
+
+  }
+
+  _tweakRotationForIsometric() {
+
+    if (!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) return;
+
+    if(this._isRangeFind && this.target) {
+
+      let skew = this.rotationContainer.rotation - Math.PI / 4;
+
+      if (Math.abs(skew) >= ((Math.PI / 2) - 0.5) && Math.abs(skew) <= ((Math.PI / 2) + 0.5)) {
+        skew -= Math.PI / 2;
+      }
+
+      this.isometricContainer.skew.set(Math.normalizeRadians(skew), 0);
+      this.isometricContainer.rotation = 0;
+
+    }else{
+
+      let skew = Math.PI / 4 + this.rotationContainer.rotation;
+      this.isometricContainer.skew.set(Math.normalizeRadians(skew - Math.PI / 4), 0);
+      this.isometricContainer.scale.set(1.0, window.scale ?? CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION);
+
+    }
 
   }
 
@@ -2110,6 +2155,8 @@ export default class CanvasEffect extends PIXI.Container {
       }
     }
 
+    this._tweakRotationForIsometric();
+
     if (!this.data.anchor && this.data.rotateTowards) {
       const startPointRatio = (this.template.startPoint / this._texture.width) / 2;
       this.spriteContainer.pivot.set(this.sprite.width * (-0.5 + startPointRatio), 0);
@@ -2119,7 +2166,6 @@ export default class CanvasEffect extends PIXI.Container {
         lib.interpolate(this.sprite.height * -0.5, this.sprite.height * 0.5, this.data.anchor?.y ?? 0.5)
       );
     }
-
   }
 
   _transformStretchToAttachedSprite() {
@@ -2230,6 +2276,8 @@ export default class CanvasEffect extends PIXI.Container {
       if (applyRotation) {
         this.rotationContainer.rotation = this.getSourceData().rotation;
       }
+
+      this._tweakRotationForIsometric();
 
       try {
         this._applyAttachmentOffset();

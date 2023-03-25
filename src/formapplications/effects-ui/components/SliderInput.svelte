@@ -1,7 +1,8 @@
 <script>
 
-	import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
+  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
   import { writable } from "svelte/store";
+  import { applyStyles } from "@typhonjs-fvtt/runtime/svelte/action";
 
   export let setting;
   export let lock = false;
@@ -9,12 +10,33 @@
   export let max = 3;
   export let maxInput = Infinity;
   export let step = 0.01;
+  export let styles = {};
 
   const store = setting.store;
   const isLocked = lock ? lock.store : writable(false);
 
 </script>
 
-<label>{localize(setting.label)}</label>
-<input disabled={$isLocked} type="range" {min} {step} {max} bind:value="{$store}"/>
-<input disabled={$isLocked} type="number" {min} {step} max={maxInput} required bind:value="{$store}"/>
+<div style="display: flex; align-items: center;" use:applyStyles={styles}>
+	<label>{localize(setting.label)}</label>
+	<input bind:value="{$store}" disabled={$isLocked} {max} {min} {step} type="range"/>
+	<input bind:value="{$store}" disabled={$isLocked} max={maxInput} {min} required {step} type="number"/>
+</div>
+
+<style lang="scss">
+
+	label {
+		flex: 1 0 auto;
+		margin-right: 0.25rem;
+	}
+
+	input[type="range"] {
+    flex: 1 0 50%;
+    margin-right: 0.25rem;
+	}
+
+	input[type="number"] {
+    flex: 1 0 15%;
+	}
+
+</style>

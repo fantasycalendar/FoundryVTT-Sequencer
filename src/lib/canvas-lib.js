@@ -143,11 +143,9 @@ export function get_object_position(obj, { measure = false, exact = false } = {}
     }
   } else if (obj instanceof Token) {
 
-    const adjusted = adjust_token_for_isometric(obj);
-
     pos = {
-      x: obj.mesh.x + adjusted.x,
-      y: obj.mesh.y - adjusted.y
+      x: obj.mesh.x,
+      y: obj.mesh.y
     }
 
     if (exact) {
@@ -174,7 +172,7 @@ export function adjust_token_for_isometric(inObj) {
 
   let { width, height } = get_object_dimensions(inObj);
 
-  if(!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active || !(inObj.document instanceof TokenDocument)) {
+  if(!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) {
     return { x: 0, y: 0 };
   }
 

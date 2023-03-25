@@ -119,7 +119,6 @@ const PlayerSettings = {
     label: "SEQUENCER.Player.Option.Persist",
     store: writable(false)
   },
-
   repeat: {
     label: "SEQUENCER.Player.Option.Repeat",
     store: writable(false),
