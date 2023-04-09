@@ -26,9 +26,11 @@ const flagManager = {
    */
   getFlags(inDocument) {
 
-    const effects = getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? false;
+    let effects = getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
 
     if (!effects?.length) return [];
+
+    effects = foundry.utils.deepClone(effects);
 
     const changes = [];
     for (let [effectId, effectData] of effects) {
@@ -347,7 +349,7 @@ const flagManager = {
 
     await Actor.updateDocuments(Object.entries(actorUpdates).map(([actorId, effects]) => ({
       _id: actorId,
-      [`prototypeToken.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
+      [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
     })));
 
   }, 250)

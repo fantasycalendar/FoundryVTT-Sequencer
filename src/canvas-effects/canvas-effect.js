@@ -2515,7 +2515,9 @@ export default class CanvasEffect extends PIXI.Container {
 
     let fadeIn = this.data.fadeIn;
 
-    if (this.actualCreationTime - (this.data.creationTimestamp + fadeIn.duration + fadeIn.delay) > 0) return;
+    if (this.actualCreationTime - (this.data.creationTimestamp + fadeIn.duration + fadeIn.delay) > 0) {
+      return;
+    }
 
     this.alphaFilter.alpha = 0.0;
 

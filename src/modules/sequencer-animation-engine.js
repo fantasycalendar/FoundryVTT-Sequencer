@@ -86,7 +86,6 @@ const SequencerAnimationEngine = {
         delete this._startingValues[targetId];
       }
     }
-
   },
 
   _startingValues: {},
@@ -105,7 +104,7 @@ const SequencerAnimationEngine = {
           attribute.complete = true;
         }
 
-        let delta = deltas.find(delta => attribute.target === delta.target && attribute.setPropertyName === delta.setPropertyName);
+        let delta = deltas.find(delta => attribute.targetId === delta.targetId && attribute.setPropertyName === delta.setPropertyName);
 
         if (!delta) {
 

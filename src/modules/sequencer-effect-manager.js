@@ -330,10 +330,11 @@ export default class SequencerEffectManager {
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
     const docEffectsMap = allObjects.reduce((acc, doc) => {
-      let effects = flagManager.getFlags(doc);
-      if(!effects.length && doc instanceof TokenDocument && doc?.actorLink){
-        effects = flagManager.getFlags(doc?.actor)
-        effects.forEach(e => {
+      let tokenEffects = flagManager.getFlags(doc);
+      if(doc instanceof TokenDocument && doc?.actorLink){
+        const actorEffects = flagManager.getFlags(doc?.actor)
+        actorEffects.forEach(e => {
+          e[1]._id = randomID();
           if(lib.is_UUID(e[1].source) && fromUuidSync(e[1].source)?.actor === doc?.actor){
             e[1].source = doc.uuid;
             e[1].sceneId = doc.parent.id;
@@ -343,9 +344,10 @@ export default class SequencerEffectManager {
             e[1].sceneId = doc.parent.id;
           }
         });
+        tokenEffects = tokenEffects.concat(actorEffects);
       }
-      if(effects.length) {
-        acc[doc.uuid] = effects;
+      if(tokenEffects.length) {
+        acc[doc.uuid] = tokenEffects;
       }
       return acc;
     }, {});
