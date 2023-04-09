@@ -4,6 +4,8 @@
 - *Sequencer* - Updated Sequencer Database Viewer:
   - Improved UI and added nested tree view
   - Added ctrl modifier to buttons that copy paths, which adds quotes around the copied paths 
+- *Sequencer* - Updated Sequencer Effect Player:
+  - Improved UI based on the design of MatthijsKok on github - thanks a lot for the inspiration!
 - *Sequencer* - Added `.scrollingText()` which allows to play scrolling text on the canvas for users
 - *Sequencer* - Added `.toJSON()` and `.fromJSON()` to Sequences to be able to be serialized and deserialized; only sequences with effects, sounds, and scrolling texts can be serialized
 - *Sequencer* - Added options to `.play()`, which may contain an object; currently supports `{ remote: true/false }` which will serialize the sequence (see above), and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed 

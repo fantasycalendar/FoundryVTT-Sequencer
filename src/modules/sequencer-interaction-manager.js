@@ -269,15 +269,15 @@ export const EffectPlayer = {
     const effect = sequence.effect()
       .file(settings.file)
       .forUsers(settings.users)
-      .repeats(settings.repetitions, settings.repeatDelayMin, settings.repeatDelayMax)
       .mirrorX(settings.mirrorX && !settings.randomMirrorX)
       .mirrorY(settings.mirrorY && !settings.randomMirrorY)
       .randomizeMirrorX(settings.randomMirrorX)
       .randomizeMirrorY(settings.randomMirrorY)
       .persist(settings.persist)
+      .belowTokens(settings.belowTokens);
 
-    if (settings.belowTokens) {
-      effect.elevation(0);
+    if(settings.repeat){
+      effect.repeats(settings.repetitions, settings.repeatDelayMin, settings.repeatDelayMax)
     }
 
     if(settings.fadeIn > 0) effect.fadeIn(settings.fadeIn)

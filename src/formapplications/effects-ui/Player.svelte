@@ -40,6 +40,9 @@
     canvas.sequencerInterfaceLayer.activate({ tool: "play-effect" });
 	}
 
+  const presets = PlayerSettings.getPresets();
+  let selectedPreset = "default";
+
 </script>
 
 <div class="effect-player-container">
@@ -78,22 +81,25 @@
 
 			<div class="preset-container">
 
-				<select class="preset-select">
+				<select class="preset-select" bind:value={selectedPreset} on:change={() => PlayerSettings.loadPreset(selectedPreset)}>
 
 					<option value="default">{localize("SEQUENCER.Player.PresetsDefault")}</option>
+					{#each presets as preset}
+						<option>{preset}</option>
+					{/each}
 					<!--{{#each presets}}-->
 					<!--<option>{{ @key }}</option>-->
 					<!--{{/each}}-->
 
 				</select>
 
-				<button class="save-preset small-button" type="button">
+				<button class="save-preset small-button" type="button" on:click={() => PlayerSettings.savePreset(selectedPreset)}>
 					<i class="fas fa-download"></i>
 				</button>
-				<button class="copy-preset small-button" disabled type="button">
+				<button class="copy-preset small-button" disabled={selectedPreset === "default"} type="button" on:click={() => PlayerSettings.copyPreset(selectedPreset)}>
 					<i class="fas fa-copy"></i>
 				</button>
-				<button class="delete-preset small-button" disabled type="button">
+				<button class="delete-preset small-button" disabled={selectedPreset === "default"} type="button" on:click={() => PlayerSettings.deletePreset(selectedPreset)}>
 					<i class="fas fa-times"></i>
 				</button>
 
