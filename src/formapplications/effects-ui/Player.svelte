@@ -7,6 +7,7 @@
   import Checkbox from "./components/Checkbox.svelte";
   import NumberInput from "./components/NumberInput.svelte";
   import SwitchToggle from "./components/SwitchToggle.svelte";
+  import * as lib from "../../lib/lib.js";
 
   const fileStore = PlayerSettings.file.store;
   const users = game.users.filter(user => user.active);
@@ -34,6 +35,11 @@
 
   $: searchDebounce($fileStore);
 
+  async function activateLayer(){
+    ui.controls.initialize({ control: "sequencer", tool: "play-effect" });
+    canvas.sequencerInterfaceLayer.activate({ tool: "play-effect" });
+	}
+
 </script>
 
 <div class="effect-player-container">
@@ -42,7 +48,7 @@
 
 		<legend>Effect</legend>
 
-		<button class="activate-layer" type="button">{localize("SEQUENCER.Player.SwitchToLayer")}</button>
+		<button class="activate-layer" type="button" on:click={() => activateLayer()}>{localize("SEQUENCER.Player.SwitchToLayer")}</button>
 
 		<div class="file-settings">
 			<input bind:value={$fileStore} class="file-input flex3" list="dblist"
@@ -114,14 +120,13 @@
 			<Checkbox setting={PlayerSettings.mirrorX} styles={{ "grid-column": `1 / 3` }}/>
 			<Checkbox setting={PlayerSettings.mirrorY} styles={{ "grid-column": `3 / 5` }}/>
 			<Checkbox setting={PlayerSettings.randomMirrorX} styles={{ "grid-column": `1 / 3` }} lock={PlayerSettings.mirrorX} inverse/>
-			<Checkbox setting={PlayerSettings.randomMirrorY} styles={{ "grid-column": `3 / 5` }} lock={PlayerSettings.mirrorX} inverse/>
+			<Checkbox setting={PlayerSettings.randomMirrorY} styles={{ "grid-column": `3 / 5` }} lock={PlayerSettings.mirrorY} inverse/>
 			<div class="divider"></div>
-			<NumberInput setting={PlayerSettings.offsetX}  styles={{ "grid-column": `1 / 3` }}/>
-			<NumberInput setting={PlayerSettings.offsetY}  styles={{ "grid-column": `3 / 5` }}/>
-			<Checkbox setting={PlayerSettings.randomOffsetX} styles={{ "grid-column": `1 / 3` }}/>
-			<Checkbox setting={PlayerSettings.randomOffsetY} styles={{ "grid-column": `3 / 5` }}/>
-			<div></div>
-			<Checkbox setting={PlayerSettings.offsetGridUnits} styles={{ "grid-column": `2 / 4` }}/>
+			<NumberInput setting={PlayerSettings.offsetX} lock={PlayerSettings.randomOffset} styles={{ "grid-column": `1 / 3` }}/>
+			<NumberInput setting={PlayerSettings.offsetY} lock={PlayerSettings.randomOffset} styles={{ "grid-column": `3 / 5` }}/>
+			<Checkbox setting={PlayerSettings.randomOffset} styles={{ "grid-column": `1 / 3` }}/>
+			<NumberInput setting={PlayerSettings.randomOffsetAmount} lock={PlayerSettings.randomOffset} inverse styles={{ "grid-column": `3 / 5` }}/>
+			<Checkbox setting={PlayerSettings.offsetGridUnits} styles={{ "grid-column": `2 / 5` }}/>
 			<div></div>
 		</div>
 

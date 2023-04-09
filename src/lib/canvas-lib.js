@@ -6,7 +6,7 @@ export function createShape(shape) {
 
   const graphic = new PIXI.Graphics();
 
-  graphic.beginFill(shape?.fillColor ?? 0xFFFFFF, shape?.fillColor ? (shape?.fillAlpha ?? 1) : 0)
+  graphic.beginFill(shape?.fillColor ?? 0xFFFFFF, shape?.fillColor !== undefined ? (shape?.fillAlpha ?? 1) : 0)
 
   if(shape?.lineSize){
     graphic.lineStyle(shape.lineSize, shape?.lineColor ?? 0xFFFFFF)
@@ -166,29 +166,6 @@ export function get_object_position(obj, { measure = false, exact = false } = {}
 
   return pos;
 
-}
-
-export function adjust_token_for_isometric(inObj) {
-
-  let { width, height } = get_object_dimensions(inObj);
-
-  if(!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active || !(inObj instanceof PlaceableObject)) {
-    return { x: 0, y: 0 };
-  }
-
-  const isometricType = getProperty(inObj.document, CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_FLAG);
-
-  switch (isometricType) {
-    case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.TOPDOWN:
-      return { x: 0, y: 0 };
-    case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.DIAMETRIC:
-      return { x: width * 2, y: height * 2 };
-    default:
-      return {
-        x: width * CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION * 0.3,
-        y: height * CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION * 0.3
-      };
-  }
 }
 
 export function get_random_offset(target, randomOffset, twister = false) {

@@ -78,16 +78,13 @@ const PlayerSettings = {
     store: writable(false),
   },
 
-  randomOffsetX: {
-    label: "SEQUENCER.Player.Option.Randomize",
-    store: writable(0),
-  },
-  randomOffsetY: {
-    label: "SEQUENCER.Player.Option.Randomize",
-    store: writable(0),
-  },
-  randomOffset: {
+  randomOffsetAmount: {
     label: "SEQUENCER.Player.Option.RandomOffset",
+    store: writable(0),
+  },
+
+  randomOffset: {
+    label: "SEQUENCER.Player.Option.Randomize",
     store: writable(false),
   },
 
@@ -146,6 +143,14 @@ PlayerSettings.export = () => {
   return Object.fromEntries(Object.entries(PlayerSettings).map(entry => {
     return [entry[0], get(entry[1].store)]
   }));
+}
+
+PlayerSettings.import = (settings) => {
+  Object.entries(PlayerSettings).forEach(entry => {
+    if(settings?.[entry[0]]){
+      entry[1].store.set(settings?.[entry[0]])
+    }
+  });
 }
 
 export { PlayerSettings };

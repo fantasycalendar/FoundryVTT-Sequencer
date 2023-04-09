@@ -6,7 +6,6 @@ import SequencerFileCache from "./sequencer-file-cache.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 import { get } from "svelte/store";
 import { PlayerSettings } from "../formapplications/effects-ui/effect-player-store.js";
-import Player from "../formapplications/effects-ui/Player.svelte";
 
 /**
  * -------------------------------------------------------------
@@ -25,7 +24,7 @@ export const InteractionManager = {
   },
 
   get isLayerActive() {
-    return canvas.sequencerEffects.active;
+    return canvas.sequencerInterfaceLayer.active;
   },
 
   initialize() {
@@ -119,15 +118,15 @@ export const EffectPlayer = {
   endPos: false,
 
   get snapLocationToGrid(){
-    return get(PlayerSettings.snapToGrid.value);
+    return get(PlayerSettings.snapToGrid.store);
   },
 
   get sourceAttach(){
-    return get(PlayerSettings.attachTo.value)
+    return get(PlayerSettings.attachTo.store)
   },
 
   get targetAttach(){
-    return get(PlayerSettings.stretchToAttach.value)
+    return get(PlayerSettings.stretchToAttach.store)
   },
 
   sourceAttachFound: false,
@@ -145,7 +144,7 @@ export const EffectPlayer = {
   },
 
   initialize() {
-    this.layer = canvas.sequencerEffects;
+    this.layer = canvas.sequencerInterfaceLayer;
   },
 
   tearDown() {
@@ -194,7 +193,7 @@ export const EffectPlayer = {
    */
   _evaluatePosition(attach = false) {
 
-    let position = canvaslib.get_mouse_position(this.snapLocationToGrid)
+    let position = canvaslib.get_mouse_position(this.snapLocationToGrid);
 
     const attachToObject = attach
       ? canvaslib.get_closest_token(position, { minimumDistance: canvas.grid.size })
@@ -271,18 +270,24 @@ export const EffectPlayer = {
       .file(settings.file)
       .forUsers(settings.users)
       .repeats(settings.repetitions, settings.repeatDelayMin, settings.repeatDelayMax)
+      .mirrorX(settings.mirrorX && !settings.randomMirrorX)
+      .mirrorY(settings.mirrorY && !settings.randomMirrorY)
+      .randomizeMirrorX(settings.randomMirrorX)
       .randomizeMirrorY(settings.randomMirrorY)
-    //.persist(settings.persist)
+      .persist(settings.persist)
 
     if (settings.belowTokens) {
       effect.elevation(0);
     }
 
+    if(settings.fadeIn > 0) effect.fadeIn(settings.fadeIn)
+    if(settings.fadeOut > 0) effect.fadeOut(settings.fadeOut)
+
     const attachToObject = settings.attachTo ? canvaslib.get_closest_token(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
     if (attachToObject) {
-      effect.attachTo(attachToObject, { randomOffset: settings.randomOffset ? 0.75 : false });
+      effect.attachTo(attachToObject, { randomOffset: settings.randomOffset && !settings.Dragging ? settings.randomOffsetAmount : false });
     } else {
-      effect.atLocation(settings.startPos, { randomOffset: settings.randomOffset && !settings.Dragging ? 0.75 : false });
+      effect.atLocation(settings.startPos, { randomOffset: settings.randomOffset && !settings.Dragging ? settings.randomOffsetAmount : false });
     }
 
     if (settings.persist && settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new") {
@@ -291,16 +296,20 @@ export const EffectPlayer = {
 
     if (settings.Dragging) {
       if (settings.moveTowards) {
-        effect.moveTowards(settings.endPos, { randomOffset: settings.randomOffset ? 0.75 : false })
+        effect.moveTowards(settings.endPos, { randomOffset: settings.randomOffset ? settings.randomOffsetAmount : false })
         if (settings.moveSpeed) {
           effect.moveSpeed(settings.moveSpeed)
         }
       } else {
-        //let target = settings.stretchToAttach ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size }) : settings.endPos;
-        effect.stretchTo(settings.endPos, { randomOffset: settings.randomOffset ? 0.75 : false })
+        let target = settings.stretchToAttach
+          ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size })
+          : settings.endPos;
+        effect.stretchTo(target, { attachTo: settings.stretchToAttach, randomOffset: settings.randomOffset ? settings.randomOffsetAmount : false })
       }
     } else {
       effect.scale(settings.scale)
+      if(settings.scaleIn > 0) effect.scaleIn(0, settings.scaleIn, { ease: "easeInOutSine" })
+      if(settings.scaleOut > 0) effect.scaleOut(0, settings.scaleOut, { ease: "easeInOutSine" })
       effect.randomRotation(settings.randomRotation)
     }
 
@@ -339,7 +348,13 @@ export const SelectionManager = {
     PlayerSettings.snapToGrid.store.set(bool);
   },
 
-  attachToTarget: false,
+  set attachToTarget(bool){
+    PlayerSettings.stretchToAttach.store.set(bool);
+  },
+
+  get attachToTarget(){
+    return get(PlayerSettings.stretchToAttach.store);
+  },
 
   get isActive() {
     return InteractionManager.isLayerActive && game?.activeTool === "select-effect";
@@ -350,7 +365,7 @@ export const SelectionManager = {
   },
 
   initialize() {
-    this.layer = canvas.sequencerEffects;
+    this.layer = canvas.sequencerInterfaceLayer;
   },
 
   tearDown() {
@@ -409,6 +424,7 @@ export const SelectionManager = {
    */
   async delete() {
     if (!this.selectedEffect) return;
+    debugger;
     await SequencerEffectManager.endEffects({ effects: this.selectedEffect });
     this.selectedEffect = false;
   },
@@ -481,39 +497,40 @@ export const SelectionManager = {
       stretchTo: this.selectedEffect.data.stretchTo
     }
 
-    if (this.attachToTarget) {
-      const obj = canvaslib.get_closest_token(this.suggestedProperties.position, {
-        minimumDistance: canvas.grid.size,
-        type: TokenDocument
-      });
-      if (obj) {
-        let objUuid = lib.get_object_identifier(obj);
-        if (this.sourceOrTarget === "target") {
-          updates.target = objUuid;
-          updates.stretchTo.attachTo = true;
-        } else {
-          updates.source = objUuid;
-          if (!updates.attachTo) {
-            updates.attachTo = {
-              active: true,
-              align: "center",
-              rotation: true,
-              bindVisibility: true,
-              bindAlpha: true
-            };
-          }
-          updates.attachTo.active = true;
-        }
+
+    const obj = this.attachToTarget ? canvaslib.get_closest_token(this.suggestedProperties.position, {
+      minimumDistance: canvas.grid.size,
+      type: TokenDocument
+    }) : false;
+    let objUuid = obj ? lib.get_object_identifier(obj) : false;
+
+    if(this.sourceOrTarget === "source"){
+      if (!updates.attachTo) {
+        updates.attachTo = {
+          active: false,
+          align: "center",
+          rotation: true,
+          bindVisibility: true,
+          bindAlpha: true
+        };
       }
-    } else {
       updates.attachTo = foundry.utils.mergeObject(updates.attachTo || {}, {
-        active: false,
-        align: "center",
-        rotation: true,
-        bindVisibility: true,
-        bindAlpha: true
+        active: this.attachToTarget && !!objUuid,
       })
-      updates[this.sourceOrTarget ? this.sourceOrTarget : "source"] = this.suggestedProperties.position;
+      if(this.attachToTarget && objUuid){
+        updates.source = objUuid;
+      }else{
+        updates["source"] = this.suggestedProperties.position;
+      }
+    }else if(this.sourceOrTarget === "target"){
+      updates.stretchTo.attachTo = this.attachToTarget && !!objUuid;
+      if(this.attachToTarget && objUuid){
+        updates.target = objUuid;
+      }else{
+        updates["target"] = this.suggestedProperties.position;
+      }
+    }else{
+      updates["source"] = this.suggestedProperties.position;
     }
 
     this.selectedEffect.update(updates);

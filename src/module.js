@@ -19,11 +19,12 @@ import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
-import SequencerEffectsUI from "./formapplications/sequencer-effects-ui.js";
 import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
+import CONSTANTS from "./constants.js";
 
 Hooks.once('init', async function () {
   if (!game.modules.get("socketlib")?.active) return;
+  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active;
   initialize_module();
 });
 
@@ -38,17 +39,12 @@ Hooks.once('ready', async function () {
     throw new Error("Sequencer requires the SocketLib module to be active and will not work without it!");
   }
 
+  InteractionManager.initialize();
+
   setTimeout(() => {
     console.log("Sequencer | Ready to go!")
     Hooks.callAll('sequencer.ready')
     Hooks.callAll('sequencerReady')
-
-    SequencerEffectManager.setUpPersists();
-    InteractionManager.initialize();
-
-    Hooks.on("canvasReady", () => {
-      SequencerEffectManager.setUpPersists();
-    });
 
     // setTimeout(() => {
     //   EffectsUIApp.show({ tab: "player" });
@@ -56,7 +52,13 @@ Hooks.once('ready', async function () {
 
     migrateSettings();
 
-  }, 100);
+    SequencerEffectManager.setUpPersists();
+
+    Hooks.on("canvasReady", () => {
+      SequencerEffectManager.setUpPersists();
+    });
+
+  }, 50);
 });
 
 /**

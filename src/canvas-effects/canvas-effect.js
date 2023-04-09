@@ -131,6 +131,11 @@ export default class CanvasEffect extends PIXI.Container {
     return this.data.attachTo?.active && this.sourceDocument ? this.sourceDocument : game.scenes.get(this.data.sceneId);
   }
 
+  get isIsometricActive() {
+    const sceneIsIsometric = getProperty(game.scenes.get(this.data.sceneId), CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED);
+    return CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && sceneIsIsometric;
+  }
+
   /**
    * The ID of the effect
    *
@@ -541,14 +546,24 @@ export default class CanvasEffect extends PIXI.Container {
       ? canvaslib.get_object_position(this.source)
       : (this.source?.worldPosition || this.source?.center || this.source);
 
-    if (this.source && this.target instanceof PlaceableObject) {
-      const adjustment = canvaslib.adjust_token_for_isometric(this.source);
-      position.x += adjustment.x;
-      position.y -= adjustment.y;
+    const { width, height } = canvaslib.get_object_dimensions(this.source);
+
+    if (this.isIsometricActive && this.source instanceof PlaceableObject) {
+      position.x += ((this.sourceDocument.elevation ?? 0) / canvas.scene.grid.distance) * canvas.grid.size;
+      position.y -= ((this.sourceDocument.elevation ?? 0) / canvas.scene.grid.distance) * canvas.grid.size;
+      if(this.data.isometric?.overlay || this.target instanceof PlaceableObject){
+        position.x += (this.source?.height ?? height) / 2
+        position.y -= (this.source?.height ?? height) / 2
+      }
     }
 
     if (position !== undefined) {
       this._cachedSourceData.position = position;
+    }
+
+    if (width !== undefined && height !== undefined) {
+      this._cachedSourceData.width = width;
+      this._cachedSourceData.height = height;
     }
 
     let rotation = 0;
@@ -566,13 +581,6 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (alpha !== undefined) {
       this._cachedSourceData.alpha = alpha;
-    }
-
-    const { width, height } = canvaslib.get_object_dimensions(this.source)
-
-    if (width !== undefined && height !== undefined) {
-      this._cachedSourceData.width = width;
-      this._cachedSourceData.height = height;
     }
 
     return {
@@ -605,10 +613,17 @@ export default class CanvasEffect extends PIXI.Container {
       ? canvaslib.get_object_position(this.target, { measure: true })
       : (this.target?.worldPosition || this.target?.center || this.target);
 
-    if (this.target instanceof PlaceableObject) {
-      const adjustment = canvaslib.adjust_token_for_isometric(this.target);
-      position.x += adjustment.x;
-      position.y -= adjustment.y;
+    const { width, height } = canvaslib.get_object_dimensions(this.target);
+
+    if (this.isIsometricActive && this.target instanceof PlaceableObject) {
+      const targetHeight = (this.target?.height ?? height);
+      position.x += ((this.targetDocument.elevation ?? 0) / canvas.scene.grid.distance) * canvas.grid.size + targetHeight;
+      position.y -= ((this.targetDocument.elevation ?? 0) / canvas.scene.grid.distance) * canvas.grid.size + targetHeight;
+    }
+
+    if (width !== undefined && height !== undefined) {
+      this._cachedTargetData.width = width;
+      this._cachedTargetData.height = height;
     }
 
     if (position !== undefined) {
@@ -630,13 +645,6 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (alpha !== undefined) {
       this._cachedTargetData.alpha = alpha;
-    }
-
-    const { width, height } = canvaslib.get_object_dimensions(this.target);
-
-    if (width !== undefined && height !== undefined) {
-      this._cachedTargetData.width = width;
-      this._cachedTargetData.height = height;
     }
 
     return {
@@ -1389,8 +1397,8 @@ export default class CanvasEffect extends PIXI.Container {
 
     this.spriteContainer.rotation = -Math.normalizeRadians(Math.toRadians(this._customAngle));
 
-    if(game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active){
-      this.isometricContainer.rotation = Math.PI/4;
+    if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE) {
+      this.isometricContainer.rotation = Math.PI / 4;
     }
 
     if (this.data.tint) {
@@ -1434,8 +1442,15 @@ export default class CanvasEffect extends PIXI.Container {
     if (!this.data.elevation?.absolute) {
       effectElevation += targetElevation;
     }
+    const isIsometric = getProperty(game.scenes.get(this.data.sceneId), CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED);
+    if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && isIsometric) {
+      const sourceSort = this.source ? this.sourceMesh.sort + (this.data.isometric?.overlay ? 1 : -1) : 0;
+      const targetSort = this.target ? this.targetMesh.sort + (this.data.isometric?.overlay ? 1 : -1) : 0;
+      this.sort = Math.max(sourceSort, targetSort);
+    } else {
+      this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
+    }
     this.elevation = effectElevation;
-    this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
     this.parent.sortChildren();
   }
 
@@ -1486,6 +1501,16 @@ export default class CanvasEffect extends PIXI.Container {
     this.masksReady = false;
 
     this._maskContainer = new PIXI.Container();
+
+    // const maskFilter = MaskFilter.create();
+    // maskFilter.masks = this.data.masks.map(uuid => {
+    //   const documentObj = fromUuidSync(uuid);
+    //   if (!documentObj || documentObj.parent !== this.sourceDocument.parent) return false;
+    //   const obj = documentObj.object;
+    //   return obj?.mesh ?? obj?.template ?? obj?.shape;
+    // }).filter(Boolean)
+    //
+    // this.sprite.filters.push(maskFilter);
 
     this._maskSprite = new PIXI.Sprite();
     this.parent.addChild(this._maskSprite);
@@ -1739,7 +1764,7 @@ export default class CanvasEffect extends PIXI.Container {
       mask.anchor.set(0.5, 0.5);
       mask.position.set(mask.width / 2, mask.height / 2)
 
-      if (game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) {
+      if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE) {
 
         const elevation = game.settings.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME, 'token_elevation') && mask.placeableObject.document?.elevation
           ? (canvas.scene.grid.distance / mask.placeableObject.document.elevation * mask.placeableObject.document.height)
@@ -2073,9 +2098,9 @@ export default class CanvasEffect extends PIXI.Container {
 
   _tweakRotationForIsometric() {
 
-    if (!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active) return;
+    if (!CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE) return;
 
-    if(this.data.stretchTo) {
+    if (this.data.stretchTo) {
 
       let skew = Math.normalizeRadians(this.rotationContainer.rotation - Math.PI / 4);
 
@@ -2086,11 +2111,16 @@ export default class CanvasEffect extends PIXI.Container {
       this.isometricContainer.skew.set(Math.normalizeRadians(skew), 0);
       this.isometricContainer.rotation = 0;
 
-    }else{
+    } else if (this.data?.isometric?.overlay) {
 
+      this.rotationContainer.rotation = 0;
       let skew = Math.PI / 4 + this.rotationContainer.rotation;
       this.isometricContainer.skew.set(Math.normalizeRadians(skew - Math.PI / 4), 0);
       this.isometricContainer.scale.set(1.0, window.scale ?? CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION);
+
+    } else {
+
+      this.isometricContainer.rotation = 0;
 
     }
 

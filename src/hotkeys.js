@@ -1,9 +1,10 @@
 import CONSTANTS from "./constants.js";
 import { EffectPlayer, SelectionManager } from "./modules/sequencer-interaction-manager.js";
+import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 
 const hotkeys = {
   get _ready() {
-    return canvas.ready && canvas.sequencerEffects.active;
+    return canvas.ready && canvas.sequencerInterfaceLayer.active;
   },
 
   playTool: {
@@ -26,6 +27,16 @@ const hotkeys = {
       EffectPlayer.playMany = false;
       if (!EffectPlayer.isActive) return;
       EffectPlayer.playManyUp();
+    },
+    attachToDown: () => {
+      if (!hotkeys._ready) return;
+      PlayerSettings.attachTo.store.set(true);
+      PlayerSettings.stretchToAttach.store.set(true);
+    },
+    attachToUp: () => {
+      if (!hotkeys._ready) return;
+      PlayerSettings.attachTo.store.set(false);
+      PlayerSettings.stretchToAttach.store.set(false);
     }
   },
 
@@ -40,13 +51,14 @@ const hotkeys = {
     },
     attachToTargetDown: () => {
       if (!hotkeys._ready) return;
-      SelectionManager.attachToTarget = true;
       if (!SelectionManager.isActive) return;
-      SelectionManager.attachToTargetDown()
+      PlayerSettings.attachTo.store.set(true);
+      PlayerSettings.stretchToAttach.store.set(true);
     },
     attachToTargetUp: () => {
       if (!hotkeys._ready) return;
-      SelectionManager.attachToTarget = false;
+      PlayerSettings.attachTo.store.set(false);
+      PlayerSettings.stretchToAttach.store.set(false);
     },
     deleteDown: () => {
       if (!hotkeys._ready) return;
@@ -73,6 +85,15 @@ export default function registerHotkeys() {
     ],
     onDown: hotkeys.playTool.playManyDown,
     onUp: hotkeys.playTool.playManyUp
+  });
+
+  game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-alt", {
+    name: "SEQUENCER.Hotkeys.PlayTool.Alt",
+    editable: [
+      { key: "AltLeft" },
+    ],
+    onDown: hotkeys.playTool.attachToDown,
+    onUp: hotkeys.playTool.attachToDown
   });
 
   game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-control", {

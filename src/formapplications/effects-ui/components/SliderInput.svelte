@@ -7,7 +7,7 @@
   export let setting;
   export let lock = false;
   export let min = 0.1;
-  export let max = 3;
+  export let max = 2;
   export let maxInput = Infinity;
   export let step = 0.01;
   export let styles = {};

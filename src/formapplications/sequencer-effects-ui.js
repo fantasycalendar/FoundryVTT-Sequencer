@@ -327,7 +327,7 @@ export default class SequencerEffectsUI extends FormApplication {
     if (!lib.user_can_do("permissions-effect-create")) return;
 
     html.find('.activate-layer').click(async () => {
-      canvas.sequencerEffects.activate();
+      canvas.sequencerInterfaceLayer.activate();
       ui.controls.control.activeTool = "play-effect";
       await lib.wait(10)
       ui.controls.render();

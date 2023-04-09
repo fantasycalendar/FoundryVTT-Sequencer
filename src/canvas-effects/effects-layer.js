@@ -4,6 +4,17 @@ import CONSTANTS from "../constants.js";
 
 export class BaseEffectsLayer extends InteractionLayer {
 
+  static get layerOptions() {
+    return foundry.utils.mergeObject(super.layerOptions, {
+      elevation: 100000000,
+      name: "sequencerEffects"
+    });
+  }
+
+}
+
+export class SequencerInterfaceLayer extends InteractionLayer {
+
   constructor(...args) {
     super(...args);
   }
@@ -11,7 +22,7 @@ export class BaseEffectsLayer extends InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
-      name: "sequencerEffects"
+      name: "sequencerInterfaceEffects"
     });
   }
 
@@ -47,14 +58,14 @@ export class BaseEffectsLayer extends InteractionLayer {
       this.effectSelectionBorder.zIndex = 1;
 
       this.effectSourcePosition.interactive = true;
-      this.effectSourcePosition.pointerdown = () => {
+      this.effectSourcePosition.on("mousedown", () => {
         SelectionManager.sourcePointSelected();
-      }
+      })
 
       this.effectTargetPosition.interactive = true;
-      this.effectTargetPosition.pointerdown = () => {
+      this.effectTargetPosition.on("mousedown", () => {
         SelectionManager.targetPointSelected();
-      }
+      })
     }
   }
 

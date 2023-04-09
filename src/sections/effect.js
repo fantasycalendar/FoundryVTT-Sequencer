@@ -62,6 +62,7 @@ export default class EffectSection extends Section {
     this._aboveLighting = null;
     this._spriteScaleMin = 1.0;
     this._spriteScaleMax = null;
+    this._isometric = null;
     this._shapes = [];
     this._xray = null;
     this._playEffect = true;
@@ -1132,6 +1133,22 @@ export default class EffectSection extends Section {
   }
 
   /**
+   * Configures the isometric configuration of this effect
+   *
+   * @param inOptions
+   * @returns {EffectSection}
+   */
+  isometric(inOptions={}) {
+    if (typeof inOptions !== "object") throw this.sequence._customError(this, "isometric", `inOptions must be of type object`);
+    inOptions = foundry.utils.mergeObject({
+      overlay: false
+    }, inOptions)
+    if (typeof inOptions?.overlay !== "boolean") throw this.sequence._customError(this, "isometric", "inOptions.overlay must be of type boolean");
+    this._isometric = inOptions;
+    return this;
+  }
+
+  /**
    * @private
    */
   _expressWarnings() {
@@ -1445,6 +1462,7 @@ export default class EffectSection extends Section {
       masks: Array.from(new Set(this._masks)),
       shapes: this._shapes,
       volume: this._volume,
+      isometric: this._isometric,
 
       // Transforms
       scale: this._getCalculatedScale("scale"),

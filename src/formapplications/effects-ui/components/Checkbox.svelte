@@ -9,12 +9,19 @@
   export let inverse = false
   export let styles = {};
 
+	const id = "sequencer-input-" + randomID();
   const store = setting.store;
   const isLocked = lock ? lock.store : writable(inverse);
+
+  $: {
+    if($isLocked !== inverse){
+      $store = false;
+		}
+  }
 
 </script>
 
 <div style="display: flex; align-items: center;" use:applyStyles={styles}>
-	<input disabled={$isLocked !== inverse} style="height:15px;" type="checkbox" bind:checked={$store}/>
-	<label>{localize(setting.label)}</label>
+	<input id={id} disabled={$isLocked !== inverse} style="height:15px;" type="checkbox" bind:checked={$store}/>
+	<label for={id}>{localize(setting.label)}</label>
 </div>

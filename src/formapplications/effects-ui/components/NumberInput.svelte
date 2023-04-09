@@ -4,19 +4,20 @@
   import { writable } from "svelte/store";
 
   export let setting;
-  export let lock;
+  export let lock = false;
   export let inverse = false;
   export let styles = {};
 
+  const id = "sequencer-input-" + randomID();
   const store = setting.store;
   const isLocked = lock ? lock.store : writable(inverse);
 </script>
 
 <div style="display: flex; align-items: center;" use:applyStyles={styles}>
 	{#if localize(setting.label)}
-		<label>{localize(setting.label)}</label>
+		<label for={id}>{localize(setting.label)}</label>
 	{/if}
-	<input type="number" disabled={$isLocked !== inverse} bind:value={$store} on:change={() => { if($store === null) $store = 0; }}/>
+	<input id={id} type="number" disabled={$isLocked !== inverse} bind:value={$store} on:change={() => { if($store === null) $store = 0; }}/>
 </div>
 
 

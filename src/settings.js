@@ -160,13 +160,6 @@ export function registerSettings() {
     requiresReload: true
   });
 
-  game.settings.register(CONSTANTS.MODULE_NAME, "hyperspace-deprecation-warning", {
-    scope: "world",
-    config: false,
-    default: false,
-    type: Boolean
-  });
-
   game.settings.register(CONSTANTS.MODULE_NAME, "effectPresets", {
     scope: "client",
     default: {},
@@ -220,7 +213,7 @@ export function registerSettings() {
       name: CONSTANTS.MODULE_NAME,
       title: "Sequencer Layer",
       icon: "fas fa-list-ol",
-      layer: "sequencerEffects",
+      layer: "sequencerInterfaceLayer",
       visible: user_can_do("permissions-effect-create") && user_can_do("permissions-sidebar-tools"),
       activeTool: "select-effect",
       tools: [

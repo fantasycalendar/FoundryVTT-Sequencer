@@ -47,6 +47,7 @@
 
         "OffsetX":  "Offset X",
         "OffsetY":  "Offset Y",
+        "RandomOffset":  "Amount",
         "GridUnits":  "Grid Units",
 
         "Repeat":  "Repeat",
@@ -69,7 +70,8 @@
     "Hotkeys": {
       "PlayTool": {
         "Shift": "Player - Play multiple effects at the same time",
-        "Control": "Player - Play multiple effects one after another"
+        "Control": "Player - Play multiple effects one after another",
+        "Alt": "Player - Attach to object on canvas"
       },
       "SelectTool": {
         "Control": "Select - Snap to grid",

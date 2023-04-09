@@ -347,7 +347,7 @@ const flagManager = {
 
     await Actor.updateDocuments(Object.entries(actorUpdates).map(([actorId, effects]) => ({
       _id: actorId,
-      [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
+      [`prototypeToken.flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
     })));
 
   }, 250)
