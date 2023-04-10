@@ -283,11 +283,13 @@ export const EffectPlayer = {
     if(settings.fadeIn > 0) effect.fadeIn(settings.fadeIn)
     if(settings.fadeOut > 0) effect.fadeOut(settings.fadeOut)
 
+    const offsetData = settings.randomOffset ? { offset: { x: settings.offsetX, y: settings.offsetY }, gridUnits: settings.offsetGridUnits } : {};
+    const offsetSource = !settings.Dragging ? offsetData : {};
     const attachToObject = settings.attachTo ? canvaslib.get_closest_token(settings.startPos, { minimumDistance: canvas.grid.size }) : false;
     if (attachToObject) {
-      effect.attachTo(attachToObject, { randomOffset: settings.randomOffset && !settings.Dragging ? settings.randomOffsetAmount : false });
+      effect.attachTo(attachToObject, { randomOffset: settings.randomOffset && !settings.Dragging ? settings.randomOffsetAmount : false, ...offsetSource });
     } else {
-      effect.atLocation(settings.startPos, { randomOffset: settings.randomOffset && !settings.Dragging ? settings.randomOffsetAmount : false });
+      effect.atLocation(settings.startPos, { randomOffset: settings.randomOffset && !settings.Dragging ? settings.randomOffsetAmount : false, ...offsetSource });
     }
 
     if (settings.persist && settings.name && settings.name !== "" && settings.name !== "default" && settings.name !== "new") {
@@ -296,7 +298,7 @@ export const EffectPlayer = {
 
     if (settings.Dragging) {
       if (settings.moveTowards) {
-        effect.moveTowards(settings.endPos, { randomOffset: settings.randomOffset ? settings.randomOffsetAmount : false })
+        effect.moveTowards(settings.endPos, { randomOffset: settings.randomOffset ? settings.randomOffsetAmount : false, ...offsetData })
         if (settings.moveSpeed) {
           effect.moveSpeed(settings.moveSpeed)
         }
@@ -304,7 +306,7 @@ export const EffectPlayer = {
         let target = settings.stretchToAttach
           ? canvaslib.get_closest_token(settings.endPos, { minimumDistance: canvas.grid.size })
           : settings.endPos;
-        effect.stretchTo(target, { attachTo: settings.stretchToAttach, randomOffset: settings.randomOffset ? settings.randomOffsetAmount : false })
+        effect.stretchTo(target, { attachTo: settings.stretchToAttach, randomOffset: settings.randomOffset ? settings.randomOffsetAmount : false, ...offsetData })
       }
     } else {
       effect.scale(settings.scale)
