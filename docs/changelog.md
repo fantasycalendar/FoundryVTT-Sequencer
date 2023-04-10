@@ -1,6 +1,6 @@
 ## Changelog
 
-### Version 3.0.0 - Not released yet
+### Version 3.0.0
 - *Sequencer* - Updated Sequencer Database Viewer:
   - Improved UI and added nested tree view
   - Added ctrl modifier to buttons that copy paths, which adds quotes around the copied paths 
