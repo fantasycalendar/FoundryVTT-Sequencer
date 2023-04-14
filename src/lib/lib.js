@@ -111,12 +111,17 @@ export function is_function(inFunc) {
  * @param  {array}   inArray                    An array
  * @param  {boolean} recurse                    Whether to recurse if the randomly chosen element is also an array
  * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
+ * @param  {boolean} index                      Whether to return the chosen index instead
  * @return {object}                             A random element from the array
  */
-export function random_array_element(inArray, { recurse = false, twister = false } = {}) {
-  let choice = inArray[random_int_between(0, inArray.length, twister)];
+export function random_array_element(inArray, { recurse = false, twister = false, index = false } = {}) {
+  const chosenIndex = random_int_between(0, inArray.length, twister);
+  let choice = inArray[chosenIndex];
   if (recurse && Array.isArray(choice)) {
-    return random_array_element(choice, { recurse: true });
+    return random_array_element(choice, { recurse, twister, index });
+  }
+  if(index){
+    return chosenIndex;
   }
   return choice;
 }

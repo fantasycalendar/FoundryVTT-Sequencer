@@ -426,7 +426,6 @@ export const SelectionManager = {
    */
   async delete() {
     if (!this.selectedEffect) return;
-    debugger;
     await SequencerEffectManager.endEffects({ effects: this.selectedEffect });
     this.selectedEffect = false;
   },

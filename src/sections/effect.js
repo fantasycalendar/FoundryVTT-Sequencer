@@ -1172,7 +1172,7 @@ export default class EffectSection extends Section {
     const target = this._getTargetObject();
 
     if (!this._screenSpace && this._persistOptions?.persistTokenPrototype && this._masks.filter(uuid => uuid !== source).length > 0) {
-      this.sequence._showWarning(this, "persist", "You have applied persistTokenPrototype with multiple masks from objects in the scene - these will not be persisted to token prototype", true);
+      this.sequence._showWarning(this, "persist", "You have applied persistTokenPrototype with multiple masks from objects in the scene - these will not be persisted across scenes!", true);
     }
 
     if (!source && !target && !this._screenSpace) {

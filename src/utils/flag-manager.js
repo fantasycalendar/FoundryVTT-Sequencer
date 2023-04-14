@@ -26,7 +26,7 @@ const flagManager = {
    */
   getFlags(inDocument) {
 
-    let effects = getProperty(inDocument, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
+    let effects = getProperty(inDocument, CONSTANTS.EFFECTS_FLAG);
 
     if (!effects?.length) return [];
 
@@ -273,7 +273,7 @@ const flagManager = {
       let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
       let toRemove = flagsToRemove.get(objectUUID) ?? { effects: [], removeAll: false };
 
-      const existingFlags = new Map(getProperty(object, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`) ?? []);
+      const existingFlags = new Map(getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? []);
 
       if (toRemove?.removeAll) {
         toRemove.effects = Array.from(existingFlags).map(entry => entry[0]);
@@ -316,7 +316,7 @@ const flagManager = {
           updates: {},
           documents: {}
         };
-        sceneObjectsToUpdate[sceneId].updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = flagsToSet;
+        sceneObjectsToUpdate[sceneId].updates[CONSTANTS.EFFECTS_FLAG] = flagsToSet;
       } else if (!(object instanceof Actor)){
         const sceneId = object.parent.id;
         const docName = object.documentName;
@@ -331,7 +331,7 @@ const flagManager = {
         sceneObjectsToUpdate[sceneId].documents[docName].options = options;
         sceneObjectsToUpdate[sceneId].documents[docName].updates.push({
           _id: object.id,
-          [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: flagsToSet
+          [CONSTANTS.EFFECTS_FLAG]: flagsToSet
         })
       }
     }
@@ -349,7 +349,7 @@ const flagManager = {
 
     await Actor.updateDocuments(Object.entries(actorUpdates).map(([actorId, effects]) => ({
       _id: actorId,
-      [`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`]: effects
+      [CONSTANTS.EFFECTS_FLAG]: effects
     })));
 
   }, 250)

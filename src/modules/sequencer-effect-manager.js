@@ -160,7 +160,7 @@ export default class SequencerEffectManager {
     let effects = this.effects;
     if (inFilter.sceneId && inFilter.sceneId !== canvas.scene.id) {
       effects = lib.get_all_documents_from_scene(inFilter.sceneId).map(doc => {
-        return getProperty(doc, `flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`);
+        return getProperty(doc, CONSTANTS.EFFECTS_FLAG);
       }).filter(flags => !!flags).map(flags => {
         return flags.map(flag => CanvasEffect.make(flag[1]));
       }).deepFlatten();
@@ -395,7 +395,7 @@ export default class SequencerEffectManager {
       documentUuid = inDocument.uuid;
     }
 
-    updates[`flags.${CONSTANTS.MODULE_NAME}.${CONSTANTS.FLAG_NAME}`] = this.patchEffectDataForDocument(documentUuid, effects)
+    updates[CONSTANTS.EFFECTS_FLAG] = this.patchEffectDataForDocument(documentUuid, effects)
 
     return inDocument.updateSource(updates);
 

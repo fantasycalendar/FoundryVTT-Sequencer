@@ -81,7 +81,6 @@ export default {
   },
 
   async _validateCustomRange(inFile) {
-
     const finalFiles = {};
     const validRanges = Object.keys(SequencerFileRangeFind.ftToDistanceMap);
     for (const [range, rangeFile] of Object.entries(inFile)) {
@@ -92,13 +91,12 @@ export default {
     }
 
     return { file: finalFiles, forcedIndex: false, customRange: true };
-
   },
 
   _determineDatabaseFile(inFile) {
     const entries = Sequencer.Database.getEntry(inFile);
     const entry = Array.isArray(entries) ? lib.random_array_element(entries) : entries;
-    const match = inFile.match(/\[([0-9]+)]$/);
+    const match = inFile.match(/(\d)+$/);
     return { file: entry, forcedIndex: match ? Number(match[1]) : false, customRange: false };
   },
 

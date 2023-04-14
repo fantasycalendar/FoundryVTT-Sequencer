@@ -1,6 +1,8 @@
 import * as lib from "../lib/lib.js";
 import SequencerFileCache from "./sequencer-file-cache.js";
 
+const flipBookTextureCache = {};
+
 export class SequencerFileBase {
   static make(inData, inDBPath, inMetadata) {
 
@@ -25,7 +27,7 @@ export class SequencerFile extends SequencerFileBase {
     inData = foundry.utils.duplicate(inData);
     inMetadata = foundry.utils.duplicate(inMetadata);
     this.originalData = inData;
-    this.originalMetadata = inMetadata;
+    this.metadata = inMetadata;
     for (let [key, value] of Object.entries(inMetadata)) {
       this[key] = value;
     }
@@ -33,7 +35,7 @@ export class SequencerFile extends SequencerFileBase {
     this.moduleName = inDBPath.split('.')[0];
     this.originalFile = inData?.file ?? inData;
     this.file = foundry.utils.duplicate(this.originalFile);
-    this.fileIndex = false;
+    this.fileIndex = null;
 
     this.fileTextureMap = Object.fromEntries(this.getAllFiles().map(file => {
       return [file, false];
@@ -43,7 +45,7 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   clone() {
-    return SequencerFile.make(this.originalData, this.dbPath, this.originalMetadata);
+    return SequencerFile.make(this.originalData, this.dbPath, this.metadata);
   }
 
   async validate() {
@@ -76,14 +78,20 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   getFile() {
-
     if (Array.isArray(this.file)) {
-      return lib.is_real_number(this.fileIndex)
-        ? this.file[this.fileIndex]
-        : lib.random_array_element(this.file, { twister: this.twister });
+      this.fileIndex = lib.is_real_number(this.fileIndex)
+        ? this.fileIndex
+        : lib.random_array_element(this.file, { twister: this.twister, index: true });
+      return this.file[this.fileIndex];
     }
-
     return this.file;
+  }
+
+  getTimestamps(){
+    if(Array.isArray(this.metadata?.timestamps)){
+      return this.metadata?.timestamps?.[this.fileIndex] ?? this.metadata?.timestamps[0]
+    }
+    return this.metadata?.timestamps;
   }
 
   getPreviewFile(entry) {
@@ -101,6 +109,7 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   destroy() {
+    if(this.metadata?.flipbook) return;
     for (let texture of Object.values(this.fileTextureMap)) {
       if (!texture) continue;
       try {
@@ -137,12 +146,25 @@ export class SequencerFile extends SequencerFileBase {
     return this.template ? this.template[1] / width : undefined
   }
 
+  async _getFlipBookSheet(filePath){
+    if (!this.metadata?.flipbook) return false;
+    if(flipBookTextureCache[filePath]){
+      return flipBookTextureCache[filePath];
+    }
+    flipBookTextureCache[filePath] = this.file.map(file => {
+      return PIXI.Texture.from(file);
+    });
+    return flipBookTextureCache[filePath];
+  }
+
   async getTexture(distance) {
     const filePath = this.getFile();
     const texture = await this._getTexture(this.getFile());
+    const sheet = await this._getFlipBookSheet(filePath);
     return {
       filePath,
       texture,
+      sheet,
       spriteScale: this._adjustScaleForPadding(distance, texture.width),
       spriteAnchor: this._adjustAnchorForPadding(texture.width)
     };
@@ -177,12 +199,12 @@ export class SequencerFileRangeFind extends SequencerFile {
   }
 
   getFile(inFt) {
-
     if (inFt && this.file[inFt]) {
       if (Array.isArray(this.file[inFt])) {
-        return lib.is_real_number(this.fileIndex)
-          ? this.file[inFt][this.fileIndex]
+        const fileIndex = lib.is_real_number(this.fileIndex)
+          ? this.fileIndex
           : lib.random_array_element(this.file[inFt], { twister: this.twister });
+        return this.file[inFt][fileIndex]
       }
       return this.file[inFt];
     }
@@ -272,12 +294,12 @@ export class SequencerFileProxy extends SequencerFileBase {
     return new Proxy(this, {
       get(target, prop) {
         // Return the proxy's property if it has it
-        if(prop === "dbPath") return dbPath;
-        if(!sequencerEntry){
+        if (prop === "dbPath") return dbPath;
+        if (!sequencerEntry) {
           sequencerEntry = Sequencer.Database.getEntry(entry);
         }
         // If the path results in an array, grab a random element every time
-        if(Array.isArray(this.entry)){
+        if (Array.isArray(this.entry)) {
           return Reflect.get(lib.random_array_element(sequencerEntry), prop);
         }
         return Reflect.get(sequencerEntry, prop);

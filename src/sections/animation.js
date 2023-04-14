@@ -375,6 +375,7 @@ class AnimationSection extends Section {
 
       targetLocation.x += this._offset.x;
       targetLocation.y += this._offset.y;
+      targetLocation.elevation = targetLocation?.elevation ?? this._originObject?.elevation;
 
       if (this._moveTowards.relativeToCenter) {
         const dimensions = canvaslib.get_object_dimensions(this._originObject);
@@ -503,6 +504,7 @@ class AnimationSection extends Section {
           : canvaslib.get_object_position(this._teleportTo.target, { exact: true });
         targetLocation.x += this._offset.x;
         targetLocation.y += this._offset.y;
+        targetLocation.elevation = targetLocation?.elevation ?? this._originObject?.elevation;
         if (this._teleportTo.relativeToCenter) {
           const dimensions = canvaslib.get_object_dimensions(this._originObject);
           targetLocation.x -= dimensions.width / 2;

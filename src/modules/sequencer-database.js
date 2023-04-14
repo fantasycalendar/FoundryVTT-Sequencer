@@ -305,9 +305,11 @@ class Database {
    */
   _flatten(entries, inModule) {
     let flattened = lib.flatten_object(foundry.utils.duplicate({ [inModule]: entries }));
-    this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened)));
+    this.flattenedEntries = lib.make_array_unique(this.flattenedEntries.concat(Object.keys(flattened).map(file => file.split(".file")[0])));
     this.inverseFlattenedEntries = Object.keys(flattened)
-      .reduce((acc, entry) => acc.set(flattened[entry], entry), this.inverseFlattenedEntries);
+      .reduce((acc, entry) => {
+        return acc.set(flattened[entry], entry.split(".file")[0])
+      }, this.inverseFlattenedEntries);
   }
 
   /**
@@ -344,6 +346,7 @@ class Database {
         combinedPath = combinedPath ? combinedPath + "." + part : part;
         const entry = getProperty(entries, combinedPath);
         if (Array.isArray(entry) || typeof entry === "string" || entry?.file) {
+          metadata = this._getCleanData(entry, { existingData: metadata });
           break;
         }
         metadata = this._getCleanData(entry, { existingData: metadata });
