@@ -27,7 +27,7 @@ export class SequencerFile extends SequencerFileBase {
     inData = foundry.utils.duplicate(inData);
     inMetadata = foundry.utils.duplicate(inMetadata);
     this.originalData = inData;
-    this.metadata = inMetadata;
+    this.originalMetadata = inMetadata;
     for (let [key, value] of Object.entries(inMetadata)) {
       this[key] = value;
     }
@@ -45,7 +45,7 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   clone() {
-    return SequencerFile.make(this.originalData, this.dbPath, this.metadata);
+    return SequencerFile.make(this.originalData, this.dbPath, this.originalMetadata);
   }
 
   async validate() {
@@ -88,10 +88,10 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   getTimestamps(){
-    if(Array.isArray(this.metadata?.timestamps)){
-      return this.metadata?.timestamps?.[this.fileIndex] ?? this.metadata?.timestamps[0]
+    if(Array.isArray(this.originalMetadata?.timestamps)){
+      return this.originalMetadata?.timestamps?.[this.fileIndex] ?? this.originalMetadata?.timestamps[0]
     }
-    return this.metadata?.timestamps;
+    return this.originalMetadata?.timestamps;
   }
 
   getPreviewFile(entry) {
@@ -109,7 +109,7 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   destroy() {
-    if(this.metadata?.flipbook) return;
+    if(this.originalMetadata?.flipbook) return;
     for (let texture of Object.values(this.fileTextureMap)) {
       if (!texture) continue;
       try {
@@ -147,7 +147,7 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   async _getFlipBookSheet(filePath){
-    if (!this.metadata?.flipbook) return false;
+    if (!this.originalMetadata?.flipbook) return false;
     if(flipBookTextureCache[filePath]){
       return flipBookTextureCache[filePath];
     }

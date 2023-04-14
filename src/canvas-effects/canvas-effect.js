@@ -2975,7 +2975,7 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   _setupTimestampHook(offset){
-    if(!this._file?.metadata?.timestamps || this._ended) return;
+    if(!this._file?.originalMetadata?.timestamps || this._ended) return;
     const timestamps = this._file.getTimestamps();
     const timestampArray = Array.isArray(timestamps) ? timestamps : [timestamps];
     for(const timestamp of timestampArray){
