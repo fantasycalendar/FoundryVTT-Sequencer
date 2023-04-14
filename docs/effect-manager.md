@@ -61,7 +61,8 @@ This will return any effect(s) that match the given filters. If an object is giv
 ```js
 inFilters = {
     name: String, // From the .name() method on effects, can have wildcards in them (such as "fireball_*" to match anything that starts with "fireball_")
-    object: PlaceableObject|String,  // Token, Tile, etc, or its id
+    object: PlaceableObject|String,  // Token, Tile, etc, or its id,
+    effects: CanvasEffect|String,  // The actual effect, or an ID of an effect,
     source: PlaceableObject|Document|String, // Token, Tile, etc, Document, or an UUID
     target: PlaceableObject|Document|String, // Token, Tile, etc, Document, or an UUID
     sceneId: String, // Default to current scene ID
@@ -75,7 +76,7 @@ inFilters = {
 ```js
 
 // Ends every effect named "test_effect"
-await Sequencer.EffectManager.endEffects({ name: "test_effect" })`
+await Sequencer.EffectManager.endEffects({ name: "test_effect" })
 
 // Ends effects named "test_effect" on a specific token
 await Sequencer.EffectManager.endEffects({ name: "test_effect", object: token })

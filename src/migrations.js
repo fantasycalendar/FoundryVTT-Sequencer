@@ -18,15 +18,15 @@ export default async function runMigrations() {
   }
 }
 
-function getSequencerEffectTokens(version, filter = () => true) {
+function getSequencerEffectTokens(version, tokenFilter = (t) => {
+  const effects = getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
+  const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
+  return effectsOutOfDate.length;
+}) {
   return Array.from(game.scenes)
     .map(scene => ([
       scene,
-      Array.from(scene.tokens).filter(t => {
-        const effects = getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
-        const effectsOutOfDate = effects.filter(e => isNewerVersion(e[1], version));
-        return effectsOutOfDate.length;
-      }).filter(filter)
+      Array.from(scene.tokens).filter(tokenFilter)
     ]))
     .filter(([_, tokens]) => tokens.length);
 }
@@ -35,36 +35,53 @@ const migrations = {
 
   "3.0.0": async (version) => {
 
-    const tokensOnScenes = getSequencerEffectTokens(version, (token) => {
-      return token.actorLink;
+    const tokensOnScenes = getSequencerEffectTokens(version, (t) => {
+      const effects = getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
+      const prototypeTokenEffects = getProperty(t.actor, "prototypeToken."+CONSTANTS.EFFECTS_FLAG) ?? [];
+      const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
+      const prototypeEffectsOutOfDate = prototypeTokenEffects.filter(e => isNewerVersion(version, e[1].flagVersion));
+      return effectsOutOfDate.length || prototypeEffectsOutOfDate.length;
     });
 
     const actorUpdates = {};
+    const actorTokenPrototypeUpdates = {};
 
     for (const [scene, tokens] of tokensOnScenes) {
 
       const updates = [];
       for (const token of tokens) {
 
-        const effectsToMoveToActor = getProperty(t, CONSTANTS.EFFECTS_FLAG)
+        const effectsToMoveFromTokenPrototype = getProperty(token.actor.prototypeToken, CONSTANTS.EFFECTS_FLAG)
           .filter(([_, effect]) => {
             return effect.persistOptions?.persistTokenPrototype;
           })
           .map(([id, effect]) => {
-            effect.version = version;
+            effect.flagVersion = version;
+            effect.source = token.uuid;
             return [id, effect];
           });
 
-        if (!actorUpdates[token.actor.id]) actorUpdates[token.actor.id] = [];
-
-        actorUpdates[token.actor.id].push(...effectsToMoveToActor);
-
-        const effectsToKeepOnToken = getProperty(t, CONSTANTS.EFFECTS_FLAG)
+        const effectsToKeepOnTokenPrototype = getProperty(token.actor.prototypeToken, CONSTANTS.EFFECTS_FLAG)
           .filter(([_, effect]) => {
             return !effect.persistOptions?.persistTokenPrototype;
           })
           .map(([id, effect]) => {
-            effect.version = version;
+            effect.flagVersion = version;
+            return [id, effect];
+          });
+
+        if (!actorUpdates[token.actor.id]) actorUpdates[token.actor.id] = [];
+        if (!actorTokenPrototypeUpdates[token.actor.id]) actorTokenPrototypeUpdates[token.actor.id] = [];
+
+        actorUpdates[token.actor.id].push(...effectsToMoveFromTokenPrototype);
+        actorTokenPrototypeUpdates[token.actor.id].push(...effectsToKeepOnTokenPrototype)
+
+        const effectsToKeepOnToken = getProperty(token, CONSTANTS.EFFECTS_FLAG)
+          .filter(([_, effect]) => {
+            return !effect.persistOptions?.persistTokenPrototype;
+          })
+          .map(([id, effect]) => {
+            effect.flagVersion = version;
             return [id, effect];
           });
 
@@ -84,7 +101,8 @@ const migrations = {
     const actorUpdateArray = Object.entries(actorUpdates).map(([actorId, effects]) => {
       return {
         _id: actorId,
-        [CONSTANTS.EFFECTS_FLAG]: effects
+        [CONSTANTS.EFFECTS_FLAG]: effects,
+        ["prototypeToken." + CONSTANTS.EFFECTS_FLAG]: actorTokenPrototypeUpdates[actorId]
       }
     });
 
@@ -92,7 +110,6 @@ const migrations = {
       console.log(`Sequencer | Updated ${actorUpdateArray.length} actors' effects to version ${version}`);
       await Actor.updateDocuments(actorUpdateArray);
     }
-
 
   }
 

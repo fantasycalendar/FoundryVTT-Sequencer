@@ -883,7 +883,7 @@ Examples:
 - `.filter("Glow", { color: 0xFF0000 })`
 - `.filter("Blur", { blurX: 5, blurY: 10 })`
 
-This method adds a filter to the effect that is playing. Filters are listed [here](api/filter/filter.md).
+This method adds a filter to the effect that is playing. Filters are listed [here](api/filter.md).
 
 You may "stack" multiple filters on top of each other, and they will work in concert with each other.
 

@@ -145,9 +145,11 @@
 
     &-header {
       display: flex;
+      align-items: center;
       flex-direction: row;
 
       > select {
+				flex: 0 1 auto;
         border-radius: 5px 0 0 5px;
         border-right: 0;
         height: 28px;
@@ -158,6 +160,11 @@
         padding-left: 0.5rem;
         height: 28px;
       }
+
+			> label {
+				flex: 1 0 auto;
+        padding-right: 0.25rem;
+			}
     }
 
     &-entries-container {

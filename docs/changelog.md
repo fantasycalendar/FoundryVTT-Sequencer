@@ -10,7 +10,8 @@
 - *Sequencer* - Added `.toJSON()` and `.fromJSON()` to Sequences to be able to be serialized and deserialized; only sequences with effects, sounds, and scrolling texts can be serialized
 - *Sequencer* - Added options to `.play()`, which may contain an object; currently supports `{ remote: true/false }` which will serialize the sequence (see above), and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed 
 - *Sequencer* - Added database support for `_timestamps` metadata on effect files, which will trigger the `sequencerEffectTimestamp` hook when effects reach the point of the timestamps for that file 
-- *Sequencer* - Added support for flipbook-type effects
+- *Sequencer* - Added support for flipbook-type effects through a `_flipbook` database tag
+- *Effects* - Fixed `stretchTo` effects would be visible when not in vision
 - *Effects* - Vastly improved how effects are replicated on linked tokens when `.persist()`'s `persistPrototypeToken` is enabled
 
 ### Version 2.414

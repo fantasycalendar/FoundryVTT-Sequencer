@@ -22,6 +22,7 @@ import { DatabaseViewerApp } from "./formapplications/database/database-viewer-a
 import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 import CONSTANTS from "./constants.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
+import runMigrations from "./migrations.js";
 
 Hooks.once('init', async function () {
   if (!game.modules.get("socketlib")?.active) return;
@@ -39,6 +40,8 @@ Hooks.once('ready', async function () {
     ui.notifications.error("Sequencer requires the SocketLib module to be active and will not work without it!", { console: false });
     throw new Error("Sequencer requires the SocketLib module to be active and will not work without it!");
   }
+
+  await runMigrations();
 
   PlayerSettings.migrateOldPresets();
 

@@ -1,12 +1,15 @@
 ## Class Definitions
+
 All of the methods are listed in the [Sequencer Database wiki article](database/database.md).
 
 ## Opening the Database Viewer
 
 You can open database viewer by calling:
+
 ```js
 Sequencer.DatabaseViewer.show()
 ```
+
 or by pressing this button:
 
 ![Image showing the button to open the Effect Manager](images/database-viewer-button.jpg)
@@ -29,24 +32,24 @@ Registering files is as easy as shown below:
 
 ```js
 const database = {
-    effects: {
-        generic: {
-            explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
-        }
-    },
-    sounds: {
-        generic: {
-            explosions: [
-                "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
-                "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_02.ogg",
-                "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_03.ogg"
-            ]
-        }
+  effects: {
+    generic: {
+      explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
     }
+  },
+  sounds: {
+    generic: {
+      explosions: [
+        "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
+        "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_02.ogg",
+        "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_03.ogg"
+      ]
+    }
+  }
 }
 
 Hooks.on("sequencerReady", () => {
-    Sequencer.Database.registerEntries("your_module_name", database);
+  Sequencer.Database.registerEntries("your_module_name", database);
 });
 ```
 
@@ -62,31 +65,33 @@ In the above example, I registered one explosion effect and three sounds, which 
 
 ```js
 new Sequence()
-    .effect()
-        .file("your_module_name.effects.generic.explosions")
-        .atLocation(token)
+  .effect()
+    .file("your_module_name.effects.generic.explosions")
+    .atLocation(token)
     .sound()
-        .file("your_module_name.sounds.generic.explosions")
-    .play()
+    .file("your_module_name.sounds.generic.explosions")
+  .play()
 ```
 
 This will play the explosion effect on the selected token, and play one of the sounds in the list, which is picked randomly. If `sounds.generic.explosions` was just one file, it would play just that one sound.
 
 In addition, if you were to add multiple file paths like this:
+
 ```js
 const database = {
-    effects: {
-        generic: {
-            explosions: {
-                red: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_red_01.webm",
-                blue: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_blue_01.webm",
-                green: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_green_01.webm",
-                purple: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_purple_01.webm"
-            }
-        }
+  effects: {
+    generic: {
+      explosions: {
+        red: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_red_01.webm",
+        blue: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_blue_01.webm",
+        green: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_green_01.webm",
+        purple: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_purple_01.webm"
+      }
     }
+  }
 }
 ```
+
 A user could put this into the effect: `your_module_name.effects.generic.explosions` and the Sequencer would pick one random explosion from your colors.
 
 ## Range-finding effects
@@ -95,19 +100,20 @@ In addition, if you define your structure like this:
 
 ```js
 const database = {
-    fire_bolt: {
-        dark_red: {
-            "30ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
-            "60ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
-            "90ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm"
-        }
+  fire_bolt: {
+    dark_red: {
+      "30ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
+      "60ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
+      "90ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm"
     }
+  }
 }
 ```
 
 This will make it so that if you pass `your_module_name.fire_bolt.dark_red` to an effect in the Sequencer, and the effect has a source and a target, the Sequencer will determine the best one to use for the distance between the source and the target.
 
 The current supported ranges are:
+
 - "05ft"
 - "15ft"
 - "30ft"
@@ -128,23 +134,23 @@ In this case, you simply need to define a `_templates` section at the start of y
 
 ```js
 const database = {
-    _templates: { // Grid size, start point, end point
-        "default": [200, 0, 0],
-        "ranged": [200, 200, 200]
+  _templates: { // Grid size, start point, end point
+    "default": [200, 0, 0],
+    "ranged": [200, 200, 200]
+  },
+  effects: {
+    fire_bolt: {
+      dark_red: {
+        _template: "ranged",
+        "30ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
+        "60ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
+        "90ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm"
+      }
     },
-    effects: {
-        fire_bolt: {
-            dark_red: {
-                _template: "ranged",
-                "30ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
-                "60ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
-                "90ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm"
-            }
-        },
-        generic: {
-            explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
-        }
-    },
+    generic: {
+      explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
+    }
+  },
 }
 ```
 
@@ -163,12 +169,14 @@ See the difference between having no template and having a template:
 If you define the following structure:
 
 ```js
-complete: {
+const database = {
+  complete: {
     _markers: {
-        loop: { start: 1533, end: 5566 },
-        forcedEnd: 6566
+      loop: { start: 1533, end: 5566 },
+      forcedEnd: 6566
     },
     blue: "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_03_Regular_Blue_Complete_400x400.webm"
+  }
 }
 ```
 
@@ -180,7 +188,7 @@ This is applied to every file on the same level and below.
 
 ## Time ranges within files
 
-Last, but not least, is the fact that you also have the ability to add specific timeranges to the database.
+You also have the ability to add specific timeranges to the database.
 
 By defining `_timeRange` within a portion of your database, either next to a `file` or within a section shown below, loading that file from the database will automatically set up the timeranges to be played.
 
@@ -188,17 +196,78 @@ This means you can have one sound file with multiple portions within it that can
 
 ```js
 const database = {
-    sounds: {
-        generic: {
-            _timeRange: [0, 100],
-            explosion: "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
-        },
-        steps: [
-            { file: "Music/Sound_Effects/Steps.wav", _timeRange: [0, 100] },
-            { file: "Music/Sound_Effects/Steps.wav", _timeRange: [120, 220] },
-            { file: "Music/Sound_Effects/Steps.wav", _timeRange: [240, 340] },
-            { file: "Music/Sound_Effects/Steps.wav", _timeRange: [360, 480] },
-        ]
-    }
+  sounds: {
+    generic: {
+      _timeRange: [0, 100],
+      explosion: "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
+    },
+    steps: [
+      { file: "Music/Sound_Effects/Steps.wav", _timeRange: [0, 100] },
+      { file: "Music/Sound_Effects/Steps.wav", _timeRange: [120, 220] },
+      { file: "Music/Sound_Effects/Steps.wav", _timeRange: [240, 340] },
+      { file: "Music/Sound_Effects/Steps.wav", _timeRange: [360, 480] },
+    ]
+  }
+}
+```
+
+## Timestamps within files
+
+In addition to time ranges, which segments the file's playback, you can also define timestamps.
+
+In this case, `_timestamps` can either be an array of numbers, or an array of an array of numbers. The difference between the two is simply how you structured your files near that metadata.
+
+The example below shows `dagger.white` being a single file, so it uses a single depth array, but since `halberd.dark_orangepuple` is an array of 5 files, `_timestamps` needs to be an array of five different arrays containing the timestamps.
+
+Whenever a timestamp is reached in the playback of the effect, the `sequencerEffectTimestamp` hook will be called.
+
+```js
+const database = {
+  dagger: {
+    _timestamps: [
+      1000
+    ],
+    white: "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Dagger01_01_Regular_White_30ft_1600x400.webm"
+  },
+  halberd: {
+    _timestamps: [
+      [1000],
+      [1250],
+      [1250, 1350],
+      [1250],
+      [1250]
+    ],
+    dark_orangepurple: [
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_01_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_02_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_03_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_04_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_05_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_06_Dark_OrangePurple_800x600.webm'
+    ]
+  }
+}
+```
+
+## Flipbook textures
+
+Another feature of the database is being able to bundle up files into flipbook assets. These act like normal animated files, but are comprised of several separate textures that give the impression of an animated webm.
+
+If you define `_flipbook: true` anywhere near files, they will become a single file that will animate accordingly. This is great for performance, since Foundry keeps all the textures in memory, which means that duplicating the same effect 100 times will cost almost as much as just 10.
+
+The default FPS for these assets is 24 frames per second. 
+
+```js
+const database = {
+  border_multiple_images: {
+    file: [
+      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00000.webp",
+      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00001.webp",
+      ...
+      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00094.webp",
+      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00095.webp"
+    ],
+    _flipbook: true
+  },
 }
 ```

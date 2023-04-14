@@ -96,6 +96,10 @@ function playFile(entry) {
 
   if (isImage) {
     databaseStore.elements.image.src = file;
+    databaseStore.metadata.set({
+      type: "Image",
+      duration: "n/a"
+    });
     return;
   }
 

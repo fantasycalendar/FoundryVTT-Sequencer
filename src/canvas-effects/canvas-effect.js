@@ -1274,9 +1274,15 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (this._isRangeFind && (this.data.stretchTo?.attachTo?.active || this.data.attachTo?.active)) {
 
-      const sprite = this.data.tilingTexture
-        ? new PIXI.TilingSprite(this._texture)
-        : new PIXI.Sprite(this._texture);
+      let sprite;
+      let spriteType = this.data.tilingTexture
+        ? PIXI.TilingSprite
+        : SpriteMesh;
+      if (!this.data.xray && !this.data.aboveLighting) {
+        sprite = new spriteType(texture, VisionSamplerShader);
+      } else {
+        sprite = new spriteType();
+      }
       this._relatedSprites[this._currentFilePath] = sprite;
       this.sprite.addChild(sprite);
 
@@ -1287,9 +1293,15 @@ export default class CanvasEffect extends PIXI.Container {
 
           let texture = await this._file._getTexture(filePath);
 
-          const sprite = this.data.tilingTexture
-            ? new PIXI.TilingSprite(texture)
-            : new PIXI.Sprite(texture);
+          let sprite;
+          let spriteType = this.data.tilingTexture
+            ? PIXI.TilingSprite
+            : SpriteMesh;
+          if (!this.data.xray && !this.data.aboveLighting) {
+            sprite = new spriteType(texture, VisionSamplerShader);
+          } else {
+            sprite = new spriteType();
+          }
           sprite.renderable = false;
           this._relatedSprites[filePath] = sprite;
           this.sprite.addChild(sprite);
@@ -2973,6 +2985,7 @@ export default class CanvasEffect extends PIXI.Container {
         realTimestamp += this._endTime;
       }
       setTimeout(() => {
+        if(this._ended) return;
         Hooks.callAll("sequencerEffectTimestamp", this, this._file);
         if(this.mediaLooping){
           const offsets = (this._endTime - this.mediaCurrentTime) * -1000;
