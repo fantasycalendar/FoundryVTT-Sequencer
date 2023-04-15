@@ -2019,7 +2019,8 @@ export default class CanvasEffect extends PIXI.Container {
     setTimeout(() => {
       this.renderable = renderable;
       this.spriteContainer.alpha = alpha ?? 1.0;
-    }, 30);
+      this.alpha = 1.0;
+    }, 25);
 
   }
 
