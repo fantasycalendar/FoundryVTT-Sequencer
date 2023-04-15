@@ -60,16 +60,15 @@
 <style lang="scss">
 
   .effects-container {
-    height: 100%;
-    width: 100%;
     min-width: 300px;
 		min-height: 563px;
+    max-width: 300px;
+		max-height: 563px;
     display: flex;
     flex-direction: column;
 
 		& > div {
       padding: 5px 0;
-      max-height: calc(425px - 5rem);
       overflow-y: scroll;
       overflow-x: hidden;
       flex: 1;

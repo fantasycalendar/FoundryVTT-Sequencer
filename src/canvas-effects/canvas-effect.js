@@ -75,6 +75,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._resolve = null;
     this._durationResolve = null;
 
+    this.ready = false;
     this._ended = false;
     this._isEnding = false;
 
@@ -971,6 +972,7 @@ export default class CanvasEffect extends PIXI.Container {
    * @private
    */
   async _initialize(play = true) {
+    this.ready = false;
     this._initializeVariables();
     await this._contextLostCallback();
     await this._loadTexture();
@@ -985,6 +987,7 @@ export default class CanvasEffect extends PIXI.Container {
     this._setEndTimeout();
     this._timeoutVisibility();
     if (play) await this.playMedia();
+    this.ready = true;
   }
 
   /**
@@ -1021,24 +1024,6 @@ export default class CanvasEffect extends PIXI.Container {
     // An offset container for the sprite
     this.spriteContainer = this.isometricContainer.addChild(new PIXI.Container());
     this.spriteContainer.id = this.id + "-spriteContainer";
-
-    // The sprite itself
-    const args = [this.spriteSheet ? this.spriteSheet : null];
-    if(!this.data.xray && !this.data.aboveLighting && !this.spriteSheet){
-      args.push(VisionSamplerShader);
-    }
-
-    const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : SpriteMesh;
-    const sprite = new spriteType(...args);
-    this.sprite = this.spriteContainer.addChild(sprite);
-    this.sprite.id = this.id + "-sprite";
-
-    this.animatedSprite = false;
-    if (this.spriteSheet) {
-      this.animatedSprite = true;
-      this.sprite.animationSpeed = 0.4;
-      this.sprite.loop = false;
-    }
 
     this._template = this.data.template;
     this._ended = null;
@@ -1270,6 +1255,23 @@ export default class CanvasEffect extends PIXI.Container {
       this._currentFilePath = filePath;
       this._texture = texture;
       this.spriteSheet = sheet;
+    }
+
+    const args = [this.spriteSheet ? this.spriteSheet : null];
+    if(!this.data.xray && !this.data.aboveLighting && !this.spriteSheet){
+      args.push(VisionSamplerShader);
+    }
+
+    const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : SpriteMesh;
+    const sprite = new spriteType(...args);
+    this.sprite = this.spriteContainer.addChild(sprite);
+    this.sprite.id = this.id + "-sprite";
+
+    this.animatedSprite = false;
+    if (this.spriteSheet) {
+      this.animatedSprite = true;
+      this.sprite.animationSpeed = 0.4;
+      this.sprite.loop = false;
     }
 
     if (this._isRangeFind && (this.data.stretchTo?.attachTo?.active || this.data.attachTo?.active)) {
@@ -1557,7 +1559,7 @@ export default class CanvasEffect extends PIXI.Container {
       const targetSort = this.target ? this.targetMesh.sort + (this.data.isometric?.overlay ? 1 : -1) : 0;
       this.sort = Math.max(sourceSort, targetSort);
     } else {
-      this.sort = !lib.is_real_number(this.data.zIndex) ? 100000 - this.data.index : 100000 + this.data.zIndex;
+      this.sort = !lib.is_real_number(this.data.zIndex) ? this.data.index + this.parent.children.length : 100000 + this.data.zIndex;
     }
     this.elevation = effectElevation;
     this.parent.sortChildren();

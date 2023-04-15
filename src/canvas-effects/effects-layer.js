@@ -139,7 +139,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
     if (SelectionManager.hoveredEffectUI) effects.add(SelectionManager.hoveredEffectUI)
     for (const effect of effects) {
       if (!effect || effect === SelectionManager.selectedEffect || effect.data.screenSpace || effect._isEnding) continue;
-      this._drawBoxAroundEffect(this.effectHoverBoxes, effect);
+        this._drawBoxAroundEffect(this.effectHoverBoxes, effect);
     }
   }
 
@@ -151,7 +151,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
 
   _drawBoxAroundEffect(graphic, effect, selected = false) {
 
-    if (!effect || effect._destroyed || !effect.spriteContainer) return;
+    if (!effect || effect._destroyed || !effect.spriteContainer || !effect.ready) return;
 
     graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xFFFFFF, 0.9)
 

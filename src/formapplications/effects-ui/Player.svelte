@@ -54,9 +54,10 @@
 		<button class="activate-layer" type="button" on:click={() => activateLayer()}>{localize("SEQUENCER.Player.SwitchToLayer")}</button>
 
 		<div class="file-settings">
-			<input bind:value={$fileStore} class="file-input flex3" list="dblist"
+			<input bind:value={$fileStore} class="file-input flex3"
+             list="dblist"
 						 placeholder='{localize("SEQUENCER.Player.PathInput")}'
-						 type="text">
+						 type="text"/>
 			<button class="custom-file-picker small-button" type="button"><i class="fas fa-file-import"></i></button>
 			<datalist id="dblist">
 				{#each suggestions as suggestion}
@@ -186,13 +187,25 @@
 
   .small-button {
     flex: 0 0 24px;
+    min-width: 30px;
     line-height: 24px;
     margin: -1px 0 -1px 4px;
     order: 99;
+    text-align: center;
+
+    i {
+      margin: 0;
+    }
   }
 
 	.user-settings {
     margin-bottom: 0.5rem;
 	}
+
+  .scrolling-text {
+
+  }
+
+  /* jb2a.breath_weapons02.burst.cone.arcana */
 
 </style>

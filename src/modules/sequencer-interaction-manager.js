@@ -459,6 +459,10 @@ export const SelectionManager = {
 
     if (!this.selectedEffect) return;
 
+    if(this.selectedEffect.data.stretchTo && !this.sourceOrTarget){
+      return;
+    }
+
     let showCursor = false;
     let showPoint = this.snapToGrid;
 
@@ -493,11 +497,12 @@ export const SelectionManager = {
 
   _updateEffect() {
 
+    if (!this.selectedEffect) return;
+
     const updates = {
       attachTo: this.selectedEffect.data.attachTo,
       stretchTo: this.selectedEffect.data.stretchTo
     }
-
 
     const obj = this.attachToTarget ? canvaslib.get_closest_token(this.suggestedProperties.position, {
       minimumDistance: canvas.grid.size,
