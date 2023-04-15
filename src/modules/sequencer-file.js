@@ -203,7 +203,7 @@ export class SequencerFileRangeFind extends SequencerFile {
       if (Array.isArray(this.file[inFt])) {
         const fileIndex = lib.is_real_number(this.fileIndex)
           ? this.fileIndex
-          : lib.random_array_element(this.file[inFt], { twister: this.twister });
+          : lib.random_array_element(this.file[inFt], { twister: this.twister, index: true });
         return this.file[inFt][fileIndex]
       }
       return this.file[inFt];
