@@ -664,7 +664,9 @@ export default class CanvasEffect extends PIXI.Container {
       this._cachedSourceData.rotation = rotation;
     }
 
-    const alpha = (this.source instanceof TokenDocument || this.source instanceof TileDocument) ? this.sourceDocument?.alpha ?? 1.0 : 1.0;
+    const alpha = (this.sourceDocument instanceof TokenDocument || this.sourceDocument instanceof TileDocument)
+      ? this.sourceDocument?.alpha ?? 1.0
+      : 1.0;
 
     if (alpha !== undefined) {
       this._cachedSourceData.alpha = alpha;
@@ -728,7 +730,9 @@ export default class CanvasEffect extends PIXI.Container {
       this._cachedTargetData.rotation = rotation;
     }
 
-    const alpha = (this.target instanceof TokenDocument || this.target instanceof TileDocument) ? this.targetDocument?.alpha ?? 1.0 : 1.0;
+    const alpha = (this.targetDocument instanceof TokenDocument || this.targetDocument instanceof TileDocument)
+      ? this.targetDocument?.alpha ?? 1.0
+      : 1.0;
 
     if (alpha !== undefined) {
       this._cachedTargetData.alpha = alpha;
@@ -1944,9 +1948,12 @@ export default class CanvasEffect extends PIXI.Container {
     const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
     const attachedToTarget = (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) && lib.is_UUID(this.data.target);
 
+    this.renderable = false;
+    this.alpha = 0.0;
+
     const baseRenderable = this.shouldPlayVisible;
     let renderable = baseRenderable;
-    let alpha = 1.0;
+    let alpha = null;
 
     if (attachedToSource) {
 
@@ -1979,8 +1986,9 @@ export default class CanvasEffect extends PIXI.Container {
           }
         });
       }
+
       if (this.data.attachTo?.bindAlpha) {
-        alpha = this.spriteContainer.alpha;
+        alpha = this._cachedSourceData.alpha;
       }
 
     }
@@ -2010,7 +2018,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     setTimeout(() => {
       this.renderable = renderable;
-      this.spriteContainer.alpha = alpha;
+      this.spriteContainer.alpha = alpha ?? 1.0;
     }, 30);
 
   }
