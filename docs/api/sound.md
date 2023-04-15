@@ -1,16 +1,18 @@
 ### What is this?
+
 This part of the Sequencer makes playing sounds easy, including fading the sound in or out, playing for specific players, etc.
 
 ### How do I use this?
 
 When creating a sound section, you can assemble these methods like this:
+
 ```js
 new Sequence()
-    .sound()
-        .file("Music/Sound_Effects/Phoenix_Cry.wav")
-        .fadeInAudio(500)
-        .fadeOutAudio(500)
-    .play()
+  .sound()
+  .file("Music/Sound_Effects/Phoenix_Cry.wav")
+  .fadeInAudio(500)
+  .fadeOutAudio(500)
+  .play();
 ```
 
 <hr/>
@@ -52,6 +54,7 @@ It is highly recommended that you do not load too many files at the same time, a
 Causes the sound not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the sound or sound to play.
 
 Below is an example of a function used in this method, which would cause this sound or sound to only be played about 50% of the time.
+
 ```js
 .playIf(() => {
 	return Math.random() < 0.5;
@@ -204,7 +207,7 @@ We recommend users and creators alike read the documentation on the [Sequencer d
 
 ## Add override
 
-Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct modifications of sound's data. For example, it could be manipulated to change which file will be used based  on the distance to the target.
+Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct modifications of sound's data. For example, it could be manipulated to change which file will be used based on the distance to the target.
 
 ```js
 .addOverride(async (sound, data) => {

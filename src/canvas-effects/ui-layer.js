@@ -1,7 +1,5 @@
 export default class SequencerUILayer {
-
   constructor(name, zIndex = 0.1) {
-
     this.canvas = document.createElement("canvas");
     this.canvas.id = name;
 
@@ -24,7 +22,7 @@ export default class SequencerUILayer {
       view: this.canvas,
       antialias: true,
       backgroundAlpha: 0.0,
-      sharedTicker: true
+      sharedTicker: true,
     });
 
     this.app.resizeTo = window;
@@ -36,7 +34,6 @@ export default class SequencerUILayer {
     this.app.stage.addChild(this.container);
 
     this.app.ticker.add(this.tick.bind(this));
-
   }
 
   get effects() {
@@ -45,9 +42,9 @@ export default class SequencerUILayer {
 
   static setup() {
     return {
-      "below": new this("sequencerUILayerBelow"),
-      "above": new this("sequencerUILayerAbove", 10000)
-    }
+      below: new this("sequencerUILayerBelow"),
+      above: new this("sequencerUILayerAbove", 10000),
+    };
   }
 
   tick() {
@@ -55,17 +52,15 @@ export default class SequencerUILayer {
   }
 
   removeContainerByEffect(inEffect) {
-    const child = this.children.find(child => child === inEffect);
+    const child = this.children.find((child) => child === inEffect);
     if (!child) return;
     this.container.removeChild(child);
   }
 
   updateAnchoredElements() {
-
     for (let effect of this.effects) {
-
       let screenSpaceAnchor = effect.data.screenSpaceAnchor;
-      let screenSpacePosition = effect.data.screenSpacePosition
+      let screenSpacePosition = effect.data.screenSpacePosition;
 
       if (!screenSpaceAnchor) {
         if (!effect.data.anchor) {
@@ -83,7 +78,7 @@ export default class SequencerUILayer {
       }
 
       if (!screenSpacePosition) {
-        screenSpacePosition = { x: 0, y: 0 }
+        screenSpacePosition = { x: 0, y: 0 };
       }
 
       effect.position.set(
@@ -92,7 +87,6 @@ export default class SequencerUILayer {
       );
 
       if (effect.data.screenSpaceScale) {
-
         const scaleData = effect.data.screenSpaceScale ?? { x: 1, y: 1 };
 
         let scaleX = scaleData.x;
@@ -109,15 +103,8 @@ export default class SequencerUILayer {
         scaleX = scaleData.ratioX ? scaleY : scaleX;
         scaleY = scaleData.ratioY ? scaleX : scaleY;
 
-        effect.scale.set(
-          scaleX,
-          scaleY
-        )
-
+        effect.scale.set(scaleX, scaleY);
       }
-
     }
-
   }
-
 }

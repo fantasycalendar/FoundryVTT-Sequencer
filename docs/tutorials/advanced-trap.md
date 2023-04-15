@@ -17,11 +17,13 @@ _[Click here to go to the advanced macro](#advanced-macro)_
 ![Token walking over the triggering tile, which stops it and then explodes](../images/trap-tutorial/trap-triggered-explosion-final.gif)
 
 ### Required modules
-* [Sequencer](https://foundryvtt.com/packages/sequencer)
-* [Monk's Active Tile Triggers](https://foundryvtt.com/packages/monks-active-tiles)
-* [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
+
+- [Sequencer](https://foundryvtt.com/packages/sequencer)
+- [Monk's Active Tile Triggers](https://foundryvtt.com/packages/monks-active-tiles)
+- [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
 
 **Steps:**
+
 1. [Create a new macro](#1-create-a-new-macro)
 2. [Add test line to Macro](#2-add-test-line-to-Macro)
 3. [Add a new tile and hide it](#3-add-a-new-tile-and-hide-it)
@@ -83,10 +85,12 @@ Replace the contents of the `Callback-Fire-Trap` macro with the following:
 
 ```js
 new Sequence()
-    .effect()
-        .file("modules/jb2a_patreon/Library/Generic/Explosion/Explosion_01_Orange_400x400.webm")
-        .atLocation(token)
-    .play()
+  .effect()
+  .file(
+    "modules/jb2a_patreon/Library/Generic/Explosion/Explosion_01_Orange_400x400.webm"
+  )
+  .atLocation(token)
+  .play();
 ```
 
 As you can see, the macro will start a `new Sequence()`, which will play an `.effect()` with a `.file()`, but `.atLocation()` determined by who triggered it, the **token**, and then we immediately `.play()` it!
@@ -120,13 +124,15 @@ Now, as you can see, when the tile is triggered, the tile stops the token from m
 ![Token walking over an arrow pressure plate and then arrows fly from the left and right.](../images/trap-tutorial/dungeon-trap-triggered-final.gif)
 
 ### Required Modules
-* [Sequencer](https://foundryvtt.com/packages/sequencer)
-* [Monk's Active Tile Triggers](https://foundryvtt.com/packages/monks-active-tiles)
-* [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
-* [Tagger](https://foundryvtt.com/packages/tagger)
-* [Midi Quality of Life Improvements](https://foundryvtt.com/packages/midi-qol)
+
+- [Sequencer](https://foundryvtt.com/packages/sequencer)
+- [Monk's Active Tile Triggers](https://foundryvtt.com/packages/monks-active-tiles)
+- [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
+- [Tagger](https://foundryvtt.com/packages/tagger)
+- [Midi Quality of Life Improvements](https://foundryvtt.com/packages/midi-qol)
 
 **Steps:**
+
 1. [Create three hidden tiles and tag them](#1-Create-three-hidden-tiles-and-tag-them)
 2. [Set up the triggers](#2-Set-up-the-triggers)
 3. [Create Trap Actor](#3-Create-Trap-Actor)
@@ -207,9 +213,7 @@ const trapItem = trapActor.items.getName("Arrow Trap Attack");
 
 new MidiQOL.TrapWorkflow(trapActor, trapItem, [token]);
 
-Hooks.once("midi-qol.RollComplete", async function(result){
-    
-});
+Hooks.once("midi-qol.RollComplete", async function (result) {});
 ```
 
 Once the `TrapWorkflow` is finished, the function inside the `midi-qol.RollComplete` hook will run, with the `result` of the trap's attack and saving throw available to us.
@@ -226,11 +230,9 @@ const trapItem = trapActor.items.getName("Arrow Trap Attack");
 
 new MidiQOL.TrapWorkflow(trapActor, trapItem, [token]);
 
-Hooks.once("midi-qol.RollComplete", async function(result){
-    
-    const [leftTile] = await Tagger.getByTag('left-trap-source');
-    const [rightTile] = await Tagger.getByTag('right-trap-source');
-
+Hooks.once("midi-qol.RollComplete", async function (result) {
+  const [leftTile] = await Tagger.getByTag("left-trap-source");
+  const [rightTile] = await Tagger.getByTag("right-trap-source");
 });
 ```
 
@@ -248,31 +250,28 @@ const trapItem = trapActor.items.getName("Arrow Trap Attack");
 
 new MidiQOL.TrapWorkflow(trapActor, trapItem, [token]);
 
-Hooks.once("midi-qol.RollComplete", async function(result) {
+Hooks.once("midi-qol.RollComplete", async function (result) {
+  const [leftTile] = await Tagger.getByTag("left-trap-source");
+  const [rightTile] = await Tagger.getByTag("right-trap-source");
 
-    const [leftTile] = await Tagger.getByTag('left-trap-source');
-    const [rightTile] = await Tagger.getByTag('right-trap-source');
-
-    new Sequence()
-        .effect()
-            .file("jb2a.arrow.physical.white.01")
-            .atLocation(leftTile, { randomOffset: true })
-            .stretchTo(rightTile, { randomOffset: true })
-            .repeats(5, 30, 60)
-        .effect()
-            .file("jb2a.arrow.physical.white.01")
-            .atLocation(rightTile, { randomOffset: true })
-            .stretchTo(leftTile, { randomOffset: true })
-            .repeats(5, 30, 60)
-        .play();
-
+  new Sequence()
+    .effect()
+    .file("jb2a.arrow.physical.white.01")
+    .atLocation(leftTile, { randomOffset: true })
+    .stretchTo(rightTile, { randomOffset: true })
+    .repeats(5, 30, 60)
+    .effect()
+    .file("jb2a.arrow.physical.white.01")
+    .atLocation(rightTile, { randomOffset: true })
+    .stretchTo(leftTile, { randomOffset: true })
+    .repeats(5, 30, 60)
+    .play();
 });
 ```
 
 As you can see, we're playing two `.effect()`s, both of the them are using the JB2A white arrow `.file()` in the Sequencer Database. These are being spawned at the left tile and attacking the right tile, and vice versa, but also targeting a random space within the opposite tile with a `randomOffset`. Each side `.repeats()` 5 times, with a random delay between 30 and 60 milliseconds.
 
 ![Token walking over an arrow pressure plate and then arrows fly from the left and right.](../images/trap-tutorial/dungeon-trap-triggered.gif)
-
 
 ### 9. Macro: Make arrows hit the token if they failed their save
 
@@ -295,26 +294,25 @@ const trapItem = trapActor.items.getName("Arrow Trap Attack");
 
 new MidiQOL.TrapWorkflow(trapActor, trapItem, [token]);
 
-Hooks.once("midi-qol.RollComplete", async function(result) {
+Hooks.once("midi-qol.RollComplete", async function (result) {
+  const [leftTile] = await Tagger.getByTag("left-trap-source");
+  const [rightTile] = await Tagger.getByTag("right-trap-source");
 
-    const [leftTile] = await Tagger.getByTag('left-trap-source');
-    const [rightTile] = await Tagger.getByTag('right-trap-source');
+  const leftTarget = result.failedSaves.has(token) ? token : leftTile;
+  const rightTarget = result.failedSaves.has(token) ? token : rightTile;
 
-    const leftTarget = result.failedSaves.has(token) ? token : leftTile;
-    const rightTarget = result.failedSaves.has(token) ? token : rightTile;
-
-    new Sequence()
-        .effect()
-            .file("jb2a.arrow.physical.white.01")
-            .atLocation(leftTile, { randomOffset: true })
-            .stretchTo(rightTarget, { randomOffset: true }) // <----------------------- Right here
-            .repeats(5, 30, 60)
-        .effect()
-            .file("jb2a.arrow.physical.white.01")
-            .atLocation(rightTile, { randomOffset: true })
-            .stretchTo(leftTarget, { randomOffset: true }) // <---------------------- and right here
-            .repeats(5, 30, 60)
-        .play();
+  new Sequence()
+    .effect()
+    .file("jb2a.arrow.physical.white.01")
+    .atLocation(leftTile, { randomOffset: true })
+    .stretchTo(rightTarget, { randomOffset: true }) // <----------------------- Right here
+    .repeats(5, 30, 60)
+    .effect()
+    .file("jb2a.arrow.physical.white.01")
+    .atLocation(rightTile, { randomOffset: true })
+    .stretchTo(leftTarget, { randomOffset: true }) // <---------------------- and right here
+    .repeats(5, 30, 60)
+    .play();
 });
 ```
 

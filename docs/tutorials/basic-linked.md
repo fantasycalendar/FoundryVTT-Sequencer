@@ -17,12 +17,14 @@ You will see a lot of `> Macro so far` after every step. You can click on this t
 <hr/>
 
 ## Required modules
-* [Sequencer](https://foundryvtt.com/packages/sequencer)
-* [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
+
+- [Sequencer](https://foundryvtt.com/packages/sequencer)
+- [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
 
 <hr/>
 
 ## Steps:
+
 1. [Create a new macro](#_1-Create-a-new-macro)
 2. [Make a new Sequence](#_2-Make-a-new-Sequence)
 3. [Start an effect section](#_3-Start-an-effect-section)
@@ -49,7 +51,7 @@ Since we can't play an effect without a Sequence, just add `new Sequence()` to t
   <summary><strong>Macro so far</strong></summary><br />
 
 ```js
-new Sequence()
+new Sequence();
 ```
 
 </details>
@@ -64,8 +66,7 @@ And, since we're playing an effect, you'll want to add `.effect()` below the `ne
   <summary><strong>Macro so far</strong></summary><br />
 
 ```js
-new Sequence()
-    .effect()
+new Sequence().effect();
 ```
 
 </details>
@@ -86,14 +87,11 @@ Simply click on the `Database` button on the `jb2a.energy_beam.normal.bluepink.0
 
 Add a `.file()` section and paste the copied `jb2a.energy_beam.normal.bluepink.03` into it.
 
-
 <details>
   <summary><strong>Macro so far</strong></summary><br />
 
 ```js
-new Sequence()
-    .effect()
-        .file("jb2a.energy_beam.normal.bluepink.03")
+new Sequence().effect().file("jb2a.energy_beam.normal.bluepink.03");
 ```
 
 </details>
@@ -109,9 +107,9 @@ In order for the effect to be **attached to** the token, we'll need to add `.att
 
 ```js
 new Sequence()
-    .effect()
-        .file("jb2a.energy_beam.normal.bluepink.03")
-        .attachTo(token)
+  .effect()
+  .file("jb2a.energy_beam.normal.bluepink.03")
+  .attachTo(token);
 ```
 
 </details>
@@ -139,10 +137,10 @@ Then, add the following to the bottom of the macro - `.stretchTo(target, { attac
 const target = game.user.targets.first();
 
 new Sequence()
-    .effect()
-        .file("jb2a.energy_beam.normal.bluepink.03")
-        .attachTo(token)
-        .stretchTo(target, { attachTo: true })
+  .effect()
+  .file("jb2a.energy_beam.normal.bluepink.03")
+  .attachTo(token)
+  .stretchTo(target, { attachTo: true });
 ```
 
 </details>
@@ -162,12 +160,12 @@ Then, at the very end, just add `.play()`. Think of the Sequence as the recipe, 
 const target = game.user.targets.first();
 
 new Sequence()
-    .effect()
-        .file("jb2a.energy_beam.normal.bluepink.03")
-        .attachTo(token)
-        .stretchTo(target, { attachTo: true })
-        .persist()
-    .play()
+  .effect()
+  .file("jb2a.energy_beam.normal.bluepink.03")
+  .attachTo(token)
+  .stretchTo(target, { attachTo: true })
+  .persist()
+  .play();
 ```
 
 </details>
@@ -182,12 +180,12 @@ Select a token, target another token, run the macro.
 const target = game.user.targets.first();
 
 new Sequence()
-    .effect()
-        .file("jb2a.energy_beam.normal.bluepink.03")
-        .attachTo(token)
-        .stretchTo(target, { attachTo: true })
-        .persist()
-    .play()
+  .effect()
+  .file("jb2a.energy_beam.normal.bluepink.03")
+  .attachTo(token)
+  .stretchTo(target, { attachTo: true })
+  .persist()
+  .play();
 ```
 
 ![A token that is linked from a human into a werebear, and then back.](../images/basic-tutorials/linked-token-effect.gif)

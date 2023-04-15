@@ -27,5 +27,5 @@ export default {
   tint,
   location,
   offset,
-  text
+  text,
 };

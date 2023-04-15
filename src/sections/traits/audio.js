@@ -1,7 +1,6 @@
 import { is_real_number } from "../../lib/lib.js";
 
 export default {
-
   /**
    * Base properties
    */
@@ -16,7 +15,12 @@ export default {
    * @returns this
    */
   volume(inVolume) {
-    if (!is_real_number(inVolume)) throw this.sequence._customError(this, "volume", "inVolume must be of type number");
+    if (!is_real_number(inVolume))
+      throw this.sequence._customError(
+        this,
+        "volume",
+        "inVolume must be of type number"
+      );
     this._volume = Math.max(0, Math.min(1.0, inVolume));
     return this;
   },
@@ -29,18 +33,41 @@ export default {
    * @returns this
    */
   fadeInAudio(duration, options = {}) {
-    if (typeof options !== "object") throw this.sequence._customError(this, "fadeInAudio", "options must be of type object");
-    options = foundry.utils.mergeObject({
-      ease: "linear",
-      delay: 0
-    }, options);
-    if (!is_real_number(duration)) throw this.sequence._customError(this, "fadeInAudio", "duration must be of type number");
-    if (typeof options.ease !== "string") throw this.sequence._customError(this, "fadeInAudio", "options.ease must be of type string");
-    if (!is_real_number(options.delay)) throw this.sequence._customError(this, "fadeInAudio", "options.delay must be of type number");
+    if (typeof options !== "object")
+      throw this.sequence._customError(
+        this,
+        "fadeInAudio",
+        "options must be of type object"
+      );
+    options = foundry.utils.mergeObject(
+      {
+        ease: "linear",
+        delay: 0,
+      },
+      options
+    );
+    if (!is_real_number(duration))
+      throw this.sequence._customError(
+        this,
+        "fadeInAudio",
+        "duration must be of type number"
+      );
+    if (typeof options.ease !== "string")
+      throw this.sequence._customError(
+        this,
+        "fadeInAudio",
+        "options.ease must be of type string"
+      );
+    if (!is_real_number(options.delay))
+      throw this.sequence._customError(
+        this,
+        "fadeInAudio",
+        "options.delay must be of type number"
+      );
     this._fadeInAudio = {
       duration: duration,
       ease: options.ease,
-      delay: options.delay
+      delay: options.delay,
     };
     return this;
   },
@@ -53,20 +80,42 @@ export default {
    * @returns this
    */
   fadeOutAudio(duration, options = {}) {
-    if (typeof options !== "object") throw this.sequence._customError(this, "fadeOutAudio", "options must be of type object");
-    options = foundry.utils.mergeObject({
-      ease: "linear",
-      delay: 0
-    }, options);
-    if (!is_real_number(duration)) throw this.sequence._customError(this, "fadeOutAudio", "duration must be of type number");
-    if (typeof options.ease !== "string") throw this.sequence._customError(this, "fadeOutAudio", "ease must be of type string");
-    if (!is_real_number(options.delay)) throw this.sequence._customError(this, "fadeOutAudio", "delay must be of type number");
+    if (typeof options !== "object")
+      throw this.sequence._customError(
+        this,
+        "fadeOutAudio",
+        "options must be of type object"
+      );
+    options = foundry.utils.mergeObject(
+      {
+        ease: "linear",
+        delay: 0,
+      },
+      options
+    );
+    if (!is_real_number(duration))
+      throw this.sequence._customError(
+        this,
+        "fadeOutAudio",
+        "duration must be of type number"
+      );
+    if (typeof options.ease !== "string")
+      throw this.sequence._customError(
+        this,
+        "fadeOutAudio",
+        "ease must be of type string"
+      );
+    if (!is_real_number(options.delay))
+      throw this.sequence._customError(
+        this,
+        "fadeOutAudio",
+        "delay must be of type number"
+      );
     this._fadeOutAudio = {
       duration: duration,
       ease: options.ease,
-      delay: options.delay
+      delay: options.delay,
     };
     return this;
-  }
-
-}
+  },
+};

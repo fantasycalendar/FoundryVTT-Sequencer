@@ -1,20 +1,21 @@
-import { EffectPlayer, InteractionManager, SelectionManager } from "../modules/sequencer-interaction-manager.js";
+import {
+  EffectPlayer,
+  InteractionManager,
+  SelectionManager,
+} from "../modules/sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
 export class BaseEffectsLayer extends InteractionLayer {
-
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
-      name: "sequencerEffects"
+      name: "sequencerEffects",
     });
   }
-
 }
 
 export class SequencerInterfaceLayer extends InteractionLayer {
-
   constructor(...args) {
     super(...args);
   }
@@ -22,7 +23,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
-      name: "sequencerInterfaceEffects"
+      name: "sequencerInterfaceEffects",
     });
   }
 
@@ -47,9 +48,15 @@ export class SequencerInterfaceLayer extends InteractionLayer {
       this.lineHead = this.UIContainer.addChild(new PIXI.Graphics());
       this.suggestionPoint = this.UIContainer.addChild(new PIXI.Graphics());
       this.effectHoverBoxes = this.UIContainer.addChild(new PIXI.Graphics());
-      this.effectSelectionBorder = this.UIContainer.addChild(new PIXI.Graphics());
-      this.effectSourcePosition = this.UIContainer.addChild(new PIXI.Graphics());
-      this.effectTargetPosition = this.UIContainer.addChild(new PIXI.Graphics());
+      this.effectSelectionBorder = this.UIContainer.addChild(
+        new PIXI.Graphics()
+      );
+      this.effectSourcePosition = this.UIContainer.addChild(
+        new PIXI.Graphics()
+      );
+      this.effectTargetPosition = this.UIContainer.addChild(
+        new PIXI.Graphics()
+      );
 
       this.suggestionPoint.filters = [new PIXI.filters.AlphaFilter(0.75)];
       this.effectSourcePosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
@@ -60,17 +67,16 @@ export class SequencerInterfaceLayer extends InteractionLayer {
       this.effectSourcePosition.interactive = true;
       this.effectSourcePosition.on("mousedown", () => {
         SelectionManager.sourcePointSelected();
-      })
+      });
 
       this.effectTargetPosition.interactive = true;
       this.effectTargetPosition.on("mousedown", () => {
         SelectionManager.targetPointSelected();
-      })
+      });
     }
   }
 
-  async _draw(...args) {
-  }
+  async _draw(...args) {}
 
   render(...args) {
     super.render(...args);
@@ -86,30 +92,32 @@ export class SequencerInterfaceLayer extends InteractionLayer {
 
   _clearChildren() {
     if (!this.UIContainer) return;
-    this.UIContainer.children.forEach(child => {
+    this.UIContainer.children.forEach((child) => {
       child.clear();
     });
   }
 
   _drawLine() {
+    if (
+      !EffectPlayer.startPos ||
+      !EffectPlayer.endPos ||
+      game?.activeTool !== "play-effect"
+    )
+      return;
 
-    if (!EffectPlayer.startPos || !EffectPlayer.endPos || game?.activeTool !== "play-effect") return;
-
-    this.line.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 1)
+    this.line.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 1);
     // If line already present then set its position only
     this.line.moveTo(EffectPlayer.startPos.x, EffectPlayer.startPos.y);
     this.line.lineTo(EffectPlayer.endPos.x, EffectPlayer.endPos.y);
-
   }
 
   _drawPoints() {
-
     if (game?.activeTool !== "play-effect") return;
 
     const startPos = EffectPlayer.startPos || EffectPlayer.cursorPos;
 
     this.linePoint.beginFill(CONSTANTS.COLOR.PRIMARY);
-    this.linePoint.drawCircle(startPos.x, startPos.y, 5)
+    this.linePoint.drawCircle(startPos.x, startPos.y, 5);
 
     if (EffectPlayer.sourceAttachFound) {
       this._drawCrossAtLocation(this.linePoint, startPos);
@@ -123,84 +131,136 @@ export class SequencerInterfaceLayer extends InteractionLayer {
     this.lineHead.moveTo(0, -5);
     this.lineHead.lineTo(-15, 30);
     this.lineHead.lineTo(15, 30);
-    this.lineHead.endFill()
+    this.lineHead.endFill();
     this.lineHead.rotation = angle + Math.PI / 2;
-    this.lineHead.position.set(EffectPlayer.endPos.x, EffectPlayer.endPos.y)
+    this.lineHead.position.set(EffectPlayer.endPos.x, EffectPlayer.endPos.y);
 
     if (EffectPlayer.targetAttachFound) {
       this.linePoint.beginFill(CONSTANTS.COLOR.SECONDARY);
       this._drawCrossAtLocation(this.linePoint, EffectPlayer.endPos);
     }
-
   }
 
   _drawHoveredEffectElements() {
     const effects = new Set(SelectionManager.hoveredEffects);
-    if (SelectionManager.hoveredEffectUI) effects.add(SelectionManager.hoveredEffectUI)
+    if (SelectionManager.hoveredEffectUI)
+      effects.add(SelectionManager.hoveredEffectUI);
     for (const effect of effects) {
-      if (!effect || effect === SelectionManager.selectedEffect || effect.data.screenSpace || effect._isEnding) continue;
-        this._drawBoxAroundEffect(this.effectHoverBoxes, effect);
+      if (
+        !effect ||
+        effect === SelectionManager.selectedEffect ||
+        effect.data.screenSpace ||
+        effect._isEnding
+      )
+        continue;
+      this._drawBoxAroundEffect(this.effectHoverBoxes, effect);
     }
   }
 
   _drawSelectedEffectElements() {
     if (!SelectionManager.selectedEffect) return;
-    this._drawBoxAroundEffect(this.effectSelectionBorder, SelectionManager.selectedEffect, true);
+    this._drawBoxAroundEffect(
+      this.effectSelectionBorder,
+      SelectionManager.selectedEffect,
+      true
+    );
     this._drawEffectStartEndPoints(SelectionManager.selectedEffect);
   }
 
   _drawBoxAroundEffect(graphic, effect, selected = false) {
+    if (
+      !effect ||
+      effect._destroyed ||
+      !effect.spriteContainer ||
+      !effect.ready
+    )
+      return;
 
-    if (!effect || effect._destroyed || !effect.spriteContainer || !effect.ready) return;
-
-    graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xFFFFFF, 0.9)
+    graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xffffff, 0.9);
 
     const boundingBox = effect.sprite.getLocalBounds();
     const dimensions = {
-      x: effect.position.x + (boundingBox.x * effect.sprite.scale.x),
-      y: effect.position.y + (boundingBox.y * effect.sprite.scale.y),
+      x: effect.position.x + boundingBox.x * effect.sprite.scale.x,
+      y: effect.position.y + boundingBox.y * effect.sprite.scale.y,
       width: boundingBox.width * effect.sprite.scale.x,
-      height: boundingBox.height * effect.sprite.scale.y
-    }
+      height: boundingBox.height * effect.sprite.scale.y,
+    };
 
-    const rotation = Math.normalizeRadians(effect.rotationContainer.rotation + effect.spriteContainer.rotation + effect.sprite.rotation);
+    const rotation = Math.normalizeRadians(
+      effect.rotationContainer.rotation +
+        effect.spriteContainer.rotation +
+        effect.sprite.rotation
+    );
 
     this._drawRectangle(graphic, effect.position, rotation, dimensions);
-
   }
 
   _drawRectangle(graphic, position, rotation, dimensions) {
+    graphic.moveTo(
+      ...canvaslib.rotate_coordinate(
+        position,
+        {
+          x: dimensions.x,
+          y: dimensions.y,
+        },
+        -rotation
+      )
+    );
 
-    graphic.moveTo(...canvaslib.rotate_coordinate(position, {
-      x: dimensions.x,
-      y: dimensions.y
-    }, -rotation))
+    graphic.lineTo(
+      ...canvaslib.rotate_coordinate(
+        position,
+        {
+          x: dimensions.x + dimensions.width,
+          y: dimensions.y,
+        },
+        -rotation
+      )
+    );
 
-    graphic.lineTo(...canvaslib.rotate_coordinate(position, {
-      x: dimensions.x + dimensions.width,
-      y: dimensions.y
-    }, -rotation))
+    graphic.lineTo(
+      ...canvaslib.rotate_coordinate(
+        position,
+        {
+          x: dimensions.x + dimensions.width,
+          y: dimensions.y + dimensions.height,
+        },
+        -rotation
+      )
+    );
 
-    graphic.lineTo(...canvaslib.rotate_coordinate(position, {
-      x: dimensions.x + dimensions.width,
-      y: dimensions.y + dimensions.height
-    }, -rotation))
+    graphic.lineTo(
+      ...canvaslib.rotate_coordinate(
+        position,
+        {
+          x: dimensions.x,
+          y: dimensions.y + dimensions.height,
+        },
+        -rotation
+      )
+    );
 
-    graphic.lineTo(...canvaslib.rotate_coordinate(position, {
-      x: dimensions.x,
-      y: dimensions.y + dimensions.height
-    }, -rotation))
+    graphic.lineTo(
+      ...canvaslib.rotate_coordinate(
+        position,
+        {
+          x: dimensions.x,
+          y: dimensions.y,
+        },
+        -rotation
+      )
+    );
 
-    graphic.lineTo(...canvaslib.rotate_coordinate(position, {
-      x: dimensions.x,
-      y: dimensions.y
-    }, -rotation))
-
-    graphic.lineTo(...canvaslib.rotate_coordinate(position, {
-      x: dimensions.x + dimensions.width,
-      y: dimensions.y
-    }, -rotation))
-
+    graphic.lineTo(
+      ...canvaslib.rotate_coordinate(
+        position,
+        {
+          x: dimensions.x + dimensions.width,
+          y: dimensions.y,
+        },
+        -rotation
+      )
+    );
   }
 
   /**
@@ -208,58 +268,92 @@ export class SequencerInterfaceLayer extends InteractionLayer {
    * @private
    */
   _drawEffectStartEndPoints(effect) {
-
     if (!effect || effect._destroyed || !effect.spriteContainer) return;
 
-    if (!effect.data.stretchTo || !effect.sourcePosition || !effect.targetPosition) return;
+    if (
+      !effect.data.stretchTo ||
+      !effect.sourcePosition ||
+      !effect.targetPosition
+    )
+      return;
 
     this.effectSourcePosition.beginFill(CONSTANTS.COLOR.PRIMARY);
-    this.effectSourcePosition.drawCircle(effect.sourcePosition.x, effect.sourcePosition.y, canvas.grid.size * 0.25)
+    this.effectSourcePosition.drawCircle(
+      effect.sourcePosition.x,
+      effect.sourcePosition.y,
+      canvas.grid.size * 0.25
+    );
 
     if (typeof effect.data.source === "string") {
-      this._drawCrossAtLocation(this.effectSourcePosition, effect.sourcePosition);
+      this._drawCrossAtLocation(
+        this.effectSourcePosition,
+        effect.sourcePosition
+      );
     }
 
     this.effectTargetPosition.beginFill(CONSTANTS.COLOR.SECONDARY);
-    this.effectTargetPosition.drawCircle(effect.targetPosition.x, effect.targetPosition.y, canvas.grid.size * 0.25)
+    this.effectTargetPosition.drawCircle(
+      effect.targetPosition.x,
+      effect.targetPosition.y,
+      canvas.grid.size * 0.25
+    );
     this.effectTargetPosition.alpha = 0.75;
 
     if (typeof effect.data.target === "string") {
-      this._drawCrossAtLocation(this.effectTargetPosition, effect.targetPosition);
+      this._drawCrossAtLocation(
+        this.effectTargetPosition,
+        effect.targetPosition
+      );
     }
   }
 
   _drawSuggestionPoint() {
-
-    if (!SelectionManager.suggestedProperties || !SelectionManager.selectedEffect) return;
+    if (
+      !SelectionManager.suggestedProperties ||
+      !SelectionManager.selectedEffect
+    )
+      return;
 
     const effect = SelectionManager.selectedEffect;
     const suggestion = SelectionManager.suggestedProperties;
 
-    this.suggestionPoint.position.set(0, 0)
+    this.suggestionPoint.position.set(0, 0);
     this.suggestionPoint.rotation = 0;
 
     if (effect.data.stretchTo) {
       this.suggestionPoint.beginFill(suggestion.color);
-      this.suggestionPoint.drawCircle(suggestion.position.x, suggestion.position.y, canvas.grid.size * 0.25);
+      this.suggestionPoint.drawCircle(
+        suggestion.position.x,
+        suggestion.position.y,
+        canvas.grid.size * 0.25
+      );
       if (suggestion.showCursor) {
         this._drawCrossAtLocation(this.suggestionPoint, suggestion.position);
       }
       return;
     }
 
-    const boundingBox = effect.spriteContainer.getLocalBounds()
+    const boundingBox = effect.spriteContainer.getLocalBounds();
 
     const dimensions = {
       x: boundingBox.x * effect.scale.x,
       y: boundingBox.y * effect.scale.y,
       width: boundingBox.width * effect.scale.x,
       height: boundingBox.height * effect.scale.y,
-    }
+    };
 
-    this.suggestionPoint.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 0.9)
-    this.suggestionPoint.position.set(suggestion.position.x, suggestion.position.y);
-    this._drawRectangle(this.suggestionPoint, suggestion.position, effect.rotation, dimensions, true);
+    this.suggestionPoint.lineStyle(3, CONSTANTS.COLOR.PRIMARY, 0.9);
+    this.suggestionPoint.position.set(
+      suggestion.position.x,
+      suggestion.position.y
+    );
+    this._drawRectangle(
+      this.suggestionPoint,
+      suggestion.position,
+      effect.rotation,
+      dimensions,
+      true
+    );
 
     if (suggestion.showCursor) {
       this.suggestionPoint.beginFill(CONSTANTS.COLOR.SECONDARY);
@@ -267,7 +361,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
     }
 
     if (suggestion.showPoint) {
-      this.suggestionPoint.drawCircle(0, 0, canvas.grid.size * 0.2)
+      this.suggestionPoint.drawCircle(0, 0, canvas.grid.size * 0.2);
     }
   }
 
@@ -276,20 +370,18 @@ export class SequencerInterfaceLayer extends InteractionLayer {
       inPosition.x + canvas.grid.size * -0.05,
       inPosition.y + canvas.grid.size * -0.5,
       canvas.grid.size * 0.1,
-      canvas.grid.size,
-    )
+      canvas.grid.size
+    );
     inElement.drawRect(
       inPosition.x + canvas.grid.size * -0.5,
       inPosition.y + canvas.grid.size * -0.05,
       canvas.grid.size,
-      canvas.grid.size * 0.1,
-    )
+      canvas.grid.size * 0.1
+    );
   }
-
 }
 
 export class UIEffectsLayer extends InteractionLayer {
-
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       zIndex: 999999999999999,
@@ -318,9 +410,7 @@ export class UIEffectsLayer extends InteractionLayer {
 let layer = false;
 
 export class SequencerAboveUILayer {
-
   constructor(name, zIndex = 0.1) {
-
     this.canvas = document.createElement("canvas");
     this.canvas.id = name;
 
@@ -343,11 +433,10 @@ export class SequencerAboveUILayer {
       view: this.canvas,
       antialias: true,
       backgroundAlpha: 0.0,
-      sharedTicker: true
+      sharedTicker: true,
     });
 
     this.app.resizeTo = window;
-
   }
 
   static setup() {
@@ -360,13 +449,12 @@ export class SequencerAboveUILayer {
   }
 
   static removeContainerByEffect(inEffect) {
-    const child = this.getLayer().children.find(child => child === inEffect);
+    const child = this.getLayer().children.find((child) => child === inEffect);
     if (!child) return;
     this.getLayer().removeChild(child);
   }
 
   updateTransform() {
-
     if (this.app.stage.sortableChildren && this.app.stage.sortDirty) {
       this.app.stage.sortChildren();
     }
@@ -381,7 +469,5 @@ export class SequencerAboveUILayer {
         child.updateTransform();
       }
     }
-
   }
-
 }

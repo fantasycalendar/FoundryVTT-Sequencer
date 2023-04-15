@@ -46,10 +46,7 @@ function _template(str, ...exprs) {
               attr,
               value.replace(mustacheRegex, (_, x) => {
                 const trimmed = x.trim();
-                if (
-                  typeof data === "object" &&
-                  trimmed in data
-                ) {
+                if (typeof data === "object" && trimmed in data) {
                   return data[trimmed];
                 }
                 return "";

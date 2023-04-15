@@ -1,5 +1,5 @@
-export default class ColorMatrixFilter extends globalThis.PIXI.filters.ColorMatrixFilter {
-
+export default class ColorMatrixFilter extends globalThis.PIXI.filters
+  .ColorMatrixFilter {
   /**
    * Properties & default values:
    *     - hue [false]
@@ -22,7 +22,9 @@ export default class ColorMatrixFilter extends globalThis.PIXI.filters.ColorMatr
       this.values[key] = value;
       this[key](value, true);
     } catch (err) {
-      ui.notifications.warn(`Sequencer | ${this.constructor.name} | Could not set property ${key}`);
+      ui.notifications.warn(
+        `Sequencer | ${this.constructor.name} | Could not set property ${key}`
+      );
     }
   }
 }

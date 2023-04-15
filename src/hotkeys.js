@@ -1,5 +1,8 @@
 import CONSTANTS from "./constants.js";
-import { EffectPlayer, SelectionManager } from "./modules/sequencer-interaction-manager.js";
+import {
+  EffectPlayer,
+  SelectionManager,
+} from "./modules/sequencer-interaction-manager.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 
 const hotkeys = {
@@ -37,7 +40,7 @@ const hotkeys = {
       if (!hotkeys._ready) return;
       PlayerSettings.attachTo.store.set(false);
       PlayerSettings.stretchToAttach.store.set(false);
-    }
+    },
   },
 
   selectTool: {
@@ -63,62 +66,57 @@ const hotkeys = {
     deleteDown: () => {
       if (!hotkeys._ready) return;
       SelectionManager.delete();
-    }
-  }
-}
+    },
+  },
+};
 
 export default function registerHotkeys() {
-
   game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-control", {
     name: "SEQUENCER.Hotkeys.PlayTool.Control",
-    editable: [
-      { key: "ControlLeft" },
-    ],
+    editable: [{ key: "ControlLeft" }],
     onDown: hotkeys.playTool.playManySequencedDown,
-    onUp: hotkeys.playTool.playManySequencedUp
+    onUp: hotkeys.playTool.playManySequencedUp,
   });
 
   game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-shift", {
     name: "SEQUENCER.Hotkeys.PlayTool.Shift",
-    editable: [
-      { key: "ShiftLeft" },
-    ],
+    editable: [{ key: "ShiftLeft" }],
     onDown: hotkeys.playTool.playManyDown,
-    onUp: hotkeys.playTool.playManyUp
+    onUp: hotkeys.playTool.playManyUp,
   });
 
   game.keybindings.register(CONSTANTS.MODULE_NAME, "play-tool-hotkey-alt", {
     name: "SEQUENCER.Hotkeys.PlayTool.Alt",
-    editable: [
-      { key: "AltLeft" },
-    ],
+    editable: [{ key: "AltLeft" }],
     onDown: hotkeys.playTool.attachToDown,
-    onUp: hotkeys.playTool.attachToDown
+    onUp: hotkeys.playTool.attachToDown,
   });
 
-  game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-control", {
-    name: "SEQUENCER.Hotkeys.SelectTool.Control",
-    editable: [
-      { key: "ControlLeft" },
-    ],
-    onDown: hotkeys.selectTool.snapToGridDown,
-    onUp: hotkeys.selectTool.snapToGridUp
-  });
+  game.keybindings.register(
+    CONSTANTS.MODULE_NAME,
+    "select-tool-hotkey-control",
+    {
+      name: "SEQUENCER.Hotkeys.SelectTool.Control",
+      editable: [{ key: "ControlLeft" }],
+      onDown: hotkeys.selectTool.snapToGridDown,
+      onUp: hotkeys.selectTool.snapToGridUp,
+    }
+  );
 
   game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-alt", {
     name: "SEQUENCER.Hotkeys.SelectTool.Alt",
-    editable: [
-      { key: "AltLeft" },
-    ],
+    editable: [{ key: "AltLeft" }],
     onDown: hotkeys.selectTool.attachToTargetDown,
-    onUp: hotkeys.selectTool.attachToTargetUp
+    onUp: hotkeys.selectTool.attachToTargetUp,
   });
 
-  game.keybindings.register(CONSTANTS.MODULE_NAME, "select-tool-hotkey-delete", {
-    name: "SEQUENCER.Hotkeys.SelectTool.Delete",
-    editable: [
-      { key: "Delete" },
-    ],
-    onDown: hotkeys.selectTool.deleteDown,
-  });
+  game.keybindings.register(
+    CONSTANTS.MODULE_NAME,
+    "select-tool-hotkey-delete",
+    {
+      name: "SEQUENCER.Hotkeys.SelectTool.Delete",
+      editable: [{ key: "Delete" }],
+      onDown: hotkeys.selectTool.deleteDown,
+    }
+  );
 }

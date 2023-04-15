@@ -5,22 +5,22 @@ const flipBookTextureCache = {};
 
 export class SequencerFileBase {
   static make(inData, inDBPath, inMetadata) {
-
     const originalFile = inData?.file ?? inData;
     const file = foundry.utils.duplicate(originalFile);
-    const isRangeFind = typeof file !== "string" && !Array.isArray(originalFile)
-      ? Object.keys(originalFile).filter(key => key.endsWith("ft")).length > 0
-      : false;
+    const isRangeFind =
+      typeof file !== "string" && !Array.isArray(originalFile)
+        ? Object.keys(originalFile).filter((key) => key.endsWith("ft")).length >
+          0
+        : false;
 
     return isRangeFind
       ? new SequencerFileRangeFind(inData, inDBPath, inMetadata)
-      : new SequencerFile(inData, inDBPath, inMetadata)
+      : new SequencerFile(inData, inDBPath, inMetadata);
   }
 }
 
 export class SequencerFile extends SequencerFileBase {
-
-  rangeFind = false
+  rangeFind = false;
 
   constructor(inData, inDBPath, inMetadata) {
     super();
@@ -32,20 +32,26 @@ export class SequencerFile extends SequencerFileBase {
       this[key] = value;
     }
     this.dbPath = inDBPath;
-    this.moduleName = inDBPath.split('.')[0];
+    this.moduleName = inDBPath.split(".")[0];
     this.originalFile = inData?.file ?? inData;
     this.file = foundry.utils.duplicate(this.originalFile);
     this.fileIndex = null;
 
-    this.fileTextureMap = Object.fromEntries(this.getAllFiles().map(file => {
-      return [file, false];
-    }))
+    this.fileTextureMap = Object.fromEntries(
+      this.getAllFiles().map((file) => {
+        return [file, false];
+      })
+    );
 
     this.twister = false;
   }
 
   clone() {
-    return SequencerFile.make(this.originalData, this.dbPath, this.originalMetadata);
+    return SequencerFile.make(
+      this.originalData,
+      this.dbPath,
+      this.originalMetadata
+    );
   }
 
   async validate() {
@@ -53,20 +59,22 @@ export class SequencerFile extends SequencerFileBase {
     const directories = {};
     const allFiles = this.getAllFiles();
     for (const file of allFiles) {
-      let directory = file.split("/")
-      directory.pop()
-      directory = directory.join('/')
+      let directory = file.split("/");
+      directory.pop();
+      directory = directory.join("/");
       if (directories[directory] === undefined) {
         directories[directory] = await lib.getFiles(directory);
       }
     }
     for (const file of allFiles) {
-      let directory = file.split("/")
-      directory.pop()
-      directory = directory.join('/')
+      let directory = file.split("/");
+      directory.pop();
+      directory = directory.join("/");
 
       if (directories[directory].indexOf(file) === -1) {
-        console.warn(`"${this.dbPath}" has an incorrect file path, could not find file. Points to:\n${file}`)
+        console.warn(
+          `"${this.dbPath}" has an incorrect file path, could not find file. Points to:\n${file}`
+        );
         isValid = false;
       }
     }
@@ -81,21 +89,27 @@ export class SequencerFile extends SequencerFileBase {
     if (Array.isArray(this.file)) {
       this.fileIndex = lib.is_real_number(this.fileIndex)
         ? this.fileIndex
-        : lib.random_array_element(this.file, { twister: this.twister, index: true });
+        : lib.random_array_element(this.file, {
+            twister: this.twister,
+            index: true,
+          });
       return this.file[this.fileIndex];
     }
     return this.file;
   }
 
-  getTimestamps(){
-    if(Array.isArray(this.originalMetadata?.timestamps)){
-      return this.originalMetadata?.timestamps?.[this.fileIndex] ?? this.originalMetadata?.timestamps[0]
+  getTimestamps() {
+    if (Array.isArray(this.originalMetadata?.timestamps)) {
+      return (
+        this.originalMetadata?.timestamps?.[this.fileIndex] ??
+        this.originalMetadata?.timestamps[0]
+      );
     }
     return this.originalMetadata?.timestamps;
   }
 
   getPreviewFile(entry) {
-    let parts = entry.split('.');
+    let parts = entry.split(".");
     let files = this.getAllFiles();
     if (Array.isArray(files)) {
       if (lib.is_real_number(parts[parts.length - 1])) {
@@ -109,25 +123,21 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   destroy() {
-    if(this.originalMetadata?.flipbook) return;
+    if (this.originalMetadata?.flipbook) return;
     for (let texture of Object.values(this.fileTextureMap)) {
       if (!texture) continue;
       try {
-        texture?.baseTexture?.resource?.source?.removeAttribute('src');
-      } catch (err) {
-      }
+        texture?.baseTexture?.resource?.source?.removeAttribute("src");
+      } catch (err) {}
       try {
         texture?.baseTexture?.resource?.source?.pause();
-      } catch (err) {
-      }
+      } catch (err) {}
       try {
         texture?.baseTexture?.resource?.source?.remove();
-      } catch (err) {
-      }
+      } catch (err) {}
       try {
         texture?.baseTexture?.resource?.source?.load();
-      } catch (err) {
-      }
+      } catch (err) {}
       texture.destroy();
     }
   }
@@ -139,19 +149,22 @@ export class SequencerFile extends SequencerFileBase {
   }
 
   _adjustScaleForPadding(distance, width) {
-    return distance / (width - (this.template ? this.template[1] + this.template[2] : 0));
+    return (
+      distance /
+      (width - (this.template ? this.template[1] + this.template[2] : 0))
+    );
   }
 
   _adjustAnchorForPadding(width) {
-    return this.template ? this.template[1] / width : undefined
+    return this.template ? this.template[1] / width : undefined;
   }
 
-  async _getFlipBookSheet(filePath){
+  async _getFlipBookSheet(filePath) {
     if (!this.originalMetadata?.flipbook) return false;
-    if(flipBookTextureCache[filePath]){
+    if (flipBookTextureCache[filePath]) {
       return flipBookTextureCache[filePath];
     }
-    flipBookTextureCache[filePath] = this.file.map(file => {
+    flipBookTextureCache[filePath] = this.file.map((file) => {
       return PIXI.Texture.from(file);
     });
     return flipBookTextureCache[filePath];
@@ -166,14 +179,13 @@ export class SequencerFile extends SequencerFileBase {
       texture,
       sheet,
       spriteScale: this._adjustScaleForPadding(distance, texture.width),
-      spriteAnchor: this._adjustAnchorForPadding(texture.width)
+      spriteAnchor: this._adjustAnchorForPadding(texture.width),
     };
   }
 }
 
 export class SequencerFileRangeFind extends SequencerFile {
-
-  rangeFind = true
+  rangeFind = true;
 
   constructor(...args) {
     super(...args);
@@ -186,8 +198,8 @@ export class SequencerFileRangeFind extends SequencerFile {
       "60ft": canvas.grid.size * 9,
       "30ft": canvas.grid.size * 5,
       "15ft": canvas.grid.size * 2,
-      "05ft": 0
-    }
+      "05ft": 0,
+    };
   }
 
   get _gridSizeDiff() {
@@ -203,8 +215,11 @@ export class SequencerFileRangeFind extends SequencerFile {
       if (Array.isArray(this.file[inFt])) {
         const fileIndex = lib.is_real_number(this.fileIndex)
           ? this.fileIndex
-          : lib.random_array_element(this.file[inFt], { twister: this.twister, index: true });
-        return this.file[inFt][fileIndex]
+          : lib.random_array_element(this.file[inFt], {
+              twister: this.twister,
+              index: true,
+            });
+        return this.file[inFt][fileIndex];
       }
       return this.file[inFt];
     }
@@ -213,8 +228,11 @@ export class SequencerFileRangeFind extends SequencerFile {
   }
 
   getPreviewFile(entry) {
-    let parts = entry.split('.');
-    const ft = parts.find(part => Object.keys(SequencerFileRangeFind.ftToDistanceMap).indexOf(part) > -1)
+    let parts = entry.split(".");
+    const ft = parts.find(
+      (part) =>
+        Object.keys(SequencerFileRangeFind.ftToDistanceMap).indexOf(part) > -1
+    );
     if (!ft) {
       return super.getPreviewFile(entry);
     }
@@ -231,7 +249,7 @@ export class SequencerFileRangeFind extends SequencerFile {
       filePath,
       texture,
       spriteScale: this._adjustScaleForPadding(distance, texture.width),
-      spriteAnchor: this._adjustAnchorForPadding(texture.width)
+      spriteAnchor: this._adjustAnchorForPadding(texture.width),
     };
   }
 
@@ -240,39 +258,49 @@ export class SequencerFileRangeFind extends SequencerFile {
   }
 
   _rangeFind(inDistance) {
-
     if (!this._fileDistanceMap) {
       let distances = Object.keys(this.file)
-        .filter(entry => Object.keys(SequencerFileRangeFind.ftToDistanceMap).indexOf(entry) > -1)
-        .map(ft => {
+        .filter(
+          (entry) =>
+            Object.keys(SequencerFileRangeFind.ftToDistanceMap).indexOf(entry) >
+            -1
+        )
+        .map((ft) => {
           return {
             file: this.getFile(ft),
-            minDistance: this._getMatchingDistance(ft)
-          }
+            minDistance: this._getMatchingDistance(ft),
+          };
         });
 
-      let uniqueDistances = [...new Set(distances.map(item => item.minDistance))];
+      let uniqueDistances = [
+        ...new Set(distances.map((item) => item.minDistance)),
+      ];
       uniqueDistances.sort((a, b) => a - b);
 
       let max = Math.max(...uniqueDistances);
       let min = Math.min(...uniqueDistances);
 
-      this._fileDistanceMap = distances
-        .map(entry => {
-          entry.distances = {
-            min: entry.minDistance === min ? 0 : entry.minDistance,
-            max: entry.minDistance === max ? Infinity : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1]
-          };
-          return entry;
-        })
+      this._fileDistanceMap = distances.map((entry) => {
+        entry.distances = {
+          min: entry.minDistance === min ? 0 : entry.minDistance,
+          max:
+            entry.minDistance === max
+              ? Infinity
+              : uniqueDistances[uniqueDistances.indexOf(entry.minDistance) + 1],
+        };
+        return entry;
+      });
     }
 
     const possibleFiles = this._fileDistanceMap
-      .filter(entry => {
+      .filter((entry) => {
         const relativeDistance = inDistance / this._gridSizeDiff;
-        return relativeDistance >= entry.distances.min && relativeDistance < entry.distances.max;
+        return (
+          relativeDistance >= entry.distances.min &&
+          relativeDistance < entry.distances.max
+        );
       })
-      .map(entry => entry.file)
+      .map((entry) => entry.file)
       .flat();
 
     return possibleFiles.length > 1
@@ -283,7 +311,7 @@ export class SequencerFileRangeFind extends SequencerFile {
   async _getTextureForDistance(distance) {
     const filePath = this._rangeFind(distance);
     const texture = await this._getTexture(filePath);
-    return { filePath, texture }
+    return { filePath, texture };
   }
 }
 
@@ -303,7 +331,7 @@ export class SequencerFileProxy extends SequencerFileBase {
           return Reflect.get(lib.random_array_element(sequencerEntry), prop);
         }
         return Reflect.get(sequencerEntry, prop);
-      }
-    })
+      },
+    });
   }
 }

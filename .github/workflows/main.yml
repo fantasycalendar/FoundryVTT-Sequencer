@@ -2,7 +2,7 @@ name: Release Creation
 
 on:
   release:
-    types: [ published ]
+    types: [published]
 permissions:
   contents: write
 
@@ -19,7 +19,7 @@ jobs:
         id: sub_release_manifest_version
         uses: microsoft/variable-substitution@v1
         with:
-          files: 'module.json'
+          files: "module.json"
         env:
           version: ${{github.event.release.tag_name}}
           url: https://github.com/${{github.repository}}
@@ -34,7 +34,7 @@ jobs:
         id: sub_prerelease_manifest_version
         uses: microsoft/variable-substitution@v1
         with:
-          files: 'module.json'
+          files: "module.json"
         env:
           version: ${{github.event.release.tag_name}}
           url: https://github.com/${{github.repository}}
@@ -61,7 +61,7 @@ jobs:
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './module.json, ./module.zip'
+          artifacts: "./module.json, ./module.zip"
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
 
@@ -76,7 +76,7 @@ jobs:
           draft: false
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './module.json, ./module.zip'
+          artifacts: "./module.json, ./module.zip"
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
 

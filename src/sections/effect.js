@@ -9,7 +9,6 @@ import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
 
 export default class EffectSection extends Section {
-
   constructor(inSequence, inFile = "") {
     super(inSequence);
     this._deserializedData = null;
@@ -76,7 +75,10 @@ export default class EffectSection extends Section {
   }
 
   static debounceWarning() {
-    lib.custom_warning("Sequencer", "Effect | This user does not have permissions to play effects. This can be configured in Sequencer's module settings.")
+    lib.custom_warning(
+      "Sequencer",
+      "Effect | This user does not have permissions to play effects. This can be configured in Sequencer's module settings."
+    );
   }
 
   /**
@@ -87,7 +89,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   name(inName) {
-    if (typeof inName !== "string") throw this.sequence._customError(this, "name", "inName must be of type string");
+    if (typeof inName !== "string")
+      throw this.sequence._customError(
+        this,
+        "name",
+        "inName must be of type string"
+      );
     this._name = lib.safe_str(inName);
     return this;
   }
@@ -101,13 +108,31 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   persist(inBool = true, inOptions = {}) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type boolean");
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "persist", `inOptions must be of type object`);
-    inOptions = foundry.utils.mergeObject({
-      id: randomID(),
-      persistTokenPrototype: false,
-    }, inOptions)
-    if (typeof inOptions.persistTokenPrototype !== "boolean") throw this.sequence._customError(this, "persist", "inOptions.persistTokenPrototype must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "persist",
+        "inBool must be of type boolean"
+      );
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "persist",
+        `inOptions must be of type object`
+      );
+    inOptions = foundry.utils.mergeObject(
+      {
+        id: randomID(),
+        persistTokenPrototype: false,
+      },
+      inOptions
+    );
+    if (typeof inOptions.persistTokenPrototype !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "persist",
+        "inOptions.persistTokenPrototype must be of type boolean"
+      );
     this._persist = inBool;
     this._persistOptions = inOptions;
     return this;
@@ -121,7 +146,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   playbackRate(inNumber = 1.0) {
-    if (!lib.is_real_number(inNumber)) throw this.sequence._customError(this, "playbackRate", "inNumber must be of type number");
+    if (!lib.is_real_number(inNumber))
+      throw this.sequence._customError(
+        this,
+        "playbackRate",
+        "inNumber must be of type number"
+      );
     this._playbackRate = inNumber;
     return this;
   }
@@ -133,7 +163,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   missed(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "missed", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "missed",
+        "inBool must be of type boolean"
+      );
     this._missed = inBool;
     return this;
   }
@@ -147,7 +182,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   addOverride(inFunc) {
-    if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addOverride", "The given function needs to be an actual function.");
+    if (!lib.is_function(inFunc))
+      throw this.sequence._customError(
+        this,
+        "addOverride",
+        "The given function needs to be an actual function."
+      );
     this._overrides.push(inFunc);
     return this;
   }
@@ -161,76 +201,150 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   attachTo(inObject, inOptions = {}) {
-    if (!(typeof inObject === "object" || typeof inObject === "string")){
-      throw this.sequence._customError(this, "attachTo", `inObject is invalid, and must be of type of object, string, placeable object, or document`);
+    if (!(typeof inObject === "object" || typeof inObject === "string")) {
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        `inObject is invalid, and must be of type of object, string, placeable object, or document`
+      );
     }
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "attachTo", `inOptions must be of type object`);
-    inOptions = foundry.utils.mergeObject({
-      align: "center",
-      edge: "on",
-      bindVisibility: true,
-      bindAlpha: true,
-      bindElevation: true,
-      followRotation: true,
-      offset: false,
-      randomOffset: false,
-      gridUnits: false,
-      local: false
-    }, inOptions);
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        `inOptions must be of type object`
+      );
+    inOptions = foundry.utils.mergeObject(
+      {
+        align: "center",
+        edge: "on",
+        bindVisibility: true,
+        bindAlpha: true,
+        bindElevation: true,
+        followRotation: true,
+        offset: false,
+        randomOffset: false,
+        gridUnits: false,
+        local: false,
+      },
+      inOptions
+    );
 
     const validatedObject = this._validateLocation(inObject);
-    if (validatedObject === undefined) throw this.sequence._customError(this, "attachTo", "could not find given object");
+    if (validatedObject === undefined)
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        "could not find given object"
+      );
 
     let isValidObject = true;
     if (typeof inObject === "string") {
-      isValidObject = validatedObject instanceof Token
-        || validatedObject instanceof TokenDocument
-        || validatedObject instanceof Tile
-        || validatedObject instanceof TileDocument
-        || validatedObject instanceof Drawing
-        || validatedObject instanceof DrawingDocument
-        || validatedObject instanceof MeasuredTemplate
-        || validatedObject instanceof MeasuredTemplateDocument
-        || validatedObject instanceof CanvasEffect;
+      isValidObject =
+        validatedObject instanceof Token ||
+        validatedObject instanceof TokenDocument ||
+        validatedObject instanceof Tile ||
+        validatedObject instanceof TileDocument ||
+        validatedObject instanceof Drawing ||
+        validatedObject instanceof DrawingDocument ||
+        validatedObject instanceof MeasuredTemplate ||
+        validatedObject instanceof MeasuredTemplateDocument ||
+        validatedObject instanceof CanvasEffect;
       if (!isValidObject) {
-        this.sequence._showWarning(this, "attachTo", "Only Tokens, Tiles, Drawings, and MeasuredTemplates may have attached effects - will play effect on target's location");
+        this.sequence._showWarning(
+          this,
+          "attachTo",
+          "Only Tokens, Tiles, Drawings, and MeasuredTemplates may have attached effects - will play effect on target's location"
+        );
       }
     }
 
     const aligns = Object.keys(canvaslib.alignments);
-    if (typeof inOptions.align !== "string" || !aligns.includes(inOptions.align)) {
-      throw this.sequence._customError(this, "attachTo", `inOptions.align must be of type string, one of: ${aligns.join(', ')}`);
+    if (
+      typeof inOptions.align !== "string" ||
+      !aligns.includes(inOptions.align)
+    ) {
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        `inOptions.align must be of type string, one of: ${aligns.join(", ")}`
+      );
     }
-    if (typeof inOptions.edge !== "string" || !(inOptions.edge === "on" || inOptions.edge === "inner" || inOptions.edge === "outer")) {
-      throw this.sequence._customError(this, "attachTo", `inOptions.edge must of type string with the value of either "on", "inner", or "outer"`);
+    if (
+      typeof inOptions.edge !== "string" ||
+      !(
+        inOptions.edge === "on" ||
+        inOptions.edge === "inner" ||
+        inOptions.edge === "outer"
+      )
+    ) {
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        `inOptions.edge must of type string with the value of either "on", "inner", or "outer"`
+      );
     }
-    if (typeof inOptions.bindVisibility !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.bindVisibility must be of type boolean`);
-    if (typeof inOptions.followRotation !== "boolean") throw this.sequence._customError(this, "attachTo", `inOptions.followRotation must be of type boolean`);
-    if (typeof inOptions.bindAlpha !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindAlpha must be of type boolean");
-    if (typeof inOptions.bindElevation !== "boolean") throw this.sequence._customError(this, "attachTo", "inOptions.bindElevation must be of type boolean");
-    if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "attachTo", "inOptions.randomOffset must be of type boolean or number");
+    if (typeof inOptions.bindVisibility !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        `inOptions.bindVisibility must be of type boolean`
+      );
+    if (typeof inOptions.followRotation !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        `inOptions.followRotation must be of type boolean`
+      );
+    if (typeof inOptions.bindAlpha !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        "inOptions.bindAlpha must be of type boolean"
+      );
+    if (typeof inOptions.bindElevation !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        "inOptions.bindElevation must be of type boolean"
+      );
+    if (
+      !(
+        typeof inOptions.randomOffset === "boolean" ||
+        lib.is_real_number(inOptions.randomOffset)
+      )
+    )
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        "inOptions.randomOffset must be of type boolean or number"
+      );
 
     this._source = validatedObject;
 
-    this._temporaryEffect = this._temporaryEffect ||
-      (
-        validatedObject instanceof foundry.abstract.Document || validatedObject instanceof MeasuredTemplate
-          ? !lib.is_UUID(validatedObject?.uuid)
-          : false
-      );
+    this._temporaryEffect =
+      this._temporaryEffect ||
+      (validatedObject instanceof foundry.abstract.Document ||
+      validatedObject instanceof MeasuredTemplate
+        ? !lib.is_UUID(validatedObject?.uuid)
+        : false);
 
     if (inOptions.offset) {
-      const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
+      const offsetData = this._validateOffset(
+        "attachTo",
+        inOptions.offset,
+        inOptions
+      );
       this._offset = {
         source: offsetData,
-        target: this._offset?.target ?? false
-      }
+        target: this._offset?.target ?? false,
+      };
     }
 
     this._randomOffset = {
       source: inOptions.randomOffset,
-      target: this._randomOffset?.target ?? false
-    }
+      target: this._randomOffset?.target ?? false,
+    };
 
     this._attachTo = {
       active: isValidObject,
@@ -239,7 +353,7 @@ export default class EffectSection extends Section {
       bindVisibility: inOptions.bindVisibility,
       bindAlpha: inOptions.bindAlpha,
       bindElevation: inOptions.bindElevation,
-      followRotation: inOptions.followRotation
+      followRotation: inOptions.followRotation,
     };
     return this;
   }
@@ -253,53 +367,114 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   stretchTo(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")){
-      throw this.sequence._customError(this, "stretchTo", `inLocation is invalid, and must be of type of object, string, placeable object, or document`);
+    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        `inLocation is invalid, and must be of type of object, string, placeable object, or document`
+      );
     }
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "stretchTo", `inOptions must be of type object`);
-    inOptions = foundry.utils.mergeObject({
-      cacheLocation: false,
-      attachTo: false,
-      onlyX: false,
-      tiling: false,
-      offset: false,
-      randomOffset: false,
-      gridUnits: false,
-      local: false
-    }, inOptions)
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        `inOptions must be of type object`
+      );
+    inOptions = foundry.utils.mergeObject(
+      {
+        cacheLocation: false,
+        attachTo: false,
+        onlyX: false,
+        tiling: false,
+        offset: false,
+        randomOffset: false,
+        gridUnits: false,
+        local: false,
+      },
+      inOptions
+    );
     const validatedObject = this._validateLocation(inLocation);
-    if (validatedObject === undefined) throw this.sequence._customError(this, "stretchTo", "could not find position of given object");
-    if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.cacheLocation must be of type boolean");
-    if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.attachTo must be of type boolean");
-    if (typeof inOptions.onlyX !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.onlyX must be of type boolean");
-    if (typeof inOptions.tiling !== "boolean") throw this.sequence._customError(this, "stretchTo", "inOptions.tiling must be of type boolean");
-    if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "stretchTo", "inOptions.randomOffset must be of type boolean or number");
+    if (validatedObject === undefined)
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "could not find position of given object"
+      );
+    if (typeof inOptions.cacheLocation !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "inOptions.cacheLocation must be of type boolean"
+      );
+    if (typeof inOptions.attachTo !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "inOptions.attachTo must be of type boolean"
+      );
+    if (typeof inOptions.onlyX !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "inOptions.onlyX must be of type boolean"
+      );
+    if (typeof inOptions.tiling !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "inOptions.tiling must be of type boolean"
+      );
+    if (
+      !(
+        typeof inOptions.randomOffset === "boolean" ||
+        lib.is_real_number(inOptions.randomOffset)
+      )
+    )
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "inOptions.randomOffset must be of type boolean or number"
+      );
 
     if (inOptions.cacheLocation && inOptions.attachTo) {
-      throw this.sequence._customError(this, "stretchTo", "cacheLocation and attachTo cannot both be true - pick one or the other");
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "cacheLocation and attachTo cannot both be true - pick one or the other"
+      );
     }
 
     if (inOptions.tiling) this.tilingTexture();
 
-    this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document ? !lib.is_UUID(validatedObject?.uuid) : false);
+    this._temporaryEffect =
+      this._temporaryEffect ||
+      (validatedObject instanceof foundry.abstract.Document
+        ? !lib.is_UUID(validatedObject?.uuid)
+        : false);
 
     if (inOptions.offset) {
-      const offsetData = this._validateOffset("stretchTo", inOptions.offset, inOptions);
+      const offsetData = this._validateOffset(
+        "stretchTo",
+        inOptions.offset,
+        inOptions
+      );
       this._offset = {
         source: this._offset?.source ?? false,
-        target: offsetData
-      }
+        target: offsetData,
+      };
     }
 
     this._randomOffset = {
       source: this._randomOffset?.source ?? false,
-      target: inOptions.randomOffset
-    }
+      target: inOptions.randomOffset,
+    };
 
     this._stretchTo = {
-      target: inOptions.cacheLocation ? canvaslib.get_object_canvas_data(validatedObject, { measure: true }) : validatedObject,
+      target: inOptions.cacheLocation
+        ? canvaslib.get_object_canvas_data(validatedObject, { measure: true })
+        : validatedObject,
       attachTo: inOptions.attachTo,
-      onlyX: inOptions.onlyX
+      onlyX: inOptions.onlyX,
     };
 
     return this;
@@ -313,41 +488,78 @@ export default class EffectSection extends Section {
    * @returns this
    */
   rotateTowards(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")){
-      throw this.sequence._customError(this, "inLocation", `inLocation is invalid, and must be of type of object, string, placeable object, or document`);
+    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+      throw this.sequence._customError(
+        this,
+        "inLocation",
+        `inLocation is invalid, and must be of type of object, string, placeable object, or document`
+      );
     }
-    inOptions = foundry.utils.mergeObject({
-      rotationOffset: 0,
-      cacheLocation: false,
-      attachTo: false,
-      offset: false,
-      randomOffset: false,
-      local: false,
-      gridUnits: false
-    }, inOptions);
-    if (!lib.is_real_number(inOptions.rotationOffset)) throw this.sequence._customError(this, "rotateTowards", "inOptions.rotationOffset must be of type number");
-    if (typeof inOptions.attachTo !== "boolean") throw this.sequence._customError(this, "rotateTowards", "inOptions.attachTo must be of type boolean");
-    if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "rotateTowards", "inOptions.cacheLocation must be of type boolean");
+    inOptions = foundry.utils.mergeObject(
+      {
+        rotationOffset: 0,
+        cacheLocation: false,
+        attachTo: false,
+        offset: false,
+        randomOffset: false,
+        local: false,
+        gridUnits: false,
+      },
+      inOptions
+    );
+    if (!lib.is_real_number(inOptions.rotationOffset))
+      throw this.sequence._customError(
+        this,
+        "rotateTowards",
+        "inOptions.rotationOffset must be of type number"
+      );
+    if (typeof inOptions.attachTo !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "rotateTowards",
+        "inOptions.attachTo must be of type boolean"
+      );
+    if (typeof inOptions.cacheLocation !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "rotateTowards",
+        "inOptions.cacheLocation must be of type boolean"
+      );
     const validatedObject = this._validateLocation(inLocation);
-    if (!validatedObject) throw this.sequence._customError(this, "rotateTowards", "could not find position of given object");
+    if (!validatedObject)
+      throw this.sequence._customError(
+        this,
+        "rotateTowards",
+        "could not find position of given object"
+      );
 
-    this._temporaryEffect = this._temporaryEffect || (validatedObject instanceof foundry.abstract.Document ? !lib.is_UUID(validatedObject?.uuid) : false);
+    this._temporaryEffect =
+      this._temporaryEffect ||
+      (validatedObject instanceof foundry.abstract.Document
+        ? !lib.is_UUID(validatedObject?.uuid)
+        : false);
 
     if (inOptions.offset) {
-      const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
+      const offsetData = this._validateOffset(
+        "attachTo",
+        inOptions.offset,
+        inOptions
+      );
       this._offset = {
         source: offsetData,
-        target: this._offset?.target ?? false
-      }
+        target: this._offset?.target ?? false,
+      };
     }
 
     this._randomOffset = {
       source: inOptions.randomOffset,
-      target: this._randomOffset?.target ?? false
-    }
+      target: this._randomOffset?.target ?? false,
+    };
 
     this._rotateTowards = {
-      target: inOptions.cacheLocation ? canvaslib.get_object_canvas_data(validatedObject, { measure: true }) : validatedObject,
+      target: inOptions.cacheLocation
+        ? canvaslib.get_object_canvas_data(validatedObject, { measure: true })
+        : validatedObject,
       rotationOffset: inOptions.rotationOffset,
       cacheLocation: inOptions.cacheLocation,
       attachTo: inOptions.attachTo,
@@ -364,127 +576,268 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   from(inObject, inOptions = {}) {
-    if (!(inObject instanceof Token || inObject instanceof Tile || inObject instanceof TokenDocument || inObject instanceof TileDocument)){
-      throw this.sequence._customError(this, "from", "inObject must be of type Token, Tile, TokenDocument, or TileDocument");
+    if (
+      !(
+        inObject instanceof Token ||
+        inObject instanceof Tile ||
+        inObject instanceof TokenDocument ||
+        inObject instanceof TileDocument
+      )
+    ) {
+      throw this.sequence._customError(
+        this,
+        "from",
+        "inObject must be of type Token, Tile, TokenDocument, or TileDocument"
+      );
     }
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "from", `inOptions must be of type object`);
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "from",
+        `inOptions must be of type object`
+      );
     inObject = inObject.document ?? inObject;
-    if (!inObject?.texture?.src) throw this.sequence._customError(this, "from", "could not find the image for the given object");
-    inOptions = foundry.utils.mergeObject({
-      cacheLocation: false,
-      offset: false,
-      randomOffset: false,
-      local: false,
-      gridUnits: false
-    }, inOptions)
-    if (typeof inOptions.cacheLocation !== "boolean") throw this.sequence._customError(this, "from", "inOptions.cacheLocation must be of type boolean");
-    if (!(typeof inOptions.randomOffset === "boolean" || lib.is_real_number(inOptions.randomOffset))) throw this.sequence._customError(this, "from", "inOptions.randomOffset must be of type boolean or number");
+    if (!inObject?.texture?.src)
+      throw this.sequence._customError(
+        this,
+        "from",
+        "could not find the image for the given object"
+      );
+    inOptions = foundry.utils.mergeObject(
+      {
+        cacheLocation: false,
+        offset: false,
+        randomOffset: false,
+        local: false,
+        gridUnits: false,
+      },
+      inOptions
+    );
+    if (typeof inOptions.cacheLocation !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "from",
+        "inOptions.cacheLocation must be of type boolean"
+      );
+    if (
+      !(
+        typeof inOptions.randomOffset === "boolean" ||
+        lib.is_real_number(inOptions.randomOffset)
+      )
+    )
+      throw this.sequence._customError(
+        this,
+        "from",
+        "inOptions.randomOffset must be of type boolean or number"
+      );
 
-    this._temporaryEffect = this._temporaryEffect || (inObject instanceof foundry.abstract.Document ? !lib.is_UUID(inObject?.uuid) : false);
+    this._temporaryEffect =
+      this._temporaryEffect ||
+      (inObject instanceof foundry.abstract.Document
+        ? !lib.is_UUID(inObject?.uuid)
+        : false);
 
     if (inOptions.offset) {
-      const offsetData = this._validateOffset("attachTo", inOptions.offset, inOptions);
+      const offsetData = this._validateOffset(
+        "attachTo",
+        inOptions.offset,
+        inOptions
+      );
       this._offset = {
         source: offsetData,
-        target: this._offset?.target ?? false
-      }
+        target: this._offset?.target ?? false,
+      };
     }
 
     this._randomOffset = {
       source: inOptions.randomOffset,
-      target: this._randomOffset?.target ?? false
-    }
+      target: this._randomOffset?.target ?? false,
+    };
 
     this._from = {
       object: inObject,
-      options: inOptions
-    }
+      options: inOptions,
+    };
     return this;
   }
 
   shape(inType, inOptions = {}) {
-    if (typeof inType !== "string") throw this.sequence._customError(this, "shape", "type must be of type string");
+    if (typeof inType !== "string")
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "type must be of type string"
+      );
 
     if (!Object.values(CONSTANTS.SHAPES).includes(inType)) {
-      throw this.sequence._customError(this, "shape", "type must be one of: " + Object.values(CONSTANTS.SHAPES).join(", "));
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "type must be one of: " + Object.values(CONSTANTS.SHAPES).join(", ")
+      );
     }
 
     if (inType === CONSTANTS.SHAPES.POLY) {
       if (!Array.isArray(inOptions.points)) {
-        throw this.sequence._customError(this, "shape", "if creating polygon, inOptions.points must be of type array");
+        throw this.sequence._customError(
+          this,
+          "shape",
+          "if creating polygon, inOptions.points must be of type array"
+        );
       }
-      inOptions.points = inOptions.points.map(point => {
+      inOptions.points = inOptions.points.map((point) => {
         if (Array.isArray(point)) {
           if (!is_real_number(point[0]) || !is_real_number(point[1])) {
-            throw this.sequence._customError(this, "shape", "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties");
+            throw this.sequence._customError(
+              this,
+              "shape",
+              "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties"
+            );
           }
           return point;
         }
         if (typeof point === "object") {
           if (!is_real_number(point?.x) || !is_real_number(point?.y)) {
-            throw this.sequence._customError(this, "shape", "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties");
+            throw this.sequence._customError(
+              this,
+              "shape",
+              "inOptions.points must be an array, containing an array of two numbers or objects with x and y number properties"
+            );
           }
           return [point.x, point.y];
         }
       });
     } else if (inType === CONSTANTS.SHAPES.CIRC) {
       if (typeof inOptions.radius !== "number") {
-        throw this.sequence._customError(this, "shape", "if creating circle, inOptions.radius must be of type number");
+        throw this.sequence._customError(
+          this,
+          "shape",
+          "if creating circle, inOptions.radius must be of type number"
+        );
       }
-    } else if (inType === CONSTANTS.SHAPES.RECT || inType === CONSTANTS.SHAPES.RREC || inType === CONSTANTS.SHAPES.ELIP) {
+    } else if (
+      inType === CONSTANTS.SHAPES.RECT ||
+      inType === CONSTANTS.SHAPES.RREC ||
+      inType === CONSTANTS.SHAPES.ELIP
+    ) {
       if (inOptions.width ^ inOptions.height) {
         inOptions.width = inOptions.width ?? inOptions.height;
         inOptions.height = inOptions.height ?? inOptions.width;
       }
       if (typeof inOptions.width !== "number") {
-        throw this.sequence._customError(this, "shape", `if creating rectangle, rounded rectangle, or an ellipse, inOptions.width must be of type number`);
+        throw this.sequence._customError(
+          this,
+          "shape",
+          `if creating rectangle, rounded rectangle, or an ellipse, inOptions.width must be of type number`
+        );
       }
       if (typeof inOptions.height !== "number") {
-        throw this.sequence._customError(this, "shape", "if creating rectangle, rounded rectangle, or an ellipse, inOptions.height must be of type number");
+        throw this.sequence._customError(
+          this,
+          "shape",
+          "if creating rectangle, rounded rectangle, or an ellipse, inOptions.height must be of type number"
+        );
       }
-      if (inType === CONSTANTS.SHAPES.RREC && typeof inOptions.radius !== "number") {
-        throw this.sequence._customError(this, "shape", "if creating rounded border rectangle, inOptions.radius must be of type number");
+      if (
+        inType === CONSTANTS.SHAPES.RREC &&
+        typeof inOptions.radius !== "number"
+      ) {
+        throw this.sequence._customError(
+          this,
+          "shape",
+          "if creating rounded border rectangle, inOptions.radius must be of type number"
+        );
       }
     }
 
-    if (inOptions.gridUnits !== undefined && typeof inOptions.gridUnits !== "boolean") {
-      throw this.sequence._customError(this, "shape", "inOptions.gridUnits must be of type boolean");
+    if (
+      inOptions.gridUnits !== undefined &&
+      typeof inOptions.gridUnits !== "boolean"
+    ) {
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.gridUnits must be of type boolean"
+      );
     }
 
     if (inOptions.name && typeof inOptions.name !== "string") {
-      throw this.sequence._customError(this, "shape", "inOptions.name must be of type string");
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.name must be of type string"
+      );
     }
 
-    if (inOptions.fillColor && !is_real_number(inOptions.fillColor) && typeof inOptions.fillColor !== "string") {
-      throw this.sequence._customError(this, "shape", "inOptions.fillColor must be of type string (hexadecimal) or number (decimal)");
+    if (
+      inOptions.fillColor &&
+      !is_real_number(inOptions.fillColor) &&
+      typeof inOptions.fillColor !== "string"
+    ) {
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.fillColor must be of type string (hexadecimal) or number (decimal)"
+      );
     } else {
       inOptions.fillColor = lib.parseColor(inOptions.fillColor).decimal;
     }
 
     if (inOptions.fillAlpha && !is_real_number(inOptions.fillAlpha)) {
-      throw this.sequence._customError(this, "shape", "inOptions.fillAlpha must be of type number");
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.fillAlpha must be of type number"
+      );
     }
 
     if (inOptions.alpha && !is_real_number(inOptions.alpha)) {
-      throw this.sequence._customError(this, "shape", "inOptions.alpha must be of type number");
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.alpha must be of type number"
+      );
     }
 
     if (inOptions.lineSize && !is_real_number(inOptions.lineSize)) {
-      throw this.sequence._customError(this, "shape", "inOptions.lineSize must be of type number");
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.lineSize must be of type number"
+      );
     }
 
-    if (inOptions.lineColor && !is_real_number(inOptions.lineColor) && typeof inOptions.lineColor !== "string") {
-      throw this.sequence._customError(this, "shape", "inOptions.lineColor must be of type string (hexadecimal) or number (decimal)");
+    if (
+      inOptions.lineColor &&
+      !is_real_number(inOptions.lineColor) &&
+      typeof inOptions.lineColor !== "string"
+    ) {
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.lineColor must be of type string (hexadecimal) or number (decimal)"
+      );
     } else {
       inOptions.lineColor = lib.parseColor(inOptions.lineColor).decimal;
     }
 
     if (inOptions.offset) {
-      inOptions.offset = this._validateOffset("shape", inOptions.offset, inOptions.offset)
+      inOptions.offset = this._validateOffset(
+        "shape",
+        inOptions.offset,
+        inOptions.offset
+      );
     }
 
-    if (inOptions.isMask !== undefined && typeof inOptions.isMask !== "boolean") {
-      throw this.sequence._customError(this, "shape", "inOptions.isMask must be of type boolean");
+    if (
+      inOptions.isMask !== undefined &&
+      typeof inOptions.isMask !== "boolean"
+    ) {
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.isMask must be of type boolean"
+      );
     }
 
     this._shapes.push({
@@ -503,9 +856,24 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   offset(inOffset, inOptions = {}) {
-    this.sequence._showWarning(this, "offset", "This method is becoming deprecated, please use the secondary offset option in atLocation, attachTo, stretchTo instead.", true)
-    if (inOffset === undefined) throw this.sequence._customError(this, "offset", "inOffset must not be undefined");
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "offset", "options must be of type object");
+    this.sequence._showWarning(
+      this,
+      "offset",
+      "This method is becoming deprecated, please use the secondary offset option in atLocation, attachTo, stretchTo instead.",
+      true
+    );
+    if (inOffset === undefined)
+      throw this.sequence._customError(
+        this,
+        "offset",
+        "inOffset must not be undefined"
+      );
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "offset",
+        "options must be of type object"
+      );
     this._offsetLegacy = this._validateOffset("offset", inOffset, inOptions);
     return this;
   }
@@ -518,9 +886,23 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   spriteOffset(inOffset, inOptions = {}) {
-    if (inOffset === undefined) throw this.sequence._customError(this, "spriteOffset", "inOffset must not be undefined");
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "spriteOffset", "options must be of type object");
-    this._spriteOffset = this._validateOffset("spriteOffset", inOffset, inOptions);
+    if (inOffset === undefined)
+      throw this.sequence._customError(
+        this,
+        "spriteOffset",
+        "inOffset must not be undefined"
+      );
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "spriteOffset",
+        "options must be of type object"
+      );
+    this._spriteOffset = this._validateOffset(
+      "spriteOffset",
+      inOffset,
+      inOptions
+    );
     return this;
   }
 
@@ -531,7 +913,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   snapToGrid(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "snapToGrid", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "snapToGrid",
+        "inBool must be of type boolean"
+      );
     this._snapToGrid = inBool;
     return this;
   }
@@ -544,14 +931,32 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   scaleToObject(inScale = 1.0, inOptions = {}) {
-    if (!lib.is_real_number(inScale)) throw this.sequence._customError(this, "scaleToObject", `inScale must be of type number!`);
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "scaleToObject", "inOptions must be of type object");
-    inOptions = foundry.utils.mergeObject({
-      scale: inScale,
-      considerTokenScale: false,
-      uniform: false
-    }, inOptions);
-    if (typeof inOptions.uniform !== "boolean") throw this.sequence._customError(this, "scaleToObject", "inBool must be of type boolean");
+    if (!lib.is_real_number(inScale))
+      throw this.sequence._customError(
+        this,
+        "scaleToObject",
+        `inScale must be of type number!`
+      );
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "scaleToObject",
+        "inOptions must be of type object"
+      );
+    inOptions = foundry.utils.mergeObject(
+      {
+        scale: inScale,
+        considerTokenScale: false,
+        uniform: false,
+      },
+      inOptions
+    );
+    if (typeof inOptions.uniform !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "scaleToObject",
+        "inBool must be of type boolean"
+      );
     this._scaleToObject = inOptions;
     return this;
   }
@@ -564,37 +969,75 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   size(inSize, inOptions = {}) {
-    if (!lib.is_real_number(inSize) && typeof inSize !== "object") throw this.sequence._customError(this, "size", "inSize must be of type number or object");
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "size", "inOptions must be of type object");
+    if (!lib.is_real_number(inSize) && typeof inSize !== "object")
+      throw this.sequence._customError(
+        this,
+        "size",
+        "inSize must be of type number or object"
+      );
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "size",
+        "inOptions must be of type object"
+      );
     if (lib.is_real_number(inSize)) {
       inSize = {
         width: inSize,
-        height: inSize
-      }
+        height: inSize,
+      };
     }
 
     if ((inSize.width === undefined) ^ (inSize.height === undefined)) {
       if (inSize.width) {
-        if (!lib.is_real_number(inSize.width)) throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
-        inSize['height'] = "auto"
+        if (!lib.is_real_number(inSize.width))
+          throw this.sequence._customError(
+            this,
+            "size",
+            "inSize.width must be of type number or string 'auto'"
+          );
+        inSize["height"] = "auto";
       } else {
-        if (!lib.is_real_number(inSize.height)) throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
-        inSize['width'] = "auto"
+        if (!lib.is_real_number(inSize.height))
+          throw this.sequence._customError(
+            this,
+            "size",
+            "inSize.height must be of type number or string 'auto'"
+          );
+        inSize["width"] = "auto";
       }
     }
 
-    inOptions = foundry.utils.mergeObject({
-      gridUnits: false
-    }, inOptions)
+    inOptions = foundry.utils.mergeObject(
+      {
+        gridUnits: false,
+      },
+      inOptions
+    );
 
-    if (!lib.is_real_number(inSize.width) && inSize.width !== "auto") throw this.sequence._customError(this, "size", "inSize.width must be of type number or string 'auto'");
-    if (!lib.is_real_number(inSize.height) && inSize.height !== "auto") throw this.sequence._customError(this, "size", "inSize.height must be of type number or string 'auto'");
-    if (typeof inOptions.gridUnits !== "boolean") throw this.sequence._customError(this, "size", "inOptions.gridUnits must be of type boolean");
+    if (!lib.is_real_number(inSize.width) && inSize.width !== "auto")
+      throw this.sequence._customError(
+        this,
+        "size",
+        "inSize.width must be of type number or string 'auto'"
+      );
+    if (!lib.is_real_number(inSize.height) && inSize.height !== "auto")
+      throw this.sequence._customError(
+        this,
+        "size",
+        "inSize.height must be of type number or string 'auto'"
+      );
+    if (typeof inOptions.gridUnits !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "size",
+        "inOptions.gridUnits must be of type boolean"
+      );
 
     this._size = {
       width: inSize.width ?? canvas.grid.size,
       height: inSize.height ?? canvas.grid.size,
-      ...inOptions
+      ...inOptions,
     };
     return this;
   }
@@ -610,10 +1053,19 @@ export default class EffectSection extends Section {
    * @returns this
    */
   spriteScale(inScaleMin, inScaleMax) {
-    if (!lib.is_real_number(inScaleMin) && typeof inScaleMin !== "object") throw this.sequence._customError(this, "spriteScale", "inScale must be of type number or object");
+    if (!lib.is_real_number(inScaleMin) && typeof inScaleMin !== "object")
+      throw this.sequence._customError(
+        this,
+        "spriteScale",
+        "inScale must be of type number or object"
+      );
     if (lib.is_real_number(inScaleMin)) {
       if (inScaleMax && !lib.is_real_number(inScaleMax)) {
-        throw this.sequence._customError(this, "spriteScale", "if inScaleMin is a number, inScaleMax must also be of type number");
+        throw this.sequence._customError(
+          this,
+          "spriteScale",
+          "if inScaleMin is a number, inScaleMax must also be of type number"
+        );
       }
     }
     this._spriteScaleMin = inScaleMin;
@@ -631,10 +1083,30 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   template({ gridSize, startPoint, endPoint } = {}) {
-    if (gridSize && !lib.is_real_number(gridSize)) throw this.sequence._customError(this, "template", "gridSize must be of type number");
-    if (startPoint && !lib.is_real_number(startPoint)) throw this.sequence._customError(this, "template", "startPoint must be of type number");
-    if (endPoint && !lib.is_real_number(endPoint)) throw this.sequence._customError(this, "template", "endPoint must be of type number");
-    if (!gridSize && !startPoint && !endPoint) throw this.sequence._customError(this, "template", "You need to define at least one parameter!");
+    if (gridSize && !lib.is_real_number(gridSize))
+      throw this.sequence._customError(
+        this,
+        "template",
+        "gridSize must be of type number"
+      );
+    if (startPoint && !lib.is_real_number(startPoint))
+      throw this.sequence._customError(
+        this,
+        "template",
+        "startPoint must be of type number"
+      );
+    if (endPoint && !lib.is_real_number(endPoint))
+      throw this.sequence._customError(
+        this,
+        "template",
+        "endPoint must be of type number"
+      );
+    if (!gridSize && !startPoint && !endPoint)
+      throw this.sequence._customError(
+        this,
+        "template",
+        "You need to define at least one parameter!"
+      );
     if (!this._template) this._template = {};
     if (gridSize) this._template["gridSize"] = gridSize;
     if (startPoint) this._template["startPoint"] = startPoint;
@@ -650,24 +1122,43 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   tilingTexture(scale = { x: 1.0, y: 1.0 }, position = { x: 0, y: 0 }) {
-
     if (lib.is_real_number(scale)) {
-      scale = { x: scale, y: scale }
+      scale = { x: scale, y: scale };
     }
 
-    scale = { x: scale?.x ?? 1.0, y: scale?.y ?? 1.0 }
+    scale = { x: scale?.x ?? 1.0, y: scale?.y ?? 1.0 };
 
-    if (!lib.is_real_number(scale.x)) throw this.sequence._customError(this, "tilingTexture", `scale.x must be of type number!`);
-    if (!lib.is_real_number(scale.y)) throw this.sequence._customError(this, "tilingTexture", `scale.y must be of type number!`);
+    if (!lib.is_real_number(scale.x))
+      throw this.sequence._customError(
+        this,
+        "tilingTexture",
+        `scale.x must be of type number!`
+      );
+    if (!lib.is_real_number(scale.y))
+      throw this.sequence._customError(
+        this,
+        "tilingTexture",
+        `scale.y must be of type number!`
+      );
 
-    position = { x: position?.x ?? 0, y: position?.y ?? 0 }
+    position = { x: position?.x ?? 0, y: position?.y ?? 0 };
 
-    if (!lib.is_real_number(position.x)) throw this.sequence._customError(this, "tilingTexture", `position.x must be of type number!`);
-    if (!lib.is_real_number(position.y)) throw this.sequence._customError(this, "tilingTexture", `position.y must be of type number!`);
+    if (!lib.is_real_number(position.x))
+      throw this.sequence._customError(
+        this,
+        "tilingTexture",
+        `position.x must be of type number!`
+      );
+    if (!lib.is_real_number(position.y))
+      throw this.sequence._customError(
+        this,
+        "tilingTexture",
+        `position.y must be of type number!`
+      );
 
     this._tilingTexture = {
       scale,
-      position
+      position,
     };
 
     return this;
@@ -683,17 +1174,27 @@ export default class EffectSection extends Section {
     if (lib.is_real_number(inAnchor)) {
       inAnchor = {
         x: inAnchor,
-        y: inAnchor
-      }
+        y: inAnchor,
+      };
     }
 
     inAnchor = {
       x: inAnchor?.x ?? 0.5,
-      y: inAnchor?.y ?? 0.5
-    }
+      y: inAnchor?.y ?? 0.5,
+    };
 
-    if (!lib.is_real_number(inAnchor.x)) throw this.sequence._customError(this, "anchor", `inAnchor.x must be of type number!`);
-    if (!lib.is_real_number(inAnchor.y)) throw this.sequence._customError(this, "anchor", `inAnchor.y must be of type number!`);
+    if (!lib.is_real_number(inAnchor.x))
+      throw this.sequence._customError(
+        this,
+        "anchor",
+        `inAnchor.x must be of type number!`
+      );
+    if (!lib.is_real_number(inAnchor.y))
+      throw this.sequence._customError(
+        this,
+        "anchor",
+        `inAnchor.y must be of type number!`
+      );
 
     this._anchor = inAnchor;
     return this;
@@ -709,17 +1210,27 @@ export default class EffectSection extends Section {
     if (lib.is_real_number(inAnchor)) {
       inAnchor = {
         x: inAnchor,
-        y: inAnchor
-      }
+        y: inAnchor,
+      };
     }
 
     inAnchor = {
       x: inAnchor?.x ?? 0.5,
-      y: inAnchor?.y ?? 0.5
-    }
+      y: inAnchor?.y ?? 0.5,
+    };
 
-    if (!lib.is_real_number(inAnchor.x)) throw this.sequence._customError(this, "anchor", `inAnchor.x must be of type number!`);
-    if (!lib.is_real_number(inAnchor.y)) throw this.sequence._customError(this, "anchor", `inAnchor.y must be of type number!`);
+    if (!lib.is_real_number(inAnchor.x))
+      throw this.sequence._customError(
+        this,
+        "anchor",
+        `inAnchor.x must be of type number!`
+      );
+    if (!lib.is_real_number(inAnchor.y))
+      throw this.sequence._customError(
+        this,
+        "anchor",
+        `inAnchor.y must be of type number!`
+      );
 
     this._spriteAnchor = inAnchor;
     return this;
@@ -746,8 +1257,18 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   randomOffset(inOffsetScale = 1.0) {
-    this.sequence._showWarning(this, "randomOffset", "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.", true)
-    if (!lib.is_real_number(inOffsetScale)) throw this.sequence._customError(this, "randomOffset", "inBool must be of type number");
+    this.sequence._showWarning(
+      this,
+      "randomOffset",
+      "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.",
+      true
+    );
+    if (!lib.is_real_number(inOffsetScale))
+      throw this.sequence._customError(
+        this,
+        "randomOffset",
+        "inBool must be of type number"
+      );
     this._randomOffsetLegacy = inOffsetScale;
     return this;
   }
@@ -760,7 +1281,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   randomizeMirrorX(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "randomizeMirrorX", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "randomizeMirrorX",
+        "inBool must be of type boolean"
+      );
     this._randomMirrorX = inBool;
     return this;
   }
@@ -773,7 +1299,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   randomizeMirrorY(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "randomizeMirrorY", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "randomizeMirrorY",
+        "inBool must be of type boolean"
+      );
     this._randomMirrorY = inBool;
     return this;
   }
@@ -786,7 +1317,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   mirrorX(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "mirrorX", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "mirrorX",
+        "inBool must be of type boolean"
+      );
     this._mirrorX = inBool;
     return this;
   }
@@ -799,7 +1335,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   mirrorY(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "mirrorY", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "mirrorY",
+        "inBool must be of type boolean"
+      );
     this._mirrorY = inBool;
     return this;
   }
@@ -811,7 +1352,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   belowTokens(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTokens", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "belowTokens",
+        "inBool must be of type boolean"
+      );
     if (!inBool) return this;
     return this.elevation(0, { absolute: true });
   }
@@ -823,7 +1369,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   belowTiles(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "belowTokens", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "belowTokens",
+        "inBool must be of type boolean"
+      );
     if (!inBool) return this;
     return this.elevation(-1, { absolute: true });
   }
@@ -835,7 +1386,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   aboveLighting(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "aboveLighting", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "aboveLighting",
+        "inBool must be of type boolean"
+      );
     this._aboveLighting = inBool;
     return this;
   }
@@ -848,18 +1404,36 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   elevation(inElevation, inOptions = {}) {
-    if (typeof inElevation !== "number") throw this.sequence._customError(this, "elevation", "inElevation must be of type number");
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "elevation", `inOptions must be of type object`);
+    if (typeof inElevation !== "number")
+      throw this.sequence._customError(
+        this,
+        "elevation",
+        "inElevation must be of type number"
+      );
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "elevation",
+        `inOptions must be of type object`
+      );
 
-    inOptions = foundry.utils.mergeObject({
-      elevation: 1,
-      absolute: false
-    }, inOptions);
+    inOptions = foundry.utils.mergeObject(
+      {
+        elevation: 1,
+        absolute: false,
+      },
+      inOptions
+    );
 
-    if (typeof inOptions.absolute !== "boolean") throw this.sequence._customError(this, "elevation", "inOptions.absolute must be of type boolean");
+    if (typeof inOptions.absolute !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "elevation",
+        "inOptions.absolute must be of type boolean"
+      );
     this._elevation = {
       elevation: inElevation,
-      absolute: inOptions.absolute
+      absolute: inOptions.absolute,
     };
     return this;
   }
@@ -871,7 +1445,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   zIndex(inZIndex) {
-    if (!lib.is_real_number(inZIndex)) throw this.sequence._customError(this, "zIndex", "inZIndex must be of type number");
+    if (!lib.is_real_number(inZIndex))
+      throw this.sequence._customError(
+        this,
+        "zIndex",
+        "inZIndex must be of type number"
+      );
     this._zIndex = inZIndex;
     return this;
   }
@@ -883,7 +1462,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   extraEndDuration(inExtraDuration) {
-    if (!lib.is_real_number(inExtraDuration)) throw this.sequence._customError(this, "extraEndDuration", "inExtraDuration must be of type number");
+    if (!lib.is_real_number(inExtraDuration))
+      throw this.sequence._customError(
+        this,
+        "extraEndDuration",
+        "inExtraDuration must be of type number"
+      );
     this._extraEndDuration = inExtraDuration;
     return this;
   }
@@ -895,7 +1479,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   spriteRotation(inAngle) {
-    if (!lib.is_real_number(inAngle)) throw this.sequence._customError(this, "spriteRotation", "inAngle must be of type number");
+    if (!lib.is_real_number(inAngle))
+      throw this.sequence._customError(
+        this,
+        "spriteRotation",
+        "inAngle must be of type number"
+      );
     this._spriteRotation = inAngle;
     return this;
   }
@@ -907,7 +1496,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   zeroSpriteRotation(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "zeroSpriteRotation", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "zeroSpriteRotation",
+        "inBool must be of type boolean"
+      );
     this._zeroSpriteRotation = inBool;
     return this;
   }
@@ -919,7 +1513,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   noLoop(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "noLoop", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "noLoop",
+        "inBool must be of type boolean"
+      );
     this._noLoop = inBool;
     return this;
   }
@@ -931,7 +1530,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   private(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "private", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "private",
+        "inBool must be of type boolean"
+      );
     this._private = inBool;
     return this;
   }
@@ -943,7 +1547,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   screenSpace(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpace", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "screenSpace",
+        "inBool must be of type boolean"
+      );
     this._screenSpace = inBool;
     this._screenSpaceAnchor = this._screenSpaceAnchor ?? { x: 0.5, y: 0.5 };
     return this;
@@ -956,7 +1565,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   screenSpaceAboveUI(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "screenSpaceAboveUI", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "screenSpaceAboveUI",
+        "inBool must be of type boolean"
+      );
     this._screenSpaceAboveUI = inBool;
     return this;
   }
@@ -970,10 +1584,20 @@ export default class EffectSection extends Section {
   screenSpacePosition(inPosition) {
     inPosition = {
       x: inPosition?.x ?? 0,
-      y: inPosition?.y ?? 0
-    }
-    if (!lib.is_real_number(inPosition.x)) throw this.sequence._customError(this, "screenSpacePosition", `inPosition.x must be of type number!`);
-    if (!lib.is_real_number(inPosition.y)) throw this.sequence._customError(this, "screenSpacePosition", `inPosition.y must be of type number!`);
+      y: inPosition?.y ?? 0,
+    };
+    if (!lib.is_real_number(inPosition.x))
+      throw this.sequence._customError(
+        this,
+        "screenSpacePosition",
+        `inPosition.x must be of type number!`
+      );
+    if (!lib.is_real_number(inPosition.y))
+      throw this.sequence._customError(
+        this,
+        "screenSpacePosition",
+        `inPosition.y must be of type number!`
+      );
     this._screenSpacePosition = inPosition;
     return this;
   }
@@ -988,17 +1612,27 @@ export default class EffectSection extends Section {
     if (lib.is_real_number(inAnchor)) {
       inAnchor = {
         x: inAnchor,
-        y: inAnchor
-      }
+        y: inAnchor,
+      };
     }
 
     inAnchor = {
       x: inAnchor?.x ?? 0.5,
-      y: inAnchor?.y ?? 0.5
-    }
+      y: inAnchor?.y ?? 0.5,
+    };
 
-    if (!lib.is_real_number(inAnchor.x)) throw this.sequence._customError(this, "screenSpaceAnchor", `inAnchor.x must be of type number!`);
-    if (!lib.is_real_number(inAnchor.y)) throw this.sequence._customError(this, "screenSpaceAnchor", `inAnchor.y must be of type number!`);
+    if (!lib.is_real_number(inAnchor.x))
+      throw this.sequence._customError(
+        this,
+        "screenSpaceAnchor",
+        `inAnchor.x must be of type number!`
+      );
+    if (!lib.is_real_number(inAnchor.y))
+      throw this.sequence._customError(
+        this,
+        "screenSpaceAnchor",
+        `inAnchor.y must be of type number!`
+      );
 
     this._screenSpaceAnchor = inAnchor;
     return this;
@@ -1011,26 +1645,68 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   screenSpaceScale(inOptions) {
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        `inOptions must be of type object`
+      );
 
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "screenSpaceScale", `inOptions must be of type object`);
+    inOptions = foundry.utils.mergeObject(
+      {
+        x: 1.0,
+        y: 1.0,
+        fitX: false,
+        fitY: false,
+        ratioX: false,
+        ratioY: false,
+      },
+      inOptions
+    );
 
-    inOptions = foundry.utils.mergeObject({
-      x: 1.0,
-      y: 1.0,
-      fitX: false,
-      fitY: false,
-      ratioX: false,
-      ratioY: false
-    }, inOptions)
+    if (!lib.is_real_number(inOptions.x))
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        `inOptions.x must be of type number!`
+      );
+    if (!lib.is_real_number(inOptions.y))
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        `inOptions.y must be of type number!`
+      );
+    if (typeof inOptions.fitX !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        "inOptions.fitX must be of type boolean"
+      );
+    if (typeof inOptions.fitY !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        "inOptions.fitY must be of type boolean"
+      );
+    if (typeof inOptions.ratioX !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        "inOptions.ratioX must be of type boolean"
+      );
+    if (typeof inOptions.ratioY !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        "inOptions.ratioY must be of type boolean"
+      );
 
-    if (!lib.is_real_number(inOptions.x)) throw this.sequence._customError(this, "screenSpaceScale", `inOptions.x must be of type number!`);
-    if (!lib.is_real_number(inOptions.y)) throw this.sequence._customError(this, "screenSpaceScale", `inOptions.y must be of type number!`);
-    if (typeof inOptions.fitX !== "boolean") throw this.sequence._customError(this, "screenSpaceScale", "inOptions.fitX must be of type boolean");
-    if (typeof inOptions.fitY !== "boolean") throw this.sequence._customError(this, "screenSpaceScale", "inOptions.fitY must be of type boolean");
-    if (typeof inOptions.ratioX !== "boolean") throw this.sequence._customError(this, "screenSpaceScale", "inOptions.ratioX must be of type boolean");
-    if (typeof inOptions.ratioY !== "boolean") throw this.sequence._customError(this, "screenSpaceScale", "inOptions.ratioY must be of type boolean");
-
-    if (inOptions.ratioX && inOptions.ratioY) throw this.sequence._customError(this, "screenSpaceScale", "both ratioX and ratioY cannot be true, one axis must fit or be set directly")
+    if (inOptions.ratioX && inOptions.ratioY)
+      throw this.sequence._customError(
+        this,
+        "screenSpaceScale",
+        "both ratioX and ratioY cannot be true, one axis must fit or be set directly"
+      );
 
     this._screenSpaceScale = inOptions;
 
@@ -1048,9 +1724,19 @@ export default class EffectSection extends Section {
     inOrigin = lib.validate_document(inOrigin);
     if (inOrigin instanceof foundry.abstract.Document) {
       inOrigin = inOrigin?.uuid;
-      if (!inOrigin) throw this.sequence._customError(this, "origin", "could not find the UUID for the given Document")
+      if (!inOrigin)
+        throw this.sequence._customError(
+          this,
+          "origin",
+          "could not find the UUID for the given Document"
+        );
     }
-    if (typeof inOrigin !== "string") throw this.sequence._customError(this, "origin", "inOrigin must be of type string");
+    if (typeof inOrigin !== "string")
+      throw this.sequence._customError(
+        this,
+        "origin",
+        "inOrigin must be of type string"
+      );
     this._origin = inOrigin;
     return this;
   }
@@ -1066,17 +1752,35 @@ export default class EffectSection extends Section {
       inDocuments = [inDocuments];
     }
     for (let doc of inDocuments) {
-      if (typeof doc !== "string" && !(doc instanceof PlaceableObject) && !(doc instanceof foundry.abstract.Document)) {
-        throw this.sequence._customError(this, "tieToDocument", "inOrigin must be of type string, PlaceableObject, or Document, or an array thereof");
+      if (
+        typeof doc !== "string" &&
+        !(doc instanceof PlaceableObject) &&
+        !(doc instanceof foundry.abstract.Document)
+      ) {
+        throw this.sequence._customError(
+          this,
+          "tieToDocument",
+          "inOrigin must be of type string, PlaceableObject, or Document, or an array thereof"
+        );
       }
       if (typeof doc === "string") {
         const obj = lib.from_uuid_fast(doc);
-        if (!obj) throw this.sequence._customError(this, "tieToDocument", `could not find document with UUID "${doc}"`);
+        if (!obj)
+          throw this.sequence._customError(
+            this,
+            "tieToDocument",
+            `could not find document with UUID "${doc}"`
+          );
       } else {
         doc = lib.validate_document(doc);
         if (doc instanceof foundry.abstract.Document) {
           doc = doc?.uuid;
-          if (!doc) throw this.sequence._customError(this, "tieToDocument", "could not find the UUID for the given object");
+          if (!doc)
+            throw this.sequence._customError(
+              this,
+              "tieToDocument",
+              "could not find the UUID for the given object"
+            );
         }
       }
       this._tiedDocuments.push(doc);
@@ -1092,7 +1796,6 @@ export default class EffectSection extends Section {
    * @returns {Section}
    */
   mask(inObject) {
-
     if (!inObject) {
       this._selfMask = true;
       return this;
@@ -1107,12 +1810,17 @@ export default class EffectSection extends Section {
 
     const validatedObject = this._validateLocation(inObject);
 
-    const isValidObject = validatedObject instanceof TokenDocument
-      || validatedObject instanceof TileDocument
-      || validatedObject instanceof DrawingDocument
-      || validatedObject instanceof MeasuredTemplateDocument;
+    const isValidObject =
+      validatedObject instanceof TokenDocument ||
+      validatedObject instanceof TileDocument ||
+      validatedObject instanceof DrawingDocument ||
+      validatedObject instanceof MeasuredTemplateDocument;
     if (!isValidObject) {
-      throw this.sequence._customError(this, "mask", "A foundry object was provided, but only Tokens, Tiles, Drawings, and MeasuredTemplates may be used to create effect masks");
+      throw this.sequence._customError(
+        this,
+        "mask",
+        "A foundry object was provided, but only Tokens, Tiles, Drawings, and MeasuredTemplates may be used to create effect masks"
+      );
     }
 
     this._masks.push(lib.get_object_identifier(validatedObject));
@@ -1127,7 +1835,12 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   xray(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "xray", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "xray",
+        "inBool must be of type boolean"
+      );
     this._xray = inBool;
     return this;
   }
@@ -1138,12 +1851,25 @@ export default class EffectSection extends Section {
    * @param inOptions
    * @returns {EffectSection}
    */
-  isometric(inOptions={}) {
-    if (typeof inOptions !== "object") throw this.sequence._customError(this, "isometric", `inOptions must be of type object`);
-    inOptions = foundry.utils.mergeObject({
-      overlay: false
-    }, inOptions)
-    if (typeof inOptions?.overlay !== "boolean") throw this.sequence._customError(this, "isometric", "inOptions.overlay must be of type boolean");
+  isometric(inOptions = {}) {
+    if (typeof inOptions !== "object")
+      throw this.sequence._customError(
+        this,
+        "isometric",
+        `inOptions must be of type object`
+      );
+    inOptions = foundry.utils.mergeObject(
+      {
+        overlay: false,
+      },
+      inOptions
+    );
+    if (typeof inOptions?.overlay !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "isometric",
+        "inOptions.overlay must be of type boolean"
+      );
     this._isometric = inOptions;
     return this;
   }
@@ -1153,30 +1879,69 @@ export default class EffectSection extends Section {
    */
   _expressWarnings() {
     if (this._stretchTo && this._anchor?.x) {
-      this.sequence._showWarning(this, "stretchTo", "you have called .stretchTo() and .anchor() - stretchTo will manually set the X axis of the anchor and may not behave like you expect.", true);
+      this.sequence._showWarning(
+        this,
+        "stretchTo",
+        "you have called .stretchTo() and .anchor() - stretchTo will manually set the X axis of the anchor and may not behave like you expect.",
+        true
+      );
     }
     if (this._stretchTo && this._scaleToObject) {
-      throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while scaling to fit another??? Make up your mind!");
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "You're trying to stretch towards an object, while scaling to fit another??? Make up your mind!"
+      );
     }
     if (this._stretchTo && this._randomRotation) {
-      throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while trying to randomly rotate the effect? What?");
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "You're trying to stretch towards an object, while trying to randomly rotate the effect? What?"
+      );
     }
     if (this._stretchTo && this._moveTowards) {
-      throw this.sequence._customError(this, "stretchTo", "You're trying to stretch towards an object, while moving towards it? You're insane.");
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "You're trying to stretch towards an object, while moving towards it? You're insane."
+      );
     }
-    if (this._attachTo && this._stretchTo?.attachTo && (this._startTime || this._endTime) && this._isRangedEffect) {
-      throw this.sequence._customError(this, "stretchTo", "Dual-attached range-finding effects combined while using any of the time methods is stable - modern web browsers cannot handle it and it may crash them, so this feature has been disabled.");
+    if (
+      this._attachTo &&
+      this._stretchTo?.attachTo &&
+      (this._startTime || this._endTime) &&
+      this._isRangedEffect
+    ) {
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "Dual-attached range-finding effects combined while using any of the time methods is stable - modern web browsers cannot handle it and it may crash them, so this feature has been disabled."
+      );
     }
 
     const source = this._getSourceObject();
     const target = this._getTargetObject();
 
-    if (!this._screenSpace && this._persistOptions?.persistTokenPrototype && this._masks.filter(uuid => uuid !== source).length > 0) {
-      this.sequence._showWarning(this, "persist", "You have applied persistTokenPrototype with multiple masks from objects in the scene - these will not be persisted across scenes!", true);
+    if (
+      !this._screenSpace &&
+      this._persistOptions?.persistTokenPrototype &&
+      this._masks.filter((uuid) => uuid !== source).length > 0
+    ) {
+      this.sequence._showWarning(
+        this,
+        "persist",
+        "You have applied persistTokenPrototype with multiple masks from objects in the scene - these will not be persisted across scenes!",
+        true
+      );
     }
 
     if (!source && !target && !this._screenSpace) {
-      throw this.sequence._customError(this, "play", "Could not determine where to play the effect!");
+      throw this.sequence._customError(
+        this,
+        "play",
+        "Could not determine where to play the effect!"
+      );
     }
   }
 
@@ -1184,9 +1949,7 @@ export default class EffectSection extends Section {
    * @OVERRIDE
    */
   async preRun() {
-
     if (this._from) {
-
       this._file = this._file || this._from.object?.texture?.src;
 
       if (this._source === null) {
@@ -1198,15 +1961,23 @@ export default class EffectSection extends Section {
         this._size = {
           width: size?.width ?? canvas.grid.size,
           height: size?.height ?? canvas.grid.size,
-          gridUnits: false
+          gridUnits: false,
         };
       }
 
-      if (this._mirrorX === null && (this._from.object.mirrorX || (this._from.object?.tile && this._from.object?.tile.scale.x < 0))) {
+      if (
+        this._mirrorX === null &&
+        (this._from.object.mirrorX ||
+          (this._from.object?.tile && this._from.object?.tile.scale.x < 0))
+      ) {
         this._mirrorX = true;
       }
 
-      if (this._mirrorY === null && (this._from.object.mirrorY || (this._from.object?.tile && this._from.object?.tile.scale.y < 0))) {
+      if (
+        this._mirrorY === null &&
+        (this._from.object.mirrorY ||
+          (this._from.object?.tile && this._from.object?.tile.scale.y < 0))
+      ) {
         this._mirrorY = true;
       }
 
@@ -1216,10 +1987,9 @@ export default class EffectSection extends Section {
 
       this._randomOffset = {
         source: this._randomOffset?.source ?? this._from.options.randomOffset,
-        target: this._randomOffset?.target ?? false
-      }
+        target: this._randomOffset?.target ?? false,
+      };
     }
-
   }
 
   /**
@@ -1235,10 +2005,12 @@ export default class EffectSection extends Section {
         resolve();
       });
     }
-    if(!this._deserializedData) this._expressWarnings();
+    if (!this._deserializedData) this._expressWarnings();
     const data = await this._sanitizeEffectData();
     if (Hooks.call("preCreateSequencerEffect", data) === false) return;
-    let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId)) && !this.sequence.localOnly;
+    let push =
+      !(data?.users?.length === 1 && data?.users?.includes(game.userId)) &&
+      !this.sequence.localOnly;
     let canvasEffectData = await Sequencer.EffectManager.play(data, push);
     let totalDuration = this._currentWaitTime;
     if (this._persist) {
@@ -1246,7 +2018,7 @@ export default class EffectSection extends Section {
     } else {
       totalDuration += await canvasEffectData.duration;
     }
-    await new Promise(resolve => setTimeout(resolve, totalDuration))
+    await new Promise((resolve) => setTimeout(resolve, totalDuration));
   }
 
   /**
@@ -1279,22 +2051,21 @@ export default class EffectSection extends Section {
       }
 
       if (!this.sequence.nameOffsetMap[this._name]) {
-
         const source = this._getSourceObject();
         const target = this._getTargetObject();
 
         if (this._offsetLegacy && !this._offset) {
           this._offset = {
             source: !target ? this._offsetLegacy : false,
-            target: !!target ? this._offsetLegacy : false
-          }
+            target: !!target ? this._offsetLegacy : false,
+          };
         }
 
         if (this._randomOffsetLegacy && !this._randomOffset) {
           this._randomOffset = {
             source: !target ? this._randomOffsetLegacy : false,
-            target: !!target ? this._randomOffsetLegacy : false
-          }
+            target: !!target ? this._randomOffsetLegacy : false,
+          };
         }
 
         this.sequence.nameOffsetMap[this._name] = {
@@ -1305,21 +2076,29 @@ export default class EffectSection extends Section {
           missed: this._missed,
           offset: this._offset,
           repetitions: this._repetitions,
-          twister: {}
+          twister: {},
         };
       }
     }
 
-    if (!this._file && !this._from && !this._text && !this._shapes.length && this.sequence.softFail) {
+    if (
+      !this._file &&
+      !this._from &&
+      !this._text &&
+      !this._shapes.length &&
+      this.sequence.softFail
+    ) {
       this._playEffect = false;
       return;
     }
 
-    let fileData = this._file ? (await this._determineFile(this._file)) : {
-      file: this._file,
-      forcedIndex: false,
-      customRange: false
-    };
+    let fileData = this._file
+      ? await this._determineFile(this._file)
+      : {
+          file: this._file,
+          forcedIndex: false,
+          customRange: false,
+        };
 
     this._isRangedEffect = fileData?.file?.rangeFind;
 
@@ -1328,17 +2107,19 @@ export default class EffectSection extends Section {
     let exists = false;
     try {
       exists = await SequencerFileCache.srcExists(fileData.file);
-    } catch (err) {
-    }
+    } catch (err) {}
 
     if (!exists) {
       if (this.sequence.softFail) {
         this._playEffect = false;
         return;
       }
-      throw this.sequence._customError(this, "Play", `Could not find file:<br>${fileData.file}`);
+      throw this.sequence._customError(
+        this,
+        "Play",
+        `Could not find file:<br>${fileData.file}`
+      );
     }
-
   }
 
   /**
@@ -1346,7 +2127,10 @@ export default class EffectSection extends Section {
    */
   _getSourceObject() {
     if (!this._source || typeof this._source !== "object") return this._source;
-    return lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source);
+    return (
+      lib.get_object_identifier(this._source) ??
+      canvaslib.get_object_canvas_data(this._source)
+    );
   }
 
   /**
@@ -1355,49 +2139,65 @@ export default class EffectSection extends Section {
   _getTargetObject() {
     if (!this._target?.target) return this._target;
     if (typeof this._target.target !== "object") return this._target.target;
-    return lib.get_object_identifier(this._target.target) ?? canvaslib.get_object_canvas_data(this._target.target, true);
+    return (
+      lib.get_object_identifier(this._target.target) ??
+      canvaslib.get_object_canvas_data(this._target.target, true)
+    );
   }
 
   /**
    * @private
    */
   async _sanitizeEffectData() {
-
-    if(this._deserializedData){
-      this._deserializedData.creationTimestamp = (+new Date());
+    if (this._deserializedData) {
+      this._deserializedData.creationTimestamp = +new Date();
       this._deserializedData.remote = true;
       return this._deserializedData;
     }
 
-    const {
-      file,
-      forcedIndex,
-      customRange
-    } = this._file && this._playEffect ? (await this._determineFile(this._file)) : {
-      file: this._file,
-      forcedIndex: false,
-      customRange: false
-    };
+    const { file, forcedIndex, customRange } =
+      this._file && this._playEffect
+        ? await this._determineFile(this._file)
+        : {
+            file: this._file,
+            forcedIndex: false,
+            customRange: false,
+          };
 
     const source = this._getSourceObject();
     const target = this._getTargetObject();
 
     if (this._offsetLegacy) {
       this._offset = {
-        source: !target && this._offset?.source ? this._offsetLegacy : this._offset?.source,
-        target: !!target && this._offset?.target ? this._offsetLegacy : this._offset?.target
-      }
+        source:
+          !target && this._offset?.source
+            ? this._offsetLegacy
+            : this._offset?.source,
+        target:
+          !!target && this._offset?.target
+            ? this._offsetLegacy
+            : this._offset?.target,
+      };
     }
 
     if (this._randomOffsetLegacy) {
       this._randomOffset = {
-        source: !target && this._randomOffset?.source ? this._randomOffsetLegacy : this._randomOffset?.source,
-        target: !!target && this._randomOffset?.target ? this._randomOffsetLegacy : this._randomOffset?.target
-      }
+        source:
+          !target && this._randomOffset?.source
+            ? this._randomOffsetLegacy
+            : this._randomOffset?.source,
+        target:
+          !!target && this._randomOffset?.target
+            ? this._randomOffsetLegacy
+            : this._randomOffset?.target,
+      };
     }
 
     if (this._selfMask) {
-      this._masks.push(lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source));
+      this._masks.push(
+        lib.get_object_identifier(this._source) ??
+          canvaslib.get_object_canvas_data(this._source)
+      );
     }
 
     let sceneId = game.user.viewedScene;
@@ -1420,7 +2220,7 @@ export default class EffectSection extends Section {
       _id: randomID(),
       flagVersion: flagManager.latestFlagVersion,
       sequenceId: this.sequence.id,
-      creationTimestamp: (+new Date()),
+      creationTimestamp: +new Date(),
       sceneId,
       creatorUserId: game.userId,
       moduleName: this.sequence.moduleName,
@@ -1439,14 +2239,18 @@ export default class EffectSection extends Section {
       source: source,
       target: target,
       rotateTowards: this._rotateTowards,
-      stretchTo: this._stretchTo ? {
-        attachTo: this._stretchTo.attachTo,
-        onlyX: this._stretchTo.onlyX
-      } : false,
-      moveTowards: this._moveTowards ? {
-        ease: this._moveTowards.ease,
-        rotate: this._moveTowards.rotate
-      } : false,
+      stretchTo: this._stretchTo
+        ? {
+            attachTo: this._stretchTo.attachTo,
+            onlyX: this._stretchTo.onlyX,
+          }
+        : false,
+      moveTowards: this._moveTowards
+        ? {
+            ease: this._moveTowards.ease,
+            rotate: this._moveTowards.rotate,
+          }
+        : false,
 
       attachTo: this._attachTo,
       missed: this._missed,
@@ -1489,8 +2293,8 @@ export default class EffectSection extends Section {
       noLoop: this._noLoop,
       spriteRotation: this._spriteRotation,
       tint: this._tint?.decimal,
-      flipX: (this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)),
-      flipY: (this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)),
+      flipX: this._mirrorX || (this._randomMirrorX && Math.random() < 0.5),
+      flipY: this._mirrorY || (this._randomMirrorY && Math.random() < 0.5),
 
       /**
        * Time properties
@@ -1500,17 +2304,24 @@ export default class EffectSection extends Section {
       persistOptions: this._persistOptions,
       playbackRate: this._playbackRate,
       extraEndDuration: this._extraEndDuration,
-      time: (this._startTime || this._endTime) ? {
-        start: lib.is_real_number(this._startTime) ? {
-          value: this._startTime,
-          isPerc: this._startPerc
-        } : false,
-        end: lib.is_real_number(this._endTime) ? {
-          value: this._endTime,
-          isPerc: this._endPerc
-        } : false,
-        isRange: this._isRange
-      } : false,
+      time:
+        this._startTime || this._endTime
+          ? {
+              start: lib.is_real_number(this._startTime)
+                ? {
+                    value: this._startTime,
+                    isPerc: this._startPerc,
+                  }
+                : false,
+              end: lib.is_real_number(this._endTime)
+                ? {
+                    value: this._endTime,
+                    isPerc: this._endPerc,
+                  }
+                : false,
+              isRange: this._isRange,
+            }
+          : false,
 
       /**
        * Animation properties
@@ -1536,22 +2347,30 @@ export default class EffectSection extends Section {
       screenSpacePosition: this._screenSpacePosition,
       screenSpaceScale: this._screenSpaceScale,
 
-      nameOffsetMap: this.sequence.nameOffsetMap
+      nameOffsetMap: this.sequence.nameOffsetMap,
     });
 
     for (let override of this._overrides) {
       data = await override(this, data);
     }
 
-    if ((typeof data.file !== "string" || data.file === "") && !data.text && !data.shapes && !data.customRange) {
-      throw this.sequence._customError(this, "file", "an effect must have a file, text, or have a shape!");
+    if (
+      (typeof data.file !== "string" || data.file === "") &&
+      !data.text &&
+      !data.shapes &&
+      !data.customRange
+    ) {
+      throw this.sequence._customError(
+        this,
+        "file",
+        "an effect must have a file, text, or have a shape!"
+      );
     }
 
     // TODO: Revisit this at some point?
     // data = Object.fromEntries(Object.entries(data).filter(entry => entry[1] !== null && entry[1] !== false));
 
     return data;
-
   }
 
   async _serialize() {
@@ -1561,7 +2380,7 @@ export default class EffectSection extends Section {
     return {
       ...data,
       type: "effect",
-      sectionData
+      sectionData,
     };
   }
 
@@ -1574,7 +2393,6 @@ export default class EffectSection extends Section {
    * @private
    */
   _getCalculatedScale(type) {
-
     const min = this["_" + type + "Min"];
     const max = this["_" + type + "Max"];
 
@@ -1585,13 +2403,12 @@ export default class EffectSection extends Section {
       }
       scale = {
         x: scale,
-        y: scale
-      }
+        y: scale,
+      };
     }
     return {
-      x: (scale?.x ?? 1.0),
-      y: (scale?.y ?? 1.0)
-    }
+      x: scale?.x ?? 1.0,
+      y: scale?.y ?? 1.0,
+    };
   }
-
 }

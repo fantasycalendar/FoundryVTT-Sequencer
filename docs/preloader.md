@@ -7,7 +7,7 @@ Use the preloader with **caution** and **consideration** - not every client can 
 You can access the global Sequencer preloader through:
 
 ```js
-Sequencer.Preloader
+Sequencer.Preloader;
 ```
 
 ## Preload For Clients
@@ -21,20 +21,30 @@ Sequencer.Preloader.preloadForClients(files = string|array<string>, showProgress
 
 ```js
 // Preload a single file:
-await Sequencer.Preloader.preloadForClients("single/path/to/file.webm")
+await Sequencer.Preloader.preloadForClients("single/path/to/file.webm");
 
 // Preloading a list of files:
-await Sequencer.Preloader.preloadForClients(["an/array/of/files.webm", "that/all/gets/loaded.webm"])
+await Sequencer.Preloader.preloadForClients([
+  "an/array/of/files.webm",
+  "that/all/gets/loaded.webm",
+]);
 
 // Preload a single database path (which may contain multiple files)
-await Sequencer.Preloader.preloadForClients("jb2a.fire_bolt")
+await Sequencer.Preloader.preloadForClients("jb2a.fire_bolt");
 
 // Preload a list of database paths:
-await Sequencer.Preloader.preloadForClients(["jb2a.fire_bolt", "jb2a.ray_of_frost"])
+await Sequencer.Preloader.preloadForClients([
+  "jb2a.fire_bolt",
+  "jb2a.ray_of_frost",
+]);
 
 // Preloading a list of files and show the progress bar:
-await Sequencer.Preloader.preloadForClients(["an/array/of/files.webm", "that/all/gets/loaded.webm"], true)
+await Sequencer.Preloader.preloadForClients(
+  ["an/array/of/files.webm", "that/all/gets/loaded.webm"],
+  true
+);
 ```
+
 <strong>--------------------------------</strong>
 
 </details>
@@ -58,20 +68,27 @@ Sequencer.Preloader.preload(files = string|array<strings>, showProgressBar = boo
 
 ```js
 // Preload a single file:
-await Sequencer.Preloader.preload("single/path/to/file.webm")
+await Sequencer.Preloader.preload("single/path/to/file.webm");
 
 // Preloading a list of files:
-await Sequencer.Preloader.preload(["an/array/of/files.webm", "that/all/gets/loaded.webm"])
+await Sequencer.Preloader.preload([
+  "an/array/of/files.webm",
+  "that/all/gets/loaded.webm",
+]);
 
 // Preload a single database path (which may contain multiple files)
-await Sequencer.Preloader.preload("jb2a.fire_bolt")
+await Sequencer.Preloader.preload("jb2a.fire_bolt");
 
 // Preload a list of database paths:
-await Sequencer.Preloader.preload(["jb2a.fire_bolt", "jb2a.ray_of_frost"])
+await Sequencer.Preloader.preload(["jb2a.fire_bolt", "jb2a.ray_of_frost"]);
 
 // Preloading a list of files and show the progress bar:
-await Sequencer.Preloader.preload(["an/array/of/files.webm", "that/all/gets/loaded.webm"], true)
+await Sequencer.Preloader.preload(
+  ["an/array/of/files.webm", "that/all/gets/loaded.webm"],
+  true
+);
 ```
+
 <strong>--------------------------------</strong>
 
 </details>

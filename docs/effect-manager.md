@@ -3,15 +3,17 @@
 You can access the global Sequencer Effect Manager through:
 
 ```js
-Sequencer.EffectManager
+Sequencer.EffectManager;
 ```
 
 ## Show Effect Manager
 
 You can either call this method:
+
 ```js
-Sequencer.EffectManager.show()
+Sequencer.EffectManager.show();
 ```
+
 Or press this button
 
 ![Image showing the button to open the Effect Manager](images/effect-viewer-button.jpg)
@@ -26,13 +28,13 @@ This will open this UI, where you can end any of your own effects currently play
 
 ```js
 inFilters = {
-    name: String, // From the .name() method on effects, can have wildcards in them (such as "fireball_*" to match anything that starts with "fireball_")
-    object: PlaceableObject|String,  // Token, Tile, etc, or its id
-    source: PlaceableObject|Document|String, // Token, Tile, etc, Document, or an UUID
-    target: PlaceableObject|Document|String, // Token, Tile, etc, Document, or an UUID
-    sceneId: String, // Default to current scene ID
-    origin: String // From the .origin() method on effects
-}
+  name: String, // From the .name() method on effects, can have wildcards in them (such as "fireball_*" to match anything that starts with "fireball_")
+  object: PlaceableObject | String, // Token, Tile, etc, or its id
+  source: PlaceableObject | Document | String, // Token, Tile, etc, Document, or an UUID
+  target: PlaceableObject | Document | String, // Token, Tile, etc, Document, or an UUID
+  sceneId: String, // Default to current scene ID
+  origin: String, // From the .origin() method on effects
+};
 ```
 
 <details>
@@ -40,14 +42,18 @@ inFilters = {
 
 ```js
 // Retrieves every effect named "test_effect"
-const effects = Sequencer.EffectManager.getEffects({ name: "test_effect" })
+const effects = Sequencer.EffectManager.getEffects({ name: "test_effect" });
 
 // Retrieves effects named "test_effect" on a specific token
-const effects = Sequencer.EffectManager.getEffects({ name: "test_effect", object: token })
+const effects = Sequencer.EffectManager.getEffects({
+  name: "test_effect",
+  object: token,
+});
 
 // Retrieves effects that have "test" in their name
-const effects = Sequencer.EffectManager.getEffects({ name: "*test*" })
+const effects = Sequencer.EffectManager.getEffects({ name: "*test*" });
 ```
+
 <strong>--------------------------------</strong>
 
 </details>
@@ -60,31 +66,33 @@ This will return any effect(s) that match the given filters. If an object is giv
 
 ```js
 inFilters = {
-    name: String, // From the .name() method on effects, can have wildcards in them (such as "fireball_*" to match anything that starts with "fireball_")
-    object: PlaceableObject|String,  // Token, Tile, etc, or its id,
-    effects: CanvasEffect|String,  // The actual effect, or an ID of an effect,
-    source: PlaceableObject|Document|String, // Token, Tile, etc, Document, or an UUID
-    target: PlaceableObject|Document|String, // Token, Tile, etc, Document, or an UUID
-    sceneId: String, // Default to current scene ID
-    origin: String // From the .origin() method on effects
-}
+  name: String, // From the .name() method on effects, can have wildcards in them (such as "fireball_*" to match anything that starts with "fireball_")
+  object: PlaceableObject | String, // Token, Tile, etc, or its id,
+  effects: CanvasEffect | String, // The actual effect, or an ID of an effect,
+  source: PlaceableObject | Document | String, // Token, Tile, etc, Document, or an UUID
+  target: PlaceableObject | Document | String, // Token, Tile, etc, Document, or an UUID
+  sceneId: String, // Default to current scene ID
+  origin: String, // From the .origin() method on effects
+};
 ```
 
 <details>
   <summary><strong>------ Click for examples ------</strong></summary><br />
 
 ```js
-
 // Ends every effect named "test_effect"
-await Sequencer.EffectManager.endEffects({ name: "test_effect" })
+await Sequencer.EffectManager.endEffects({ name: "test_effect" });
 
 // Ends effects named "test_effect" on a specific token
-await Sequencer.EffectManager.endEffects({ name: "test_effect", object: token })
+await Sequencer.EffectManager.endEffects({
+  name: "test_effect",
+  object: token,
+});
 
 // Ends effects that have "test" in their name
-const effects = Sequencer.EffectManager.getEffects({ name: "*test*" })
-
+const effects = Sequencer.EffectManager.getEffects({ name: "*test*" });
 ```
+
 <strong>--------------------------------</strong>
 
 </details>
@@ -101,14 +109,13 @@ You can only end effects you created, unless you are a GM.
   <summary><strong>------ Click for examples ------</strong></summary><br />
 
 ```js
-
 // Ends all effects in the current scene
-await Sequencer.EffectManager.endAllEffects()
+await Sequencer.EffectManager.endAllEffects();
 
 // Ends all effects in the scene with the ID of "ULohafjBlsTRST8F"
-await Sequencer.EffectManager.endAllEffects("ULohafjBlsTRST8F")
-
+await Sequencer.EffectManager.endAllEffects("ULohafjBlsTRST8F");
 ```
+
 <strong>--------------------------------</strong>
 
 </details>

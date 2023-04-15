@@ -2,12 +2,15 @@ import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 
 export default class FunctionSection extends Section {
-
   constructor(inSequence, inFunc) {
-    super(inSequence)
-    if (!lib.is_function(inFunc)) this._customError("create", "The given function needs to be an actual function");
+    super(inSequence);
+    if (!lib.is_function(inFunc))
+      this._customError(
+        "create",
+        "The given function needs to be an actual function"
+      );
     this._func = inFunc;
-    this._waitUntilFinished = inFunc.constructor.name === 'AsyncFunction';
+    this._waitUntilFinished = inFunc.constructor.name === "AsyncFunction";
   }
 
   /**
@@ -25,5 +28,4 @@ export default class FunctionSection extends Section {
   async _execute() {
     await this.run();
   }
-
 }

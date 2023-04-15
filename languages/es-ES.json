@@ -34,15 +34,15 @@
       "Option": {
         "Scale": "Escala",
         "BelowTokens": "Bajo los iconos",
-        "SnapToGrid":  "Fijar a la rejilla",
+        "SnapToGrid": "Fijar a la rejilla",
         "RandomRotation": "Rotación aleatoria",
-        "RandomMirrorY":  "Eje Y invertido aleatorio",
+        "RandomMirrorY": "Eje Y invertido aleatorio",
         "RandomOffset": "Desviación aleatoria",
-        "Repetitions":  "Repeticiones",
+        "Repetitions": "Repeticiones",
         "DelayMin": "Retardo (min)",
-        "DelayMax":  "Retardo (max)",
+        "DelayMax": "Retardo (max)",
         "Preload": "Precargar",
-        "DragBehavior":  "Comportamiento al arrastrar:<br>Estirar o Mover",
+        "DragBehavior": "Comportamiento al arrastrar:<br>Estirar o Mover",
         "MoveSpeed": "Velocidad de movimiento",
         "AttachTo": "Fijar al punto de partida",
         "StretchToAttach": "Fijar al punto final",
@@ -101,7 +101,7 @@
     },
 
     "Setting": {
-      "DatabaseViewer":{
+      "DatabaseViewer": {
         "Title": "Abrir visor de base de datos de Sequencer",
         "Label": "Abrir visor de base de datos"
       },

@@ -1,46 +1,51 @@
 import * as lib from "../lib/lib.js";
 
 export function registerEase(easeName, easeFunction, overwrite = false) {
-  if (typeof easeName !== "string") throw lib.custom_error("registerEase", "easeName must be of type string")
-  if (!lib.is_function(easeFunction)) throw lib.custom_error("registerEase", "easeFunction must be of type function")
+  if (typeof easeName !== "string")
+    throw lib.custom_error("registerEase", "easeName must be of type string");
+  if (!lib.is_function(easeFunction))
+    throw lib.custom_error(
+      "registerEase",
+      "easeFunction must be of type function"
+    );
   if (easeFunctions[easeName] !== undefined && !overwrite) return;
   lib.debug(`registerEase | Registered ease function: ${easeName}`);
   easeFunctions[easeName] = easeFunction;
 }
 
 export const easeFunctions = {
-  "linear": linear,
-  "easeInSine": easeInSine,
-  "easeOutSine": easeOutSine,
-  "easeInOutSine": easeInOutSine,
-  "easeInQuad": easeInQuad,
-  "easeOutQuad": easeOutQuad,
-  "easeInOutQuad": easeInOutQuad,
-  "easeInCubic": easeInCubic,
-  "easeOutCubic": easeOutCubic,
-  "easeInOutCubic": easeInOutCubic,
-  "easeInQuart": easeInQuart,
-  "easeOutQuart": easeOutQuart,
-  "easeInOutQuart": easeInOutQuart,
-  "easeInQuint": easeInQuint,
-  "easeOutQuint": easeOutQuint,
-  "easeInOutQuint": easeInOutQuint,
-  "easeInExpo": easeInExpo,
-  "easeOutExpo": easeOutExpo,
-  "easeInOutExpo": easeInOutExpo,
-  "easeInCirc": easeInCirc,
-  "easeOutCirc": easeOutCirc,
-  "easeInOutCirc": easeInOutCirc,
-  "easeInBack": easeInBack,
-  "easeOutBack": easeOutBack,
-  "easeInOutBack": easeInOutBack,
-  "easeInElastic": easeInElastic,
-  "easeOutElastic": easeOutElastic,
-  "easeInOutElastic": easeInOutElastic,
-  "easeInBounce": easeInBounce,
-  "easeOutBounce": easeOutBounce,
-  "easeInOutBounce": easeInOutBounce
-}
+  linear: linear,
+  easeInSine: easeInSine,
+  easeOutSine: easeOutSine,
+  easeInOutSine: easeInOutSine,
+  easeInQuad: easeInQuad,
+  easeOutQuad: easeOutQuad,
+  easeInOutQuad: easeInOutQuad,
+  easeInCubic: easeInCubic,
+  easeOutCubic: easeOutCubic,
+  easeInOutCubic: easeInOutCubic,
+  easeInQuart: easeInQuart,
+  easeOutQuart: easeOutQuart,
+  easeInOutQuart: easeInOutQuart,
+  easeInQuint: easeInQuint,
+  easeOutQuint: easeOutQuint,
+  easeInOutQuint: easeInOutQuint,
+  easeInExpo: easeInExpo,
+  easeOutExpo: easeOutExpo,
+  easeInOutExpo: easeInOutExpo,
+  easeInCirc: easeInCirc,
+  easeOutCirc: easeOutCirc,
+  easeInOutCirc: easeInOutCirc,
+  easeInBack: easeInBack,
+  easeOutBack: easeOutBack,
+  easeInOutBack: easeInOutBack,
+  easeInElastic: easeInElastic,
+  easeOutElastic: easeOutElastic,
+  easeInOutElastic: easeInOutElastic,
+  easeInBounce: easeInBounce,
+  easeOutBounce: easeOutBounce,
+  easeInOutBounce: easeInOutBounce,
+};
 
 function linear(x) {
   return x;
@@ -118,9 +123,10 @@ function easeInOutExpo(x) {
   return x === 0
     ? 0
     : x === 1
-      ? 1
-      : x < 0.5 ? Math.pow(2, 20 * x - 10) / 2
-        : (2 - Math.pow(2, -20 * x + 10)) / 2;
+    ? 1
+    : x < 0.5
+    ? Math.pow(2, 20 * x - 10) / 2
+    : (2 - Math.pow(2, -20 * x + 10)) / 2;
 }
 
 function easeInCirc(x) {
@@ -166,8 +172,8 @@ function easeInElastic(x) {
   return x === 0
     ? 0
     : x === 1
-      ? 1
-      : -Math.pow(2, 10 * x - 10) * Math.sin((x * 10 - 10.75) * c4);
+    ? 1
+    : -Math.pow(2, 10 * x - 10) * Math.sin((x * 10 - 10.75) * c4);
 }
 
 function easeOutElastic(x) {
@@ -176,8 +182,8 @@ function easeOutElastic(x) {
   return x === 0
     ? 0
     : x === 1
-      ? 1
-      : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+    ? 1
+    : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
 }
 
 function easeInOutElastic(x) {
@@ -186,10 +192,10 @@ function easeInOutElastic(x) {
   return x === 0
     ? 0
     : x === 1
-      ? 1
-      : x < 0.5
-        ? -(Math.pow(2, 20 * x - 10) * Math.sin((20 * x - 11.125) * c5)) / 2
-        : (Math.pow(2, -20 * x + 10) * Math.sin((20 * x - 11.125) * c5)) / 2 + 1;
+    ? 1
+    : x < 0.5
+    ? -(Math.pow(2, 20 * x - 10) * Math.sin((20 * x - 11.125) * c5)) / 2
+    : (Math.pow(2, -20 * x + 10) * Math.sin((20 * x - 11.125) * c5)) / 2 + 1;
 }
 
 function easeInBounce(x) {

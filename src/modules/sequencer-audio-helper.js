@@ -1,6 +1,6 @@
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerAnimationEngine from "./sequencer-animation-engine.js";
-import * as lib from '../lib/lib.js';
+import * as lib from "../lib/lib.js";
 
 export default class SequencerAudioHelper {
   /**
@@ -11,8 +11,10 @@ export default class SequencerAudioHelper {
    * @returns {Promise<Sound>} A promise that resolves when the audio file has finished playing.
    */
   static async play(data, push = false) {
-    if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, data);
-    data.volume = (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume");
+    if (push)
+      sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, data);
+    data.volume =
+      (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume");
     return this._play(data);
   }
 
@@ -22,11 +24,12 @@ export default class SequencerAudioHelper {
    * @private
    */
   static async _play(data) {
-
-    if (!game.settings.get('sequencer', 'soundsEnabled')
-      || game.user.viewedScene !== data.sceneId
-      || (data?.users?.length && !data?.users?.includes(game.userId))) {
-      return new Promise(resolve => setTimeout(resolve, data.duration));
+    if (
+      !game.settings.get("sequencer", "soundsEnabled") ||
+      game.user.viewedScene !== data.sceneId ||
+      (data?.users?.length && !data?.users?.includes(game.userId))
+    ) {
+      return new Promise((resolve) => setTimeout(resolve, data.duration));
     }
 
     Hooks.callAll("createSequencerSound", data);
@@ -36,7 +39,7 @@ export default class SequencerAudioHelper {
     const sound = await game.audio.play(data.src, {
       volume: data.fadeIn ? 0 : data.volume,
       loop: data.loop,
-      offset: data.startTime
+      offset: data.startTime,
     });
 
     const soundId = randomID();
@@ -49,7 +52,7 @@ export default class SequencerAudioHelper {
         to: data.volume,
         duration: Math.min(data.fadeIn.duration, data.duration),
         ease: data.fadeIn.ease,
-        delay: Math.min(data.fadeIn.delay, data.duration)
+        delay: Math.min(data.fadeIn.delay, data.duration),
       });
     }
 
@@ -61,7 +64,10 @@ export default class SequencerAudioHelper {
         to: 0.0,
         duration: Math.min(data.fadeOut.duration, data.duration),
         ease: data.fadeOut.ease,
-        delay: Math.max(data.duration - data.fadeOut.duration + data.fadeOut.delay, 0)
+        delay: Math.max(
+          data.duration - data.fadeOut.duration + data.fadeOut.delay,
+          0
+        ),
       });
     }
 

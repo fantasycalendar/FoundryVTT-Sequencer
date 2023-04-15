@@ -39,7 +39,7 @@ export default class VisionSamplerShader extends BaseSamplerShader {
     sampler: 0,
     maskSampler: 0,
     screenDimensions: [1, 1],
-    enableVisionMasking: false
+    enableVisionMasking: false,
   };
 
   /** @override */
