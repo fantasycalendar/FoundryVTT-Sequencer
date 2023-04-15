@@ -17,12 +17,14 @@ You will see a lot of `> Macro so far` after every step. You can click on this t
 <hr/>
 
 ## Required modules
-* [Sequencer](https://foundryvtt.com/packages/sequencer)
-* [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
+
+- [Sequencer](https://foundryvtt.com/packages/sequencer)
+- [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e) (or the patreon version)
 
 <hr/>
 
 ## Steps:
+
 1. [Create a new macro](#_1-Create-a-new-macro)
 2. [Determine token transformation images](#_2-Determine-token-transformation-images)
 3. [Pick the right image](#_3-Pick-the-right-image)
@@ -65,7 +67,8 @@ So now we know which images to use, but not which one to switch to. Using this c
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
+let img =
+  token.document.texture.src === notTransformed ? transformed : notTransformed;
 ```
 
 This means that if the currently selected token's image is the same as `notTransformed` (the token has not yet transformed), we assign `systems/dnd5e/tokens/humanoid/Werebear.webp` into the variable called `img`.
@@ -89,7 +92,7 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
-new Sequence()
+new Sequence();
 ```
 
 </details>
@@ -109,8 +112,7 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
-new Sequence()
-    .effect()
+new Sequence().effect();
 ```
 
 </details>
@@ -131,8 +133,10 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
 new Sequence()
-    .effect()
-        .file("modules/jb2a_patreon/Library/2nd_Level/Misty_Step/MistyStep_02_Regular_Blue_400x400.webm")
+  .effect()
+  .file(
+    "modules/jb2a_patreon/Library/2nd_Level/Misty_Step/MistyStep_02_Regular_Blue_400x400.webm"
+  );
 ```
 
 </details>
@@ -153,16 +157,12 @@ Paste that into the `.file()` section. It is always recommended to use the Datab
   <summary><strong>Macro so far</strong></summary><br />
 
 ```js
-
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
-new Sequence()
-    .effect()
-        .file("jb2a.misty_step.02.blue")
-
+new Sequence().effect().file("jb2a.misty_step.02.blue");
 ```
 
 </details>
@@ -184,11 +184,7 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
-new Sequence()
-    .effect()
-        .file("jb2a.misty_step.02.blue")
-        .atLocation(token)
-
+new Sequence().effect().file("jb2a.misty_step.02.blue").atLocation(token);
 ```
 
 </details>
@@ -211,12 +207,11 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
 new Sequence()
-    .effect()
-        .file("jb2a.misty_step.02.blue")
-        .atLocation(token)
-        .scaleToObject(2.5)
-        .randomRotation()
-
+  .effect()
+  .file("jb2a.misty_step.02.blue")
+  .atLocation(token)
+  .scaleToObject(2.5)
+  .randomRotation();
 ```
 
 </details>
@@ -237,13 +232,12 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
 new Sequence()
-    .effect()
-        .file("jb2a.misty_step.02.blue")
-        .atLocation(token)
-        .scaleToObject(2.5)
-        .randomRotation()
-    .wait(1500)
-
+  .effect()
+  .file("jb2a.misty_step.02.blue")
+  .atLocation(token)
+  .scaleToObject(2.5)
+  .randomRotation()
+  .wait(1500);
 ```
 
 </details>
@@ -258,7 +252,6 @@ This means that once the `.wait(1500)` finishes after 1500ms, **then** we'll **d
 
 Then, at the very end, just add `.play()`. Think of the Sequence as the recipe, but in order to actually cook everything we've assembled (the effect, the wait, the token image switch), we need to `.play()` it.
 
-
 <details>
   <summary><strong>Macro so far</strong></summary><br />
 
@@ -269,17 +262,16 @@ let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
 new Sequence()
-    .effect()
-        .file("jb2a.misty_step.02.blue")
-        .atLocation(token)
-        .scaleToObject(2.5)
-        .randomRotation()
-    .wait(1500)
-    .thenDo(() => {
-        token.document.update({ img });
-    })
-    .play()
-
+  .effect()
+  .file("jb2a.misty_step.02.blue")
+  .atLocation(token)
+  .scaleToObject(2.5)
+  .randomRotation()
+  .wait(1500)
+  .thenDo(() => {
+    token.document.update({ img });
+  })
+  .play();
 ```
 
 </details>
@@ -289,24 +281,24 @@ new Sequence()
 ## Finished macro:
 
 ```js
-
-let notTransformed = 'systems/dnd5e/tokens/humanoid/Thug.webp';
-let transformed = 'systems/dnd5e/tokens/humanoid/Werebear.webp';
+let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
+let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
 let img = token.data.img === notTransformed ? transformed : notTransformed;
 
 new Sequence()
-    .effect()
-        .file("modules/jb2a_patreon/Library/2nd_Level/Misty_Step/MistyStep_02_Regular_Blue_400x400.webm")
-        .atLocation(token)
-        .scaleToObject(2.5)
-        .randomRotation()
-    .wait(1500)
-    .thenDo(() => {
-        token.document.update({ img });
-    })
-    .play()
-
+  .effect()
+  .file(
+    "modules/jb2a_patreon/Library/2nd_Level/Misty_Step/MistyStep_02_Regular_Blue_400x400.webm"
+  )
+  .atLocation(token)
+  .scaleToObject(2.5)
+  .randomRotation()
+  .wait(1500)
+  .thenDo(() => {
+    token.document.update({ img });
+  })
+  .play();
 ```
 
 ![A token that transforms from a human into a werebear, and then back.](../images/basic-tutorials/transformation.gif)

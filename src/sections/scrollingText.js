@@ -6,7 +6,6 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import SequencerScrollingTextHelper from "../modules/sequencer-scrolling-text-helper.js";
 
 export default class ScrollingTextSection extends Section {
-
   constructor(inSequence, target, text, textOptions) {
     super(inSequence);
     this._deserializedData = null;
@@ -18,10 +17,10 @@ export default class ScrollingTextSection extends Section {
     this._anchor = null;
     this._direction = null;
     this._seed = lib.get_hash(randomID());
-    if(target){
+    if (target) {
       this.atLocation(target);
     }
-    if(text){
+    if (text) {
       this.text(text, textOptions);
     }
   }
@@ -36,37 +35,64 @@ export default class ScrollingTextSection extends Section {
     Object.assign(this.constructor.prototype, traits.text);
   }
 
-  direction(inDirection){
-    if(!(typeof inDirection === "string" || lib.is_real_number(inDirection))){
-      throw this.sequence._customError(this, "direction", "inDirection must be of type string (CONST.TEXT_ANCHOR_POINTS) or number");
+  direction(inDirection) {
+    if (!(typeof inDirection === "string" || lib.is_real_number(inDirection))) {
+      throw this.sequence._customError(
+        this,
+        "direction",
+        "inDirection must be of type string (CONST.TEXT_ANCHOR_POINTS) or number"
+      );
     }
-    if(typeof inDirection === "string" && !CONST.TEXT_ANCHOR_POINTS[inDirection]){
-      throw this.sequence._customError(this, "direction", `${inDirection} does not exist in CONST.TEXT_ANCHOR_POINTS!`);
-    }else if(typeof inDirection === "string"){
+    if (
+      typeof inDirection === "string" &&
+      !CONST.TEXT_ANCHOR_POINTS[inDirection]
+    ) {
+      throw this.sequence._customError(
+        this,
+        "direction",
+        `${inDirection} does not exist in CONST.TEXT_ANCHOR_POINTS!`
+      );
+    } else if (typeof inDirection === "string") {
       this._direction = CONST.TEXT_ANCHOR_POINTS[inDirection];
-    }else{
+    } else {
       this._direction = inDirection;
     }
     return this;
   }
 
-  anchor(inAnchor){
-    if(!(typeof inAnchor === "string" || lib.is_real_number(inAnchor))){
-      throw this.sequence._customError(this, "direction", "inAnchor must be of type string (CONST.TEXT_ANCHOR_POINTS) or number");
+  anchor(inAnchor) {
+    if (!(typeof inAnchor === "string" || lib.is_real_number(inAnchor))) {
+      throw this.sequence._customError(
+        this,
+        "direction",
+        "inAnchor must be of type string (CONST.TEXT_ANCHOR_POINTS) or number"
+      );
     }
-    if((typeof inAnchor === "string" && !CONST.TEXT_ANCHOR_POINTS[inAnchor]) || (lib.is_real_number(inAnchor) && !Object.values(CONST.TEXT_ANCHOR_POINTS).includes(inAnchor))){
-      throw this.sequence._customError(this, "direction", `${inAnchor} does not exist in CONST.TEXT_ANCHOR_POINTS!`);
-    }else if(typeof inAnchor === "string"){
+    if (
+      (typeof inAnchor === "string" && !CONST.TEXT_ANCHOR_POINTS[inAnchor]) ||
+      (lib.is_real_number(inAnchor) &&
+        !Object.values(CONST.TEXT_ANCHOR_POINTS).includes(inAnchor))
+    ) {
+      throw this.sequence._customError(
+        this,
+        "direction",
+        `${inAnchor} does not exist in CONST.TEXT_ANCHOR_POINTS!`
+      );
+    } else if (typeof inAnchor === "string") {
       this._anchor = CONST.TEXT_ANCHOR_POINTS[inAnchor];
-    }else{
+    } else {
       this._anchor = inAnchor;
     }
     return this;
   }
 
-  jitter(inJitter){
-    if(!(lib.is_real_number(inJitter) && inJitter >= 0 && inJitter <= 1.0)){
-      throw this.sequence._customError(this, "jitter", "inJitter must be of type number between 0 and 1");
+  jitter(inJitter) {
+    if (!(lib.is_real_number(inJitter) && inJitter >= 0 && inJitter <= 1.0)) {
+      throw this.sequence._customError(
+        this,
+        "jitter",
+        "inJitter must be of type number between 0 and 1"
+      );
     }
     this._jitter = inJitter;
     return this;
@@ -75,22 +101,29 @@ export default class ScrollingTextSection extends Section {
   async run() {
     const data = await this._sanitizeTextData();
     if (Hooks.call("preCreateScrollingText", data) === false) return;
-    let push = !(data?.users?.length === 1 && data?.users?.includes(game.userId));
-    if(push && !this.sequence.localOnly){
-      sequencerSocket.executeForOthers(SOCKET_HANDLERS.CREATE_SCROLLING_TEXT, data);
+    let push = !(
+      data?.users?.length === 1 && data?.users?.includes(game.userId)
+    );
+    if (push && !this.sequence.localOnly) {
+      sequencerSocket.executeForOthers(
+        SOCKET_HANDLERS.CREATE_SCROLLING_TEXT,
+        data
+      );
     }
     SequencerScrollingTextHelper.play(data);
-    await new Promise(resolve => setTimeout(resolve, this._currentWaitTime))
+    await new Promise((resolve) => setTimeout(resolve, this._currentWaitTime));
   }
 
   _getSourceObject() {
     if (!this._source || typeof this._source !== "object") return this._source;
-    return lib.get_object_identifier(this._source) ?? canvaslib.get_object_canvas_data(this._source);
+    return (
+      lib.get_object_identifier(this._source) ??
+      canvaslib.get_object_canvas_data(this._source)
+    );
   }
 
-  async _sanitizeTextData(){
-
-    if(this._deserializedData){
+  async _sanitizeTextData() {
+    if (this._deserializedData) {
       return this._deserializedData;
     }
 
@@ -111,9 +144,9 @@ export default class ScrollingTextSection extends Section {
         duration: this._duration,
         distance: this._distance,
         jitter: this._jitter,
-        ...this._text
-      }
-    }
+        ...this._text,
+      },
+    };
   }
 
   async _serialize() {
@@ -122,7 +155,7 @@ export default class ScrollingTextSection extends Section {
     return {
       ...data,
       type: "scrollingText",
-      sectionData
+      sectionData,
     };
   }
 
@@ -130,5 +163,4 @@ export default class ScrollingTextSection extends Section {
     this._deserializedData = data.sectionData;
     return super._deserialize(data);
   }
-
 }

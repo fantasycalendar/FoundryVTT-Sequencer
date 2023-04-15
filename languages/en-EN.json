@@ -34,7 +34,7 @@
       "Option": {
         "Scale": "Scale",
         "BelowTokens": "Below Tokens",
-        "SnapToGrid":  "Snap To Grid",
+        "SnapToGrid": "Snap To Grid",
         "Rotation": "Rotation",
         "Randomize": "Randomize",
         "FadeIn": "Fade In",
@@ -42,22 +42,22 @@
         "ScaleIn": "Scale In",
         "ScaleOut": "Scale Out",
 
-        "MirrorX":  "Mirror X",
-        "MirrorY":  "Mirror Y",
+        "MirrorX": "Mirror X",
+        "MirrorY": "Mirror Y",
 
-        "OffsetX":  "Offset X",
-        "OffsetY":  "Offset Y",
-        "RandomOffset":  "Amount",
-        "GridUnits":  "Grid Units",
+        "OffsetX": "Offset X",
+        "OffsetY": "Offset Y",
+        "RandomOffset": "Amount",
+        "GridUnits": "Grid Units",
 
-        "Repeat":  "Repeat",
-        "Repetitions":  "Repetitions",
+        "Repeat": "Repeat",
+        "Repetitions": "Repetitions",
         "DelayMin": "(ms)",
-        "DelayMax":  "",
+        "DelayMax": "",
 
-        "DragBehavior":  "Drag Behavior",
-        "DragStretch":  "Stretch",
-        "DragMove":  "Move",
+        "DragBehavior": "Drag Behavior",
+        "DragStretch": "Stretch",
+        "DragMove": "Move",
         "MoveSpeed": "Move speed",
 
         "Preload": "Preload",
@@ -120,7 +120,7 @@
     },
 
     "Setting": {
-      "DatabaseViewer":{
+      "DatabaseViewer": {
         "Title": "Open Sequencer Database Viewer",
         "Label": "Open Database Viewer"
       },

@@ -1,10 +1,12 @@
 import * as lib from "../lib/lib.js";
 import { reactiveEl as html } from "../lib/html.js";
-import { EffectPlayer, SelectionManager } from "../modules/sequencer-interaction-manager.js";
+import {
+  EffectPlayer,
+  SelectionManager,
+} from "../modules/sequencer-interaction-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 
 export default class SequencerEffectsUI extends FormApplication {
-
   constructor(dialogData = {}, options = {}) {
     super(dialogData, options);
     this._settings = duplicate(SequencerEffectsUI.defaultNoninputSettings);
@@ -29,11 +31,13 @@ export default class SequencerEffectsUI extends FormApplication {
       top: 65,
       left: 120,
       resizable: true,
-      tabs: [{
-        navSelector: ".tabs",
-        contentSelector: ".content",
-        initial: "manager"
-      }]
+      tabs: [
+        {
+          navSelector: ".tabs",
+          contentSelector: ".content",
+          initial: "manager",
+        },
+      ],
     });
   }
 
@@ -49,83 +53,86 @@ export default class SequencerEffectsUI extends FormApplication {
 
   static get activeSettings() {
     const defaultSettings = SequencerEffectsUI.defaultSettingsMap;
-    return foundry.utils.mergeObject(defaultSettings,
-      this.activeInstance?._settings ?? SequencerEffectsUI.defaultNoninputSettings
+    return foundry.utils.mergeObject(
+      defaultSettings,
+      this.activeInstance?._settings ??
+        SequencerEffectsUI.defaultNoninputSettings
     );
   }
 
   static get defaultSettingsMap() {
-    return Object.fromEntries(Object.entries(this.defaultSettings)
-      .map(setting => {
+    return Object.fromEntries(
+      Object.entries(this.defaultSettings).map((setting) => {
         return [setting[0], setting[1].default];
-      }));
+      })
+    );
   }
 
   static get defaultNoninputSettings() {
-    return { file: "", users: ['all'] };
+    return { file: "", users: ["all"] };
   }
 
   static get defaultSettings() {
     return {
-      "scale": {
+      scale: {
         type: "number",
         default: 1.0,
         label: game.i18n.localize("SEQUENCER.Player.Option.Scale"),
       },
-      "belowTokens": {
+      belowTokens: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.BelowTokens"),
       },
-      "snapToGrid": {
+      snapToGrid: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.SnapToGrid"),
         callback: (e) => {
           EffectPlayer.snapLocationToGrid = e.target.checked;
-        }
+        },
       },
-      "randomRotation": {
+      randomRotation: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.RandomRotation"),
       },
-      "randomMirrorY": {
+      randomMirrorY: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.RandomMirrorY"),
       },
-      "randomOffset": {
+      randomOffset: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.RandomOffset"),
       },
-      "repetitions": {
+      repetitions: {
         type: "number",
         default: 1.0,
         label: game.i18n.localize("SEQUENCER.Player.Option.Repetitions"),
       },
-      "repeatDelayMin": {
+      repeatDelayMin: {
         type: "number",
         default: 200,
         label: game.i18n.localize("SEQUENCER.Player.Option.DelayMin"),
       },
-      "repeatDelayMax": {
+      repeatDelayMax: {
         type: "number",
         default: 400,
         label: game.i18n.localize("SEQUENCER.Player.Option.DelayMax"),
       },
-      "preload": {
+      preload: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.Preload"),
       },
-      "moveTowards": {
+      moveTowards: {
         type: "checkbox",
         default: false,
         label: game.i18n.localize("SEQUENCER.Player.Option.DragBehavior"),
       },
-      "moveSpeed": {
+      moveSpeed: {
         type: "number",
         default: 0,
         label: game.i18n.localize("SEQUENCER.Player.Option.MoveSpeed"),
@@ -151,13 +158,16 @@ export default class SequencerEffectsUI extends FormApplication {
           default: false,
           label: game.i18n.localize("SEQUENCER.Player.Option.Persist")
       }*/
-    }
+    };
   }
 
   get presets() {
-    let presets = game.settings.get('sequencer', 'effectPresets');
+    let presets = game.settings.get("sequencer", "effectPresets");
     for (let [name, preset] of Object.entries(presets)) {
-      presets[name] = foundry.utils.mergeObject(SequencerEffectsUI.defaultSettingsMap, preset);
+      presets[name] = foundry.utils.mergeObject(
+        SequencerEffectsUI.defaultSettingsMap,
+        preset
+      );
     }
     return presets;
   }
@@ -202,25 +212,24 @@ export default class SequencerEffectsUI extends FormApplication {
 
   /** @override */
   getData() {
-    let data = super.getData()
+    let data = super.getData();
     data.userIsGM = game.user.isGM;
     data.canCreateEffects = lib.user_can_do("permissions-effect-create");
     data = this.getPlayerData(data);
     return data;
   }
 
-
   /* --------------------------------------------------------------
    *                        EFFECT PLAYER
    * -------------------------------------------------------------- */
 
   close(options) {
-    super.close(options)
+    super.close(options);
     EffectPlayer.snapLocationToGrid = false;
   }
 
   async _onSubmit(event) {
-    super._onSubmit(event, { preventClose: true })
+    super._onSubmit(event, { preventClose: true });
   }
 
   activateManagerListeners(html) {
@@ -230,51 +239,54 @@ export default class SequencerEffectsUI extends FormApplication {
     this.temporaryEffectsContainer = html.find(".temporary-effects");
 
     html.find(".end-all-effects").click(function () {
-      const effects = Sequencer.EffectManager.effects.filter(effect => effect.userCanDelete && !effect.data.private);
+      const effects = Sequencer.EffectManager.effects.filter(
+        (effect) => effect.userCanDelete && !effect.data.private
+      );
       Sequencer.EffectManager.endEffects({ effects: effects });
     });
   }
 
   createEffectElement(effect) {
-
     let effectName = "Unknown effect";
-    if(effect.data.file){
-      effectName = effect.data.file.split('\\').pop().split('/').pop();
-    }else if(effect.data.text){
+    if (effect.data.file) {
+      effectName = effect.data.file.split("\\").pop().split("/").pop();
+    } else if (effect.data.text) {
       effectName = "Text: " + effect.data.text.text;
-    }else{
-      effectName = "Shape: " + effect.data.shapes[0].type
+    } else {
+      effectName = "Shape: " + effect.data.shapes[0].type;
     }
 
-    effectName = effect.data.name ? `${effect.data.name} (${effectName})` : effectName;
+    effectName = effect.data.name
+      ? `${effect.data.name} (${effectName})`
+      : effectName;
 
     if (effect.data.creatorUserId !== game.userId) {
       let user_name = game.users.get(effect.data.creatorUserId)?.name;
-      let formattedUsername = (user_name
+      let formattedUsername = user_name
         ? game.i18n.format("SEQUENCER.ManagerPlayersEffect", { user_name })
-        : game.i18n.localize("SEQUENCER.ManagerUnknownEffect"));
+        : game.i18n.localize("SEQUENCER.ManagerUnknownEffect");
       effectName += ` (${formattedUsername})`;
     }
 
-    const el = html`
-      <div class="effect hover-highlight">
-        <button type="button" class="btn_end"><i class="fas fa-times"></i></button>
-        <div class="effect-text hover-text"></div>
-      </div>`;
+    const el = html` <div class="effect hover-highlight">
+      <button type="button" class="btn_end">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="effect-text hover-text"></div>
+    </div>`;
 
-    const endButton = el.querySelector(
-      ".btn_end"
-    );
+    const endButton = el.querySelector(".btn_end");
 
-    const nameInput = el.querySelector(
-      ".effect-text"
-    );
+    const nameInput = el.querySelector(".effect-text");
 
     nameInput.innerText = effectName;
 
     endButton.addEventListener("click", function (e) {
       SelectionManager.hoveredEffectUI = effect;
-      Sequencer.EffectManager.endEffects({ effects: effect, sceneId: game.user.viewedScene });
+      Sequencer.EffectManager.endEffects({
+        effects: effect,
+        sceneId: game.user.viewedScene,
+      });
     });
 
     el.addEventListener("mouseover", function () {
@@ -289,9 +301,10 @@ export default class SequencerEffectsUI extends FormApplication {
   }
 
   updateEffects() {
-
-    const effects = Sequencer.EffectManager.effects
-      .filter(effect => effect.onCurrentScene && effect.userCanDelete && !effect.data.private);
+    const effects = Sequencer.EffectManager.effects.filter(
+      (effect) =>
+        effect.onCurrentScene && effect.userCanDelete && !effect.data.private
+    );
 
     this.persistentEffectsContainer.empty();
     this.temporaryEffectsContainer.empty();
@@ -302,17 +315,16 @@ export default class SequencerEffectsUI extends FormApplication {
     if (effects.length === 0) return;
 
     const persistentEffects = effects
-      .filter(effect => effect.data.persist)
-      .map(effect => this.createEffectElement(effect));
+      .filter((effect) => effect.data.persist)
+      .map((effect) => this.createEffectElement(effect));
 
     this.persistentEffectsContainer.append(persistentEffects);
 
     const temporaryEffects = effects
-      .filter(effect => !effect.data.persist)
-      .map(effect => this.createEffectElement(effect));
+      .filter((effect) => !effect.data.persist)
+      .map((effect) => this.createEffectElement(effect));
 
     this.temporaryEffectsContainer.append(temporaryEffects);
-
   }
 
   getPlayerData(data) {
@@ -323,13 +335,12 @@ export default class SequencerEffectsUI extends FormApplication {
   }
 
   activatePlayerListeners(html) {
-
     if (!lib.user_can_do("permissions-effect-create")) return;
 
-    html.find('.activate-layer').click(async () => {
+    html.find(".activate-layer").click(async () => {
       canvas.sequencerInterfaceLayer.activate();
       ui.controls.control.activeTool = "play-effect";
-      await lib.wait(10)
+      await lib.wait(10);
       ui.controls.render();
     });
 
@@ -338,10 +349,10 @@ export default class SequencerEffectsUI extends FormApplication {
     this.settingsElements = html.find(".setting");
 
     this.settingsElements.each(function () {
-
       $(this).change(function (event) {
-        const type = $(this).attr("type")
-        const settingValue = type === "checkbox" ? $(this).prop("checked") : Number($(this).val());
+        const type = $(this).attr("type");
+        const settingValue =
+          type === "checkbox" ? $(this).prop("checked") : Number($(this).val());
         _this.setSetting(settingName, settingValue);
       });
 
@@ -350,17 +361,16 @@ export default class SequencerEffectsUI extends FormApplication {
       if (setting?.callback) {
         $(this).change(setting.callback.bind(_this));
       }
-
     });
 
-    this.userSelect = html.find('.user-select');
+    this.userSelect = html.find(".user-select");
     this.userSelect.change(function () {
       let selected = $(this).val();
-      _this.setSetting('users', selected);
-    })
+      _this.setSetting("users", selected);
+    });
 
-    this.fileInput = html.find('.file-input');
-    const autosuggestions = html.find('#dblist');
+    this.fileInput = html.find(".file-input");
+    const autosuggestions = html.find("#dblist");
 
     const debouncedSearch = debounce(function () {
       _this.showResults(autosuggestions, _this.fileInput.val());
@@ -380,7 +390,7 @@ export default class SequencerEffectsUI extends FormApplication {
       debouncedSearch();
     });
 
-    const filepicker = html.find('.custom-file-picker');
+    const filepicker = html.find(".custom-file-picker");
     filepicker.click(function () {
       new FilePicker({
         type: "imagevideo",
@@ -388,13 +398,13 @@ export default class SequencerEffectsUI extends FormApplication {
         callback: async (imagePath) => {
           _this.fileInput.val(imagePath);
           _this.updateFile(imagePath);
-        }
+        },
       }).browse();
     });
 
-    this.presetSelect = html.find('.preset-select');
-    this.deletePresetButton = html.find('.delete-preset');
-    const savePresetButton = html.find('.save-preset');
+    this.presetSelect = html.find(".preset-select");
+    this.deletePresetButton = html.find(".delete-preset");
+    const savePresetButton = html.find(".save-preset");
 
     savePresetButton.click(function () {
       const preset_name = _this.presetSelect.val();
@@ -406,7 +416,7 @@ export default class SequencerEffectsUI extends FormApplication {
       }
     });
 
-    this.copyPresetButton = html.find('.copy-preset');
+    this.copyPresetButton = html.find(".copy-preset");
     this.copyPresetButton.click(function () {
       $(this).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
       _this.newPreset(true);
@@ -415,15 +425,25 @@ export default class SequencerEffectsUI extends FormApplication {
     this.presetSelect.change(async function () {
       const preset_name = _this.presetSelect.val();
       const activeSettings = SequencerEffectsUI.activeSettings;
-      if (activeSettings?.name && preset_name !== activeSettings?.name && activeSettings?.name !== "default") {
+      if (
+        activeSettings?.name &&
+        preset_name !== activeSettings?.name &&
+        activeSettings?.name !== "default"
+      ) {
         const preset = _this.getPreset(activeSettings.name);
-        const diff = foundry.utils.diffObject(preset, SequencerEffectsUI.activeSettings);
-        delete diff['name'];
+        const diff = foundry.utils.diffObject(
+          preset,
+          SequencerEffectsUI.activeSettings
+        );
+        delete diff["name"];
         if (Object.keys(diff).length) {
           $(this).val(activeSettings.name);
           const doSwitch = await Dialog.confirm({
             title: game.i18n.localize("SEQUENCER.Player.ApplyPresetTitle"),
-            content: `<p>${game.i18n.format("SEQUENCER.Player.ApplyPresetContent", { preset_name })}</p>`
+            content: `<p>${game.i18n.format(
+              "SEQUENCER.Player.ApplyPresetContent",
+              { preset_name }
+            )}</p>`,
           });
           if (!doSwitch) {
             return;
@@ -432,20 +452,18 @@ export default class SequencerEffectsUI extends FormApplication {
         }
       }
       _this.applyPreset(preset_name);
-    })
+    });
 
     this.deletePresetButton.click(async function () {
       _this.deletePreset(_this.presetSelect.val());
     });
 
-    html.find('.open-module-settings').click(function () {
+    html.find(".open-module-settings").click(function () {
       _this.renderPermissionsConfig();
     });
-
   }
 
   async renderPermissionsConfig() {
-
     const settings = new SettingsConfig().render(true);
 
     settings._tabs[0].active = "modules";
@@ -453,19 +471,26 @@ export default class SequencerEffectsUI extends FormApplication {
     await lib.wait(250);
 
     const settingsList = $(settings.element).find(".settings-list");
-    const settingToScrollTo = settingsList.find('select[name="sequencer.permissions-sidebar-tools"]').parent().parent();
+    const settingToScrollTo = settingsList
+      .find('select[name="sequencer.permissions-sidebar-tools"]')
+      .parent()
+      .parent();
     await lib.scroll_to_element(settingsList, settingToScrollTo);
     await lib.highlight_element(settingToScrollTo, { duration: 2500 });
-
   }
 
   async updateFile(inPath) {
-    if (!(Sequencer.Database.entryExists(inPath) || (await SequencerFileCache.srcExists(inPath)))) return;
-    this.setSetting('file', inPath);
+    if (
+      !(
+        Sequencer.Database.entryExists(inPath) ||
+        (await SequencerFileCache.srcExists(inPath))
+      )
+    )
+      return;
+    this.setSetting("file", inPath);
   }
 
   applyPresetData(inSettings) {
-
     const settings = foundry.utils.mergeObject(
       SequencerEffectsUI.defaultSettingsMap,
       inSettings
@@ -476,8 +501,8 @@ export default class SequencerEffectsUI extends FormApplication {
     this.userSelect.val(settings.users);
 
     this.settingsElements.each(function () {
-      const settingName = $(this).attr('name');
-      const settingType = $(this).attr("type")
+      const settingName = $(this).attr("name");
+      const settingType = $(this).attr("type");
       if (settingType === "checkbox") {
         $(this).prop("checked", settings[settingName]);
       } else {
@@ -487,7 +512,6 @@ export default class SequencerEffectsUI extends FormApplication {
     });
 
     this._settings = foundry.utils.duplicate(settings);
-
   }
 
   reapplySettings() {
@@ -511,7 +535,7 @@ export default class SequencerEffectsUI extends FormApplication {
 
     this.applyPresetData(presetData);
 
-    this._settings['name'] = inPresetName;
+    this._settings["name"] = inPresetName;
 
     this.presetSelect.val(inPresetName);
 
@@ -521,35 +545,37 @@ export default class SequencerEffectsUI extends FormApplication {
 
   async savePreset(inName) {
     const presets = this.presets;
-    presets[inName] = foundry.utils.duplicate(SequencerEffectsUI.activeSettings);
-    await game.settings.set('sequencer', 'effectPresets', presets)
+    presets[inName] = foundry.utils.duplicate(
+      SequencerEffectsUI.activeSettings
+    );
+    await game.settings.set("sequencer", "effectPresets", presets);
   }
 
   async deletePreset(inName) {
-
     const doDelete = await Dialog.confirm({
       title: game.i18n.localize("SEQUENCER.Player.DeletePresetTitle"),
-      content: `<p>${game.i18n.format("SEQUENCER.Player.DeletePresetContent", { preset_name: inName })}</p>`
+      content: `<p>${game.i18n.format("SEQUENCER.Player.DeletePresetContent", {
+        preset_name: inName,
+      })}</p>`,
     });
     if (!doDelete) return;
 
     const presets = this.presets;
     delete presets[inName];
-    await game.settings.set('sequencer', 'effectPresets', presets)
+    await game.settings.set("sequencer", "effectPresets", presets);
     await this.render(true);
   }
 
   async newPreset(copy) {
     const presetName = await this.promptPresetName(copy);
     if (!presetName) return;
-    await this.savePreset(presetName)
+    await this.savePreset(presetName);
     await this.render(true);
     await lib.wait(50);
     this.applyPreset(presetName);
   }
 
   async promptPresetName(copy = false, inName = "") {
-
     let title = copy
       ? game.i18n.localize("SEQUENCER.Player.CopyPresetTitle")
       : game.i18n.localize("SEQUENCER.Player.CreateNewPresetTitle");
@@ -558,13 +584,15 @@ export default class SequencerEffectsUI extends FormApplication {
       let rejected = false;
       new Dialog({
         title: title,
-        content: `<p><input type="text" placeholder="${game.i18n.localize("SEQUENCER.Player.CreateNewPresetInputLabel")}" id="newPresetName" style="width:100%;"></p>`,
+        content: `<p><input type="text" placeholder="${game.i18n.localize(
+          "SEQUENCER.Player.CreateNewPresetInputLabel"
+        )}" id="newPresetName" style="width:100%;"></p>`,
         buttons: {
           okay: {
             icon: '<i class="fas fa-check"></i>',
             label: game.i18n.localize("SEQUENCER.OK"),
             callback: async (html) => {
-              let name = html.find('#newPresetName').val();
+              let name = html.find("#newPresetName").val();
 
               if (name === "" || !name) {
                 name = false;
@@ -572,8 +600,7 @@ export default class SequencerEffectsUI extends FormApplication {
               }
 
               resolve(name);
-
-            }
+            },
           },
           cancel: {
             icon: '<i class="fas fa-times"></i>',
@@ -581,42 +608,41 @@ export default class SequencerEffectsUI extends FormApplication {
             callback: () => {
               rejected = true;
               resolve(false);
-            }
-          }
+            },
+          },
         },
-        close: () => {
-
-        },
+        close: () => {},
         render: (html) => {
-          html.find('#newPresetName').val(inName).focus();
-        }
+          html.find("#newPresetName").val(inName).focus();
+        },
       }).render(true);
     });
 
     if (presetName) {
-
       if (presetName.toLowerCase() === "default") {
         Dialog.prompt({
           title: game.i18n.localize("SEQUENCER.Player.DefaultErrorTitle"),
-          content: `<p>${game.i18n.localize("SEQUENCER.Player.DefaultErrorContent")}</p>`,
+          content: `<p>${game.i18n.localize(
+            "SEQUENCER.Player.DefaultErrorContent"
+          )}</p>`,
           label: game.i18n.localize("SEQUENCER.OK"),
-          callback: () => {
-          }
+          callback: () => {},
         });
         return false;
       }
 
       if (this.presets[presetName]) {
-
         const overwrite = await Dialog.confirm({
           title: game.i18n.localize("SEQUENCER.Player.OverwritePresetTitle"),
-          content: `<p>${game.i18n.format("SEQUENCER.Player.OverwritePresetContent", { preset_name: presetName })}</p>`
+          content: `<p>${game.i18n.format(
+            "SEQUENCER.Player.OverwritePresetContent",
+            { preset_name: presetName }
+          )}</p>`,
         });
 
         if (!overwrite) {
           presetName = await this.promptPresetName(copy, presetName);
         }
-
       }
     }
 
@@ -624,7 +650,6 @@ export default class SequencerEffectsUI extends FormApplication {
   }
 
   showResults(autosuggestions, input) {
-
     if (this.lastSearch === input) return;
 
     this.lastSearch = input;
@@ -645,14 +670,12 @@ export default class SequencerEffectsUI extends FormApplication {
 
     let frag = document.createDocumentFragment();
 
-    results.forEach(entry => {
-      const option = document.createElement('option');
+    results.forEach((entry) => {
+      const option = document.createElement("option");
       option.value = entry;
-      frag.appendChild(option)
+      frag.appendChild(option);
     });
 
     autosuggestions.append(frag);
-
   }
-
 }

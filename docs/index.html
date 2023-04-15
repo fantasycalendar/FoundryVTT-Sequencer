@@ -2,83 +2,82 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta charset="UTF-8">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8" />
 
-  <!-- Themes dark -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
+    <!-- Themes dark -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css"
+    />
 
-  <!-- Custom Styles -->
-  <style>
+    <!-- Custom Styles -->
+    <style>
       :root {
-          --theme-color: rgb(72, 187, 120);
-          --link-color: #44C7C5;
-          --heading-h2-padding: 0 0 0.25rem 0;
-          --heading-h2-margin: 0.5rem 0 0.25rem 0;
+        --theme-color: rgb(72, 187, 120);
+        --link-color: #44c7c5;
+        --heading-h2-padding: 0 0 0.25rem 0;
+        --heading-h2-margin: 0.5rem 0 0.25rem 0;
       }
 
       strong {
-          color: rgb(39, 213, 112);
+        color: rgb(39, 213, 112);
       }
 
       .sidebar {
-          font-size: 0.85rem;
+        font-size: 0.85rem;
       }
 
       .sidebar li p {
-          margin-bottom: 0;
+        margin-bottom: 0;
       }
 
       .sidebar li:not(:first-of-type) p {
-          padding-top: 0.5rem;
-          border-top: 1px solid var(--sidebar-border-color);
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--sidebar-border-color);
       }
 
       summary:hover {
-          cursor: pointer;
+        cursor: pointer;
       }
-  </style>
+    </style>
+  </head>
 
-</head>
+  <body>
+    <div id="app"></div>
+    <script>
+      window.$docsify = {
+        auto2top: true,
+        autoHeader: true,
+        mergeNavbar: true,
+        maxLevel: 5,
+        subMaxLevel: 2,
+        search: {
+          noData: {
+            "/": "No results!",
+          },
+          paths: "auto",
+          placeholder: {
+            "/": "Search",
+          },
+        },
+        loadSidebar: "sidebar.md",
+        alias: {
+          "/.*/sidebar.md": "./docs/sidebar.md",
+        },
+        name: "Sequencer Wiki",
+        logo: "./images/fantasycomputerworks.png",
+      };
+    </script>
 
-<body>
+    <!-- Required -->
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
 
-<div id="app"></div>
-<script>
-  window.$docsify = {
-    auto2top: true,
-    autoHeader: true,
-    mergeNavbar: true,
-    maxLevel: 5,
-    subMaxLevel: 2,
-    search: {
-      noData: {
-        '/': 'No results!'
-      },
-      paths: 'auto',
-      placeholder: {
-        '/': 'Search'
-      }
-    },
-    loadSidebar: "sidebar.md",
-    alias: {
-      '/.*/sidebar.md': './docs/sidebar.md'
-    },
-    name: "Sequencer Wiki",
-    logo: "./images/fantasycomputerworks.png"
-  }
-</script>
-
-<!-- Required -->
-<script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
-
-<!-- Recommended -->
-<script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
-
-</body>
-
+    <!-- Recommended -->
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+  </body>
 </html>

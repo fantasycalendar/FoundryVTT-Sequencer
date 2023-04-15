@@ -1,5 +1,4 @@
 export default {
-
   _text: null,
 
   /**
@@ -11,10 +10,18 @@ export default {
    * @returns {EffectSection}
    */
   text(inText, inOptions = {}) {
-    if (typeof inText !== "string") throw this.sequence._customError(this, "text", "inText must be of type string");
-    this._text = foundry.utils.mergeObject({
-      text: inText
-    }, inOptions);
+    if (typeof inText !== "string")
+      throw this.sequence._customError(
+        this,
+        "text",
+        "inText must be of type string"
+      );
+    this._text = foundry.utils.mergeObject(
+      {
+        text: inText,
+      },
+      inOptions
+    );
     return this;
-  }
-}
+  },
+};

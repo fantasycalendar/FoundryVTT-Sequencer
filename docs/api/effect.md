@@ -7,23 +7,28 @@ This part of the Sequencer allows you to easily play visual effects on the canva
 ### How do I use this?
 
 When creating an effect section, you can assemble these methods like this:
+
 ```js
 new Sequence()
-    .effect()
-        .atLocation(token)
-        .file("modules/jb2a_patreon/Library/Generic/Healing/HealingAbility_01_Blue_200x200.webm")
-        .fadeIn(500)
-        .fadeOut(500)
-    .play()
+  .effect()
+  .atLocation(token)
+  .file(
+    "modules/jb2a_patreon/Library/Generic/Healing/HealingAbility_01_Blue_200x200.webm"
+  )
+  .fadeIn(500)
+  .fadeOut(500)
+  .play();
 ```
+
 or an effect that uses a [Sequencer Database](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/How-to:-Sequencer-Database) path:
+
 ```js
 new Sequence()
-    .effect()
-        .atLocation(token)
-        .stretchTo(target)
-        .file("jb2a.fire_bolt.orange")
-    .play()
+  .effect()
+  .atLocation(token)
+  .stretchTo(target)
+  .file("jb2a.fire_bolt.orange")
+  .play();
 ```
 
 <hr/>
@@ -65,6 +70,7 @@ It is highly recommended that you do not load too many files at the same time, a
 Causes the effect not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect or sound to play.
 
 Below is an example of a function used in this method, which would cause this effect or sound to only be played about 50% of the time.
+
 ```js
 .playIf(() => {
     return Math.random() < 0.5;
@@ -216,6 +222,7 @@ If there are multiple files in the database with `.xxft` in their database paths
 We recommend users and creators alike read the documentation on the [Sequencer database](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Database).
 
 Lastly, you may pass a range-finding type object to the file method:
+
 ```js
 .file({
     "05ft": "modules/jb2a_patreon/Library/1st_Level/Witch_Bolt/WitchBolt_01_Regular_Blue_05ft_600x400.webm",
@@ -233,6 +240,7 @@ Sequencer will pick the best file to play for the given distance between the sou
 `.from(token|tile, object)`
 
 Examples:
+
 ```js
 .from(token)
 .from(tile)
@@ -243,6 +251,7 @@ Examples:
 Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles. When used with a token or a tile, the effect will be placed at the exact same place as the object.
 
 Also supports a second options object that accepts:
+
 - `cacheLocation: boolean` - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
@@ -254,6 +263,7 @@ Also supports a second options object that accepts:
 `.atLocation(object|string, object)`
 
 Examples:
+
 ```js
 .atLocation(token)
 .atLocation("stored_name")
@@ -263,12 +273,14 @@ Examples:
 ```
 
 A smart method that can take:
+
 - Reference to a token
 - Reference to a template
 - Direct coordinate on the canvas
 - String reference (see [`.name()`](#name))
 
 Also supports a second options object that accepts:
+
 - `cacheLocation: boolean` - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
@@ -280,6 +292,7 @@ Also supports a second options object that accepts:
 `.attachTo(object|string, object)`
 
 Examples:
+
 ```js
 .attachTo(token)
 .attachTo(template)
@@ -291,6 +304,7 @@ Examples:
 This method makes the effect attached to an object. If the object cannot have attached effects, the effect will be created on the canvas.
 
 A smart method that can take:
+
 - Reference to a placeable object (tokens, templates, lights, etc)
 - String reference (see [`.name()`](#name))
 
@@ -313,6 +327,7 @@ In addition, a secondary options parameter can be given to this method, which ha
 `.rotateTowards(object|string, object)`
 
 Examples:
+
 ```js
 .rotateTowards(token)
 .rotateTowards("stored_name")
@@ -324,6 +339,7 @@ Examples:
 Causes the effect to be rotated towards the given token, template, coordinates, or a string reference (see [`.name()`](#name)). This is useful if you want to play an effect on a token facing another token, like an explosion or a magical effect.
 
 Also supports a second options object that accepts:
+
 - `cacheLocation: boolean` (default `false`) - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - `attachTo: boolean` (default `false`) - causes the effect to be attached to the target (combine with [`.attachTo()`](#attachTo) for two-way bindings!)
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
@@ -337,6 +353,7 @@ Also supports a second options object that accepts:
 `.stretchTo(object|string, object)`
 
 Examples:
+
 ```js
 .stretchTo(token)
 .stretchTo("stored_name")
@@ -348,6 +365,7 @@ Examples:
 Causes the effect to be rotated and stretched towards the given token, template, coordinates, or a string reference (see [`.name()`](#name)). This effectively calculates the proper X scale for the effect to stretch to the target.
 
 Also supports a second options object that accepts:
+
 - `cacheLocation: boolean` (default `false`) - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - `attachTo: boolean` (default `false`) - causes the effect to be attached to the target (combine with [`.attachTo()`](#attachTo) for two-way bindings!)
 - `onlyX: boolean` (default `false`) - causes the effect to only stretch the X axis of the sprite towards the target (keeping Y at 1.0, or your given scale)
@@ -362,6 +380,7 @@ Also supports a second options object that accepts:
 `.moveTowards(object, object)`
 
 Examples:
+
 ```js
 .moveTowards(token)
 .moveTowards("stored_name")
@@ -372,6 +391,7 @@ Examples:
 Causes the effect to move towards the given token, template, coordinates, or a string reference (see [`.name()`](#name)).
 
 Also supports a second options object that accepts:
+
 - `ease: string` (default `linear`) - set the ease of the movement,
 - `cacheLocation: boolean` (default `false`) - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - `rotate: boolean` (default `true`) - causes the effect to rotate towards the target
@@ -395,6 +415,7 @@ Causes the effect's location (or target location, if using `.stretchTo()` or `.m
 `.spriteOffset(inOffset, options)`
 
 Examples:
+
 ```js
 .spriteOffset({ x: 100, y: -50 })
 .spriteOffset({ x: 1 }, { gridUnits: true })
@@ -403,6 +424,7 @@ Examples:
 This causes the effect's **sprite** to be offset relative to its container based on a given vector. Sprite Offset is independent from `.atLocation()` and other location's `offset` parameter.
 
 A second options parameter accepts the following properties:
+
 - `gridUnits` - boolean (false) - Whether the given values in x and y should be treated as the number of grids
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
@@ -420,6 +442,7 @@ Causes the effect to not rotate should its container (see `spriteContainer` in [
 Calling this method will cause the effect to become permanent on the canvas. You can end the effect with the [Effect Manager](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager).
 
 Also supports a second options object that accepts:
+
 - `persistTokenPrototype: boolean` (default `false`) - makes the effect persist on the token's prototype data, useful for active effect-linked VFX
 
 ## Extra End Duration
@@ -446,7 +469,7 @@ Used for adding extra information to an effect, like the origin of the effect in
 
 `.name(inString)`
 
-Causes the effect's position to be stored and can then be used  with [`.atLocation()`](#at-location), [`.stretchTo()`](#stretch-to), [`.rotateTowards()`](#rotate-towards), and [`.moveTowards()`](#move-towards) to refer to previous effects' locations
+Causes the effect's position to be stored and can then be used with [`.atLocation()`](#at-location), [`.stretchTo()`](#stretch-to), [`.rotateTowards()`](#rotate-towards), and [`.moveTowards()`](#move-towards) to refer to previous effects' locations
 
 ## Private
 
@@ -471,9 +494,9 @@ If a location has been picked with [`.atLocation()`](#at-location), a random spo
 })
 ```
 
-* `effect` is a reference to the effect in itself - interact with this at your own risk.
+- `effect` is a reference to the effect in itself - interact with this at your own risk.
 
-* `data` is the effect's data that is going to be passed to canvas layer.
+- `data` is the effect's data that is going to be passed to canvas layer.
 
 Adds a function that will run at the end of the effect serialization step, but before it is played. Allows direct modifications of effect's data.
 
@@ -486,6 +509,7 @@ You _must_ define the function like above and return the data at the end of the 
 Sets the width and the height of the effect in pixels, this size is set before any scaling.
 
 A secondary options object may be passed to the method, which may contain:
+
 - `gridUnits: boolean` (default `false`) - Causes the numbers given to the width and height to be counted as grid units, rather than pixel dimensions
 
 ## Template
@@ -535,17 +559,19 @@ You can also pass functions that will get evaluated during runtime by Mustache:
 ```
 
 This would result in a random color, and a random number between 1 and 9, so any of these:
-* `MagicMissile_01_Regular_Blue_30ft_01_1600x400.webm`
-* `MagicMissile_01_Regular_Green_30ft_08_1600x400.webm`
-* `MagicMissile_01_Regular_Yellow_30ft_02_1600x400.webm`
-* `MagicMissile_01_Regular_Purple_30ft_04_1600x400.webm`
-* ...and so on
+
+- `MagicMissile_01_Regular_Blue_30ft_01_1600x400.webm`
+- `MagicMissile_01_Regular_Green_30ft_08_1600x400.webm`
+- `MagicMissile_01_Regular_Yellow_30ft_02_1600x400.webm`
+- `MagicMissile_01_Regular_Purple_30ft_04_1600x400.webm`
+- ...and so on
 
 ## Scale
 
 `.scale(0.5)` or `.scale({ x: 0.5, y: 1.0 })` or `.scale(0.2, 0.6)`
 
 A method that can take the following:
+
 - A number to set the scale uniformly
 - An object with x and y for non-uniform scaling
 - Two numbers which the Sequencer will randomly pick a uniform scale between
@@ -599,6 +625,7 @@ Causes the effect to be scaled to the target object's grid dimensions - for exam
 A number be passed to the method, causing the effect to also scale uniformly (1.5 meaning 150% of the target object's dimensions).
 
 A secondary options parameter can be passed as well, which accepts the following parameters:
+
 - `uniform: boolean` (default `false`) - This causes the scaling to always be uniform, as it picks the largest dimension of the object
 
 ## Sprite Scale
@@ -606,6 +633,7 @@ A secondary options parameter can be passed as well, which accepts the following
 `.spriteScale(0.5)` or `.spriteScale({ x: 0.5, y: 1.0 })` or `.spriteScale(0.2, 0.6)`
 
 A method that scales the sprite directly (independently from `.scale()`) that take the following:
+
 - A number to set the scale uniformly
 - An object with x and y for non-uniform scaling
 - Two numbers which the Sequencer will randomly pick a uniform scale between
@@ -665,26 +693,29 @@ const source = canvas.tokens.controlled[0];
 const target = Array.from(game.user.targets)[0];
 
 // Find effects on source with name "arrow"
-const currentEffects = Sequencer.EffectManager.getEffects({ source: source, name: "arrow" }) 
+const currentEffects = Sequencer.EffectManager.getEffects({
+  source: source,
+  name: "arrow",
+});
 
 // If none were found
-if( currentEffects.length != 0 ) {
-    // End effects on source named "arrow"
-    Sequencer.EffectManager.endEffects({ source: source, name: "arrow" });
-}else{
-    new Sequence()
-        .effect()
-            .file("jb2a.ui.indicator.green.01.01")          // Play arrow animation from Sequencer Database
-            .attachTo(source, { followRotation: false })    // Attach to source token but do not rotate with it
-            .rotateTowards(target, { attachTo: true })      // Rotate towards target token
-            .scaleToObject(0.75)                            // Scale effect to fit token's size
-            .persist()                                      // Make it last forever
-            .spriteOffset({ x: 0.5 }, { gridUnits: true })  // Move above token by 1 grid unit
-            .spriteRotation(90)                             // Rotate the sprite itself 90 degrees
-            .name("arrow")                                  // Name it arrow so that the effect manager can find it
-            .fadeIn(500)                                    // When first created, fade it in
-            .fadeOut(500)                                   // When ending, fade it out
-        .play()
+if (currentEffects.length != 0) {
+  // End effects on source named "arrow"
+  Sequencer.EffectManager.endEffects({ source: source, name: "arrow" });
+} else {
+  new Sequence()
+    .effect()
+    .file("jb2a.ui.indicator.green.01.01") // Play arrow animation from Sequencer Database
+    .attachTo(source, { followRotation: false }) // Attach to source token but do not rotate with it
+    .rotateTowards(target, { attachTo: true }) // Rotate towards target token
+    .scaleToObject(0.75) // Scale effect to fit token's size
+    .persist() // Make it last forever
+    .spriteOffset({ x: 0.5 }, { gridUnits: true }) // Move above token by 1 grid unit
+    .spriteRotation(90) // Rotate the sprite itself 90 degrees
+    .name("arrow") // Name it arrow so that the effect manager can find it
+    .fadeIn(500) // When first created, fade it in
+    .fadeOut(500) // When ending, fade it out
+    .play();
 }
 ```
 
@@ -775,6 +806,7 @@ Sets the z-index of the effect, potentially displaying it on top of or below oth
 `.animateProperty(target, propertyName, options)`
 
 Examples:
+
 - `.animateProperty("sprite", "position.x", { from: -200, to: 200, duration: 500})`
 - `.animateProperty("sprite", "rotation", { from: 0, to: 360, duration: 1500, ease: "easeInOutCubic"})`
 - `.animateProperty("spriteContainer", "rotation", { from: 0, to: 180, duration: 5000, delay: 500 })`
@@ -786,7 +818,9 @@ Animates a property on the target of the animation.
 Valid targets are `sprite` (the effect itself) and `spriteContainer` (the effect's container).
 
 Animatable properties are as follows:
+
 - `sprite`
+
   - `position.x`
   - `position.y`
   - `rotation` (degrees)
@@ -797,6 +831,7 @@ Animatable properties are as follows:
   - `height`
 
 - `alphaFilter`
+
   - `alpha`
 
 - `spriteContainer`
@@ -822,6 +857,7 @@ Check out what easings are available here: https://easings.net/
 `.loopProperty(target, propertyName, options)`
 
 Examples:
+
 - `.loopProperty("sprite", "position.x", { from: -200, to: 200, duration: 500})`
 - `.loopProperty("sprite", "rotation", { from: 0, to: 360, duration: 1500})`
 - `.loopProperty("spriteContainer", "rotation", { from: 0, to: 180, duration: 5000, delay: 500 })`
@@ -838,7 +874,9 @@ If no `options.loops` are provided, the animation is indefinite (lasts forever).
 Valid targets are `sprite` (the effect itself) and `spriteContainer` (the effect's container).
 
 Animatable properties are as follows:
+
 - `sprite`
+
   - `position.x`
   - `position.y`
   - `rotation` (degrees)
@@ -849,6 +887,7 @@ Animatable properties are as follows:
   - `height`
 
 - `alphaFilter`
+
   - `alpha`
 
 - `spriteContainer`
@@ -860,6 +899,7 @@ Animatable properties are as follows:
   - `scale.y`
 
 Default parameters:
+
 ```js
 {
     loops: 0,
@@ -879,6 +919,7 @@ Check out what easings are available here: https://easings.net/
 `.filter(string, object)`
 
 Examples:
+
 - `.filter("ColorMatrix", { hue: 100 })`
 - `.filter("Glow", { color: 0xFF0000 })`
 - `.filter("Blur", { blurX: 5, blurY: 10 })`
@@ -892,6 +933,7 @@ You may "stack" multiple filters on top of each other, and they will work in con
 `.tint()` or `.tint(hexadecimal)` or `.tint(decimal)`
 
 Examples:
+
 - `.tint("#FF0000")` - Red tint
 - `.tint(0x0000FF)` - Blue tint
 
@@ -908,7 +950,6 @@ Causes the effect to be played in screen space instead of world space (where tok
 `.screenSpaceAboveUI()` or `.screenSpaceAboveUI(boolean)`
 
 If `.screenSpace()` has been used, this will cause the effect to be played above all elements in Foundry.
-
 
 ## Screen Space Position
 
@@ -945,17 +986,13 @@ Sets up various properties relating to scale of the effect on the screen. Accept
 
 ```js
 const style = {
-    "fill": "red",
-    "fontFamily": "Arial Black",
-    "fontSize": 28,
-    "strokeThickness": 4
-}
+  fill: "red",
+  fontFamily: "Arial Black",
+  fontSize: 28,
+  strokeThickness: 4,
+};
 
-new Sequence()
-   .effect()
-      .atLocation(token)
-      .text("Test Text", style)
-   .play()
+new Sequence().effect().atLocation(token).text("Test Text", style).play();
 ```
 
 Creates a text element, attached to the effect. The options for the text are available here:
@@ -964,31 +1001,43 @@ Creates a text element, attached to the effect. The options for the text are ava
 
 Use the JSON object as the options parameter for `.text()`
 
-
 ## Shape
 
 `.shape(inType, inOptions)`
 
 ```js
 new Sequence()
-    .effect()
-        .attachTo(token)
-        .persist()
-        .shape("circle", {
-            lineSize: 4,
-            lineColor: "#FF0000",
-            radius: 1.5,
-            gridUnits: true,
-            name: "test"
-        })
-        .loopProperty("shapes.test", "scale.x", { from: 0.9, to: 1.1, duration: 1000, pingPong: true, ease: "easeInOutSine" })
-        .loopProperty("shapes.test", "scale.y", { from: 0.9, to: 1.1, duration: 1000, pingPong: true, ease: "easeInOutSine" })
-    .play()
+  .effect()
+  .attachTo(token)
+  .persist()
+  .shape("circle", {
+    lineSize: 4,
+    lineColor: "#FF0000",
+    radius: 1.5,
+    gridUnits: true,
+    name: "test",
+  })
+  .loopProperty("shapes.test", "scale.x", {
+    from: 0.9,
+    to: 1.1,
+    duration: 1000,
+    pingPong: true,
+    ease: "easeInOutSine",
+  })
+  .loopProperty("shapes.test", "scale.y", {
+    from: 0.9,
+    to: 1.1,
+    duration: 1000,
+    pingPong: true,
+    ease: "easeInOutSine",
+  })
+  .play();
 ```
 
 Creates a graphics element, attached to the effect.
 
 The supported shapes (`inType`) are:
+
 - "polygon"
 - "rectangle"
 - "circle"
@@ -996,13 +1045,14 @@ The supported shapes (`inType`) are:
 - "roundedRect"
 
 The optional options are as follows:
+
 - `radius`: `number` - The radius of `circle` shapes, and the radius of the `roundedRect` edges
 - `width`: `number` - The width of `rectangle`, `ellipse`, and `roundedRect` shapes
 - `height`: `number` - The height of `rectangle`, `ellipse`, and `roundedRect` shapes
-- `points`: `Array<[number, number]|{ x: number, y: number}>` - The points of a `polygon` object 
+- `points`: `Array<[number, number]|{ x: number, y: number}>` - The points of a `polygon` object
 - `gridUnits`: `boolean` - Whether the positions or height/width should be considered grid units (1 = one grid on the canvas grid)
 - `name`: `string` - What name to give this shape, which can be used with `.animateProperty()` and `.loopProperty()` through `shapes.[name]`
-- `fillColor`: `string|number` - The fill color of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)  
+- `fillColor`: `string|number` - The fill color of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)
 - `fillAlpha`: `number` - The alpha of the fill color
 - `alpha`: `number` - The alpha of the entire shape
 - `lineSize`: `number` - The size of the outline of the shape (in pixels)
@@ -1021,7 +1071,6 @@ Causes the effect to ignore vision-based masking.
 `.mask()` or `.mask(token)` or `.mask([list, of, objects])`
 
 Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
-
 
 ## Tie To Documents
 

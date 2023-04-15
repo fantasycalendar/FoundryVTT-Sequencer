@@ -1,7 +1,6 @@
 import CONSTANTS from "../constants.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 
-
 /**
  *  This function linearly interpolates between p1 and p2 based on a normalized value of t
  *
@@ -9,13 +8,15 @@ import { easeFunctions } from "../canvas-effects/ease.js";
  * @param  {object}         inOptions   The end value
  * @return {array|boolean}              Interpolated value
  */
-export async function getFiles(inFile, { applyWildCard = false, softFail = false } = {}) {
-
-  let source = 'data';
+export async function getFiles(
+  inFile,
+  { applyWildCard = false, softFail = false } = {}
+) {
+  let source = "data";
   const browseOptions = { wildcard: applyWildCard };
 
   if (/\.s3\./.test(inFile)) {
-    source = 's3'
+    source = "s3";
     const { bucket, keyPrefix } = FilePicker.parseS3URL(inFile);
     if (bucket) {
       browseOptions.bucket = bucket;
@@ -98,10 +99,10 @@ export function shuffle_array(inArray, twister = false) {
  * @return {boolean}              A boolean whether the function is actually a function
  */
 export function is_function(inFunc) {
-  return inFunc && (
-    {}.toString.call(inFunc) === '[object Function]'
-    ||
-    {}.toString.call(inFunc) === '[object AsyncFunction]'
+  return (
+    inFunc &&
+    ({}.toString.call(inFunc) === "[object Function]" ||
+      {}.toString.call(inFunc) === "[object AsyncFunction]")
   );
 }
 
@@ -114,13 +115,16 @@ export function is_function(inFunc) {
  * @param  {boolean} index                      Whether to return the chosen index instead
  * @return {object}                             A random element from the array
  */
-export function random_array_element(inArray, { recurse = false, twister = false, index = false } = {}) {
+export function random_array_element(
+  inArray,
+  { recurse = false, twister = false, index = false } = {}
+) {
   const chosenIndex = random_int_between(0, inArray.length, twister);
   let choice = inArray[chosenIndex];
   if (recurse && Array.isArray(choice)) {
     return random_array_element(choice, { recurse, twister, index });
   }
-  if(index){
+  if (index) {
     return chosenIndex;
   }
   return choice;
@@ -134,7 +138,10 @@ export function random_array_element(inArray, { recurse = false, twister = false
  * @param  {boolean|MersenneTwister} twister    The twister to generate the random results from
  * @return {object}                             A random element from the object
  */
-export function random_object_element(inObject, { recurse = false, twister = false } = {}) {
+export function random_object_element(
+  inObject,
+  { recurse = false, twister = false } = {}
+) {
   let keys = Object.keys(inObject).filter((k) => !k.startsWith("_"));
   let choice = inObject[random_array_element(keys, { twister })];
   if (typeof choice === "object" && recurse) {
@@ -150,9 +157,7 @@ export function random_object_element(inObject, { recurse = false, twister = fal
  * @return {boolean}                Whether it is of type number, not infinite, and not NaN
  */
 export function is_real_number(inNumber) {
-  return !isNaN(inNumber)
-    && typeof inNumber === "number"
-    && isFinite(inNumber);
+  return !isNaN(inNumber) && typeof inNumber === "number" && isFinite(inNumber);
 }
 
 /**
@@ -170,8 +175,7 @@ export function deep_get(obj, path) {
       obj = obj[path[i]];
     }
     return obj[path[i]];
-  } catch (err) {
-  }
+  } catch (err) {}
 }
 
 /**
@@ -196,8 +200,7 @@ export function deep_set(obj, path, value) {
     } else {
       obj[path[i]] = value;
     }
-  } catch (err) {
-  }
+  } catch (err) {}
 }
 
 /**
@@ -258,10 +261,14 @@ export function clamp(num, min, max) {
  * @returns {boolean}
  */
 export function is_UUID(inId) {
-  return typeof inId === "string"
-    && (inId.startsWith("Scene") || inId.startsWith("Actor") || inId.startsWith("Item"))
-    && (inId.match(/\./g) || []).length
-    && !inId.endsWith(".");
+  return (
+    typeof inId === "string" &&
+    (inId.startsWith("Scene") ||
+      inId.startsWith("Actor") ||
+      inId.startsWith("Item")) &&
+    (inId.match(/\./g) || []).length &&
+    !inId.endsWith(".")
+  );
 }
 
 /**
@@ -271,14 +278,17 @@ export function is_UUID(inId) {
  * @param  {String}     inSceneId   The scene ID to search within
  * @return {any}                    Object if found, else undefined
  */
-export function get_object_from_scene(inObjectId, inSceneId = game.user.viewedScene) {
+export function get_object_from_scene(
+  inObjectId,
+  inSceneId = game.user.viewedScene
+) {
   let tryUUID = is_UUID(inObjectId);
   if (tryUUID) {
     const obj = from_uuid_fast(inObjectId);
     if (obj) return obj;
     tryUUID = false;
   }
-  return get_all_documents_from_scene(inSceneId).find(obj => {
+  return get_all_documents_from_scene(inSceneId).find((obj) => {
     return get_object_identifier(obj, tryUUID) === inObjectId;
   });
 }
@@ -299,12 +309,12 @@ export function from_uuid_fast(uuid) {
   doc = collection.get(docId);
 
   // Embedded Documents
-  while (doc && (parts.length > 1)) {
+  while (doc && parts.length > 1) {
     const [embeddedName, embeddedId] = parts.slice(0, 2);
     if (embeddedName === "SequencerEffect") {
       if (game.user.viewedScene !== docId) {
         let effects = doc.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
-        doc = new Map(effects).get(embeddedId)
+        doc = new Map(effects).get(embeddedId);
       } else {
         doc = Sequencer.EffectManager.getEffects({ effect: docId })?.[0];
       }
@@ -328,7 +338,7 @@ export function get_all_documents_from_scene(inSceneId = false) {
     : game.scenes.get(game.user?.viewedScene);
   if (!scene) return [];
   return [
-    ...canvas.templates?.preview?.children ?? [],
+    ...(canvas.templates?.preview?.children ?? []),
     ...Array.from(scene?.tokens ?? []),
     ...Array.from(scene?.lights ?? []),
     ...Array.from(scene?.sounds ?? []),
@@ -336,7 +346,9 @@ export function get_all_documents_from_scene(inSceneId = false) {
     ...Array.from(scene?.tiles ?? []),
     ...Array.from(scene?.walls ?? []),
     ...Array.from(scene?.drawings ?? []),
-  ].deepFlatten().filter(Boolean);
+  ]
+    .deepFlatten()
+    .filter(Boolean);
 }
 
 /**
@@ -347,9 +359,7 @@ export function get_all_documents_from_scene(inSceneId = false) {
  */
 export function validate_document(inObject) {
   const document = inObject?.document ?? inObject;
-  return is_UUID(document?.uuid)
-    ? document
-    : inObject;
+  return is_UUID(document?.uuid) ? document : inObject;
 }
 
 /**
@@ -361,12 +371,14 @@ export function validate_document(inObject) {
  */
 export function get_object_identifier(inObject, tryUUID = true) {
   const uuid = tryUUID && is_UUID(inObject?.uuid) ? inObject?.uuid : undefined;
-  return uuid
-    ?? inObject?.id
-    ?? inObject?.document?.name
-    ?? inObject?.name
-    ?? (inObject?.tag !== "" ? inObject?.tag : undefined)
-    ?? (inObject?.label !== "" ? inObject?.label : undefined);
+  return (
+    uuid ??
+    inObject?.id ??
+    inObject?.document?.name ??
+    inObject?.name ??
+    (inObject?.tag !== "" ? inObject?.tag : undefined) ??
+    (inObject?.label !== "" ? inObject?.label : undefined)
+  );
 }
 
 /**
@@ -380,35 +392,51 @@ export function make_array_unique(inArray) {
 }
 
 export function debug(msg, args = "") {
-  if (game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.log(`DEBUG | Sequencer | ${msg}`, args)
+  if (game.settings.get(CONSTANTS.MODULE_NAME, "debug"))
+    console.log(`DEBUG | Sequencer | ${msg}`, args);
 }
 
 export function debug_error(msg, args) {
-  if (game.settings.get(CONSTANTS.MODULE_NAME, "debug")) console.error(`DEBUG | Sequencer | ${msg}`, args)
+  if (game.settings.get(CONSTANTS.MODULE_NAME, "debug"))
+    console.error(`DEBUG | Sequencer | ${msg}`, args);
 }
 
 export function custom_warning(inClassName, warning, notify = false) {
-  inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+  inClassName =
+    inClassName !== "Sequencer"
+      ? "Sequencer | Module: " + inClassName
+      : inClassName;
   warning = `${inClassName} | ${warning}`;
   if (notify) ui.notifications.warn(warning, { console: false });
   console.warn(warning.replace("<br>", "\n"));
 }
 
 const throttledWarnings = {};
-export function throttled_custom_warning(inClassName, warning, delay = 10000, notify = false){
-  inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+export function throttled_custom_warning(
+  inClassName,
+  warning,
+  delay = 10000,
+  notify = false
+) {
+  inClassName =
+    inClassName !== "Sequencer"
+      ? "Sequencer | Module: " + inClassName
+      : inClassName;
   warning = `${inClassName} | ${warning}`;
-  if(throttledWarnings[warning]) return;
+  if (throttledWarnings[warning]) return;
   throttledWarnings[warning] = true;
   if (notify) ui.notifications.warn(warning, { console: false });
   console.warn(warning.replace("<br>", "\n"));
   setTimeout(() => {
     delete throttledWarnings[warning];
-  }, delay)
+  }, delay);
 }
 
 export function custom_error(inClassName, error, notify = true) {
-  inClassName = inClassName !== "Sequencer" ? "Sequencer | Module: " + inClassName : inClassName;
+  inClassName =
+    inClassName !== "Sequencer"
+      ? "Sequencer | Module: " + inClassName
+      : inClassName;
   error = `${inClassName} | ${error}`;
   if (notify) ui.notifications.error(error, { console: false });
   return new Error(error.replace("<br>", "\n"));
@@ -427,7 +455,7 @@ export function group_by(xs, key) {
   }, {});
 }
 
-function objHasProperty(obj, prop){
+function objHasProperty(obj, prop) {
   return obj.constructor.prototype.hasOwnProperty(prop);
 }
 
@@ -435,9 +463,9 @@ export function sequence_proxy_wrap(inSequence) {
   return new Proxy(inSequence, {
     get: function (target, prop) {
       if (!objHasProperty(target, prop)) {
-        if (Sequencer.SectionManager.externalSections[prop] === undefined){
-          const section = target.sections[target.sections.length-1];
-          if(section && objHasProperty(section, prop)){
+        if (Sequencer.SectionManager.externalSections[prop] === undefined) {
+          const section = target.sections[target.sections.length - 1];
+          if (section && objHasProperty(section, prop)) {
             const targetProperty = Reflect.get(section, prop);
             return is_function(targetProperty)
               ? targetProperty.bind(section)
@@ -445,7 +473,8 @@ export function sequence_proxy_wrap(inSequence) {
           }
           return Reflect.get(target, prop);
         }
-        target.sectionToCreate = Sequencer.SectionManager.externalSections[prop];
+        target.sectionToCreate =
+          Sequencer.SectionManager.externalSections[prop];
         return Reflect.get(target, "_createCustomSection");
       }
       return Reflect.get(target, prop);
@@ -456,7 +485,10 @@ export function sequence_proxy_wrap(inSequence) {
 export function section_proxy_wrap(inClass) {
   return new Proxy(inClass, {
     get: function (target, prop) {
-      if (!objHasProperty(target, prop) && objHasProperty(target.sequence, prop)) {
+      if (
+        !objHasProperty(target, prop) &&
+        objHasProperty(target.sequence, prop)
+      ) {
         const targetProperty = Reflect.get(target.sequence, prop);
         return is_function(targetProperty)
           ? targetProperty.bind(target.sequence)
@@ -478,31 +510,51 @@ export function safe_str(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-export function scroll_to_element(scrollElement, scrollToElement, duration = 500) {
+export function scroll_to_element(
+  scrollElement,
+  scrollToElement,
+  duration = 500
+) {
   if (!duration) {
-    scrollElement.scrollTop(scrollElement.scrollTop() - scrollElement.offset().top + scrollToElement.offset().top);
+    scrollElement.scrollTop(
+      scrollElement.scrollTop() -
+        scrollElement.offset().top +
+        scrollToElement.offset().top
+    );
     return;
   }
 
-  scrollElement.animate({
-    scrollTop: scrollElement.scrollTop() - scrollElement.offset().top + scrollToElement.offset().top
-  }, duration);
+  scrollElement.animate(
+    {
+      scrollTop:
+        scrollElement.scrollTop() -
+        scrollElement.offset().top +
+        scrollToElement.offset().top,
+    },
+    duration
+  );
 
   return wait(duration);
 }
 
-export async function highlight_element(element, { duration = false, color = "#FF0000", size = "3px" } = {}) {
-  element.prop("style", `-webkit-box-shadow: inset 0px 0px ${size} ${size} ${color}; box-shadow: inset 0px 0px ${size} ${size} ${color};`);
+export async function highlight_element(
+  element,
+  { duration = false, color = "#FF0000", size = "3px" } = {}
+) {
+  element.prop(
+    "style",
+    `-webkit-box-shadow: inset 0px 0px ${size} ${size} ${color}; box-shadow: inset 0px 0px ${size} ${size} ${color};`
+  );
   if (!duration) return;
   await wait(duration);
   element.prop("style", "");
 }
 
 export function get_hash(input) {
-  let hash = 0
+  let hash = 0;
   const len = input.length;
   for (let i = 0; i < len; i++) {
-    hash = ((hash << 5) - hash) + input.charCodeAt(i);
+    hash = (hash << 5) - hash + input.charCodeAt(i);
     hash |= 0; // to 32bit integer
   }
   return hash;
@@ -510,11 +562,10 @@ export function get_hash(input) {
 
 export function parseColor(inColor) {
   return {
-    hexadecimal: is_real_number(inColor)
-      ? inColor.toString(16)
-      : inColor,
-    decimal: (typeof inColor === "string" && inColor.startsWith("#"))
-      ? parseInt(inColor.slice(1), 16)
-      : inColor
-  }
+    hexadecimal: is_real_number(inColor) ? inColor.toString(16) : inColor,
+    decimal:
+      typeof inColor === "string" && inColor.startsWith("#")
+        ? parseInt(inColor.slice(1), 16)
+        : inColor,
+  };
 }

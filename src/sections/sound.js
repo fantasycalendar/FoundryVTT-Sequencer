@@ -5,7 +5,6 @@ import traits from "./traits/_traits.js";
 import { SequencerFile, SequencerFileBase } from "../modules/sequencer-file.js";
 
 class SoundSection extends Section {
-
   constructor(inSequence, inFile = "") {
     super(inSequence);
     this._file = inFile;
@@ -21,7 +20,12 @@ class SoundSection extends Section {
    * @returns {SoundSection}
    */
   addOverride(inFunc) {
-    if (!lib.is_function(inFunc)) throw this.sequence._customError(this, "addOverride", "The given function needs to be an actual function.");
+    if (!lib.is_function(inFunc))
+      throw this.sequence._customError(
+        this,
+        "addOverride",
+        "The given function needs to be an actual function."
+      );
     this._overrides.push(inFunc);
     return this;
   }
@@ -41,23 +45,30 @@ class SoundSection extends Section {
    * @returns {Promise}
    */
   async run() {
-
     const playData = await this._sanitizeSoundData();
 
-    if((!playData.src && this.sequence.softFail)){
+    if (!playData.src && this.sequence.softFail) {
       return new Promise((reject) => {
         reject();
       });
     }
 
     if (!playData?.play) {
-      this.sequence._showWarning(this, "Play", `File not found: ${playData.data.src}`);
+      this.sequence._showWarning(
+        this,
+        "Play",
+        `File not found: ${playData.data.src}`
+      );
       return new Promise((reject) => reject());
     }
 
     if (Hooks.call("preCreateSequencerSound", playData.data) === false) return;
 
-    let push = !(playData.data?.users?.length === 1 && playData.data?.users?.includes(game.userId)) && !this.sequence.localOnly;
+    let push =
+      !(
+        playData.data?.users?.length === 1 &&
+        playData.data?.users?.includes(game.userId)
+      ) && !this.sequence.localOnly;
     return SequencerAudioHelper.play(playData, push);
   }
 
@@ -66,15 +77,14 @@ class SoundSection extends Section {
    * @private
    */
   async _sanitizeSoundData() {
-
-    if(this._deserializedData){
+    if (this._deserializedData) {
       return this._deserializedData;
     }
 
-    if(!this._file){
+    if (!this._file) {
       return {
         play: false,
-        src: false
+        src: false,
       };
     }
 
@@ -83,7 +93,7 @@ class SoundSection extends Section {
     if (!file) {
       return {
         play: false,
-        src: false
+        src: false,
       };
     }
 
@@ -100,16 +110,25 @@ class SoundSection extends Section {
     if (!soundFile) {
       return {
         play: false,
-        src: file
+        src: file,
       };
     }
     let duration = soundFile.duration * 1000;
 
-    let startTime = (this._startTime ? (!this._startPerc ? this._startTime : this._startTime * duration) : 0) / 1000;
+    let startTime =
+      (this._startTime
+        ? !this._startPerc
+          ? this._startTime
+          : this._startTime * duration
+        : 0) / 1000;
 
     if (this._endTime) {
       duration = !this._endPerc
-        ? Number(this._isRange ? this._endTime - this._startTime : duration - this._endTime)
+        ? Number(
+            this._isRange
+              ? this._endTime - this._startTime
+              : duration - this._endTime
+          )
         : this._endTime * duration;
     }
 
@@ -125,7 +144,7 @@ class SoundSection extends Section {
       startTime: startTime,
       duration: this._duration || duration,
       sceneId: game.user.viewedScene,
-      users: this._users ? Array.from(this._users) : null
+      users: this._users ? Array.from(this._users) : null,
     };
 
     for (let override of this._overrides) {
@@ -133,7 +152,11 @@ class SoundSection extends Section {
     }
 
     if (typeof data.src !== "string" || data.src === "") {
-      throw this.sequence._customError(this, "file", "a sound must have a src of type string!");
+      throw this.sequence._customError(
+        this,
+        "file",
+        "a sound must have a src of type string!"
+      );
     }
 
     return data;
@@ -145,7 +168,7 @@ class SoundSection extends Section {
     return {
       ...data,
       type: "sound",
-      sectionData
+      sectionData,
     };
   }
 

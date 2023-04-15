@@ -7,6 +7,7 @@
 `.filter("ColorMatrix", inData)`
 
 `inData` may contain any of the following:
+
 ```js
 {
     hue: 0,          // Number, in degrees
@@ -21,6 +22,7 @@
 `.filter("Glow", inData)`
 
 `inData` may contain any of the following:
+
 ```js
 {
     distance: 10,      // Number, distance of the glow in pixels
@@ -36,6 +38,7 @@
 
 `.filter("Blur", inData)`
 `inData` may contain any of the following:
+
 ```js
 {
     strength: 8,    // Number, strength of the filter

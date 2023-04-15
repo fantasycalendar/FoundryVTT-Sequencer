@@ -3,24 +3,29 @@
 ## Creating A New Sequence
 
 You can start a new Sequence by simply calling:
+
 ```js
-new Sequence()
+new Sequence();
 ```
+
 Any other methods you call on this will continue to work on the same sequence, like so:
+
 ```js
 new Sequence()
-     .thenDo(function(){
-          console.log("I'm in here.")
-     })
-     .thenDo(function(){
-          console.log("But now, I'm in here!")
-     })
+  .thenDo(function () {
+    console.log("I'm in here.");
+  })
+  .thenDo(function () {
+    console.log("But now, I'm in here!");
+  });
 ```
 
 For module developers, by putting your module name in the Sequence like this:
+
 ```js
-new Sequence({ moduleName: "myModuleName" })
+new Sequence({ moduleName: "myModuleName" });
 ```
+
 Means that any errors will show up like this:
 
 ![Sequencer module error example](../images/error-example.jpg)
@@ -30,10 +35,10 @@ This will help you and your module's users to get to the bottom of the issue.
 In addition, you can also add `softFail` like so:
 
 ```js
-new Sequence({ moduleName: "myModuleName", softFail: true })
+new Sequence({ moduleName: "myModuleName", softFail: true });
 ```
 
-This will make sequencer consider all failures to find an effect file, sound file, or a macro a non-issue and simply continues executing the sequence, rather than halt the execution. 
+This will make sequencer consider all failures to find an effect file, sound file, or a macro a non-issue and simply continues executing the sequence, rather than halt the execution.
 
 ## Core Methods
 

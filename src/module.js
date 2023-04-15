@@ -12,7 +12,10 @@ import SequencerDatabase from "./modules/sequencer-database.js";
 import SequencerPreloader from "./modules/sequencer-preloader.js";
 import SequencerEffectManager from "./modules/sequencer-effect-manager.js";
 import SequencerSectionManager from "./modules/sequencer-section-manager.js";
-import { EffectPlayer, InteractionManager } from "./modules/sequencer-interaction-manager.js";
+import {
+  EffectPlayer,
+  InteractionManager,
+} from "./modules/sequencer-interaction-manager.js";
 import Section from "./sections/section.js";
 import * as lib from "./lib/lib.js";
 import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
@@ -24,21 +27,27 @@ import CONSTANTS from "./constants.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 import runMigrations from "./migrations.js";
 
-Hooks.once('init', async function () {
+Hooks.once("init", async function () {
   if (!game.modules.get("socketlib")?.active) return;
-  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME)?.active;
+  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
+    CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
+  )?.active;
   initialize_module();
 });
 
 Hooks.once("socketlib.ready", () => {
   registerSocket();
-})
+});
 
-Hooks.once('ready', async function () {
-
+Hooks.once("ready", async function () {
   if (!game.modules.get("socketlib")?.active) {
-    ui.notifications.error("Sequencer requires the SocketLib module to be active and will not work without it!", { console: false });
-    throw new Error("Sequencer requires the SocketLib module to be active and will not work without it!");
+    ui.notifications.error(
+      "Sequencer requires the SocketLib module to be active and will not work without it!",
+      { console: false }
+    );
+    throw new Error(
+      "Sequencer requires the SocketLib module to be active and will not work without it!"
+    );
   }
 
   await runMigrations();
@@ -48,9 +57,9 @@ Hooks.once('ready', async function () {
   InteractionManager.initialize();
 
   setTimeout(() => {
-    console.log("Sequencer | Ready to go!")
-    Hooks.callAll('sequencer.ready')
-    Hooks.callAll('sequencerReady')
+    console.log("Sequencer | Ready to go!");
+    Hooks.callAll("sequencer.ready");
+    Hooks.callAll("sequencerReady");
 
     // setTimeout(() => {
     //   EffectsUIApp.show({ tab: "player" });
@@ -63,7 +72,6 @@ Hooks.once('ready', async function () {
     Hooks.on("canvasReady", () => {
       SequencerEffectManager.setUpPersists();
     });
-
   }, 50);
 });
 
@@ -71,7 +79,6 @@ Hooks.once('ready', async function () {
  * Creation & delete hooks for persistent effects
  */
 function initialize_module() {
-
   window.Sequence = Sequence;
   window.Sequencer = {
     Player: EffectPlayer,
@@ -92,9 +99,9 @@ function initialize_module() {
       shuffle_array: lib.shuffle_array,
       random_array_element: lib.random_array_element,
       random_object_element: lib.random_object_element,
-      make_array_unique: lib.make_array_unique
-    }
-  }
+      make_array_unique: lib.make_array_unique,
+    },
+  };
 
   registerSettings();
   registerLayers();
@@ -103,16 +110,31 @@ function initialize_module() {
 
   SequencerAboveUILayer.setup();
 
-  Hooks.on("preCreateToken", (...args) => Sequencer.EffectManager.patchCreationData(...args));
-  Hooks.on("preCreateDrawing", (...args) => Sequencer.EffectManager.patchCreationData(...args));
-  Hooks.on("preCreateTile", (...args) => Sequencer.EffectManager.patchCreationData(...args));
-  Hooks.on("preCreateMeasuredTemplate", (...args) => Sequencer.EffectManager.patchCreationData(...args));
+  Hooks.on("preCreateToken", (...args) =>
+    Sequencer.EffectManager.patchCreationData(...args)
+  );
+  Hooks.on("preCreateDrawing", (...args) =>
+    Sequencer.EffectManager.patchCreationData(...args)
+  );
+  Hooks.on("preCreateTile", (...args) =>
+    Sequencer.EffectManager.patchCreationData(...args)
+  );
+  Hooks.on("preCreateMeasuredTemplate", (...args) =>
+    Sequencer.EffectManager.patchCreationData(...args)
+  );
 
-  Hooks.on("createToken", (...args) => Sequencer.EffectManager.documentCreated(...args));
-  Hooks.on("createDrawing", (...args) => Sequencer.EffectManager.documentCreated(...args));
-  Hooks.on("createTile", (...args) => Sequencer.EffectManager.documentCreated(...args));
-  Hooks.on("createMeasuredTemplate", (...args) => Sequencer.EffectManager.documentCreated(...args));
-
+  Hooks.on("createToken", (...args) =>
+    Sequencer.EffectManager.documentCreated(...args)
+  );
+  Hooks.on("createDrawing", (...args) =>
+    Sequencer.EffectManager.documentCreated(...args)
+  );
+  Hooks.on("createTile", (...args) =>
+    Sequencer.EffectManager.documentCreated(...args)
+  );
+  Hooks.on("createMeasuredTemplate", (...args) =>
+    Sequencer.EffectManager.documentCreated(...args)
+  );
 }
 
-Hooks.once('monaco-editor.ready', registerTypes)
+Hooks.once("monaco-editor.ready", registerTypes);

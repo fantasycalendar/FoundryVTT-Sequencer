@@ -10,7 +10,6 @@ const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
 
 export default class SequencerEffectManager {
-
   /**
    * Returns all of the currently running effects on the canvas
    *
@@ -44,10 +43,14 @@ export default class SequencerEffectManager {
    */
   static async play(data, push = true) {
     if (!lib.user_can_do("permissions-effect-create")) {
-      lib.custom_warning("Sequencer", "EffectManager | play | Players do not have permissions to play effects. This can be configured in Sequencer's module settings.")
+      lib.custom_warning(
+        "Sequencer",
+        "EffectManager | play | Players do not have permissions to play effects. This can be configured in Sequencer's module settings."
+      );
       return;
     }
-    if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
+    if (push)
+      sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
     if (data?.persistOptions?.persistTokenPrototype) {
       this._playPrototypeTokenEffects(data, push);
     }
@@ -65,7 +68,11 @@ export default class SequencerEffectManager {
    */
   static getEffects(inFilter = {}) {
     const filters = this._validateFilters(inFilter);
-    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | getEffects | Incorrect or incomplete parameters provided")
+    if (!inFilter)
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | getEffects | Incorrect or incomplete parameters provided"
+      );
     return this._filterEffects(filters);
   }
 
@@ -82,14 +89,21 @@ export default class SequencerEffectManager {
    */
   static updateEffects(inFilter, inUpdates) {
     inFilter = this._validateFilters(inFilter);
-    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | updateEffects | Incorrect or incomplete parameters provided")
+    if (!inFilter)
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | updateEffects | Incorrect or incomplete parameters provided"
+      );
 
     CanvasEffect.validateUpdate(inUpdates);
 
-    const effectsToUpdate = this._filterEffects(inFilter)
-      .filter(effect => effect.userCanUpdate);
+    const effectsToUpdate = this._filterEffects(inFilter).filter(
+      (effect) => effect.userCanUpdate
+    );
 
-    return Promise.allSettled(effectsToUpdate.map(effect => effect.update(inUpdates)));
+    return Promise.allSettled(
+      effectsToUpdate.map((effect) => effect.update(inUpdates))
+    );
   }
 
   /**
@@ -105,10 +119,18 @@ export default class SequencerEffectManager {
    */
   static async endEffects(inFilter = {}, push = true) {
     inFilter = this._validateFilters(inFilter);
-    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endEffects | Incorrect or incomplete parameters provided");
+    if (!inFilter)
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | endEffects | Incorrect or incomplete parameters provided"
+      );
     const effectsToEnd = this._getEffectsByFilter(inFilter);
     if (!effectsToEnd.length) return;
-    if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
+    if (push)
+      sequencerSocket.executeForOthers(
+        SOCKET_HANDLERS.END_EFFECTS,
+        effectsToEnd
+      );
     return this._endManyEffects(effectsToEnd);
   }
 
@@ -121,17 +143,31 @@ export default class SequencerEffectManager {
    */
   static async endAllEffects(inSceneId = game.user.viewedScene, push = true) {
     const inFilter = this._validateFilters({ sceneId: inSceneId });
-    if (!inFilter) throw lib.custom_error("Sequencer", "EffectManager | endAllEffects | Incorrect or incomplete parameters provided");
+    if (!inFilter)
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | endAllEffects | Incorrect or incomplete parameters provided"
+      );
     const effectsToEnd = this._getEffectsByFilter(inFilter);
     if (!effectsToEnd.length) return;
-    if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_EFFECTS, effectsToEnd);
+    if (push)
+      sequencerSocket.executeForOthers(
+        SOCKET_HANDLERS.END_EFFECTS,
+        effectsToEnd
+      );
     return this._endManyEffects(effectsToEnd);
   }
 
-  static _getEffectsByFilter(inFilter){
-    return lib.make_array_unique(this._filterEffects(inFilter).filter(effect => effect.userCanDelete).map(effect => {
-      return effect.data?.persistOptions?.persistTokenPrototype ? effect.data?.persistOptions?.id ?? effect.id : effect.id;
-    }));
+  static _getEffectsByFilter(inFilter) {
+    return lib.make_array_unique(
+      this._filterEffects(inFilter)
+        .filter((effect) => effect.userCanDelete)
+        .map((effect) => {
+          return effect.data?.persistOptions?.persistTokenPrototype
+            ? effect.data?.persistOptions?.id ?? effect.id
+            : effect.id;
+        })
+    );
   }
 
   /**
@@ -142,7 +178,11 @@ export default class SequencerEffectManager {
    * @private
    */
   static getEffectPositionByName(inName) {
-    if (!(typeof inName === "string")) throw lib.custom_error("Sequencer", "EffectManager | getEffectPositionByName | inName must be of type string")
+    if (!(typeof inName === "string"))
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | getEffectPositionByName | inName must be of type string"
+      );
     return PositionContainer.get(inName) ?? false;
   }
 
@@ -155,18 +195,34 @@ export default class SequencerEffectManager {
    */
   static _filterEffects(inFilter) {
     if (inFilter.name) {
-      inFilter.name = new RegExp(lib.str_to_search_regex_str(lib.safe_str(inFilter.name)), "gu");
+      inFilter.name = new RegExp(
+        lib.str_to_search_regex_str(lib.safe_str(inFilter.name)),
+        "gu"
+      );
     }
     let effects = this.effects;
     if (inFilter.sceneId && inFilter.sceneId !== canvas.scene.id) {
-      effects = lib.get_all_documents_from_scene(inFilter.sceneId).map(doc => {
-        return getProperty(doc, CONSTANTS.EFFECTS_FLAG);
-      }).filter(flags => !!flags).map(flags => {
-        return flags.map(flag => CanvasEffect.make(flag[1]));
-      }).deepFlatten();
+      effects = lib
+        .get_all_documents_from_scene(inFilter.sceneId)
+        .map((doc) => {
+          return getProperty(doc, CONSTANTS.EFFECTS_FLAG);
+        })
+        .filter((flags) => !!flags)
+        .map((flags) => {
+          return flags.map((flag) => CanvasEffect.make(flag[1]));
+        })
+        .deepFlatten();
     }
-    return effects.filter(effect => {
-      return (!inFilter.effects || inFilter.effects.includes(effect.id)) && (!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length)) && (!inFilter.source || inFilter.source === effect.data.source) && (!inFilter.target || inFilter.target === effect.data.target) && (!inFilter.origin || inFilter.origin === effect.data.origin)
+    return effects.filter((effect) => {
+      return (
+        (!inFilter.effects || inFilter.effects.includes(effect.id)) &&
+        (!inFilter.name ||
+          (effect.data.name &&
+            effect.data.name.match(inFilter.name)?.length)) &&
+        (!inFilter.source || inFilter.source === effect.data.source) &&
+        (!inFilter.target || inFilter.target === effect.data.target) &&
+        (!inFilter.origin || inFilter.origin === effect.data.origin)
+      );
     });
   }
 
@@ -179,19 +235,36 @@ export default class SequencerEffectManager {
    * @private
    */
   static _validateObject(object, sceneId) {
-
-    if (!(object instanceof foundry.abstract.Document || object instanceof PlaceableObject || typeof object === "string")) {
-      throw lib.custom_error("Sequencer", "EffectManager | object must be instance of PlaceableObject or of type string")
-    } else if (object instanceof PlaceableObject || object instanceof foundry.abstract.Document) {
+    if (
+      !(
+        object instanceof foundry.abstract.Document ||
+        object instanceof PlaceableObject ||
+        typeof object === "string"
+      )
+    ) {
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | object must be instance of PlaceableObject or of type string"
+      );
+    } else if (
+      object instanceof PlaceableObject ||
+      object instanceof foundry.abstract.Document
+    ) {
       object = lib.get_object_identifier(object?.document ?? object);
     } else if (typeof object === "string") {
       const actualObject = lib.get_object_from_scene(object, sceneId);
       if (!actualObject) {
-        throw lib.custom_error("Sequencer", `EffectManager | could not find object with ID: ${object}`)
+        throw lib.custom_error(
+          "Sequencer",
+          `EffectManager | could not find object with ID: ${object}`
+        );
       }
       const uuid = lib.get_object_identifier(actualObject);
       if (!uuid) {
-        throw lib.custom_error("Sequencer", `EffectManager | could could not establish identifier of object with ID: ${object}`)
+        throw lib.custom_error(
+          "Sequencer",
+          `EffectManager | could could not establish identifier of object with ID: ${object}`
+        );
       }
       object = uuid;
     }
@@ -207,10 +280,17 @@ export default class SequencerEffectManager {
    * @private
    */
   static _validateFilters(inFilter) {
-
     if (inFilter?.sceneId) {
-      if (typeof inFilter.sceneId !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.sceneId must be of type string")
-      if (!game.scenes.get(inFilter.sceneId)) throw lib.custom_error("Sequencer", "EffectManager | inFilter.sceneId must be a valid scene id (could not find scene)")
+      if (typeof inFilter.sceneId !== "string")
+        throw lib.custom_error(
+          "Sequencer",
+          "EffectManager | inFilter.sceneId must be of type string"
+        );
+      if (!game.scenes.get(inFilter.sceneId))
+        throw lib.custom_error(
+          "Sequencer",
+          "EffectManager | inFilter.sceneId must be a valid scene id (could not find scene)"
+        );
     } else {
       inFilter.sceneId = game.user.viewedScene;
     }
@@ -228,24 +308,52 @@ export default class SequencerEffectManager {
       inFilter.target = this._validateObject(inFilter.target, inFilter.sceneId);
     }
 
-    if (inFilter?.name && typeof inFilter?.name !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.name must be of type string")
-    if (inFilter?.origin && typeof inFilter?.origin !== "string") throw lib.custom_error("Sequencer", "EffectManager | inFilter.origin must be of type string")
+    if (inFilter?.name && typeof inFilter?.name !== "string")
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | inFilter.name must be of type string"
+      );
+    if (inFilter?.origin && typeof inFilter?.origin !== "string")
+      throw lib.custom_error(
+        "Sequencer",
+        "EffectManager | inFilter.origin must be of type string"
+      );
 
     if (inFilter?.effects) {
-      if (!Array.isArray(inFilter.effects)) inFilter.effects = [inFilter.effects];
-      inFilter.effects = inFilter.effects.map(effect => {
-        if (!(typeof effect === "string" || effect instanceof CanvasEffect)) throw lib.custom_error("Sequencer", "EffectManager | collections in inFilter.effects must be of type string or CanvasEffect")
+      if (!Array.isArray(inFilter.effects))
+        inFilter.effects = [inFilter.effects];
+      inFilter.effects = inFilter.effects.map((effect) => {
+        if (!(typeof effect === "string" || effect instanceof CanvasEffect))
+          throw lib.custom_error(
+            "Sequencer",
+            "EffectManager | collections in inFilter.effects must be of type string or CanvasEffect"
+          );
         if (effect instanceof CanvasEffect) return effect.id;
         return effect;
-      })
+      });
     }
 
-    if (!inFilter.name && !inFilter.origin && !inFilter.target && !inFilter.sceneId && !inFilter.effects && !inFilter.origin) return false;
+    if (
+      !inFilter.name &&
+      !inFilter.origin &&
+      !inFilter.target &&
+      !inFilter.sceneId &&
+      !inFilter.effects &&
+      !inFilter.origin
+    )
+      return false;
 
-    return foundry.utils.mergeObject({
-      effects: false, name: false, source: false, target: false, sceneId: false, origin: false
-    }, inFilter);
-
+    return foundry.utils.mergeObject(
+      {
+        effects: false,
+        name: false,
+        source: false,
+        target: false,
+        sceneId: false,
+        origin: false,
+      },
+      inFilter
+    );
   }
 
   /**
@@ -257,10 +365,16 @@ export default class SequencerEffectManager {
    * @private
    */
   static async _playEffect(data, setFlags = true) {
-
     const effect = CanvasEffect.make(data);
 
-    if (data.persist && setFlags && effect.context && effect.owner && !data.temporary && !data.remote) {
+    if (
+      data.persist &&
+      setFlags &&
+      effect.context &&
+      effect.owner &&
+      !data.temporary &&
+      !data.remote
+    ) {
       flagManager.addFlags(effect.context.uuid, effect.data);
     }
 
@@ -273,7 +387,8 @@ export default class SequencerEffectManager {
       effect._ticker.add(() => {
         if (effect.isDestroyed) return;
         PositionContainer.set(effect.data.name, {
-          start: effect.sourcePosition, end: effect.targetPosition
+          start: effect.sourcePosition,
+          end: effect.targetPosition,
         });
       });
     }
@@ -285,14 +400,22 @@ export default class SequencerEffectManager {
         if (effect.source && !effect.isSourceDestroyed) {
           const sourceData = effect.getSourceData();
           if (JSON.stringify(sourceData) !== lastSourcePosition) {
-            sequencerSocket.executeForOthers(SOCKET_HANDLERS.UPDATE_POSITION, data.source, sourceData);
+            sequencerSocket.executeForOthers(
+              SOCKET_HANDLERS.UPDATE_POSITION,
+              data.source,
+              sourceData
+            );
             lastSourcePosition = JSON.stringify(sourceData);
           }
         }
         if (effect.target && !effect.isTargetDestroyed) {
           const targetData = effect.getTargetData();
           if (JSON.stringify(targetData) !== lastTargetPosition) {
-            sequencerSocket.executeForOthers(SOCKET_HANDLERS.UPDATE_POSITION, data.target, targetData);
+            sequencerSocket.executeForOthers(
+              SOCKET_HANDLERS.UPDATE_POSITION,
+              data.target,
+              targetData
+            );
             lastTargetPosition = JSON.stringify(targetData);
           }
         }
@@ -331,23 +454,25 @@ export default class SequencerEffectManager {
     allObjects.push(canvas.scene);
     const docEffectsMap = allObjects.reduce((acc, doc) => {
       let tokenEffects = flagManager.getFlags(doc);
-      if(doc instanceof TokenDocument && doc?.actorLink){
-        const actorEffects = flagManager.getFlags(doc?.actor)
-        actorEffects.forEach(e => {
+      if (doc instanceof TokenDocument && doc?.actorLink) {
+        const actorEffects = flagManager.getFlags(doc?.actor);
+        actorEffects.forEach((e) => {
           e[1]._id = randomID();
           e[1].source = doc.uuid;
           e[1].sceneId = doc.parent.id;
         });
         tokenEffects = tokenEffects.concat(actorEffects);
       }
-      if(tokenEffects.length) {
+      if (tokenEffects.length) {
         acc[doc.uuid] = tokenEffects;
       }
       return acc;
     }, {});
-    const promises = Object.entries(docEffectsMap).map(([uuid, effects]) => {
-      return this._playEffectMap(effects, fromUuidSync(uuid));
-    }).flat();
+    const promises = Object.entries(docEffectsMap)
+      .map(([uuid, effects]) => {
+        return this._playEffectMap(effects, fromUuidSync(uuid));
+      })
+      .flat();
     return Promise.all(promises).then(() => {
       Hooks.callAll("sequencerEffectManagerReady");
     });
@@ -357,10 +482,12 @@ export default class SequencerEffectManager {
    * Tears down persisting effects when the scene is unloaded
    */
   static tearDownPersists() {
-    return Promise.allSettled(this.effects.map(effect => {
-      VisibleEffects.delete(effect.id);
-      return effect.destroy();
-    }));
+    return Promise.allSettled(
+      this.effects.map((effect) => {
+        VisibleEffects.delete(effect.id);
+        return effect.destroy();
+      })
+    );
   }
 
   /**
@@ -372,7 +499,6 @@ export default class SequencerEffectManager {
    * @returns {*}
    */
   static async patchCreationData(inDocument, data, options) {
-
     const effects = flagManager.getFlags(inDocument);
 
     if (!effects?.length) return;
@@ -389,14 +515,16 @@ export default class SequencerEffectManager {
       documentUuid = inDocument.uuid;
     }
 
-    updates[CONSTANTS.EFFECTS_FLAG] = this.patchEffectDataForDocument(documentUuid, effects)
+    updates[CONSTANTS.EFFECTS_FLAG] = this.patchEffectDataForDocument(
+      documentUuid,
+      effects
+    );
 
     return inDocument.updateSource(updates);
-
   }
 
-  static patchEffectDataForDocument(inDocumentUuid, effects){
-    return effects.map(effect => {
+  static patchEffectDataForDocument(inDocumentUuid, effects) {
+    return effects.map((effect) => {
       effect[0] = randomID();
       const effectData = effect[1];
       effectData._id = effect[0];
@@ -407,7 +535,7 @@ export default class SequencerEffectManager {
         }
         effectData.source = inDocumentUuid;
       }
-      effectData.sceneId = inDocumentUuid.split('.')[1];
+      effectData.sceneId = inDocumentUuid.split(".")[1];
       return effect;
     });
   }
@@ -420,14 +548,17 @@ export default class SequencerEffectManager {
    */
   static async documentCreated(inDocument) {
     let effects = flagManager.getFlags(inDocument);
-    if (inDocument instanceof TokenDocument && inDocument?.actorLink){
+    if (inDocument instanceof TokenDocument && inDocument?.actorLink) {
       let actorEffects = flagManager.getFlags(inDocument.actor);
-      if(actorEffects.length){
-        actorEffects = this.patchEffectDataForDocument(inDocument.uuid, actorEffects);
+      if (actorEffects.length) {
+        actorEffects = this.patchEffectDataForDocument(
+          inDocument.uuid,
+          actorEffects
+        );
       }
       effects = effects.concat(actorEffects);
     }
-    if(!effects?.length) return;
+    if (!effects?.length) return;
     return this._playEffectMap(effects, inDocument);
   }
 
@@ -441,23 +572,27 @@ export default class SequencerEffectManager {
    */
   static _playEffectMap(inEffects, inDocument) {
     if (inEffects instanceof Map) inEffects = Array.from(inEffects);
-    return Promise.all(inEffects.map(async (effect) => {
-      if (!CanvasEffect.checkValid(effect[1])) {
-        if (game.user.isGM) {
-          lib.custom_warning(`Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`);
-        }
-        return flagManager.removeFlags(inDocument.uuid, effect);
-      }
-      return this._playEffect(effect[1], false)
-        .then((result) => {
-          if (!result) {
-            lib.debug("Error playing effect")
+    return Promise.all(
+      inEffects.map(async (effect) => {
+        if (!CanvasEffect.checkValid(effect[1])) {
+          if (game.user.isGM) {
+            lib.custom_warning(
+              `Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
+            );
           }
-        })
-        .catch((err) => {
-          lib.debug("Error playing effect:", err)
-        });
-    }));
+          return flagManager.removeFlags(inDocument.uuid, effect);
+        }
+        return this._playEffect(effect[1], false)
+          .then((result) => {
+            if (!result) {
+              lib.debug("Error playing effect");
+            }
+          })
+          .catch((err) => {
+            lib.debug("Error playing effect:", err);
+          });
+      })
+    );
   }
 
   /**
@@ -468,53 +603,92 @@ export default class SequencerEffectManager {
    * @private
    */
   static async _endManyEffects(inEffectIds = false) {
+    const actorEffectsToEnd = this.effects.filter((effect) =>
+      inEffectIds.includes(effect.data?.persistOptions?.id)
+    );
+    const regularEffectsToEnd = this.effects.filter((effect) =>
+      inEffectIds.includes(effect.id)
+    );
 
-    const actorEffectsToEnd = this.effects.filter(effect => inEffectIds.includes(effect.data?.persistOptions?.id));
-    const regularEffectsToEnd = this.effects.filter(effect => inEffectIds.includes(effect.id));
+    const effectsByContextUuid = Object.values(
+      lib.group_by(regularEffectsToEnd, "context.uuid")
+    );
+    const effectsByActorUuid = Object.values(
+      lib.group_by(actorEffectsToEnd, "context.actor.uuid")
+    );
 
-    const effectsByContextUuid = Object.values(lib.group_by(regularEffectsToEnd, "context.uuid"));
-    const effectsByActorUuid = Object.values(lib.group_by(actorEffectsToEnd, "context.actor.uuid"));
-
-    effectsByContextUuid.forEach(effects => {
-      effects = effects.filter(effect => effect.data.persist && !effect.data.temporary);
+    effectsByContextUuid.forEach((effects) => {
+      effects = effects.filter(
+        (effect) => effect.data.persist && !effect.data.temporary
+      );
       if (!effects.length) return;
-      const effectData = effects.map(effect => effect.data);
-      flagManager.removeFlags(effects[0].context.uuid, effectData, !inEffectIds);
+      const effectData = effects.map((effect) => effect.data);
+      flagManager.removeFlags(
+        effects[0].context.uuid,
+        effectData,
+        !inEffectIds
+      );
     });
 
-    effectsByActorUuid.forEach(effects => {
-      effects = effects.filter(effect => effect.data.persist && !effect.data.temporary);
+    effectsByActorUuid.forEach((effects) => {
+      effects = effects.filter(
+        (effect) => effect.data.persist && !effect.data.temporary
+      );
       if (!effects.length) return;
 
       const effectContext = effects[0].context;
-      const effectData = effects.map(effect => effect.data);
+      const effectData = effects.map((effect) => effect.data);
 
-      if (!(effectContext instanceof TokenDocument && effectContext.actorLink && effectContext.actor.prototypeToken.actorLink)) return;
+      if (
+        !(
+          effectContext instanceof TokenDocument &&
+          effectContext.actorLink &&
+          effectContext.actor.prototypeToken.actorLink
+        )
+      )
+        return;
 
-      const persistentEffectData = effectData.filter(data => data?.persistOptions?.persistTokenPrototype);
+      const persistentEffectData = effectData.filter(
+        (data) => data?.persistOptions?.persistTokenPrototype
+      );
       if (!persistentEffectData.length) return;
 
       const actorEffects = flagManager.getFlags(effectContext.actor);
-      const applicableActorEffects = actorEffects.filter(effect => {
-        return effect[1]?.persistOptions?.persistTokenPrototype && (
-          persistentEffectData.some(persistentEffect => persistentEffect.persistOptions.id === effect[1]?.persistOptions?.id)
-        );
-      }).map(e => e[0]);
+      const applicableActorEffects = actorEffects
+        .filter((effect) => {
+          return (
+            effect[1]?.persistOptions?.persistTokenPrototype &&
+            persistentEffectData.some(
+              (persistentEffect) =>
+                persistentEffect.persistOptions.id ===
+                effect[1]?.persistOptions?.id
+            )
+          );
+        })
+        .map((e) => e[0]);
 
-      flagManager.removeFlags(effectContext.actor.uuid, applicableActorEffects, !inEffectIds);
-
+      flagManager.removeFlags(
+        effectContext.actor.uuid,
+        applicableActorEffects,
+        !inEffectIds
+      );
     });
 
-    const effectsToEnd = effectsByContextUuid.concat(effectsByActorUuid).deepFlatten();
+    const effectsToEnd = effectsByContextUuid
+      .concat(effectsByActorUuid)
+      .deepFlatten();
 
-    return Promise.allSettled(effectsToEnd.map(effect => this._removeEffect(effect)));
-
+    return Promise.allSettled(
+      effectsToEnd.map((effect) => this._removeEffect(effect))
+    );
   }
 
   static _effectContextFilter(inUUID, effectData) {
-    return effectData?.source === inUUID
-      || effectData?.target === inUUID
-      || (effectData?.tiedDocuments ?? []).indexOf(inUUID) > -1;
+    return (
+      effectData?.source === inUUID ||
+      effectData?.target === inUUID ||
+      (effectData?.tiedDocuments ?? []).indexOf(inUUID) > -1
+    );
   }
 
   /**
@@ -524,26 +698,33 @@ export default class SequencerEffectManager {
    * @returns {Promise}
    */
   static objectDeleted(inUUID) {
-    const documentsToCheck = game.scenes.filter(scene => scene.id !== game.user.viewedScene)
-      .map(scene => [scene, ...lib.get_all_documents_from_scene(scene.id)])
+    const documentsToCheck = game.scenes
+      .filter((scene) => scene.id !== game.user.viewedScene)
+      .map((scene) => [scene, ...lib.get_all_documents_from_scene(scene.id)])
       .deepFlatten();
 
-    const documentEffectsToEnd = documentsToCheck.map(obj => {
-      const objEffects = flagManager.getFlags(obj);
-      const effectsToEnd = objEffects.filter(([effectId, effectData]) => this._effectContextFilter(inUUID, effectData));
-      return {
-        document: obj,
-        effects: effectsToEnd.map(effect => effect[0])
-      };
-    }).filter(obj => obj.effects.length);
+    const documentEffectsToEnd = documentsToCheck
+      .map((obj) => {
+        const objEffects = flagManager.getFlags(obj);
+        const effectsToEnd = objEffects.filter(([effectId, effectData]) =>
+          this._effectContextFilter(inUUID, effectData)
+        );
+        return {
+          document: obj,
+          effects: effectsToEnd.map((effect) => effect[0]),
+        };
+      })
+      .filter((obj) => obj.effects.length);
 
-    const visibleEffectsToEnd = this.effects.filter(effect => this._effectContextFilter(inUUID, effect.data)).map(e => e.id);
+    const visibleEffectsToEnd = this.effects
+      .filter((effect) => this._effectContextFilter(inUUID, effect.data))
+      .map((e) => e.id);
 
     return Promise.allSettled([
       this._endManyEffects(visibleEffectsToEnd),
-      ...documentEffectsToEnd.map(obj => {
+      ...documentEffectsToEnd.map((obj) => {
         return flagManager.removeFlags(obj.document.uuid, obj.effects);
-      })
+      }),
     ]);
   }
 
@@ -562,28 +743,37 @@ export default class SequencerEffectManager {
   }
 
   static async _playPrototypeTokenEffects(data, push) {
-
     if (!lib.is_UUID(data.source)) return;
 
     const object = lib.from_uuid_fast(data.source);
 
     if (!(object instanceof TokenDocument)) return;
 
-    const tokenEffectsToPlay = game.scenes.map(scene => scene.tokens.filter(token => {
-      return token.actorLink && token.actor === object.actor && token !== object;
-    })).deepFlatten();
+    const tokenEffectsToPlay = game.scenes
+      .map((scene) =>
+        scene.tokens.filter((token) => {
+          return (
+            token.actorLink && token.actor === object.actor && token !== object
+          );
+        })
+      )
+      .deepFlatten();
 
     for (const tokenDocument of tokenEffectsToPlay) {
       const duplicatedData = foundry.utils.deepClone(data);
       duplicatedData._id = randomID();
       duplicatedData.sceneId = tokenDocument.uuid.split(".")[1];
       duplicatedData.masks = duplicatedData.masks
-        .map(uuid => uuid.replace(duplicatedData.source, tokenDocument.uuid))
-        .filter(uuid => uuid.includes(duplicatedData.sceneId));
+        .map((uuid) => uuid.replace(duplicatedData.source, tokenDocument.uuid))
+        .filter((uuid) => uuid.includes(duplicatedData.sceneId));
       duplicatedData.source = tokenDocument.uuid;
       if (CanvasEffect.checkValid(duplicatedData)) {
-        if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, duplicatedData);
-        if(duplicatedData.sceneId === game.user.viewedScene) {
+        if (push)
+          sequencerSocket.executeForOthers(
+            SOCKET_HANDLERS.PLAY_EFFECT,
+            duplicatedData
+          );
+        if (duplicatedData.sceneId === game.user.viewedScene) {
           await this._playEffect(duplicatedData, false);
         }
       }

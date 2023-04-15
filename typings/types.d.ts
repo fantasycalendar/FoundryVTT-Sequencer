@@ -1,6 +1,4 @@
-import {
-  CoreFlags
-} from "@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs/activeEffectData";
+import { CoreFlags } from "@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs/activeEffectData";
 
 type EasingOptions = {
   ease?: string;
@@ -27,9 +25,17 @@ type Size = {
   height: number;
 };
 
-type Shapes = "polygon"|"rectangle"|"circle"|"ellipse"|"roundedRect";
+type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
 
-type VisibleFoundryTypes = Token|TokenDocument|Tile|TileDocument|Drawing|DrawingDocument|MeasuredTemplate|MeasuredTemplateDocument;
+type VisibleFoundryTypes =
+  | Token
+  | TokenDocument
+  | Tile
+  | TileDocument
+  | Drawing
+  | DrawingDocument
+  | MeasuredTemplate
+  | MeasuredTemplateDocument;
 
 declare class CoreMethods {
   /**
@@ -66,7 +72,11 @@ declare class CoreMethods {
   /**
    * Creates a scrolling text. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Scrolling Text section.
    */
-  scrollingText(inTarget?: VisibleFoundryTypes|Vector2, inText?: string, inTextStyle?: object): ScrollingTextSection;
+  scrollingText(
+    inTarget?: VisibleFoundryTypes | Vector2,
+    inText?: string,
+    inTextStyle?: object
+  ): ScrollingTextSection;
 
   /**
    * Adds the sections from a given Sequence to this Sequence
@@ -78,7 +88,10 @@ declare class CoreMethods {
   /**
    * Appends a preset to the current sequence in place
    */
-  preset(presetName: string, args?: any): Sequence | EffectSection | AnimationSection | SoundSection;
+  preset(
+    presetName: string,
+    args?: any
+  ): Sequence | EffectSection | AnimationSection | SoundSection;
 
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
@@ -96,8 +109,7 @@ declare class CoreMethods {
   fromJSON(inJSON: Array<Object>): Sequence;
 }
 
-declare interface Sequence extends CoreMethods {
-}
+declare interface Sequence extends CoreMethods {}
 
 declare class Sequence {
   /**
@@ -105,11 +117,10 @@ declare class Sequence {
    * include the module name, which lets you and other users know which module caused the error. The secondary argument
    * is an object that can contain a number of optional arguments.
    */
-  constructor(inOptions?: { inModuleName?: string, softFail?: boolean });
+  constructor(inOptions?: { inModuleName?: string; softFail?: boolean });
 }
 
 declare abstract class Section<T> {
-
   readonly shouldWaitUntilFinished: boolean;
   readonly shouldAsync: boolean;
   readonly shouldPlay: boolean;
@@ -157,11 +168,9 @@ declare abstract class Section<T> {
    * Appends a preset to the current sequence in place
    */
   preset(presetName: string, args?: any): T;
-
 }
 
 declare abstract class HasAudio<T> {
-
   /**
    * Sets the volume of the sound.
    */
@@ -176,11 +185,9 @@ declare abstract class HasAudio<T> {
    * Causes the audio to fade out at the end of the animated section's duration
    */
   fadeOutAudio(duration: number, options?: EasingOptions): T;
-
 }
 
 declare abstract class HasFiles<T> {
-
   /**
    * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
    * time the section is played.
@@ -197,11 +204,9 @@ declare abstract class HasFiles<T> {
    * Sets the Mustache of the filepath. This is applied after the randomization of the filepath, if available.
    */
   setMustache(inMustache: Record<string, unknown>): T;
-
 }
 
 declare abstract class HasMovement<T> {
-
   /**
    * Sets the rotation of the effect or animation, which is added on top of the calculated rotation after .rotateTowards() or .randomRotation()
    */
@@ -214,11 +219,9 @@ declare abstract class HasMovement<T> {
    Sets the speed (pixels per frame) to move the target object
    */
   moveSpeed(inSpeed: number): T;
-
 }
 
 declare abstract class HasOpacity<T> {
-
   /**
    * Sets the opacity of the effect. If used with .fadeIn() and/or .fadeOut(), this defines what the effect will fade to/from
    */
@@ -233,11 +236,9 @@ declare abstract class HasOpacity<T> {
    * Causes the effect to fade out at the end of the effect's duration
    */
   fadeOut(durationMs: number, options?: EasingOptions): T;
-
 }
 
 declare abstract class HasRotation<T> {
-
   /**
    * The object gets a random rotation, which means it should not be used with .stretchTo()
    */
@@ -257,11 +258,9 @@ declare abstract class HasRotation<T> {
    *  Causes the effect to rotate at the end of the effect's duration
    */
   rotateOut(degrees: number, duration: number, options?: EasingOptions): T;
-
 }
 
 declare abstract class HasScale<T> {
-
   /**
    * A method that can take the following:
    *  - A number to set the scale uniformly
@@ -279,11 +278,9 @@ declare abstract class HasScale<T> {
    * Causes the effect to scale at the end of the effect's duration
    */
   scaleOut(inScale: number, durationMs: number, options?: EasingOptions): T;
-
 }
 
 declare abstract class HasTime<T> {
-
   /**
    * Sets the start and end time of the section, playing only that range
    */
@@ -308,20 +305,16 @@ declare abstract class HasTime<T> {
    * Sets the ending time of the section based on a percentage from the total duration.
    */
   endTimePerc(inPercentage: number): T;
-
 }
 
 declare abstract class HasTint<T> {
-
   /**
    * Tints the target of this section by the color given to the
    */
-  tint(inColor: number|string): T;
-
+  tint(inColor: number | string): T;
 }
 
 declare abstract class HasUsers<T> {
-
   /**
    * Causes section to be executed only locally, and not push to other connected clients.
    */
@@ -330,78 +323,79 @@ declare abstract class HasUsers<T> {
   /**
    * Causes the section to be executed for only a set of users.
    */
-  forUsers(inUsers: string|User|Array<string|User>): T;
-
+  forUsers(inUsers: string | User | Array<string | User>): T;
 }
 
 declare abstract class HasAnimations<T> {
-
   /**
    * Animates a property on the target of the animation.
    */
-  animateProperty(inTarget: string, inPropertyName: string, inOptions: {
-    duration: number,
-    from: number,
-    to: number,
-    delay?: number,
-    ease?: string,
-    fromEnd?: boolean,
-    gridUnits?: boolean
-  }): this;
+  animateProperty(
+    inTarget: string,
+    inPropertyName: string,
+    inOptions: {
+      duration: number;
+      from: number;
+      to: number;
+      delay?: number;
+      ease?: string;
+      fromEnd?: boolean;
+      gridUnits?: boolean;
+    }
+  ): this;
 
   /**
    * Loops a property between a set of values on the target
    */
-  loopProperty(inTarget: string, inPropertyName: string, inOptions: {
-    duration: number,
-    from?: number,
-    to?: number,
-    values?: Array<number>,
-    loops?: number,
-    pingPong?: boolean,
-    delay?: number,
-    ease?: string,
-    fromEnd?: boolean,
-    gridUnits?: boolean
-  }): this;
-
+  loopProperty(
+    inTarget: string,
+    inPropertyName: string,
+    inOptions: {
+      duration: number;
+      from?: number;
+      to?: number;
+      values?: Array<number>;
+      loops?: number;
+      pingPong?: boolean;
+      delay?: number;
+      ease?: string;
+      fromEnd?: boolean;
+      gridUnits?: boolean;
+    }
+  ): this;
 }
 
 declare abstract class HasFilters<T> {
-
   /**
    * Applies a files
    */
   filter(inFilterName: string, inData?: {}, inName?: string): this;
-
 }
 
 declare abstract class HasLocation<T> {
-
   /**
    *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
    *  or a string reference (see .name())
    */
-  atLocation(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
-    cacheLocation?: boolean,
-    offset?: Vector2,
-    randomOffset?: number,
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
-
+  atLocation(
+    inLocation: VisibleFoundryTypes | Vector2 | string,
+    inOptions?: {
+      cacheLocation?: boolean;
+      offset?: Vector2;
+      randomOffset?: number;
+      gridUnits?: boolean;
+      local?: boolean;
+    }
+  ): this;
 }
 
 declare abstract class HasText<T> {
-
   /**
    * Creates a text element, attached to the sprite. The options for the text are available here:
    * https://pixijs.io/pixi-text-style/
    */
   text(inText: string, inOptions?: object): this;
-
 }
-
 
 interface AnimatedSection<T> {}
 
@@ -413,8 +407,7 @@ declare interface AnimationSection
     HasRotation<AnimationSection>,
     HasAudio<AnimationSection>,
     HasTint<AnimationSection>,
-    AnimatedSection<AnimationSection> {
-}
+    AnimatedSection<AnimationSection> {}
 
 declare abstract class AnimationSection {
   /**
@@ -436,12 +429,12 @@ declare abstract class AnimationSection {
   rotateTowards(
     inTarget: VisibleFoundryTypes | Vector2 | string,
     options?: {
-      duration: Number,
-      ease: string,
-      delay: number,
-      rotationOffset: number,
-      towardsCenter: boolean,
-      cacheLocation: boolean
+      duration: Number;
+      ease: string;
+      delay: number;
+      rotationOffset: number;
+      towardsCenter: boolean;
+      cacheLocation: boolean;
     }
   ): this;
 
@@ -469,7 +462,6 @@ declare abstract class AnimationSection {
    * Causes the object to become visible
    */
   show(inBool?: boolean): this;
-
 }
 
 declare interface EffectSection
@@ -488,11 +480,9 @@ declare interface EffectSection
     HasTint<EffectSection>,
     HasLocation<EffectSection>,
     HasText<EffectSection>,
-    AnimatedSection<EffectSection> {
-}
+    AnimatedSection<EffectSection> {}
 
 declare abstract class EffectSection {
-
   /**
    * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
    * and .rotateTowards() to refer to previous effects' locations
@@ -503,7 +493,10 @@ declare abstract class EffectSection {
    * Causes the effect to persist indefinitely on the canvas until _ended via SequencerEffectManager.endAllEffects() or
    * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
    */
-  persist(inBool?: boolean, inOptions?: { persistTokenPrototype: boolean }): this;
+  persist(
+    inBool?: boolean,
+    inOptions?: { persistTokenPrototype: boolean }
+  ): this;
 
   /**
    * Sets the effect's playback rate. A playback rate of 2.0 would make it play 2x as fast, 0.5 would make
@@ -527,88 +520,106 @@ declare abstract class EffectSection {
    * A smart method that can take a reference to an object, or a direct on the canvas to attach an effect to,
    * or a string reference (see .name())
    */
-  attachTo(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
-    align?: string,
-    edge?: string,
-    bindVisibility?: boolean,
-    bindAlpha?: boolean,
-    bindElevation?: boolean,
-    followRotation?: boolean,
-    offset?: Vector2,
-    randomOffset?: number,
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
+  attachTo(
+    inLocation: VisibleFoundryTypes | Vector2 | string,
+    inOptions?: {
+      align?: string;
+      edge?: string;
+      bindVisibility?: boolean;
+      bindAlpha?: boolean;
+      bindElevation?: boolean;
+      followRotation?: boolean;
+      offset?: Vector2;
+      randomOffset?: number;
+      gridUnits?: boolean;
+      local?: boolean;
+    }
+  ): this;
 
   /**
    * Causes the effect to be rotated and stretched towards an object, or a direct on the canvas to play the effect at, or a string reference (see .name())
    * This effectively calculates the proper X scale for the effect to reach the target
    */
-  stretchTo(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
-    cacheLocation?: boolean,
-    attachTo?: boolean,
-    onlyX?: boolean,
-    tiling?: boolean,
-    offset?: Vector2,
-    randomOffset?: number,
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
+  stretchTo(
+    inLocation: VisibleFoundryTypes | Vector2 | string,
+    inOptions?: {
+      cacheLocation?: boolean;
+      attachTo?: boolean;
+      onlyX?: boolean;
+      tiling?: boolean;
+      offset?: Vector2;
+      randomOffset?: number;
+      gridUnits?: boolean;
+      local?: boolean;
+    }
+  ): this;
 
   /**
    * Sets the location to rotate the object to
    */
-  rotateTowards(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
-    rotationOffset?: number,
-    cacheLocation?: boolean,
-    attachTo?: boolean,
-    offset?: Vector2,
-    randomOffset?: number,
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
+  rotateTowards(
+    inLocation: VisibleFoundryTypes | Vector2 | string,
+    inOptions?: {
+      rotationOffset?: number;
+      cacheLocation?: boolean;
+      attachTo?: boolean;
+      offset?: Vector2;
+      randomOffset?: number;
+      gridUnits?: boolean;
+      local?: boolean;
+    }
+  ): this;
 
   /**
    * Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
    */
-  from(inLocation: Token | Tile | TokenDocument | TileDocument, inOptions?: {
-    cacheLocation?: boolean,
-    offset?: Vector2,
-    randomOffset?: number,
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
+  from(
+    inLocation: Token | Tile | TokenDocument | TileDocument,
+    inOptions?: {
+      cacheLocation?: boolean;
+      offset?: Vector2;
+      randomOffset?: number;
+      gridUnits?: boolean;
+      local?: boolean;
+    }
+  ): this;
 
   /**
    * Creates a graphical element, attached to the sprite.
    */
-  shape(inType: Shapes, inOptions?: {
-    radius?: number,
-    width?: number,
-    height?: number,
-    points?: Array<[number, number]|{ x: number, y: number}>,
-    gridUnits?: boolean,
-    name?: string,
-    fillColor?: string|number,
-    fillAlpha?: number,
-    alpha?: number,
-    lineSize?: number,
-    lineColor?: string|number,
-    offset?: {
-      x?: number,
-      y?: number,
-      gridUnits?: boolean
-    },
-    isMask?: boolean,
-  })
+  shape(
+    inType: Shapes,
+    inOptions?: {
+      radius?: number;
+      width?: number;
+      height?: number;
+      points?: Array<[number, number] | { x: number; y: number }>;
+      gridUnits?: boolean;
+      name?: string;
+      fillColor?: string | number;
+      fillAlpha?: number;
+      alpha?: number;
+      lineSize?: number;
+      lineColor?: string | number;
+      offset?: {
+        x?: number;
+        y?: number;
+        gridUnits?: boolean;
+      };
+      isMask?: boolean;
+    }
+  );
 
   /**
    * Causes the effect's sprite to be offset relative to its location based on a given vector
    */
-  spriteOffset(inOffset: Vector2, inOptions?: {
-    gridUnits?: boolean,
-    local?: boolean
-  }): this;
+  spriteOffset(
+    inOffset: Vector2,
+    inOptions?: {
+      gridUnits?: boolean;
+      local?: boolean;
+    }
+  ): this;
 
   /**
    * Causes the final effect location to be snapped to the grid
@@ -618,17 +629,23 @@ declare abstract class EffectSection {
   /**
    * Causes the effect to be scaled to the target object's width
    */
-  scaleToObject(inScale?: number, inOptions?: {
-    uniform?: boolean,
-    considerTokenScale?: boolean
-  }): this;
+  scaleToObject(
+    inScale?: number,
+    inOptions?: {
+      uniform?: boolean;
+      considerTokenScale?: boolean;
+    }
+  ): this;
 
   /**
    * Sets the width and the height of the effect in pixels, this size is set before any scaling
    */
-  size(inSize: Number | Size, inOptions?: {
-    gridUnits: boolean
-  }): this;
+  size(
+    inSize: Number | Size,
+    inOptions?: {
+      gridUnits: boolean;
+    }
+  ): this;
 
   /**
    * This scales the sprite of the effect, and this method can take the following:
@@ -642,13 +659,16 @@ declare abstract class EffectSection {
    * This defines the internal padding of this effect. Gridsize determines the internal grid size of this effect which will determine how big it is on the canvas
    * relative to the canvas's grid size. Start and end point defines padding at the left and right of the effect
    */
-  template(inTemplate?: { gridSize: number, startPoint: number, endPoint: number }): this;
+  template(inTemplate?: {
+    gridSize: number;
+    startPoint: number;
+    endPoint: number;
+  }): this;
 
   /**
    * This makes the texture of the effect tile, effectively repeat itself within the sprite's dimensions
    */
   tilingTexture(scale?: Vector2, position?: Vector2): this;
-
 
   /**
    *  Anchors the sprite's container according to the given x and y coordinates, or uniformly based on a single number
@@ -766,12 +786,12 @@ declare abstract class EffectSection {
    * Sets up various properties relating to scale of the effect on the screen
    */
   screenSpaceScale(inOptions: {
-    x?: number,
-    y?: number,
-    fitX?: boolean,
-    fitY?: boolean,
-    ratioX?: boolean,
-    ratioY?: boolean
+    x?: number;
+    y?: number;
+    fitX?: boolean;
+    fitY?: boolean;
+    ratioX?: boolean;
+    ratioY?: boolean;
   }): this;
 
   /**
@@ -784,7 +804,12 @@ declare abstract class EffectSection {
   /**
    * Ties the effect to any number of documents in Foundry - if those get deleted, the effect is ended.
    */
-  tieToDocuments(inOrigin: string | foundry.abstract.Document | Array<string | foundry.abstract.Document>): this;
+  tieToDocuments(
+    inOrigin:
+      | string
+      | foundry.abstract.Document
+      | Array<string | foundry.abstract.Document>
+  ): this;
 
   /**
    * This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
@@ -797,7 +822,6 @@ declare abstract class EffectSection {
    * Causes the effect to be visible through walls
    */
   xray(inBool?: boolean): this;
-
 }
 
 declare interface SoundSection
@@ -805,16 +829,14 @@ declare interface SoundSection
     Section<SoundSection>,
     HasFiles<EffectSection>,
     HasAudio<EffectSection>,
-    HasTime<EffectSection>{}
+    HasTime<EffectSection> {}
 
 declare abstract class SoundSection {
-
   /**
    * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
    * modifications of sound's data.
    */
   addOverride(inFunc: Function): this;
-
 }
 
 declare interface ScrollingTextSection
@@ -822,36 +844,36 @@ declare interface ScrollingTextSection
     Section<ScrollingTextSection>,
     HasLocation<EffectSection>,
     HasText<EffectSection>,
-    HasUsers<EffectSection>{}
-
+    HasUsers<EffectSection> {}
 
 declare abstract class ScrollingTextSection {
-
   /**
    * The original anchor point where the text appears
    */
-  anchor(inAnchor: string|number): this;
+  anchor(inAnchor: string | number): this;
 
   /**
    * The direction in which the text scrolls
    */
-  direction(inDirection: string|number): this;
+  direction(inDirection: string | number): this;
 
   /**
    * An amount of randomization between [0, 1] applied to the initial position
    */
   jitter(inDirection: number): this;
-
 }
 
 declare abstract class SequencerFile {}
 
 declare abstract class SequencerDatabase {
-
   /**
    *  Registers a set of entries to the database on the given module name
    */
-  registerEntries(inModuleName: string, inEntries: object, isPrivate?: boolean): boolean;
+  registerEntries(
+    inModuleName: string,
+    inEntries: object,
+    isPrivate?: boolean
+  ): boolean;
 
   /**
    *  Validates the entries under a certain module name, checking whether paths to assets are correct or not
@@ -866,7 +888,10 @@ declare abstract class SequencerDatabase {
   /**
    *  Gets the entry in the database by a dot-notated string
    */
-  getEntry(inString: string, inOptions?: { softFail?: boolean }): SequencerFile | Array<SequencerFile> | Boolean;
+  getEntry(
+    inString: string,
+    inOptions?: { softFail?: boolean }
+  ): SequencerFile | Array<SequencerFile> | Boolean;
 
   /**
    *  Gets all files under a database path
@@ -882,26 +907,27 @@ declare abstract class SequencerDatabase {
    *  Get all valid entries under a certain path
    */
   searchFor(inPath: string): Array<string> | boolean;
-
 }
 
-
 declare abstract class SequencerPreloader {
-
   /**
    * Causes each connected client (including the caller) to fetch and cache the provided file(s) locally, vastly improving loading speed of those files.
    */
-  preload(inSrc: string|Array<string>, showProgressBar?: boolean): Promise<void>;
+  preload(
+    inSrc: string | Array<string>,
+    showProgressBar?: boolean
+  ): Promise<void>;
 
   /**
    * Caches provided file(s) locally, vastly improving loading speed of those files.
    */
-  preloadForClients(inSrc: string|Array<string>, showProgressBar?: boolean): Promise<void>;
-
+  preloadForClients(
+    inSrc: string | Array<string>,
+    showProgressBar?: boolean
+  ): Promise<void>;
 }
 
 declare abstract class SequencerHelpers {
-
   /**
    * Wait for a duration.
    */
@@ -935,105 +961,113 @@ declare abstract class SequencerHelpers {
   /**
    * Returns a random element in the given array
    */
-  random_array_element(inArray: Array<any>, inOptions?: { recurse?: boolean }): any;
+  random_array_element(
+    inArray: Array<any>,
+    inOptions?: { recurse?: boolean }
+  ): any;
 
   /**
    *  Returns a random element in the given object
    */
-  random_object_element(inObject: object, inOptions?: { recurse?: boolean }): any;
+  random_object_element(
+    inObject: object,
+    inOptions?: { recurse?: boolean }
+  ): any;
 
   /**
    *  Turns an array containing multiples of the same string, objects, etc, and removes duplications, and returns a fresh array
    */
   make_array_unique(inArray: Array<any>): Array<any>;
-
 }
 
 declare class Class {}
 
 declare abstract class SequencerSectionManager {
-
   /**
    * Registers a class by a name that will then be available through the Sequencer
    */
-  registerSection(inModuleName: string, inMethodName: string, inClass: Class, overwrite?: boolean): boolean;
-
+  registerSection(
+    inModuleName: string,
+    inMethodName: string,
+    inClass: Class,
+    overwrite?: boolean
+  ): boolean;
 }
 
 declare abstract class SequencerDatabaseViewer {
-
   /**
    * Opens the Sequencer database viewer
    */
-  show(): Promise<void>
-
+  show(): Promise<void>;
 }
 
 declare abstract class SequencerEffectPlayer {
-
   /**
    * Opens the Sequencer Effects UI with the player tab open
    */
-  show(): Promise<void>
-
+  show(): Promise<void>;
 }
 
 declare abstract class SequencerEffectManager {
-
   /**
    * Opens the Sequencer Effects UI with the effects tab open
    */
-  show(): Promise<void>
+  show(): Promise<void>;
 
   /**
    * Returns all of the currently running effects on the canvas
    */
-  get effects(): Array<any>
+  get effects(): Array<any>;
 
   /**
    * Get effects that are playing on the canvas based on a set of filters
    */
-  getEffects(options: { object?: string|VisibleFoundryTypes, name?: string, sceneId?: string }): Array<any>
-
+  getEffects(options: {
+    object?: string | VisibleFoundryTypes;
+    name?: string;
+    sceneId?: string;
+  }): Array<any>;
 
   /**
    * Updates effects based on a set of filters
    */
   updateEffects(options: {
-    object?: string|VisibleFoundryTypes,
-    name?: string,
-    sceneId?: string,
-    effects: string|CanvasEffect|Array<string>|Array<CanvasEffect>
-  }): Promise<Array<any>>
+    object?: string | VisibleFoundryTypes;
+    name?: string;
+    sceneId?: string;
+    effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
+  }): Promise<Array<any>>;
 
   /**
    * End effects that are playing on the canvas based on a set of filters
    */
   endEffects(options: {
-    object?: string|VisibleFoundryTypes,
-    name?: string,
-    sceneId?: string,
-    effects: string|CanvasEffect|Array<string>|Array<CanvasEffect>
-  }): Promise<void>
+    object?: string | VisibleFoundryTypes;
+    name?: string;
+    sceneId?: string;
+    effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
+  }): Promise<void>;
 
   /**
    * End all effects that are playing on the canvas
    */
-  endAllEffects(inSceneId?: string, push?: boolean): Promise<void>
+  endAllEffects(inSceneId?: string, push?: boolean): Promise<void>;
 
   /**
    * If an effect has been named its position will be cached, which can be retrieved with this method
    */
-  getEffectPositionByName(inName: string): Vector2
-
+  getEffectPositionByName(inName: string): Vector2;
 }
 
 declare abstract class SequencerPresets {
-
   /**
    * Adds a preset that can then be used in sequences through .preset()
    */
-  add(inName: string, inFunction: Function, overwrite?: boolean): Map<string, Function>;
+  add(
+    inName: string,
+    inFunction: Function,
+    overwrite?: boolean
+  ): Map<string, Function>;
 
   /**
    * Retrieves all presets
@@ -1044,12 +1078,9 @@ declare abstract class SequencerPresets {
    * Retrieves preset based on its name
    */
   get(name: string): Function;
-
 }
 
-
 declare namespace Sequencer {
-
   const Database: SequencerDatabase;
   const Presets: SequencerPresets;
   const Preloader: SequencerPreloader;
@@ -1058,6 +1089,9 @@ declare namespace Sequencer {
   const Player: SequencerEffectPlayer;
   const SectionManager: SequencerSectionManager;
   const EffectManager: SequencerEffectManager;
-  function registerEase(easeName: string, easeFunction: Function, overwrite?: boolean);
-
+  function registerEase(
+    easeName: string,
+    easeFunction: Function,
+    overwrite?: boolean
+  );
 }

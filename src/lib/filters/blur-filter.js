@@ -1,5 +1,4 @@
 export default class BlurFilter extends globalThis.PIXI.filters.BlurFilter {
-
   /**
    * Properties & default values:
    *     - strength [8]
@@ -11,13 +10,15 @@ export default class BlurFilter extends globalThis.PIXI.filters.BlurFilter {
    *     - kernelSize [5]
    */
   constructor(inData = {}) {
-
-    inData = foundry.utils.mergeObject({
-      strength: 1,
-      quality: 4,
-      resolution: PIXI.settings.FILTER_RESOLUTION,
-      kernelSize: 5
-    }, inData)
+    inData = foundry.utils.mergeObject(
+      {
+        strength: 1,
+        quality: 4,
+        resolution: PIXI.settings.FILTER_RESOLUTION,
+        kernelSize: 5,
+      },
+      inData
+    );
 
     super(...Object.values(inData));
 
@@ -26,10 +27,11 @@ export default class BlurFilter extends globalThis.PIXI.filters.BlurFilter {
       try {
         this[key] = value;
       } catch (err) {
-        ui.notifications.warn(`Sequencer | ${this.constructor.name} | Could not set property ${key}`);
+        ui.notifications.warn(
+          `Sequencer | ${this.constructor.name} | Could not set property ${key}`
+        );
         this.isValid = false;
       }
     }
   }
 }
-

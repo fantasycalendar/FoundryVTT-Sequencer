@@ -1,32 +1,33 @@
 <!-- _sidebar.md -->
 
-* [Sequencer](/)
+- [Sequencer](/)
 
-* [Sequencer Basics](basics.md)
+- [Sequencer Basics](basics.md)
 
-* Basic Tutorials
-  * [Token Transformation Macro](tutorials/basic-transformation.md)
-  * [Linked Effect Between Tokens](tutorials/basic-linked.md)
-  
-* Advanced Tutorials
-  * [Trap With Effects & Damage](tutorials/advanced-trap.md)
-  * [Fire Bolt & MidiQOL](tutorials/advanced-fire-bolt.md)
-  * [Shield & Dynamic Active Effects](tutorials/advanced-shield.md)
+- Basic Tutorials
+  - [Token Transformation Macro](tutorials/basic-transformation.md)
+  - [Linked Effect Between Tokens](tutorials/basic-linked.md)
+- Advanced Tutorials
 
-* [Sample Macros](sample-macros.md)
+  - [Trap With Effects & Damage](tutorials/advanced-trap.md)
+  - [Fire Bolt & MidiQOL](tutorials/advanced-fire-bolt.md)
+  - [Shield & Dynamic Active Effects](tutorials/advanced-shield.md)
 
-* [API](api/home.md)
-  * [Animation](api/animation.md)
-  * [Effect](api/effect.md)
-    * [Filters](api/filter.md)
-  * [Sound](api/sound.md)
-  * [Scrolling Text](api/scrolling-text.md)
+- [Sample Macros](sample-macros.md)
 
-* Global
-  * [Database](database.md)
-  * [How to: Sequencer Database](database-basics.md)
-  * [Effect Manager](effect-manager.md)
-  * [Effect Player](player.md)
-  * [Preloader](preloader.md)
-  * [Section Manager](section-manager.md)
-  * [Presets](presets.md)
+- [API](api/home.md)
+
+  - [Animation](api/animation.md)
+  - [Effect](api/effect.md)
+    - [Filters](api/filter.md)
+  - [Sound](api/sound.md)
+  - [Scrolling Text](api/scrolling-text.md)
+
+- Global
+  - [Database](database.md)
+  - [How to: Sequencer Database](database-basics.md)
+  - [Effect Manager](effect-manager.md)
+  - [Effect Player](player.md)
+  - [Preloader](preloader.md)
+  - [Section Manager](section-manager.md)
+  - [Presets](presets.md)

@@ -1,7 +1,6 @@
 import * as lib from "../lib/lib.js";
 
 const SequencerAnimationEngine = {
-
   _animations: [],
   _debug: undefined,
   _deltas: [],
@@ -12,14 +11,16 @@ const SequencerAnimationEngine = {
   isRunning: false,
 
   addAnimation(origin, attributes = [], timeDifference = 0) {
-
     if (!Array.isArray(attributes)) attributes = [attributes];
 
     return new Promise((resolve) => {
       this._animations.push({
         origin,
-        attributes: attributes.map(attribute => {
-          attribute.targetId = lib.get_object_identifier(attribute.target) + "-" + attribute.propertyName;
+        attributes: attributes.map((attribute) => {
+          attribute.targetId =
+            lib.get_object_identifier(attribute.target) +
+            "-" +
+            attribute.propertyName;
           attribute.started = false;
           attribute.initialized = false;
           attribute.finishing = false;
@@ -31,12 +32,17 @@ const SequencerAnimationEngine = {
           attribute.durationDone = timeDifference ?? 0;
 
           if (attribute?.looping) {
-            attribute.loopDuration = attribute.loopDuration ?? attribute.duration ?? 0;
-            attribute.loopDurationDone = timeDifference % attribute.loopDuration ?? 0;
+            attribute.loopDuration =
+              attribute.loopDuration ?? attribute.duration ?? 0;
+            attribute.loopDurationDone =
+              timeDifference % attribute.loopDuration ?? 0;
             attribute.loops = attribute.loops ?? 0;
-            attribute.loopsDone = Math.floor(attribute.durationDone / attribute.duration);
-            attribute.index = (attribute.loopsDone) % attribute.values.length;
-            attribute.nextIndex = (attribute.loopsDone + 1) % attribute.values.length;
+            attribute.loopsDone = Math.floor(
+              attribute.durationDone / attribute.duration
+            );
+            attribute.index = attribute.loopsDone % attribute.values.length;
+            attribute.nextIndex =
+              (attribute.loopsDone + 1) % attribute.values.length;
             if (!attribute.pingPong && attribute.nextIndex === 0) {
               attribute.index = 0;
               attribute.nextIndex = 1;
@@ -46,31 +52,31 @@ const SequencerAnimationEngine = {
         }),
         complete: false,
         totalDt: timeDifference,
-        resolve: resolve
+        resolve: resolve,
       });
       if (!this.ticker || !this.ticker.started) {
         this.start();
       }
       lib.debug(`Added animations to Animation Engine`);
     });
-
   },
 
   endAnimations(target) {
-    this._animations = this._animations.filter(animation => animation.origin !== target);
+    this._animations = this._animations.filter(
+      (animation) => animation.origin !== target
+    );
   },
 
   start() {
     lib.debug(`Animation Engine Started`);
     if (!this.ticker) {
-      this.ticker = new PIXI.Ticker;
+      this.ticker = new PIXI.Ticker();
       this.ticker.add(this.nextFrame.bind(this));
     }
     this.ticker.start();
   },
 
   nextFrame() {
-
     if (this._animations.length === 0) {
       lib.debug(`Animation Engine Paused`);
       this.ticker.stop();
@@ -78,11 +84,17 @@ const SequencerAnimationEngine = {
       return;
     }
 
-    this._animations.forEach(animation => this._animate(animation));
-    this._animations = this._animations.filter(animation => !animation.complete);
+    this._animations.forEach((animation) => this._animate(animation));
+    this._animations = this._animations.filter(
+      (animation) => !animation.complete
+    );
     this._applyDeltas();
     for (const targetId of Object.keys(this._startingValues)) {
-      if (!this._animations.some(_a => _a.attributes.some(_b => _b.targetId === targetId))) {
+      if (
+        !this._animations.some((_a) =>
+          _a.attributes.some((_b) => _b.targetId === targetId)
+        )
+      ) {
         delete this._startingValues[targetId];
       }
     }
@@ -91,109 +103,112 @@ const SequencerAnimationEngine = {
   _startingValues: {},
 
   _applyDeltas() {
-
     const deltas = [];
 
     for (const animation of this._animations) {
-
       for (const attribute of animation.attributes) {
-
         if (!attribute.started || attribute.complete) continue;
 
         if (attribute.finishing) {
           attribute.complete = true;
         }
 
-        let delta = deltas.find(delta => attribute.targetId === delta.targetId && attribute.setPropertyName === delta.setPropertyName);
+        let delta = deltas.find(
+          (delta) =>
+            attribute.targetId === delta.targetId &&
+            attribute.setPropertyName === delta.setPropertyName
+        );
 
         if (!delta) {
-
           delta = {
             targetId: attribute.targetId,
             target: attribute.target,
-            getPropertyName: attribute.getPropertyName ?? attribute.propertyName,
+            getPropertyName:
+              attribute.getPropertyName ?? attribute.propertyName,
             setPropertyName: attribute.propertyName,
-            value: 0
+            value: 0,
           };
 
-          if(attribute.target instanceof PIXI.filters.ColorMatrixFilter){
+          if (attribute.target instanceof PIXI.filters.ColorMatrixFilter) {
             delta.value = attribute.previousValue;
           }
 
-          deltas.push(delta)
-
+          deltas.push(delta);
         }
 
         delta.value += attribute.delta;
-
       }
-
     }
 
     for (let delta of deltas) {
-
-      const finalValue = lib.deep_get(delta.target, delta.getPropertyName) + delta.value;
+      const finalValue =
+        lib.deep_get(delta.target, delta.getPropertyName) + delta.value;
 
       try {
-        lib.deep_set(
-          delta.target,
-          delta.setPropertyName,
-          finalValue
-        )
+        lib.deep_set(delta.target, delta.setPropertyName, finalValue);
       } catch (err) {
         //console.log(err)
       }
     }
-
   },
 
   _animate(animation) {
-
     animation.totalDt += this.ticker.elapsedMS;
 
-    animation.attributes.filter(attribute => !attribute.complete)
-      .forEach(attribute => this._animateAttribute(animation.totalDt, attribute));
+    animation.attributes
+      .filter((attribute) => !attribute.complete)
+      .forEach((attribute) =>
+        this._animateAttribute(animation.totalDt, attribute)
+      );
 
-    animation.complete = animation.attributes.filter(attribute => !attribute.complete).length === 0;
+    animation.complete =
+      animation.attributes.filter((attribute) => !attribute.complete).length ===
+      0;
 
     if (animation.complete) {
       animation.resolve();
     }
-
   },
 
   _animateAttribute(totalDt, attribute) {
-
     if (totalDt < attribute.delay) return;
 
     if (!attribute.started) {
+      const funkyProperty =
+        attribute.propertyName.includes("scale") ||
+        attribute.propertyName.includes("alpha");
 
-      const funkyProperty = attribute.propertyName.includes("scale") || attribute.propertyName.includes("alpha");
-
-      if (this._startingValues[attribute.targetId] === undefined || attribute.absolute) {
-
+      if (
+        this._startingValues[attribute.targetId] === undefined ||
+        attribute.absolute
+      ) {
         const getProperty = funkyProperty || attribute.from === undefined;
 
         this._startingValues[attribute.targetId] = getProperty
-          ? lib.deep_get(attribute.target, attribute.getPropertyName ?? attribute.propertyName)
+          ? lib.deep_get(
+              attribute.target,
+              attribute.getPropertyName ?? attribute.propertyName
+            )
           : attribute.from;
 
         if (!attribute.propertyName.includes("scale")) {
-          lib.deep_set(attribute.target, attribute.propertyName, this._startingValues[attribute.targetId]);
+          lib.deep_set(
+            attribute.target,
+            attribute.propertyName,
+            this._startingValues[attribute.targetId]
+          );
         }
-
       }
 
       attribute.previousValue = this._startingValues[attribute.targetId];
 
       if (attribute?.looping) {
-        attribute.values = attribute.values.map(value => {
+        attribute.values = attribute.values.map((value) => {
           return value + attribute.previousValue - (funkyProperty ? 1.0 : 0);
-        })
+        });
       } else if (attribute.from === undefined) {
-        attribute.from = attribute.previousValue
+        attribute.from = attribute.previousValue;
       }
-
     }
 
     attribute.started = true;
@@ -209,17 +224,14 @@ const SequencerAnimationEngine = {
     attribute.delta = attribute.value - attribute.previousValue;
 
     attribute.previousValue = attribute.value;
-
   },
 
   _handleBaseLoop(attribute) {
-
     if (!attribute.initialized) {
       if (attribute.values.length === 1) {
-        attribute.values.unshift(lib.deep_get(
-          attribute.target,
-          attribute.propertyName
-        ));
+        attribute.values.unshift(
+          lib.deep_get(attribute.target, attribute.propertyName)
+        );
       }
       attribute.initialized = true;
     }
@@ -235,7 +247,6 @@ const SequencerAnimationEngine = {
     );
 
     if (attribute.progress >= 1.0) {
-
       attribute.loopDurationDone -= attribute.loopDuration;
 
       attribute.index = (attribute.index + 1) % attribute.values.length;
@@ -254,25 +265,23 @@ const SequencerAnimationEngine = {
         attribute.progress % 1.0,
         attribute.ease
       );
-
     }
-
   },
 
   _handleIndefiniteLoop(attribute) {
-
     return this._handleBaseLoop(attribute);
-
   },
 
   _handleLoops(attribute) {
-
     this._handleBaseLoop(attribute);
 
     attribute.durationDone += this.ticker.deltaMS;
     attribute.overallProgress = attribute.durationDone / attribute.duration;
 
-    if (attribute.progress >= 1.0 && attribute.loopsDone === attribute.loops * 2) {
+    if (
+      attribute.progress >= 1.0 &&
+      attribute.loopsDone === attribute.loops * 2
+    ) {
       attribute.finishing = true;
       attribute.value = attribute.values[attribute.index];
     }
@@ -280,11 +289,9 @@ const SequencerAnimationEngine = {
     if (attribute.overallProgress >= 1.0) {
       attribute.finishing = true;
     }
-
   },
 
   _handleDefault(attribute) {
-
     attribute.durationDone += this.ticker.deltaMS;
     attribute.progress = attribute.durationDone / attribute.duration;
 
@@ -299,9 +306,7 @@ const SequencerAnimationEngine = {
       attribute.value = attribute.to;
       attribute.finishing = true;
     }
-
-  }
-
-}
+  },
+};
 
 export default SequencerAnimationEngine;

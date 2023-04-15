@@ -1,8 +1,7 @@
-import { SvelteApplication } from '@typhonjs-fvtt/runtime/svelte/application';
+import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import DatabaseShell from "./database-shell.svelte";
 
 export class DatabaseViewerApp extends SvelteApplication {
-
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       title: game.i18n.localize("SEQUENCER.Database.Title"),
@@ -11,14 +10,16 @@ export class DatabaseViewerApp extends SvelteApplication {
       height: 425,
       svelte: {
         class: DatabaseShell,
-        target: document.body
+        target: document.body,
       },
     });
   }
 
   static getActiveApp() {
-    return Object.values(ui.windows).find(app => {
-      return app instanceof this && app._state > Application.RENDER_STATES.CLOSED;
+    return Object.values(ui.windows).find((app) => {
+      return (
+        app instanceof this && app._state > Application.RENDER_STATES.CLOSED
+      );
     });
   }
 
@@ -28,7 +29,6 @@ export class DatabaseViewerApp extends SvelteApplication {
     return new Promise((resolve) => {
       options.resolve = resolve;
       new this(options).render(true, { focus: true });
-    })
+    });
   }
-
 }

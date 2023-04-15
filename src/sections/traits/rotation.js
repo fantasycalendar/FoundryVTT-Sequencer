@@ -1,7 +1,6 @@
 import { is_real_number } from "../../lib/lib.js";
 
 export default {
-
   /**
    * Base properties
    */
@@ -18,7 +17,12 @@ export default {
    * @returns this
    */
   randomRotation(inBool = true) {
-    if (typeof inBool !== "boolean") throw this.sequence._customError(this, "randomRotation", "inBool must be of type boolean");
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "randomRotation",
+        "inBool must be of type boolean"
+      );
     this._randomRotation = inBool;
     return this;
   },
@@ -30,7 +34,12 @@ export default {
    * @returns this
    */
   rotate(inRotation) {
-    if (!is_real_number(inRotation)) throw this.sequence._customError(this, "opacity", "inRotation must be of type number");
+    if (!is_real_number(inRotation))
+      throw this.sequence._customError(
+        this,
+        "opacity",
+        "inRotation must be of type number"
+      );
     this._angle = inRotation;
     return this;
   },
@@ -44,20 +53,48 @@ export default {
    * @returns this
    */
   rotateIn(degrees, duration, options = {}) {
-    if (typeof options !== "object") throw this.sequence._customError(this, "rotateIn", "options must be of type object");
-    options = foundry.utils.mergeObject({
-      ease: "linear",
-      delay: 0
-    }, options);
-    if (!is_real_number(degrees)) throw this.sequence._customError(this, "rotateOut", "degrees must be of type number");
-    if (!is_real_number(duration)) throw this.sequence._customError(this, "rotateOut", "duration must be of type number");
-    if (typeof options.ease !== "string") throw this.sequence._customError(this, "rotateIn", "options.ease must be of type string");
-    if (!is_real_number(options.delay)) throw this.sequence._customError(this, "rotateIn", "options.delay must be of type number");
+    if (typeof options !== "object")
+      throw this.sequence._customError(
+        this,
+        "rotateIn",
+        "options must be of type object"
+      );
+    options = foundry.utils.mergeObject(
+      {
+        ease: "linear",
+        delay: 0,
+      },
+      options
+    );
+    if (!is_real_number(degrees))
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "degrees must be of type number"
+      );
+    if (!is_real_number(duration))
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "duration must be of type number"
+      );
+    if (typeof options.ease !== "string")
+      throw this.sequence._customError(
+        this,
+        "rotateIn",
+        "options.ease must be of type string"
+      );
+    if (!is_real_number(options.delay))
+      throw this.sequence._customError(
+        this,
+        "rotateIn",
+        "options.delay must be of type number"
+      );
     this._rotateIn = {
       value: degrees,
       duration: duration,
       ease: options.ease,
-      delay: options.delay
+      delay: options.delay,
     };
     return this;
   },
@@ -71,22 +108,49 @@ export default {
    * @returns this
    */
   rotateOut(degrees, duration, options = {}) {
-    if (typeof options !== "object") throw this.sequence._customError(this, "rotateOut", "options must be of type object");
-    options = foundry.utils.mergeObject({
-      ease: "linear",
-      delay: 0
-    }, options);
-    if (!is_real_number(degrees)) throw this.sequence._customError(this, "rotateOut", "degrees must be of type number");
-    if (!is_real_number(duration)) throw this.sequence._customError(this, "rotateOut", "duration must be of type number");
-    if (typeof options.ease !== "string") throw this.sequence._customError(this, "rotateOut", "options.ease must be of type string");
-    if (!is_real_number(options.delay)) throw this.sequence._customError(this, "rotateOut", "options.delay must be of type number");
+    if (typeof options !== "object")
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "options must be of type object"
+      );
+    options = foundry.utils.mergeObject(
+      {
+        ease: "linear",
+        delay: 0,
+      },
+      options
+    );
+    if (!is_real_number(degrees))
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "degrees must be of type number"
+      );
+    if (!is_real_number(duration))
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "duration must be of type number"
+      );
+    if (typeof options.ease !== "string")
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "options.ease must be of type string"
+      );
+    if (!is_real_number(options.delay))
+      throw this.sequence._customError(
+        this,
+        "rotateOut",
+        "options.delay must be of type number"
+      );
     this._rotateOut = {
       value: degrees,
       duration: duration,
       ease: options.ease,
-      delay: options.delay
+      delay: options.delay,
     };
     return this;
-  }
-
-}
+  },
+};

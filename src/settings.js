@@ -4,7 +4,6 @@ import { DatabaseViewerApp } from "./formapplications/database/database-viewer-a
 import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 
 export function registerSettings() {
-
   game.settings.register(CONSTANTS.MODULE_NAME, "enable-pixi-fix", {
     name: "SEQUENCER.Setting.EnablePixiFix.Title",
     hint: "SEQUENCER.Setting.EnablePixiFix.Label",
@@ -12,7 +11,7 @@ export function registerSettings() {
     config: true,
     default: true,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "enable-global-pixi-fix", {
@@ -22,7 +21,7 @@ export function registerSettings() {
     config: true,
     default: false,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "enable-above-ui-screenspace", {
@@ -32,7 +31,7 @@ export function registerSettings() {
     config: true,
     default: true,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "debug", {
@@ -41,7 +40,7 @@ export function registerSettings() {
     scope: "client",
     config: true,
     default: false,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "showSidebarTools", {
@@ -51,7 +50,7 @@ export function registerSettings() {
     config: true,
     default: true,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "showTokenSidebarTools", {
@@ -61,7 +60,7 @@ export function registerSettings() {
     config: true,
     default: true,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "effectsEnabled", {
@@ -71,7 +70,7 @@ export function registerSettings() {
     config: true,
     default: true,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "soundsEnabled", {
@@ -81,7 +80,7 @@ export function registerSettings() {
     config: true,
     default: true,
     requiresReload: true,
-    type: Boolean
+    type: Boolean,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "user-effect-opacity", {
@@ -94,15 +93,15 @@ export function registerSettings() {
     range: {
       min: 0,
       max: 100,
-      step: 1
-    }
+      step: 1,
+    },
   });
 
   const permissionLevels = [
     game.i18n.localize("SEQUENCER.Permission.Player"),
     game.i18n.localize("SEQUENCER.Permission.Trusted"),
     game.i18n.localize("SEQUENCER.Permission.Assistant"),
-    game.i18n.localize("SEQUENCER.Permission.GM")
+    game.i18n.localize("SEQUENCER.Permission.GM"),
   ];
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-create", {
@@ -113,7 +112,7 @@ export function registerSettings() {
     default: 0,
     type: Number,
     choices: permissionLevels,
-    requiresReload: true
+    requiresReload: true,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-effect-delete", {
@@ -124,7 +123,7 @@ export function registerSettings() {
     default: 2,
     type: Number,
     choices: permissionLevels,
-    requiresReload: true
+    requiresReload: true,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sound-create", {
@@ -135,7 +134,7 @@ export function registerSettings() {
     default: 0,
     type: Number,
     choices: permissionLevels,
-    requiresReload: true
+    requiresReload: true,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-preload", {
@@ -146,7 +145,7 @@ export function registerSettings() {
     default: 1,
     type: Number,
     choices: permissionLevels,
-    requiresReload: true
+    requiresReload: true,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "permissions-sidebar-tools", {
@@ -157,34 +156,37 @@ export function registerSettings() {
     default: 0,
     type: Number,
     choices: permissionLevels,
-    requiresReload: true
+    requiresReload: true,
   });
 
   game.settings.register(CONSTANTS.MODULE_NAME, "effectPresets", {
     scope: "client",
     default: {},
-    type: Object
+    type: Object,
   });
 
   Hooks.on("getSceneControlButtons", (controls) => {
-
     if (!game.settings.get(CONSTANTS.MODULE_NAME, "showSidebarTools")) return;
 
     const selectTool = {
       icon: "fas fa-expand",
       name: "select-effect",
       title: "Select Effect",
-      visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
+      visible:
+        user_can_do("permissions-effect-create") &&
+        user_can_do("permissions-sidebar-tools"),
     };
 
     const playTool = {
       icon: "fas fa-play",
       name: "play-effect",
       title: "Play Effect",
-      visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
+      visible:
+        user_can_do("permissions-effect-create") &&
+        user_can_do("permissions-sidebar-tools"),
       onClick: () => {
         EffectsUIApp.show({ inFocus: true, tab: "player" });
-      }
+      },
     };
 
     const viewer = {
@@ -192,10 +194,12 @@ export function registerSettings() {
       name: "effectviewer",
       title: "Show Sequencer Effects Viewer",
       button: true,
-      visible: user_can_do("permissions-effect-create") && user_can_do('permissions-sidebar-tools'),
+      visible:
+        user_can_do("permissions-effect-create") &&
+        user_can_do("permissions-sidebar-tools"),
       onClick: () => {
         EffectsUIApp.show({ inFocus: true, tab: "manager" });
-      }
+      },
     };
 
     const database = {
@@ -203,10 +207,10 @@ export function registerSettings() {
       name: "effectdatabase",
       title: "Show Sequencer Database",
       button: true,
-      visible: user_can_do('permissions-sidebar-tools'),
+      visible: user_can_do("permissions-sidebar-tools"),
       onClick: () => {
         DatabaseViewerApp.show();
-      }
+      },
     };
 
     controls.push({
@@ -214,43 +218,49 @@ export function registerSettings() {
       title: "Sequencer Layer",
       icon: "fas fa-list-ol",
       layer: "sequencerInterfaceLayer",
-      visible: user_can_do("permissions-effect-create") && user_can_do("permissions-sidebar-tools"),
+      visible:
+        user_can_do("permissions-effect-create") &&
+        user_can_do("permissions-sidebar-tools"),
       activeTool: "select-effect",
-      tools: [
-        selectTool,
-        playTool,
-        viewer,
-        database
-      ]
-    })
+      tools: [selectTool, playTool, viewer, database],
+    });
 
-    if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools")) return;
+    if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools"))
+      return;
 
-    const bar = controls.find(c => c.name === "token");
+    const bar = controls.find((c) => c.name === "token");
     bar.tools.push(database);
     bar.tools.push(viewer);
-
   });
 
   console.log("Sequencer | Registered settings");
-
 }
 
-export async function migrateSettings(){
+export async function migrateSettings() {
+  const oldPixiFixSetting = game.settings.storage
+    .get("client")
+    .getItem("sequencer.disable-pixi-fix");
 
-  const oldPixiFixSetting = game.settings.storage.get('client').getItem('sequencer.disable-pixi-fix');
-
-  if(oldPixiFixSetting){
+  if (oldPixiFixSetting) {
     const value = oldPixiFixSetting === "true";
-    game.settings.storage.get('client').removeItem('sequencer.disable-pixi-fix')
-    await game.settings.set(CONSTANTS.MODULE_NAME, 'enable-pixi-fix', !value);
+    game.settings.storage
+      .get("client")
+      .removeItem("sequencer.disable-pixi-fix");
+    await game.settings.set(CONSTANTS.MODULE_NAME, "enable-pixi-fix", !value);
   }
 
-  const oldScreenspaceSetting = game.settings.storage.get('client').getItem('sequencer.disable-above-ui-screenspace');
-  if(oldScreenspaceSetting){
+  const oldScreenspaceSetting = game.settings.storage
+    .get("client")
+    .getItem("sequencer.disable-above-ui-screenspace");
+  if (oldScreenspaceSetting) {
     const value = oldScreenspaceSetting === "true";
-    game.settings.storage.get('client').removeItem('sequencer.disable-above-ui-screenspace')
-    await game.settings.set(CONSTANTS.MODULE_NAME, 'enable-above-ui-screenspace', !value);
+    game.settings.storage
+      .get("client")
+      .removeItem("sequencer.disable-above-ui-screenspace");
+    await game.settings.set(
+      CONSTANTS.MODULE_NAME,
+      "enable-above-ui-screenspace",
+      !value
+    );
   }
-
 }

@@ -18,13 +18,15 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   grid-column: 1/5;
 }
-.effect-player-container .effect-transform-container input[type=range] {
+.effect-player-container .effect-transform-container input[type="range"] {
   grid-column: 2/4;
 }
-.effect-player-container .effect-transform-container input[type=range]:disabled {
+.effect-player-container
+  .effect-transform-container
+  input[type="range"]:disabled {
   opacity: 0.5;
 }
-.effect-player-container .effect-transform-container input[type=number] {
+.effect-player-container .effect-transform-container input[type="number"] {
   height: 20px;
   min-width: 30px;
   font-size: 0.8rem;

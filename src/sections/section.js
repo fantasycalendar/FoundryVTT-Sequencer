@@ -2,7 +2,6 @@ import * as lib from "../lib/lib.js";
 import SequencerPresets from "../modules/sequencer-presets.js";
 
 export default class Section {
-
   constructor(inSequence) {
     this.sequence = inSequence;
     this._applyTraits();
@@ -25,29 +24,33 @@ export default class Section {
    * @protected
    */
   get _shouldAsync() {
-    return this._async || this._waitAnyway
+    return this._async || this._waitAnyway;
   }
 
   /**
    * @protected
    */
   get shouldWaitUntilFinished() {
-    return this._waitUntilFinished || this._waitAnyway
+    return this._waitUntilFinished || this._waitAnyway;
   }
 
   /**
    * @protected
    */
   get _waitAnyway() {
-    return ((this._async || this._waitUntilFinished) && this._isLastRepetition)
-      || (this._isLastRepetition && this._isLastSection);
+    return (
+      ((this._async || this._waitUntilFinished) && this._isLastRepetition) ||
+      (this._isLastRepetition && this._isLastSection)
+    );
   }
 
   /**
    * @protected
    */
   get _isLastSection() {
-    return (this.sequence.sections.length - 1) === this.sequence.sections.indexOf(this);
+    return (
+      this.sequence.sections.length - 1 === this.sequence.sections.indexOf(this)
+    );
   }
 
   /** ------------------------------------------------------------------------------------------------------------------------------ *
@@ -58,14 +61,19 @@ export default class Section {
    * @protected
    */
   get _isLastRepetition() {
-    return (this._repetitions === 1 || this._repetitions === this._currentRepetition + 1);
+    return (
+      this._repetitions === 1 ||
+      this._repetitions === this._currentRepetition + 1
+    );
   }
 
   /**
    * @protected
    */
   get _currentWaitTime() {
-    let waitUntilFinishedDelay = this._waitAnyway ? lib.random_int_between(...this._waitUntilFinishedDelay) : 0;
+    let waitUntilFinishedDelay = this._waitAnyway
+      ? lib.random_int_between(...this._waitUntilFinishedDelay)
+      : 0;
     return waitUntilFinishedDelay + this._repeatDelay;
   }
 
@@ -75,8 +83,7 @@ export default class Section {
    * @returns {Promise<void>}
    * @protected
    */
-  async preRun() {
-  }
+  async preRun() {}
 
   /**
    * Method overwritten by inheriting classes, which is called when this section is executed by the Sequence
@@ -84,8 +91,7 @@ export default class Section {
    * @returns {Promise<void>}
    * @protected
    */
-  async run() {
-  }
+  async run() {}
 
   /**
    * Method overwritten by inheriting classes, which is called when this section is serialized by the Sequence
@@ -93,18 +99,18 @@ export default class Section {
    * @returns {object}
    * @private
    */
-  async _serialize(){
+  async _serialize() {
     return {
       async: this._async,
       delay: [this._delayMin, this._delayMax],
       waitUntilFinished: this._waitUntilFinished,
       waitUntilFinishedDelay: this._waitUntilFinishedDelay,
       repetitions: this._repetitions,
-      repetitionsDelay: [this._repeatDelayMin, this._repeatDelayMax]
+      repetitionsDelay: [this._repeatDelayMin, this._repeatDelayMax],
     };
   }
 
-  _deserialize(data){
+  _deserialize(data) {
     this._async = data.async;
     this._waitUntilFinished = data.waitUntilFinished;
     this._waitUntilFinishedDelay = data.waitUntilFinishedDelay;
@@ -119,8 +125,7 @@ export default class Section {
    *
    * @protected
    */
-  async _initialize() {
-  }
+  async _initialize() {}
 
   /**
    * Method overwritten by inheriting classes. Inheriting classes uses the following to apply traits to themselves:
@@ -128,8 +133,7 @@ export default class Section {
    *
    * @protected
    */
-  _applyTraits() {
-  }
+  _applyTraits() {}
 
   /**
    * Causes the section to be repeated n amount of times, with an optional delay. If given inRepeatDelayMin
@@ -141,14 +145,34 @@ export default class Section {
    * @returns {Section} this
    */
   repeats(inRepetitions, inRepeatDelayMin = 0, inRepeatDelayMax) {
-    if (!lib.is_real_number(inRepetitions)) throw this.sequence._customError(this, "repeats", "inRepetitions must be of type number");
-    if (!lib.is_real_number(inRepeatDelayMin)) throw this.sequence._customError(this, "repeats", "repeatDelayMin must be of type number");
+    if (!lib.is_real_number(inRepetitions))
+      throw this.sequence._customError(
+        this,
+        "repeats",
+        "inRepetitions must be of type number"
+      );
+    if (!lib.is_real_number(inRepeatDelayMin))
+      throw this.sequence._customError(
+        this,
+        "repeats",
+        "repeatDelayMin must be of type number"
+      );
     if (inRepeatDelayMax && !lib.is_real_number(inRepeatDelayMax)) {
-      throw this.sequence._customError(this, "repeats", "repeatDelayMax must be of type number");
+      throw this.sequence._customError(
+        this,
+        "repeats",
+        "repeatDelayMax must be of type number"
+      );
     }
     this._repetitions = inRepetitions;
-    this._repeatDelayMin = Math.min(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
-    this._repeatDelayMax = Math.max(inRepeatDelayMin, inRepeatDelayMax ?? inRepeatDelayMin);
+    this._repeatDelayMin = Math.min(
+      inRepeatDelayMin,
+      inRepeatDelayMax ?? inRepeatDelayMin
+    );
+    this._repeatDelayMax = Math.max(
+      inRepeatDelayMin,
+      inRepeatDelayMax ?? inRepeatDelayMin
+    );
     return this;
   }
 
@@ -172,11 +196,24 @@ export default class Section {
    * @returns {Section} this
    */
   waitUntilFinished(minDelay = 0, maxDelay = null) {
-    if(minDelay === false) return this;
-    if (!lib.is_real_number(minDelay)) throw this.sequence._customError(this, "waitUntilFinished", "minDelay must be of type number");
-    if (maxDelay !== null && !lib.is_real_number(maxDelay)) throw this.sequence._customError(this, "waitUntilFinished", "maxDelay must be of type number");
+    if (minDelay === false) return this;
+    if (!lib.is_real_number(minDelay))
+      throw this.sequence._customError(
+        this,
+        "waitUntilFinished",
+        "minDelay must be of type number"
+      );
+    if (maxDelay !== null && !lib.is_real_number(maxDelay))
+      throw this.sequence._customError(
+        this,
+        "waitUntilFinished",
+        "maxDelay must be of type number"
+      );
     this._waitUntilFinished = true;
-    this._waitUntilFinishedDelay = [Math.min(minDelay, maxDelay ?? minDelay), Math.max(minDelay, maxDelay ?? minDelay)];
+    this._waitUntilFinishedDelay = [
+      Math.min(minDelay, maxDelay ?? minDelay),
+      Math.max(minDelay, maxDelay ?? minDelay),
+    ];
     return this;
   }
 
@@ -201,10 +238,20 @@ export default class Section {
    * @returns {Section} this
    */
   delay(msMin, msMax) {
-    if (!lib.is_real_number(msMin)) throw this.sequence._customError(this, "delay", "msMin must be of type number");
-    if (msMax && !lib.is_real_number(msMax)) throw this.sequence._customError(this, "delay", "msMax must be of type number");
+    if (!lib.is_real_number(msMin))
+      throw this.sequence._customError(
+        this,
+        "delay",
+        "msMin must be of type number"
+      );
+    if (msMax && !lib.is_real_number(msMax))
+      throw this.sequence._customError(
+        this,
+        "delay",
+        "msMax must be of type number"
+      );
     this._delayMin = Math.min(msMin, msMax ?? msMin);
-    this._delayMax = Math.max(msMin, msMax ?? msMin)
+    this._delayMax = Math.max(msMin, msMax ?? msMin);
     return this;
   }
 
@@ -215,7 +262,12 @@ export default class Section {
    * @returns {Section} this
    */
   duration(inDuration) {
-    if (!lib.is_real_number(inDuration)) throw this.sequence._customError(this, "duration", "inDuration must be of type number");
+    if (!lib.is_real_number(inDuration))
+      throw this.sequence._customError(
+        this,
+        "duration",
+        "inDuration must be of type number"
+      );
     this._duration = inDuration;
     return this;
   }
@@ -227,13 +279,20 @@ export default class Section {
    * @param {*} args
    * @returns {Section|FunctionSection|EffectSection|AnimationSection|SoundSection}
    */
-  preset(presetName, ...args){
-    if(typeof presetName !== "string"){
-      throw this.sequence._customError(this, "name", `inName must be of type string`);
+  preset(presetName, ...args) {
+    if (typeof presetName !== "string") {
+      throw this.sequence._customError(
+        this,
+        "name",
+        `inName must be of type string`
+      );
     }
     const preset = SequencerPresets.get(presetName);
-    if(!preset){
-      lib.custom_warning("Sequencer", `preset | Could not find preset with name "${presetName}"`)
+    if (!preset) {
+      lib.custom_warning(
+        "Sequencer",
+        `preset | Could not find preset with name "${presetName}"`
+      );
       return this;
     }
     return preset(this, ...args);
@@ -255,7 +314,7 @@ export default class Section {
       inLocation = lib.get_object_from_scene(inLocation) ?? inLocation;
     }
     if (typeof inLocation === "string") {
-      inLocation = lib.safe_str(inLocation)
+      inLocation = lib.safe_str(inLocation);
     }
     return inLocation;
   }
@@ -264,14 +323,20 @@ export default class Section {
    * @protected
    */
   async _execute() {
-    if (!await this._shouldPlay()) return;
+    if (!(await this._shouldPlay())) return;
     let self = this;
     this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
     return new Promise(async (resolve) => {
       setTimeout(async function () {
         for (let i = 0; i < self._repetitions; i++) {
           self._currentRepetition = i;
-          self._repeatDelay = i !== self._repetitions - 1 ? lib.random_float_between(self._repeatDelayMin, self._repeatDelayMax) : 0;
+          self._repeatDelay =
+            i !== self._repetitions - 1
+              ? lib.random_float_between(
+                  self._repeatDelayMin,
+                  self._repeatDelayMax
+                )
+              : 0;
           await self.preRun();
           if (self._shouldAsync) {
             await self.run();
@@ -293,8 +358,7 @@ export default class Section {
   async _delayBetweenRepetitions() {
     let self = this;
     return new Promise((resolve) => {
-      setTimeout(resolve, self._repeatDelay)
+      setTimeout(resolve, self._repeatDelay);
     });
   }
-
 }

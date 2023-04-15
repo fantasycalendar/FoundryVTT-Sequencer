@@ -132,7 +132,7 @@ const PlayerSettings = {
     default: false,
     callback: (e) => {
       EffectPlayer.sourceAttach = e.target.checked;
-    }
+    },
   },
   stretchToAttach: {
     label: "SEQUENCER.Player.Option.StretchToAttach",
@@ -140,7 +140,7 @@ const PlayerSettings = {
     default: false,
     callback: (e) => {
       EffectPlayer.targetAttach = e.target.checked;
-    }
+    },
   },
   persist: {
     label: "SEQUENCER.Player.Option.Persist",
@@ -166,59 +166,87 @@ const PlayerSettings = {
     label: "SEQUENCER.Player.Option.DelayMax",
     store: writable(400),
     default: 400,
-  }
-}
+  },
+};
 
 PlayerSettings.export = () => {
-  return Object.fromEntries(Object.entries(PlayerSettings).map(entry => {
-    return [entry[0], get(entry[1].store)]
-  }));
-}
+  return Object.fromEntries(
+    Object.entries(PlayerSettings).map((entry) => {
+      return [entry[0], get(entry[1].store)];
+    })
+  );
+};
 
 PlayerSettings.import = (settings) => {
-  Object.entries(PlayerSettings).forEach(entry => {
-    if(settings?.[entry[0]] !== undefined){
+  Object.entries(PlayerSettings).forEach((entry) => {
+    if (settings?.[entry[0]] !== undefined) {
       entry[1].store.set(settings?.[entry[0]]);
-    }else if(entry[1]?.default !== undefined){
+    } else if (entry[1]?.default !== undefined) {
       entry[1].store.set(entry[1].default);
     }
   });
-}
+};
 
 PlayerSettings.getPresets = () => {
   return Object.keys(game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets"));
-}
+};
 
 PlayerSettings.loadPreset = (name) => {
-  const effectPresets = game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets");
-  return PlayerSettings.import(effectPresets[name])
-}
+  const effectPresets = game.settings.get(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets"
+  );
+  return PlayerSettings.import(effectPresets[name]);
+};
 
 PlayerSettings.savePreset = async (name) => {
   const newName = await promptNewPresetName(name);
-  if(!newName) return;
-  const effectPresets = game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets");
+  if (!newName) return;
+  const effectPresets = game.settings.get(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets"
+  );
   effectPresets[newName] = PlayerSettings.export();
-  return game.settings.set(CONSTANTS.MODULE_NAME, "effectPresets", effectPresets);
-}
+  return game.settings.set(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets",
+    effectPresets
+  );
+};
 
 PlayerSettings.copyPreset = async (name) => {
   const newName = await promptNewPresetName(name, true);
-  if(!newName) return;
-  const effectPresets = game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets");
+  if (!newName) return;
+  const effectPresets = game.settings.get(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets"
+  );
   effectPresets[newName] = PlayerSettings.export();
-  return game.settings.set(CONSTANTS.MODULE_NAME, "effectPresets", effectPresets);
-}
+  return game.settings.set(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets",
+    effectPresets
+  );
+};
 
 PlayerSettings.deletePreset = (name) => {
-  const effectPresets = game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets");
+  const effectPresets = game.settings.get(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets"
+  );
   delete effectPresets[name];
-  return game.settings.set(CONSTANTS.MODULE_NAME, "effectPresets", effectPresets);
-}
+  return game.settings.set(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets",
+    effectPresets
+  );
+};
 
 async function promptNewPresetName(inName, copy = false) {
-
-  const effectPresets = game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets");
+  const effectPresets = game.settings.get(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets"
+  );
 
   let title = copy
     ? game.i18n.localize("SEQUENCER.Player.CopyPresetTitle")
@@ -228,13 +256,15 @@ async function promptNewPresetName(inName, copy = false) {
     let rejected = false;
     new Dialog({
       title: title,
-      content: `<p><input type="text" placeholder="${game.i18n.localize("SEQUENCER.Player.CreateNewPresetInputLabel")}" id="newPresetName" style="width:100%;"></p>`,
+      content: `<p><input type="text" placeholder="${game.i18n.localize(
+        "SEQUENCER.Player.CreateNewPresetInputLabel"
+      )}" id="newPresetName" style="width:100%;"></p>`,
       buttons: {
         okay: {
           icon: '<i class="fas fa-check"></i>',
           label: game.i18n.localize("SEQUENCER.OK"),
           callback: async (html) => {
-            let name = html.find('#newPresetName').val();
+            let name = html.find("#newPresetName").val();
 
             if (name === "" || !name) {
               name = false;
@@ -242,8 +272,7 @@ async function promptNewPresetName(inName, copy = false) {
             }
 
             resolve(name);
-
-          }
+          },
         },
         cancel: {
           icon: '<i class="fas fa-times"></i>',
@@ -251,36 +280,36 @@ async function promptNewPresetName(inName, copy = false) {
           callback: () => {
             rejected = true;
             resolve(false);
-          }
-        }
+          },
+        },
       },
-      close: () => {
-
-      },
+      close: () => {},
       render: (html) => {
-        html.find('#newPresetName').val(inName).focus();
-      }
+        html.find("#newPresetName").val(inName).focus();
+      },
     }).render(true);
   });
 
   if (presetName) {
-
     if (presetName.toLowerCase() === "default") {
       Dialog.prompt({
         title: game.i18n.localize("SEQUENCER.Player.DefaultErrorTitle"),
-        content: `<p>${game.i18n.localize("SEQUENCER.Player.DefaultErrorContent")}</p>`,
+        content: `<p>${game.i18n.localize(
+          "SEQUENCER.Player.DefaultErrorContent"
+        )}</p>`,
         label: game.i18n.localize("SEQUENCER.OK"),
-        callback: () => {
-        }
+        callback: () => {},
       });
       return false;
     }
 
     if (effectPresets[presetName]) {
-
       const overwrite = await Dialog.confirm({
         title: game.i18n.localize("SEQUENCER.Player.OverwritePresetTitle"),
-        content: `<p>${game.i18n.format("SEQUENCER.Player.OverwritePresetContent", { preset_name: presetName })}</p>`
+        content: `<p>${game.i18n.format(
+          "SEQUENCER.Player.OverwritePresetContent",
+          { preset_name: presetName }
+        )}</p>`,
       });
 
       if (!overwrite) {
@@ -290,42 +319,45 @@ async function promptNewPresetName(inName, copy = false) {
   }
 
   return presetName;
-
 }
 
-
-
 PlayerSettings.migrateOldPresets = () => {
+  if (!game.user.isGM) return;
 
-  if(!game.user.isGM) return;
+  const effectPresets = game.settings.get(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets"
+  );
 
-  const effectPresets = game.settings.get(CONSTANTS.MODULE_NAME, "effectPresets")
-
-  const presetsToUpdate = Object.values(effectPresets).filter(preset => {
+  const presetsToUpdate = Object.values(effectPresets).filter((preset) => {
     return !preset?.version;
   });
 
-  if(!presetsToUpdate.length) return;
+  if (!presetsToUpdate.length) return;
 
-  const newEffectPresets = Object.fromEntries(Object.entries(effectPresets).map(([name, preset]) => {
-    if(preset?.version) return [name, preset];
-    preset.version = game.modules.get(CONSTANTS.MODULE_NAME).version;
-    if(preset.repetitions > 1){
-      preset.repeat = true;
-    }
-    if(preset.randomMirrorY){
-      preset.mirrorY = true;
-    }
-    if(preset.randomOffset){
-      preset.randomOffsetAmount = 1;
-      preset.offsetGridUnits = true;
-    }
-    return [name, preset];
-  }));
+  const newEffectPresets = Object.fromEntries(
+    Object.entries(effectPresets).map(([name, preset]) => {
+      if (preset?.version) return [name, preset];
+      preset.version = game.modules.get(CONSTANTS.MODULE_NAME).version;
+      if (preset.repetitions > 1) {
+        preset.repeat = true;
+      }
+      if (preset.randomMirrorY) {
+        preset.mirrorY = true;
+      }
+      if (preset.randomOffset) {
+        preset.randomOffsetAmount = 1;
+        preset.offsetGridUnits = true;
+      }
+      return [name, preset];
+    })
+  );
 
-  return game.settings.set(CONSTANTS.MODULE_NAME, "effectPresets", newEffectPresets);
-
-}
-
+  return game.settings.set(
+    CONSTANTS.MODULE_NAME,
+    "effectPresets",
+    newEffectPresets
+  );
+};
 
 export { PlayerSettings };

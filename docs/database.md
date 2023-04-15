@@ -3,7 +3,7 @@
 You can access the global Sequencer database through:
 
 ```js
-Sequencer.Database
+Sequencer.Database;
 ```
 
 ## Register Entries
@@ -11,9 +11,10 @@ Sequencer.Database
 `Sequencer.Database.registerEntries(moduleName, entries)`
 
 It is recommended this is called in the `ready` hook:
+
 ```js
 Hooks.on("sequencerReady", () => {
-    Sequencer.Database.registerEntries("your_module_name", data);
+  Sequencer.Database.registerEntries("your_module_name", data);
 });
 ```
 
@@ -23,24 +24,25 @@ The `entries` parameter is expected to be an object in a structure like this:
 
 ```js
 const database = {
-    effects: {
-        generic: {
-            explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
-        },
-        lasershot: {
-            red: [
-                "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_01.webm",
-                "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_02.webm",
-                "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_03.webm",
-            ],
-            blue: [
-                "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_01.webm",
-                "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_02.webm",
-                "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_03.webm",
-            ]
-        }
-    }
-}
+  effects: {
+    generic: {
+      explosions:
+        "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm",
+    },
+    lasershot: {
+      red: [
+        "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_01.webm",
+        "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_02.webm",
+        "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_03.webm",
+      ],
+      blue: [
+        "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_01.webm",
+        "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_02.webm",
+        "modules/your_module_name/Library/VFX/LaserShots/lasershot_red_03.webm",
+      ],
+    },
+  },
+};
 ```
 
 The structure can be in any form you want, as long as it eventually ends up at a file path, or an array of file paths (shown above).
@@ -60,7 +62,6 @@ This will return `SequencerFile` objects, ones used within the Sequencer ecosyst
 `Sequencer.Database.getPathsUnder(inDatabasePath)`
 
 This method will get all of the keys under a given path. If you have a database like this:
-
 
 ```js
 const database = {
@@ -88,4 +89,3 @@ Returns a list of strings.
 `Sequencer.Database.validateEntries(inModule)`
 
 This goes through each of the registered entries under a module name and checks if the paths exist and are spelled correctly.
-
