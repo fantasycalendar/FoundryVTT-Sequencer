@@ -36,8 +36,14 @@ const migrations = {
   "3.0.0": async (version) => {
 
     const tokensOnScenes = getSequencerEffectTokens(version, (t) => {
+      let actor;
+      try{
+        actor = t.actor;
+      }catch(err){
+        return false;
+      }
       const effects = getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
-      const prototypeTokenEffects = getProperty(t.actor, "prototypeToken."+CONSTANTS.EFFECTS_FLAG) ?? [];
+      const prototypeTokenEffects = getProperty(actor, "prototypeToken."+CONSTANTS.EFFECTS_FLAG) ?? [];
       const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
       const prototypeEffectsOutOfDate = prototypeTokenEffects.filter(e => isNewerVersion(version, e[1].flagVersion));
       return effectsOutOfDate.length || prototypeEffectsOutOfDate.length;
