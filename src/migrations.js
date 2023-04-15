@@ -18,22 +18,69 @@ export default async function runMigrations() {
   }
 }
 
-function getSequencerEffectTokens(version, tokenFilter = (t) => {
-  const effects = getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
-  const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
-  return effectsOutOfDate.length;
-}) {
+function getSequencerEffectTokens(version, tokenFilter = false) {
   return Array.from(game.scenes)
     .map(scene => ([
       scene,
-      Array.from(scene.tokens).filter(tokenFilter)
+      Array.from(scene.tokens).filter((token, index) => {
+        if (tokenFilter){
+          return tokenFilter(token, index)
+        }
+        const effects = getProperty(token, CONSTANTS.EFFECTS_FLAG) ?? [];
+        const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
+        return effectsOutOfDate.length;
+      })
     ]))
     .filter(([_, tokens]) => tokens.length);
+}
+
+function getSequencerEffectActors(version, actorFilter = false){
+  return Array.from(game.actors).filter((actor, index) => {
+    if(actorFilter){
+      return actorFilter(actor, index)
+    }
+    const effects = getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
+    const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
+    return effectsOutOfDate.length;
+  });
 }
 
 const migrations = {
 
   "3.0.0": async (version) => {
+
+    const actorsToUpdate = getSequencerEffectActors(version, (actor) => {
+      const effects = getProperty(actor, "prototypeToken."+CONSTANTS.EFFECTS_FLAG) ?? [];
+      const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
+      return effectsOutOfDate.length;
+    });
+
+    const actorUpdateArray = actorsToUpdate.map(actor => {
+
+      const effectsToMoveFromTokenPrototype = getProperty(actor.prototypeToken, CONSTANTS.EFFECTS_FLAG)
+        .filter(([_, effect]) => {
+          return effect.persistOptions?.persistTokenPrototype;
+        })
+        .map(([id, effect]) => {
+          effect.flagVersion = version;
+          return [id, effect];
+        });
+
+      const effectsToKeepOnTokenPrototype = getProperty(actor.prototypeToken, CONSTANTS.EFFECTS_FLAG)
+        .filter(([_, effect]) => {
+          return !effect.persistOptions?.persistTokenPrototype;
+        })
+        .map(([id, effect]) => {
+          effect.flagVersion = version;
+          return [id, effect];
+        });
+
+      return {
+        _id: actor.id,
+        [CONSTANTS.EFFECTS_FLAG]: effectsToMoveFromTokenPrototype,
+        ["prototypeToken." + CONSTANTS.EFFECTS_FLAG]: effectsToKeepOnTokenPrototype
+      }
+    });
 
     const tokensOnScenes = getSequencerEffectTokens(version, (t) => {
       let actor;
@@ -46,41 +93,13 @@ const migrations = {
       const prototypeTokenEffects = getProperty(actor, "prototypeToken."+CONSTANTS.EFFECTS_FLAG) ?? [];
       const effectsOutOfDate = effects.filter(e => isNewerVersion(version, e[1].flagVersion));
       const prototypeEffectsOutOfDate = prototypeTokenEffects.filter(e => isNewerVersion(version, e[1].flagVersion));
-      return effectsOutOfDate.length || prototypeEffectsOutOfDate.length;
+      return t.actorLink && (effectsOutOfDate.length || prototypeEffectsOutOfDate.length);
     });
-
-    const actorUpdates = {};
-    const actorTokenPrototypeUpdates = {};
 
     for (const [scene, tokens] of tokensOnScenes) {
 
       const updates = [];
       for (const token of tokens) {
-
-        const effectsToMoveFromTokenPrototype = getProperty(token.actor.prototypeToken, CONSTANTS.EFFECTS_FLAG)
-          .filter(([_, effect]) => {
-            return effect.persistOptions?.persistTokenPrototype;
-          })
-          .map(([id, effect]) => {
-            effect.flagVersion = version;
-            effect.source = token.uuid;
-            return [id, effect];
-          });
-
-        const effectsToKeepOnTokenPrototype = getProperty(token.actor.prototypeToken, CONSTANTS.EFFECTS_FLAG)
-          .filter(([_, effect]) => {
-            return !effect.persistOptions?.persistTokenPrototype;
-          })
-          .map(([id, effect]) => {
-            effect.flagVersion = version;
-            return [id, effect];
-          });
-
-        if (!actorUpdates[token.actor.id]) actorUpdates[token.actor.id] = [];
-        if (!actorTokenPrototypeUpdates[token.actor.id]) actorTokenPrototypeUpdates[token.actor.id] = [];
-
-        actorUpdates[token.actor.id].push(...effectsToMoveFromTokenPrototype);
-        actorTokenPrototypeUpdates[token.actor.id].push(...effectsToKeepOnTokenPrototype)
 
         const effectsToKeepOnToken = getProperty(token, CONSTANTS.EFFECTS_FLAG)
           .filter(([_, effect]) => {
@@ -103,14 +122,6 @@ const migrations = {
       }
 
     }
-
-    const actorUpdateArray = Object.entries(actorUpdates).map(([actorId, effects]) => {
-      return {
-        _id: actorId,
-        [CONSTANTS.EFFECTS_FLAG]: effects,
-        ["prototypeToken." + CONSTANTS.EFFECTS_FLAG]: actorTokenPrototypeUpdates[actorId]
-      }
-    });
 
     if(actorUpdateArray.length) {
       console.log(`Sequencer | Updated ${actorUpdateArray.length} actors' effects to version ${version}`);

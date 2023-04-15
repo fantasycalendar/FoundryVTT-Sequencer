@@ -335,14 +335,8 @@ export default class SequencerEffectManager {
         const actorEffects = flagManager.getFlags(doc?.actor)
         actorEffects.forEach(e => {
           e[1]._id = randomID();
-          if(lib.is_UUID(e[1].source) && fromUuidSync(e[1].source)?.actor === doc?.actor){
-            e[1].source = doc.uuid;
-            e[1].sceneId = doc.parent.id;
-          }
-          if(lib.is_UUID(e[1].target) && fromUuidSync(e[1].target)?.actor === doc?.actor){
-            e[1].target = doc.uuid;
-            e[1].sceneId = doc.parent.id;
-          }
+          e[1].source = doc.uuid;
+          e[1].sceneId = doc.parent.id;
         });
         tokenEffects = tokenEffects.concat(actorEffects);
       }
