@@ -20,7 +20,6 @@
     "@league-of-foundry-developers/foundry-vtt-types": "^9.238.1",
     "@typhonjs-config/eslint-config": "^0.3.0",
     "@typhonjs-fvtt/eslint-config-foundry.js": "^0.8.0",
-    "eslint": "^8",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.1",
     "prettier": "^2.8.7",
@@ -39,7 +38,6 @@
     "prepare": "husky install"
   },
   "lint-staged": {
-    "*.js": "eslint --cache --fix",
     "*.{js,css,md}": "prettier --write"
   }
 }
