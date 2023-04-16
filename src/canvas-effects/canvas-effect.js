@@ -1398,7 +1398,10 @@ export default class CanvasEffect extends PIXI.Container {
       this._currentFilePath = filePath;
       this._texture = texture;
       this.spriteSheet = sheet;
-    } else if (!this._isRangeFind) {
+    } else if (
+      !this._isRangeFind ||
+      (this._isRangeFind && !this.data.stretchTo)
+    ) {
       const { filePath, texture, sheet } = await this._file.getTexture();
       this._currentFilePath = filePath;
       this._texture = texture;

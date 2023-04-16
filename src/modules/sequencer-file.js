@@ -243,7 +243,7 @@ export class SequencerFileRangeFind extends SequencerFile {
     return this.getFile(ft);
   }
 
-  async getTexture(distance) {
+  async getTexture(distance = 400) {
     const { filePath, texture } = await this._getTextureForDistance(distance);
     return {
       filePath,

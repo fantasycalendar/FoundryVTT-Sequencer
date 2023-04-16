@@ -94,13 +94,13 @@
 
 				</select>
 
-				<button class="save-preset small-button" type="button" on:click={() => PlayerSettings.savePreset(selectedPreset)}>
+				<button class="save-preset small-button" data-tooltip="Save Preset" type="button" on:click={() => PlayerSettings.savePreset(selectedPreset)}>
 					<i class="fas fa-download"></i>
 				</button>
-				<button class="copy-preset small-button" disabled={selectedPreset === "default"} type="button" on:click={() => PlayerSettings.copyPreset(selectedPreset)}>
+				<button class="copy-preset small-button" data-tooltip="Copy Preset" disabled={selectedPreset === "default"} type="button" on:click={() => PlayerSettings.copyPreset(selectedPreset)}>
 					<i class="fas fa-copy"></i>
 				</button>
-				<button class="delete-preset small-button" disabled={selectedPreset === "default"} type="button" on:click={() => PlayerSettings.deletePreset(selectedPreset)}>
+				<button class="delete-preset small-button" data-tooltip="Delete Preset" disabled={selectedPreset === "default"} type="button" on:click={() => PlayerSettings.deletePreset(selectedPreset)}>
 					<i class="fas fa-times"></i>
 				</button>
 
@@ -196,6 +196,12 @@
     i {
       margin: 0;
     }
+
+    &:disabled {
+      cursor: initial;
+      opacity: 0.5;
+    }
+
   }
 
 	.user-settings {
