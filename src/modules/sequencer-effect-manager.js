@@ -603,18 +603,25 @@ export default class SequencerEffectManager {
    * @private
    */
   static async _endManyEffects(inEffectIds = false) {
-    const actorEffectsToEnd = this.effects.filter((effect) =>
-      inEffectIds.includes(effect.data?.persistOptions?.id)
-    );
-    const regularEffectsToEnd = this.effects.filter((effect) =>
-      inEffectIds.includes(effect.id)
-    );
-
-    const effectsByContextUuid = Object.values(
-      lib.group_by(regularEffectsToEnd, "context.uuid")
-    );
+    const actorEffectsToEnd = this.effects.filter((effect) => {
+      return (
+        effect.context?.actorLink &&
+        inEffectIds.includes(effect.data?.persistOptions?.id)
+      );
+    });
     const effectsByActorUuid = Object.values(
       lib.group_by(actorEffectsToEnd, "context.actor.uuid")
+    );
+
+    const regularEffectsToEnd = this.effects.filter((effect) => {
+      return (
+        inEffectIds.includes(effect.id) ||
+        (!effect.context?.actorLink &&
+          inEffectIds.includes(effect.data?.persistOptions?.id))
+      );
+    });
+    const effectsByContextUuid = Object.values(
+      lib.group_by(regularEffectsToEnd, "context.uuid")
     );
 
     effectsByContextUuid.forEach((effects) => {
@@ -645,8 +652,9 @@ export default class SequencerEffectManager {
           effectContext.actorLink &&
           effectContext.actor.prototypeToken.actorLink
         )
-      )
+      ) {
         return;
+      }
 
       const persistentEffectData = effectData.filter(
         (data) => data?.persistOptions?.persistTokenPrototype
