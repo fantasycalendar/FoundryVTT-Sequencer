@@ -178,13 +178,36 @@ export class SequencerInterfaceLayer extends InteractionLayer {
 
     graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xffffff, 0.9);
 
-    const boundingBox = effect.sprite.getLocalBounds();
-    const dimensions = {
+    let boundingBox = effect.sprite.getLocalBounds();
+    let dimensions = {
       x: effect.position.x + boundingBox.x * effect.sprite.scale.x,
       y: effect.position.y + boundingBox.y * effect.sprite.scale.y,
       width: boundingBox.width * effect.sprite.scale.x,
       height: boundingBox.height * effect.sprite.scale.y,
     };
+
+    if (effect.data.shapes.length) {
+      for (const shape of Object.values(effect.shapes)) {
+        boundingBox = shape.getLocalBounds();
+        dimensions = {
+          x: Math.max(
+            dimensions.x,
+            effect.position.x + boundingBox.x * shape.scale.x
+          ),
+          y: Math.max(
+            dimensions.y,
+            effect.position.y + boundingBox.y * shape.scale.y
+          ),
+          width: Math.max(dimensions.width, boundingBox.width * shape.scale.x),
+          height: Math.max(
+            dimensions.height,
+            boundingBox.height * shape.scale.y
+          ),
+        };
+      }
+    }
+
+    console.log(dimensions);
 
     const rotation = Math.normalizeRadians(
       effect.rotationContainer.rotation +

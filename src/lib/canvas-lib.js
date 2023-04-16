@@ -10,9 +10,10 @@ export function createShape(shape) {
     shape?.fillColor !== undefined ? shape?.fillAlpha ?? 1 : 0
   );
 
-  if (shape?.lineSize) {
-    graphic.lineStyle(shape.lineSize, shape?.lineColor ?? 0xffffff);
-  }
+  graphic.lineStyle(
+    shape.lineSize ?? (shape?.lineColor !== undefined ? 1 : 0),
+    shape?.lineColor ?? 0xffffff
+  );
 
   const offsetX =
     (shape.offset?.x ?? 0) * (shape.offset?.gridUnits ? canvas.grid.size : 1);

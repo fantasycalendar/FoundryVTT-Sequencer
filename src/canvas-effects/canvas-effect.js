@@ -469,7 +469,7 @@ export default class CanvasEffect extends PIXI.Container {
   set mediaPlaybackRate(inPlaybackRate) {
     if (this.animatedSprite) {
       this.sprite.animationSpeed = 0.4 * inPlaybackRate;
-    } else {
+    } else if (this.video) {
       this.video.playbackRate = inPlaybackRate;
     }
   }
@@ -1717,16 +1717,15 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   _createShapes() {
-    const nonMaskShapes = this.data.shapes.filter((shape) => !shape.isMask);
-
+    const nonMaskShapes = (this.data?.shapes ?? []).filter(
+      (shape) => !shape.isMask
+    );
+    this.shapes = {};
     for (const shape of nonMaskShapes) {
       const graphic = canvaslib.createShape(shape);
       graphic.filters = this.sprite.filters;
       this.spriteContainer.addChild(graphic);
-      if (shape.name) {
-        if (!this.shapes) this.shapes = {};
-        this.shapes[shape.name] = graphic;
-      }
+      this.shapes[shape?.name ?? "shape-" + randomID()] = graphic;
     }
   }
 
