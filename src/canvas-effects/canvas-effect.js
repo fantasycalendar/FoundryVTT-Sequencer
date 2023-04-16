@@ -1432,7 +1432,7 @@ export default class CanvasEffect extends PIXI.Container {
       let sprite;
       let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
       if (!this.data.xray && !this.data.aboveLighting) {
-        sprite = new spriteType(texture, VisionSamplerShader);
+        sprite = new spriteType(this._texture, VisionSamplerShader);
       } else {
         sprite = new spriteType();
       }
@@ -2171,9 +2171,6 @@ export default class CanvasEffect extends PIXI.Container {
       (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo) &&
       lib.is_UUID(this.data.target);
 
-    this.renderable = false;
-    this.alpha = 0.0;
-
     const baseRenderable = this.shouldPlayVisible;
     let renderable = baseRenderable;
     let alpha = null;
@@ -2254,7 +2251,6 @@ export default class CanvasEffect extends PIXI.Container {
     setTimeout(() => {
       this.renderable = renderable;
       this.spriteContainer.alpha = alpha ?? 1.0;
-      this.alpha = 1.0;
     }, 25);
   }
 
