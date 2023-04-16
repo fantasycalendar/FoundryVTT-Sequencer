@@ -7,7 +7,6 @@
   import Checkbox from "./components/Checkbox.svelte";
   import NumberInput from "./components/NumberInput.svelte";
   import SwitchToggle from "./components/SwitchToggle.svelte";
-  import * as lib from "../../lib/lib.js";
 
   const fileStore = PlayerSettings.file.store;
   const users = game.users.filter(user => user.active);
@@ -40,6 +39,26 @@
     canvas.sequencerInterfaceLayer.activate({ tool: "play-effect" });
 	}
 
+  let filePicker = false;
+
+  function handleClick() {
+    if (!filePicker) {
+      const file = get(fileStore);
+      const current = SequencerDatabase.getEntry(file, { softFail: true })
+        ? file
+        : "";
+      filePicker = new FilePicker({
+        type: "imageVideo",
+        current,
+        callback: path => {
+          fileStore.set(path);
+          filePicker = false;
+        }
+      });
+    }
+    filePicker.render(true, { focus: true });
+  }
+
   const presets = PlayerSettings.getPresets();
   let selectedPreset = "default";
 
@@ -58,7 +77,9 @@
              list="dblist"
 						 placeholder='{localize("SEQUENCER.Player.PathInput")}'
 						 type="text"/>
-			<button class="custom-file-picker small-button" type="button"><i class="fas fa-file-import"></i></button>
+			<button class="custom-file-picker small-button" type="button" on:click={handleClick}>
+        <i class="fas fa-file-import"></i>
+      </button>
 			<datalist id="dblist">
 				{#each suggestions as suggestion}
 					<option>{suggestion}</option>

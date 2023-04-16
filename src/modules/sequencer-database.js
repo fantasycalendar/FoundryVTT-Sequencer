@@ -156,11 +156,15 @@ class Database {
    * @return {array|SequencerFile|boolean}                The found entry in the database, or false if not found (with warning)
    */
   getEntry(inString, { softFail = false } = {}) {
-    if (typeof inString !== "string")
+    if (typeof inString !== "string") {
+      if (softFail) return false;
       return this._throwError("getEntry", "inString must be of type string");
+    }
     inString = inString.trim();
-    if (inString === "")
+    if (inString === "") {
+      if (softFail) return false;
       return this._throwError("getEntry", "inString cannot be empty");
+    }
     inString = inString.replace(/\[[0-9]+]$/, "");
     if (!this.entryExists(inString)) {
       if (softFail) return false;

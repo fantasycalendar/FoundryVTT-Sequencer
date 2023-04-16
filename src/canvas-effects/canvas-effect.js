@@ -1120,9 +1120,9 @@ export default class CanvasEffect extends PIXI.Container {
     this._initializeVariables();
     await this._contextLostCallback();
     await this._loadTexture();
-    this._calculateDuration();
     this._addToContainer();
     this._createSprite();
+    this._calculateDuration();
     this._createShapes();
     await this._setupMasks();
     await this._transformSprite();
@@ -1408,23 +1408,6 @@ export default class CanvasEffect extends PIXI.Container {
       this.spriteSheet = sheet;
     }
 
-    const args = [this.spriteSheet ? this.spriteSheet : null];
-    if (!this.data.xray && !this.data.aboveLighting && !this.spriteSheet) {
-      args.push(VisionSamplerShader);
-    }
-
-    const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : SpriteMesh;
-    const sprite = new spriteType(...args);
-    this.sprite = this.spriteContainer.addChild(sprite);
-    this.sprite.id = this.id + "-sprite";
-
-    this.animatedSprite = false;
-    if (this.spriteSheet) {
-      this.animatedSprite = true;
-      this.sprite.animationSpeed = 0.4;
-      this.sprite.loop = false;
-    }
-
     if (
       this._isRangeFind &&
       (this.data.stretchTo?.attachTo?.active || this.data.attachTo?.active)
@@ -1626,7 +1609,22 @@ export default class CanvasEffect extends PIXI.Container {
   _createSprite() {
     this.renderable = false;
 
-    this.updateElevation();
+    const args = [this.spriteSheet ? this.spriteSheet : null];
+    if (!this.data.xray && !this.data.aboveLighting && !this.spriteSheet) {
+      args.push(VisionSamplerShader);
+    }
+
+    const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : SpriteMesh;
+    const sprite = new spriteType(...args);
+    this.sprite = this.spriteContainer.addChild(sprite);
+    this.sprite.id = this.id + "-sprite";
+
+    this.animatedSprite = false;
+    if (this.spriteSheet) {
+      this.animatedSprite = true;
+      this.sprite.animationSpeed = 0.4;
+      this.sprite.loop = false;
+    }
 
     let textSprite;
 
@@ -1714,6 +1712,8 @@ export default class CanvasEffect extends PIXI.Container {
         ),
       ];
     }
+
+    this.updateElevation();
   }
 
   _createShapes() {
