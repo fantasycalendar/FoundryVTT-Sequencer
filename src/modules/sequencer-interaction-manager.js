@@ -360,7 +360,9 @@ export const EffectPlayer = {
           ...offsetData,
         });
       }
-    } else {
+    }
+
+    if (!settings.Dragging || (settings.Dragging && settings.moveTowards)) {
       effect.scale(settings.scale);
       if (settings.scaleIn > 0)
         effect.scaleIn(0, settings.scaleIn, { ease: "easeInOutSine" });
