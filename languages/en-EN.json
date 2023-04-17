@@ -116,7 +116,8 @@
       "ButtonFilepath": "Filepath",
       "ButtonDatabasePath": "Database",
       "ShowAllRanges": "Show all ranges",
-      "ShowSubLists": "Show sub lists"
+      "ShowSubLists": "Show sub lists",
+      "ListView": "List View"
     },
 
     "Setting": {

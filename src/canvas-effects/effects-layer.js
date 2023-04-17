@@ -190,11 +190,11 @@ export class SequencerInterfaceLayer extends InteractionLayer {
       for (const shape of Object.values(effect.shapes)) {
         boundingBox = shape.getLocalBounds();
         dimensions = {
-          x: Math.max(
+          x: Math.min(
             dimensions.x,
             effect.position.x + boundingBox.x * shape.scale.x
           ),
-          y: Math.max(
+          y: Math.min(
             dimensions.y,
             effect.position.y + boundingBox.y * shape.scale.y
           ),
@@ -206,8 +206,6 @@ export class SequencerInterfaceLayer extends InteractionLayer {
         };
       }
     }
-
-    console.log(dimensions);
 
     const rotation = Math.normalizeRadians(
       effect.rotationContainer.rotation +

@@ -47,6 +47,40 @@ export const easeFunctions = {
   easeInOutBounce: easeInOutBounce,
 };
 
+export const EASE = {
+  LINEAR: "linear",
+  SINE_IN: "easeInSine",
+  SINE_OUT: "easeOutSine",
+  SINE_IN_OUT: "easeInOutSine",
+  QUAD_IN: "easeInQuad",
+  QUAD_OUT: "easeOutQuad",
+  QUAD_IN_OUT: "easeInOutQuad",
+  CUBIC_IN: "easeInCubic",
+  CUBIC_OUT: "easeOutCubic",
+  CUBIC_IN_OUT: "easeInOutCubic",
+  QUART_IN: "easeInQuart",
+  QUART_OUT: "easeOutQuart",
+  QUART_IN_OUT: "easeInOutQuart",
+  QUINT_IN: "easeInQuint",
+  QUINT_OUT: "easeOutQuint",
+  QUINT_IN_OUT: "easeInOutQuint",
+  EXPO_IN: "easeInExpo",
+  EXPO_OUT: "easeOutExpo",
+  EXPO_IN_OUT: "easeInOutExpo",
+  CIRC_IN: "easeInCirc",
+  CIRC_OUT: "easeOutCirc",
+  CIRC_IN_OUT: "easeInOutCirc",
+  BACK_IN: "easeInBack",
+  BACK_OUT: "easeOutBack",
+  BACK_IN_OUT: "easeInOutBack",
+  ELASTIC_IN: "easeInElastic",
+  ELASTIC_OUT: "easeOutElastic",
+  ELASTIC_IN_OUT: "easeInOutElastic",
+  BOUNCE_IN: "easeInBounce",
+  BOUNCE_OUT: "easeOutBounce",
+  BOUNCE_IN_OUT: "easeInOutBounce",
+};
+
 function linear(x) {
   return x;
 }

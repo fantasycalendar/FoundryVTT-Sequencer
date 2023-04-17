@@ -360,23 +360,45 @@ class AnimationSection extends Section {
 
       if (this._snapToGrid) targetLoc = this._snapLocationToGrid(targetLoc);
 
-      animData.attributes.push({
-        name: "rotationTowards",
-        offset: offset,
-        origin: this._originObject,
-        originLocation: targetLoc,
-        target:
-          this._rotateTowards.target?.object ?? this._rotateTowards.target,
-        towardsCenter: this._rotateTowards.towardsCenter,
-        from: false,
-        to: false,
-        progress: 0,
-        done: false,
-        duration: this._rotateTowards.duration,
-        durationDone: 0,
-        delay: this._rotateTowards.delay,
-        ease: this._rotateTowards.ease,
-      });
+      if (this._originObject instanceof TokenDocument) {
+        setTimeout(async () => {
+          let target =
+            this._rotateTowards.target?.object ?? this._rotateTowards.target;
+          if (this._rotateTowards.towardsCenter) {
+            target = target?.center ?? target;
+          }
+          let ray = new Ray(targetLoc, target);
+          let angle = (ray.angle * 180) / Math.PI - 90;
+          angle += offset;
+          await this._updateObject(
+            this._originObject,
+            { rotation: angle },
+            this._rotateTowards.duration > 0,
+            {
+              duration: this._rotateTowards.duration,
+              easing: this._rotateTowards.ease,
+            }
+          );
+        }, this._rotateTowards.delay ?? 0);
+      } else {
+        animData.attributes.push({
+          name: "rotationTowards",
+          offset: offset,
+          origin: this._originObject,
+          originLocation: targetLoc,
+          target:
+            this._rotateTowards.target?.object ?? this._rotateTowards.target,
+          towardsCenter: this._rotateTowards.towardsCenter,
+          from: false,
+          to: false,
+          progress: 0,
+          done: false,
+          duration: this._rotateTowards.duration,
+          durationDone: 0,
+          delay: this._rotateTowards.delay,
+          ease: this._rotateTowards.ease,
+        });
+      }
 
       let rotateDuration =
         this._rotateTowards.duration + this._rotateTowards.delay;
@@ -388,17 +410,26 @@ class AnimationSection extends Section {
     if (this._fadeIn) {
       let to = lib.is_real_number(this._opacity) ? this._opacity : 1.0;
 
-      animData.attributes.push({
-        name: "alpha",
-        from: 0.0,
-        to: to,
-        progress: 0,
-        done: false,
-        duration: this._fadeIn.duration,
-        durationDone: 0,
-        delay: this._fadeIn.delay,
-        ease: this._fadeIn.ease,
-      });
+      if (this._originObject instanceof TokenDocument) {
+        setTimeout(async () => {
+          await this._updateObject(this._originObject, { alpha: to }, true, {
+            duration: this._fadeIn.duration,
+            easing: this._fadeIn.ease,
+          });
+        }, this._fadeIn.delay ?? 0);
+      } else {
+        animData.attributes.push({
+          name: "alpha",
+          from: 0.0,
+          to: to,
+          progress: 0,
+          done: false,
+          duration: this._fadeIn.duration,
+          durationDone: 0,
+          delay: this._fadeIn.delay,
+          ease: this._fadeIn.ease,
+        });
+      }
 
       let fadeDuration = this._fadeIn.duration + this._fadeIn.delay;
 
@@ -439,17 +470,33 @@ class AnimationSection extends Section {
         }
       }
 
-      animData.attributes.push({
-        name: "rotation",
-        from: from,
-        to: to,
-        progress: 0,
-        done: false,
-        duration: this._rotateIn.duration,
-        durationDone: 0,
-        delay: this._rotateIn.delay,
-        ease: this._rotateIn.ease,
-      });
+      if (this._originObject instanceof TokenDocument) {
+        setTimeout(async () => {
+          if (this._originObject.rotation !== from) {
+            await this._updateObject(
+              this._originObject,
+              { rotation: from },
+              false
+            );
+          }
+          await this._updateObject(this._originObject, { rotation: to }, true, {
+            duration: this._rotateIn.duration,
+            easing: this._rotateIn.ease,
+          });
+        }, this._rotateIn.delay ?? 0);
+      } else {
+        animData.attributes.push({
+          name: "rotation",
+          from: from,
+          to: to,
+          progress: 0,
+          done: false,
+          duration: this._rotateIn.duration,
+          durationDone: 0,
+          delay: this._rotateIn.delay,
+          ease: this._rotateIn.ease,
+        });
+      }
 
       let rotateDuration = this._rotateIn.duration + this._rotateIn.delay;
 
@@ -500,12 +547,14 @@ class AnimationSection extends Section {
       overallDuration =
         overallDuration > moveDuration ? overallDuration : moveDuration;
 
-      if (
-        !this._duration &&
-        !this._moveSpeed &&
-        this._moveTowards.ease === "linear"
-      ) {
-        await this._updateObject(this._originObject, targetLocation, true);
+      if (this._originObject instanceof TokenDocument) {
+        setTimeout(async () => {
+          await this._updateObject(this._originObject, targetLocation, true, {
+            movementSpeed: this._moveSpeed,
+            duration,
+            easing: this._moveTowards.ease,
+          });
+        }, this._moveTowards.delay ?? 0);
       } else {
         if (!(duration === 0 || originalDistance === 0)) {
           animData.attributes.push({
@@ -530,17 +579,26 @@ class AnimationSection extends Section {
         ? this._opacity
         : this._originObject.alpha ?? 1.0;
 
-      animData.attributes.push({
-        name: "alpha",
-        from: from,
-        to: 0.0,
-        progress: 0,
-        done: false,
-        duration: this._fadeOut.duration,
-        durationDone: 0,
-        delay: overallDuration - this._fadeOut.duration,
-        ease: this._fadeOut.ease,
-      });
+      if (this._originObject instanceof TokenDocument) {
+        setTimeout(async () => {
+          await this._updateObject(this._originObject, { alpha: 0 }, true, {
+            duration: this._fadeOut.duration,
+            easing: this._fadeOut.ease,
+          });
+        }, this._fadeOut.delay ?? 0);
+      } else {
+        animData.attributes.push({
+          name: "alpha",
+          from: from,
+          to: 0.0,
+          progress: 0,
+          done: false,
+          duration: this._fadeOut.duration,
+          durationDone: 0,
+          delay: overallDuration - this._fadeOut.duration,
+          ease: this._fadeOut.ease,
+        });
+      }
 
       let fadeOutDuration = this._fadeOut.duration + this._fadeOut.delay;
 
@@ -588,17 +646,33 @@ class AnimationSection extends Section {
         }
       }
 
-      animData.attributes.push({
-        name: "rotation",
-        from: from,
-        to: to,
-        progress: 0,
-        done: false,
-        duration: this._rotateOut.duration,
-        durationDone: 0,
-        delay: overallDuration - this._rotateOut.duration,
-        ease: this._rotateOut.ease,
-      });
+      if (this._originObject instanceof TokenDocument) {
+        setTimeout(async () => {
+          if (this._originObject.rotation !== from) {
+            await this._updateObject(
+              this._originObject,
+              { rotation: from },
+              false
+            );
+          }
+          await this._updateObject(this._originObject, { rotation: to }, true, {
+            duration: this._rotateOut.duration,
+            easing: this._rotateOut.ease,
+          });
+        }, this._rotateOut.delay ?? 0);
+      } else {
+        animData.attributes.push({
+          name: "rotation",
+          from: from,
+          to: to,
+          progress: 0,
+          done: false,
+          duration: this._rotateOut.duration,
+          durationDone: 0,
+          delay: overallDuration - this._rotateOut.duration,
+          ease: this._rotateOut.ease,
+        });
+      }
 
       let rotateOutDuration = this._rotateOut.duration + this._rotateOut.delay;
 
@@ -632,7 +706,7 @@ class AnimationSection extends Section {
         }
         if (this._snapToGrid)
           targetLocation = this._snapLocationToGrid(targetLocation);
-        await this._updateObject(this._originObject, targetLocation);
+        await this._updateObject(this._originObject, targetLocation, false);
       }, this._teleportTo.delay);
       if (overallDuration <= this._teleportTo.delay) {
         this._waitUntilFinished = true;
@@ -674,9 +748,9 @@ class AnimationSection extends Section {
     }
 
     if (Object.keys(updateAttributes).length) {
-      setTimeout(async () => {
-        await this._updateObject(this._originObject, updateAttributes);
-      }, 1);
+      await lib.wait(1);
+      await this._updateObject(this._originObject, updateAttributes);
+      await lib.wait(1);
     }
 
     return new Promise(async (resolve) => {

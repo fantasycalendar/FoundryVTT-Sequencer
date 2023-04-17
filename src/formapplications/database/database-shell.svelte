@@ -24,7 +24,7 @@
   const metadata = databaseStore.metadata;
   const allRanges = databaseStore.allRanges;
   const subLists = databaseStore.subLists;
-  const treeView = databaseStore.treeView;
+  const listView = databaseStore.listView;
   const visibleTreeStore = databaseStore.visibleTreeStore;
   const search = databaseStore.search;
   const cleanSearchStore = databaseStore.cleanSearchStore;
@@ -77,32 +77,32 @@
 			<label class="all-ranges-label" for="database-all-ranges">{localize("SEQUENCER.Database.ShowAllRanges")}</label>
 			<input bind:checked={$subLists} class="ml-2" id="include-sub-lists" type="checkbox">
 			<label class="all-ranges-label" for="include-sub-lists">{localize("SEQUENCER.Database.ShowSubLists")}</label>
-			<input bind:checked={$treeView} class="ml-2" id="treeview" type="checkbox">
-			<label class="all-ranges-label" for="treeview">Tree View</label>
+			<input bind:checked={$listView} class="ml-2" id="treeview" type="checkbox">
+			<label class="all-ranges-label" for="treeview">{localize("SEQUENCER.Database.ListView")}</label>
 		</div>
 
 		<div class="sequencer-database-entries-container">
 
-			{#if $treeView}
-				<div class="sequencer-database-entries-tree">
-					<VirtualScroll
-						data={$visibleTreeStore}
-						key="fullPath"
-						let:data
-					>
-						<svelte:component this={data.class} {data}/>
-					</VirtualScroll>
-				</div>
+			{#if $listView}
+        <div class="sequencer-database-entries">
+          <VirtualScroll
+            data={filteredEntries}
+            key="entry"
+            let:data
+          >
+            <DatabaseEntry entry={data.entry}/>
+          </VirtualScroll>
+        </div>
 			{:else}
-				<div class="sequencer-database-entries">
-					<VirtualScroll
-						data={filteredEntries}
-						key="entry"
-						let:data
-					>
-						<DatabaseEntry entry={data.entry}/>
-					</VirtualScroll>
-				</div>
+        <div class="sequencer-database-entries-tree">
+          <VirtualScroll
+            data={$visibleTreeStore}
+            key="fullPath"
+            let:data
+          >
+            <svelte:component this={data.class} {data}/>
+          </VirtualScroll>
+        </div>
 			{/if}
 
 			<div class="sequencer-database-player-container">

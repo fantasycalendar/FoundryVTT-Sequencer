@@ -222,7 +222,7 @@ export function registerSettings() {
         user_can_do("permissions-effect-create") &&
         user_can_do("permissions-sidebar-tools"),
       activeTool: "select-effect",
-      tools: [selectTool, playTool, viewer, database],
+      tools: [selectTool, playTool, database, viewer],
     });
 
     if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools"))

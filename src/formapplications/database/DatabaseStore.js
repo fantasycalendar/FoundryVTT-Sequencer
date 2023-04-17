@@ -152,7 +152,7 @@ const databaseStore = {
   metadata: writable(false),
   allRanges: writable(false),
   subLists: writable(false),
-  treeView: writable(false),
+  listView: writable(false),
   packStore: packStore,
   selectedPackStore: selectedPackStore,
   visibleTreeStore: visibleTreeStore,
@@ -174,6 +174,10 @@ databaseStore.allRanges.subscribe(() => {
 });
 
 databaseStore.subLists.subscribe(() => {
+  filterFlattenedEntries();
+});
+
+databaseStore.selectedPackStore.subscribe(() => {
   filterFlattenedEntries();
 });
 

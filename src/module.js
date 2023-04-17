@@ -5,7 +5,7 @@ import registerLayers from "./layers.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "../typings/typings.js";
 import { registerSocket } from "./sockets.js";
-import { registerEase } from "./canvas-effects/ease.js";
+import { EASE, easeFunctions, registerEase } from "./canvas-effects/ease.js";
 
 import Sequence from "./modules/sequencer.js";
 import SequencerDatabase from "./modules/sequencer-database.js";
@@ -29,9 +29,10 @@ import runMigrations from "./migrations.js";
 
 Hooks.once("init", async function () {
   if (!game.modules.get("socketlib")?.active) return;
-  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
-    CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
-  )?.active;
+  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = false;
+  //   !!game.modules.get(
+  //   CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
+  // )?.active;
   initialize_module();
 });
 
@@ -48,6 +49,12 @@ Hooks.once("ready", async function () {
     throw new Error(
       "Sequencer requires the SocketLib module to be active and will not work without it!"
     );
+  }
+
+  for (const [name, func] of Object.entries(easeFunctions)) {
+    if (!CanvasAnimation[name]) {
+      CanvasAnimation[name] = func;
+    }
   }
 
   await runMigrations();
@@ -90,6 +97,9 @@ function initialize_module() {
     SectionManager: new SequencerSectionManager(),
     registerEase: registerEase,
     BaseSection: Section,
+    CONSTANTS: {
+      EASE,
+    },
     Helpers: {
       wait: lib.wait,
       clamp: lib.clamp,
