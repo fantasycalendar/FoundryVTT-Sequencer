@@ -5,10 +5,9 @@ With this guide, we'll be creating the following effect:
 ![Firebolt missing and then hitting](../images/firebolt-tutorial/firebolt.gif)
 
 For this guide to work, you'll need the following modules installed:
-
-- [Midi Quality of Life Improvements](https://foundryvtt.com/packages/midi-qol/)
-- [Advanced Macros](https://foundryvtt.com/packages/advanced-macros)
-- [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
+* [Midi Quality of Life Improvements](https://foundryvtt.com/packages/midi-qol/)
+* [Advanced Macros](https://foundryvtt.com/packages/advanced-macros)
+* [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
 
 ## Initial setup
 
@@ -69,7 +68,6 @@ As you can see, all of these are very useful to help us determine the who, what,
 ## Creating The Macro
 
 **Steps:**
-
 1. [Determine the caster](#1-determine-the-caster)
 2. [Start on the Sequence](#2-start-on-the-sequence)
 3. [Add the Effect](#3-add-the-effect)
@@ -100,7 +98,7 @@ Start by creating a new sequence:
 ```js
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
-new Sequence();
+new Sequence()
 ```
 
 <hr/>
@@ -112,7 +110,8 @@ Then add an effect to it:
 ```js
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
-new Sequence().effect();
+new Sequence()
+    .effect()
 ```
 
 <hr/>
@@ -125,10 +124,8 @@ Let's add the Fire Bolt path to the effect - your effect might be located somewh
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
-  .effect()
-  .file(
-    "modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm"
-  );
+    .effect()
+        .file("modules/JB2A_DnD5e-0.2.1/Library/Cantrip/Fire_Bolt/FireBolt_01_Regular_Orange_30ft_1600x400.webm")
 ```
 
 However, if you want to get fancy you can instead use the **Sequencer Database path** instead. You can get the Database Path to the firebolt by simply clicking on this button:
@@ -146,7 +143,9 @@ Paste that into the `.file()` section, so it looks like this:
 ```js
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
-new Sequence().effect().file("jb2a.fire_bolt.orange");
+new Sequence()
+    .effect()
+        .file("jb2a.fire_bolt.orange")
 ```
 
 <hr/>
@@ -158,7 +157,10 @@ Now, let's make it play from the token who used the item:
 ```js
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
-new Sequence().effect().file("jb2a.fire_bolt.orange").atLocation(tokenD);
+new Sequence()
+    .effect()
+        .file("jb2a.fire_bolt.orange")
+        .atLocation(tokenD)
 ```
 
 <hr/>
@@ -173,13 +175,13 @@ Then, let's make the effect **reach** towards the target:
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
-  .effect()
-  .file("jb2a.fire_bolt.orange")
-  .atLocation(tokenD)
-  .stretchTo(args[0].targets[0]);
+    .effect()
+        .file("jb2a.fire_bolt.orange")
+        .atLocation(tokenD)
+        .stretchTo(args[0].targets[0])
 ```
 
-(_Note:_ the reason why we're using `.stretchTo()` here is because JB2A's projectiles already move towards the target inside of the effect itself)
+(*Note:* the reason why we're using `.stretchTo()` here is because JB2A's projectiles already move towards the target inside of the effect itself)
 
 <hr/>
 
@@ -187,7 +189,7 @@ new Sequence()
 
 But what if the attack missed?! No worries, the Sequencer can handle that. Just add `.missed(args[0].hitTargets.length === 0)` to it.
 
-What this means is that if there are tokens inside of `hitTargets` (as in, the attack DID hit something), it's false, meaning the effect _should_ hit the target.
+What this means is that if there are tokens inside of `hitTargets` (as in, the attack DID hit something), it's false, meaning the effect *should* hit the target.
 
 But if there are no tokens in `hitTargets`, that means that the attack missed, so it will be true, meaning the effect will target a random square around the target.
 
@@ -195,11 +197,11 @@ But if there are no tokens in `hitTargets`, that means that the attack missed, s
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
-  .effect()
-  .file("jb2a.fire_bolt.orange")
-  .atLocation(tokenD)
-  .stretchTo(args[0].targets[0])
-  .missed(args[0].hitTargets.length === 0);
+    .effect()
+        .file("jb2a.fire_bolt.orange")
+        .atLocation(tokenD)
+        .stretchTo(args[0].targets[0])
+        .missed(args[0].hitTargets.length === 0)
 ```
 
 <hr/>
@@ -212,12 +214,12 @@ Now, you just need to finish off with `.play()`!
 let tokenD = canvas.tokens.get(args[0].tokenId);
 
 new Sequence()
-  .effect()
-  .file("jb2a.fire_bolt.orange")
-  .atLocation(tokenD)
-  .stretchTo(args[0].targets[0])
-  .missed(args[0].hitTargets.length === 0)
-  .play();
+    .effect()
+        .file("jb2a.fire_bolt.orange")
+        .atLocation(tokenD)
+        .stretchTo(args[0].targets[0])
+        .missed(args[0].hitTargets.length === 0)
+    .play()
 ```
 
 ## Now target a token, cast the spell (DO NOT CLICK THE MACRO), and ta-da! You have a Fire Bolt!

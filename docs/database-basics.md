@@ -7,7 +7,7 @@ All of the methods are listed in the [Sequencer Database wiki article](database/
 You can open database viewer by calling:
 
 ```js
-Sequencer.DatabaseViewer.show();
+Sequencer.DatabaseViewer.show()
 ```
 
 or by pressing this button:
@@ -34,20 +34,19 @@ Registering files is as easy as shown below:
 const database = {
   effects: {
     generic: {
-      explosions:
-        "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm",
-    },
+      explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
+    }
   },
   sounds: {
     generic: {
       explosions: [
         "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
         "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_02.ogg",
-        "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_03.ogg",
-      ],
-    },
-  },
-};
+        "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_03.ogg"
+      ]
+    }
+  }
+}
 
 Hooks.on("sequencerReady", () => {
   Sequencer.Database.registerEntries("your_module_name", database);
@@ -67,11 +66,11 @@ In the above example, I registered one explosion effect and three sounds, which 
 ```js
 new Sequence()
   .effect()
-  .file("your_module_name.effects.generic.explosions")
-  .atLocation(token)
-  .sound()
-  .file("your_module_name.sounds.generic.explosions")
-  .play();
+    .file("your_module_name.effects.generic.explosions")
+    .atLocation(token)
+    .sound()
+    .file("your_module_name.sounds.generic.explosions")
+  .play()
 ```
 
 This will play the explosion effect on the selected token, and play one of the sounds in the list, which is picked randomly. If `sounds.generic.explosions` was just one file, it would play just that one sound.
@@ -85,14 +84,12 @@ const database = {
       explosions: {
         red: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_red_01.webm",
         blue: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_blue_01.webm",
-        green:
-          "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_green_01.webm",
-        purple:
-          "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_purple_01.webm",
-      },
-    },
-  },
-};
+        green: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_green_01.webm",
+        purple: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_purple_01.webm"
+      }
+    }
+  }
+}
 ```
 
 A user could put this into the effect: `your_module_name.effects.generic.explosions` and the Sequencer would pick one random explosion from your colors.
@@ -105,15 +102,12 @@ In addition, if you define your structure like this:
 const database = {
   fire_bolt: {
     dark_red: {
-      "30ft":
-        "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
-      "60ft":
-        "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
-      "90ft":
-        "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm",
-    },
-  },
-};
+      "30ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
+      "60ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
+      "90ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm"
+    }
+  }
+}
 ```
 
 This will make it so that if you pass `your_module_name.fire_bolt.dark_red` to an effect in the Sequencer, and the effect has a source and a target, the Sequencer will determine the best one to use for the distance between the source and the target.
@@ -140,29 +134,24 @@ In this case, you simply need to define a `_templates` section at the start of y
 
 ```js
 const database = {
-  _templates: {
-    // Grid size, start point, end point
-    default: [200, 0, 0],
-    ranged: [200, 200, 200],
+  _templates: { // Grid size, start point, end point
+    "default": [200, 0, 0],
+    "ranged": [200, 200, 200]
   },
   effects: {
     fire_bolt: {
       dark_red: {
         _template: "ranged",
-        "30ft":
-          "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
-        "60ft":
-          "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
-        "90ft":
-          "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm",
-      },
+        "30ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_30ft_1600x400.webm",
+        "60ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_60ft_2800x400.webm",
+        "90ft": "modules/jb2a_patreon/Library/Cantrip/Fire_Bolt/FireBolt_01_Dark_Red_90ft_4000x400.webm"
+      }
     },
     generic: {
-      explosions:
-        "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm",
-    },
+      explosions: "modules/your_module_name/Library/VFX/Generic/Explosion/explosion_01.webm"
+    }
   },
-};
+}
 ```
 
 If there's no template found (like with `effects.generic.explosion`), it will use the "default" entry in the `_templates`.
@@ -184,11 +173,11 @@ const database = {
   complete: {
     _markers: {
       loop: { start: 1533, end: 5566 },
-      forcedEnd: 6566,
+      forcedEnd: 6566
     },
-    blue: "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_03_Regular_Blue_Complete_400x400.webm",
-  },
-};
+    blue: "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_03_Regular_Blue_Complete_400x400.webm"
+  }
+}
 ```
 
 This will cause the effect to be able to be looped without having to split the animation into "in", "loop", and "out" animations. The system will recognize the times given, and cause the effect to loop between 1533ms (at the 1.533 seconds mark of the effect) and 5566ms (5.566 seconds into the effect), and stay within that loop for as long as the effect persists.
@@ -210,17 +199,16 @@ const database = {
   sounds: {
     generic: {
       _timeRange: [0, 100],
-      explosion:
-        "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
+      explosion: "modules/your_module_name/Library/SFX/Generic/Explosion/explosion_01.ogg",
     },
     steps: [
       { file: "Music/Sound_Effects/Steps.wav", _timeRange: [0, 100] },
       { file: "Music/Sound_Effects/Steps.wav", _timeRange: [120, 220] },
       { file: "Music/Sound_Effects/Steps.wav", _timeRange: [240, 340] },
       { file: "Music/Sound_Effects/Steps.wav", _timeRange: [360, 480] },
-    ],
-  },
-};
+    ]
+  }
+}
 ```
 
 ## Timestamps within files
@@ -236,22 +224,29 @@ Whenever a timestamp is reached in the playback of the effect, the `sequencerEff
 ```js
 const database = {
   dagger: {
-    _timestamps: [1000],
-    white:
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Dagger01_01_Regular_White_30ft_1600x400.webm",
+    _timestamps: [
+      1000
+    ],
+    white: "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Dagger01_01_Regular_White_30ft_1600x400.webm"
   },
   halberd: {
-    _timestamps: [[1000], [1250], [1250, 1350], [1250], [1250]],
-    dark_orangepurple: [
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_01_Dark_OrangePurple_800x600.webm",
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_02_Dark_OrangePurple_800x600.webm",
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_03_Dark_OrangePurple_800x600.webm",
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_04_Dark_OrangePurple_800x600.webm",
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_05_Dark_OrangePurple_800x600.webm",
-      "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_06_Dark_OrangePurple_800x600.webm",
+    _timestamps: [
+      [1000],
+      [1250],
+      [1250, 1350],
+      [1250],
+      [1250]
     ],
-  },
-};
+    dark_orangepurple: [
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_01_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_02_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_03_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_04_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_05_Dark_OrangePurple_800x600.webm',
+      'modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Halberd01_06_Dark_OrangePurple_800x600.webm'
+    ]
+  }
+}
 ```
 
 ## Flipbook textures
@@ -260,7 +255,7 @@ Another feature of the database is being able to bundle up files into flipbook a
 
 If you define `_flipbook: true` anywhere near files, they will become a single file that will animate accordingly. This is great for performance, since Foundry keeps all the textures in memory, which means that duplicating the same effect 100 times will cost almost as much as just 10.
 
-The default FPS for these assets is 24 frames per second.
+The default FPS for these assets is 24 frames per second. 
 
 ```js
 const database = {
@@ -268,10 +263,11 @@ const database = {
     file: [
       "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00000.webp",
       "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00001.webp",
-      ..."flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00094.webp",
-      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00095.webp",
+      ...
+      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00094.webp",
+      "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00095.webp"
     ],
-    _flipbook: true,
+    _flipbook: true
   },
-};
+}
 ```

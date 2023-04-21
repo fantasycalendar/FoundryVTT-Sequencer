@@ -7,14 +7,13 @@ This part of the Sequencer acts **on** objects in the scene, such as tokens, til
 ### How do I use this?
 
 When creating an animation section, you can assemble these methods like this:
-
 ```js
 new Sequence()
-  .animation()
-  .on(token)
-  .fadeIn(500)
-  .teleportTo({ x: 100, y: 0 })
-  .play();
+    .animation()
+        .on(token)
+        .fadeIn(500)
+        .teleportTo({ x: 100, y: 0 })
+    .play()
 ```
 
 <hr/>
@@ -56,7 +55,6 @@ It is highly recommended that you do not load too many files at the same time, a
 Causes the section not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect or sound to play.
 
 Below is an example of a function used in this method, which would cause this effect or sound to only be played about 50% of the time.
-
 ```js
 .playIf(() => {
 	return Math.random() < 0.5;
@@ -270,7 +268,6 @@ Check out what easings are available here: https://easings.net/
 `.tint()` or `.tint(hexadecimal)` or `.tint(decimal)`
 
 Examples:
-
 - `.tint("#FF0000")` - Red tint
 - `.tint(0x0000FF)` - Blue tint
 
@@ -287,3 +284,5 @@ Causes the animated object to be hidden (or visible, if the parameter passed to 
 `.show()` or `.show(boolean)`
 
 Causes the animated object to be visible (or hidden, if the parameter passed to it is `false`)
+
+

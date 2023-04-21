@@ -7,26 +7,25 @@ This part of the Sequencer allows you to easily display scrolling text on the ca
 ### How do I use this?
 
 When creating a scrolling text section, you can assemble these methods like this:
-
-```js
-new Sequence().scrollingText(token, "My Text").play();
-```
-
-or more involved
-
 ```js
 new Sequence()
-  .scrollingText()
-  .atLocation(token, { randomOffset: true })
-  .text("My text", {
-    fill: "#ffffff",
-    fontSize: 35,
-    fontWeight: "bold",
-    lineJoin: "round",
-    strokeThickness: 3,
-  })
-  .duration(1000)
-  .play();
+    .scrollingText(token, "My Text")
+    .play()
+```
+or more involved
+```js
+new Sequence()
+    .scrollingText()
+        .atLocation(token, { randomOffset: true })
+        .text("My text", {
+          "fill": "#ffffff",
+          "fontSize": 35,
+          "fontWeight": "bold",
+          "lineJoin": "round",
+          "strokeThickness": 3
+        })
+        .duration(1000)
+    .play()
 ```
 
 <hr/>
@@ -37,7 +36,7 @@ new Sequence()
 
 Calling this method will cause the scrolling text to finish running before starting the next section.
 
-Passing a number as a parameter will cause the scrolling text to wait for the given number (in ms) after finishing playing before continuing to the next section.
+Passing a number as a parameter will cause the scrolling text or sound to wait for the given number (in ms) after finishing playing before continuing to the next section.
 
 If given a negative number, the Sequencer will continue to the next section early but continue playing the scrolling text.
 
@@ -63,10 +62,9 @@ As an option, you can give it `inRepeatDelayMin` for a static delay between repe
 
 `.playIf(boolean)` or `.playIf(inFunction)`
 
-Causes the scrolling text not to play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the scrolling text or sound to play.
+Causes the scrolling text not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the scrolling text or sound to play.
 
 Below is an example of a function used in this method, which would cause this scrolling text to only be played about 50% of the time.
-
 ```js
 .playIf(() => {
     return Math.random() < 0.5;
@@ -104,7 +102,6 @@ Accepts a single user ID or username (case-sensitive), or an array thereof.
 `.atLocation(object|string, object)`
 
 Examples:
-
 ```js
 .atLocation(token)
 .atLocation({ x: 0, y: 0 })
@@ -113,13 +110,11 @@ Examples:
 ```
 
 A smart method that can take:
-
 - Reference to a token
 - Reference to a template
 - Direct coordinate on the canvas
 
 Also supports a second options object that accepts:
-
 - `cacheLocation: boolean` - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
@@ -131,13 +126,17 @@ Also supports a second options object that accepts:
 
 ```js
 const style = {
-  fill: "red",
-  fontFamily: "Arial Black",
-  fontSize: 28,
-  strokeThickness: 4,
-};
+    "fill": "red",
+    "fontFamily": "Arial Black",
+    "fontSize": 28,
+    "strokeThickness": 4
+}
 
-new Sequence().scrollingText().atLocation(token).text("My Text", style).play();
+new Sequence()
+   .scrollingText()
+      .atLocation(token)
+      .text("My Text", style)
+   .play()
 ```
 
 Sets the text and styling of the scrolling text.
@@ -145,6 +144,7 @@ Sets the text and styling of the scrolling text.
 <a>https://pixijs.io/pixi-text-style/</a>
 
 Use the JSON object as the options parameter for `.text()`
+
 
 ## Anchor
 
@@ -154,6 +154,7 @@ Sets the placement of the text's location on the location.
 
 You can either set this with Foundry's native `CONST.TEXT_ANCHOR_POINTS`, or by giving it any of `CENTER`, `BOTTOM`, `TOP`, `LEFT`, or `RIGHT`.
 
+
 ## Direction
 
 `.direction(string|number)`
@@ -162,7 +163,8 @@ Sets the direction the text's movement.
 
 You can either set this with Foundry's native `CONST.TEXT_ANCHOR_POINTS`, or by giving it any of `CENTER`, `BOTTOM`, `TOP`, `LEFT`, or `RIGHT`.
 
-## Jitter
+
+## jitter
 
 `.jitter(number)`
 
