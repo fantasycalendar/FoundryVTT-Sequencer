@@ -3,17 +3,15 @@
 You can access the global Sequencer Effect Manager through:
 
 ```js
-Sequencer.Player;
+Sequencer.Player
 ```
 
 ## Show Effect Player
 
 You can either call this method:
-
 ```js
-Sequencer.Player.show();
+Sequencer.Player.show()
 ```
-
 Or press this button
 
 ![Image showing the button to open the Effect Player](https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/master/images/effect-player-button.jpg)

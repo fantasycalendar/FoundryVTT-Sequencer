@@ -5,11 +5,10 @@ With this guide, we'll be creating the following effect:
 ![Shield spell being cast and expiring with animations](../images/shield.gif)
 
 For this guide to work, you'll need the following modules installed:
-
-- [Times Up](https://foundryvtt.com/packages/times-up/)
-- [Dynamic Active Effects](https://foundryvtt.com/packages/dae)
-- [Advanced Macros](https://foundryvtt.com/packages/advanced-macros)
-- [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
+* [Times Up](https://foundryvtt.com/packages/times-up/)
+* [Dynamic Active Effects](https://foundryvtt.com/packages/dae)
+* [Advanced Macros](https://foundryvtt.com/packages/advanced-macros)
+* [JB2A - Jules & Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
 
 ## Shield Item & Effect
 
@@ -28,7 +27,6 @@ As you can see, the dynamic active effect ends at the end of the caster's next t
 Similar to the [Fire Bolt tutorial](tutorials/advanced-fire-bolt.md), we'll be using the `args` parameter given to the macro by Advanced Macros. Read that tutorial to get an understanding of what that means.
 
 **Steps:**
-
 1. [If starting or ending](_#1-If-starting-or-ending)
 2. [Determine the caster](_#2-Determine-the-caster)
 3. [Start on the Sequence](_#3-Start-on-the-Sequence)
@@ -48,12 +46,12 @@ Similar to the [Fire Bolt tutorial](tutorials/advanced-fire-bolt.md), we'll be u
 Since we're making an effect that can last for several rounds, Dynamic Active Effects changes the `args` a bit. If the effect lasts for a duration, `args[0]` can be `on` or `off`. "on" means the dynamic active effect just started and was applied to a target, and "off" means that the dynamic active effect ended on the target. With that in mind, we can start with this:
 
 ```js
-if (args[0] === "on") {
-  // If the dynamic active effect started
+if(args[0] === "on"){
+    // If the dynamic active effect started
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -66,12 +64,12 @@ To get the token who used the item, you just need to:
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
+if(args[0] === "on"){
+    // If the dynamic active effect started
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -86,13 +84,15 @@ Similar to the fire bolt we created before, we'll need to start by creating a ne
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence().effect().file("jb2a.shield.01.intro.blue");
+if(args[0] === "on"){
+    // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -105,13 +105,16 @@ Then, all we need to do is attach the effect to the caster with `attachTo` - thi
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence().effect().file("jb2a.shield.01.intro.blue").attachTo(tokenD);
+if(args[0] === "on"){
+    // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -121,21 +124,22 @@ if (args[0] === "off") {
 
 The effect is a bit too big for the token, so I've also added `scale(0.5)`. In addition, since the effect we're playing is just the **intro**, we'll want to `waitUntilFinished`, as the next effect we're going to create is the **looping** shield effect.
 
+
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500);
+if(args[0] === "on"){
+    // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -150,22 +154,22 @@ As it is set up almost exactly the same as the previous effect - the only thing 
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500)
-    .effect()
-    .file("jb2a.shield.01.loop.blue")
-    .attachTo(tokenD)
-    .scale(0.5);
+if(args[0] === "on"){
+    // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
+        .effect()
+            .file("jb2a.shield.01.loop.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -178,24 +182,24 @@ As we don't want the loop shield effect to end after it has finished one loop, w
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500)
-    .effect()
-    .file("jb2a.shield.01.loop.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .persist()
-    .name(`Shield-${tokenD.id}`);
+if(args[0] === "on"){
+    // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
+        .effect()
+            .file("jb2a.shield.01.loop.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .persist()
+            .name(`Shield-${tokenD.id}`)
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -208,26 +212,26 @@ Since the looping effect doesn't have a fade when it appears and disappears (bec
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500)
-    .effect()
-    .file("jb2a.shield.01.loop.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .persist()
-    .name(`Shield-${tokenD.id}`)
-    .fadeIn(300)
-    .fadeOut(300);
+if(args[0] === "on"){
+    // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
+        .effect()
+            .file("jb2a.shield.01.loop.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .persist()
+            .name(`Shield-${tokenD.id}`)
+            .fadeIn(300)
+            .fadeOut(300)
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -240,28 +244,28 @@ Last, but not least, we need to give the loop effect `extraEndDuration`. That me
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500)
-    .effect()
-    .file("jb2a.shield.01.loop.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .persist()
-    .name(`Shield-${tokenD.id}`)
-    .fadeIn(300)
-    .fadeOut(300)
-    .extraEndDuration(800)
-    .play();
+if(args[0] === "on"){
+     // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
+        .effect()
+            .file("jb2a.shield.01.loop.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .persist()
+            .name(`Shield-${tokenD.id}`)
+            .fadeIn(300)
+            .fadeOut(300)
+            .extraEndDuration(800)
+        .play()
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
+if(args[0] === "off"){
+    // If the dynamic active effect ended
 }
 ```
 
@@ -276,32 +280,29 @@ In this case, we can use the `Sequencer.EffectManager` to end the effect that is
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500)
-    .effect()
-    .file("jb2a.shield.01.loop.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .persist()
-    .name(`Shield-${tokenD.id}`)
-    .fadeIn(300)
-    .fadeOut(300)
-    .extraEndDuration(800)
-    .play();
+if(args[0] === "on"){
+     // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
+        .effect()
+            .file("jb2a.shield.01.loop.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .persist()
+            .name(`Shield-${tokenD.id}`)
+            .fadeIn(300)
+            .fadeOut(300)
+            .extraEndDuration(800)
+        .play()
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
-  Sequencer.EffectManager.endEffects({
-    name: `Shield-${tokenD.id}`,
-    object: tokenD,
-  });
+if(args[0] === "off"){
+    // If the dynamic active effect ended
+    Sequencer.EffectManager.endEffects({ name: `Shield-${tokenD.id}`, object: tokenD });
 }
 ```
 
@@ -316,39 +317,36 @@ By this point, you should be able to understand how the Sequence and effects fit
 ```js
 let tokenD = canvas.tokens.get(args[1].tokenId);
 
-if (args[0] === "on") {
-  // If the dynamic active effect started
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.intro.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .waitUntilFinished(-500)
-    .effect()
-    .file("jb2a.shield.01.loop.blue")
-    .attachTo(tokenD)
-    .scale(0.5)
-    .persist()
-    .name(`Shield-${tokenD.id}`)
-    .fadeIn(300)
-    .fadeOut(300)
-    .extraEndDuration(800)
-    .play();
+if(args[0] === "on"){
+     // If the dynamic active effect started
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.intro.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .waitUntilFinished(-500)
+        .effect()
+            .file("jb2a.shield.01.loop.blue")
+            .attachTo(tokenD)
+            .scale(0.5)
+            .persist()
+            .name(`Shield-${tokenD.id}`)
+            .fadeIn(300)
+            .fadeOut(300)
+            .extraEndDuration(800)
+        .play()
 }
 
-if (args[0] === "off") {
-  // If the dynamic active effect ended
-  Sequencer.EffectManager.endEffects({
-    name: `Shield-${tokenD.id}`,
-    object: tokenD,
-  });
+if(args[0] === "off"){
+    // If the dynamic active effect ended
+    Sequencer.EffectManager.endEffects({ name: `Shield-${tokenD.id}`, object: tokenD });
 
-  new Sequence()
-    .effect()
-    .file("jb2a.shield.01.outro_explode.blue")
-    .scale(0.5)
-    .attachTo(tokenD)
-    .play();
+    new Sequence()
+        .effect()
+            .file("jb2a.shield.01.outro_explode.blue")
+            .scale(0.5)
+            .attachTo(tokenD)
+        .play()
 }
 ```
 

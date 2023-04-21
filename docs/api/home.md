@@ -3,29 +3,24 @@
 ## Creating A New Sequence
 
 You can start a new Sequence by simply calling:
-
-```js
-new Sequence();
-```
-
-Any other methods you call on this will continue to work on the same sequence, like so:
-
 ```js
 new Sequence()
-  .thenDo(function () {
-    console.log("I'm in here.");
-  })
-  .thenDo(function () {
-    console.log("But now, I'm in here!");
-  });
+```
+Any other methods you call on this will continue to work on the same sequence, like so:
+```js
+new Sequence()
+     .thenDo(function(){
+          console.log("I'm in here.")
+     })
+     .thenDo(function(){
+          console.log("But now, I'm in here!")
+     })
 ```
 
 For module developers, by putting your module name in the Sequence like this:
-
 ```js
-new Sequence({ moduleName: "myModuleName" });
+new Sequence({ moduleName: "myModuleName" })
 ```
-
 Means that any errors will show up like this:
 
 ![Sequencer module error example](../images/error-example.jpg)
@@ -35,10 +30,10 @@ This will help you and your module's users to get to the bottom of the issue.
 In addition, you can also add `softFail` like so:
 
 ```js
-new Sequence({ moduleName: "myModuleName", softFail: true });
+new Sequence({ moduleName: "myModuleName", softFail: true })
 ```
 
-This will make sequencer consider all failures to find an effect file, sound file, or a macro a non-issue and simply continues executing the sequence, rather than halt the execution.
+This will make sequencer consider all failures to find an effect file, sound file, or a macro a non-issue and simply continues executing the sequence, rather than halt the execution. 
 
 ## Core Methods
 
@@ -65,12 +60,6 @@ Creates a sound section. Until you call any of the [core methods](#sequencer-cor
 `.scrollingText()` or `.scrollingText(inToken, inText, inTextStyles)`
 
 Creates a scrolling text section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the scrolling text section.
-
-### Canvas Pan
-
-`.canvasPan()` or `.canvasPan(inTarget, inDuration, inScale)`
-
-Creates a canvas pan section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the canvas pan section.
 
 ### Then do
 
@@ -117,24 +106,6 @@ Adds the sections from a given Sequence to this Sequence. This is useful if you 
 Returns `Promise`
 
 Causes the Sequence to play through all of its sections. Returns a `Promise` which resolves when all sections have played.
-
-You can pass an object to this method, which can contain `remote` as a boolean, like `{ remote: true }`. This will serialize the sequence, and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed.
-
-### To JSON
-
-`.toJSON()`
-
-Returns `object`.
-
-Calling this will serialize the sequence, which can be saved and reused with `.fromJSON()` (see below.) **Note:** Only sequences with effects, sounds, scrolling texts, and canvas pans can be serialized.
-
-### From JSON
-
-`.fromJSON(inObject)`
-
-Returns `Sequence`
-
-This will take a serialized sequence and reconstruct it, which can then be `.play()`ed.
 
 ### Preset
 
