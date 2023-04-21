@@ -32,3 +32,5 @@
   - [Preloader](preloader.md)
   - [Section Manager](section-manager.md)
   - [Presets](presets.md)
+  - [Hooks](hooks.md)
+  - [Helper Functions](helpers.md)
