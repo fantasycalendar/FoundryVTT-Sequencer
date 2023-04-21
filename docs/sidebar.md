@@ -22,6 +22,15 @@
   * [Sound](api/sound.md)
   * [Scrolling Text](api/scrolling-text.md)
 
+* [API](api/home.md)
+
+  * [Animation](api/animation.md)
+  * [Effect](api/effect.md)
+    * [Filters](api/filter.md)
+  * [Sound](api/sound.md)
+  * [Scrolling Text](api/scrolling-text.md)
+  * [Canvas Pan](api/canvas-pan.md)
+
 * Global
   * [Database](database.md)
   * [How to: Sequencer Database](database-basics.md)
@@ -30,3 +39,5 @@
   * [Preloader](preloader.md)
   * [Section Manager](section-manager.md)
   * [Presets](presets.md)
+  * [Hooks](hooks.md)
+  * [Helper Functions](helpers.md)
