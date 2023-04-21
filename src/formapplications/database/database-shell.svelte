@@ -10,6 +10,7 @@
   import SequencerDatabase from "../../modules/sequencer-database.js";
   import { databaseStore } from "./DatabaseStore.js";
   import * as lib from "../../lib/lib.js";
+  import CONSTANTS from "../../constants.js";
 
   const { application } = getContext("#external");
 
@@ -30,6 +31,10 @@
   const cleanSearchStore = databaseStore.cleanSearchStore;
   const searchRegex = databaseStore.searchRegex;
   const entriesStore = SequencerDatabase.entriesStore;
+
+  listView.set(game.settings.get(CONSTANTS.MODULE_NAME, "db-list-view"));
+
+  $: game.settings.set(CONSTANTS.MODULE_NAME, "db-list-view", $listView);
 
   $: {
     $entriesStore;

@@ -118,6 +118,24 @@ Returns `Promise`
 
 Causes the Sequence to play through all of its sections. Returns a `Promise` which resolves when all sections have played.
 
+You can pass an object to this method, which can contain `remote` as a boolean, like `{ remote: true }`. This will serialize the sequence, and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed.
+
+### To JSON
+
+`.toJSON()`
+
+Returns `object`.
+
+Calling this will serialize the sequence, which can be saved and reused with `.fromJSON()` (see below.) **Note:** Only sequences with effects, sounds, scrolling texts, and canvas pans can be serialized.
+
+### From JSON
+
+`.fromJSON(inObject)`
+
+Returns `Sequence`
+
+This will take a serialized sequence and reconstruct it, which can then be `.play()`ed.
+
 ### Preset
 
 `.preset("name")`

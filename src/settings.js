@@ -97,6 +97,13 @@ export function registerSettings() {
     },
   });
 
+  game.settings.register(CONSTANTS.MODULE_NAME, "db-list-view", {
+    scope: "client",
+    config: false,
+    default: false,
+    type: Boolean,
+  });
+
   const permissionLevels = [
     game.i18n.localize("SEQUENCER.Permission.Player"),
     game.i18n.localize("SEQUENCER.Permission.Trusted"),
