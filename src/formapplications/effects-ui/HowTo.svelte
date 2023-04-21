@@ -39,8 +39,8 @@
 <style lang="scss">
 
   .howto-container{
-    min-width: 300px;
-    max-width: 300px;
+    min-width: 320px;
+    max-width: 320px;
     min-height: 563px;
 
     li{

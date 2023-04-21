@@ -67,6 +67,8 @@ export default class EffectSection extends Section {
     this._playEffect = true;
   }
 
+  static niceName = "Effect";
+
   /**
    * @private
    */

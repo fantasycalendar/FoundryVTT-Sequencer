@@ -37,7 +37,7 @@ new Sequence()
 
 Calling this method will cause the scrolling text to finish running before starting the next section.
 
-Passing a number as a parameter will cause the scrolling text or sound to wait for the given number (in ms) after finishing playing before continuing to the next section.
+Passing a number as a parameter will cause the scrolling text to wait for the given number (in ms) after finishing playing before continuing to the next section.
 
 If given a negative number, the Sequencer will continue to the next section early but continue playing the scrolling text.
 
@@ -63,7 +63,7 @@ As an option, you can give it `inRepeatDelayMin` for a static delay between repe
 
 `.playIf(boolean)` or `.playIf(inFunction)`
 
-Causes the scrolling text not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the scrolling text or sound to play.
+Causes the scrolling text not to play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the scrolling text or sound to play.
 
 Below is an example of a function used in this method, which would cause this scrolling text to only be played about 50% of the time.
 
@@ -162,7 +162,7 @@ Sets the direction the text's movement.
 
 You can either set this with Foundry's native `CONST.TEXT_ANCHOR_POINTS`, or by giving it any of `CENTER`, `BOTTOM`, `TOP`, `LEFT`, or `RIGHT`.
 
-## jitter
+## Jitter
 
 `.jitter(number)`
 

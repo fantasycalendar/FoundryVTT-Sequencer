@@ -415,3 +415,150 @@ export function rotateAroundPoint(cx, cy, x, y, angle) {
     ny = cos * (y - cy) - sin * (x - cx) + cy;
   return { x: nx, y: ny };
 }
+
+export function validateAnimation(inTarget, inPropertyName, inOptions) {
+  if (typeof inPropertyName !== "string") {
+    return `inPropertyName must be of type string`;
+  }
+  if (typeof inTarget !== "string") {
+    return `inTarget must be of type string`;
+  }
+  if (!lib.is_real_number(inOptions.from)) {
+    return `inOptions.from must be of type number`;
+  }
+  if (!lib.is_real_number(inOptions.to)) {
+    return `inOptions.to must be of type number`;
+  }
+  if (!lib.is_real_number(inOptions.duration)) {
+    return `inOptions.duration must be of type number`;
+  }
+  if (inOptions?.delay !== undefined && !lib.is_real_number(inOptions.delay)) {
+    return `inOptions.delay must be of type number`;
+  }
+  if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") {
+    return `inOptions.ease must be of type string`;
+  }
+  if (
+    inOptions?.fromEnd !== undefined &&
+    typeof inOptions.fromEnd !== "boolean"
+  ) {
+    return `inOptions.fromEnd must be of type boolean`;
+  }
+  if (inOptions?.gridUnits !== undefined) {
+    if (typeof inOptions.gridUnits !== "boolean") {
+      return `inOptions.gridUnits must be of type boolean`;
+    }
+    if (
+      inOptions.gridUnits &&
+      ![
+        "position.x",
+        "position.y",
+        "scale.x",
+        "scale.y",
+        "height",
+        "width",
+      ].includes(inPropertyName)
+    ) {
+      return `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`;
+    }
+  }
+
+  return {
+    target: inTarget,
+    propertyName: inPropertyName,
+    from: inOptions?.from,
+    to: inOptions?.to,
+    duration: inOptions?.duration ?? 0,
+    delay: inOptions?.delay ?? 0,
+    ease: inOptions?.ease ?? "linear",
+    looping: false,
+    fromEnd: inOptions?.fromEnd ?? false,
+    gridUnits: inOptions?.gridUnits ?? false,
+  };
+}
+
+export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
+  if (typeof inPropertyName !== "string") {
+    return `inPropertyName must be of type string`;
+  }
+  if (typeof inTarget !== "string") {
+    return `inTarget must be of type string`;
+  }
+
+  if (!inOptions?.values) {
+    if (!inOptions?.from === undefined || !inOptions?.to === undefined) {
+      return `if inOptions.values is not set, you must provide inOptions.from and inOptions.to`;
+    }
+    if (!lib.is_real_number(inOptions.from)) {
+      return `inOptions.from must be of type number`;
+    }
+    if (!lib.is_real_number(inOptions.to)) {
+      return `inOptions.to must be of type number`;
+    }
+    inOptions.values = [inOptions?.from, inOptions?.to];
+    delete inOptions.from;
+    delete inOptions.to;
+  } else {
+    if (!Array.isArray(inOptions.values)) {
+      return `inOptions.values must be of type array`;
+    }
+    inOptions.values.forEach((value) => {
+      if (!lib.is_real_number(value)) {
+        return `values in inOptions.keys must be of type number`;
+      }
+    });
+  }
+
+  if (!lib.is_real_number(inOptions.duration)) {
+    return `inOptions.duration must be of type number`;
+  }
+
+  if (inOptions?.delay !== undefined && !lib.is_real_number(inOptions.delay)) {
+    return `inOptions.delay must be of type number`;
+  }
+  if (inOptions?.ease !== undefined && typeof inOptions.ease !== "string") {
+    return `inOptions.ease must be of type string`;
+  }
+  if (inOptions?.loops !== undefined && !lib.is_real_number(inOptions.loops)) {
+    return `inOptions.loops must be of type number`;
+  }
+  if (
+    inOptions?.pingPong !== undefined &&
+    typeof inOptions.pingPong !== "boolean"
+  ) {
+    return `inOptions.pingPong must be of type boolean`;
+  }
+  if (inOptions?.gridUnits !== undefined) {
+    if (typeof inOptions.gridUnits !== "boolean") {
+      return `inOptions.gridUnits must be of type boolean`;
+    }
+    if (
+      inOptions.gridUnits &&
+      ![
+        "position.x",
+        "position.y",
+        "scale.x",
+        "scale.y",
+        "height",
+        "width",
+      ].includes(inPropertyName)
+    ) {
+      return `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`;
+    }
+  }
+
+  return {
+    target: inTarget,
+    propertyName: inPropertyName,
+    values: inOptions?.values,
+    duration: inOptions?.duration ?? 0,
+    delay: inOptions?.delay ?? 0,
+    ease: inOptions?.ease ?? "linear",
+    looping: true,
+    loops: inOptions?.loops,
+    indefinite:
+      inOptions?.loops === undefined || !lib.is_real_number(inOptions?.loops),
+    pingPong: inOptions?.pingPong ?? false,
+    gridUnits: inOptions?.gridUnits ?? false,
+  };
+}

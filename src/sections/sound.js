@@ -3,6 +3,7 @@ import SequencerAudioHelper from "../modules/sequencer-audio-helper.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { SequencerFile, SequencerFileBase } from "../modules/sequencer-file.js";
+import CONSTANTS from "../constants.js";
 
 class SoundSection extends Section {
   constructor(inSequence, inFile = "") {
@@ -11,6 +12,8 @@ class SoundSection extends Section {
     this._volume = 0.8;
     this._overrides = [];
   }
+
+  static niceName = "Sound";
 
   /**
    * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
@@ -69,7 +72,12 @@ class SoundSection extends Section {
         playData.data?.users?.length === 1 &&
         playData.data?.users?.includes(game.userId)
       ) && !this.sequence.localOnly;
-    return SequencerAudioHelper.play(playData, push);
+
+    SequencerAudioHelper.play(playData, push);
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, this._currentWaitTime + playData.duration)
+    );
   }
 
   /**
@@ -131,8 +139,6 @@ class SoundSection extends Section {
           )
         : this._endTime * duration;
     }
-
-    duration += this._currentWaitTime;
 
     let data = {
       play: true,

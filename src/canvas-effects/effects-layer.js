@@ -458,6 +458,7 @@ export class SequencerAboveUILayer {
     });
 
     this.app.resizeTo = window;
+    this.app.stage.renderable = false;
   }
 
   static setup() {
@@ -469,10 +470,21 @@ export class SequencerAboveUILayer {
     return layer ? layer.app.stage : canvas.uiEffectsLayer;
   }
 
+  static addChild(...args) {
+    const result = this.getLayer().addChild(...args);
+    layer.app.stage.renderable = layer.app.stage.children.length > 0;
+    return result;
+  }
+
+  static sortChildren() {
+    return this.getLayer().sortChildren();
+  }
+
   static removeContainerByEffect(inEffect) {
     const child = this.getLayer().children.find((child) => child === inEffect);
     if (!child) return;
     this.getLayer().removeChild(child);
+    layer.app.stage.renderable = layer.app.stage.children.length > 0;
   }
 
   updateTransform() {

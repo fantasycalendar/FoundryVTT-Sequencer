@@ -1,12 +1,13 @@
 import SequencerAudioHelper from "./modules/sequencer-audio-helper.js";
 import CONSTANTS from "./constants.js";
 import FlagManager from "./utils/flag-manager.js";
-import SequencerScrollingTextHelper from "./modules/sequencer-scrolling-text-helper.js";
+import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
 export const SOCKET_HANDLERS = {
   PLAY_EFFECT: "playEffect",
   END_EFFECTS: "endEffects",
   UPDATE_EFFECT: "updateEffects",
+  ADD_EFFECT_ANIMATIONS: "addEffectAnimations",
   PLAY_SOUND: "playSound",
   PRELOAD: "preload",
   PRELOAD_RESPONSE: "preloadResponse",
@@ -16,6 +17,7 @@ export const SOCKET_HANDLERS = {
   REMOVE_FLAGS: "removeFlags",
   UPDATE_POSITION: "updatePosition",
   CREATE_SCROLLING_TEXT: "createScrollingText",
+  PAN_CANVAS: "panCanvas",
   RUN_SEQUENCE_LOCALLY: "runSequenceLocally",
 };
 
@@ -32,6 +34,9 @@ export function registerSocket() {
   );
   sequencerSocket.register(SOCKET_HANDLERS.UPDATE_EFFECT, (...args) =>
     Sequencer.EffectManager._updateEffect(...args)
+  );
+  sequencerSocket.register(SOCKET_HANDLERS.ADD_EFFECT_ANIMATIONS, (...args) =>
+    Sequencer.EffectManager._addEffectAnimations(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) =>
     SequencerAudioHelper.play(...args)
@@ -55,7 +60,10 @@ export function registerSocket() {
     Sequencer.EffectManager._updatePosition(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.CREATE_SCROLLING_TEXT, (data) =>
-    SequencerScrollingTextHelper.play(data)
+    SequencerFoundryReplicator._playScrollingText(data)
+  );
+  sequencerSocket.register(SOCKET_HANDLERS.PAN_CANVAS, (data) =>
+    SequencerFoundryReplicator._panCanvas(data)
   );
   sequencerSocket.register(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, (data) => {
     new Sequence().fromJSON(data).play();

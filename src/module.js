@@ -26,6 +26,7 @@ import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 import CONSTANTS from "./constants.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 import runMigrations from "./migrations.js";
+import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
 Hooks.once("init", async function () {
   if (!game.modules.get("socketlib")?.active) return;
@@ -60,6 +61,7 @@ Hooks.once("ready", async function () {
   await runMigrations();
 
   PlayerSettings.migrateOldPresets();
+  SequencerFoundryReplicator.registerHooks();
 
   InteractionManager.initialize();
 

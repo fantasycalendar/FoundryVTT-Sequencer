@@ -7,6 +7,10 @@ import Section from "../sections/section.js";
 import SequencerPresets from "./sequencer-presets.js";
 import ScrollingTextSection from "../sections/scrollingText.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import CanvasPanSection from "../sections/canvasPan.js";
+import SequenceManager from "./sequence-manager.js";
+import { get, writable } from "svelte/store";
+import CONSTANTS from "../constants.js";
 
 export default class Sequence {
   constructor(
@@ -26,6 +30,7 @@ export default class Sequence {
     this.effectIndex = 0;
     this.sectionToCreate = undefined;
     this.localOnly = false;
+    this._status = writable(CONSTANTS.STATUS.READY);
     return lib.sequence_proxy_wrap(this);
   }
 
@@ -43,14 +48,15 @@ export default class Sequence {
         data
       );
     }
-    Hooks.callAll("createSequencerSequence");
+    Hooks.callAll("createSequencerSequence", this);
     lib.debug("Initializing sections");
     for (let section of this.sections) {
       await section._initialize();
     }
+    SequenceManager.RunningSequences.add(this.id, this);
     this.effectIndex = 0;
     lib.debug("Playing sections");
-
+    this.status = CONSTANTS.STATUS.RUNNING;
     const promises = [];
     for (let section of this.sections) {
       if (section instanceof EffectSection) this.effectIndex++;
@@ -59,13 +65,18 @@ export default class Sequence {
       } else {
         promises.push(section._execute());
       }
-      if (!section._isLastSection)
+      if (get(this.status) === CONSTANTS.STATUS.ABORTED) {
+        continue;
+      }
+      if (!section._isLastSection) {
         await new Promise((resolve) => setTimeout(resolve, 1));
+      }
     }
 
     return Promise.allSettled(promises).then(() => {
       Hooks.callAll("endedSequencerSequence");
       lib.debug("Finished playing sections");
+      this.status = CONSTANTS.STATUS.COMPLETE;
     });
   }
 
@@ -236,6 +247,22 @@ export default class Sequence {
   }
 
   /**
+   * Pans the canvas text. Until you call any other sections you'll be working on the Canvas Pan section.
+   *
+   * @param {Object|String|Boolean} [inTarget=false] inTarget
+   * @param {Boolean|Number} inDuration
+   * @param {Boolean|Number} inSpeed
+   * @returns {AnimationSection}
+   */
+  canvasPan(inTarget = false, inDuration = null, inSpeed = null) {
+    const panning = lib.section_proxy_wrap(
+      new CanvasPanSection(this, inTarget)
+    );
+    this.sections.push(panning);
+    return panning;
+  }
+
+  /**
    * Causes the sequence to wait after the last section for as many milliseconds as you pass to this method. If given
    * a second number, a random wait time between the two given numbers will be generated.
    *
@@ -351,5 +378,28 @@ export default class Sequence {
       this.moduleName,
       `${self.constructor.name.replace("Section", "")} | ${func} - ${error}`
     );
+  }
+
+  set status(inStatus) {
+    this._status.update((currentStatus) => {
+      if (
+        currentStatus === CONSTANTS.STATUS.READY ||
+        currentStatus === CONSTANTS.STATUS.RUNNING
+      ) {
+        return inStatus;
+      }
+      return currentStatus;
+    });
+  }
+
+  get status() {
+    return this._status;
+  }
+
+  _abort() {
+    this.status = CONSTANTS.STATUS.ABORTED;
+    for (const section of this.sections) {
+      section._abortSection();
+    }
   }
 }

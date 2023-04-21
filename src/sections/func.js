@@ -13,6 +13,8 @@ export default class FunctionSection extends Section {
     this._waitUntilFinished = inFunc.constructor.name === "AsyncFunction";
   }
 
+  static niceName = "Function";
+
   /**
    * @returns {Promise<void>}
    */

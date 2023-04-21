@@ -8,9 +8,9 @@ export default class SequencerAudioHelper {
    *
    * @param {{src: string, loop?: boolean, volume?: number, _fadeIn?: {duration: number}, _fadeOut?: {duration: number}, duration?: number}} data The data that describes the audio to play.
    * @param {boolean} [push=false] A flag indicating whether or not to make other clients play the audio, too.
-   * @returns {Promise<Sound>} A promise that resolves when the audio file has finished playing.
+   * @returns {Number} A promise that resolves when the audio file has finished playing.
    */
-  static async play(data, push = false) {
+  static play(data, push = false) {
     if (push)
       sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, data);
     data.volume =
@@ -20,10 +20,10 @@ export default class SequencerAudioHelper {
 
   /**
    * @param {{src: string, loop?: boolean, volume: number, _fadeIn?: {duration: number}, _fadeOut?: {duration: number}, duration?: number}} data
-   * @returns {Promise<Sound>}
+   * @returns {Number}
    * @private
    */
-  static async _play(data) {
+  static _play(data) {
     if (
       !game.settings.get("sequencer", "soundsEnabled") ||
       game.user.viewedScene !== data.sceneId ||
@@ -36,7 +36,7 @@ export default class SequencerAudioHelper {
 
     lib.debug(`Playing sound:`, data);
 
-    const sound = await game.audio.play(data.src, {
+    const sound = game.audio.play(data.src, {
       volume: data.fadeIn ? 0 : data.volume,
       loop: data.loop,
       offset: data.startTime,
@@ -77,11 +77,13 @@ export default class SequencerAudioHelper {
       }, data.duration);
     }
 
-    return new Promise((resolve) => {
+    new Promise((resolve) => {
       sound.on("stop", resolve);
       sound.on("end", resolve);
     }).then(() => {
       Hooks.callAll("endedSequencerSound", data);
     });
+
+    return data.duration;
   }
 }

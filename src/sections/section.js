@@ -1,10 +1,13 @@
 import * as lib from "../lib/lib.js";
 import SequencerPresets from "../modules/sequencer-presets.js";
+import CONSTANTS from "../constants.js";
+import { get, writable } from "svelte/store";
 
 export default class Section {
   constructor(inSequence) {
     this.sequence = inSequence;
     this._applyTraits();
+    this._sectionStatus = writable(CONSTANTS.STATUS.READY);
     this._playIf = true;
     this._waitUntilFinished = false;
     this._async = false;
@@ -19,6 +22,8 @@ export default class Section {
     this._basicDelay = 0;
     this._duration = false;
   }
+
+  static niceName = "Section";
 
   /**
    * @protected
@@ -323,33 +328,63 @@ export default class Section {
    * @protected
    */
   async _execute() {
-    if (!(await this._shouldPlay())) return;
-    let self = this;
+    if (!(await this._shouldPlay())) {
+      this.sectionStatus = CONSTANTS.STATUS.SKIPPED;
+      return;
+    }
     this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
     return new Promise(async (resolve) => {
-      setTimeout(async function () {
-        for (let i = 0; i < self._repetitions; i++) {
-          self._currentRepetition = i;
-          self._repeatDelay =
-            i !== self._repetitions - 1
+      setTimeout(async () => {
+        this.sectionStatus = CONSTANTS.STATUS.RUNNING;
+        for (let i = 0; i < this._repetitions; i++) {
+          if (get(this.sectionStatus) === CONSTANTS.STATUS.ABORTED) {
+            resolve();
+            return;
+          }
+          this._currentRepetition = i;
+          this._repeatDelay =
+            i !== this._repetitions - 1
               ? lib.random_float_between(
-                  self._repeatDelayMin,
-                  self._repeatDelayMax
+                  this._repeatDelayMin,
+                  this._repeatDelayMax
                 )
               : 0;
-          await self.preRun();
-          if (self._shouldAsync) {
-            await self.run();
+          await this.preRun();
+          if (this._shouldAsync) {
+            await this.run();
           } else {
-            self.run();
+            this.run();
           }
-          if (self._repetitions > 1 && i !== self._repetitions - 1) {
-            await self._delayBetweenRepetitions();
+          if (this._repetitions > 1 && i !== this._repetitions - 1) {
+            await this._delayBetweenRepetitions();
           }
         }
         resolve();
       }, this._basicDelay);
+    }).then(() => {
+      this.sectionStatus = CONSTANTS.STATUS.COMPLETE;
     });
+  }
+
+  set sectionStatus(inStatus) {
+    this._sectionStatus.update((currentStatus) => {
+      if (
+        currentStatus === CONSTANTS.STATUS.READY ||
+        (currentStatus === CONSTANTS.STATUS.RUNNING &&
+          inStatus !== CONSTANTS.STATUS.ABORTED)
+      ) {
+        return inStatus;
+      }
+      return currentStatus;
+    });
+  }
+
+  get sectionStatus() {
+    return this._sectionStatus;
+  }
+
+  _abortSection() {
+    this.sectionStatus = CONSTANTS.STATUS.ABORTED;
   }
 
   /**

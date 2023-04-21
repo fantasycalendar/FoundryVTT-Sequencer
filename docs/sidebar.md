@@ -22,6 +22,7 @@
     - [Filters](api/filter.md)
   - [Sound](api/sound.md)
   - [Scrolling Text](api/scrolling-text.md)
+  - [Canvas Pan](api/canvas-pan.md)
 
 - Global
   - [Database](database.md)

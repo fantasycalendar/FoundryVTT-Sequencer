@@ -17,6 +17,8 @@ class AnimationSection extends Section {
     if (inTarget) this.on(inTarget);
   }
 
+  static niceName = "Animation";
+
   /**
    * Sets the target object to be animated
    *

@@ -10,6 +10,7 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
+import animation from "../sections/traits/animation.js";
 
 const hooksManager = {
   _hooks: new Map(),
@@ -1036,7 +1037,7 @@ export default class CanvasEffect extends PIXI.Container {
       );
     CanvasEffect.validateUpdate(inUpdates);
 
-    const newData = foundry.utils.duplicate(this.data);
+    const newData = foundry.utils.deepClone(this.data);
     const updateKeys = Object.keys(inUpdates);
 
     updateKeys.forEach((key) => {
@@ -1077,6 +1078,73 @@ export default class CanvasEffect extends PIXI.Container {
       this.id,
       newData
     );
+  }
+
+  async addAnimatedProperties({ animations = [], loopingAnimation = [] } = {}) {
+    const animationsToAdd = [];
+    if (!Array.isArray(animations)) {
+      throw lib.custom_error(
+        this.data.moduleName,
+        `animations must be an array of arrays`
+      );
+    }
+    for (const animationData of animations) {
+      if (!Array.isArray(animationData)) {
+        throw lib.custom_error(
+          this.data.moduleName,
+          `each entry in animations must be an array, each with target, property name, and animation options`
+        );
+      }
+      const result = canvaslib.validateAnimation(...animationData);
+      if (typeof result === "string") {
+        throw lib.custom_error(this.data.moduleName, result);
+      }
+      result.creationTimestamp = +new Date();
+      animationsToAdd.push(result);
+    }
+    if (!Array.isArray(loopingAnimation)) {
+      throw lib.custom_error(
+        this.data.moduleName,
+        `loopingAnimation must be an array of arrays`
+      );
+    }
+    for (const animationData of loopingAnimation) {
+      if (!Array.isArray(animationData)) {
+        throw lib.custom_error(
+          this.data.moduleName,
+          `each entry in loopingAnimation must be an array, each with target, property name, and animation options`
+        );
+      }
+      const result = canvaslib.validateLoopingAnimation(...animationData);
+      if (typeof result === "string") {
+        throw lib.custom_error(this.data.moduleName, result);
+      }
+      result.creationTimestamp = +new Date();
+      animationsToAdd.push(result);
+    }
+
+    if (this.data.persist) {
+      const originalSourceUUID =
+        lib.is_UUID(this.data.source) && this.data.attachTo
+          ? this.data.source
+          : "Scene." + this.data.sceneId;
+      const newData = foundry.utils.deepClone(this.data);
+      newData.animations = (newData.animations ?? []).concat(
+        foundry.utils.deepClone(animationsToAdd)
+      );
+      flagManager.addFlags(originalSourceUUID, newData);
+    }
+
+    return sequencerSocket.executeForEveryone(
+      SOCKET_HANDLERS.ADD_EFFECT_ANIMATIONS,
+      this.id,
+      animationsToAdd
+    );
+  }
+
+  async _addAnimations(inAnimations) {
+    this._playAnimations(inAnimations);
+    this.data.animations = (this.data.animations ?? []).concat(inAnimations);
   }
 
   /**
@@ -1204,7 +1272,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     this._nameOffsetMap = Object.fromEntries(
       Object.entries(
-        foundry.utils.duplicate(this.data.nameOffsetMap ?? {})
+        foundry.utils.deepClone(this.data.nameOffsetMap ?? {})
       ).map((entry) => {
         return [entry[0], this._setupOffsetMap(entry[1])];
       })
@@ -1338,7 +1406,7 @@ export default class CanvasEffect extends PIXI.Container {
   _addToContainer() {
     let layer;
     if (this.data.screenSpaceAboveUI) {
-      layer = SequencerAboveUILayer.getLayer();
+      layer = SequencerAboveUILayer;
     } else if (this.data.screenSpace) {
       layer = canvas.sequencerEffectsUILayer;
     } else if (this.data.aboveLighting) {
@@ -1610,7 +1678,13 @@ export default class CanvasEffect extends PIXI.Container {
     this.renderable = false;
 
     const args = [this.spriteSheet ? this.spriteSheet : null];
-    if (!this.data.xray && !this.data.aboveLighting && !this.spriteSheet) {
+    if (
+      !this.data.xray &&
+      !this.data.aboveLighting &&
+      !this.spriteSheet &&
+      !this.data.screenSpace &&
+      !this.data.screenSpaceAboveUI
+    ) {
       args.push(VisionSamplerShader);
     }
 
@@ -1630,7 +1704,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (this.data.text) {
       const text = this.data.text.text;
-      const fontSettings = foundry.utils.duplicate(this.data.text);
+      const fontSettings = foundry.utils.deepClone(this.data.text);
       fontSettings.fontSize =
         (fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
 
@@ -2704,7 +2778,7 @@ export default class CanvasEffect extends PIXI.Container {
       this.data.zeroSpriteRotation
     ) {
       delete animation.target;
-      let counterAnimation = foundry.utils.duplicate(animation);
+      let counterAnimation = foundry.utils.deepClone(animation);
       animation.target = this.spriteContainer;
       counterAnimation.target = this.sprite;
       if (counterAnimation.values) {
@@ -2734,9 +2808,14 @@ export default class CanvasEffect extends PIXI.Container {
   _playCustomAnimations() {
     if (!this.data.animations) return 0;
 
-    let animationsToSend = [];
+    this._playAnimations(
+      foundry.utils.deepClone(this.data.animations) ?? [],
+      this.actualCreationTime - this.data.creationTimestamp
+    );
+  }
 
-    const animations = foundry.utils.duplicate(this.data.animations) ?? [];
+  _playAnimations(animations, timeDifference = 0) {
+    let animationsToSend = [];
 
     const oneShotAnimations = animations.filter(
       (animation) => !animation.looping && !animation.fromEnd
@@ -2816,7 +2895,7 @@ export default class CanvasEffect extends PIXI.Container {
       SequencerAnimationEngine.addAnimation(
         this.id,
         animationsToSend,
-        this.actualCreationTime - this.data.creationTimestamp
+        timeDifference
       );
     }, 20);
   }
@@ -2824,7 +2903,7 @@ export default class CanvasEffect extends PIXI.Container {
   _getFromEndCustomAnimations(immediate = false) {
     let fromEndAnimations = [];
 
-    const animations = foundry.utils.duplicate(this.data.animations) ?? [];
+    const animations = foundry.utils.deepClone(this.data.animations) ?? [];
 
     const oneShotEndingAnimations = animations.filter(
       (animation) => !animation.looping && animation.fromEnd
@@ -3453,7 +3532,7 @@ class PersistentCanvasEffect extends CanvasEffect {
       ),
     ].filter(Boolean);
     SequencerAnimationEngine.addAnimation(this.id, fromEndCustomAnimations);
-    const waitDuration = Math.max(...durations);
+    const waitDuration = Math.max(...durations, 0);
     this._resolve(waitDuration);
     return new Promise((resolve) =>
       setTimeout(() => {

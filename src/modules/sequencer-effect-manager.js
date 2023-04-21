@@ -3,7 +3,7 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "../lib/lib.js";
 import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
-import { VisibleEffects } from "./sequencer-visible-effects-store.js";
+import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 
 const PositionContainer = new Map();
@@ -16,7 +16,7 @@ export default class SequencerEffectManager {
    * @returns {Array}
    */
   static get effects() {
-    return Array.from(VisibleEffects.values());
+    return Array.from(SequenceManager.VisibleEffects.values());
   }
 
   static _updatePosition(uuid, position) {
@@ -382,7 +382,7 @@ export default class SequencerEffectManager {
 
     const playData = effect.play();
 
-    VisibleEffects.add(effect.id, effect);
+    SequenceManager.VisibleEffects.add(effect.id, effect);
     if (effect.data.name) {
       effect._ticker.add(() => {
         if (effect.isDestroyed) return;
@@ -438,9 +438,24 @@ export default class SequencerEffectManager {
    * @private
    */
   static _updateEffect(inEffectId, inUpdates) {
-    const effect = VisibleEffects.get(inEffectId);
+    const effect = SequenceManager.VisibleEffects.get(inEffectId);
     if (!effect) return false;
     return effect._update(inUpdates);
+  }
+
+  /**
+   * Updates a single effect with new animations
+   *
+   * @param inEffectId
+   * @param inAnimations
+   * @param inLoopingAnimations
+   * @returns {promise|boolean}
+   * @private
+   */
+  static _addEffectAnimations(inEffectId, inAnimations, inLoopingAnimations) {
+    const effect = SequenceManager.VisibleEffects.get(inEffectId);
+    if (!effect) return false;
+    return effect._addAnimations(inAnimations, inLoopingAnimations);
   }
 
   /**
@@ -484,7 +499,7 @@ export default class SequencerEffectManager {
   static tearDownPersists() {
     return Promise.allSettled(
       this.effects.map((effect) => {
-        VisibleEffects.delete(effect.id);
+        SequenceManager.VisibleEffects.delete(effect.id);
         return effect.destroy();
       })
     );
@@ -744,7 +759,7 @@ export default class SequencerEffectManager {
    * @private
    */
   static _removeEffect(effect) {
-    VisibleEffects.delete(effect.id);
+    SequenceManager.VisibleEffects.delete(effect.id);
     TemporaryPositionsContainer.delete(effect.data.source);
     TemporaryPositionsContainer.delete(effect.data.target);
     return effect.endEffect();

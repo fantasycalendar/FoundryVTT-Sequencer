@@ -1,9 +1,8 @@
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
-import SequencerScrollingTextHelper from "../modules/sequencer-scrolling-text-helper.js";
+import SequencerFoundryReplicator from "../modules/sequencer-foundry-replicator.js";
 
 export default class ScrollingTextSection extends Section {
   constructor(inSequence, target, text, textOptions) {
@@ -24,6 +23,8 @@ export default class ScrollingTextSection extends Section {
       this.text(text, textOptions);
     }
   }
+
+  static niceName = "Scrolling Text";
 
   /**
    * @private
@@ -101,17 +102,13 @@ export default class ScrollingTextSection extends Section {
   async run() {
     const data = await this._sanitizeTextData();
     if (Hooks.call("preCreateScrollingText", data) === false) return;
-    let push = !(
-      data?.users?.length === 1 && data?.users?.includes(game.userId)
+    const push =
+      !(data?.users?.length === 1 && data?.users?.includes(game.userId)) &&
+      !this.sequence.localOnly;
+    const duration = SequencerFoundryReplicator.playScrollingText(data, push);
+    await new Promise((resolve) =>
+      setTimeout(resolve, this._currentWaitTime + duration)
     );
-    if (push && !this.sequence.localOnly) {
-      sequencerSocket.executeForOthers(
-        SOCKET_HANDLERS.CREATE_SCROLLING_TEXT,
-        data
-      );
-    }
-    SequencerScrollingTextHelper.play(data);
-    await new Promise((resolve) => setTimeout(resolve, this._currentWaitTime));
   }
 
   _getSourceObject() {

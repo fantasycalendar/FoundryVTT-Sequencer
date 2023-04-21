@@ -15,6 +15,13 @@ const CONSTANTS = {
   },
   FEET_REGEX: new RegExp(/\.[0-9]+ft\.*/g),
   ARRAY_REGEX: new RegExp(/\.[0-9]$/g),
+  STATUS: {
+    READY: 0,
+    RUNNING: 1,
+    COMPLETE: 2,
+    SKIPPED: 3,
+    ABORTED: 4,
+  },
 };
 
 CONSTANTS.INTEGRATIONS = {};

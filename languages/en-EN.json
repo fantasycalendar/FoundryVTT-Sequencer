@@ -82,12 +82,22 @@
 
     "Manager": {
       "Title": "Manager",
-      "NoEffects": "No effects currently playing...",
+      "NoEffects": "No effects currently playing",
       "PersistentEffects": "Persistent effects:",
       "TemporaryEffects": "Temporary effects:",
       "PlayersEffect": "{user_name}'s effect",
       "UnknownEffect": "Unknown user's effect",
       "EndAllEffects": "End All Effects"
+    },
+
+    "Sequences": {
+      "Title": "Sequences",
+      "NoSequences": "No sequences currently running",
+      "AbortSequence": "Abort Sequence",
+      "AbortSection": "Abort Section",
+      "ClearFinished": "Clear Finished",
+      "Clear": "Clear",
+      "StopAll": "Stop All"
     },
 
     "HowTo": {
