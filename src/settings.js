@@ -171,7 +171,7 @@ export function registerSettings() {
     const selectTool = {
       icon: "fas fa-expand",
       name: "select-effect",
-      title: "Select Effect",
+      title: "SEQUENCER.SidebarButtons.Select",
       visible:
         user_can_do("permissions-effect-create") &&
         user_can_do("permissions-sidebar-tools"),
@@ -180,7 +180,7 @@ export function registerSettings() {
     const playTool = {
       icon: "fas fa-play",
       name: "play-effect",
-      title: "Play Effect",
+      title: "SEQUENCER.SidebarButtons.Play",
       visible:
         user_can_do("permissions-effect-create") &&
         user_can_do("permissions-sidebar-tools"),
@@ -192,7 +192,7 @@ export function registerSettings() {
     const viewer = {
       icon: "fas fa-film",
       name: "effectviewer",
-      title: "Show Sequencer Effects Viewer",
+      title: "SEQUENCER.SidebarButtons.Manager",
       button: true,
       visible:
         user_can_do("permissions-effect-create") &&
@@ -205,7 +205,7 @@ export function registerSettings() {
     const database = {
       icon: "fas fa-database",
       name: "effectdatabase",
-      title: "Show Sequencer Database",
+      title: "SEQUENCER.SidebarButtons.Database",
       button: true,
       visible: user_can_do("permissions-sidebar-tools"),
       onClick: () => {

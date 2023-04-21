@@ -3,9 +3,11 @@ import CONSTANTS from "../constants.js";
 
 const SequenceManager = {
   VisibleEffects: writable({}),
+  RunningSounds: writable({}),
   RunningSequences: writable({}),
 };
 
+/* ------------------ Effects ------------------ */
 SequenceManager.VisibleEffects.get = (id) => {
   return get(SequenceManager.VisibleEffects)[id];
 };
@@ -28,6 +30,34 @@ SequenceManager.VisibleEffects.values = () => {
   return Object.values(get(SequenceManager.VisibleEffects));
 };
 
+/* ------------------ Sounds ------------------ */
+SequenceManager.RunningSounds.get = (id) => {
+  return get(SequenceManager.RunningSounds)[id];
+};
+
+SequenceManager.RunningSounds.add = (id, data) => {
+  SequenceManager.RunningSounds.update((effects) => {
+    effects[id] = data;
+    return effects;
+  });
+};
+
+SequenceManager.RunningSounds.delete = (id) => {
+  SequenceManager.RunningSounds.update((effects) => {
+    delete effects[id];
+    return effects;
+  });
+};
+
+SequenceManager.RunningSounds.values = () => {
+  return Object.values(get(SequenceManager.RunningSounds));
+};
+
+SequenceManager.RunningSounds.keys = () => {
+  return Object.keys(get(SequenceManager.RunningSounds));
+};
+
+/* ----------------- Sequences ------------------ */
 SequenceManager.RunningSequences.get = (id) => {
   return get(SequenceManager.RunningSequences)[id];
 };

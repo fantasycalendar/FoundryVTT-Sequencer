@@ -3,8 +3,6 @@
     "OK": "OK",
     "Cancel": "Cancel",
 
-    "Effects": "Sequencer Effects",
-
     "PlayerPermissionsWarning": "Hi there! Since you're a GM you can create effects, but by default <strong>so can your players</strong>. If you don't want that, you can configure permissions by clicking this button:",
 
     "Error": {
@@ -67,6 +65,13 @@
       }
     },
 
+    "SidebarButtons": {
+      "Select": "Select Effect",
+      "Play": "Play Effect",
+      "Manager": "Show Sequencer Manager",
+      "Database": "Show Sequencer Database"
+    },
+
     "Hotkeys": {
       "PlayTool": {
         "Shift": "Player - Play multiple effects at the same time",
@@ -82,12 +87,14 @@
 
     "Manager": {
       "Title": "Manager",
-      "NoEffects": "No effects currently playing",
+      "NothingPlaying": "Nothing currently playing",
       "PersistentEffects": "Persistent effects:",
       "TemporaryEffects": "Temporary effects:",
+      "Sounds": "Sounds:",
       "PlayersEffect": "{user_name}'s effect",
       "UnknownEffect": "Unknown user's effect",
-      "EndAllEffects": "End All Effects"
+      "EndAllEffects": "End All Effects",
+      "EndAllSounds": "End All Sounds"
     },
 
     "Sequences": {
@@ -118,6 +125,8 @@
       "ShiftControlLabel": "Play multiple effects one after another, waiting between them",
       "MoreToCome": "...and more to come in future updates!"
     },
+
+    "ManagerUI": "Sequencer Manager",
 
     "Database": {
       "Title": "Sequencer Database Viewer",

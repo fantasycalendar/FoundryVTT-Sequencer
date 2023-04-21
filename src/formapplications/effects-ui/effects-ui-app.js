@@ -4,7 +4,7 @@ import EffectsUIShell from "./effects-ui-shell.svelte";
 export class EffectsUIApp extends SvelteApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      title: game.i18n.localize("SEQUENCER.Effects"),
+      title: game.i18n.localize("SEQUENCER.ManagerUI"),
       classes: ["dialog"],
       width: "auto",
       height: "auto",

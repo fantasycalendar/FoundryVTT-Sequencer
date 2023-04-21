@@ -9,6 +9,7 @@ export const SOCKET_HANDLERS = {
   UPDATE_EFFECT: "updateEffects",
   ADD_EFFECT_ANIMATIONS: "addEffectAnimations",
   PLAY_SOUND: "playSound",
+  STOP_SOUNDS: "stopSounds",
   PRELOAD: "preload",
   PRELOAD_RESPONSE: "preloadResponse",
   PRELOAD_DONE: "preloadDone",
@@ -39,7 +40,10 @@ export function registerSocket() {
     Sequencer.EffectManager._addEffectAnimations(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) =>
-    SequencerAudioHelper.play(...args)
+    SequencerAudioHelper._play(...args)
+  );
+  sequencerSocket.register(SOCKET_HANDLERS.STOP_SOUNDS, (...args) =>
+    SequencerAudioHelper._stop(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) =>
     Sequencer.Preloader.respond(...args)

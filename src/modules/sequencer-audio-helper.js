@@ -1,6 +1,7 @@
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerAnimationEngine from "./sequencer-animation-engine.js";
 import * as lib from "../lib/lib.js";
+import SequenceManager from "./sequence-manager.js";
 
 export default class SequencerAudioHelper {
   /**
@@ -10,11 +11,9 @@ export default class SequencerAudioHelper {
    * @param {boolean} [push=false] A flag indicating whether or not to make other clients play the audio, too.
    * @returns {Number} A promise that resolves when the audio file has finished playing.
    */
-  static play(data, push = false) {
+  static async play(data, push = true) {
     if (push)
       sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, data);
-    data.volume =
-      (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume");
     return this._play(data);
   }
 
@@ -23,7 +22,7 @@ export default class SequencerAudioHelper {
    * @returns {Number}
    * @private
    */
-  static _play(data) {
+  static async _play(data) {
     if (
       !game.settings.get("sequencer", "soundsEnabled") ||
       game.user.viewedScene !== data.sceneId ||
@@ -36,16 +35,19 @@ export default class SequencerAudioHelper {
 
     lib.debug(`Playing sound:`, data);
 
-    const sound = game.audio.play(data.src, {
+    data.volume =
+      (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume");
+
+    const sound = await game.audio.play(data.src, {
       volume: data.fadeIn ? 0 : data.volume,
       loop: data.loop,
       offset: data.startTime,
     });
 
-    const soundId = randomID();
+    SequenceManager.RunningSounds.add(data.id, sound);
 
     if (data.fadeIn) {
-      SequencerAnimationEngine.addAnimation(soundId, {
+      SequencerAnimationEngine.addAnimation(data.id, {
         target: sound,
         propertyName: "volume",
         from: 0.0,
@@ -57,7 +59,7 @@ export default class SequencerAudioHelper {
     }
 
     if (data.fadeOut) {
-      SequencerAnimationEngine.addAnimation(soundId, {
+      SequencerAnimationEngine.addAnimation(data.id, {
         target: sound,
         propertyName: "volume",
         from: data.volume,
@@ -81,9 +83,25 @@ export default class SequencerAudioHelper {
       sound.on("stop", resolve);
       sound.on("end", resolve);
     }).then(() => {
+      SequenceManager.RunningSounds.delete(data.id);
       Hooks.callAll("endedSequencerSound", data);
     });
 
     return data.duration;
+  }
+
+  static stop(ids, push = true) {
+    if (push && game.user.isGM)
+      sequencerSocket.executeForOthers(SOCKET_HANDLERS.STOP_SOUNDS, ids);
+    return this._stop(ids);
+  }
+
+  static _stop(ids) {
+    for (const id of ids) {
+      const sound = SequenceManager.RunningSounds.get(id);
+      if (sound) {
+        sound.stop();
+      }
+    }
   }
 }

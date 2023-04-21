@@ -2,8 +2,7 @@ import * as lib from "../lib/lib.js";
 import SequencerAudioHelper from "../modules/sequencer-audio-helper.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { SequencerFile, SequencerFileBase } from "../modules/sequencer-file.js";
-import CONSTANTS from "../constants.js";
+import { SequencerFileBase } from "../modules/sequencer-file.js";
 
 class SoundSection extends Section {
   constructor(inSequence, inFile = "") {
@@ -141,6 +140,7 @@ class SoundSection extends Section {
     }
 
     let data = {
+      id: randomID(),
       play: true,
       src: file,
       loop: this._duration > duration,
