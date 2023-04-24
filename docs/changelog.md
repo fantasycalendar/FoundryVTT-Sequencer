@@ -1,27 +1,30 @@
 ## Changelog
 
+### Version 3.0.1
+- *Effects* - Fixed dual attached effects not working
+
 ### Version 3.0.0
-- _Sequencer_ - Updated Sequencer Database Viewer:
+- *Sequencer* - Updated Sequencer Database Viewer:
   - Improved UI and added nested tree view
   - Added ctrl modifier to buttons that copy paths, which adds quotes around the copied paths
-- _Sequencer_ - Updated Sequencer Effect Player:
+- *Sequencer* - Updated Sequencer Effect Player:
   - Improved UI based on the design of MatthijsKok on github - thanks a lot for the inspiration!
-- _Sequencer_ - Reworked the Sequencer Effect Manager to the Sequencer Manager:
-  - **Added the ability to stop running sounds**
-  - **Added a Sequence view where you can see the sequences as they are running, and stop the entire execution or their individual sections**
-- _Sequencer_ - Added `.scrollingText()` which allows playing scrolling text on the canvas for users
-- _Sequencer_ - **Added `.canvasPan()` which allows panning the canvas for connected users**
-- _Sequencer_ - Added `.toJSON()` and `.fromJSON()` to Sequences to be able to be serialized and deserialized; only sequences with effects, sounds, and scrolling texts can be serialized
-- _Sequencer_ - Added options to `.play()`, which may contain an object; currently supports `{ remote: true/false }` which will serialize the sequence (see above), and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed
-- _Sequencer_ - Added database support for `_timestamps` metadata on effect files, which will trigger the `sequencerEffectTimestamp` hook when effects reach the point of the timestamps for that file
-- _Sequencer_ - Added support for flipbook-type effects through a `_flipbook` database tag
-- _Animations_ - **Improved playback of movement, fade in/out, and rotation animations on tokens**
-- _Effects_ - **Added `CanvasEffect#addAnimatedProperties`, which will allow you to easily add animations to properties of existing effects**
-- _Effects_ - **Improved screenspace above UI effect performance by not rendering the extra canvas when not in use**
-- _Effects_ - **Fixed screenspace effects being affected by the vision mask**
-- _Effects_ - Fixed `.stretchTo()` effects would be visible when not in vision
-- _Effects_ - Fixed `.fadeOut()` and `.scaleOut()` not working at all
-- _Effects_ - Reworked how effects are replicated on linked tokens when `.persist()`'s `persistPrototypeToken` is enabled, improving performance
+- *Sequencer* - Reworked the Sequencer Effect Manager to the Sequencer Manager:
+  - Added the ability to stop running sounds
+  - Added a Sequence view where you can see the sequences as they are running, and stop the entire execution or their individual sections
+- *Sequencer* - Added `.scrollingText()` which allows playing scrolling text on the canvas for users
+- *Sequencer* - Added `.canvasPan()` which allows panning the canvas for connected users
+- *Sequencer* - Added `.toJSON()` and `.fromJSON()` to Sequences to be able to be serialized and deserialized; only sequences with effects, sounds, and scrolling texts can be serialized
+- *Sequencer* - Added options to `.play()`, which may contain an object; currently supports `{ remote: true/false }` which will serialize the sequence (see above), and send it to each client for local playback, instead of the person running the sequence sending data to clients as it is being executed
+- *Sequencer* - Added database support for `_timestamps` metadata on effect files, which will trigger the `sequencerEffectTimestamp` hook when effects reach the point of the timestamps for that file
+- *Sequencer* - Added support for flipbook-type effects through a `_flipbook` database tag
+- *Animations* - Improved playback of movement, fade in/out, and rotation animations on tokens
+- *Effects* - Added `CanvasEffect#addAnimatedProperties`, which will allow you to easily add animations to properties of existing effects
+- *Effects* - Improved screenspace above UI effect performance by not rendering the extra canvas when not in use
+- *Effects* - Fixed screenspace effects being affected by the vision mask
+- *Effects* - Fixed `.stretchTo()` effects would be visible when not in vision
+- *Effects* - Fixed `.fadeOut()` and `.scaleOut()` not working at all
+- *Effects* - Reworked how effects are replicated on linked tokens when `.persist()`'s `persistPrototypeToken` is enabled, improving performance
 
 ### Version 2.414
 - *Sequencer* - Included missing CSS file

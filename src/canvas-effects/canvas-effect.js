@@ -1488,7 +1488,6 @@ export default class CanvasEffect extends PIXI.Container {
         sprite = new spriteType();
       }
       this._relatedSprites[this._currentFilePath] = sprite;
-      this.sprite.addChild(sprite);
 
       new Promise(async (resolve) => {
         for (let filePath of this._file.getAllFiles()) {
@@ -1507,7 +1506,6 @@ export default class CanvasEffect extends PIXI.Container {
           }
           sprite.renderable = false;
           this._relatedSprites[filePath] = sprite;
-          this.sprite.addChild(sprite);
         }
 
         resolve();
@@ -1692,6 +1690,10 @@ export default class CanvasEffect extends PIXI.Container {
     const sprite = new spriteType(...args);
     this.sprite = this.spriteContainer.addChild(sprite);
     this.sprite.id = this.id + "-sprite";
+
+    Object.values(this._relatedSprites).forEach((sprite) => {
+      this.sprite.addChild(sprite);
+    });
 
     this.animatedSprite = false;
     if (this.spriteSheet) {
