@@ -1,4 +1,4 @@
-# Effects
+# Scrolling Text
 
 ### What is this?
 

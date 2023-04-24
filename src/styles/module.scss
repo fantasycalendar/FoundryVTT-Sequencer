@@ -1,0 +1,36 @@
+.effect-player-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 750px;
+  height: 300px;
+  font-size: 0.8rem;
+
+  .effect-transform-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    column-gap: 10px;
+    row-gap: 2px;
+    align-items: center;
+
+    .divider {
+      margin-bottom: 3px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      grid-column: 1 / 5;
+    }
+
+    input[type="range"] {
+      grid-column: 2 / 4;
+    }
+
+    input[type="range"]:disabled {
+      opacity: 0.5;
+    }
+
+    input[type="number"] {
+      height: 20px;
+      min-width: 30px;
+      font-size: 0.8rem;
+    }
+  }
+}

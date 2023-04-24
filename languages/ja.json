@@ -34,15 +34,15 @@
       "Option": {
         "Scale": "縮尺",
         "BelowTokens": "コマの下",
-        "SnapToGrid":  "マス目に沿う",
+        "SnapToGrid": "マス目に沿う",
         "RandomRotation": "ランダム回転",
-        "RandomMirrorY":  "ランダムY反転",
+        "RandomMirrorY": "ランダムY反転",
         "RandomOffset": "ランダムオフセット",
-        "Repetitions":  "繰り返し",
+        "Repetitions": "繰り返し",
         "DelayMin": "遅延（最低）",
-        "DelayMax":  "遅延（最大）",
+        "DelayMax": "遅延（最大）",
         "Preload": "先読み",
-        "DragBehavior":  "ドラッグの挙動：引き伸ばしまたは移動",
+        "DragBehavior": "ドラッグの挙動：引き伸ばしまたは移動",
         "MoveSpeed": "移動速度",
         "AttachTo": "開始地点に貼り付け",
         "StretchToAttach": "終了地点に貼り付け",
@@ -101,7 +101,7 @@
     },
 
     "Setting": {
-      "DatabaseViewer":{
+      "DatabaseViewer": {
         "Title": "Sequencerデータベース閲覧",
         "Label": "Sequencerデータベース閲覧"
       },

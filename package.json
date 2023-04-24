@@ -1,5 +1,43 @@
 {
+  "name": "sequencer",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "author": "Fantasy Computerworks (https://github.com/fantasycalendar)",
+  "contributors": [
+    "Wasp (https://github.com/haxxer)"
+  ],
+  "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^6.3.0",
+    "@typhonjs-fvtt/runtime": "^0.0.22",
+    "@typhonjs-fvtt/svelte-standard": "^0.0.18",
+    "svelte": "^3.55.0",
+    "svelte-virtual-scroll-list": "^1.1.0"
+  },
   "devDependencies": {
-    "@league-of-foundry-developers/foundry-vtt-types": "^9.238.1"
+    "@league-of-foundry-developers/foundry-vtt-types": "^9.238.1",
+    "@typhonjs-config/eslint-config": "^0.3.0",
+    "@typhonjs-fvtt/eslint-config-foundry.js": "^0.8.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.1",
+    "prettier": "^2.8.7",
+    "svelte-dnd-action": "^0.9.18",
+    "svelte-preprocess": "^5",
+    "vite": "^4"
+  },
+  "browserslist": [
+    ">5%",
+    "not IE 11"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "eslint": "eslint .",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,css}": "prettier --write"
   }
 }
