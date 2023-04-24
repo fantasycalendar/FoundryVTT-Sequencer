@@ -1,6 +1,6 @@
 ## Class Definitions
 
-All of the methods are listed in the [Sequencer Database wiki article](database/database.md).
+All of the methods are listed in the [Sequencer Database wiki article](docs/database.md).
 
 ## Opening the Database Viewer
 
@@ -16,7 +16,11 @@ or by pressing this button:
 
 This will open this UI, where you can preview any of the effects in the database by pressing the play button on the far left. The following buttons copy the database path and the filepath, respectively.
 
-![Image showing Effect Manager UI ](images/database-viewer-ui.jpg)
+![Image showing Effect Manager UI in tree view](images/database-viewer-ui-tree.png)
+
+You can also view it in its classical list view.
+
+![Image showing Effect Manager UI in list view](images/database-viewer-ui.png)
 
 ## Why does the Sequencer need a database?
 

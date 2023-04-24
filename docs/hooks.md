@@ -11,6 +11,7 @@ This page contains information regarding every hook that the Sequencer can fire.
 - [Pre Create Sequencer Effect](#preCreate-sequencer-effect)
 - [Create Sequencer Effect](#create-sequencer-effect)
 - [Ended Sequencer Effect](#ended-sequencer-effect)
+- [Reached Effect Timestamp](#reached-effect-timestamp)
 - [Pre Create Sequencer Sound](#pre-create-sequencer-sound)
 - [Create Sequencer Sound](#create-sequencer-sound)
 - [Ended Sequencer Sound](#ended-sequencer-sound)
@@ -45,17 +46,23 @@ This hook fires when a `new Sequence()` has finished running.
 
 This hook fires before an [`.effect()`](api/effect.md) section is going to be run. The `effectData` contains all the evaluated data to be sent to other clients, and their canvases.
 
-### Create Sequencer Effect
+### Ended Sequencer Effect
 
-`Hooks.on("createSequencerEffect", (effectData) => {})`
+`Hooks.on("endedSequencerEffect", (effectData) => {})`
 
-This hook fires as an [`.effect()`](api/effect.md) has been created on the canvas. The `effectData` contains all the evaluated data for that effect.
+This hook fires as an [`.effect()`](api/effect.md) has finished playing. The `effectData` contains all the evaluated data for that effect.
 
 ### Ended Sequencer Effect
 
 `Hooks.on("endedSequencerEffect", (effectData) => {})`
 
 This hook fires as an [`.effect()`](api/effect.md) has finished playing. The `effectData` contains all the evaluated data for that effect.
+
+### Reached Effect Timestamp
+
+`Hooks.on("sequencerEffectTimestamp", (CanvasEffect, SequencerFile) => {})`
+
+This hook fires every time an [`.effect()`](api/effect.md) on the canvas reaches a timestamp as defined in its [database configuration](docs/database-basics.md#timestamps-within-files). The arguments given are the effect, and the Sequencer database file.
 
 ### Pre Create Sequencer Sound
 

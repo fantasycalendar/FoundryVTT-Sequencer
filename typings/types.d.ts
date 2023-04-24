@@ -1,5 +1,3 @@
-import { CoreFlags } from "@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs/activeEffectData";
-
 type EasingOptions = {
   ease?: string;
   delay?: number;
@@ -55,28 +53,37 @@ declare class CoreMethods {
   wait(delayMs?: number, delayRangeEndMs?: number): Sequence;
 
   /**
-   * Creates an animation. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Animation section.
+   * Creates an animation. Until you call any other sections you'll be working on the Animation section.
    */
   animation(inTokenOrInTile?: VisibleFoundryTypes): AnimationSection;
 
   /**
-   * Creates an effect section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Effect section.
+   * Creates an effect section. Until you call any other sections you'll be working on the Effect section.
    */
   effect(filePath?: string): EffectSection;
 
   /**
-   * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
+   * Creates a sound section. Until you call any other sections you'll be working on the Sound section.
    */
   sound(filePath?: string): SoundSection;
 
   /**
-   * Creates a scrolling text. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Scrolling Text section.
+   * Creates a scrolling text. Until you call any other sections you'll be working on the Scrolling Text section.
    */
   scrollingText(
     inTarget?: VisibleFoundryTypes | Vector2,
     inText?: string,
     inTextStyle?: object
   ): ScrollingTextSection;
+
+  /**
+   * Pans the canvas text. Until you call any other sections you'll be working on the Canvas Pan section.
+   */
+  canvasPan(
+    inTarget?: VisibleFoundryTypes | Vector2,
+    inDuration?: number,
+    inSpeed?: number
+  ): CanvasPanSection;
 
   /**
    * Adds the sections from a given Sequence to this Sequence
@@ -861,6 +868,29 @@ declare abstract class ScrollingTextSection {
    * An amount of randomization between [0, 1] applied to the initial position
    */
   jitter(inDirection: number): this;
+}
+
+declare interface CanvasPanSection
+  extends CoreMethods,
+    Section<CanvasPanSection>,
+    HasLocation<EffectSection>,
+    HasUsers<EffectSection> {}
+
+declare abstract class CanvasPanSection {
+  /**
+   * Sets the speed (pixels per frame) of the canvas pan
+   */
+  speed(inSpeed: number): this;
+
+  /**
+   * Sets the zoom level of the canvas pan
+   */
+  scale(inScale: number): this;
+
+  /**
+   * Locks the canvas at the given location for the given duration
+   */
+  lockView(inDuration: number): this;
 }
 
 declare abstract class SequencerFile {}

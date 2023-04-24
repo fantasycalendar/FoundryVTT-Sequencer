@@ -17,10 +17,10 @@ or more involved
 ```js
 new Sequence()
   .canvasPan()
-  .atLocation(token) // Set the location
-  .duration(1000) // Pan over 1 second
-  .scale(2) // Zoom in
-  .lockView(5000) // Lock the view for 5 seconds
+    .atLocation(token) // Set the location
+    .duration(1000) // Pan over 1 second
+    .scale(2) // Zoom in
+    .lockView(5000) // Lock the view for 5 seconds
   .play();
 ```
 

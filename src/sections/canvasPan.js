@@ -55,6 +55,12 @@ export default class CanvasPanSection extends Section {
     return this;
   }
 
+  /**
+   * Sets the zoom level of the canvas pan
+   *
+   * @param {number} inScale
+   * @returns this
+   */
   scale(inScale) {
     if (!is_real_number(inScale))
       throw this.sequence._customError(
@@ -74,7 +80,7 @@ export default class CanvasPanSection extends Section {
   }
 
   /**
-   * Locks the canvas at the given
+   * Locks the canvas at the given location for the given duration
    *
    * @param {number} inDuration
    * @returns this
