@@ -2129,6 +2129,9 @@ export default class EffectSection extends Section {
    */
   _getSourceObject() {
     if (!this._source || typeof this._source !== "object") return this._source;
+    if (this._source?.cachedLocation) {
+      return canvaslib.get_object_canvas_data(this._source);
+    }
     return (
       lib.get_object_identifier(this._source) ??
       canvaslib.get_object_canvas_data(this._source)
@@ -2141,6 +2144,9 @@ export default class EffectSection extends Section {
   _getTargetObject() {
     if (!this._target?.target) return this._target;
     if (typeof this._target.target !== "object") return this._target.target;
+    if (this._target?.target?.cachedLocation) {
+      return canvaslib.get_object_canvas_data(this._target.target, true);
+    }
     return (
       lib.get_object_identifier(this._target.target) ??
       canvaslib.get_object_canvas_data(this._target.target, true)

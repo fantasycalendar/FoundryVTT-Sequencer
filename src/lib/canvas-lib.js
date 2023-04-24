@@ -300,6 +300,7 @@ export function get_object_canvas_data(inObject, measure = false) {
     ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject),
     elevation: get_object_elevation(inObject),
     uuid: inObject?.document?.uuid ?? inObject?.uuid,
+    cachedLocation: true,
   };
 }
 

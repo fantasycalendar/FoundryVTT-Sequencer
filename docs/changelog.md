@@ -1,6 +1,7 @@
 ## Changelog
 
 ### Version 3.0.1
+- *Effects* - Fixed `cacheLocation` not working on effect locations
 - *Effects* - Fixed dual attached effects not working
 
 ### Version 3.0.0
