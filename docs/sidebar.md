@@ -16,13 +16,6 @@
 * [Sample Macros](sample-macros.md)
 
 * [API](api/home.md)
-  * [Animation](api/animation.md)
-  * [Effect](api/effect.md)
-    * [Filters](api/filter.md)
-  * [Sound](api/sound.md)
-  * [Scrolling Text](api/scrolling-text.md)
-
-* [API](api/home.md)
 
   * [Animation](api/animation.md)
   * [Effect](api/effect.md)
