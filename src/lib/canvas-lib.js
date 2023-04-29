@@ -218,6 +218,7 @@ export function get_object_dimensions(inObj, half = false) {
   inObj = inObj?.object ?? inObj?._object ?? inObj;
 
   let width =
+    inObj?.mesh?.width ??
     inObj?.hitArea?.width ??
     inObj?.w ??
     inObj?.shape?.width ??
@@ -226,6 +227,7 @@ export function get_object_dimensions(inObj, half = false) {
     canvas.grid.size;
 
   let height =
+    inObj?.mesh?.height ??
     inObj?.hitArea?.height ??
     inObj?.h ??
     inObj?.shape?.height ??

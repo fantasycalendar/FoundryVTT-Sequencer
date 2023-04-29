@@ -11,20 +11,22 @@ import CanvasPanSection from "../sections/canvasPan.js";
 import SequenceManager from "./sequence-manager.js";
 import { get, writable } from "svelte/store";
 import CONSTANTS from "../constants.js";
+import WaitSection from "../sections/wait.js";
 
 export default class Sequence {
   constructor(
     options = {
       moduleName: "Sequencer",
       softFail: false,
-    }
+    },
+    softFail = false
   ) {
     this.id = randomID();
     this.moduleName =
       typeof options === "string"
         ? options
         : options?.moduleName ?? "Sequencer";
-    this.softFail = options?.softFail ?? false;
+    this.softFail = options?.softFail ?? softFail;
     this.sections = [];
     this.nameOffsetMap = false;
     this.effectIndex = 0;
@@ -47,6 +49,7 @@ export default class Sequence {
         SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY,
         data
       );
+      return new Sequence().fromJSON(data).play();
     }
     Hooks.callAll("createSequencerSequence", this);
     lib.debug("Initializing sections");
@@ -281,8 +284,7 @@ export default class Sequence {
         this.moduleName,
         `wait - Max wait ms cannot be less than 1`
       );
-    const wait = lib.random_int_between(msMin, Math.max(msMin, msMax));
-    const section = lib.section_proxy_wrap(this._createWaitSection(wait));
+    const section = lib.section_proxy_wrap(new WaitSection(this, msMin, msMax));
     this.sections.push(section);
     return this;
   }
@@ -328,7 +330,10 @@ export default class Sequence {
   }
 
   async toJSON() {
-    const data = [];
+    const data = {
+      options: { moduleName: this.moduleName, softFail: this.softFail },
+      sections: [],
+    };
     for (const section of this.sections) {
       const sectionData = await section._serialize();
       if (!sectionData.type) {
@@ -336,13 +341,16 @@ export default class Sequence {
           `Sequencer | toJson | ${section.constructor.name} does not support serialization!`
         );
       }
-      data.push(sectionData);
+      data.sections.push(sectionData);
     }
     return data;
   }
 
   fromJSON(data) {
-    for (const section of data) {
+    this.moduleName = data.options.moduleName;
+    this.softFail = data.options.softFail;
+    this.localOnly = true;
+    for (const section of data.sections) {
       this[section.type]()._deserialize(section);
     }
     return this;
@@ -355,14 +363,6 @@ export default class Sequence {
     this.sectionToCreate = undefined;
     this.sections.push(func);
     return func;
-  }
-
-  _createWaitSection(ms = 1) {
-    return new FunctionSection(this, async function () {
-      return new Promise(async (resolve) => {
-        setTimeout(resolve, ms);
-      });
-    });
   }
 
   _showWarning(self, func, warning, notify) {

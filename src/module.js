@@ -45,11 +45,9 @@ Hooks.once("ready", async function () {
   if (!game.modules.get("socketlib")?.active) {
     ui.notifications.error(
       "Sequencer requires the SocketLib module to be active and will not work without it!",
-      { console: false }
+      { console: true }
     );
-    throw new Error(
-      "Sequencer requires the SocketLib module to be active and will not work without it!"
-    );
+    return;
   }
 
   for (const [name, func] of Object.entries(easeFunctions)) {

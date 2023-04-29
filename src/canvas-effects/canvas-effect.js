@@ -1410,7 +1410,7 @@ export default class CanvasEffect extends PIXI.Container {
     } else if (this.data.screenSpace) {
       layer = canvas.sequencerEffectsUILayer;
     } else if (this.data.aboveLighting) {
-      layer = canvas.weather;
+      layer = canvas.interface;
     } else {
       layer = canvas.primary;
     }
@@ -1482,10 +1482,10 @@ export default class CanvasEffect extends PIXI.Container {
     ) {
       let sprite;
       let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
-      if (!this.data.xray && !this.data.aboveLighting) {
-        sprite = new spriteType(this._texture, VisionSamplerShader);
+      if (this.data.xray) {
+        sprite = new spriteType(this._texture);
       } else {
-        sprite = new spriteType();
+        sprite = new spriteType(this._texture, VisionSamplerShader);
       }
       this._relatedSprites[this._currentFilePath] = sprite;
 
@@ -1499,10 +1499,10 @@ export default class CanvasEffect extends PIXI.Container {
           let spriteType = this.data.tilingTexture
             ? PIXI.TilingSprite
             : SpriteMesh;
-          if (!this.data.xray && !this.data.aboveLighting) {
-            sprite = new spriteType(texture, VisionSamplerShader);
+          if (this.data.xray) {
+            sprite = new spriteType(texture);
           } else {
-            sprite = new spriteType();
+            sprite = new spriteType(texture, VisionSamplerShader);
           }
           sprite.renderable = false;
           this._relatedSprites[filePath] = sprite;
@@ -1678,7 +1678,6 @@ export default class CanvasEffect extends PIXI.Container {
     const args = [this.spriteSheet ? this.spriteSheet : null];
     if (
       !this.data.xray &&
-      !this.data.aboveLighting &&
       !this.spriteSheet &&
       !this.data.screenSpace &&
       !this.data.screenSpaceAboveUI
@@ -2431,10 +2430,10 @@ export default class CanvasEffect extends PIXI.Container {
         let spriteType = this.data.tilingTexture
           ? PIXI.TilingSprite
           : SpriteMesh;
-        if (!this.data.xray && !this.data.aboveLighting) {
-          sprite = new spriteType(texture, VisionSamplerShader);
+        if (this.data.xray) {
+          sprite = new spriteType(texture);
         } else {
-          sprite = new spriteType();
+          sprite = new spriteType(texture, VisionSamplerShader);
         }
 
         this._relatedSprites[filePath] = sprite;

@@ -1,5 +1,13 @@
 ## Changelog
 
+### Version 3.0.2
+- *Sequencer* - Added backwards compatibility to the old format of `new Sequence(moduleName, softFail)`
+- *Sequencer* - Added `remote` support for `.wait()`
+- *Sequencer* - Added `moduleName` and `softFail` support for `remote`
+- *Animations* - Fixed `.snapToGrid()` sometimes not working well on hex scenes 
+- *Effects* - Fixed `.xray()` causing effects to disappear
+- *Sounds* - Fixed `softFail` not working properly
+
 ### Version 3.0.1
 - *Effects* - Fixed `cacheLocation` not working on effect locations
 - *Effects* - Fixed dual attached effects not working

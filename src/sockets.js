@@ -2,6 +2,7 @@ import SequencerAudioHelper from "./modules/sequencer-audio-helper.js";
 import CONSTANTS from "./constants.js";
 import FlagManager from "./utils/flag-manager.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
+import * as lib from "./lib/lib.js";
 
 export const SOCKET_HANDLERS = {
   PLAY_EFFECT: "playEffect",
@@ -70,6 +71,7 @@ export function registerSocket() {
     SequencerFoundryReplicator._panCanvas(data)
   );
   sequencerSocket.register(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, (data) => {
+    lib.debug("Playing remote Sequence");
     new Sequence().fromJSON(data).play();
   });
 }

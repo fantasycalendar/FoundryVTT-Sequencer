@@ -49,27 +49,26 @@ class SoundSection extends Section {
   async run() {
     const playData = await this._sanitizeSoundData();
 
-    if (!playData.src && this.sequence.softFail) {
+    if (!playData.play && this.sequence.softFail) {
       return new Promise((reject) => {
         reject();
       });
     }
 
     if (!playData?.play) {
-      this.sequence._showWarning(
+      this.sequence._customError(
         this,
         "Play",
-        `File not found: ${playData.data.src}`
+        `File not found: ${playData.src}`
       );
       return new Promise((reject) => reject());
     }
 
-    if (Hooks.call("preCreateSequencerSound", playData.data) === false) return;
+    if (Hooks.call("preCreateSequencerSound", playData) === false) return;
 
     let push =
       !(
-        playData.data?.users?.length === 1 &&
-        playData.data?.users?.includes(game.userId)
+        playData?.users?.length === 1 && playData?.users?.includes(game.userId)
       ) && !this.sequence.localOnly;
 
     SequencerAudioHelper.play(playData, push);
@@ -114,10 +113,10 @@ class SoundSection extends Section {
     }
 
     let soundFile = await AudioHelper.preloadSound(file);
-    if (!soundFile) {
+    if (!soundFile || soundFile.failed) {
       return {
         play: false,
-        src: file,
+        src: this._file,
       };
     }
     let duration = soundFile.duration * 1000;

@@ -276,19 +276,17 @@ class AnimationSection extends Section {
     let originLoc = canvaslib.get_object_position(origin, { exact: true });
     let targetLoc = canvaslib.get_object_position(target, { exact: true });
 
-    let originSizeWidth = (origin?.width ?? 1) * canvas.grid.size;
-    let originSizeHeight = (origin?.height ?? 1) * canvas.grid.size;
+    let originDimensions = canvaslib.get_object_dimensions(origin);
+    let targetDimensions = canvaslib.get_object_dimensions(target);
+
     let originBottom = Math.max(
-      originSizeWidth - canvas.grid.size,
+      originDimensions.width - canvas.grid.size,
       canvas.grid.size
     );
     let originRight = Math.max(
-      originSizeHeight - canvas.grid.size,
+      originDimensions.height - canvas.grid.size,
       canvas.grid.size
     );
-
-    let targetSizeWidth = (target?.width ?? 1) * canvas.grid.size;
-    let targetSizeHeight = (target?.height ?? 1) * canvas.grid.size;
 
     let ray = new Ray(originLoc, targetLoc);
 
@@ -296,17 +294,17 @@ class AnimationSection extends Section {
     let dy = ray.dy;
 
     if (dx > 0 && Math.abs(dx) > originRight) {
-      dx -= originSizeWidth;
-    } else if (dx < 0 && Math.abs(dx) > targetSizeWidth) {
-      dx += targetSizeHeight;
+      dx -= originDimensions.width;
+    } else if (dx < 0 && Math.abs(dx) > targetDimensions.width) {
+      dx += targetDimensions.height;
     } else {
       dx = 0;
     }
 
     if (dy > 0 && Math.abs(dy) > originBottom) {
-      dy -= originSizeHeight;
-    } else if (dy < 0 && Math.abs(dy) > targetSizeHeight) {
-      dy += targetSizeHeight;
+      dy -= originDimensions.height;
+    } else if (dy < 0 && Math.abs(dy) > targetDimensions.height) {
+      dy += targetDimensions.height;
     } else {
       dy = 0;
     }
@@ -321,14 +319,7 @@ class AnimationSection extends Section {
    * @private
    */
   _snapLocationToGrid(inLocation) {
-    let coords = canvas.grid.grid.getGridPositionFromPixels(
-      inLocation.x,
-      inLocation.y
-    );
-    return {
-      x: coords[1] * canvas.grid.size,
-      y: coords[0] * canvas.grid.size,
-    };
+    return canvas.grid.getSnappedPosition(inLocation.x, inLocation.y);
   }
 
   /**
@@ -360,7 +351,9 @@ class AnimationSection extends Section {
       targetLoc.x += this._offset.x;
       targetLoc.y += this._offset.y;
 
-      if (this._snapToGrid) targetLoc = this._snapLocationToGrid(targetLoc);
+      if (this._snapToGrid) {
+        targetLoc = this._snapLocationToGrid(targetLoc);
+      }
 
       if (this._originObject instanceof TokenDocument) {
         setTimeout(async () => {
@@ -531,8 +524,9 @@ class AnimationSection extends Section {
         }
       }
 
-      if (this._snapToGrid)
+      if (this._snapToGrid) {
         targetLocation = this._snapLocationToGrid(targetLocation);
+      }
 
       let originalDx = targetLocation.x - originLocation.x;
       let originalDy = targetLocation.y - originLocation.y;
@@ -695,10 +689,8 @@ class AnimationSection extends Section {
         targetLocation.y += this._offset.y;
         targetLocation.elevation =
           targetLocation?.elevation ?? this._originObject?.elevation;
+        const dimensions = canvaslib.get_object_dimensions(this._originObject);
         if (this._teleportTo.relativeToCenter) {
-          const dimensions = canvaslib.get_object_dimensions(
-            this._originObject
-          );
           targetLocation.x -= dimensions.width / 2;
           targetLocation.y -= dimensions.height / 2;
           if (this._snapToGrid) {
@@ -706,8 +698,11 @@ class AnimationSection extends Section {
             targetLocation.y -= 0.01;
           }
         }
-        if (this._snapToGrid)
+        if (this._snapToGrid) {
+          targetLocation.x -= dimensions.width / 2;
+          targetLocation.y -= dimensions.height / 2;
           targetLocation = this._snapLocationToGrid(targetLocation);
+        }
         await this._updateObject(this._originObject, targetLocation, false);
       }, this._teleportTo.delay);
       if (overallDuration <= this._teleportTo.delay) {
