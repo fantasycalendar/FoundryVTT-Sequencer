@@ -325,7 +325,15 @@ export default class Sequence {
         `addSequence - could not find the sequence from the given parameter`
       );
     }
-    this.sections = this.sections.concat(inSequence.sections);
+    const newSections = inSequence.sections.map((section) => {
+      const newSection = Object.assign(
+        Object.create(Object.getPrototypeOf(section)),
+        section
+      );
+      newSection.sequence = this;
+      return newSection;
+    });
+    this.sections = this.sections.concat(newSections);
     return this;
   }
 

@@ -15,14 +15,10 @@ export default {
    * time the section is played.
    *
    * @param {string|array} inFile
-   * @param {boolean} silentlyFail
    * @returns this
    */
-  file(inFile, silentlyFail) {
+  file(inFile) {
     this._file = inFile;
-    if (silentlyFail !== undefined) {
-      this.sequence.softFail = silentlyFail;
-    }
     return this;
   },
 

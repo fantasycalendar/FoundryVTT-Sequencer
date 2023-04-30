@@ -185,7 +185,7 @@ Defines the base folder that will prepend to the file path. This is mainly just 
 ## File
 
 ```js
-.file(inFilePath = string|array<string>, softFail = boolean)
+.file(inFilePath = string|array<string>)
 ```
 
 - Filepath: `.file("Audio/Soundly_Assets/Combat/Blade/Miss1.wav")`

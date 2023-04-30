@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.0.3
+- *Sequencer* - Fixed edge case with `.addSequence()` that would cause a sequence to ignore `softFail`
+- *Effects & Sounds* - Removed secondary boolean argument for `.file()` as it is covered by the Sequence-wide soft fail
+
 ### Version 3.0.2
 - *Sequencer* - Added backwards compatibility to the old format of `new Sequence(moduleName, softFail)`
 - *Sequencer* - Added `remote` support for `.wait()`
