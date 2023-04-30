@@ -62,7 +62,7 @@ This hook fires as an [`.effect()`](api/effect.md) has finished playing. The `ef
 
 `Hooks.on("sequencerEffectTimestamp", (CanvasEffect, SequencerFile) => {})`
 
-This hook fires every time an [`.effect()`](api/effect.md) on the canvas reaches a timestamp as defined in its [database configuration](docs/database-basics.md#timestamps-within-files). The arguments given are the effect, and the Sequencer database file.
+This hook fires every time an [`.effect()`](api/effect.md) on the canvas reaches a timestamp as defined in its [database configuration](database-basics.md#timestamps-within-files). The arguments given are the effect, and the Sequencer database file.
 
 ### Pre Create Sequencer Sound
 

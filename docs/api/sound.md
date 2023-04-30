@@ -68,7 +68,7 @@ This will delay the sound from being played for a set amount of milliseconds. If
 
 `.preset("name")`
 
-Applies a preset to the current sound - read the [Sequencer Presets article](docs/presets.md) for more information.
+Applies a preset to the current sound - read the [Sequencer Presets article](presets.md) for more information.
 
 ## Duration
 

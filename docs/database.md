@@ -45,7 +45,7 @@ const database = {
 
 The structure can be in any form you want, as long as it eventually ends up at a file path, or an array of file paths (shown above).
 
-Read more on the [How To Use The Database](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/How-to:-Sequencer-Database) article.
+Read more on the [How To Use The Database](database-basics.md) article.
 
 ## Get Entry
 

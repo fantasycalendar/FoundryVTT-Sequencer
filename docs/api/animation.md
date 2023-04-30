@@ -71,7 +71,7 @@ This will delay the section from being played for a set amount of milliseconds. 
 
 `.preset("name")`
 
-Applies a preset to the current animation - read the [Sequencer Presets article](docs/presets.md) for more information.
+Applies a preset to the current animation - read the [Sequencer Presets article](presets.md) for more information.
 
 ## Opacity
 

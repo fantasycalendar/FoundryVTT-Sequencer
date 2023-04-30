@@ -1,6 +1,6 @@
 ## Class Definitions
 
-All of the methods are listed in the [Sequencer Database wiki article](docs/database.md).
+All of the methods are listed in the [Sequencer Database wiki article](database.md).
 
 ## Opening the Database Viewer
 

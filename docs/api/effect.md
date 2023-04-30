@@ -81,7 +81,7 @@ This will delay the effect from being played for a set amount of milliseconds. I
 
 `.preset("name")`
 
-Applies a preset to the current effect - read the [Sequencer Presets article](docs/presets.md) for more information.
+Applies a preset to the current effect - read the [Sequencer Presets article](presets.md) for more information.
 
 ## Opacity
 
