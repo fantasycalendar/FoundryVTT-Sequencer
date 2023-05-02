@@ -600,6 +600,7 @@ A number be passed to the method, causing the effect to also scale uniformly (1.
 
 A secondary options parameter can be passed as well, which accepts the following parameters:
 - `uniform: boolean` (default `false`) - This causes the scaling to always be uniform, as it picks the largest dimension of the object
+- `considerTokenScale: boolean` (default `false`) - This causes the effect to also consider the token's scale
 
 ## Sprite Scale
 

@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.0.4
+- *Effects* - Added support for file buckets that contain `video/webm-x` files (mostly Google Buckets)
+- *Effects* - Fixed `.scaleToObject()` taking into account token scale when it should not (unless `considerTokenScale` is set to `true`)
+
 ## Version 3.0.3
 - *Sequencer* - Fixed edge case with `.addSequence()` that would cause a sequence to ignore `softFail`
 - *Effects & Sounds* - Removed secondary boolean argument for `.file()` as it is covered by the Sequence-wide soft fail

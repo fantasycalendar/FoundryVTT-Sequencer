@@ -10,7 +10,6 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
-import animation from "../sections/traits/animation.js";
 
 const hooksManager = {
   _hooks: new Map(),
@@ -2650,12 +2649,13 @@ export default class CanvasEffect extends PIXI.Container {
         : this.getSourceData();
 
       const target = this.targetDocument || this.sourceDocument;
-      if (
-        target instanceof TokenDocument &&
-        this.data.scaleToObject?.considerTokenScale
-      ) {
-        width = target?.object?.mesh?.width;
-        height = target?.object?.mesh?.height;
+      if (target instanceof TokenDocument) {
+        width *= this.data.scaleToObject?.considerTokenScale
+          ? target.texture.scaleX
+          : 1.0;
+        height *= this.data.scaleToObject?.considerTokenScale
+          ? target.texture.scaleY
+          : 1.0;
       }
 
       if (this.data.scaleToObject?.uniform) {
