@@ -1,6 +1,6 @@
 ## Changelog
 
-## Version 3.0.4
+## Version 3.0.5
 - *Effects* - Fixed support for google bucket files (it meant to be `video/x-webm` instead of `video/webm-x`)
 - *Effects* - Fixed dual attached effects disappearing once going beyond the range of the initial effect
 
