@@ -1,6 +1,10 @@
 ## Changelog
 
 ## Version 3.0.4
+- *Effects* - Fixed support for google bucket files (it meant to be `video/x-webm` instead of `video/webm-x`)
+- *Effects* - Fixed dual attached effects disappearing once going beyond the range of the initial effect
+
+## Version 3.0.4
 - *Effects* - Added support for file buckets that contain `video/webm-x` files (mostly Google Buckets)
 - *Effects* - Fixed `.scaleToObject()` taking into account token scale when it should not (unless `considerTokenScale` is set to `true`)
 

@@ -4,7 +4,7 @@ const SequencerFileCache = {
   _videos: {},
   _preloadedFiles: new Set(),
   _totalCacheSize: 0,
-  _validTypes: ["video/webm", "video/webm-x", "application/octet-stream"],
+  _validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
 
   async loadVideo(inSrc) {
     if (!this._videos[inSrc]) {

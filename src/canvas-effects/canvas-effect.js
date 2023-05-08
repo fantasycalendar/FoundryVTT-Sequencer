@@ -2434,7 +2434,6 @@ export default class CanvasEffect extends PIXI.Container {
         } else {
           sprite = new spriteType(texture, VisionSamplerShader);
         }
-
         this._relatedSprites[filePath] = sprite;
         if (this.data.tint) {
           sprite.tint = this.data.tint;
@@ -2454,10 +2453,14 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (this._relatedSprites[filePath]) {
       if (this.data.attachTo?.active) {
-        await this._applyAttachmentOffset();
+        this._applyAttachmentOffset();
       }
 
       const sprite = this._relatedSprites[filePath];
+
+      if (!sprite.parent) {
+        this.sprite.addChild(sprite);
+      }
 
       if (this.data.tilingTexture) {
         const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
