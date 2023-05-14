@@ -44,10 +44,6 @@ let position = await warpgate.crosshairs.show({
 
 new Sequence()
     .effect()
-        .file("jb2a.chain_lightning.primary.blue")
-        .atLocation(token)
-    .wait(300)
-    .effect()
         .from(token)
         .fadeIn(50)
         .duration(550)
