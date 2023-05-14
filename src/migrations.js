@@ -24,31 +24,35 @@ function getSequencerEffectTokens(version, tokenFilter = false) {
   return Array.from(game.scenes)
     .map((scene) => [
       scene,
-      Array.from(scene.tokens).filter((token, index) => {
-        if (tokenFilter) {
-          return tokenFilter(token, index);
-        }
-        const effects = getProperty(token, CONSTANTS.EFFECTS_FLAG) ?? [];
-        const effectsOutOfDate = effects.filter((e) =>
-          isNewerVersion(version, e[1].flagVersion)
-        );
-        return effectsOutOfDate.length;
-      }),
+      Array.from(scene.tokens)
+        .filter((token) => token.isOwner)
+        .filter((token, index) => {
+          if (tokenFilter) {
+            return tokenFilter(token, index);
+          }
+          const effects = getProperty(token, CONSTANTS.EFFECTS_FLAG) ?? [];
+          const effectsOutOfDate = effects.filter((e) =>
+            isNewerVersion(version, e[1].flagVersion)
+          );
+          return effectsOutOfDate.length;
+        }),
     ])
     .filter(([_, tokens]) => tokens.length);
 }
 
 function getSequencerEffectActors(version, actorFilter = false) {
-  return Array.from(game.actors).filter((actor, index) => {
-    if (actorFilter) {
-      return actorFilter(actor, index);
-    }
-    const effects = getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
-    const effectsOutOfDate = effects.filter((e) =>
-      isNewerVersion(version, e[1].flagVersion)
-    );
-    return effectsOutOfDate.length;
-  });
+  return Array.from(game.actors)
+    .filter((actor) => actor.isOwner)
+    .filter((actor, index) => {
+      if (actorFilter) {
+        return actorFilter(actor, index);
+      }
+      const effects = getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
+      const effectsOutOfDate = effects.filter((e) =>
+        isNewerVersion(version, e[1].flagVersion)
+      );
+      return effectsOutOfDate.length;
+    });
 }
 
 const migrations = {

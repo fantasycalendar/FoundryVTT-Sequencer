@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.0.6
+- *Sequencer* - Fixed issue with Sequencer trying to make users migrate tokens and effects they do not own 
+- *Effects* - Fixed effects not updating reliably when the target's opacity and/or hidden status changes
+
 ## Version 3.0.5
 - *Effects* - Fixed support for google bucket files (it meant to be `video/x-webm` instead of `video/webm-x`)
 - *Effects* - Fixed dual attached effects disappearing once going beyond the range of the initial effect

@@ -2281,7 +2281,7 @@ export default class CanvasEffect extends PIXI.Container {
         hooksManager.addHook(this.uuid, this.getSourceHook("update"), (doc) => {
           if (doc !== this.sourceDocument) return;
           if (this.data.attachTo?.bindAlpha) {
-            this.spriteContainer.alpha = this._cachedSourceData.alpha;
+            this.spriteContainer.alpha = this.getSourceData().alpha;
           }
           if (this.data.attachTo?.bindElevation) {
             this.updateElevation();
@@ -2290,7 +2290,7 @@ export default class CanvasEffect extends PIXI.Container {
       }
 
       if (this.data.attachTo?.bindAlpha) {
-        alpha = this._cachedSourceData.alpha;
+        alpha = this.getSourceData().alpha;
       }
     }
 
