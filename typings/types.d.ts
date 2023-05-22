@@ -558,6 +558,8 @@ declare abstract class EffectSection {
       randomOffset?: number;
       gridUnits?: boolean;
       local?: boolean;
+      requiresLineOfSight?: boolean;
+      hideLineOfSight?: boolean;
     }
   ): this;
 

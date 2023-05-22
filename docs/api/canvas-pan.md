@@ -9,7 +9,7 @@ This part of the Sequencer allows you to easily pan your canvas, or the canvas o
 When creating a canvas pan section, you can assemble these methods like this:
 
 ```js
-new Sequence().canvasPan(token)play();
+new Sequence().canvasPan(token).play();
 ```
 
 or more involved

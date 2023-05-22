@@ -356,6 +356,8 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `requiresLineOfSight: boolean` - (requires `attachTo` to be true) causes the effect to end prematurely if the line of sight from the source and target is broken
+- `hideLineOfSight: boolean` - (requires `requiresLineOfSight` to be true) changes the behavior of `requiresLineOfSight` and causes the effect to be hidden while the line of sight is broken
 
 ## Move Towards
 

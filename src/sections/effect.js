@@ -392,6 +392,8 @@ export default class EffectSection extends Section {
         randomOffset: false,
         gridUnits: false,
         local: false,
+        requiresLineOfSight: false,
+        hideLineOfSight: false,
       },
       inOptions
     );
@@ -446,6 +448,38 @@ export default class EffectSection extends Section {
       );
     }
 
+    if (typeof inOptions.requiresLineOfSight !== "boolean") {
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "requiresLineOfSight must be of type boolean"
+      );
+    }
+
+    if (!inOptions.attachTo && inOptions.requiresLineOfSight) {
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "requiresLineOfSight requires that attachTo is true"
+      );
+    }
+
+    if (typeof inOptions.hideLineOfSight !== "boolean") {
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "hideLineOfSight must be of type boolean"
+      );
+    }
+
+    if (!inOptions.requiresLineOfSight && inOptions.hideLineOfSight) {
+      throw this.sequence._customError(
+        this,
+        "stretchTo",
+        "hideLineOfSight requires that requiresLineOfSight is true"
+      );
+    }
+
     if (inOptions.tiling) this.tilingTexture();
 
     this._temporaryEffect =
@@ -477,6 +511,8 @@ export default class EffectSection extends Section {
         : validatedObject,
       attachTo: inOptions.attachTo,
       onlyX: inOptions.onlyX,
+      requiresLineOfSight: inOptions.requiresLineOfSight,
+      hideLineOfSight: inOptions.hideLineOfSight,
     };
 
     return this;
@@ -2251,6 +2287,8 @@ export default class EffectSection extends Section {
         ? {
             attachTo: this._stretchTo.attachTo,
             onlyX: this._stretchTo.onlyX,
+            requiresLineOfSight: this._stretchTo.requiresLineOfSight,
+            hideLineOfSight: this._stretchTo.hideLineOfSight,
           }
         : false,
       moveTowards: this._moveTowards

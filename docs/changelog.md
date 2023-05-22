@@ -1,5 +1,13 @@
 ## Changelog
 
+## Version 3.0.7
+- *Effects* - Added `requiresLineOfSight` and `hideLineOfSight` to the secondary arguments of `.stretchTo()`
+  - This requires `attachTo` to be true in `stretchTo()`
+  - `requiresLineOfSight` causes the effect to immediately end if the line of sight between the source and target is broken
+  - `hideLineOfSight` modifies the above behavior to temporarily hide the effect until the line of sight is unbroken
+- *Effects* - Fixed the "External Effect Opacity" setting, which causes effects playing for other players to show up as faint for GMs to let them know that players has effects playing for them, but would not work if the opacity was set to 0
+- *Effects* - Improved dual-attached effects performance
+
 ## Version 3.0.6
 - *Sequencer* - Fixed issue with Sequencer trying to make users migrate tokens and effects they do not own 
 - *Effects* - Fixed effects not updating reliably when the target's opacity and/or hidden status changes

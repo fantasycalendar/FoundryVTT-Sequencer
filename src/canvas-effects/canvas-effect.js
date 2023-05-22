@@ -361,7 +361,6 @@ export default class CanvasEffect extends PIXI.Container {
     // And if the effect is going to be played for a subset of users
     // And the users does not contain this user
     return (
-      game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") !== 0 &&
       this.data.users &&
       this.data.users.length &&
       !(
@@ -410,7 +409,7 @@ export default class CanvasEffect extends PIXI.Container {
       : Math.min(currentTime, this._video.duration);
     this._video.loop = isLooping;
 
-    this._texture.update();
+    this.updateTexture();
   }
 
   async playMedia() {
@@ -418,10 +417,18 @@ export default class CanvasEffect extends PIXI.Container {
       await this.sprite.play();
     } else if (this.video) {
       try {
-        await this.video.play();
+        await this.video.play().then(() => {
+          this.updateTexture();
+        });
       } catch (err) {}
     }
     this._setupTimestampHook(this.mediaCurrentTime * 1000);
+  }
+
+  updateTexture() {
+    if (this._texture.valid) {
+      this._texture.update();
+    }
   }
 
   async pauseMedia() {
@@ -1778,14 +1785,17 @@ export default class CanvasEffect extends PIXI.Container {
       this.sprite.addChild(textSprite);
     }
 
-    if (this.shouldShowFadedVersion) {
-      this.filters = [
-        new PIXI.filters.ColorMatrixFilter({ saturation: -1 }),
-        new PIXI.filters.AlphaFilter(
-          game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100
-        ),
-      ];
-    }
+    this.filters = [
+      new PIXI.filters.ColorMatrixFilter({
+        saturation: this.shouldShowFadedVersion ? -1 : 1,
+      }),
+      new PIXI.filters.AlphaFilter(
+        this.shouldShowFadedVersion
+          ? game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") /
+            100
+          : 1
+      ),
+    ];
 
     this.updateElevation();
   }
@@ -2269,7 +2279,9 @@ export default class CanvasEffect extends PIXI.Container {
               this.target &&
               (!attachedToTarget || (this.targetMesh?.visible ?? true));
             this.renderable =
-              baseRenderable && (sourceVisible || targetVisible);
+              baseRenderable &&
+              (sourceVisible || targetVisible) &&
+              this._checkWallCollisions();
             this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
             renderable = baseRenderable && this.renderable;
           },
@@ -2410,7 +2422,7 @@ export default class CanvasEffect extends PIXI.Container {
     let { filePath, texture, spriteAnchor, scaleX, scaleY, distance } =
       await this._getTextureForDistance(ray.distance);
 
-    if (this._currentFilePath !== filePath || !this._relatedSprites[filePath]) {
+    if (this._currentFilePath !== filePath) {
       this._texture = texture;
       this.video = filePath.toLowerCase().endsWith(".webm")
         ? texture?.baseTexture?.resource?.source ?? false
@@ -2443,13 +2455,7 @@ export default class CanvasEffect extends PIXI.Container {
       }
     }
 
-    try {
-      this._relatedSprites[filePath].texture?.baseTexture?.resource?.source
-        .play()
-        .then(() => {
-          this._relatedSprites[filePath].texture.update();
-        });
-    } catch (err) {}
+    this.playMedia();
 
     if (this._relatedSprites[filePath]) {
       if (this.data.attachTo?.active) {
@@ -2485,6 +2491,25 @@ export default class CanvasEffect extends PIXI.Container {
         this.data.anchor?.y ?? 0.5
       );
     }
+  }
+
+  _checkWallCollisions() {
+    if (
+      !this.data.stretchTo?.attachTo ||
+      !this.data.stretchTo?.requiresLineOfSight
+    )
+      return true;
+
+    const ray = new Ray(this.sourcePosition, this.targetPosition);
+
+    const blockingObjects = canvas.walls.checkCollision(ray, { type: "sight" });
+
+    if (!blockingObjects.length && !this.data.stretchTo?.hideLineOfSight) {
+      this._ticker.stop();
+      SequencerEffectManager.endEffects({ effects: this });
+    }
+
+    return !blockingObjects.length;
   }
 
   /**
@@ -2565,7 +2590,7 @@ export default class CanvasEffect extends PIXI.Container {
       this.video?.currentTime !== undefined
     ) {
       await lib.wait(20);
-      this.sprite.texture.update();
+      this.updateTexture();
     }
 
     if (!this.data.stretchTo) {
@@ -3406,7 +3431,7 @@ class PersistentCanvasEffect extends CanvasEffect {
       if (this._endTime !== this.mediaDuration) {
         setTimeout(() => {
           this.mediaCurrentTime = this._endTime;
-          this.sprite.texture.update();
+          this.updateTexture();
         }, this._endTime * 1000 - creationTimeDifference);
       }
       await this.playMedia();
@@ -3420,7 +3445,7 @@ class PersistentCanvasEffect extends CanvasEffect {
       this.renderable = false;
       setTimeout(() => {
         this.renderable = oldRenderable;
-        this.sprite.texture.update();
+        this.updateTexture();
       }, 350);
     }
   }
