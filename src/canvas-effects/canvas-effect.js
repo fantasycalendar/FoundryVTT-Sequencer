@@ -426,6 +426,7 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   updateTexture() {
+    console.log(this._texture);
     if (this._texture.valid) {
       this._texture.update();
     }
@@ -2422,7 +2423,10 @@ export default class CanvasEffect extends PIXI.Container {
     let { filePath, texture, spriteAnchor, scaleX, scaleY, distance } =
       await this._getTextureForDistance(ray.distance);
 
-    if (this._currentFilePath !== filePath) {
+    if (
+      this._currentFilePath !== filePath ||
+      this._relatedSprites[filePath] === undefined
+    ) {
       this._texture = texture;
       this.video = filePath.toLowerCase().endsWith(".webm")
         ? texture?.baseTexture?.resource?.source ?? false

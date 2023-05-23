@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.0.8
+- *Effects* - Fixed `stretchTo()` effects sometimes not being visible
+
 ## Version 3.0.7
 - *Effects* - Added `requiresLineOfSight` and `hideLineOfSight` to the secondary arguments of `.stretchTo()`
   - This requires `attachTo` to be true in `stretchTo()`
