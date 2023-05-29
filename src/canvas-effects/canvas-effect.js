@@ -426,7 +426,6 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   updateTexture() {
-    console.log(this._texture);
     if (this._texture.valid) {
       this._texture.update();
     }

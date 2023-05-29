@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.0.9
+- *Canvas Pan* - Added `.shake()` which can be used to add camera shake to the canvas
+- *Effects* - Fixed glow filter not working in v11
+
 ## Version 3.0.8
 - *Effects* - Fixed `stretchTo()` effects sometimes not being visible
 

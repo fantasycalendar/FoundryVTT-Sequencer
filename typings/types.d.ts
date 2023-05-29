@@ -893,6 +893,18 @@ declare abstract class CanvasPanSection {
    * Locks the canvas at the given location for the given duration
    */
   lockView(inDuration: number): this;
+
+  /**
+   * Shakes the canvas
+   */
+  shake(inOptions?: {
+    duration?: number,
+    strength?: number,
+    frequency?: number,
+    fadeInDuration?: number,
+    fadeOutDuration?: number,
+    rotation?: boolean,
+  }): this;
 }
 
 declare abstract class SequencerFile {}

@@ -14,6 +14,7 @@ export default class CanvasPanSection extends Section {
     this._speed = null;
     this._scale = scale ?? 1.0;
     this._lockView = null;
+    this._shake = null;
     this._seed = lib.get_hash(randomID());
     if (target) {
       this.atLocation(target);
@@ -103,6 +104,78 @@ export default class CanvasPanSection extends Section {
     return this;
   }
 
+  /**
+   * Shakes the canvas
+   *
+   * @param {number} duration
+   * @param {number} strength
+   * @param {number} frequency
+   * @param {number} fadeInDuration
+   * @param {number} fadeOutDuration
+   * @param {boolean} rotation
+   * @returns this
+   */
+  shake({
+    duration = 250,
+    strength = 20,
+    frequency = 10,
+    fadeInDuration = 0,
+    fadeOutDuration = 200,
+    rotation = true,
+  } = {}) {
+    if (!is_real_number(duration)) {
+      throw this.sequence._customError(
+        this,
+        "shake",
+        "duration must be of type number"
+      );
+    }
+    if (!is_real_number(strength)) {
+      throw this.sequence._customError(
+        this,
+        "shake",
+        "strength must be of type number"
+      );
+    }
+    if (!is_real_number(strength)) {
+      throw this.sequence._customError(
+        this,
+        "shake",
+        "frequency must be of type number"
+      );
+    }
+    if (!is_real_number(fadeInDuration)) {
+      throw this.sequence._customError(
+        this,
+        "shake",
+        "fadeInDuration must be of type number"
+      );
+    }
+    if (!is_real_number(fadeOutDuration)) {
+      throw this.sequence._customError(
+        this,
+        "shake",
+        "fadeOutDuration must be of type number"
+      );
+    }
+    if (typeof rotation !== "boolean") {
+      throw this.sequence._customError(
+        this,
+        "shake",
+        "rotation must be of type boolean"
+      );
+    }
+    this._shake = {
+      duration,
+      strength,
+      frequency,
+      fadeInDuration,
+      fadeOutDuration,
+      rotation,
+    };
+    return this;
+  }
+
   async run() {
     const data = await this._sanitizeData();
     if (Hooks.call("preCanvasPan", data) === false) return;
@@ -142,6 +215,7 @@ export default class CanvasPanSection extends Section {
       speed: this._speed,
       scale: this._scale,
       lockView: this._lockView,
+      shake: this._shake,
     };
   }
 

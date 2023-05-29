@@ -73,6 +73,15 @@ export function random_int_between(min, max, twister = false) {
   return Math.floor(random_float_between(min, max, twister));
 }
 
+export function flip_negate(num_1, num_2) {
+  if (num_1 > 0) {
+    num_1 -= num_2;
+  } else {
+    num_1 += num_2;
+  }
+  return num_1;
+}
+
 /**
  *  Returns a shuffled copy of the original array.
  *

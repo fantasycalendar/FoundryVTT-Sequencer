@@ -108,37 +108,108 @@ export default class SequencerFoundryReplicator {
     if (game.user.viewedScene !== data.sceneId) return;
     if (data.users.length && !data.users.includes(game.userId)) return;
 
-    const position = this._getPositionFromData(data);
+    if (data.source) {
+      const position = this._getPositionFromData(data);
 
-    canvas.animatePan({
-      x: position.x,
-      y: position.y,
-      scale: data.scale,
-      duration: data.duration,
-      speed: data.speed,
-    });
-
-    if (data.speed) {
-      let ray = new Ray(canvas.stage.pivot, {
+      canvas.animatePan({
         x: position.x,
         y: position.y,
+        scale: data.scale,
+        duration: data.duration,
+        speed: data.speed,
       });
-      data.duration = Math.round((ray.distance * 1000) / data.speed);
-    }
 
-    if (data.lockView > 0) {
-      setTimeout(() => {
-        lockedView = {
+      if (data.speed) {
+        let ray = new Ray(canvas.stage.pivot, {
           x: position.x,
           y: position.y,
-          scale: data.scale,
-        };
-      }, data.duration);
-      setTimeout(() => {
-        lockedView = false;
-      }, data.lockView + data.duration);
+        });
+        data.duration = Math.round((ray.distance * 1000) / data.speed);
+      }
+
+      if (data.lockView > 0) {
+        setTimeout(() => {
+          lockedView = {
+            x: position.x,
+            y: position.y,
+            scale: data.scale,
+          };
+        }, data.duration);
+        setTimeout(() => {
+          lockedView = false;
+        }, data.lockView + data.duration);
+      }
+    } else {
+      data.duration = 0;
     }
 
-    return data.duration + (data.lockView ?? 0);
+    if (data.shake) {
+      setTimeout(() => {
+        this._shake(data.shake);
+      }, data.duration);
+    }
+
+    return (
+      data.duration + Math.max(data.lockView ?? 0, data.shake?.duration ?? 0)
+    );
+  }
+
+  static _shake(shakeData) {
+    let x = lib.random_float_between(-1, 1);
+    let y = lib.random_float_between(-1, 1);
+    let rot = shakeData.rotation ? lib.random_float_between(-1, 1) : 0;
+    let positions = [{ x, y, rot }];
+
+    for (
+      let index = 0;
+      index < Math.floor(shakeData.duration / shakeData.frequency);
+      index++
+    ) {
+      x = lib.flip_negate(x, Math.random());
+      y = lib.flip_negate(y, Math.random());
+      rot = shakeData.rotation ? lib.flip_negate(rot, Math.random()) : 0;
+      positions.push({ x, y, rot });
+    }
+
+    let currentDuration = 0;
+    positions = positions.map((pos) => {
+      let fadeStrength = 1;
+      if (
+        shakeData.fadeInDuration &&
+        currentDuration <= shakeData.fadeInDuration
+      ) {
+        fadeStrength = Math.max(
+          0,
+          Math.min(1, currentDuration / shakeData.fadeInDuration)
+        );
+      }
+      if (
+        shakeData.fadeOutDuration &&
+        currentDuration >= shakeData.duration - shakeData.fadeOutDuration
+      ) {
+        fadeStrength = Math.max(
+          0,
+          Math.min(
+            1,
+            (shakeData.duration - currentDuration) / shakeData.fadeOutDuration
+          )
+        );
+      }
+      pos.x *= shakeData.strength * fadeStrength;
+      pos.y *= shakeData.strength * fadeStrength;
+      if (shakeData.rotation) {
+        pos.rot *= (shakeData.strength / 7.5) * fadeStrength;
+      } else {
+        pos.rot = 0;
+      }
+      currentDuration += shakeData.frequency;
+      return {
+        transform: `translate(${pos.x}px, ${pos.y}px) rotate(${pos.rot}deg)`,
+      };
+    });
+
+    document.getElementById("board").animate(positions, {
+      duration: shakeData.duration,
+    });
   }
 }

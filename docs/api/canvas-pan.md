@@ -123,3 +123,18 @@ Sets how fast the canvas pan should move.
 `.scale(number)`
 
 Sets the scale of the viewpoint.
+
+## Shake
+
+`.shake()`
+
+Shakes the viewport.
+
+This function takes an object, which can contain these properties:
+
+- `duration: number` (default `400`) - Number of milliseconds the shake should last
+- `strength: number` (default `10`) - Strength of the shake, which is how far the shake should move in pixels (nominal between 10-35)
+- `frequency: number` (default `25`) - Number of milliseconds each iteration of the shake should last (lower means faster shakes)
+- `fadeInDuration: number` (default `0`) - Number of milliseconds it will take for the shake to blend in
+- `fadeOutDuration: number` (default `125`) - Number of milliseconds it will take for the shake to blend out
+- `rotation: boolean` (default `true`) - Whether the shake should also rotate the viewport
