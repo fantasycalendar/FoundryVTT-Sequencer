@@ -86,10 +86,10 @@ class Database {
       );
     this._flatten(inEntries, inModuleName);
     const processedEntries = this._processEntries(inModuleName, inEntries);
+    if (isPrivate) this.privateModules.push(inModuleName);
     this.entries = foundry.utils.mergeObject(this.entries, {
       [inModuleName]: processedEntries,
     });
-    if (isPrivate) this.privateModules.push(inModuleName);
     console.log(
       `Sequencer | Database | Entries for "${inModuleName}" registered`
     );

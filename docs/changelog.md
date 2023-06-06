@@ -2,6 +2,7 @@
 
 ## Version 3.0.10
 - *Sequencer* - Fixed Effect Player not working in Foundry v11
+- *Sequencer* - Fixed private modules showing up in the Database Viewer
 
 ## Version 3.0.9
 - *Canvas Pan* - Added `.shake()` which can be used to add camera shake to the canvas
