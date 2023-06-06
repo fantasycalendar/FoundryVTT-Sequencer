@@ -578,3 +578,9 @@ export function parseColor(inColor) {
         : inColor,
   };
 }
+
+export function getCanvasMouse() {
+  return game.release.generation === 11
+    ? canvas.app.renderer.plugins.interaction.pointer
+    : canvas.app.renderer.plugins.interaction.mouse;
+}

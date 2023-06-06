@@ -309,9 +309,7 @@ export function get_object_elevation(inObject) {
 }
 
 export function get_mouse_position(snapToGrid = false, gridSnap = 2) {
-  const pos = canvas.app.renderer.plugins.interaction.mouse.getLocalPosition(
-    canvas.app.stage
-  );
+  const pos = lib.getCanvasMouse().getLocalPosition(canvas.app.stage);
   return !snapToGrid
     ? new PIXI.Point(pos.x, pos.y)
     : canvas.grid.getSnappedPosition(pos.x, pos.y, gridSnap);
