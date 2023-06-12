@@ -174,6 +174,17 @@ export function get_object_position(
       pos.x -= halfSize.width;
       pos.y -= halfSize.height;
     }
+  } else if (obj instanceof Drawing) {
+    pos = {
+      x: obj.document.x,
+      y: obj.document.y,
+    };
+
+    if (!exact) {
+      const halfSize = get_object_dimensions(obj, true);
+      pos.x += halfSize.width;
+      pos.y += halfSize.height;
+    }
   }
 
   pos = {
