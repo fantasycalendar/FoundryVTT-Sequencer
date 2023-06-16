@@ -3,6 +3,7 @@
 ## Version 3.0.11
 - *Sequencer* - Made PIXI fix settings default to being turned off
 - *Effects* - Fixed some persistent effects not being deleted from scenes after their attached sources were deleted
+- *Effects* - Fixed drawing dimensions and positions not taken into account when used as targets for effects (Thanks LukeAbby!)
 
 ## Version 3.0.10
 - *Sequencer* - Fixed Effect Player not working in Foundry v11
