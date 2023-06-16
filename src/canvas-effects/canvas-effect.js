@@ -473,6 +473,14 @@ export default class CanvasEffect extends PIXI.Container {
     return this.video?.currentTime ?? null;
   }
 
+  get mediaPlaybackRate() {
+    if (this.animatedSprite) {
+      return this.sprite.animationSpeed;
+    } else if (this.video) {
+      return this.video.playbackRate;
+    }
+  }
+
   set mediaPlaybackRate(inPlaybackRate) {
     if (this.animatedSprite) {
       this.sprite.animationSpeed = 0.4 * inPlaybackRate;
@@ -506,7 +514,7 @@ export default class CanvasEffect extends PIXI.Container {
         PIXI.Ticker.shared.FPS
       );
     } else if (this.video) {
-      return this.video?.duration;
+      return this.video?.duration / this.mediaPlaybackRate;
     }
     return 1;
   }
@@ -1536,6 +1544,10 @@ export default class CanvasEffect extends PIXI.Container {
    * @private
    */
   _calculateDuration() {
+    let playbackRate = this.data.playbackRate ? this.data.playbackRate : 1.0;
+
+    this.mediaPlaybackRate = playbackRate;
+
     this._animationDuration = this.data.duration || this.mediaDuration * 1000;
 
     // If the effect moves, then infer the duration from the distance divided by the speed
@@ -1620,9 +1632,12 @@ export default class CanvasEffect extends PIXI.Container {
       this._startTime === 0 &&
       this._endTime === this.mediaDuration
     ) {
-      this._animationTimes.loopStart = this._file.markers.loop.start / 1000;
-      this._animationTimes.loopEnd = this._file.markers.loop.end / 1000;
-      this._animationTimes.forcedEnd = this._file.markers.forcedEnd / 1000;
+      this._animationTimes.loopStart =
+        this._file.markers.loop.start / playbackRate / 1000;
+      this._animationTimes.loopEnd =
+        this._file.markers.loop.end / playbackRate / 1000;
+      this._animationTimes.forcedEnd =
+        this._file.markers.forcedEnd / playbackRate / 1000;
     }
 
     this._animationDuration /= this.data.playbackRate ?? 1.0;
@@ -1632,10 +1647,6 @@ export default class CanvasEffect extends PIXI.Container {
 
     this.mediaLooping =
       this._animationDuration / 1000 > this.mediaDuration && !this.data.noLoop;
-
-    this.mediaPlaybackRate = this.data.playbackRate
-      ? this.data.playbackRate
-      : 1.0;
   }
 
   /**
@@ -3375,7 +3386,7 @@ export default class CanvasEffect extends PIXI.Container {
       : [timestamps];
     for (const timestamp of timestampArray) {
       if (!lib.is_real_number(timestamp)) continue;
-      let realTimestamp = timestamp - offset;
+      let realTimestamp = timestamp - offset / this.mediaPlaybackRate;
       if (realTimestamp < 0) {
         realTimestamp += this._endTime;
       }

@@ -308,7 +308,8 @@ export default class Sequence {
       );
       return this;
     }
-    return preset(this, ...args);
+    const lastSection = this.sections[this.sections.length - 1];
+    return preset(lastSection, ...args);
   }
 
   /**
