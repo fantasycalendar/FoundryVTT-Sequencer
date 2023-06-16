@@ -103,7 +103,7 @@ async function get_video_texture(inBlob) {
         resourceOptions: { autoPlay: false },
       });
 
-      if (game.settings.get(CONSTANTS.MODULE_NAME, "enable-pixi-fix")) {
+      if (game.settings.get(CONSTANTS.MODULE_NAME, "enable-fix-pixi")) {
         baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA;
       }
 

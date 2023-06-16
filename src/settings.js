@@ -4,17 +4,17 @@ import { DatabaseViewerApp } from "./formapplications/database/database-viewer-a
 import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 
 export function registerSettings() {
-  game.settings.register(CONSTANTS.MODULE_NAME, "enable-pixi-fix", {
+  game.settings.register(CONSTANTS.MODULE_NAME, "enable-fix-pixi", {
     name: "SEQUENCER.Setting.EnablePixiFix.Title",
     hint: "SEQUENCER.Setting.EnablePixiFix.Label",
     scope: "client",
     config: true,
-    default: true,
+    default: false,
     requiresReload: true,
     type: Boolean,
   });
 
-  game.settings.register(CONSTANTS.MODULE_NAME, "enable-global-pixi-fix", {
+  game.settings.register(CONSTANTS.MODULE_NAME, "enable-global-fix-pixi", {
     name: "SEQUENCER.Setting.EnableGlobalPixiFix.Title",
     hint: "SEQUENCER.Setting.EnableGlobalPixiFix.Label",
     scope: "client",
@@ -244,18 +244,6 @@ export function registerSettings() {
 }
 
 export async function migrateSettings() {
-  const oldPixiFixSetting = game.settings.storage
-    .get("client")
-    .getItem("sequencer.disable-pixi-fix");
-
-  if (oldPixiFixSetting) {
-    const value = oldPixiFixSetting === "true";
-    game.settings.storage
-      .get("client")
-      .removeItem("sequencer.disable-pixi-fix");
-    await game.settings.set(CONSTANTS.MODULE_NAME, "enable-pixi-fix", !value);
-  }
-
   const oldScreenspaceSetting = game.settings.storage
     .get("client")
     .getItem("sequencer.disable-above-ui-screenspace");

@@ -618,6 +618,12 @@ export default class CanvasEffect extends PIXI.Container {
     if (effectData.target && lib.is_UUID(effectData.target)) {
       targetExists = lib.from_uuid_fast(effectData.target);
     }
+    for (let tiedDocumentUuid of effectData?.tiedDocuments ?? []) {
+      if (tiedDocumentUuid && lib.is_UUID(tiedDocumentUuid)) {
+        let tiedDocumentExists = lib.from_uuid_fast(tiedDocumentUuid);
+        if (!tiedDocumentExists) return false;
+      }
+    }
     if (
       effectData.source &&
       lib.is_UUID(effectData.source) &&

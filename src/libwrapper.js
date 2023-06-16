@@ -13,7 +13,7 @@ function PIXIUPLOAD(wrapped, ...args) {
 
   if (
     baseTexture.sequencer_patched ||
-    !game.settings.get(CONSTANTS.MODULE_NAME, "enable-global-pixi-fix")
+    !game.settings.get(CONSTANTS.MODULE_NAME, "enable-global-fix-pixi")
   ) {
     return wrapped(...args);
   }

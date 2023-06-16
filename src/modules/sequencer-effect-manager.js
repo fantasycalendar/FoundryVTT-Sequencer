@@ -590,11 +590,10 @@ export default class SequencerEffectManager {
     return Promise.all(
       inEffects.map(async (effect) => {
         if (!CanvasEffect.checkValid(effect[1])) {
-          if (game.user.isGM) {
-            lib.custom_warning(
-              `Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
-            );
-          }
+          if (!game.user.isGM) return;
+          lib.custom_warning(
+            `Sequencer``Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
+          );
           return flagManager.removeFlags(inDocument.uuid, effect);
         }
         return this._playEffect(effect[1], false)
