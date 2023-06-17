@@ -15,7 +15,7 @@ export default class MaskFilter extends AbstractBaseFilter {
   static defaultUniforms = { uMaskSampler: null };
 
   /** @type {DisplayObject[]|null} */
-  masks = null;
+  masks = [];
 
   /** @override */
   apply(filterManager, input, output, clearMode, currentState) {

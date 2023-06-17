@@ -1905,7 +1905,6 @@ export default class CanvasEffect extends PIXI.Container {
     if (!this.data?.masks?.length && !maskShapes.length) return;
 
     const maskFilter = MaskFilter.create();
-    maskFilter.masks = [];
 
     for (const uuid of this.data.masks) {
       const documentObj = fromUuidSync(uuid);
@@ -1955,7 +1954,6 @@ export default class CanvasEffect extends PIXI.Container {
     for (const shapeData of maskShapes) {
       const shape = canvaslib.createShape(shapeData);
       shape.cullable = true;
-      this.sprite.addChild(shape);
       maskFilter.masks.push(shape);
     }
 
