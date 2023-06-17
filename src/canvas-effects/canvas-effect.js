@@ -10,6 +10,7 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
+import MaskFilter from "../lib/filters/mask-filter.js";
 
 const hooksManager = {
   _hooks: new Map(),
@@ -1903,361 +1904,62 @@ export default class CanvasEffect extends PIXI.Container {
 
     if (!this.data?.masks?.length && !maskShapes.length) return;
 
-    this.masksReady = false;
-
-    this._maskContainer = new PIXI.Container();
-
-    // const maskFilter = MaskFilter.create();
-    // maskFilter.masks = this.data.masks.map(uuid => {
-    //   const documentObj = fromUuidSync(uuid);
-    //   if (!documentObj || documentObj.parent !== this.sourceDocument.parent) return false;
-    //   const obj = documentObj.object;
-    //   return obj?.mesh ?? obj?.template ?? obj?.shape;
-    // }).filter(Boolean)
-    //
-    // this.sprite.filters.push(maskFilter);
-
-    this._maskSprite = new PIXI.Sprite();
-    this.parent.addChild(this._maskSprite);
-    if (this.sprite) {
-      this.sprite.mask = this._maskSprite;
-    }
-
-    const blurFilter = new filters.Blur({ strength: 2 });
-    this._maskContainer.filters = [blurFilter];
+    const maskFilter = MaskFilter.create();
+    maskFilter.masks = [];
 
     for (const uuid of this.data.masks) {
-      const documentType = uuid.split(".")[2];
-      const documentObj = await fromUuid(uuid);
+      const documentObj = fromUuidSync(uuid);
+
       if (!documentObj || documentObj.parent !== this.sourceDocument.parent)
         continue;
 
-      const placeableObject = documentObj.object;
-      const objMaskSprite =
-        documentType === "Token" || documentType === "Tile"
-          ? new PIXI.Sprite()
-          : new PIXI.Graphics();
-      objMaskSprite.uuid = uuid;
-      objMaskSprite.placeableObject = placeableObject;
-      objMaskSprite.documentType = documentType;
+      const obj = documentObj.object;
 
-      const clipFilter = new filters.Clip();
-      const blurFilter = new filters.Blur({ strength: 1 });
-      objMaskSprite.filters = [blurFilter, clipFilter];
+      let shape = obj?.mesh ?? obj?.template ?? obj?.shape;
+      let shapeToAdd = shape;
 
-      const spriteContainer = new PIXI.Container();
+      if (obj instanceof MeasuredTemplate || obj instanceof Drawing) {
+        shapeToAdd = new PIXI.LegacyGraphics()
+          .beginFill()
+          .drawShape(shape)
+          .endFill();
+        shapeToAdd.position.set(documentObj.x, documentObj.y);
+        shapeToAdd.cullable = true;
+        shapeToAdd.custom = true;
+        shapeToAdd.uuid = uuid;
+      }
 
-      spriteContainer.addChild(objMaskSprite);
-      spriteContainer.maskSprite = objMaskSprite;
-      spriteContainer.exclude = false;
-
-      this._maskContainer.addChild(spriteContainer);
-
-      hooksManager.addHook(this.uuid, "delete" + documentType, (doc) => {
+      hooksManager.addHook(this.uuid, this.getHook("delete", uuid), (doc) => {
         if (doc !== documentObj) return;
-        const mask = this._maskContainer.children.find(
-          (mask) => mask.maskSprite.uuid === doc.uuid
-        );
-        if (!mask) return;
-        mask.destroy();
-        this._updateMaskSprite();
-        if (!this._maskContainer.children.length) {
-          if (this.sprite) {
-            this.sprite.mask = null;
-          }
+        const index = maskFilter.masks.indexOf(shapeToAdd);
+        if (index === -1) return;
+        maskFilter.masks.splice(maskFilter.masks.indexOf(shapeToAdd));
+        if (shapeToAdd.custom) {
+          shapeToAdd.destroy();
         }
       });
 
-      hooksManager.addHook(this.uuid, "update" + documentType, (doc) => {
+      hooksManager.addHook(this.uuid, this.getHook("update", uuid), (doc) => {
         if (doc !== documentObj) return;
-        const mask = this._maskContainer.children.find(
-          (mask) => mask.maskSprite.uuid === doc.uuid
-        );
-        if (!mask) return;
-        const changed = this._handleUpdatingMask(mask);
-        if (changed) this._updateMaskSprite();
+        const index = maskFilter.masks.indexOf(shapeToAdd);
+        if (index === -1) return;
+        if (!shapeToAdd.custom) return;
+        shapeToAdd.clear();
+        shapeToAdd.beginFill().drawShape(shape).endFill();
+        shapeToAdd.position.set(documentObj.x, documentObj.y);
       });
+
+      maskFilter.masks.push(shapeToAdd);
     }
 
-    let anyMaskChanged = false;
-
-    for (const maskShape of maskShapes) {
-      const graphic = canvaslib.createShape(maskShape);
-
-      const clipFilter = new filters.Clip();
-      const blurFilter = new filters.Blur({ strength: 1 });
-      graphic.filters = [blurFilter, clipFilter];
-
-      const spriteContainer = new PIXI.Container();
-
-      spriteContainer.addChild(graphic);
-      spriteContainer.maskSprite = graphic;
-      spriteContainer.exclude = true;
-
-      this._maskContainer.addChild(spriteContainer);
-
-      anyMaskChanged = true;
+    for (const shapeData of maskShapes) {
+      const shape = canvaslib.createShape(shapeData);
+      shape.cullable = true;
+      this.sprite.addChild(shape);
+      maskFilter.masks.push(shape);
     }
 
-    if (!this._maskContainer.children.length) {
-      if (this.sprite) {
-        this.sprite.mask = null;
-      }
-      return false;
-    }
-
-    this._ticker.add(() => {
-      for (let container of this._maskContainer.children) {
-        if (!container.exclude) {
-          anyMaskChanged =
-            anyMaskChanged || this._handleUpdatingMask(container);
-        }
-      }
-
-      if (anyMaskChanged) {
-        this._updateMaskSprite();
-      }
-    });
-
-    this.masksReady = true;
-  }
-
-  _handleUpdatingMask(container) {
-    const mask = container.maskSprite;
-
-    let objectSprite;
-    let objectWidth = 0;
-    let objectHeight = 0;
-    let additionalData = {
-      walledmask: getProperty(
-        mask.placeableObject,
-        "flags.walledtemplates.enabled"
-      ),
-    };
-    try {
-      if (mask.documentType === "Token") {
-        objectSprite = mask.placeableObject.mesh;
-        objectWidth = objectSprite.width / 2;
-        objectHeight = objectSprite.height / 2;
-        additionalData["img"] = mask.placeableObject.document.texture.src;
-        additionalData["elevation"] = mask.placeableObject.document.elevation;
-      } else if (mask.documentType === "Tile") {
-        objectSprite = mask.placeableObject.mesh;
-        objectWidth = objectSprite.width / 2;
-        objectHeight = objectSprite.height / 2;
-        additionalData["img"] = mask.placeableObject.document.texture.src;
-      } else if (mask.documentType === "Drawing") {
-        objectSprite = mask.placeableObject.shape;
-      } else if (mask.documentType === "MeasuredTemplate") {
-        objectSprite = mask.placeableObject.template;
-        additionalData["direction"] = mask.placeableObject.direction;
-        additionalData["distance"] = mask.placeableObject.distance;
-        additionalData["angle"] = mask.placeableObject.angle;
-        additionalData["width"] = mask.placeableObject.width;
-      }
-    } catch (err) {
-      return false;
-    }
-
-    let position = {
-      x: objectSprite.parent.x + objectSprite.x - objectWidth,
-      y: objectSprite.parent.y + objectSprite.y - objectHeight,
-    };
-
-    const angle = objectSprite.angle;
-
-    const data = duplicate(additionalData);
-
-    const noChange =
-      container.position.x === position.x &&
-      container.position.y === position.y &&
-      mask.scale.x === objectSprite.scale.x &&
-      mask.scale.y === objectSprite.scale.y &&
-      mask.texture === objectSprite.texture &&
-      mask.angle === angle &&
-      foundry.utils.isEmpty(foundry.utils.diffObject(mask.oldData, data));
-
-    if (noChange) return false;
-
-    if (mask.documentType === "Drawing") {
-      mask.clear();
-      mask.beginFill(0xffffff, 1);
-
-      const drawingType = mask.placeableObject.type;
-
-      if (drawingType === CONST.DRAWING_TYPES.RECTANGLE) {
-        mask.drawRect(
-          objectSprite.width / -2,
-          objectSprite.height / -2,
-          objectSprite.width,
-          objectSprite.height
-        );
-      } else if (drawingType === CONST.DRAWING_TYPES.ELLIPSE) {
-        mask.drawEllipse(
-          objectSprite.width / -2,
-          objectSprite.height / -2,
-          objectSprite.width / 2,
-          objectSprite.height / 2
-        );
-      } else {
-        const vertices = mask.placeableObject.points;
-
-        if (drawingType === CONST.DRAWING_TYPES.FREEHAND) {
-          // Shamelessly stolen from Foundry's source-code
-          let factor = mask.placeableObject.bezierFactor ?? 0.5;
-
-          // Get drawing points
-          let last = vertices[vertices.length - 1];
-          let isClosed = vertices[0].equals(last);
-
-          // Handle edge cases
-          mask.moveTo(...vertices[0]);
-          if (vertices.length < 2) return;
-          else if (vertices.length === 2) {
-            mask.lineTo(...vertices[1]);
-            return;
-          }
-
-          // Set initial conditions
-          let [previous, point] = vertices.slice(0, 2);
-          let cp0 = canvaslib.getBezierControlPoints(
-            factor,
-            last,
-            previous,
-            point
-          ).next_cp0;
-          let cp1, next_cp0, next;
-
-          // Begin iteration
-          for (let i = 1; i < vertices.length; i++) {
-            next = vertices[i + 1];
-            if (next) {
-              let bp = canvaslib.getBezierControlPoints(
-                factor,
-                previous,
-                point,
-                next
-              );
-              cp1 = bp.cp1;
-              next_cp0 = bp.next_cp0;
-            }
-
-            // First point
-            if (i === 1 && !isClosed) {
-              mask.quadraticCurveTo(cp1.x, cp1.y, point[0], point[1]);
-            }
-
-            // Last Point
-            else if (i === vertices.length - 1 && !isClosed) {
-              mask.quadraticCurveTo(cp0.x, cp0.y, point[0], point[1]);
-            }
-
-            // Bezier points
-            else {
-              mask.bezierCurveTo(
-                cp0.x,
-                cp0.y,
-                cp1.x,
-                cp1.y,
-                point[0],
-                point[1]
-              );
-            }
-
-            // Increment
-            previous = point;
-            point = next;
-            cp0 = next_cp0;
-          }
-        } else {
-          mask.moveTo(...vertices[0]);
-          for (let i = 1; i < vertices.length; i++) {
-            mask.lineTo(...vertices[i]);
-          }
-        }
-      }
-
-      mask.endFill();
-    } else if (mask.documentType === "MeasuredTemplate") {
-      mask.clear();
-      mask.beginFill(0xffffff, 1);
-      const shape = mask.placeableObject.shape.clone();
-      mask.drawShape(shape);
-    }
-
-    mask.texture = objectSprite.texture;
-    container.position.set(position.x, position.y);
-    mask.scale.set(objectSprite.scale.x, objectSprite.scale.y);
-    mask.angle = angle;
-    mask.oldData = additionalData;
-
-    if (mask instanceof PIXI.Sprite) {
-      mask.anchor.set(0.5, 0.5);
-      mask.position.set(mask.width / 2, mask.height / 2);
-
-      if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE) {
-        const elevation =
-          game.settings.get(
-            CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
-            "token_elevation"
-          ) && mask.placeableObject.document?.elevation
-            ? (canvas.scene.grid.distance /
-                mask.placeableObject.document.elevation) *
-              mask.placeableObject.document.height
-            : Infinity;
-
-        const isometricType = getProperty(
-          mask.placeableObject.document,
-          CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_FLAG
-        );
-
-        switch (isometricType) {
-          case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.TOPDOWN:
-            break;
-          case CONSTANTS.INTEGRATIONS.ISOMETRIC.PROJECTION_TYPES.DIAMETRIC:
-            mask.anchor.set(0.5, 0.75 + 0.505 / elevation);
-            break;
-          default:
-            mask.anchor.set(0.5, 0.69 + 0.63 / elevation);
-            break;
-        }
-      }
-    }
-
-    return true;
-  }
-
-  _updateMaskSprite() {
-    if (!this.masksReady) return;
-
-    const smallestX = this._maskContainer.children.reduce((acc, container) => {
-      let x;
-      const bounds = container.getBounds();
-      if (container.exclude) {
-        x = this.x - bounds.width / 2 + container.maskSprite.offset.x;
-      } else {
-        x = bounds.x;
-      }
-      return acc >= x ? x : acc;
-    }, Infinity);
-
-    const smallestY = this._maskContainer.children.reduce((acc, container) => {
-      let y;
-      const bounds = container.getBounds(true);
-      if (container.exclude) {
-        y = this.y - bounds.height / 2 + container.maskSprite.offset.y;
-      } else {
-        y = bounds.y;
-      }
-      return acc >= y ? y : acc;
-    }, Infinity);
-
-    this._maskSprite.position.set(smallestX, smallestY);
-
-    this._maskSprite.texture.destroy(true);
-    this._maskSprite.texture = canvas.app.renderer.generateTexture(
-      this._maskContainer
-    );
+    this.sprite.filters.push(maskFilter);
   }
 
   /**
