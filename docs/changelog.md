@@ -3,6 +3,7 @@
 ## Version 3.0.11
 - *Sequencer* - Made PIXI fix settings default to being turned off
 - *Sequencer* - Fixed strange interaction with `.preset()` not working when certain functions were called in the preset
+- *Sequencer* - In Foundry v11, `.macro()` now requires the secondary parameter to be an object, as the behavior of Advanced Macros have been partially integrated in v11
 - *Effects* - Fixed some persistent effects not being deleted from scenes after their attached sources were deleted
 - *Effects* - Fixed effects targeting drawings not properly using the drawing position and dimensions
 - *Effects* - Fixed `.playbackRate()` not working well with internal loops and `.persist()`
