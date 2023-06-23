@@ -2635,8 +2635,8 @@ export default class CanvasEffect extends PIXI.Container {
     this._tweakRotationForIsometric();
 
     if (!this.data.anchor && this.data.rotateTowards) {
-      const startPointRatio =
-        this.template.startPoint / this._texture.width / 2;
+      const textureWidth = (this._texture?.width ?? this.sprite.width) / 2;
+      const startPointRatio = this.template.startPoint / textureWidth;
       this.spriteContainer.pivot.set(
         this.sprite.width * (-0.5 + startPointRatio),
         0

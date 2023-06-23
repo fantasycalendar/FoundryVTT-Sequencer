@@ -7,6 +7,7 @@
 - *Canvas Pan* - Fixed `.canvasPan()` not working other clients than the executing client
 - *Effects* - Slightly adjusted how `.missed()` interacts with `.stretchTo()` when two tokens are right next to each other
 - *Effects* - Fixed `.playbackRate()` causing effects to have the incorrect amount of playback time
+- *Effects* - Fixed `.rotateTowards()` not working with `.text()`
 
 ## Version 3.0.11
 - *Sequencer* - Made PIXI fix settings default to being turned off
