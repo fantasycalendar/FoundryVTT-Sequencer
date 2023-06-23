@@ -3,6 +3,8 @@
 ## Version 3.0.12
 - *Sequencer* - Fixed console error caused by the clean-up of old expired effects (Thanks LukeAbby on Github!)
 - *Sequencer* - Added `fullyQualified` secondary parameter to `Sequencer.Database.getPathsUnder()` (Thanks LukeAbby on Github!)
+- *Animations* - Added support for elevation in `.teleportTo()`
+- *Canvas Pan* - Fixed `.canvasPan()` not working other clients than the executing client
 - *Effects* - Slightly adjusted how `.missed()` interacts with `.stretchTo()` when two tokens are right next to each other
 - *Effects* - Fixed `.playbackRate()` causing effects to have the incorrect amount of playback time
 

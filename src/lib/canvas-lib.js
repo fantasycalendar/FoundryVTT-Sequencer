@@ -201,7 +201,7 @@ export function get_object_position(
       obj?.position?._x ??
       obj?.document?.x ??
       obj?.document?.position?.x ??
-      0,
+      null,
     y:
       pos.y ??
       obj?.y ??
@@ -209,12 +209,13 @@ export function get_object_position(
       obj?.position?._y ??
       obj?.document?.y ??
       obj?.document?.position?.y ??
-      0,
+      null,
+    elevation: obj?.elevation ?? obj?.document?.elevation ?? null,
   };
 
-  if (!lib.is_real_number(pos.x) || !lib.is_real_number(pos.y)) {
-    return false;
-  }
+  if (pos.x === null) delete pos["x"];
+  if (pos.y === null) delete pos["y"];
+  if (pos.elevation === null) delete pos["elevation"];
 
   return pos;
 }

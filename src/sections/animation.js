@@ -309,10 +309,17 @@ class AnimationSection extends Section {
       dy = 0;
     }
 
-    return {
+    const pos = {
       x: originLoc.x + dx,
       y: originLoc.y + dy,
+      elevation: targetLoc?.elevation,
     };
+
+    if (!pos.elevation) {
+      delete pos["elevation"];
+    }
+
+    return pos;
   }
 
   /**
@@ -334,6 +341,9 @@ class AnimationSection extends Section {
     };
 
     let overallDuration = this._duration ? this._duration : 0;
+    const originLocation = canvaslib.get_object_position(this._originObject, {
+      exact: true,
+    });
 
     if (this._rotateTowards) {
       let offset =
@@ -685,6 +695,10 @@ class AnimationSection extends Section {
           : canvaslib.get_object_position(this._teleportTo.target, {
               exact: true,
             });
+        if (targetLocation.x === undefined) targetLocation.x = originLocation.x;
+        if (targetLocation.y === undefined) targetLocation.y = originLocation.y;
+        if (targetLocation.elevation === undefined)
+          targetLocation.elevation = originLocation.elevation;
         targetLocation.x += this._offset.x;
         targetLocation.y += this._offset.y;
         targetLocation.elevation =

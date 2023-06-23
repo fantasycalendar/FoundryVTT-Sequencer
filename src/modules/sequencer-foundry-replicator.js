@@ -95,10 +95,7 @@ export default class SequencerFoundryReplicator {
 
   static panCanvas(data, push = true) {
     if (push) {
-      sequencerSocket.executeForOthers(
-        SOCKET_HANDLERS.CREATE_SCROLLING_TEXT,
-        data
-      );
+      sequencerSocket.executeForOthers(SOCKET_HANDLERS.PAN_CANVAS, data);
     }
 
     return this._panCanvas(data);
