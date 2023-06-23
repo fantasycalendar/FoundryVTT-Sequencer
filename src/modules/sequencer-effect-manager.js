@@ -592,7 +592,8 @@ export default class SequencerEffectManager {
         if (!CanvasEffect.checkValid(effect[1])) {
           if (!game.user.isGM) return;
           lib.custom_warning(
-            `Sequencer | Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
+            `Sequencer`,
+            `Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
           );
           return flagManager.removeFlags(inDocument.uuid, effect);
         }

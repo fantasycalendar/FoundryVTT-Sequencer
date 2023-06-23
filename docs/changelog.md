@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.0.12
+- *Sequencer* - Fixed console error caused by the clean-up of old expired effects (Thanks LukeAbby on Github!)
+- *Sequencer* - Added `fullyQualified` secondary parameter to `Sequencer.Database.getPathsUnder()` (Thanks LukeAbby on Github!)
+- *Effects* - Slightly adjusted how `.missed()` interacts with `.stretchTo()` when two tokens are right next to each other
+
 ## Version 3.0.11
 - *Sequencer* - Made PIXI fix settings default to being turned off
 - *Sequencer* - Fixed strange interaction with `.preset()` not working when certain functions were called in the preset
