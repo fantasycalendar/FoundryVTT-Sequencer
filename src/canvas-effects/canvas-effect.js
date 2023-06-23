@@ -1640,8 +1640,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._file.markers.forcedEnd / playbackRate / 1000;
     }
 
-    this._animationDuration /= this.data.playbackRate ?? 1.0;
-
     // Resolve duration promise so that owner of effect may know when it is finished
     this._durationResolve(this._animationDuration);
 
