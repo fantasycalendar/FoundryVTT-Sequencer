@@ -1927,8 +1927,7 @@ export default class CanvasEffect extends PIXI.Container {
     for (const uuid of this.data.masks) {
       const documentType = uuid.split(".")[2];
       const documentObj = await fromUuid(uuid);
-      if (!documentObj || documentObj.parent !== this.sourceDocument.parent)
-        continue;
+      if (!documentObj || documentObj.parent.id !== this.data.sceneId) continue;
 
       const placeableObject = documentObj.object;
       const objMaskSprite =

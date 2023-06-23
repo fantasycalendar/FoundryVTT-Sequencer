@@ -3,6 +3,7 @@ import LoadingBar from "../utils/loadingBar.js";
 import { SequencerFile, SequencerFileBase } from "./sequencer-file.js";
 import { writable, get } from "svelte/store";
 import CONSTANTS from "../constants.js";
+import { SequencerFileProxy } from "./sequencer-file.js";
 
 class Database {
   #entriesStore = writable({});
