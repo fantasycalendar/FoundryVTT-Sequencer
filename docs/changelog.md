@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.0.13
+- *Effects* - Added `.randomSpriteRotation()`
+- *Effects* - Fixed a bug with cached locations and `.mask()`
+- *Effects* - Fixed database-to-database mappings
+
 ## Version 3.0.12
 - *Sequencer* - Fixed console error caused by the clean-up of old expired effects (Thanks LukeAbby on Github!)
 - *Sequencer* - Added `fullyQualified` secondary parameter to `Sequencer.Database.getPathsUnder()` (Thanks LukeAbby on Github!)
