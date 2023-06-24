@@ -1772,8 +1772,13 @@ export default class CanvasEffect extends PIXI.Container {
       this.data.spriteAnchor?.y ?? 0.5
     );
 
+    let spriteRotation = this.data.spriteRotation ?? 0;
+    if (this.data.randomSpriteRotation) {
+      spriteRotation += lib.random_float_between(-360, 360, this._twister);
+    }
+
     this.sprite.rotation = Math.normalizeRadians(
-      Math.toRadians(this.data.spriteRotation ?? 0)
+      Math.toRadians(spriteRotation)
     );
 
     this._customAngle = this.data.angle ?? 0;
