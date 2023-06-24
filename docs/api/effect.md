@@ -409,6 +409,12 @@ A second options parameter accepts the following properties:
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
 
+## Random Sprite Rotation
+
+`.randomS[roteRotation()`
+
+Causes the sprite to have a random rotation.
+
 ## Zero Sprite Rotation
 
 `.zeroSpriteRotation()` or `.zeroSpriteRotation(boolean)`
@@ -737,7 +743,7 @@ Check out what easings are available here: https://easings.net/
 
 `.randomRotation()`
 
-Causes the sprite to have a random rotation, which means it should **not** be used with [`.stretchTo()`](#stretch-to).
+Causes the effect to have a random rotation, which means it should **not** be used with [`.stretchTo()`](#stretch-to).
 
 ## Playback Rate
 
