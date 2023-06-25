@@ -34,6 +34,8 @@ export default class MaskFilter extends AbstractBaseFilter {
       mask.renderable = renderable;
     }
 
+    renderer.batch.flush();
+
     this.#pop(filterManager, currentState, originalFilterTexture);
     this.uniforms.uMaskSampler = maskFilterTexture;
     filterManager.applyFilter(this, input, output, clearMode);
