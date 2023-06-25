@@ -3,7 +3,6 @@ import LoadingBar from "../utils/loadingBar.js";
 import { SequencerFile, SequencerFileBase } from "./sequencer-file.js";
 import { writable, get } from "svelte/store";
 import CONSTANTS from "../constants.js";
-import { SequencerFileProxy } from "./sequencer-file.js";
 
 class Database {
   #entriesStore = writable({});
@@ -473,7 +472,14 @@ class Database {
           );
           continue;
         } else if (existingEntry) {
-          moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
+          const sequencerFile = this.getEntry(data);
+          const clone = sequencerFile.clone();
+          clone.dbPath = wholeDBPath;
+          clone.metadata = foundry.utils.mergeObject(
+            clone.metadata ?? {},
+            metadata ?? {}
+          );
+          moduleEntries.push(clone);
           continue;
         }
       }
