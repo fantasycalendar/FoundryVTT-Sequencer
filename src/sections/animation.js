@@ -253,12 +253,42 @@ class AnimationSection extends Section {
   /**
    * @private
    */
+  async _waitForTokenRefresh(obj) {
+    let token;
+
+    if (obj instanceof Token) {
+      token = obj;
+    }
+
+    if (obj instanceof TokenDocument) {
+      token = obj.object;
+    }
+
+    if (token == null || token.mesh != null) {
+      return;
+    }
+
+    let refreshTokenID;
+
+    return await new Promise(resolve => {
+      refreshTokenID = Hooks.on('refreshToken', async (tokenDoc) => {
+        if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh) return;
+        Hooks.off('refreshToken', refreshTokenID);
+        resolve();
+      })
+    })
+  }
+
+  /**
+   * @private
+   */
   async _execute() {
     if (!(await this._shouldPlay())) return;
     let self = this;
     this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
     return new Promise(async (resolve) => {
       setTimeout(async () => {
+        await this._waitForTokenRefresh(this._originObject);
         if (this._shouldAsync) {
           await self.run();
         } else {
