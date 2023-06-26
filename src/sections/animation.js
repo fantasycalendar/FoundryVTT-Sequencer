@@ -253,7 +253,7 @@ class AnimationSection extends Section {
   /**
    * @private
    */
-  async _waitForUnloadedMesh(obj) {
+  async _waitForTokenRefresh(obj) {
     let token;
 
     if (obj instanceof Token) {
@@ -288,7 +288,7 @@ class AnimationSection extends Section {
     this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
     return new Promise(async (resolve) => {
       setTimeout(async () => {
-        await this._waitForUnloadedMesh(this._originObject);
+        await this._waitForTokenRefresh(this._originObject);
         if (this._shouldAsync) {
           await self.run();
         } else {
