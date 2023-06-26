@@ -170,13 +170,13 @@ export function get_object_position(
       pos.y += Math.abs(obj.document.height / 2);
     }
   } else if (obj instanceof Token) {
+    const halfSize = get_object_dimensions(obj, true);
     pos = {
-      x: obj.x + obj.scene.grid.size / 2,
-      y: obj.y + obj.scene.grid.size / 2
+      x: obj.x + halfSize.width,
+      y: obj.y + halfSize.height
     };
 
     if (exact) {
-      const halfSize = get_object_dimensions(obj, true);
       pos.x -= halfSize.width;
       pos.y -= halfSize.height;
     }
