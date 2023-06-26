@@ -1,8 +1,23 @@
 ## Changelog
 
+## Version 3.0.13
+- *Effects* - Added `.randomSpriteRotation()`
+- *Effects* - Fixed a bug with cached locations and `.mask()`
+- *Effects* - Fixed database-to-database mappings
+
+## Version 3.0.12
+- *Sequencer* - Fixed console error caused by the clean-up of old expired effects (Thanks LukeAbby on Github!)
+- *Sequencer* - Added `fullyQualified` secondary parameter to `Sequencer.Database.getPathsUnder()` (Thanks LukeAbby on Github!)
+- *Animations* - Added support for elevation in `.teleportTo()`
+- *Canvas Pan* - Fixed `.canvasPan()` not working other clients than the executing client
+- *Effects* - Slightly adjusted how `.missed()` interacts with `.stretchTo()` when two tokens are right next to each other
+- *Effects* - Fixed `.playbackRate()` causing effects to have the incorrect amount of playback time
+- *Effects* - Fixed `.rotateTowards()` not working with `.text()`
+
 ## Version 3.0.11
 - *Sequencer* - Made PIXI fix settings default to being turned off
 - *Sequencer* - Fixed strange interaction with `.preset()` not working when certain functions were called in the preset
+- *Sequencer* - In Foundry v11, `.macro()` now requires the secondary parameter to be an object, as the behavior of Advanced Macros have been partially integrated in v11
 - *Effects* - Fixed some persistent effects not being deleted from scenes after their attached sources were deleted
 - *Effects* - Fixed effects targeting drawings not properly using the drawing position and dimensions
 - *Effects* - Fixed `.playbackRate()` not working well with internal loops and `.persist()`

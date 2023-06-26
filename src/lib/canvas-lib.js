@@ -61,7 +61,7 @@ export function createShape(shape) {
       break;
     case CONSTANTS.SHAPES.POLY:
       graphic.drawPolygon(
-        shape.points.map((point, index) => {
+        shape.points.map((point) => {
           return new PIXI.Point(
             point[0] * sizeMultiplier + graphic.offset.x,
             point[1] * sizeMultiplier + graphic.offset.y
@@ -80,10 +80,9 @@ export function createShape(shape) {
 
 export function calculate_missed_position(source, target, twister) {
   const sourcePosition = get_object_position(source);
+  const sourceDimensions = get_object_dimensions(source, true);
 
   if (!target) {
-    const sourceDimensions = get_object_dimensions(source, true);
-
     const angle = twister.random() * Math.PI * 2;
     let x = Math.cos(angle) * sourceDimensions.width;
     let y = Math.sin(angle) * sourceDimensions.height;
@@ -102,23 +101,30 @@ export function calculate_missed_position(source, target, twister) {
   let startRadians = ray.angle + Math.PI / 2;
   let endRadians = ray.angle - Math.PI / 2;
 
-  let distance = ray.distance / canvas.grid.size - 1;
+  const sizeCompensation = Math.max(
+    1,
+    Math.abs(sourceDimensions.width - targetDimensions.height)
+  );
+  let distance = ray.distance / canvas.grid.size - sizeCompensation;
 
-  let angle;
-
-  if (distance < 1) {
-    angle = twister.random() > 0.5 ? startRadians : endRadians;
-  } else {
-    distance = Math.max(Math.abs(distance - 15), 6);
-
-    endRadians -= Math.PI / distance;
-    startRadians += Math.PI / distance;
-
-    angle = lib.interpolate(startRadians, endRadians, twister.random());
+  if (distance <= 1) {
+    const angle =
+      twister.random() > 0.5
+        ? ray.angle + Math.PI / 4
+        : ray.angle - Math.PI / 4;
+    const x = Math.cos(angle) * targetDimensions.width;
+    const y = Math.sin(angle) * targetDimensions.height;
+    return { x, y };
   }
 
-  let x = Math.cos(angle) * targetDimensions.width;
-  let y = Math.sin(angle) * targetDimensions.height;
+  distance = Math.max(Math.abs(distance - 15), 6);
+
+  endRadians -= Math.PI / distance;
+  startRadians += Math.PI / distance;
+
+  const angle = lib.interpolate(startRadians, endRadians, twister.random());
+  const x = Math.cos(angle) * targetDimensions.width;
+  const y = Math.sin(angle) * targetDimensions.height;
 
   return {
     x: lib.random_float_between(x * 1.5, x * 2.5, twister),
@@ -195,7 +201,7 @@ export function get_object_position(
       obj?.position?._x ??
       obj?.document?.x ??
       obj?.document?.position?.x ??
-      0,
+      null,
     y:
       pos.y ??
       obj?.y ??
@@ -203,12 +209,13 @@ export function get_object_position(
       obj?.position?._y ??
       obj?.document?.y ??
       obj?.document?.position?.y ??
-      0,
+      null,
+    elevation: obj?.elevation ?? obj?.document?.elevation ?? null,
   };
 
-  if (!lib.is_real_number(pos.x) || !lib.is_real_number(pos.y)) {
-    return false;
-  }
+  if (pos.x === null) delete pos["x"];
+  if (pos.y === null) delete pos["y"];
+  if (pos.elevation === null) delete pos["elevation"];
 
   return pos;
 }

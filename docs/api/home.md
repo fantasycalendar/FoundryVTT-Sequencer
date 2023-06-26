@@ -83,7 +83,11 @@ Creates a section that will run a function. Remember that if you want your funct
 
 Creates a section that will run a macro based on a name or a direct reference to a macro. If the macro is not found, Sequencer will complain. Loudly.
 
-If you have [Advanced Macros](https://foundryvtt.com/packages/advanced-macros) installed, you may also pass any number of parameters to the method that will then be passed through to the macro:
+In Foundry v11, you can provide an object as a secondary parameter, which will be passed through to the macro:
+
+`.macro("New Macro", { test: true, fileName: "fire-bolt", tokenId: token.id })`
+
+In Foundry v10, if you have [Advanced Macros](https://foundryvtt.com/packages/advanced-macros) installed, you may also pass any number of parameters to the method that will then be passed through to the macro:
 
 `.macro("New Macro", true, "fire-bolt", token.id)`
 

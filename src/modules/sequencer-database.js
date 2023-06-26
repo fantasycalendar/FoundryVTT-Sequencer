@@ -251,7 +251,12 @@ class Database {
    */
   getPathsUnder(
     inPath,
-    { ranges = false, arrays = false, match = false } = {}
+    {
+      ranges = false,
+      arrays = false,
+      match = false,
+      fullyQualified = false,
+    } = {}
   ) {
     if (typeof inPath !== "string")
       return this._throwError("getPathsUnder", "inPath must be of type string");
@@ -264,7 +269,7 @@ class Database {
         "getPathsUnder",
         `Could not find ${inPath} in database`
       );
-    let entries = this.flattenedEntries.filter((e) => {
+    const entries = this.flattenedEntries.filter((e) => {
       return (
         (e.startsWith(inPath + ".") || e === inPath) &&
         (!match || (match && e.match(match)))
@@ -275,8 +280,8 @@ class Database {
       entries
         .map((e) => (!arrays ? e.split(CONSTANTS.ARRAY_REGEX)[0] : e))
         .map((e) => (!ranges ? e.split(CONSTANTS.FEET_REGEX)[0] : e))
-        .map((e) => e.split(inPath)[1])
-        .map((e) => (e ? e.split(".")[1] : ""))
+        .map((e) => (!fullyQualified ? e.split(inPath)[1] : e))
+        .map((e) => (!fullyQualified ? (e ? e.split(".")[1] : "") : e))
         .filter(Boolean)
     );
   }
@@ -467,7 +472,14 @@ class Database {
           );
           continue;
         } else if (existingEntry) {
-          moduleEntries.push(new SequencerFileProxy(wholeDBPath, data));
+          const sequencerFile = this.getEntry(data);
+          const clone = sequencerFile.clone();
+          clone.dbPath = wholeDBPath;
+          clone.metadata = foundry.utils.mergeObject(
+            clone.metadata ?? {},
+            metadata ?? {}
+          );
+          moduleEntries.push(clone);
           continue;
         }
       }

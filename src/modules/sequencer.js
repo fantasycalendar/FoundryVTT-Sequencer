@@ -99,7 +99,7 @@ export default class Sequence {
    * Creates a section that will run a macro based on a name or a direct reference to a macro.
    *
    * @param {string|Macro} inMacro
-   * @param {*} args
+   * @param {object} args
    * @returns {Sequence} this
    */
   macro(inMacro, ...args) {
@@ -142,7 +142,19 @@ export default class Sequence {
       );
     }
 
-    if (args && args.length && !game.modules.get("advanced-macros")?.active) {
+    if (isNewerVersion(game.version, "11")) {
+      args = args.length ? args?.[0] : {};
+      if (typeof args !== "object") {
+        throw lib.custom_error(
+          this.moduleName,
+          `macro - Secondary argument must be an object`
+        );
+      }
+    } else if (
+      args &&
+      args.length &&
+      !game.modules.get("advanced-macros")?.active
+    ) {
       lib.custom_warning(
         this.moduleName,
         `macro - Supplying macros with arguments require the advanced-macros module to be active`,
@@ -171,21 +183,25 @@ export default class Sequence {
             macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
           }
 
-          const version = game.modules.get("advanced-macros")?.version;
-          const bugAdvancedMacros =
-            game.modules.get("advanced-macros")?.active &&
-            isNewerVersion(
-              version.startsWith("v") ? version.slice(1) : version,
-              "1.18.2"
-            ) &&
-            !isNewerVersion(
-              version.startsWith("v") ? version.slice(1) : version,
-              "1.19.1"
-            );
-          if (bugAdvancedMacros) {
-            await macro.execute([...args]);
+          if (isNewerVersion(game.version, "11")) {
+            await macro.execute(args);
           } else {
-            await macro.execute(...args);
+            const version = game.modules.get("advanced-macros")?.version;
+            const bugAdvancedMacros =
+              game.modules.get("advanced-macros")?.active &&
+              isNewerVersion(
+                version.startsWith("v") ? version.slice(1) : version,
+                "1.18.2"
+              ) &&
+              !isNewerVersion(
+                version.startsWith("v") ? version.slice(1) : version,
+                "1.19.1"
+              );
+            if (bugAdvancedMacros) {
+              await macro.execute([...args]);
+            } else {
+              await macro.execute(...args);
+            }
           }
         },
         true

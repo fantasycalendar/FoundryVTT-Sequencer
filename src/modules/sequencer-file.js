@@ -314,24 +314,3 @@ export class SequencerFileRangeFind extends SequencerFile {
     return { filePath, texture };
   }
 }
-
-export class SequencerFileProxy extends SequencerFileBase {
-  constructor(dbPath, entry) {
-    super();
-    let sequencerEntry = false;
-    return new Proxy(this, {
-      get(target, prop) {
-        // Return the proxy's property if it has it
-        if (prop === "dbPath") return dbPath;
-        if (!sequencerEntry) {
-          sequencerEntry = Sequencer.Database.getEntry(entry);
-        }
-        // If the path results in an array, grab a random element every time
-        if (Array.isArray(this.entry)) {
-          return Reflect.get(lib.random_array_element(sequencerEntry), prop);
-        }
-        return Reflect.get(sequencerEntry, prop);
-      },
-    });
-  }
-}

@@ -55,6 +55,7 @@ export default class EffectSection extends Section {
     this._selfMask = false;
     this._temporaryEffect = false;
     this._spriteRotation = 0;
+    this._randomSpriteRotation = false;
     this._isRangedEffect = null;
     this._offsetLegacy = null;
     this._randomOffsetLegacy = null;
@@ -1528,6 +1529,23 @@ export default class EffectSection extends Section {
   }
 
   /**
+   * Rotates the sprite
+   *
+   * @param {Boolean} inBool
+   * @returns {EffectSection}
+   */
+  randomSpriteRotation(inBool = true) {
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "randomSpriteRotation",
+        "inBool must be of type boolean"
+      );
+    this._randomSpriteRotation = inBool;
+    return this;
+  }
+
+  /**
    * Causes the effect to not rotate should its container rotate
    *
    * @param {Boolean} [inBool=true] inBool
@@ -2165,7 +2183,7 @@ export default class EffectSection extends Section {
    */
   _getSourceObject() {
     if (!this._source || typeof this._source !== "object") return this._source;
-    if (this._source?.cachedLocation) {
+    if (this._source?.cachedLocation || !this._attachTo) {
       return canvaslib.get_object_canvas_data(this._source);
     }
     return (
@@ -2180,7 +2198,10 @@ export default class EffectSection extends Section {
   _getTargetObject() {
     if (!this._target?.target) return this._target;
     if (typeof this._target.target !== "object") return this._target.target;
-    if (this._target?.target?.cachedLocation) {
+    if (
+      this._target?.target?.cachedLocation ||
+      !(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)
+    ) {
       return canvaslib.get_object_canvas_data(this._target.target, true);
     }
     return (
@@ -2338,6 +2359,7 @@ export default class EffectSection extends Section {
       filters: this._filters,
       noLoop: this._noLoop,
       spriteRotation: this._spriteRotation,
+      randomSpriteRotation: this._randomSpriteRotation,
       tint: this._tint?.decimal,
       flipX: this._mirrorX || (this._randomMirrorX && Math.random() < 0.5),
       flipY: this._mirrorY || (this._randomMirrorY && Math.random() < 0.5),

@@ -1641,8 +1641,6 @@ export default class CanvasEffect extends PIXI.Container {
         this._file.markers.forcedEnd / playbackRate / 1000;
     }
 
-    this._animationDuration /= this.data.playbackRate ?? 1.0;
-
     // Resolve duration promise so that owner of effect may know when it is finished
     this._durationResolve(this._animationDuration);
 
@@ -1775,8 +1773,13 @@ export default class CanvasEffect extends PIXI.Container {
       this.data.spriteAnchor?.y ?? 0.5
     );
 
+    let spriteRotation = this.data.spriteRotation ?? 0;
+    if (this.data.randomSpriteRotation) {
+      spriteRotation += lib.random_float_between(-360, 360, this._twister);
+    }
+
     this.sprite.rotation = Math.normalizeRadians(
-      Math.toRadians(this.data.spriteRotation ?? 0)
+      Math.toRadians(spriteRotation)
     );
 
     this._customAngle = this.data.angle ?? 0;
@@ -1909,8 +1912,7 @@ export default class CanvasEffect extends PIXI.Container {
     for (const uuid of this.data.masks) {
       const documentObj = fromUuidSync(uuid);
 
-      if (!documentObj || documentObj.parent !== this.sourceDocument.parent)
-        continue;
+      if (!documentObj || documentObj.parent.id !== this.data.sceneId) continue;
 
       const obj = documentObj.object;
 
@@ -2355,8 +2357,8 @@ export default class CanvasEffect extends PIXI.Container {
     this._tweakRotationForIsometric();
 
     if (!this.data.anchor && this.data.rotateTowards) {
-      const startPointRatio =
-        this.template.startPoint / this._texture.width / 2;
+      const textureWidth = (this._texture?.width ?? this.sprite.width) / 2;
+      const startPointRatio = this.template.startPoint / textureWidth;
       this.spriteContainer.pivot.set(
         this.sprite.width * (-0.5 + startPointRatio),
         0
