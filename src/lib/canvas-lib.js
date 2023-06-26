@@ -171,8 +171,8 @@ export function get_object_position(
     }
   } else if (obj instanceof Token) {
     pos = {
-      x: obj.mesh.x,
-      y: obj.mesh.y,
+      x: obj.x + obj.scene.grid.size / 2,
+      y: obj.y + obj.scene.grid.size / 2
     };
 
     if (exact) {

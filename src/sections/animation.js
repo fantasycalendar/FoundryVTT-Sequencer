@@ -271,9 +271,9 @@ class AnimationSection extends Section {
     let refreshTokenID;
 
     return await new Promise(resolve => {
-      refreshTokenID = Hooks.on('drawToken', async (tokenDoc) => {
+      refreshTokenID = Hooks.on('refreshToken', async (tokenDoc) => {
         if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh) return;
-        Hooks.off('drawToken', refreshTokenID);
+        Hooks.off('refreshToken', refreshTokenID);
         resolve();
       })
     })
@@ -285,10 +285,10 @@ class AnimationSection extends Section {
   async _execute() {
     if (!(await this._shouldPlay())) return;
     let self = this;
-    await this._waitForUnloadedMesh(this._originObject);
     this._basicDelay = lib.random_float_between(this._delayMin, this._delayMax);
     return new Promise(async (resolve) => {
       setTimeout(async () => {
+        await this._waitForUnloadedMesh(this._originObject);
         if (this._shouldAsync) {
           await self.run();
         } else {
