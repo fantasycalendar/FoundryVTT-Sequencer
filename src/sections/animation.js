@@ -258,23 +258,22 @@ class AnimationSection extends Section {
 
     if (obj instanceof Token) {
       token = obj;
-    } else if (obj instanceof TokenDocument) {
-      token = obj.object;
-    } else {
-      return;
     }
 
-    if (token.mesh != null) {
+    if (obj instanceof TokenDocument) {
+      token = obj.object;
+    }
+
+    if (token == null || token.mesh != null) {
       return;
     }
 
     let refreshTokenID;
 
     return await new Promise(resolve => {
-      refreshTokenID = Hooks.on('refreshToken', async (tokenDoc) => {
-        if (!token.mesh)
-        if (tokenDoc.document.actorId !== token.actorId) return;
-        Hooks.off('refreshToken', refreshTokenID);
+      refreshTokenID = Hooks.on('drawToken', async (tokenDoc) => {
+        if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh) return;
+        Hooks.off('drawToken', refreshTokenID);
         resolve();
       })
     })
