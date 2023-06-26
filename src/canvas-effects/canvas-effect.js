@@ -1914,38 +1914,56 @@ export default class CanvasEffect extends PIXI.Container {
 
       const obj = documentObj.object;
 
-      let shape = obj?.mesh ?? obj?.template ?? obj?.shape;
+      let shape = obj?.mesh;
       let shapeToAdd = shape;
 
       if (obj instanceof MeasuredTemplate || obj instanceof Drawing) {
+        shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
         shapeToAdd = new PIXI.LegacyGraphics()
           .beginFill()
           .drawShape(shape)
           .endFill();
-        shapeToAdd.position.set(documentObj.x, documentObj.y);
+        if (obj instanceof MeasuredTemplate) {
+          shapeToAdd.position.set(documentObj.x, documentObj.y);
+        } else {
+          const {
+            x,
+            y,
+            shape: { width, height },
+            rotation,
+          } = documentObj;
+          shapeToAdd.pivot.set(width / 2, height / 2);
+          shapeToAdd.position.set(x + width / 2, y + height / 2);
+          shapeToAdd.angle = rotation;
+        }
         shapeToAdd.cullable = true;
         shapeToAdd.custom = true;
+        shapeToAdd.renderable = false;
         shapeToAdd.uuid = uuid;
+        canvas.stage.addChild(shapeToAdd);
       }
-
-      hooksManager.addHook(this.uuid, this.getHook("delete", uuid), (doc) => {
-        if (doc !== documentObj) return;
-        const index = maskFilter.masks.indexOf(shapeToAdd);
-        if (index === -1) return;
-        maskFilter.masks.splice(maskFilter.masks.indexOf(shapeToAdd));
-        if (shapeToAdd.custom) {
-          shapeToAdd.destroy();
-        }
-      });
+      shapeToAdd.obj = obj;
 
       hooksManager.addHook(this.uuid, this.getHook("update", uuid), (doc) => {
         if (doc !== documentObj) return;
-        const index = maskFilter.masks.indexOf(shapeToAdd);
-        if (index === -1) return;
-        if (!shapeToAdd.custom) return;
-        shapeToAdd.clear();
-        shapeToAdd.beginFill().drawShape(shape).endFill();
-        shapeToAdd.position.set(documentObj.x, documentObj.y);
+        const mask = maskFilter.masks.find((shape) => shape.uuid === uuid);
+        if (!mask) return;
+        if (!mask.custom) return;
+        mask.clear();
+        mask.beginFill().drawShape(shape).endFill();
+        if (obj instanceof MeasuredTemplate) {
+          mask.position.set(documentObj.x, documentObj.y);
+        } else {
+          const {
+            x,
+            y,
+            shape: { width, height },
+            rotation,
+          } = documentObj;
+          mask.pivot.set(width / 2, height / 2);
+          mask.position.set(x + width / 2, y + height / 2);
+          mask.angle = rotation;
+        }
       });
 
       maskFilter.masks.push(shapeToAdd);

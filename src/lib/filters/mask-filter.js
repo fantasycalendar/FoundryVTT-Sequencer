@@ -28,6 +28,7 @@ export default class MaskFilter extends AbstractBaseFilter {
     const renderer = filterManager.renderer;
 
     for (const mask of this.masks) {
+      if (mask?.obj?.destroyed) continue;
       const renderable = mask.renderable;
       mask.renderable = true;
       mask.render(renderer);
