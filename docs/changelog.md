@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.0.14
+- *Sequencer* - Improved Database-to-Database binding when considering custom metadata
+- *Effects* - Vastly improved `.mask()` performance and behavior all thanks to dev7355608!
+- *Effects* - Fixed a rare case where range-finding effects would fail to determine the right video file to play
+
 ## Version 3.0.13
 - *Effects* - Added `.randomSpriteRotation()`
 - *Effects* - Fixed a bug with cached locations and `.mask()`

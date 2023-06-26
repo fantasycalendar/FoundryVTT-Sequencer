@@ -214,7 +214,7 @@ export class SequencerFileRangeFind extends SequencerFile {
     if (inFt && this.file[inFt]) {
       if (Array.isArray(this.file[inFt])) {
         const fileIndex = lib.is_real_number(this.fileIndex)
-          ? this.fileIndex
+          ? Math.min(this.file[inFt].length - 1, this.fileIndex)
           : lib.random_array_element(this.file[inFt], {
               twister: this.twister,
               index: true,
