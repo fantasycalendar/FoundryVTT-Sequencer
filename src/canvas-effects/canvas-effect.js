@@ -1430,6 +1430,8 @@ export default class CanvasEffect extends PIXI.Container {
       layer = SequencerAboveUILayer;
     } else if (this.data.screenSpace) {
       layer = canvas.sequencerEffectsUILayer;
+    } else if (this.data.aboveInterface) {
+      layer = canvas.controls;
     } else if (this.data.aboveLighting) {
       layer = canvas.interface;
     } else {
@@ -1501,30 +1503,24 @@ export default class CanvasEffect extends PIXI.Container {
       this._isRangeFind &&
       (this.data.stretchTo?.attachTo?.active || this.data.attachTo?.active)
     ) {
-      let sprite;
       let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
-      if (this.data.xray) {
-        sprite = new spriteType(this._texture);
-      } else {
-        sprite = new spriteType(this._texture, VisionSamplerShader);
-      }
-      this._relatedSprites[this._currentFilePath] = sprite;
+      this._relatedSprites[this._currentFilePath] = new spriteType(
+        this._texture,
+        this.data.xray ? null : VisionSamplerShader
+      );
 
       new Promise(async (resolve) => {
         for (let filePath of this._file.getAllFiles()) {
           if (filePath === this._currentFilePath) continue;
 
           let texture = await this._file._getTexture(filePath);
-
-          let sprite;
           let spriteType = this.data.tilingTexture
             ? PIXI.TilingSprite
             : SpriteMesh;
-          if (this.data.xray) {
-            sprite = new spriteType(texture);
-          } else {
-            sprite = new spriteType(texture, VisionSamplerShader);
-          }
+          let sprite = new spriteType(
+            texture,
+            this.data.xray ? null : VisionSamplerShader
+          );
           sprite.renderable = false;
           this._relatedSprites[filePath] = sprite;
         }

@@ -198,6 +198,15 @@
       height: 339px;
       flex: 1;
       margin-right: 0.5rem;
+
+      & :global(.virtual-scroll-item) {
+        padding: 2px;
+        margin-right: 5px;
+        border-radius: 4px;
+        min-height: 0px;
+        max-height: 17px;
+        height: auto;
+      }
     }
 
     &-player-container {

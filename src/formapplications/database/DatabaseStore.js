@@ -65,7 +65,9 @@ function copyPath(dbPath, getFilepath, quotes = false) {
   let entry;
   if (getFilepath) {
     entry = Sequencer.Database.getEntry(dbPath);
-
+    if (Array.isArray(entry)) {
+      entry = lib.random_array_element(entry);
+    }
     if (entry instanceof SequencerFileBase) {
       const specificFt = dbPath.match(CONSTANTS.FEET_REGEX);
       if (specificFt) {

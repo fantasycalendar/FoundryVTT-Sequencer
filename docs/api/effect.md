@@ -767,9 +767,15 @@ Causes the effect to be played below tiles - you can pass a boolean whether it s
 
 `.aboveLighting()` or `.aboveLighting(bool)`
 
-Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects.
+Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects and the interface (like health bars).
 
 Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden.
+
+## Above Interface
+
+`.aboveInterface()` or `.aboveInterface(bool)`
+
+Causes the effect to be played above the interface layer, which makes the effect be visible over everything in the canvas.
 
 ## Z-Index
 

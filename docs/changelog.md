@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.1.0
+- *Sequencer* - Fixed a bug in the database when copying some file paths would not work properly
+- *Effects* - Added `.aboveInterface()`
+
 ## Version 3.0.14
 - *Sequencer* - Improved Database-to-Database binding when considering custom metadata
 - *Animations* - Fixed cases where if a newly created token had `.animation()`s applied to them would sometimes fail due to `Token#mesh` not being initialized (Thanks LukeAbby & TMinz)

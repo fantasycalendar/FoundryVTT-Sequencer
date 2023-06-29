@@ -60,6 +60,7 @@ export default class EffectSection extends Section {
     this._offsetLegacy = null;
     this._randomOffsetLegacy = null;
     this._aboveLighting = null;
+    this._aboveInterface = null;
     this._spriteScaleMin = 1.0;
     this._spriteScaleMax = null;
     this._isometric = null;
@@ -869,6 +870,17 @@ export default class EffectSection extends Section {
     }
 
     if (
+      inOptions.texture !== undefined &&
+      typeof inOptions.texture !== "string"
+    ) {
+      throw this.sequence._customError(
+        this,
+        "shape",
+        "inOptions.texture must be of type string"
+      );
+    }
+
+    if (
       inOptions.isMask !== undefined &&
       typeof inOptions.isMask !== "boolean"
     ) {
@@ -1432,6 +1444,23 @@ export default class EffectSection extends Section {
         "inBool must be of type boolean"
       );
     this._aboveLighting = inBool;
+    return this;
+  }
+
+  /**
+   * Causes the effect to be played on top of interface
+   *
+   * @param {Boolean} inBool
+   * @returns {EffectSection}
+   */
+  aboveInterface(inBool = true) {
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "aboveInterface",
+        "inBool must be of type boolean"
+      );
+    this._aboveInterface = inBool;
     return this;
   }
 
@@ -2351,6 +2380,7 @@ export default class EffectSection extends Section {
       scaleToObject: this._scaleToObject,
       elevation: this._elevation,
       aboveLighting: this._aboveLighting,
+      aboveInterface: this._aboveInterface,
       xray: this._xray,
 
       // Appearance
