@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.1.1
+- *Effects* - Fixed `.shape()` with `mask: true` not masking its parent
+- *Effects* - Hopefully fixed issues surrounding effects sometimes not being cleared properly
+- *Effects* - Fixed effects in v11 sometimes ending up in the top left corner after switching scenes
+
 ## Version 3.1.0
 - *Sequencer* - Fixed a bug in the database when copying some file paths would not work properly
 - *Effects* - Added `.aboveInterface()`

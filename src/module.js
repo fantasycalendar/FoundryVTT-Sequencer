@@ -28,8 +28,14 @@ import { PlayerSettings } from "./formapplications/effects-ui/effect-player-stor
 import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
+let moduleValid = false;
+let moduleReady = false;
+let canvasReady = false;
+
 Hooks.once("init", async function () {
+  // CONFIG.debug.hooks = true;
   if (!game.modules.get("socketlib")?.active) return;
+  moduleValid = true;
   CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = false;
   //   !!game.modules.get(
   //   CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
@@ -56,30 +62,34 @@ Hooks.once("ready", async function () {
     }
   }
 
-  await runMigrations();
+  if (game.user.isGM) {
+    await runMigrations();
+    await migrateSettings();
+    await PlayerSettings.migrateOldPresets();
+  }
 
-  PlayerSettings.migrateOldPresets();
   SequencerFoundryReplicator.registerHooks();
-
   InteractionManager.initialize();
+});
 
-  setTimeout(() => {
+Hooks.on("canvasTearDown", () => {
+  canvasReady = false;
+});
+
+Hooks.on("refreshToken", async () => {
+  if (!moduleValid) return;
+  if (!moduleReady) {
+    moduleReady = true;
     console.log("Sequencer | Ready to go!");
     Hooks.callAll("sequencer.ready");
     Hooks.callAll("sequencerReady");
-
-    // setTimeout(() => {
-    //   EffectsUIApp.show({ tab: "player" });
-    // }, 200)
-
-    migrateSettings();
-
-    SequencerEffectManager.setUpPersists();
-
-    Hooks.on("canvasReady", () => {
+  }
+  if (!canvasReady) {
+    canvasReady = true;
+    setTimeout(() => {
       SequencerEffectManager.setUpPersists();
-    });
-  }, 50);
+    }, 25);
+  }
 });
 
 /**

@@ -468,7 +468,12 @@ export default class SequencerEffectManager {
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
     const docEffectsMap = allObjects.reduce((acc, doc) => {
-      let tokenEffects = flagManager.getFlags(doc);
+      let effects = flagManager.getFlags(doc);
+      effects.forEach((e) => {
+        if (lib.is_UUID(e[1].source) && e[1].source !== doc.uuid) {
+          e[1].delete = true;
+        }
+      });
       if (doc instanceof TokenDocument && doc?.actorLink) {
         const actorEffects = flagManager.getFlags(doc?.actor);
         actorEffects.forEach((e) => {
@@ -476,10 +481,10 @@ export default class SequencerEffectManager {
           e[1].source = doc.uuid;
           e[1].sceneId = doc.parent.id;
         });
-        tokenEffects = tokenEffects.concat(actorEffects);
+        effects = effects.concat(actorEffects);
       }
-      if (tokenEffects.length) {
-        acc[doc.uuid] = tokenEffects;
+      if (effects.length) {
+        acc[doc.uuid] = effects;
       }
       return acc;
     }, {});
@@ -588,7 +593,7 @@ export default class SequencerEffectManager {
   static _playEffectMap(inEffects, inDocument) {
     if (inEffects instanceof Map) inEffects = Array.from(inEffects);
     return Promise.all(
-      inEffects.map(async (effect) => {
+      inEffects.map((effect) => {
         if (!CanvasEffect.checkValid(effect[1])) {
           if (!game.user.isGM) return;
           lib.custom_warning(

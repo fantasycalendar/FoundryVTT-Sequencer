@@ -176,7 +176,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   get isSourceDestroyed() {
     return (
-      this.source && (this.source?.destroyed || this.sourceDocument?._destroyed)
+      this.source && (this.source?.destroyed || !this.sourceDocument?.object)
     );
   }
 
@@ -200,7 +200,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   get isTargetDestroyed() {
     return (
-      this.target && (this.target?.destroyed || this.targetDocument?._destroyed)
+      this.target && (this.target?.destroyed || !this.targetDocument?.object)
     );
   }
 
@@ -619,6 +619,9 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   static checkValid(effectData) {
+    if (effectData.delete) {
+      return false;
+    }
     let sourceExists = true;
     let targetExists = true;
     if (effectData.source && lib.is_UUID(effectData.source)) {
@@ -1854,12 +1857,14 @@ export default class CanvasEffect extends PIXI.Container {
       this.sort = Math.max(sourceSort, targetSort);
     } else {
       this.sort = !lib.is_real_number(this.data.zIndex)
-        ? this.data.index + this.parent.children.length
+        ? this.data.index + (this?.parent?.children?.length ?? 0)
         : 100000 + this.data.zIndex;
     }
     this.elevation = effectElevation;
     this.sort += 100;
-    this.parent.sortChildren();
+    if (this.parent) {
+      this?.parent?.sortChildren();
+    }
   }
 
   updateTransform() {
@@ -1970,6 +1975,10 @@ export default class CanvasEffect extends PIXI.Container {
     for (const shapeData of maskShapes) {
       const shape = canvaslib.createShape(shapeData);
       shape.cullable = true;
+      shape.custom = true;
+      shape.renderable = false;
+      this.spriteContainer.addChild(shape);
+      this.shapes[shapeData?.name ?? "shape-" + randomID()] = shape;
       maskFilter.masks.push(shape);
     }
 
