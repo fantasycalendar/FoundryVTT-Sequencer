@@ -40,12 +40,10 @@ Hooks.once("init", async function () {
   //   !!game.modules.get(
   //   CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
   // )?.active;
-  initialize_module();
+  initializeModule();
 });
 
-Hooks.once("socketlib.ready", () => {
-  registerSocket();
-});
+Hooks.once("socketlib.ready", registerSocket);
 
 Hooks.once("ready", async function () {
   if (!game.modules.get("socketlib")?.active) {
@@ -74,9 +72,10 @@ Hooks.once("ready", async function () {
 
 Hooks.on("canvasTearDown", () => {
   canvasReady = false;
+  SequencerEffectManager.tearDownPersists();
 });
 
-Hooks.on("refreshToken", async () => {
+const setupModule = debounce(() => {
   if (!moduleValid) return;
   if (!moduleReady) {
     moduleReady = true;
@@ -86,16 +85,25 @@ Hooks.on("refreshToken", async () => {
   }
   if (!canvasReady) {
     canvasReady = true;
-    setTimeout(() => {
-      SequencerEffectManager.setUpPersists();
-    }, 25);
+    SequencerEffectManager.initializePersistentEffects();
   }
+}, 25);
+
+Hooks.on("canvasReady", () => {
+  setTimeout(() => {
+    setupModule();
+  }, 450);
 });
+
+Hooks.on("refreshToken", setupModule);
+Hooks.on("refreshDrawing", setupModule);
+Hooks.on("refreshTile", setupModule);
+Hooks.on("refreshMeasuredTemplate", setupModule);
 
 /**
  * Creation & delete hooks for persistent effects
  */
-function initialize_module() {
+function initializeModule() {
   window.Sequence = Sequence;
   window.Sequencer = {
     Player: EffectPlayer,
@@ -129,32 +137,7 @@ function initialize_module() {
   registerLibwrappers();
 
   SequencerAboveUILayer.setup();
-
-  Hooks.on("preCreateToken", (...args) =>
-    Sequencer.EffectManager.patchCreationData(...args)
-  );
-  Hooks.on("preCreateDrawing", (...args) =>
-    Sequencer.EffectManager.patchCreationData(...args)
-  );
-  Hooks.on("preCreateTile", (...args) =>
-    Sequencer.EffectManager.patchCreationData(...args)
-  );
-  Hooks.on("preCreateMeasuredTemplate", (...args) =>
-    Sequencer.EffectManager.patchCreationData(...args)
-  );
-
-  Hooks.on("createToken", (...args) =>
-    Sequencer.EffectManager.documentCreated(...args)
-  );
-  Hooks.on("createDrawing", (...args) =>
-    Sequencer.EffectManager.documentCreated(...args)
-  );
-  Hooks.on("createTile", (...args) =>
-    Sequencer.EffectManager.documentCreated(...args)
-  );
-  Hooks.on("createMeasuredTemplate", (...args) =>
-    Sequencer.EffectManager.documentCreated(...args)
-  );
+  SequencerEffectManager.setup();
 }
 
 Hooks.once("monaco-editor.ready", registerTypes);

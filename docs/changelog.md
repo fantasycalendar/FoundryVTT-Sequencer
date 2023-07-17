@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.1.2
+- *Sequencer* - Fixed Sequencer's ready hooks sometimes not firing when canvas was fully ready
+- *Effects* - Improved persistent effects behavior when pasted across scenes 
+
 ## Version 3.1.1
 - *Effects* - Fixed `.shape()` with `mask: true` not masking its parent
 - *Effects* - Hopefully fixed issues surrounding effects sometimes not being cleared properly

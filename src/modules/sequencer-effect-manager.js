@@ -463,7 +463,7 @@ export default class SequencerEffectManager {
    *
    * @returns {promise}
    */
-  static async setUpPersists() {
+  static async initializePersistentEffects() {
     await this.tearDownPersists();
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
@@ -510,6 +510,17 @@ export default class SequencerEffectManager {
     );
   }
 
+  static setup() {
+    Hooks.on("preCreateToken", this._patchCreationData.bind(this));
+    Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
+    Hooks.on("preCreateTile", this._patchCreationData.bind(this));
+    Hooks.on("preCreateMeasuredTemplate", this._patchCreationData.bind(this));
+    Hooks.on("createToken", this._documentCreated.bind(this));
+    Hooks.on("createDrawing", this._documentCreated.bind(this));
+    Hooks.on("createTile", this._documentCreated.bind(this));
+    Hooks.on("createMeasuredTemplate", this._documentCreated.bind(this));
+  }
+
   /**
    * Patches an object's creation data before it's created so that the effect plays on it correctly
    *
@@ -518,7 +529,7 @@ export default class SequencerEffectManager {
    * @param options
    * @returns {*}
    */
-  static async patchCreationData(inDocument, data, options) {
+  static async _patchCreationData(inDocument, data, options) {
     const effects = flagManager.getFlags(inDocument);
 
     if (!effects?.length) return;
@@ -535,15 +546,17 @@ export default class SequencerEffectManager {
       documentUuid = inDocument.uuid;
     }
 
-    updates[CONSTANTS.EFFECTS_FLAG] = this.patchEffectDataForDocument(
+    updates[CONSTANTS.EFFECTS_FLAG] = this._patchEffectDataForDocument(
       documentUuid,
       effects
     );
 
+    debugger;
+
     return inDocument.updateSource(updates);
   }
 
-  static patchEffectDataForDocument(inDocumentUuid, effects) {
+  static _patchEffectDataForDocument(inDocumentUuid, effects) {
     return effects.map((effect) => {
       effect[0] = randomID();
       const effectData = effect[1];
@@ -566,12 +579,12 @@ export default class SequencerEffectManager {
    * @param inDocument
    * @returns {*}
    */
-  static async documentCreated(inDocument) {
+  static async _documentCreated(inDocument) {
     let effects = flagManager.getFlags(inDocument);
     if (inDocument instanceof TokenDocument && inDocument?.actorLink) {
       let actorEffects = flagManager.getFlags(inDocument.actor);
       if (actorEffects.length) {
-        actorEffects = this.patchEffectDataForDocument(
+        actorEffects = this._patchEffectDataForDocument(
           inDocument.uuid,
           actorEffects
         );
