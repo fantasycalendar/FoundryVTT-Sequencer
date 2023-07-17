@@ -23,6 +23,10 @@ Like what we've done? Buy us a coffee!
 
 ---
 
+## Powered by Typhon JS ❤️Svelte
+
+---
+
 ## What is Sequencer?
 
 Sequencer is a powerful module that lets you play visual effects in your scenes, attaching them to tokens or other elements, animating them, quickly and easily removing them, play sounds for all or specific players, run macros one after another in a controlled way, and so much more.
