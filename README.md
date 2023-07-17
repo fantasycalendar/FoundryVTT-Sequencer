@@ -38,6 +38,8 @@ Sequencer is a powerful module that lets you play visual effects in your scenes,
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
+## [Changelog](docs/changelog.md)
+
 ## Installation
 
 You can install it through the Foundry module installer, or by copy-pasting this link into the module installer:
@@ -47,7 +49,13 @@ You can install it through the Foundry module installer, or by copy-pasting this
 If you want to test the beta track, you can install it from this link - **NOT RECOMMENDED FOR NOVICE USERS**:
 [https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json](https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json)
 
-## [Changelog](docs/changelog.md)
+## Contributing
+
+Sequencer operates under the [MIT license](https://opensource.org/license/mit/), so feel free to contribute, fork, redistribute any part of the module.
+
+## Developing Locally
+
+To start running this module locally and developing for it, you will need to run the following commands in your terminal while in the directory of the module; `npm install` -> `npm run build` -> `npm run dev` 
 
 ## Credits
 ### Feedback and amazing help
