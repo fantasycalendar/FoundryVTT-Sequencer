@@ -430,6 +430,12 @@ Calling this method will cause the effect to become permanent on the canvas. You
 Also supports a second options object that accepts:
 - `persistTokenPrototype: boolean` (default `false`) - makes the effect persist on the token's prototype data, useful for active effect-linked VFX
 
+## Temporary
+
+`.temporary()` or `.persist(boolean)`
+
+Calling this method will cause the effect to not set any flags if `.persist()` was called.
+
 ## Extra End Duration
 
 `.extraEndDuration(inNumber)` or `.extraEndDuration(500)`

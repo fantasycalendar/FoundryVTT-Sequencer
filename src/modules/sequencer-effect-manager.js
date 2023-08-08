@@ -786,7 +786,7 @@ export default class SequencerEffectManager {
   static async _playPrototypeTokenEffects(data, push) {
     if (!lib.is_UUID(data.source)) return;
 
-    const object = lib.from_uuid_fast(data.source);
+    const object = fromUuidSync(data.source);
 
     if (!(object instanceof TokenDocument)) return;
 

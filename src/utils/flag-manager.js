@@ -275,13 +275,13 @@ const flagManager = {
     const sceneObjectsToUpdate = {};
 
     for (let objectUUID of objects) {
-      let object = lib.from_uuid_fast(objectUUID);
+      let object = fromUuidSync(objectUUID);
 
       if (!object) {
-        lib.custom_warning(
-          "Sequencer",
-          `Failed to set flags on non-existent object with UUID: ${objectUUID}`
-        );
+        // lib.custom_warning(
+        //   "Sequencer",
+        //   `Failed to set flags on non-existent object with UUID: ${objectUUID}`
+        // );
         continue;
       }
 

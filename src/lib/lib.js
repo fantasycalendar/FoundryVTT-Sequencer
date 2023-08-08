@@ -293,46 +293,13 @@ export function get_object_from_scene(
 ) {
   let tryUUID = is_UUID(inObjectId);
   if (tryUUID) {
-    const obj = from_uuid_fast(inObjectId);
+    const obj = fromUuidSync(inObjectId);
     if (obj) return obj;
     tryUUID = false;
   }
   return get_all_documents_from_scene(inSceneId).find((obj) => {
     return get_object_identifier(obj, tryUUID) === inObjectId;
   });
-}
-
-/**
- *  Retrieves an object from the scene using its UUID, avoiding compendiums as they would have to be async'd
- *
- * @param uuid
- * @returns {null}
- */
-export function from_uuid_fast(uuid) {
-  let parts = uuid.split(".");
-  let doc;
-
-  const [docName, docId] = parts.slice(0, 2);
-  parts = parts.slice(2);
-  const collection = CONFIG[docName].collection.instance;
-  doc = collection.get(docId);
-
-  // Embedded Documents
-  while (doc && parts.length > 1) {
-    const [embeddedName, embeddedId] = parts.slice(0, 2);
-    if (embeddedName === "SequencerEffect") {
-      if (game.user.viewedScene !== docId) {
-        let effects = doc.getFlag(CONSTANTS.MODULE_NAME, CONSTANTS.FLAG_NAME);
-        doc = new Map(effects).get(embeddedId);
-      } else {
-        doc = Sequencer.EffectManager.getEffects({ effect: docId })?.[0];
-      }
-    } else {
-      doc = doc.getEmbeddedDocument(embeddedName, embeddedId);
-    }
-    parts = parts.slice(2);
-  }
-  return doc || null;
 }
 
 /**

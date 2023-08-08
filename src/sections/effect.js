@@ -143,6 +143,24 @@ export default class EffectSection extends Section {
   }
 
   /**
+   * Causes the effect to become temporary, which means it will not be stored in the flags of any object,
+   * even if it .persist() is called
+   *
+   * @param {Boolean} inBool
+   * @returns {EffectSection}
+   */
+  temporary(inBool = true) {
+    if (typeof inBool !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "temporary",
+        "inBool must be of type boolean"
+      );
+    this._temporaryEffect = inBool || this._temporaryEffect;
+    return this;
+  }
+
+  /**
    * Sets the effect's playback rate. A playback rate of 2.0 would make it play 2x as fast, 0.5 would make
    * it play half as fast.
    *
@@ -331,7 +349,7 @@ export default class EffectSection extends Section {
       (validatedObject instanceof foundry.abstract.Document ||
       validatedObject instanceof MeasuredTemplate
         ? !lib.is_UUID(validatedObject?.uuid)
-        : false);
+        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -488,7 +506,7 @@ export default class EffectSection extends Section {
       this._temporaryEffect ||
       (validatedObject instanceof foundry.abstract.Document
         ? !lib.is_UUID(validatedObject?.uuid)
-        : false);
+        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -577,7 +595,7 @@ export default class EffectSection extends Section {
       this._temporaryEffect ||
       (validatedObject instanceof foundry.abstract.Document
         ? !lib.is_UUID(validatedObject?.uuid)
-        : false);
+        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -675,7 +693,7 @@ export default class EffectSection extends Section {
       this._temporaryEffect ||
       (inObject instanceof foundry.abstract.Document
         ? !lib.is_UUID(inObject?.uuid)
-        : false);
+        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -1849,7 +1867,7 @@ export default class EffectSection extends Section {
         );
       }
       if (typeof doc === "string") {
-        const obj = lib.from_uuid_fast(doc);
+        const obj = fromUuidSync(doc);
         if (!obj)
           throw this.sequence._customError(
             this,

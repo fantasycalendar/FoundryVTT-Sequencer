@@ -625,14 +625,14 @@ export default class CanvasEffect extends PIXI.Container {
     let sourceExists = true;
     let targetExists = true;
     if (effectData.source && lib.is_UUID(effectData.source)) {
-      sourceExists = lib.from_uuid_fast(effectData.source);
+      sourceExists = fromUuidSync(effectData.source);
     }
     if (effectData.target && lib.is_UUID(effectData.target)) {
-      targetExists = lib.from_uuid_fast(effectData.target);
+      targetExists = fromUuidSync(effectData.target);
     }
     for (let tiedDocumentUuid of effectData?.tiedDocuments ?? []) {
       if (tiedDocumentUuid && lib.is_UUID(tiedDocumentUuid)) {
-        let tiedDocumentExists = lib.from_uuid_fast(tiedDocumentUuid);
+        let tiedDocumentExists = fromUuidSync(tiedDocumentUuid);
         if (!tiedDocumentExists) return false;
       }
     }
@@ -1861,9 +1861,10 @@ export default class CanvasEffect extends PIXI.Container {
         : 100000 + this.data.zIndex;
     }
     this.elevation = effectElevation;
+    this.zIndex = this.sort;
     this.sort += 100;
     if (this.parent) {
-      this?.parent?.sortChildren();
+      this.parent.sortChildren();
     }
   }
 
@@ -2063,7 +2064,7 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     for (let uuid of this.data?.tiedDocuments ?? []) {
-      const tiedDocument = lib.from_uuid_fast(uuid);
+      const tiedDocument = fromUuidSync(uuid);
       if (tiedDocument) {
         hooksManager.addHook(
           this.uuid,

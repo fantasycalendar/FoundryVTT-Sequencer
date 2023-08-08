@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.1.3
+- *Sequencer* - Removed stray debugger, whoops
+- *Effects* - Added `.temporary()`, which causes an effect to not set any flags on any objects, which means a refresh will make the effect disappear
+- *Effects* - Fixed `.zIndex()` not working with `.screenSpace()`
+
 ## Version 3.1.2
 - *Sequencer* - Fixed Sequencer's ready hooks sometimes not firing when canvas was fully ready
 - *Effects* - Improved persistent effects behavior when pasted across scenes 
