@@ -79,7 +79,7 @@ const setupModule = debounce(() => {
   if (!moduleValid) return;
   if (!moduleReady) {
     moduleReady = true;
-    console.log("Sequencer | Ready to go!");
+    lib.debug("Ready to go!");
     Hooks.callAll("sequencer.ready");
     Hooks.callAll("sequencerReady");
   }

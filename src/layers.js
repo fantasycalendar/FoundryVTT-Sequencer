@@ -3,6 +3,7 @@ import {
   SequencerInterfaceLayer,
   UIEffectsLayer,
 } from "./canvas-effects/effects-layer.js";
+import { debug } from "./lib/lib.js";
 
 export default function registerLayers() {
   CONFIG.Canvas.layers = foundry.utils.mergeObject(Canvas.layers, {
@@ -29,5 +30,5 @@ export default function registerLayers() {
     });
   }
 
-  console.log("Sequencer | Registered Layers");
+  debug("Registered Layers");
 }

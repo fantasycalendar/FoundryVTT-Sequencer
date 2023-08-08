@@ -1,5 +1,5 @@
 import CONSTANTS from "./constants.js";
-import { custom_warning } from "./lib/lib.js";
+import { custom_warning, debug } from "./lib/lib.js";
 
 export default async function runMigrations() {
   const sortedMigrations = Object.entries(migrations).sort((a, b) => {
@@ -140,7 +140,7 @@ const migrations = {
       }
 
       if (updates.length) {
-        console.log(
+        debug(
           `Sequencer | Updated ${updates.length} tokens' effects on scene ${scene.id} to version ${version}`
         );
         await scene.updateEmbeddedDocuments("Token", updates);
@@ -148,7 +148,7 @@ const migrations = {
     }
 
     if (actorUpdateArray.length) {
-      console.log(
+      debug(
         `Sequencer | Updated ${actorUpdateArray.length} actors' effects to version ${version}`
       );
       await Actor.updateDocuments(actorUpdateArray);

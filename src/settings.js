@@ -1,5 +1,5 @@
 import CONSTANTS from "./constants.js";
-import { user_can_do } from "./lib/lib.js";
+import { debug, user_can_do } from "./lib/lib.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
 import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 
@@ -240,7 +240,7 @@ export function registerSettings() {
     bar.tools.push(viewer);
   });
 
-  console.log("Sequencer | Registered settings");
+  debug("Sequencer | Registered settings");
 }
 
 export async function migrateSettings() {

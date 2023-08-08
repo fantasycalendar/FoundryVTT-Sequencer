@@ -278,10 +278,9 @@ const flagManager = {
       let object = fromUuidSync(objectUUID);
 
       if (!object) {
-        // lib.custom_warning(
-        //   "Sequencer",
-        //   `Failed to set flags on non-existent object with UUID: ${objectUUID}`
-        // );
+        lib.debug(
+          `Failed to set flags on non-existent object with UUID: ${objectUUID}`
+        );
         continue;
       }
 

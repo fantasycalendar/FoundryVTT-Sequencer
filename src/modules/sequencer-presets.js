@@ -1,4 +1,4 @@
-import { custom_error, is_function } from "../lib/lib.js";
+import { custom_error, debug, is_function } from "../lib/lib.js";
 
 const presetMap = new Map();
 
@@ -34,7 +34,7 @@ export default class SequencerPresets {
     }
 
     presetMap.set(inName, inFunction);
-    console.log(`Sequencer | Presets | Added "${inName}" preset`);
+    debug(`Sequencer | Presets | Added "${inName}" preset`);
     return presetMap;
   }
 

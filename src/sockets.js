@@ -26,7 +26,7 @@ export const SOCKET_HANDLERS = {
 export let sequencerSocket;
 
 export function registerSocket() {
-  console.log("Sequencer | Registered sequencerSocket");
+  lib.debug("Sequencer | Registered sequencerSocket");
   sequencerSocket = socketlib.registerModule(CONSTANTS.MODULE_NAME);
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) =>
     Sequencer.EffectManager._playEffect(...args)

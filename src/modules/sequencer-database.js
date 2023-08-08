@@ -90,7 +90,7 @@ class Database {
     this.entries = foundry.utils.mergeObject(this.entries, {
       [inModuleName]: processedEntries,
     });
-    console.log(
+    lib.debug(
       `Sequencer | Database | Entries for "${inModuleName}" registered`
     );
     Hooks.callAll("registerSequencerDatabaseEntries", inModuleName);
