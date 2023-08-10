@@ -551,8 +551,6 @@ export default class SequencerEffectManager {
       effects
     );
 
-    debugger;
-
     return inDocument.updateSource(updates);
   }
 

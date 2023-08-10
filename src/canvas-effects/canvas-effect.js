@@ -930,12 +930,29 @@ export default class CanvasEffect extends PIXI.Container {
         newOffset.y *= canvas.grid.size;
       }
       if (extraOffset.local) {
+        if (
+          !this._cachedSourceData?.position ||
+          !this._cachedTargetData?.position
+        ) {
+          this.getSourceData();
+          this.getTargetData();
+        }
+        const angle = new Ray(
+          {
+            x: this._cachedSourceData.position.x,
+            y: this._cachedSourceData.position.y,
+          },
+          {
+            x: this._cachedTargetData.position.x,
+            y: this._cachedTargetData.position.y,
+          }
+        ).angle;
         newOffset = canvaslib.rotateAroundPoint(
           0,
           0,
           newOffset.x,
           newOffset.y,
-          -this.rotationContainer.angle
+          -angle
         );
       }
       offset.x -= newOffset.x;

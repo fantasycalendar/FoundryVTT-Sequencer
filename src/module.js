@@ -41,6 +41,7 @@ Hooks.once("init", async function () {
   //   CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
   // )?.active;
   initializeModule();
+  registerSocket();
 });
 
 Hooks.once("socketlib.ready", registerSocket);
