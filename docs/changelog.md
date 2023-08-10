@@ -2,6 +2,7 @@
 
 ## Version 3.1.3
 - *Sequencer* - Removed stray debugger, whoops
+- *Animations* - Fixed `.rotateTowards()` being off by a few degrees
 - *Effects* - Added `.temporary()`, which causes an effect to not set any flags on any objects, which means a refresh will make the effect disappear
 - *Effects* - Fixed `.zIndex()` not working with `.screenSpace()`
 - *Effects* - Fixed `offset`'s `local` modifier not applying correctly when using `.stretchTo()` and the like

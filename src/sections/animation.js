@@ -270,13 +270,14 @@ class AnimationSection extends Section {
 
     let refreshTokenID;
 
-    return await new Promise(resolve => {
-      refreshTokenID = Hooks.on('refreshToken', async (tokenDoc) => {
-        if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh) return;
-        Hooks.off('refreshToken', refreshTokenID);
+    return await new Promise((resolve) => {
+      refreshTokenID = Hooks.on("refreshToken", async (tokenDoc) => {
+        if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh)
+          return;
+        Hooks.off("refreshToken", refreshTokenID);
         resolve();
-      })
-    })
+      });
+    });
   }
 
   /**
@@ -397,13 +398,14 @@ class AnimationSection extends Section {
 
       if (this._originObject instanceof TokenDocument) {
         setTimeout(async () => {
-          let target =
+          let startLocation = this._originObject.object?.center ?? targetLoc;
+          let targetLocation =
             this._rotateTowards.target?.object ?? this._rotateTowards.target;
           if (this._rotateTowards.towardsCenter) {
-            target = target?.center ?? target;
+            targetLocation = targetLocation?.center ?? targetLocation;
           }
-          let ray = new Ray(targetLoc, target);
-          let angle = (ray.angle * 180) / Math.PI - 90;
+          let ray = new Ray(startLocation, targetLocation);
+          let angle = Math.normalizeDegrees((ray.angle * 180) / Math.PI - 90);
           angle += offset;
           await this._updateObject(
             this._originObject,
