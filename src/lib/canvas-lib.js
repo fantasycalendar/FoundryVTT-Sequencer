@@ -3,15 +3,15 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
 
 export function createShape(shape) {
-  const graphic = new PIXI.Graphics();
+  const graphic = new PIXI.LegacyGraphics();
 
   graphic.beginFill(
     shape?.fillColor ?? 0xffffff,
-    shape?.fillColor !== undefined ? shape?.fillAlpha ?? 1 : 0
+    shape?.fillAlpha ?? shape?.isMask ? 1 : 0
   );
 
   graphic.lineStyle(
-    shape.lineSize ?? (shape?.lineColor !== undefined ? 1 : 0),
+    shape.lineSize ?? (shape?.isMask ? 1 : 0),
     shape?.lineColor ?? 0xffffff
   );
 
@@ -63,8 +63,8 @@ export function createShape(shape) {
       graphic.drawPolygon(
         shape.points.map((point) => {
           return new PIXI.Point(
-            point[0] * sizeMultiplier + graphic.offset.x,
-            point[1] * sizeMultiplier + graphic.offset.y
+            point[0] * sizeMultiplier,
+            point[1] * sizeMultiplier
           );
         })
       );

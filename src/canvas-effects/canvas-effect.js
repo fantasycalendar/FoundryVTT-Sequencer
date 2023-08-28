@@ -937,16 +937,19 @@ export default class CanvasEffect extends PIXI.Container {
           this.getSourceData();
           this.getTargetData();
         }
-        const angle = new Ray(
-          {
-            x: this._cachedSourceData.position.x,
-            y: this._cachedSourceData.position.y,
-          },
-          {
-            x: this._cachedTargetData.position.x,
-            y: this._cachedTargetData.position.y,
-          }
-        ).angle;
+
+        const startPos = this._cachedSourceData.position;
+        const endPos = this._cachedTargetData.position;
+
+        const angle = this.target
+          ? new Ray(startPos, endPos).angle
+          : Ray.fromAngle(
+              startPos.x,
+              startPos.y,
+              this._cachedSourceData.rotation,
+              1
+            ).angle;
+
         newOffset = canvaslib.rotateAroundPoint(
           0,
           0,
@@ -1940,10 +1943,22 @@ export default class CanvasEffect extends PIXI.Container {
 
       if (obj instanceof MeasuredTemplate || obj instanceof Drawing) {
         shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
+
+        if (
+          game.modules.get("walledtemplates")?.active &&
+          obj.walledtemplates?.walledTemplate
+        ) {
+          let wt = obj.walledtemplates.walledTemplate;
+          wt.options.padding = 3 * canvas.dimensions.distancePixels;
+          shape = wt.computeShape();
+          wt.options.padding = 0;
+        }
+
         shapeToAdd = new PIXI.LegacyGraphics()
           .beginFill()
           .drawShape(shape)
           .endFill();
+
         if (obj instanceof MeasuredTemplate) {
           shapeToAdd.position.set(documentObj.x, documentObj.y);
         } else {
@@ -1965,15 +1980,24 @@ export default class CanvasEffect extends PIXI.Container {
       }
       shapeToAdd.obj = obj;
 
-      hooksManager.addHook(this.uuid, this.getHook("update", uuid), (doc) => {
+      const updateMethod = (doc) => {
         if (doc !== documentObj) return;
         const mask = maskFilter.masks.find((shape) => shape.uuid === uuid);
         if (!mask) return;
         if (!mask.custom) return;
         mask.clear();
-        mask.beginFill().drawShape(shape).endFill();
         if (obj instanceof MeasuredTemplate) {
           mask.position.set(documentObj.x, documentObj.y);
+          let maskObj = documentObj.object;
+          if (
+            game.modules.get("walledtemplates")?.active &&
+            maskObj.walledtemplates?.walledTemplate
+          ) {
+            let wt = maskObj.walledtemplates.walledTemplate;
+            wt.options.padding = 3 * canvas.dimensions.distancePixels;
+            shape = wt.computeShape();
+            wt.options.padding = 0;
+          }
         } else {
           const {
             x,
@@ -1985,6 +2009,33 @@ export default class CanvasEffect extends PIXI.Container {
           mask.position.set(x + width / 2, y + height / 2);
           mask.angle = rotation;
         }
+        mask.beginFill().drawShape(shape).endFill();
+      };
+
+      if (game.modules.get("walledtemplates")?.active) {
+        hooksManager.addHook(this.uuid, "createWall", () => {
+          setTimeout(() => {
+            updateMethod(documentObj);
+          }, 100);
+        });
+
+        hooksManager.addHook(this.uuid, "updateWall", () => {
+          setTimeout(() => {
+            updateMethod(documentObj);
+          }, 100);
+        });
+
+        hooksManager.addHook(this.uuid, "deleteWall", () => {
+          setTimeout(() => {
+            updateMethod(documentObj);
+          }, 100);
+        });
+      }
+
+      hooksManager.addHook(this.uuid, this.getHook("update", uuid), (doc) => {
+        setTimeout(() => {
+          updateMethod(doc);
+        }, 100);
       });
 
       maskFilter.masks.push(shapeToAdd);

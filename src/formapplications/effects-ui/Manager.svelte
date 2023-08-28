@@ -3,6 +3,7 @@
   import SequenceManager from "../../modules/sequence-manager.js";
   import EffectEntry from "./components/EffectEntry.svelte";
   import SoundEntry from "./components/SoundEntry.svelte";
+  import SequencerAudioHelper from "../../modules/sequencer-audio-helper.js";
 
   const VisibleEffects = SequenceManager.VisibleEffects;
   const RunningSounds = SequenceManager.RunningSounds;

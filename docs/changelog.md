@@ -1,5 +1,11 @@
 ## Changelog
 
+## Version 3.1.4
+- *Effects* - Added better support for the Walled Templates module
+- *Effects* - Fixed effects becoming invisible when using both `offset` and `local` with just a source location and no target
+- *Effects* - Fixed `.shape()`s `isMask` property not working when the shape type was set to `polygon`
+- *Sounds* - Fixed "End All Sounds" button not working in the Sequencer Manager
+
 ## Version 3.1.3
 - *Sequencer* - Removed stray debugger, whoops
 - *Animations* - Fixed `.rotateTowards()` being off by a few degrees
