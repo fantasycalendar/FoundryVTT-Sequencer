@@ -87,7 +87,7 @@ Simply add `new Sequence()` below the `let img` line.
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
 ```
@@ -107,7 +107,7 @@ Then add `.effect()` below the `new Sequence()` so that we're starting a new eff
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -128,7 +128,7 @@ Then choose which animation to play in the effect by adding `.file("modules/jb2a
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -157,7 +157,7 @@ Paste that into the `.file()` section. It is always recommended to use the Datab
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -182,7 +182,7 @@ You can do this by simply adding `.atLocation(token)` to the macro. Sequencer wi
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -208,7 +208,7 @@ Then, you can also add `.randomRotation()` to make it randomly rotate the effect
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -234,7 +234,7 @@ If we switch the image now, it will look like the token switches the image and t
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -252,9 +252,9 @@ new Sequence()
 
 ### 10. Switch the token's image and play Sequence
 
-Now, all we have to do is actually switching the token's image. Since we want to wait for the effect to _almost_ finish, but not finish entirely, we'll need to continue with our sequence. Thankfully, it has a lot of tricks to help us with that. Simply add `.thenDo(() => {})` to the macro, but then between the `{}` add `token.document.update({ img });`.
+Now, all we have to do is actually switching the token's image. Since we want to wait for the effect to _almost_ finish, but not finish entirely, we'll need to continue with our sequence. Thankfully, it has a lot of tricks to help us with that. Simply add `.thenDo(() => {})` to the macro, but then between the `{}` add `token.document.update({ "texture.src": img });`.
 
-This means that once the `.wait(1500)` finishes after 1500ms, **then** we'll **do** what we put inside of the `{}`. That'll switch the token's image at the perfect moment.
+This means that once the `.wait(1500)` finishes after 1500ms, **then** we'll **do** what we put inside the `{}`. That'll switch the token's image at the perfect moment.
 
 Then, at the very end, just add `.play()`. Think of the Sequence as the recipe, but in order to actually cook everything we've assembled (the effect, the wait, the token image switch), we need to `.play()` it.
 
@@ -266,7 +266,7 @@ Then, at the very end, just add `.play()`. Think of the Sequence as the recipe, 
 let notTransformed = "systems/dnd5e/tokens/humanoid/Thug.webp";
 let transformed = "systems/dnd5e/tokens/humanoid/Werebear.webp";
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -276,7 +276,7 @@ new Sequence()
         .randomRotation()
     .wait(1500)
     .thenDo(() => {
-        token.document.update({ img });
+        token.document.update({ "texture.src": img });
     })
     .play()
 
@@ -293,7 +293,7 @@ new Sequence()
 let notTransformed = 'systems/dnd5e/tokens/humanoid/Thug.webp';
 let transformed = 'systems/dnd5e/tokens/humanoid/Werebear.webp';
 
-let img = token.data.img === notTransformed ? transformed : notTransformed;
+let img = token.document.texture.src === notTransformed ? transformed : notTransformed;
 
 new Sequence()
     .effect()
@@ -303,7 +303,7 @@ new Sequence()
         .randomRotation()
     .wait(1500)
     .thenDo(() => {
-        token.document.update({ img });
+        token.document.update({ "texture.src": img });
     })
     .play()
 
