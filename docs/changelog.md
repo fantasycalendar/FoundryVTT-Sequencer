@@ -1,8 +1,17 @@
 ## Changelog
 
-## Version 3.1.5
+## Version 3.2.0
+- *Sequencer* - Added support for FoundryVTT v12
+- *Sequencer* - Added support for the [Isometric module](https://foundryvtt.com/packages/grape_juice-isometrics) (thanks grape_fruit for their assistance with this integration!) 
 - *Sequencer* - Added `Sequencer.SoundManager` which is a sound interface that mirrors `Sequencer.EffectManager`
-- *Sounds* - Added support for `.name()`
+- *Sounds* - Added support for the following methods:
+  - `.name()`
+  - `.origin()`
+  - `.atLocation()`
+  - `.radius()`
+  - `.constrainedByWalls()`
+  - `.distanceEasing()`
+  - `.alwaysForGMs()`
 - *Effects* - Removed deprecated methods `.offset()` and `.randomOffset()` as those should now be done with the relevant location-based secondary parameters
 
 ## Version 3.1.4

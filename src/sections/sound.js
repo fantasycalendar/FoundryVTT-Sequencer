@@ -5,218 +5,282 @@ import traits from "./traits/_traits.js";
 import { SequencerFileBase } from "../modules/sequencer-file.js";
 
 class SoundSection extends Section {
-  constructor(inSequence, inFile = "") {
-    super(inSequence);
-    this._file = inFile;
-    this._volume = 0.8;
-	  this._persist = false;
-    this._overrides = [];
-  }
+	constructor(inSequence, inFile = "") {
+		super(inSequence);
+		this._file = inFile;
+		this._volume = 0.8;
+		this._overrides = [];
+		this._radius = 15;
+		this._locationOptions = {};
+	}
 
-  static niceName = "Sound";
-
-  /**
-   * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
-   * modifications of sound's data.
-   *
-   * @param {function} inFunc
-   * @returns {SoundSection}
-   */
-  addOverride(inFunc) {
-    if (!lib.is_function(inFunc))
-      throw this.sequence._customError(
-        this,
-        "addOverride",
-        "The given function needs to be an actual function."
-      );
-    this._overrides.push(inFunc);
-    return this;
-  }
+	static niceName = "Sound";
 
 	/**
-	 * Causes the sound to persist indefinitely on the canvas until _ended via SequencerSoundManager.endAllSounds() or
-	 * name the sound with .name() and then end it through SequencerSoundManager.endSound()
+	 * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
+	 * modifications of sound's data.
 	 *
-	 * @param {Boolean} [inBool=true] inBool
-	 * @param {Object} [inOptions={}] inOptions
+	 * @param {function} inFunc
 	 * @returns {SoundSection}
 	 */
-	persist(inBool = true, inOptions = {}) {
-		if (typeof inBool !== "boolean")
+	addOverride(inFunc) {
+		if (!lib.is_function(inFunc))
 			throw this.sequence._customError(
 				this,
-				"persist",
-				"inBool must be of type boolean"
+				"addOverride",
+				"The given function needs to be an actual function.",
 			);
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"persist",
-				`inOptions must be of type object`
-			);
-		inOptions = foundry.utils.mergeObject(
-			{
-				id: foundry.utils.randomID()
-			},
-			inOptions
-		);
-		this._persist = inBool;
-		this._persistOptions = inOptions;
+		this._overrides.push(inFunc);
 		return this;
 	}
 
-  /**
-   * @private
-   */
-  _applyTraits() {
-    Object.assign(this.constructor.prototype, traits.files);
-    Object.assign(this.constructor.prototype, traits.audio);
-    Object.assign(this.constructor.prototype, traits.time);
-    Object.assign(this.constructor.prototype, traits.users);
-    Object.assign(this.constructor.prototype, traits.name);
-  }
+	radius(inNumber){
+		if (!lib.is_real_number(inNumber))
+			throw this.sequence._customError(
+				this,
+				"radius",
+				"inNumber must be of type number"
+			);
+		this._radius = inNumber;
+		return this;
+	}
 
-  /**
-   * @OVERRIDE
-   * @returns {Promise}
-   */
-  async run() {
-    const playData = await this._sanitizeSoundData();
+	constrainedByWalls(inBool){
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				`inBool must be of type boolean`
+			);
+		this._locationOptions['walls'] = inBool;
+		return this;
+	}
 
-    if (!playData.play && this.sequence.softFail) {
-      return new Promise((reject) => {
-        reject();
-      });
-    }
+	distanceEasing(inBool){
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"distanceEasing",
+				`inBool must be of type boolean`
+			);
+		this._locationOptions['easing'] = inBool;
+		return this;
+	}
 
-    if (!playData?.play) {
-      this.sequence._customError(
-        this,
-        "Play",
-        `File not found: ${playData.src}`
-      );
-      return new Promise((reject) => reject());
-    }
+	alwaysForGMs(inBool){
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"alwaysForGMs",
+				`inBool must be of type boolean`
+			);
+		this._locationOptions['gmAlways'] = inBool;
+		return this;
+	}
 
-    if (Hooks.call("preCreateSequencerSound", playData) === false) return;
+	baseEffect(options={}){
+		options = foundry.utils.mergeObject({
+			type: "",
+			intensity: 0
+		}, options);
+		if (typeof options.type !== "string" || !CONFIG.soundEffects[options.type])
+			throw this.sequence._customError(
+				this,
+				"baseEffect",
+				`options.type must be of type string, and one of ${Object.keys(CONFIG.soundEffects).join(", ")}`
+			);
+		if (!lib.is_real_number(options.intensity))
+			throw this.sequence._customError(
+				this,
+				"baseEffect",
+				"options.intensity must be of type number"
+			);
+		this._locationOptions['baseEffect'] = {
+			type: options.type,
+			intensity: options.intensity
+		};
+		return this;
+	}
 
-    let push =
-      !(
-        playData?.users?.length === 1 && playData?.users?.includes(game.userId)
-      ) && !this.sequence.localOnly;
+	muffledEffect(options={}){
+		options = foundry.utils.mergeObject({
+			type: "",
+			intensity: 0
+		}, options);
+		if (typeof options.type !== "string" || !CONFIG.soundEffects[options.type])
+			throw this.sequence._customError(
+				this,
+				"baseEffect",
+				`options.type must be of type string, and one of ${Object.keys(CONFIG.soundEffects).join(", ")}`
+			);
+		if (!lib.is_real_number(options.intensity))
+			throw this.sequence._customError(
+				this,
+				"baseEffect",
+				"options.intensity must be of type number"
+			);
+		this._locationOptions['muffledEffect'] = {
+			type: options.type,
+			intensity: options.intensity
+		};
+		return this;
+	}
 
-    SequencerSoundManager.play(playData, push);
+	/**
+	 * @private
+	 */
+	_applyTraits() {
+		Object.assign(this.constructor.prototype, traits.files);
+		Object.assign(this.constructor.prototype, traits.audio);
+		Object.assign(this.constructor.prototype, traits.time);
+		Object.assign(this.constructor.prototype, traits.users);
+		Object.assign(this.constructor.prototype, traits.name);
+		Object.assign(this.constructor.prototype, traits.location);
+	}
 
-    await new Promise((resolve) =>
-      setTimeout(resolve, this._currentWaitTime + playData.duration)
-    );
-  }
+	/**
+	 * @OVERRIDE
+	 * @returns {Promise}
+	 */
+	async run() {
+		const playData = await this._sanitizeSoundData();
 
-  /**
-   * @returns {Promise}
-   * @private
-   */
-  async _sanitizeSoundData() {
-    if (this._deserializedData) {
-      return this._deserializedData;
-    }
+		if (!playData.play && this.sequence.softFail) {
+			return new Promise((reject) => {
+				reject();
+			});
+		}
 
-    if (!this._file) {
-      return {
-        play: false,
-        src: false,
-      };
-    }
+		if (!playData?.play) {
+			this.sequence._customError(
+				this,
+				"Play",
+				`File not found: ${playData.src}`,
+			);
+			return new Promise((reject) => reject());
+		}
 
-    let { file, forcedIndex } = await this._determineFile(this._file);
+		if (Hooks.call("preCreateSequencerSound", playData) === false) return;
 
-    if (!file) {
-      return {
-        play: false,
-        src: false,
-      };
-    }
+		let push =
+			!(
+				playData?.users?.length === 1 && playData?.users?.includes(game.userId)
+			) && !this.sequence.localOnly;
 
-    if (file instanceof SequencerFileBase) {
-      file.forcedIndex = forcedIndex;
-      if (file.timeRange) {
-        [this._startTime, this._endTime] = file.timeRange;
-        this._isRange = true;
-      }
-      file = file.getFile();
-    }
+		SequencerSoundManager.play(playData, push);
 
-    let soundFile = await AudioHelper.preloadSound(file);
-    if (!soundFile || soundFile.failed) {
-      return {
-        play: false,
-        src: this._file,
-      };
-    }
-    let duration = soundFile.duration * 1000;
+		await new Promise((resolve) =>
+			setTimeout(resolve, this._currentWaitTime + playData.duration),
+		);
+	}
 
-    let startTime =
-      (this._startTime
-        ? !this._startPerc
-          ? this._startTime
-          : this._startTime * duration
-        : 0) / 1000;
+	/**
+	 * @returns {Promise}
+	 * @private
+	 */
+	async _sanitizeSoundData() {
+		if (this._deserializedData) {
+			return this._deserializedData;
+		}
 
-    if (this._endTime) {
-      duration = !this._endPerc
-        ? Number(
-            this._isRange
-              ? this._endTime - this._startTime
-              : duration - this._endTime
-          )
-        : this._endTime * duration;
-    }
+		if (!this._file) {
+			return {
+				play: false,
+				src: false,
+			};
+		}
 
-    let data = {
-      id: foundry.utils.randomID(),
-      play: true,
-      src: file,
-      loop: this._duration > duration || this._persist,
-      volume: this._volume,
-      fadeIn: this._fadeInAudio,
-      fadeOut: this._fadeOutAudio,
-      startTime: startTime,
-      duration: this._duration || duration,
-      sceneId: game.user.viewedScene,
-      users: this._users ? Array.from(this._users) : null,
-      name: this._name,
-      origin: this._origin
-    };
+		let { file, forcedIndex } = await this._determineFile(this._file);
 
-    for (let override of this._overrides) {
-      data = await override(this, data);
-    }
+		if (!file) {
+			return {
+				play: false,
+				src: false,
+			};
+		}
 
-    if (typeof data.src !== "string" || data.src === "") {
-      throw this.sequence._customError(
-        this,
-        "file",
-        "a sound must have a src of type string!"
-      );
-    }
+		if (file instanceof SequencerFileBase) {
+			file.forcedIndex = forcedIndex;
+			if (file.timeRange) {
+				[this._startTime, this._endTime] = file.timeRange;
+				this._isRange = true;
+			}
+			file = file.getFile();
+		}
 
-    return data;
-  }
+		let soundFile = await foundry.audio.AudioHelper.preloadSound(file);
+		if (!soundFile || soundFile.failed) {
+			return {
+				play: false,
+				src: this._file,
+			};
+		}
+		let duration = soundFile.duration * 1000;
 
-  async _serialize() {
-    const data = await super._serialize();
-    const sectionData = await this._sanitizeSoundData();
-    return {
-      ...data,
-      type: "sound",
-      sectionData,
-    };
-  }
+		let startTime =
+			(this._startTime
+				? !this._startPerc
+					? this._startTime
+					: this._startTime * duration
+				: 0) / 1000;
 
-  async _deserialize(data) {
-    this._deserializedData = data.sectionData;
-    return super._deserialize(data);
-  }
+		if (this._endTime) {
+			duration = !this._endPerc
+				? Number(
+					this._isRange
+						? this._endTime - this._startTime
+						: duration - this._endTime,
+				)
+				: this._endTime * duration;
+		}
+
+		let data = {
+			id: foundry.utils.randomID(),
+			play: true,
+			src: file,
+			location: this._source?.uuid || null,
+			locationOptions: this._locationOptions,
+			loop: this._duration > duration,
+			volume: this._volume,
+			fadeIn: this._fadeInAudio,
+			fadeOut: this._fadeOutAudio,
+			startTime: startTime,
+			duration: this._duration || duration,
+			sceneId: this._source?.parent?.id || game.user.viewedScene,
+			users: this._users ? Array.from(this._users) : null,
+			name: this._name,
+			origin: this._origin,
+		};
+
+		for (let override of this._overrides) {
+			data = await override(this, data);
+		}
+
+		if (typeof data.src !== "string" || data.src === "") {
+			throw this.sequence._customError(
+				this,
+				"file",
+				"a sound must have a src of type string!",
+			);
+		}
+
+		return data;
+	}
+
+	async _serialize() {
+		const data = await super._serialize();
+		const sectionData = await this._sanitizeSoundData();
+		return {
+			...data,
+			type: "sound",
+			sectionData,
+		};
+	}
+
+	async _deserialize(data) {
+		this._deserializedData = data.sectionData;
+		return super._deserialize(data);
+	}
 }
 
 export default SoundSection;

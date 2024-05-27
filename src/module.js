@@ -76,7 +76,7 @@ Hooks.on("canvasTearDown", () => {
   SequencerEffectManager.tearDownPersists();
 });
 
-const setupModule = debounce(() => {
+const setupModule = foundry.utils.debounce(() => {
   if (!moduleValid) return;
   if (!moduleReady) {
     moduleReady = true;
@@ -87,7 +87,6 @@ const setupModule = debounce(() => {
   if (!canvasReady) {
     canvasReady = true;
     SequencerEffectManager.initializePersistentEffects();
-    SequencerEffectManager.initializePersistentSounds();
   }
 }, 25);
 

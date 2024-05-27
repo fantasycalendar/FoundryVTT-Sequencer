@@ -255,7 +255,7 @@ const flagManager = {
 		flagManager.updateEffectFlags();
 	},
 
-	updateEffectFlags: debounce(async () => {
+	updateEffectFlags: foundry.utils.debounce(async () => {
 		let flagsToAdd = Array.from(flagManager.flagEffectAddBuffer);
 		let flagsToRemove = Array.from(flagManager.flagEffectRemoveBuffer);
 
@@ -502,7 +502,7 @@ const flagManager = {
 		flagManager.updateSoundFlags();
 	},
 
-	updateFlags: debounce(async () => {
+	updateFlags: foundry.utils.debounce(async () => {
 
 		let soundFlagsToAdd = Array.from(flagManager.flagSoundAddBuffer);
 		let soundFlagsToRemove = Array.from(flagManager.flagSoundRemoveBuffer);

@@ -1,19 +1,19 @@
 <script>
 
-  import SequencerSoundManager from "../../../modules/sequencer-sound-manager.js";
+	import SequencerSoundManager from "../../../modules/sequencer-sound-manager.js";
 
-  export let id;
-  export let sound;
+	export let id;
+	export let sound;
 
-  function endSound(){
-    SequencerSoundManager.endEffects({ sounds: [id] }, true);
+	function endSound() {
+		SequencerSoundManager.endSounds({ sounds: [id] }, true);
 	}
 
 </script>
 
 
 <div class="effect hover-highlight">
-	<button class="btn_end" type="button" on:click={endSound}>
+	<button class="btn_end" on:click={endSound} type="button">
 		<i class="fas fa-times"></i>
 	</button>
 	<div class="effect-text hover-text">

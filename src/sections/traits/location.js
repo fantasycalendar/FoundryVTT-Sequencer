@@ -6,6 +6,8 @@ export default {
    * Base properties
    */
   _source: null,
+	_offset: null,
+	_randomOffset: null,
 
   /**
    *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
@@ -63,12 +65,6 @@ export default {
         "atLocation",
         "inOptions.randomOffset must be of type boolean or number"
       );
-
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (inLocation instanceof foundry.abstract.Document
-        ? !lib.is_UUID(inLocation?.uuid)
-        : false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(

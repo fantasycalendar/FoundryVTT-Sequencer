@@ -250,3 +250,138 @@ You can also pass functions that will get evaluated during runtime by Mustache:
     }
 }
 ```
+
+## At Location
+
+`.atLocation(object|string, object)`
+
+Examples:
+```js
+.atLocation(token)
+.atLocation("stored_name")
+.atLocation({ x: 0, y: 0 })
+.atLocation(token)
+.atLocation(token, { randomOffset: true })
+```
+
+A smart method that can take:
+- Reference to a token
+- Reference to a template
+- Direct coordinate on the canvas
+- String reference (see [`.name()`](#name))
+
+Also supports a second options object that accepts:
+- `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
+- `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
+- `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the sound's scene's grid size
+
+
+## Radius
+
+`.radius(inNumber)`
+
+Examples:
+```js
+.radius(15)
+```
+
+Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.
+
+**Note:** Requires `.atLocation()` to be called as well, or the sound will still be global.
+
+
+## Constrained By Walls
+
+`.constrainedByWalls(inBool)`
+
+Examples:
+```js
+.constrainedByWalls(true)
+.constrainedByWalls(false)
+```
+
+Whether the sound will be **completely** blocked by walls.
+
+**Notes:**
+- Defaults to `false`
+- Requires `.atLocation()` to be called as well, or the sound will still be global.
+- If set to `true`, `.muffledEffect()` (see below) will have no effect
+
+
+## Distance Easing
+
+`.distanceEasing(inBool)`
+
+Examples:
+```js
+.distanceEasing(true)
+.distanceEasing(false)
+```
+
+Whether the sound will have its volume eased by the distance from its origin.
+
+**Notes:**
+- Defaults to `true`
+- Requires `.atLocation()` to be called as well, or the sound will still be global.
+
+
+## Always for GMs
+
+`.alwaysForGMs(inBool)`
+
+Examples:
+```js
+.alwaysForGMs(true)
+.alwaysForGMs(false)
+```
+
+Whether the sound will play for GMs as if they were hearing it at the origin of the sound.
+
+**Notes:**
+- Defaults to `false`
+- Requires `.atLocation()` to be called as well, or the sound will still be global.
+
+
+## Base Effect
+
+`.baseEffect(options)`
+
+Examples:
+```js
+.baseEffect({ type: "lowpass", intensity: 4 })
+```
+
+An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
+
+The options object this method accept can have the following two parameters:
+- `type`: one of the effects in `CONFIG.soundEffects`, as of Foundry V12, this is:
+  - `lowpass`
+  - `highpass`
+  - `reverb`
+- `intensity`: how strong this type of effect will be
+
+**Notes:**
+- Requires `.atLocation()` to be called as well, as this is an effect only applicable to position-based sounds.
+
+
+## Muffled Effect
+
+`.muffledEffect(options)`
+
+Examples:
+```js
+.muffledEffect({ type: "lowpass", intensity: 4 })
+```
+
+An effect to be applied on the sound when it is heard through a wall.
+
+The options object this method accept can have the following two parameters:
+- `type`: one of the effects in `CONFIG.soundEffects`, as of Foundry V12, this is:
+  - `lowpass`
+  - `highpass`
+  - `reverb`
+- `intensity`: how strong this type of effect will be
+
+**Notes:**
+- Requires `.atLocation()` to be called as well, as this is an effect only applicable to position-based sounds.
+- Requires `.constrainedByWalls()` to be set to `false` (which is the default behavior).

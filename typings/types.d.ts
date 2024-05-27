@@ -844,10 +844,11 @@ declare abstract class EffectSection {
 declare interface SoundSection
   extends CoreMethods,
     Section<SoundSection>,
-    HasFiles<EffectSection>,
-    HasAudio<EffectSection>,
-    HasName<EffectSection>,
-    HasTime<EffectSection> {}
+    HasFiles<SoundSection>,
+    HasAudio<SoundSection>,
+    HasName<SoundSection>,
+    HasTime<SoundSection> ,
+    HasLocation<SoundSection> {}
 
 declare abstract class SoundSection {
   /**
@@ -855,7 +856,42 @@ declare abstract class SoundSection {
    * modifications of sound's data.
    */
   addOverride(inFunc: Function): this;
+
+  /**
+   * Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.
+   */
+  radius(inNumber: Number): this;
+
+  /**
+   * Whether the sound will be completely blocked by walls.
+   */
+  constrainedByWalls(inBool: Boolean): this;
+
+  /**
+   * Whether the sound will have its volume eased by the distance from its origin.
+   */
+  distanceEasing(inBool: Boolean): this;
+
+  /**
+   * Whether the sound will play for GMs as if they were hearing it at the origin of the sound.
+   */
+  alwaysForGMs(inBool: Boolean): this;
+
+  /**
+   * An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
+   */
+  baseEffect(options: SoundEffect): this;
+
+  /**
+   * An effect to be applied on the sound when it is heard through a wall.
+   */
+  muffledEffect(options: SoundEffect): this;
 }
+
+type SoundEffect = {
+  type: string;
+  intensity: number;
+};
 
 declare interface ScrollingTextSection
   extends CoreMethods,

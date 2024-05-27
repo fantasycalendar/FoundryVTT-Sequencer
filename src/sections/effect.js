@@ -324,13 +324,6 @@ export default class EffectSection extends Section {
 
     this._source = validatedObject;
 
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (validatedObject instanceof foundry.abstract.Document ||
-      validatedObject instanceof MeasuredTemplate
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : this._temporaryEffect || false);
-
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
         "attachTo",
@@ -482,12 +475,6 @@ export default class EffectSection extends Section {
 
     if (inOptions.tiling) this.tilingTexture();
 
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (validatedObject instanceof foundry.abstract.Document
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : this._temporaryEffect || false);
-
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
         "stretchTo",
@@ -570,12 +557,6 @@ export default class EffectSection extends Section {
         "rotateTowards",
         "could not find position of given object"
       );
-
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (validatedObject instanceof foundry.abstract.Document
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -668,12 +649,6 @@ export default class EffectSection extends Section {
         "from",
         "inOptions.randomOffset must be of type boolean or number"
       );
-
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (inObject instanceof foundry.abstract.Document
-        ? !lib.is_UUID(inObject?.uuid)
-        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -2000,7 +1975,7 @@ export default class EffectSection extends Section {
   async run() {
     if (!lib.user_can_do("permissions-effect-create") || !this._playEffect) {
       if (!lib.user_can_do("permissions-effect-create")) {
-        debounce(EffectSection.debounceWarning, 1000);
+	      foundry.utils.debounce(EffectSection.debounceWarning, 1000);
       }
       return new Promise((resolve) => {
         resolve();
@@ -2177,6 +2152,13 @@ export default class EffectSection extends Section {
 
     const source = this._getSourceObject();
     const target = this._getTargetObject();
+
+	  this._temporaryEffect =
+		  this._temporaryEffect ||
+		  (source instanceof foundry.abstract.Document ||
+		  source instanceof MeasuredTemplate
+			  ? !lib.is_UUID(source?.uuid)
+			  : this._temporaryEffect || false);
 
     if (this._offsetLegacy) {
       this._offset = {
