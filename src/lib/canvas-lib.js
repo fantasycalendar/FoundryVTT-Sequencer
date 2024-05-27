@@ -7,7 +7,7 @@ export function createShape(shape) {
 
   graphic.beginFill(
     shape?.fillColor ?? 0xffffff,
-    shape?.fillAlpha ?? shape?.isMask ? 1 : 0
+    shape?.isMask ? 1 : shape?.fillAlpha ?? 1
   );
 
   graphic.lineStyle(

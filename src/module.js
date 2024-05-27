@@ -22,35 +22,35 @@ import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
-import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 import CONSTANTS from "./constants.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
+import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
+
 let moduleValid = false;
 let moduleReady = false;
 let canvasReady = false;
 
-Hooks.once("init", async function () {
+Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
   if (!game.modules.get("socketlib")?.active) return;
   moduleValid = true;
-  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = false;
-  //   !!game.modules.get(
-  //   CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
-  // )?.active;
+  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
+    CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
+  )?.active;
   initializeModule();
   registerSocket();
 });
 
 Hooks.once("socketlib.ready", registerSocket);
 
-Hooks.once("ready", async function () {
+Hooks.once("ready", async function() {
   if (!game.modules.get("socketlib")?.active) {
     ui.notifications.error(
       "Sequencer requires the SocketLib module to be active and will not work without it!",
-      { console: true }
+      { console: true },
     );
     return;
   }
@@ -87,6 +87,7 @@ const setupModule = debounce(() => {
   if (!canvasReady) {
     canvasReady = true;
     SequencerEffectManager.initializePersistentEffects();
+    SequencerEffectManager.initializePersistentSounds();
   }
 }, 25);
 
@@ -113,6 +114,7 @@ function initializeModule() {
     DatabaseViewer: DatabaseViewerApp,
     Preloader: SequencerPreloader,
     EffectManager: SequencerEffectManager,
+    SoundManager: SequencerSoundManager,
     SectionManager: new SequencerSectionManager(),
     registerEase: registerEase,
     BaseSection: Section,

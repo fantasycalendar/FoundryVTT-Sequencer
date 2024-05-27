@@ -1,5 +1,5 @@
 import * as lib from "../lib/lib.js";
-import SequencerAudioHelper from "../modules/sequencer-audio-helper.js";
+import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { SequencerFileBase } from "../modules/sequencer-file.js";
@@ -9,6 +9,7 @@ class SoundSection extends Section {
     super(inSequence);
     this._file = inFile;
     this._volume = 0.8;
+	  this._persist = false;
     this._overrides = [];
   }
 
@@ -32,6 +33,38 @@ class SoundSection extends Section {
     return this;
   }
 
+	/**
+	 * Causes the sound to persist indefinitely on the canvas until _ended via SequencerSoundManager.endAllSounds() or
+	 * name the sound with .name() and then end it through SequencerSoundManager.endSound()
+	 *
+	 * @param {Boolean} [inBool=true] inBool
+	 * @param {Object} [inOptions={}] inOptions
+	 * @returns {SoundSection}
+	 */
+	persist(inBool = true, inOptions = {}) {
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"persist",
+				"inBool must be of type boolean"
+			);
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"persist",
+				`inOptions must be of type object`
+			);
+		inOptions = foundry.utils.mergeObject(
+			{
+				id: randomID()
+			},
+			inOptions
+		);
+		this._persist = inBool;
+		this._persistOptions = inOptions;
+		return this;
+	}
+
   /**
    * @private
    */
@@ -40,6 +73,7 @@ class SoundSection extends Section {
     Object.assign(this.constructor.prototype, traits.audio);
     Object.assign(this.constructor.prototype, traits.time);
     Object.assign(this.constructor.prototype, traits.users);
+    Object.assign(this.constructor.prototype, traits.name);
   }
 
   /**
@@ -71,7 +105,7 @@ class SoundSection extends Section {
         playData?.users?.length === 1 && playData?.users?.includes(game.userId)
       ) && !this.sequence.localOnly;
 
-    SequencerAudioHelper.play(playData, push);
+    SequencerSoundManager.play(playData, push);
 
     await new Promise((resolve) =>
       setTimeout(resolve, this._currentWaitTime + playData.duration)
@@ -142,7 +176,7 @@ class SoundSection extends Section {
       id: randomID(),
       play: true,
       src: file,
-      loop: this._duration > duration,
+      loop: this._duration > duration || this._persist,
       volume: this._volume,
       fadeIn: this._fadeInAudio,
       fadeOut: this._fadeOutAudio,
@@ -150,6 +184,8 @@ class SoundSection extends Section {
       duration: this._duration || duration,
       sceneId: game.user.viewedScene,
       users: this._users ? Array.from(this._users) : null,
+      name: this._name,
+      origin: this._origin
     };
 
     for (let override of this._overrides) {

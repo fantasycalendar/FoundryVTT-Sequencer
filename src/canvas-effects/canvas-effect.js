@@ -1109,10 +1109,10 @@ export default class CanvasEffect extends PIXI.Container {
           : "Scene." + newData.sceneId;
 
       if (originalSourceUUID !== newSourceUUID) {
-        flagManager.removeFlags(originalSourceUUID, newData);
+        flagManager.removeEffectFlags(originalSourceUUID, newData);
       }
 
-      flagManager.addFlags(newSourceUUID, newData);
+      flagManager.addEffectFlags(newSourceUUID, newData);
     }
 
     lib.debug(`Updated effect with ID ${this.id}`);
@@ -1176,7 +1176,7 @@ export default class CanvasEffect extends PIXI.Container {
       newData.animations = (newData.animations ?? []).concat(
         foundry.utils.deepClone(animationsToAdd)
       );
-      flagManager.addFlags(originalSourceUUID, newData);
+      flagManager.addEffectFlags(originalSourceUUID, newData);
     }
 
     return sequencerSocket.executeForEveryone(
@@ -3237,19 +3237,17 @@ class PersistentCanvasEffect extends CanvasEffect {
     let creationTimeDifference =
       this.actualCreationTime - this.data.creationTimestamp;
 
-    if (!this.data.noLoop) {
-      return this._startLoop(creationTimeDifference);
-    }
-
     if (creationTimeDifference < this._animationDuration) {
       this.mediaCurrentTime = creationTimeDifference / 1000;
-      if (this._endTime !== this.mediaDuration) {
-        setTimeout(() => {
-          this.mediaCurrentTime = this._endTime;
-          this.updateTexture();
-        }, this._endTime * 1000 - creationTimeDifference);
+      if(!this.data.noLoop) {
+        if (this._endTime !== this.mediaDuration) {
+          setTimeout(() => {
+            this.mediaCurrentTime = this._endTime;
+            this.updateTexture();
+          }, this._endTime * 1000 - creationTimeDifference);
+        }
+        await this.playMedia();
       }
-      await this.playMedia();
       return;
     }
 

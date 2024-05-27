@@ -1,12 +1,12 @@
 <script>
 
-  import SequencerAudioHelper from "../../../modules/sequencer-audio-helper.js";
+  import SequencerSoundManager from "../../../modules/sequencer-sound-manager.js";
 
   export let id;
   export let sound;
 
   function endSound(){
-    SequencerAudioHelper.stop([id], true);
+    SequencerSoundManager.endEffects({ sounds: [id] }, true);
 	}
 
 </script>

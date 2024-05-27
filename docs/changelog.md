@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.1.5
+- *Sequencer* - Added `Sequencer.SoundManager` which is a sound interface that mirrors `Sequencer.EffectManager`
+- *Sounds* - Added support for `.name()`
+- *Effects* - Removed deprecated methods `.offset()` and `.randomOffset()` as those should now be done with the relevant location-based secondary parameters
+
 ## Version 3.1.4
 - *Effects* - Added better support for the Walled Templates module
 - *Effects* - Fixed effects becoming invisible when using both `offset` and `local` with just a source location and no target

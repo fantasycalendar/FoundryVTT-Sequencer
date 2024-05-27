@@ -396,6 +396,18 @@ declare abstract class HasLocation<T> {
   ): this;
 }
 
+declare abstract class HasName<T> {
+
+  /**
+   * Causes the effect to be stored and can then be used  with .atLocation(), .stretchTowards(),
+   * and .rotateTowards() to refer to previous effects' locations
+   *
+   * Named effects and sounds can be ended with their respective managers through the name.
+   */
+  name(inName: string): this;
+
+}
+
 declare abstract class HasText<T> {
   /**
    * Creates a text element, attached to the sprite. The options for the text are available here:
@@ -487,14 +499,10 @@ declare interface EffectSection
     HasTint<EffectSection>,
     HasLocation<EffectSection>,
     HasText<EffectSection>,
+    HasName<EffectSection>,
     AnimatedSection<EffectSection> {}
 
 declare abstract class EffectSection {
-  /**
-   * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
-   * and .rotateTowards() to refer to previous effects' locations
-   */
-  name(inName: string): this;
 
   /**
    * Causes the effect to persist indefinitely on the canvas until _ended via SequencerEffectManager.endAllEffects() or
@@ -838,6 +846,7 @@ declare interface SoundSection
     Section<SoundSection>,
     HasFiles<EffectSection>,
     HasAudio<EffectSection>,
+    HasName<EffectSection>,
     HasTime<EffectSection> {}
 
 declare abstract class SoundSection {
@@ -1103,6 +1112,41 @@ declare abstract class SequencerEffectManager {
   getEffectPositionByName(inName: string): Vector2;
 }
 
+declare abstract class SequencerSoundManager {
+  /**
+   * Opens the Sequencer Manager UI with the sounds tab open
+   */
+  show(): Promise<void>;
+
+  /**
+   * Returns all the currently running sounds
+   */
+  get sounds(): Array<any>;
+
+  /**
+   * Get sounds that are playing based on a set of filters
+   */
+  getSounds(options: {
+    name?: string;
+    sceneId?: string;
+  }): Array<any>;
+
+  /**
+   * End sounds that are playing based on a set of filters
+   */
+  endSounds(options: {
+    name?: string;
+    sceneId?: string;
+    effects: string | Sound | Array<string> | Array<Sound>;
+  }): Promise<void>;
+
+  /**
+   * End all sounds that are playing
+   */
+  endAllSounds(inSceneId?: string, push?: boolean): Promise<void>;
+
+}
+
 declare abstract class SequencerPresets {
   /**
    * Adds a preset that can then be used in sequences through .preset()
@@ -1133,6 +1177,7 @@ declare namespace Sequencer {
   const Player: SequencerEffectPlayer;
   const SectionManager: SequencerSectionManager;
   const EffectManager: SequencerEffectManager;
+  const SoundManager: SequencerSoundManager;
   function registerEase(
     easeName: string,
     easeFunction: Function,

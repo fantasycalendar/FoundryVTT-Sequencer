@@ -18,7 +18,6 @@ export default class EffectSection extends Section {
     this._stretchTo = null;
     this._attachTo = null;
     this._from = null;
-    this._origin = null;
     this._anchor = null;
     this._spriteAnchor = null;
     this._randomOffset = null;
@@ -31,7 +30,6 @@ export default class EffectSection extends Section {
     this._playbackRate = null;
     this._template = null;
     this._overrides = [];
-    this._name = null;
     this._zIndex = null;
     this._offset = null;
     this._spriteOffset = null;
@@ -83,24 +81,6 @@ export default class EffectSection extends Section {
       "Sequencer",
       "Effect | This user does not have permissions to play effects. This can be configured in Sequencer's module settings."
     );
-  }
-
-  /**
-   * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
-   * and .rotateTowards() to refer to previous effects' locations
-   *
-   * @param {String} inName
-   * @returns {EffectSection}
-   */
-  name(inName) {
-    if (typeof inName !== "string")
-      throw this.sequence._customError(
-        this,
-        "name",
-        "inName must be of type string"
-      );
-    this._name = lib.safe_str(inName);
-    return this;
   }
 
   /**
@@ -918,36 +898,6 @@ export default class EffectSection extends Section {
   }
 
   /**
-   *  Causes the effect to be offset relative to its location based on a given vector
-   *
-   * @param {Object} inOffset
-   * @param {Object} inOptions
-   * @returns {EffectSection}
-   */
-  offset(inOffset, inOptions = {}) {
-    this.sequence._showWarning(
-      this,
-      "offset",
-      "This method is becoming deprecated, please use the secondary offset option in atLocation, attachTo, stretchTo instead.",
-      true
-    );
-    if (inOffset === undefined)
-      throw this.sequence._customError(
-        this,
-        "offset",
-        "inOffset must not be undefined"
-      );
-    if (typeof inOptions !== "object")
-      throw this.sequence._customError(
-        this,
-        "offset",
-        "options must be of type object"
-      );
-    this._offsetLegacy = this._validateOffset("offset", inOffset, inOptions);
-    return this;
-  }
-
-  /**
    *  Causes the effect's sprite to be offset relative to its location based on a given vector
    *
    * @param {Object} inOffset
@@ -1315,30 +1265,6 @@ export default class EffectSection extends Section {
    */
   center() {
     this.anchor(0.5);
-    return this;
-  }
-
-  /**
-   * The sprite gets a random offset on its target location, usually within the object's bounds. The optional parameter
-   * scales how much offset should be added. Defaults to 1.0, which covers the entire target position, 0.5 would cover half.
-   *
-   * @param {Number} inOffsetScale
-   * @returns {EffectSection}
-   */
-  randomOffset(inOffsetScale = 1.0) {
-    this.sequence._showWarning(
-      this,
-      "randomOffset",
-      "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.",
-      true
-    );
-    if (!lib.is_real_number(inOffsetScale))
-      throw this.sequence._customError(
-        this,
-        "randomOffset",
-        "inBool must be of type number"
-      );
-    this._randomOffsetLegacy = inOffsetScale;
     return this;
   }
 
@@ -1817,34 +1743,6 @@ export default class EffectSection extends Section {
   }
 
   /**
-   *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
-   *  The method accepts a string or a Document that has an UUID.
-   *
-   * @param {string|document} inOrigin
-   * @returns {Section}
-   */
-  origin(inOrigin) {
-    inOrigin = lib.validate_document(inOrigin);
-    if (inOrigin instanceof foundry.abstract.Document) {
-      inOrigin = inOrigin?.uuid;
-      if (!inOrigin)
-        throw this.sequence._customError(
-          this,
-          "origin",
-          "could not find the UUID for the given Document"
-        );
-    }
-    if (typeof inOrigin !== "string")
-      throw this.sequence._customError(
-        this,
-        "origin",
-        "inOrigin must be of type string"
-      );
-    this._origin = inOrigin;
-    return this;
-  }
-
-  /**
    * Ties the effect to any number of documents in Foundry - if those get deleted, the effect is ended.
    *
    * @param {String|PlaceableObject|foundry.abstract.Document|Array<String|PlaceableObject|foundry.abstract.Document>} inDocuments
@@ -2142,6 +2040,7 @@ export default class EffectSection extends Section {
     Object.assign(this.constructor.prototype, traits.location);
     Object.assign(this.constructor.prototype, traits.offset);
     Object.assign(this.constructor.prototype, traits.text);
+    Object.assign(this.constructor.prototype, traits.name);
   }
 
   /**

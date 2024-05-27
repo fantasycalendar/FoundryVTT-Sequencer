@@ -12,6 +12,7 @@ import tint from "./tint.js";
 import location from "./location.js";
 import offset from "./offset.js";
 import text from "./text.js";
+import name from "./name.js";
 
 export default {
   animation,
@@ -28,4 +29,5 @@ export default {
   location,
   offset,
   text,
+  name
 };
