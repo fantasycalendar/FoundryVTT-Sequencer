@@ -205,7 +205,7 @@ export default class SequencerEffectManager {
       effects = lib
         .get_all_documents_from_scene(inFilter.sceneId)
         .map((doc) => {
-          return getProperty(doc, CONSTANTS.EFFECTS_FLAG);
+          return foundry.utils.getProperty(doc, CONSTANTS.EFFECTS_FLAG);
         })
         .filter((flags) => !!flags)
         .map((flags) => {
@@ -477,7 +477,7 @@ export default class SequencerEffectManager {
       if (doc instanceof TokenDocument && doc?.actorLink) {
         const actorEffects = flagManager.getEffectFlags(doc?.actor);
         actorEffects.forEach((e) => {
-          e[1]._id = randomID();
+          e[1]._id = foundry.utils.randomID();
           e[1].source = doc.uuid;
           e[1].sceneId = doc.parent.id;
         });
@@ -538,7 +538,7 @@ export default class SequencerEffectManager {
 
     let documentUuid;
     if (!inDocument._id) {
-      const documentId = randomID();
+      const documentId = foundry.utils.randomID();
       documentUuid = inDocument.uuid + documentId;
       updates["_id"] = documentId;
       options.keepId = true;
@@ -556,7 +556,7 @@ export default class SequencerEffectManager {
 
   static _patchEffectDataForDocument(inDocumentUuid, effects) {
     return effects.map((effect) => {
-      effect[0] = randomID();
+      effect[0] = foundry.utils.randomID();
       const effectData = effect[1];
       effectData._id = effect[0];
       if (lib.is_UUID(effectData.source)) {
@@ -800,7 +800,7 @@ export default class SequencerEffectManager {
 
     for (const tokenDocument of tokenEffectsToPlay) {
       const duplicatedData = foundry.utils.deepClone(data);
-      duplicatedData._id = randomID();
+      duplicatedData._id = foundry.utils.randomID();
       duplicatedData.sceneId = tokenDocument.uuid.split(".")[1];
       duplicatedData.masks = duplicatedData.masks
         .map((uuid) => uuid.replace(duplicatedData.source, tokenDocument.uuid))

@@ -21,7 +21,7 @@ export default class Sequence {
     },
     softFail = false
   ) {
-    this.id = randomID();
+    this.id = foundry.utils.randomID();
     this.moduleName =
       typeof options === "string"
         ? options
@@ -142,7 +142,7 @@ export default class Sequence {
       );
     }
 
-    if (isNewerVersion(game.version, "11")) {
+    if (foundry.utils.isNewerVersion(game.version, "11")) {
       args = args.length ? args?.[0] : {};
       if (typeof args !== "object") {
         throw lib.custom_error(
@@ -183,17 +183,17 @@ export default class Sequence {
             macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
           }
 
-          if (isNewerVersion(game.version, "11")) {
+          if (foundry.utils.isNewerVersion(game.version, "11")) {
             await macro.execute(args);
           } else {
             const version = game.modules.get("advanced-macros")?.version;
             const bugAdvancedMacros =
               game.modules.get("advanced-macros")?.active &&
-              isNewerVersion(
+              foundry.utils.isNewerVersion(
                 version.startsWith("v") ? version.slice(1) : version,
                 "1.18.2"
               ) &&
-              !isNewerVersion(
+              !foundry.utils.isNewerVersion(
                 version.startsWith("v") ? version.slice(1) : version,
                 "1.19.1"
               );

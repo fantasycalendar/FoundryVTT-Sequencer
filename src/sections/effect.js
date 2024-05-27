@@ -106,7 +106,7 @@ export default class EffectSection extends Section {
       );
     inOptions = foundry.utils.mergeObject(
       {
-        id: randomID(),
+        id: foundry.utils.randomID(),
         persistTokenPrototype: false,
       },
       inOptions
@@ -203,7 +203,7 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   attachTo(inObject, inOptions = {}) {
-    if (!(typeof inObject === "object" || typeof inObject === "string")) {
+    if (!inObject || !(typeof inObject === "object" || typeof inObject === "string")) {
       throw this.sequence._customError(
         this,
         "attachTo",
@@ -369,7 +369,7 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   stretchTo(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+    if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
       throw this.sequence._customError(
         this,
         "stretchTo",
@@ -526,7 +526,7 @@ export default class EffectSection extends Section {
    * @returns this
    */
   rotateTowards(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+    if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
       throw this.sequence._customError(
         this,
         "inLocation",
@@ -2071,7 +2071,7 @@ export default class EffectSection extends Section {
         }
 
         this.sequence.nameOffsetMap[this._name] = {
-          seed: `${this._name}-${randomID()}`,
+          seed: `${this._name}-${foundry.utils.randomID()}`,
           source: source,
           target: target,
           randomOffset: this._randomOffset,
@@ -2228,7 +2228,7 @@ export default class EffectSection extends Section {
       /**
        * Core properties
        */
-      _id: randomID(),
+      _id: foundry.utils.randomID(),
       flagVersion: flagManager.latestFlagVersion,
       sequenceId: this.sequence.id,
       creationTimestamp: +new Date(),

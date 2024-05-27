@@ -16,7 +16,7 @@ export default {
    * @returns {EffectSection}
    */
   atLocation(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+    if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
       throw this.sequence._customError(
         this,
         "atLocation",

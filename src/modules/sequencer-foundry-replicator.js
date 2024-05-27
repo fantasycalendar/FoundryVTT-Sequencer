@@ -32,7 +32,7 @@ export default class SequencerFoundryReplicator {
         : source?.worldPosition || source?.center || source;
 
     const multiplier = data.randomOffset;
-    const twister = new MersenneTwister(data.seed);
+    const twister = new foundry.dice.MersenneTwister(data.seed);
 
     if (source && multiplier) {
       let randomOffset = canvaslib.get_random_offset(

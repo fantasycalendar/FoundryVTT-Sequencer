@@ -424,7 +424,7 @@ export function user_can_do(inSetting) {
 
 export function group_by(xs, key) {
   return xs.reduce(function (acc, obj) {
-    let property = getProperty(obj, key);
+    let property = foundry.utils.getProperty(obj, key);
     acc[property] = acc[property] || [];
     acc[property].push(obj);
     return acc;

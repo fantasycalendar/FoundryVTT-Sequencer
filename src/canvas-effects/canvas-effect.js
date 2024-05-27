@@ -130,7 +130,7 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   get isIsometricActive() {
-    const sceneIsIsometric = getProperty(
+    const sceneIsIsometric = foundry.utils.getProperty(
       game.scenes.get(this.data.sceneId),
       CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
     );
@@ -585,7 +585,7 @@ export default class CanvasEffect extends PIXI.Container {
       game.user.viewedScene === this.data.sceneId;
 
     if (
-      isNewerVersion(game.version, "10.289") &&
+      foundry.utils.isNewerVersion(game.version, "10.289") &&
       game.settings.get("core", "photosensitiveMode")
     ) {
       playVisible = false;
@@ -1024,7 +1024,7 @@ export default class CanvasEffect extends PIXI.Container {
         : false;
       const repetition = this.data.repetition % inOffsetMap.repetitions;
       const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
-      inOffsetMap.twister = new MersenneTwister(seed);
+      inOffsetMap.twister = new foundry.dice.MersenneTwister(seed);
     }
 
     return inOffsetMap;
@@ -1085,7 +1085,7 @@ export default class CanvasEffect extends PIXI.Container {
     const updateKeys = Object.keys(inUpdates);
 
     updateKeys.forEach((key) => {
-      setProperty(newData, key, inUpdates[key]);
+      foundry.utils.setProperty(newData, key, inUpdates[key]);
     });
 
     if (
@@ -1293,7 +1293,7 @@ export default class CanvasEffect extends PIXI.Container {
     this.effectFilters = {};
     this._animationDuration = 0;
     this._animationTimes = {};
-    this._twister = new MersenneTwister(this.data.creationTimestamp);
+    this._twister = new foundry.dice.MersenneTwister(this.data.creationTimestamp);
     this._video = null;
     this._distanceCache = null;
     this._isRangeFind = false;
@@ -1716,7 +1716,7 @@ export default class CanvasEffect extends PIXI.Container {
   _createSprite() {
     this.renderable = false;
 
-    const args = [this.spriteSheet ? this.spriteSheet : null];
+    const args = [this.spriteSheet ? this.spriteSheet : PIXI.Texture.EMPTY];
     if (
       !this.data.xray &&
       !this.spriteSheet &&
@@ -1849,7 +1849,7 @@ export default class CanvasEffect extends PIXI.Container {
       const graphic = canvaslib.createShape(shape);
       graphic.filters = this.sprite.filters;
       this.spriteContainer.addChild(graphic);
-      this.shapes[shape?.name ?? "shape-" + randomID()] = graphic;
+      this.shapes[shape?.name ?? "shape-" + foundry.utils.randomID()] = graphic;
     }
   }
 
@@ -1863,7 +1863,7 @@ export default class CanvasEffect extends PIXI.Container {
     if (!this.data.elevation?.absolute) {
       effectElevation += targetElevation;
     }
-    const isIsometric = getProperty(
+    const isIsometric = foundry.utils.getProperty(
       game.scenes.get(this.data.sceneId),
       CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
     );
@@ -2047,7 +2047,7 @@ export default class CanvasEffect extends PIXI.Container {
       shape.custom = true;
       shape.renderable = false;
       this.spriteContainer.addChild(shape);
-      this.shapes[shapeData?.name ?? "shape-" + randomID()] = shape;
+      this.shapes[shapeData?.name ?? "shape-" + foundry.utils.randomID()] = shape;
       maskFilter.masks.push(shape);
     }
 
@@ -2430,23 +2430,27 @@ export default class CanvasEffect extends PIXI.Container {
 
     this._tweakRotationForIsometric();
 
+	  const spriteToConsider = this.sprite.children.length
+		  ? this.sprite.children.find(child => child.renderable)
+		  : this.sprite;
+
     if (!this.data.anchor && this.data.rotateTowards) {
-      const textureWidth = (this._texture?.width ?? this.sprite.width) / 2;
+      const textureWidth = (this._texture?.width ?? spriteToConsider.width) / 2;
       const startPointRatio = this.template.startPoint / textureWidth;
       this.spriteContainer.pivot.set(
-        this.sprite.width * (-0.5 + startPointRatio),
+	      spriteToConsider.width * (-0.5 + startPointRatio),
         0
       );
     } else {
       this.spriteContainer.pivot.set(
         lib.interpolate(
-          this.sprite.width * -0.5,
-          this.sprite.width * 0.5,
+          spriteToConsider.width * -0.5,
+          spriteToConsider.width * 0.5,
           this.data.anchor?.x ?? 0.5
         ),
         lib.interpolate(
-          this.sprite.height * -0.5,
-          this.sprite.height * 0.5,
+          spriteToConsider.height * -0.5,
+          spriteToConsider.height * 0.5,
           this.data.anchor?.y ?? 0.5
         )
       );
@@ -2666,7 +2670,7 @@ export default class CanvasEffect extends PIXI.Container {
     );
 
     for (let animation of oneShotAnimations) {
-      animation.target = foundry.utils.getProperty(this, animation.target);
+      animation.target = foundry.utils.foundry.utils.getProperty(this, animation.target);
 
       if (!animation.target) continue;
 
@@ -2699,7 +2703,7 @@ export default class CanvasEffect extends PIXI.Container {
     );
 
     for (let animation of loopingAnimations) {
-      animation.target = foundry.utils.getProperty(this, animation.target);
+      animation.target = foundry.utils.foundry.utils.getProperty(this, animation.target);
 
       if (!animation.target) continue;
 
@@ -2754,7 +2758,7 @@ export default class CanvasEffect extends PIXI.Container {
     );
 
     for (let animation of oneShotEndingAnimations) {
-      animation.target = foundry.utils.getProperty(this, animation.target);
+      animation.target = foundry.utils.foundry.utils.getProperty(this, animation.target);
 
       if (!animation.target) continue;
 

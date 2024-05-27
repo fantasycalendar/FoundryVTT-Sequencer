@@ -213,8 +213,8 @@ function filterFlattenedEntries() {
       for (const part of entry.split(".")) {
         const fullPath = path ? path + "." + part : part;
         path = path ? path + ".children." + part : part;
-        if (!getProperty(acc, path)) {
-          setProperty(
+        if (!foundry.utils.getProperty(acc, path)) {
+          foundry.utils.setProperty(
             acc,
             path,
             foundry.utils.mergeObject(
@@ -224,7 +224,7 @@ function filterFlattenedEntries() {
                 open: false,
                 children: {},
               },
-              getProperty(acc, path)
+              foundry.utils.getProperty(acc, path)
             )
           );
         }
@@ -237,8 +237,8 @@ function filterFlattenedEntries() {
 function openTreePath(fullPath, open, openAll = false) {
   treeStore.update((tree) => {
     const fullTreePath = fullPath.split(".").join(".children.");
-    const node = getProperty(tree, fullTreePath);
-    setProperty(tree, fullTreePath + ".open", open);
+    const node = foundry.utils.getProperty(tree, fullTreePath);
+    foundry.utils.setProperty(tree, fullTreePath + ".open", open);
     if ((!open || openAll) && !foundry.utils.isEmpty(node.children)) {
       recurseOpenTree(node.children, open);
     }
@@ -307,7 +307,7 @@ function recurseTree(tree, path = "", depth = 0) {
     const leaf = [entry];
     if ((data.open || entry.open) && entry.hasChildren) {
       leaf.push(...children, {
-        fullPath: randomID(),
+        fullPath: foundry.utils.randomID(),
         class: TreeViewSeparator,
       });
     }

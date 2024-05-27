@@ -56,7 +56,7 @@ class SoundSection extends Section {
 			);
 		inOptions = foundry.utils.mergeObject(
 			{
-				id: randomID()
+				id: foundry.utils.randomID()
 			},
 			inOptions
 		);
@@ -173,7 +173,7 @@ class SoundSection extends Section {
     }
 
     let data = {
-      id: randomID(),
+      id: foundry.utils.randomID(),
       play: true,
       src: file,
       loop: this._duration > duration || this._persist,

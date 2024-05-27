@@ -8,7 +8,7 @@
   export let inverse = false;
   export let styles = {};
 
-  const id = "sequencer-input-" + randomID();
+  const id = "sequencer-input-" + foundry.utils.randomID();
   const store = setting.store;
   const isLocked = lock ? lock.store : writable(inverse);
 </script>

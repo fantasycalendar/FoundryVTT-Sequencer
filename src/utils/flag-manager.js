@@ -14,7 +14,7 @@ const flagManager = {
 		if (!this._latestFlagVersion) {
 			const versions = Object.keys(this.effectMigrations);
 			versions.sort((a, b) => {
-				return isNewerVersion(a, b) ? -1 : 1;
+				return foundry.utils.isNewerVersion(a, b) ? -1 : 1;
 			});
 			this._latestFlagVersion = versions[0];
 		}
@@ -28,7 +28,7 @@ const flagManager = {
 	 * @returns {array}
 	 */
 	getEffectFlags(inDocument) {
-		let effects = getProperty(inDocument, CONSTANTS.EFFECTS_FLAG);
+		let effects = foundry.utils.getProperty(inDocument, CONSTANTS.EFFECTS_FLAG);
 
 		if (!effects?.length) return [];
 
@@ -41,7 +41,7 @@ const flagManager = {
 			if (effectData.flagVersion === this.latestFlagVersion) continue;
 
 			for (let [version, migration] of Object.entries(this.effectMigrations)) {
-				if (!isNewerVersion(version, effectVersion)) continue;
+				if (!foundry.utils.isNewerVersion(version, effectVersion)) continue;
 
 				effectData = migration(inDocument, effectData);
 			}
@@ -293,7 +293,7 @@ const flagManager = {
 			};
 
 			const existingFlags = new Map(
-				getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? [],
+				foundry.utils.getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? [],
 			);
 
 			if (toRemove?.removeAll) {
@@ -337,7 +337,7 @@ const flagManager = {
 				if (
 					isLinkedToken &&
 					game.modules.get("multilevel-tokens")?.active &&
-					getProperty(object, "flags.multilevel-tokens.stoken")
+					foundry.utils.getProperty(object, "flags.multilevel-tokens.stoken")
 				) {
 					options["mlt_bypass"] = true;
 				}
@@ -406,7 +406,7 @@ const flagManager = {
 	 * @returns {array}
 	 */
 	getSoundFlags(inDocument) {
-		let sounds = getProperty(inDocument, CONSTANTS.SOUNDS_FLAG);
+		let sounds = foundry.utils.getProperty(inDocument, CONSTANTS.SOUNDS_FLAG);
 
 		if (!sounds?.length) return [];
 
@@ -419,7 +419,7 @@ const flagManager = {
 			if (soundData.flagVersion === this.latestFlagVersion) continue;
 
 			for (let [version, migration] of Object.entries(this.soundMigrations)) {
-				if (!isNewerVersion(version, soundVersion)) continue;
+				if (!foundry.utils.isNewerVersion(version, soundVersion)) continue;
 
 				soundData = migration(inDocument, soundData);
 			}
@@ -540,7 +540,7 @@ const flagManager = {
 			};
 
 			const existingFlags = new Map(
-				getProperty(scene, CONSTANTS.SOUNDS_FLAG) ?? [],
+				foundry.utils.getProperty(scene, CONSTANTS.SOUNDS_FLAG) ?? [],
 			);
 
 			if (soundsToRemove?.removeAll) {

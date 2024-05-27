@@ -15,7 +15,7 @@ export default class ScrollingTextSection extends Section {
     this._jitter = 0;
     this._anchor = null;
     this._direction = null;
-    this._seed = lib.get_hash(randomID());
+    this._seed = lib.get_hash(foundry.utils.randomID());
     if (target) {
       this.atLocation(target);
     }
