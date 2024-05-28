@@ -258,7 +258,6 @@ You can also pass functions that will get evaluated during runtime by Mustache:
 Examples:
 ```js
 .atLocation(token)
-.atLocation("stored_name")
 .atLocation({ x: 0, y: 0 })
 .atLocation(token)
 .atLocation(token, { randomOffset: true })
@@ -268,7 +267,6 @@ A smart method that can take:
 - Reference to a token
 - Reference to a template
 - Direct coordinate on the canvas
-- String reference (see [`.name()`](#name))
 
 Also supports a second options object that accepts:
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.

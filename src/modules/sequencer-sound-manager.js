@@ -59,10 +59,10 @@ export default class SequencerSoundManager {
 		let sound;
 
 		if(data.location){
-			let location = fromUuidSync(data.location) ?? { x: 0, y: 0, width: 50, height: 50 };
+			let location = fromUuidSync(data.location) ?? { x: 0, y: 0, width: canvas.grid.size, height: canvas.grid.size };
 			if(data.offset){
-				location.x += data.offset.x * (data.gridUnits ? canvas.grid.size : 1);
-				location.y += data.offset.y * (data.gridUnits ? canvas.grid.size : 1);
+				location.x += data.offset.x * (data.offset.gridUnits ? canvas.grid.size : 1);
+				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
 			}
 			if(data.randomOffset){
 				location = canvaslib.randomOffset(location, data.randomOffset);

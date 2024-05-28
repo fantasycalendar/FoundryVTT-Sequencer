@@ -10,7 +10,6 @@ class SoundSection extends Section {
 		this._file = inFile;
 		this._volume = 0.8;
 		this._overrides = [];
-		this._radius = 15;
 		this._locationOptions = {};
 	}
 
@@ -41,7 +40,7 @@ class SoundSection extends Section {
 				"radius",
 				"inNumber must be of type number"
 			);
-		this._radius = inNumber;
+		this._locationOptions['radius'] = inNumber;
 		return this;
 	}
 
@@ -239,6 +238,8 @@ class SoundSection extends Section {
 			play: true,
 			src: file,
 			location: this._source?.uuid || null,
+			offset: this._offset,
+			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
 			loop: this._duration > duration,
 			volume: this._volume,
