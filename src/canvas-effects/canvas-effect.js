@@ -2670,7 +2670,7 @@ export default class CanvasEffect extends PIXI.Container {
     );
 
     for (let animation of oneShotAnimations) {
-      animation.target = foundry.utils.foundry.utils.getProperty(this, animation.target);
+      animation.target = foundry.utils.getProperty(this, animation.target);
 
       if (!animation.target) continue;
 
@@ -2703,7 +2703,7 @@ export default class CanvasEffect extends PIXI.Container {
     );
 
     for (let animation of loopingAnimations) {
-      animation.target = foundry.utils.foundry.utils.getProperty(this, animation.target);
+      animation.target = foundry.utils.getProperty(this, animation.target);
 
       if (!animation.target) continue;
 
@@ -2758,7 +2758,7 @@ export default class CanvasEffect extends PIXI.Container {
     );
 
     for (let animation of oneShotEndingAnimations) {
-      animation.target = foundry.utils.foundry.utils.getProperty(this, animation.target);
+      animation.target = foundry.utils.getProperty(this, animation.target);
 
       if (!animation.target) continue;
 
