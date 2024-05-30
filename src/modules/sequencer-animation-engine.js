@@ -54,7 +54,7 @@ const SequencerAnimationEngine = {
         totalDt: timeDifference,
         resolve: resolve,
       });
-      if (!this.ticker || !this.ticker.started) {
+      if (!this.ticker) {
         this.start();
       }
       lib.debug(`Added animations to Animation Engine`);
@@ -70,16 +70,13 @@ const SequencerAnimationEngine = {
   start() {
     lib.debug(`Animation Engine Started`);
     if (!this.ticker) {
-      this.ticker = new PIXI.Ticker();
+      this.ticker = CanvasAnimation.ticker;
       this.ticker.add(this.nextFrame.bind(this));
     }
-    this.ticker.start();
   },
 
   nextFrame() {
     if (this._animations.length === 0) {
-      lib.debug(`Animation Engine Paused`);
-      this.ticker.stop();
       this._startingValues = {};
       return;
     }

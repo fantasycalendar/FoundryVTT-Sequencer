@@ -1326,12 +1326,7 @@ export default class CanvasEffect extends PIXI.Container {
       ? this.id
       : this.context.uuid + ".data.flags.sequencer.effects." + this.id;
 
-    const maxPerformance = game.settings.get("core", "performanceMode") === 3;
-    const maxFPS = game.settings.get("core", "maxFPS");
-
-    this._ticker = new PIXI.Ticker();
-    this._ticker.maxFPS = maxPerformance && maxFPS === 60 ? 60 : maxFPS;
-    this._ticker.start();
+    this._ticker = CanvasAnimation.ticker;
   }
 
   /**
@@ -1346,11 +1341,6 @@ export default class CanvasEffect extends PIXI.Container {
     this.mask = null;
 
     hooksManager.removeHooks(this.uuid);
-
-    try {
-      this._ticker.stop();
-      this._ticker.destroy();
-    } catch (err) {}
 
     this._ticker = null;
 
@@ -1696,7 +1686,7 @@ export default class CanvasEffect extends PIXI.Container {
           this._source = this.sourcePosition;
           SequencerEffectManager.endEffects({ effects: this });
         }
-      });
+      }, this);
     }
     if (this.isTargetTemporary) {
       this._ticker.add(() => {
@@ -1705,7 +1695,7 @@ export default class CanvasEffect extends PIXI.Container {
           this._target = this.targetPosition;
           SequencerEffectManager.endEffects({ effects: this });
         }
-      });
+      }, this);
     }
   }
 
@@ -2465,7 +2455,7 @@ export default class CanvasEffect extends PIXI.Container {
       } catch (err) {
         //lib.debug_error(err);
       }
-    });
+    }, this);
   }
 
   _transformNoStretchSprite() {
@@ -2580,7 +2570,7 @@ export default class CanvasEffect extends PIXI.Container {
       } catch (err) {
         lib.debug_error(err);
       }
-    });
+    }, this);
   }
 
   _applyAttachmentOffset() {
@@ -2610,7 +2600,7 @@ export default class CanvasEffect extends PIXI.Container {
       } catch (err) {
         lib.debug_error(err);
       }
-    });
+    }, this);
   }
 
   /**
