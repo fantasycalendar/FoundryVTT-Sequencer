@@ -68,7 +68,7 @@ export default class Sequence {
       } else {
         promises.push(section._execute());
       }
-      if (get(this.status) === CONSTANTS.STATUS.ABORTED) {
+      if (this.status === CONSTANTS.STATUS.ABORTED) {
         continue;
       }
       if (!section._isLastSection) {
@@ -418,7 +418,7 @@ export default class Sequence {
   }
 
   get status() {
-    return this._status;
+    return get(this._status);
   }
 
   _abort() {

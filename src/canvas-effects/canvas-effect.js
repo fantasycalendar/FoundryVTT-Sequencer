@@ -151,6 +151,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   get isDestroyed() {
     return (
+			this.destroyed ||
       (this.source && this.isSourceDestroyed) ||
       (this.target && this.isTargetDestroyed)
     );
@@ -257,7 +258,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   get target() {
     if (!this._target && this.data.target) {
-      this._target = this._getObjectByID(this.data.target);
+      this._target = this._getObjectByID(this.data.target, true);
       this._target = this._target?._object ?? this._target;
     }
     return this._target;
@@ -1327,7 +1328,13 @@ export default class CanvasEffect extends PIXI.Container {
       : this.context.uuid + ".data.flags.sequencer.effects." + this.id;
 
     this._ticker = CanvasAnimation.ticker;
+		this._tickerMethods = [];
   }
+
+	_addToTicker(func){
+		this._tickerMethods.push(func);
+		this._ticker.add(func, this);
+	}
 
   /**
    * Destroys all dependencies to this element, such as tickers, animations, textures, and child elements
@@ -1342,6 +1349,7 @@ export default class CanvasEffect extends PIXI.Container {
 
     hooksManager.removeHooks(this.uuid);
 
+		this._tickerMethods.forEach(func => this._ticker.remove(func, this));
     this._ticker = null;
 
     Object.values(this._relatedSprites).forEach((sprite) =>
@@ -1403,14 +1411,17 @@ export default class CanvasEffect extends PIXI.Container {
    * coordinate object, or if it's an UUID that needs to be fetched from the scene
    *
    * @param inIdentifier
+   * @param isTarget
    * @returns {*}
    * @private
    */
-  _getObjectByID(inIdentifier) {
+  _getObjectByID(inIdentifier, isTarget = false) {
     let source = inIdentifier;
     let offsetMap = this._nameOffsetMap?.[inIdentifier];
     if (offsetMap) {
-      source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
+      source = (isTarget
+                ? (offsetMap?.targetObj || offsetMap?.sourceObj)
+                : (offsetMap?.sourceObj || offsetMap?.targetObj)) || source;
     } else {
       source = this._validateObject(source);
     }
@@ -1426,7 +1437,7 @@ export default class CanvasEffect extends PIXI.Container {
    */
   _validateObject(inObject) {
     if (lib.is_UUID(inObject) || !canvaslib.is_object_canvas_data(inObject)) {
-      inObject = lib.get_object_from_scene(inObject, this.data.sceneId);
+	    inObject = lib.get_object_from_scene(inObject, this.data.sceneId);
       inObject = inObject?._object ?? inObject;
     }
     return inObject;
@@ -1680,24 +1691,27 @@ export default class CanvasEffect extends PIXI.Container {
    */
   _contextLostCallback() {
     if (this.isSourceTemporary) {
-      this._ticker.add(() => {
-        if (this.isSourceDestroyed) {
-          this._ticker.stop();
-          this._source = this.sourcePosition;
-          SequencerEffectManager.endEffects({ effects: this });
-        }
-      }, this);
+      this._addToTicker(this._checkSourceDestroyed);
     }
     if (this.isTargetTemporary) {
-      this._ticker.add(() => {
-        if (this.isTargetDestroyed) {
-          this._ticker.stop();
-          this._target = this.targetPosition;
-          SequencerEffectManager.endEffects({ effects: this });
-        }
-      }, this);
+      this._addToTicker(this._checkTargetDestroyed);
     }
   }
+
+	_checkSourceDestroyed() {
+		if (this.isSourceDestroyed) {
+			this._source = this.sourcePosition;
+			SequencerEffectManager.endEffects({ effects: this });
+		}
+	}
+
+	_checkTargetDestroyed() {
+		if (this.isTargetDestroyed) {
+			this._source = this.targetPosition;
+			SequencerEffectManager.endEffects({ effects: this });
+		}
+	}
+
 
   /**
    * Creates the sprite, and the relevant containers that manage the position and offsets of the overall visual look of the sprite
@@ -2311,7 +2325,6 @@ export default class CanvasEffect extends PIXI.Container {
     const blockingObjects = canvas.walls.checkCollision(ray, { type: "sight" });
 
     if (!blockingObjects.length && !this.data.stretchTo?.hideLineOfSight) {
-      this._ticker.stop();
       SequencerEffectManager.endEffects({ effects: this });
     }
 
@@ -2380,9 +2393,8 @@ export default class CanvasEffect extends PIXI.Container {
   async _transformSprite() {
     if (this.data.stretchTo) {
       if (this.data.stretchTo?.attachTo) {
-        this._transformStretchToAttachedSprite();
+        this._addToTicker(this._transformStretchToAttachedSprite);
       }
-
       await this._applyDistanceScaling();
     } else {
       if (!this.sprite?.texture?.valid && this._texture?.valid) {
@@ -2404,7 +2416,7 @@ export default class CanvasEffect extends PIXI.Container {
     }
 
     if (this.data.attachTo?.active && !this.data.stretchTo?.attachTo) {
-      await this._transformAttachedNoStretchSprite();
+      this._addToTicker(this._transformAttachedNoStretchSprite);
     } else {
       if (!this.data.screenSpace) {
         this.position.set(this.sourcePosition.x, this.sourcePosition.y);
@@ -2415,7 +2427,7 @@ export default class CanvasEffect extends PIXI.Container {
       this._rotateTowards();
 
       if (this.data.rotateTowards?.attachTo) {
-        this._transformRotateTowardsAttachedSprite();
+        this._addToTicker(this._transformRotateTowardsAttachedSprite);
       }
     }
 
@@ -2448,14 +2460,12 @@ export default class CanvasEffect extends PIXI.Container {
     }
   }
 
-  _transformStretchToAttachedSprite() {
-    this._ticker.add(async () => {
-      try {
-        await this._applyDistanceScaling();
-      } catch (err) {
-        //lib.debug_error(err);
-      }
-    }, this);
+  async _transformStretchToAttachedSprite() {
+    try {
+      await this._applyDistanceScaling();
+    } catch (err) {
+      //lib.debug_error(err);
+    }
   }
 
   _transformNoStretchSprite() {
@@ -2545,6 +2555,11 @@ export default class CanvasEffect extends PIXI.Container {
   }
 
   async _transformAttachedNoStretchSprite() {
+
+	  console.log("here?")
+
+	  if (this.isDestroyed) return;
+
     const applyRotation =
       this.data.attachTo?.followRotation &&
       !(
@@ -2556,21 +2571,17 @@ export default class CanvasEffect extends PIXI.Container {
       !this.data.rotateTowards &&
       !this.data.stretchTo;
 
-    this._ticker.add(() => {
-      if (this.isDestroyed) return;
+    if (applyRotation) {
+      this.rotationContainer.rotation = this.getSourceData().rotation;
+    }
 
-      if (applyRotation) {
-        this.rotationContainer.rotation = this.getSourceData().rotation;
-      }
+    this._tweakRotationForIsometric();
 
-      this._tweakRotationForIsometric();
-
-      try {
-        this._applyAttachmentOffset();
-      } catch (err) {
-        lib.debug_error(err);
-      }
-    }, this);
+    try {
+      this._applyAttachmentOffset();
+    } catch (err) {
+      lib.debug_error(err);
+    }
   }
 
   _applyAttachmentOffset() {
@@ -2592,15 +2603,13 @@ export default class CanvasEffect extends PIXI.Container {
     );
   }
 
-  _transformRotateTowardsAttachedSprite() {
-    this._ticker.add(async () => {
-      if (this.isDestroyed) return;
-      try {
-        this._rotateTowards();
-      } catch (err) {
-        lib.debug_error(err);
-      }
-    }, this);
+  async _transformRotateTowardsAttachedSprite() {
+    if (this.isDestroyed) return;
+    try {
+      this._rotateTowards();
+    } catch (err) {
+      lib.debug_error(err);
+    }
   }
 
   /**

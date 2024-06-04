@@ -305,7 +305,7 @@ export function get_object_from_scene(
 /**
  * Gets all documents from the given scene
  *
- * @param inSceneId [inSceneId]
+ * @param {Boolean/String} inSceneId
  * @returns {Array<Document>}
  */
 export function get_all_documents_from_scene(inSceneId = false) {
@@ -314,7 +314,7 @@ export function get_all_documents_from_scene(inSceneId = false) {
     : game.scenes.get(game.user?.viewedScene);
   if (!scene) return [];
   return [
-    ...(canvas.templates?.preview?.children ?? []),
+	  ...canvas.layers.map(layer => layer?.preview?.children ?? []),
     ...Array.from(scene?.tokens ?? []),
     ...Array.from(scene?.lights ?? []),
     ...Array.from(scene?.sounds ?? []),

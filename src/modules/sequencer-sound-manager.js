@@ -65,7 +65,7 @@ export default class SequencerSoundManager {
 				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
 			}
 			if(data.randomOffset){
-				location = canvaslib.randomOffset(location, data.randomOffset);
+				location = canvaslib.get_random_offset(location, data.randomOffset);
 			}
 			sound = await canvas.sounds.playAtPosition(data.src, location, data.radius || 5, {
 				gmAlways: false,
