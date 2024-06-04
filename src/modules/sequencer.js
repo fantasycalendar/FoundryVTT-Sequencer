@@ -12,6 +12,7 @@ import SequenceManager from "./sequence-manager.js";
 import { get, writable } from "svelte/store";
 import CONSTANTS from "../constants.js";
 import WaitSection from "../sections/wait.js";
+import CrosshairSection from "../sections/crosshair.js";
 
 export default class Sequence {
   constructor(
@@ -222,6 +223,18 @@ export default class Sequence {
     this.sections.push(effect);
     return effect;
   }
+
+	/**
+	 * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
+	 *
+	 * @param {string} [inName] inName
+	 * @returns {Section}
+	 */
+	crosshair(inName = "") {
+		const crosshair = lib.section_proxy_wrap(new CrosshairSection(this, inName));
+		this.sections.push(crosshair);
+		return crosshair;
+	}
 
   /**
    * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
