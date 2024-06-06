@@ -34,3 +34,34 @@
     }
   }
 }
+
+.sequencer-welcome {
+
+  img {
+    border: none;
+  }
+
+  background: #282828;
+  color: white;
+  border-radius: 5px;
+  padding: 1rem 1rem 0.5rem 1rem;
+  font-size: 0.85rem;
+  text-align: center;
+
+  .sequencer-divider {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, rgba(47,133,90,0), rgba(47,133,90,1), rgba(47,133,90,0));
+    margin: 3px 0;
+  }
+
+  a {
+    color: #2f855a;
+    font-weight: bold;
+
+    &:hover {
+      color: #4ee196;
+      text-shadow: none;
+    }
+  }
+}

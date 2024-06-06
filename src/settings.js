@@ -104,6 +104,13 @@ export function registerSettings() {
     type: Boolean,
   });
 
+  game.settings.register(CONSTANTS.MODULE_NAME, "welcome-shown", {
+    scope: "world",
+    config: false,
+    default: false,
+    type: Boolean,
+  });
+
   const permissionLevels = [
     game.i18n.localize("SEQUENCER.Permission.Player"),
     game.i18n.localize("SEQUENCER.Permission.Trusted"),

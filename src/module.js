@@ -140,6 +140,26 @@ function initializeModule() {
 
   SequencerAboveUILayer.setup();
   SequencerEffectManager.setup();
+
 }
+
+Hooks.on("sequencer.ready", () => {
+
+	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
+	game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+
+	ChatMessage.create({
+		content: `
+<div class="sequencer-welcome">
+<img src="sequencer.png"/>
+<div class="sequencer-divider"></div>
+<p>Sequencer remains open, free, and regularly updated with the support of the Foundry community.</p>
+<p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
+<div class="sequencer-divider"></div>
+<p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://ko-fi.com/fantasycomputerworks">Donate</a></p>
+</div>`,
+	});
+
+});
 
 Hooks.once("monaco-editor.ready", registerTypes);
