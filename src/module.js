@@ -151,7 +151,7 @@ Hooks.on("sequencer.ready", () => {
 	ChatMessage.create({
 		content: `
 <div class="sequencer-welcome">
-<img src="sequencer.png"/>
+<img src="modules/sequencer/images/sequencer.png"/>
 <div class="sequencer-divider"></div>
 <p>Sequencer remains open, free, and regularly updated with the support of the Foundry community.</p>
 <p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
