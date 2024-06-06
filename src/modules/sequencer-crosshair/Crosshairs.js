@@ -28,7 +28,6 @@ export default class Crosshairs extends MeasuredTemplateDocument {
 
 	static defaultConfig() {
 		return foundry.utils.deepClone({
-			borderDisplay: false,
 			icon: {
 				display: false,
 				texture: "",
@@ -43,7 +42,7 @@ export default class Crosshairs extends MeasuredTemplateDocument {
 				max: null
 			},
 			label: {
-				display: false,
+				display: true,
 				text: "",
 				dx: 0,
 				dy: 0,

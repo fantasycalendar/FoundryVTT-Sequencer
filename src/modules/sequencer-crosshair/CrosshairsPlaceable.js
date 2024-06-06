@@ -24,13 +24,37 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this.document.callbacks;
 	}
 
+	async draw() {
+		await super.draw();
+
+		this.controlIcon.renderable = this.crosshair.icon.display;
+		if (this.crosshair.icon.texture) {
+			this.controlIcon.icon.iconSrc = this.crosshair.icon.texture;
+			this.controlIcon.draw();
+		}
+
+		return this;
+	}
+
+	_refreshRulerText() {
+		this.ruler.renderable = this.crosshair.label.display;
+		if(!this.crosshair.label.display) return;
+		if(this.crosshair.label?.text) {
+			this.ruler.anchor.set(0.5, 2.25);
+			this.ruler.position.set(this.crosshair.label.dx ?? 0, this.crosshair.label.dy ?? 0)
+			this.ruler.text = this.crosshair.label?.text ?? "";
+		} else {
+			return super._refreshRulerText();
+		}
+	}
+
 	async show() {
 		await this.draw();
 		this.layer.addChild(this);
 		this.oldInteractiveChildren = this.layer.interactiveChildren;
 		this.layer.interactiveChildren = false;
 		this.updatePosition();
-		if(this.callbacks["show"]){
+		if (this.callbacks["show"]) {
 			this.callbacks["show"](this);
 		}
 		return this.activateShowListeners();
@@ -70,7 +94,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		this.updatePosition();
 
-		if(this.callbacks["move"]){
+		if (this.callbacks["move"]) {
 			this.callbacks["move"](this);
 		}
 
@@ -95,43 +119,34 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 				const { width, height } = this.crosshair.lockLocation.location.bounds;
 
-				const onXPositiveSide = mouseLocation.x >= (locationX + Math.floor(width / 2));
-				const onXNegativeSide = mouseLocation.x <= (locationX - Math.ceil(width / 2));
-				const onYPositiveSide = mouseLocation.y >= (locationY + Math.floor(height / 2));
-				const onYNegativeSide = mouseLocation.y <= (locationY - Math.ceil(height / 2));
+				let onXPositiveSide = mouseLocation.x >= (locationX + Math.floor(width / 2));
+				let onXNegativeSide = mouseLocation.x <= (locationX - Math.ceil(width / 2));
+				let onYPositiveSide = mouseLocation.y >= (locationY + Math.floor(height / 2));
+				let onYNegativeSide = mouseLocation.y <= (locationY - Math.ceil(height / 2));
 
-				if (onXPositiveSide) {
-					position.x += Math.floor(width/2)
-					snappedMouseLocation.x = position.x + Math.max(width, height);
-					if (onYPositiveSide) {
-						position.y += Math.floor(height/2)
-						snappedMouseLocation.y = position.y + Math.max(width, height);
-					} else if (onYNegativeSide) {
-						position.y -= Math.ceil(height/2)
-						snappedMouseLocation.y = position.y - Math.max(width, height);
-					}else{
-						position.y = snappedMouseLocation.y
-					}
-				} else if (onXNegativeSide) {
-					position.x -= Math.ceil(width/2)
-					snappedMouseLocation.x = position.x - Math.max(width, height);
-					if (onYPositiveSide) {
-						position.y += Math.floor(height/2)
-						snappedMouseLocation.y = position.y + Math.max(width, height);
-					} else if (onYNegativeSide) {
-						position.y -= Math.ceil(height/2)
-						snappedMouseLocation.y = position.y - Math.max(width, height);
-					}else{
-						position.y = snappedMouseLocation.y
-					}
-				} else {
-					if (onYPositiveSide) {
-						position.x = snappedMouseLocation.x
-						position.y += Math.max(width, height)
-					} else if (onYNegativeSide) {
-						position.x = snappedMouseLocation.x
-						position.y -= Math.max(width, height)
-					}
+				if (!(onXPositiveSide || onXNegativeSide || onYPositiveSide || onYNegativeSide)) {
+					const absX = Math.abs(locationX - mouseLocation.x);
+					const absY = Math.abs(locationY - mouseLocation.y);
+					const xOrY = absX >= absY;
+					const both = (this.document.parent.grid.size/10) >= Math.abs(absX - absY);
+					onXPositiveSide = (xOrY || both) && mouseLocation.x >= (locationX);
+					onXNegativeSide = (xOrY || both) && mouseLocation.x < (locationX);
+					onYPositiveSide = (!xOrY || both) && mouseLocation.y >= (locationY);
+					onYNegativeSide = (!xOrY || both) && mouseLocation.y < (locationY);
+				}
+
+				if(onXPositiveSide || onXNegativeSide){
+					position.x = position.x + (Math.floor(width / 2) * (onXPositiveSide ? 1 : -1))
+					snappedMouseLocation.x = position.x + (Math.max(width, height) * (onXPositiveSide ? 1 : -1));
+				}else{
+					position.x = snappedMouseLocation.x;
+				}
+
+				if(onYPositiveSide || onYNegativeSide){
+					position.y = position.y + (Math.floor(height / 2) * (onYPositiveSide ? 1 : -1))
+					snappedMouseLocation.y = position.y + (Math.max(width, height) * (onYPositiveSide ? 1 : -1));
+				}else{
+					position.y = snappedMouseLocation.y;
 				}
 
 				const { rotation, distance } = this._getDraggedMatrix(position, snappedMouseLocation);

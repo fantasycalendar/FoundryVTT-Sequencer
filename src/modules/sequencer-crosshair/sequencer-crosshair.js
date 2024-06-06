@@ -3,31 +3,27 @@ import Crosshairs from "./Crosshairs.js";
 export default class Crosshair {
 
 	/**
-	 * @param {MeasuredTemplateData/Object} template
-	 * @param {CrosshairData/Object} crosshair
+	 * @param {CrosshairData/Object} config
 	 * @param {CrosshairCallbackData/Object} callbacks
 	 * @returns {*}
 	 */
-	static show({ template = {}, crosshair= {}, callbacks= {} }={}) {
+	static show(config = {}, callbacks = {}) {
 
 		const reticle = new Crosshairs({
-			...template,
-			t: template?.t ?? CONST.MEASURED_TEMPLATE_TYPES.CIRCLE,
-			distance: template?.distance ?? 0.5,
-			direction: template.direction ?? 0,
-			angle: template.angle ?? 0,
-			borderColor: template.borderColor ?? "#000000",
-			fillColor: template.fillColor ?? "#000000",
+			t: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE,
+			distance: config?.distance ?? 0.5,
+			borderColor: config.borderColor ?? "#000000",
+			fillColor: config.fillColor ?? "#000000",
 		}, {
 			parent: canvas.scene
-		}, foundry.utils.mergeObject(Crosshairs.defaultConfig(), crosshair), callbacks);
+		}, foundry.utils.mergeObject(Crosshairs.defaultConfig(), config), callbacks);
 
 		return reticle.show();
 
 	}
 
 	/**
-	 * @param {MeasuredTemplateData} crosshair
+	 * @param {CrosshairData} crosshair
 	 * @param {String/Array<string>} types
 	 * @param {Function} filterMethod
 	 * @returns {Array<Document>|Object<String:Array<Document>>}

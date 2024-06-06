@@ -53,8 +53,20 @@ type VisibleFoundryTypes =
   | MeasuredTemplate
   | MeasuredTemplateDocument;
 
-type CrosshairData = {
-  borderDisplay: boolean,
+type TemplateData = {
+  angle: Number,
+  t: String,
+  texture: Object,
+  x: Number,
+  y: Number,
+  elevation: Number,
+  distance: Number,
+  fillColor: String,
+  borderColor: String,
+  parent: Scene
+}
+
+type CrosshairsData = {
   icon: {
     display: boolean,
     texture: string,
@@ -82,6 +94,10 @@ type CrosshairData = {
   lockManualRotation: boolean,
   textureTile: number,
 };
+
+declare interface CrosshairData extends
+  TemplateData,
+  CrosshairsData {}
 
 type CrosshairCallbackData = {
   show: Function,
@@ -1240,17 +1256,13 @@ declare abstract class SequencerSoundManager {
 
 declare abstract class SequencerCrosshair {
 
-  show(options: {
-    template?: MeasuredTemplateData,
-    crosshair?: CrosshairData,
-    callbacks?: CrosshairCallbackData
-  }): Promise<void>;
+  show(crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<void>;
 
   /**
    * Collect overlapping placeable objects of a crosshair of a given placeable type
    */
   collect(
-    crosshair?: MeasuredTemplateData,
+    crosshair?: CrosshairData,
     types?: String | Array<string>,
     filterMethod?: Function
   ): Array<Document>;
