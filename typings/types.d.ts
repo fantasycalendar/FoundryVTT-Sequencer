@@ -23,7 +23,25 @@ type Size = {
   height: number;
 };
 
-type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
+type SnappingOptions = {
+  BOTTOM_LEFT_CORNER: 1024,
+  BOTTOM_LEFT_VERTEX: 64,
+  BOTTOM_RIGHT_CORNER: 2048,
+  BOTTOM_RIGHT_VERTEX: 128,
+  BOTTOM_SIDE_MIDPOINT: 8192,
+  CENTER: 1,
+  CORNER: 3840,
+  EDGE_MIDPOINT: 2,
+  LEFT_SIDE_MIDPOINT: 16384,
+  RIGHT_SIDE_MIDPOINT: 32768,
+  SIDE_MIDPOINT: 61440,
+  TOP_LEFT_CORNER: 256,
+  TOP_LEFT_VERTEX: 16,
+  TOP_RIGHT_CORNER: 512,
+  TOP_RIGHT_VERTEX: 32,
+  TOP_SIDE_MIDPOINT: 4096,
+  VERTEX: 240
+}
 
 type VisibleFoundryTypes =
   | Token
@@ -34,6 +52,43 @@ type VisibleFoundryTypes =
   | DrawingDocument
   | MeasuredTemplate
   | MeasuredTemplateDocument;
+
+type CrosshairData = {
+  borderDisplay: boolean,
+  icon: {
+    display: boolean,
+    texture: string,
+  },
+  snap: {
+    position: SnappingOptions,
+    size: SnappingOptions,
+    angle: number
+  },
+  distanceMinMax: {
+    min: null | number,
+    max: null | number
+  },
+  label: {
+    display: boolean,
+    text: string,
+    dx: number,
+    dy: number,
+  },
+  lockLocation: {
+    location: null | VisibleFoundryTypes,
+    offsetDistance: number,
+    edge: boolean
+  },
+  lockManualRotation: boolean,
+  textureTile: number,
+};
+
+type CrosshairCallbackData = {
+  show: Function,
+  move: Function,
+}
+
+type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
 
 declare class CoreMethods {
   /**
@@ -1183,6 +1238,25 @@ declare abstract class SequencerSoundManager {
 
 }
 
+declare abstract class SequencerCrosshair {
+
+  show(options: {
+    template?: MeasuredTemplateData,
+    crosshair?: CrosshairData,
+    callbacks?: CrosshairCallbackData
+  }): Promise<void>;
+
+  /**
+   * Collect overlapping placeable objects of a crosshair of a given placeable type
+   */
+  collect(
+    crosshair?: MeasuredTemplateData,
+    types?: String | Array<string>,
+    filterMethod?: Function
+  ): Array<Document>;
+
+}
+
 declare abstract class SequencerPresets {
   /**
    * Adds a preset that can then be used in sequences through .preset()
@@ -1214,6 +1288,7 @@ declare namespace Sequencer {
   const SectionManager: SequencerSectionManager;
   const EffectManager: SequencerEffectManager;
   const SoundManager: SequencerSoundManager;
+  const crosshair: SequencerCrosshair;
   function registerEase(
     easeName: string,
     easeFunction: Function,

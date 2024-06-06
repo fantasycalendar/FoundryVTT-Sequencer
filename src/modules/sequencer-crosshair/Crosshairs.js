@@ -9,12 +9,13 @@ import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
  */
 export default class Crosshairs extends MeasuredTemplateDocument {
 
-	constructor(config = {}, options = {}, crosshair = {}) {
+	constructor(config = {}, options = {}, crosshair = {}, callbacks = {}) {
 		super(config, options);
 		this.crosshair = foundry.utils.mergeObject(
 			Crosshairs.defaultConfig(),
 			crosshair
 		);
+		this.callbacks = callbacks;
 	}
 
 	crosshair = {};
@@ -33,8 +34,8 @@ export default class Crosshairs extends MeasuredTemplateDocument {
 				texture: "",
 			},
 			snap: {
-				position: CONST.GRID_SNAPPING_MODES.VERTEX,
-				size: CONST.GRID_SNAPPING_MODES.VERTEX,
+				position: CONST.GRID_SNAPPING_MODES.CENTER,
+				size: CONST.GRID_SNAPPING_MODES.CENTER,
 				angle: 0
 			},
 			distanceMinMax: {

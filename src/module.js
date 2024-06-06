@@ -28,6 +28,7 @@ import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
+import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
 
 let moduleValid = false;
 let moduleReady = false;
@@ -131,6 +132,7 @@ function initializeModule() {
       random_object_element: lib.random_object_element,
       make_array_unique: lib.make_array_unique,
     },
+	  crosshair: Crosshair
   };
 
   registerSettings();

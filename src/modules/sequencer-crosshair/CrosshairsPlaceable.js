@@ -20,12 +20,19 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this.document.crosshair;
 	}
 
+	get callbacks() {
+		return this.document.callbacks;
+	}
+
 	async show() {
 		await this.draw();
 		this.layer.addChild(this);
 		this.oldInteractiveChildren = this.layer.interactiveChildren;
 		this.layer.interactiveChildren = false;
 		this.updatePosition();
+		if(this.callbacks["show"]){
+			this.callbacks["show"](this);
+		}
 		return this.activateShowListeners();
 	}
 
@@ -62,6 +69,10 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		if (now - this.moveTime <= 20) return;
 
 		this.updatePosition();
+
+		if(this.callbacks["move"]){
+			this.callbacks["move"](this);
+		}
 
 		this.refresh();
 		this.moveTime = now;

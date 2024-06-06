@@ -2556,8 +2556,6 @@ export default class CanvasEffect extends PIXI.Container {
 
   async _transformAttachedNoStretchSprite() {
 
-	  console.log("here?")
-
 	  if (this.isDestroyed) return;
 
     const applyRotation =
