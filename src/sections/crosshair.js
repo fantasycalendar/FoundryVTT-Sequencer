@@ -20,6 +20,7 @@ export default class CrosshairSection extends Section {
 		this._direction = 0;
 		this._borderColor = null;
 		this._fillColor = null;
+		this._persist = false;
 		this._config = Crosshairs.defaultConfig();
 		this._waitUntilFinished = true;
 	}
@@ -191,6 +192,17 @@ export default class CrosshairSection extends Section {
 		return this;
 	}
 
+	persist(inBool = true) {
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"persist",
+				"inBool must be of type number",
+			);
+		this._persist = inBool;
+		return this;
+	}
+
 	async run() {
 
 		const reticle = new Crosshairs({
@@ -204,7 +216,7 @@ export default class CrosshairSection extends Section {
 			parent: canvas.scene
 		}, this._config);
 
-		return reticle.show().then(() => {
+		return reticle.show().then(async () => {
 
 			const position = reticle.getOrientation();
 
@@ -218,8 +230,13 @@ export default class CrosshairSection extends Section {
 					target: position?.end ?? null
 				}
 			}
+
+			if(this._persist) {
+				await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [reticle.toObject()]);
+			}
+
 		}).catch(() => {
-			this.sequence._abort()
+			this.sequence._abort();
 		});
 	}
 

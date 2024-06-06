@@ -1,4 +1,4 @@
-import { get_object_position, } from "../../lib/canvas-lib.js";
+import { get_mouse_position, get_object_position, } from "../../lib/canvas-lib.js";
 
 export default class CrosshairsPlaceable extends MeasuredTemplate {
 
@@ -25,6 +25,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.layer.addChild(this);
 		this.oldInteractiveChildren = this.layer.interactiveChildren;
 		this.layer.interactiveChildren = false;
+		this.updatePosition();
 		return this.activateShowListeners();
 	}
 
@@ -60,7 +61,15 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		// Apply a 20ms throttle
 		if (now - this.moveTime <= 20) return;
 
-		let mouseLocation = evt.data.getLocalPosition(this.layer);
+		this.updatePosition();
+
+		this.refresh();
+		this.moveTime = now;
+	}
+
+	updatePosition() {
+
+		let mouseLocation = get_mouse_position();
 
 		if (this.crosshair.lockLocation.location) {
 
@@ -70,53 +79,47 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 			if (this.crosshair.lockLocation.edge) {
 
-				const { width, height } = this.crosshair.lockLocation.location.bounds;
-
-				const sides = {
-					xPos: locationX + Math.floor(width / 2),
-					xNeg: locationX - Math.ceil(width / 2),
-					yPos: locationY + Math.floor(height / 2),
-					yNeg: locationY - Math.ceil(height / 2),
-				}
-				const onXPositiveSide = mouseLocation.x >= (sides.xPos);
-				const onXNegativeSide = mouseLocation.x <= (sides.xNeg);
-				const onYPositiveSide = mouseLocation.y >= (sides.yPos);
-				const onYNegativeSide = mouseLocation.y <= (sides.yNeg);
-
 				let position = { x: locationX, y: locationY };
 				let snappedMouseLocation = this.getSnappedPoint(mouseLocation, CONST.GRID_SNAPPING_MODES.CENTER);
 
+				const { width, height } = this.crosshair.lockLocation.location.bounds;
+
+				const onXPositiveSide = mouseLocation.x >= (locationX + Math.floor(width / 2));
+				const onXNegativeSide = mouseLocation.x <= (locationX - Math.ceil(width / 2));
+				const onYPositiveSide = mouseLocation.y >= (locationY + Math.floor(height / 2));
+				const onYNegativeSide = mouseLocation.y <= (locationY - Math.ceil(height / 2));
+
 				if (onXPositiveSide) {
 					position.x += Math.floor(width/2)
-					snappedMouseLocation.x = position.x + Math.floor(Math.max(width, height)/2);
+					snappedMouseLocation.x = position.x + Math.max(width, height);
 					if (onYPositiveSide) {
 						position.y += Math.floor(height/2)
-						snappedMouseLocation.y = position.y + Math.floor(Math.max(width, height)/2);
+						snappedMouseLocation.y = position.y + Math.max(width, height);
 					} else if (onYNegativeSide) {
 						position.y -= Math.ceil(height/2)
-						snappedMouseLocation.y = position.y - Math.ceil(Math.max(width, height)/2);
+						snappedMouseLocation.y = position.y - Math.max(width, height);
 					}else{
 						position.y = snappedMouseLocation.y
 					}
 				} else if (onXNegativeSide) {
 					position.x -= Math.ceil(width/2)
-					snappedMouseLocation.x = position.x - Math.ceil(Math.max(width, height)/2);
+					snappedMouseLocation.x = position.x - Math.max(width, height);
 					if (onYPositiveSide) {
 						position.y += Math.floor(height/2)
-						snappedMouseLocation.y = position.y + Math.floor(Math.max(width, height)/2);
+						snappedMouseLocation.y = position.y + Math.max(width, height);
 					} else if (onYNegativeSide) {
 						position.y -= Math.ceil(height/2)
-						snappedMouseLocation.y = position.y - Math.ceil(Math.max(width, height)/2);
+						snappedMouseLocation.y = position.y - Math.max(width, height);
 					}else{
 						position.y = snappedMouseLocation.y
 					}
 				} else {
 					if (onYPositiveSide) {
 						position.x = snappedMouseLocation.x
-						position.y += Math.floor(Math.max(width, height)/2)
+						position.y += Math.max(width, height)
 					} else if (onYNegativeSide) {
 						position.x = snappedMouseLocation.x
-						position.y -= Math.ceil(Math.max(width, height)/2)
+						position.y -= Math.max(width, height)
 					}
 				}
 
@@ -160,8 +163,6 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			this.document.updateSource({ x, y });
 		}
 
-		this.refresh();
-		this.moveTime = now;
 	}
 
 	_getDraggedMatrix(source, target, snapDirection = this.crosshair.snap.direction) {
@@ -194,10 +195,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		canvas.stage.off("mouseup", this.#handlers.confirm);
 		canvas.app.view.oncontextmenu = null;
 		canvas.app.view.onwheel = null;
-		canvas.mouseInteractionManager.reset({
-			interactionData: true,
-			state: false,
-		});
+		canvas.mouseInteractionManager.reset({ interactionData: true, state: false });
 	}
 
 	_onConfirm(evt) {
