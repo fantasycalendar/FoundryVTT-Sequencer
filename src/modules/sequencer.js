@@ -390,7 +390,7 @@ export default class Sequence {
     return func;
   }
 
-  _showWarning(self, func, warning, notify) {
+  _showWarning(self, func, warning, notify=false) {
     lib.custom_warning(
       this.moduleName,
       `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`,
