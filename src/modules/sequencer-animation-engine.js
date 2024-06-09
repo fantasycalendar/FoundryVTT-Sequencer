@@ -144,7 +144,7 @@ const SequencerAnimationEngine = {
       try {
         lib.deep_set(delta.target, delta.setPropertyName, finalValue);
       } catch (err) {
-        //console.log(err)
+
       }
     }
   },

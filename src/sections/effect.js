@@ -223,7 +223,8 @@ export default class EffectSection extends Section {
         bindVisibility: true,
         bindAlpha: true,
         bindElevation: true,
-        followRotation: true,
+	      bindScale: true,
+        bindRotation: true,
         offset: false,
         randomOffset: false,
         gridUnits: false,
@@ -292,11 +293,19 @@ export default class EffectSection extends Section {
         "attachTo",
         `inOptions.bindVisibility must be of type boolean`
       );
-    if (typeof inOptions.followRotation !== "boolean")
+		if (inOptions.followRotation !== undefined) {
+			inOptions.bindRotation = inOptions.followRotation;
+			this.sequence._showWarning(
+				this,
+				"attachTo",
+				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead"
+			);
+		}
+    if (typeof inOptions.bindRotation !== "boolean")
       throw this.sequence._customError(
         this,
         "attachTo",
-        `inOptions.followRotation must be of type boolean`
+        `inOptions.bindRotation must be of type boolean`
       );
     if (typeof inOptions.bindAlpha !== "boolean")
       throw this.sequence._customError(
@@ -309,6 +318,12 @@ export default class EffectSection extends Section {
         this,
         "attachTo",
         "inOptions.bindElevation must be of type boolean"
+      );
+    if (typeof inOptions.bindScale !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        "inOptions.bindScale must be of type boolean"
       );
     if (
       !(
@@ -347,8 +362,9 @@ export default class EffectSection extends Section {
       edge: inOptions.edge,
       bindVisibility: inOptions.bindVisibility,
       bindAlpha: inOptions.bindAlpha,
+      bindScale: inOptions.bindScale,
       bindElevation: inOptions.bindElevation,
-      followRotation: inOptions.followRotation,
+      bindRotation: inOptions.bindRotation,
     };
     return this;
   }
@@ -941,15 +957,21 @@ export default class EffectSection extends Section {
       {
         scale: inScale,
         considerTokenScale: false,
-        uniform: false,
+        uniform: false
       },
       inOptions
     );
+    if (typeof inOptions.considerTokenScale !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "scaleToObject",
+        "inOptions.considerTokenScale must be of type boolean"
+      );
     if (typeof inOptions.uniform !== "boolean")
       throw this.sequence._customError(
         this,
         "scaleToObject",
-        "inBool must be of type boolean"
+        "inOptions.uniform must be of type boolean"
       );
     this._scaleToObject = inOptions;
     return this;

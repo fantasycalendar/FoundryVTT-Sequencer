@@ -193,6 +193,22 @@ const flagManager = {
 
 			return effectData;
 		},
+
+		"3.2.0": (inDocument, effectData) => {
+			if(effectData.attachTo?.followRotation !== undefined){
+				effectData.attachTo.bindRotation = effectData.attachTo.followRotation;
+				delete effectData.attachTo.followRotation;
+			}
+			if (effectData.scaleToObject) {
+				if (effectData.attachTo?.active) {
+					effectData.attachTo.bindScale = true;
+				} else if (!effectData.attachTo?.active && !effectData.attachTo?.bindScale) {
+					effectData.scaleToObject = false;
+					effectData.size = canvaslib.get_object_dimensions(inDocument);
+				}
+			}
+			return effectData;
+		}
 	},
 
 	/**

@@ -181,7 +181,7 @@ export default class Sequence {
               );
             }
             macro = new Macro(macroData);
-            macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
+            macro.ownership.default = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
           }
 
           if (foundry.utils.isNewerVersion(game.version, "11")) {
@@ -403,7 +403,7 @@ export default class Sequence {
     return func;
   }
 
-  _showWarning(self, func, warning, notify) {
+  _showWarning(self, func, warning, notify=false) {
     lib.custom_warning(
       this.moduleName,
       `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`,

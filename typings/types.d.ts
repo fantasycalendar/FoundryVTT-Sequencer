@@ -613,6 +613,7 @@ declare abstract class EffectSection {
       edge?: string;
       bindVisibility?: boolean;
       bindAlpha?: boolean;
+      bindScale?: boolean;
       bindElevation?: boolean;
       followRotation?: boolean;
       offset?: Vector2;

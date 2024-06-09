@@ -2,10 +2,15 @@
 
 ## Version 3.2.0
 - *Sequencer* - Added support for FoundryVTT v12
+- *Sequencer* - Added startup chat message with links to relevant external resources
 - *Sequencer* - Added support for the [Isometric module](https://foundryvtt.com/packages/grape_juice-isometrics) (thanks grape_fruit for their assistance with this integration!) 
 - *Sequencer* - Added `Sequencer.SoundManager` which is a sound interface that mirrors `Sequencer.EffectManager`
 - *Effects* - Greatly improved responsiveness of attached effects actually following their targets more accurately
 - *Effects* - Removed deprecated methods `.offset()` and `.randomOffset()` as those should now be done with the relevant location-based secondary parameters
+- - *Effects* - Tweaked `.scaleToObject()` to cache its target's scale when first created, unless paired with `.attachTo()` and `bindScale` (see below)
+- *Effects* - Added `bindScale` (defaults to `true`) to `.attachTo()`, that if combined with `.scaleToObject()` it will always scale with the object
+- *Effects* - Fixed `.tint()` not being applied when used with `.attachTo()` and `.stretchTo()` with `{ attachTo: true }`
+- - *Effects* - Tweaked `.attachTo()`'s `followRotation` to be named `bindRotation` (will remain backwards compatible for a few versions before becoming deprecated)
 - *Sounds* - Added support for the following methods (see the [`.sound()` documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/sound) for more info):
   - `.name()`
   - `.origin()`
