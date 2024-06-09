@@ -1553,7 +1553,6 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 			if (this.data.tint) {
 				this._relatedSprites[this._currentFilePath].tint = this.data.tint;
-				this._relatedSprites[this._currentFilePath].renderable = false;
 			}
 
 			new Promise(async (resolve) => {
@@ -2300,7 +2299,6 @@ export default class CanvasEffect extends PIXI.Container {
 				}
 
 				this.sprite.addChild(sprite);
-				sprite.renderable = false;
 			}
 
 			if (this._endTime) {

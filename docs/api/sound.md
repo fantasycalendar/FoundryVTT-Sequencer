@@ -253,6 +253,8 @@ You can also pass functions that will get evaluated during runtime by Mustache:
 
 ## At Location
 
+### Only supported in Foundry v12
+
 `.atLocation(object|string, object)`
 
 Examples:

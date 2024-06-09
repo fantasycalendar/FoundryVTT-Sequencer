@@ -265,6 +265,14 @@ class SoundSection extends Section {
 			);
 		}
 
+		if(data.location && game.version.split(".")[0] === "12"){
+			throw this.sequence._customError(
+				this,
+				"atLocation",
+				"a sound cannot have a location in v11",
+			);
+		}
+
 		return data;
 	}
 
