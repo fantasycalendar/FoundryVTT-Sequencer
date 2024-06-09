@@ -74,6 +74,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.ready = false;
 		this._ended = false;
 		this._isEnding = false;
+		this._lastDimensions = {};
 
 		this._cachedSourceData = {};
 		this._cachedTargetData = {};
@@ -108,8 +109,8 @@ export default class CanvasEffect extends PIXI.Container {
 		];
 	}
 
-	_sanitizeData(){
-		if(this.data.scaleToObject && (!this.data.attachTo?.active || !this.data.attachTo?.bindScale)){
+	_sanitizeData() {
+		if (this.data.scaleToObject && (!this.data.attachTo?.active || !this.data.attachTo?.bindScale)) {
 			this.data.scaleToObject = false;
 			const { width, height } = this.getSourceData();
 			this.data.size = { width, height };
@@ -188,7 +189,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isSourceDestroyed() {
 		return (
-			this.source && (this.source?.destroyed || !this.sourceDocument?.object)
+			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed)
 		);
 	}
 
@@ -212,7 +213,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isTargetDestroyed() {
 		return (
-			this.target && (this.target?.destroyed || !this.targetDocument?.object)
+			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed)
 		);
 	}
 
@@ -1292,7 +1293,13 @@ export default class CanvasEffect extends PIXI.Container {
 		this.isometricContainer.id = this.id + "-isometricContainer";
 
 		// An offset container for the sprite
-		this.spriteContainer = this.isometricContainer.addChild(
+		this.scaleContainer = this.isometricContainer.addChild(
+			new PIXI.Container()
+		);
+		this.scaleContainer.id = this.id + "-scaleContainer";
+
+		// An offset container for the sprite
+		this.spriteContainer = this.scaleContainer.addChild(
 			new PIXI.Container()
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
@@ -1538,10 +1545,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this.spriteSheet = sheet;
 		}
 
-		if (
-			this._isRangeFind &&
-			(this.data.stretchTo?.attachTo?.active || this.data.attachTo?.active)
-		) {
+		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
 			let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
 			this._relatedSprites[this._currentFilePath] = new spriteType(
 				this._texture,
@@ -1549,6 +1553,7 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 			if (this.data.tint) {
 				this._relatedSprites[this._currentFilePath].tint = this.data.tint;
+				this._relatedSprites[this._currentFilePath].renderable = false;
 			}
 
 			new Promise(async (resolve) => {
@@ -1663,6 +1668,8 @@ export default class CanvasEffect extends PIXI.Container {
 					: this._animationDuration - this.data.time.end.value
 				: this._animationDuration * this.data.time.end.value;
 		}
+
+		this._animationDuration = Math.max(0, this._animationDuration - this._startTime * 1000);
 
 		this._endTime = this._animationDuration / 1000;
 
@@ -2293,10 +2300,24 @@ export default class CanvasEffect extends PIXI.Container {
 				}
 
 				this.sprite.addChild(sprite);
+				sprite.renderable = false;
+			}
+
+			if (this._endTime) {
+				if (this._endTime !== this.mediaCurrentTime) {
+					this.playMedia();
+					setTimeout(() => {
+						this.pauseMedia()
+					}, (this._endTime - this.mediaCurrentTime) * 1000);
+				} else {
+					this.mediaCurrentTime = this._endTime;
+					this.pauseMedia();
+					this.updateTexture();
+				}
+			} else {
+				this.playMedia();
 			}
 		}
-
-		this.playMedia();
 
 		if (this._relatedSprites[filePath]) {
 			if (this.data.attachTo?.active) {
@@ -2499,26 +2520,28 @@ export default class CanvasEffect extends PIXI.Container {
 			this.sprite.tilePosition = this.data.tilingTexture.position;
 		}
 
+		const heightWidthRatio = this.sprite.height / this.sprite.width;
+		const widthHeightRatio = this.sprite.width / this.sprite.height;
+
+		const baseScaleX =
+			(this.data.scale?.x ?? 1.0) *
+			(this.data.spriteScale?.x ?? 1.0) *
+			this.flipX;
+		const baseScaleY =
+			(this.data.scale?.y ?? 1.0) *
+			(this.data.spriteScale?.y ?? 1.0) *
+			this.flipY;
+
 		if (this.data.scaleToObject && this.source) {
 
-			if(this.data?.attachTo?.active && this.data?.attachTo?.bindScale){
-				this._addToTicker(this._applyScaleToObject);
+			if (this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
+				this._addToTicker(() => {
+					this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
+				});
 			}
-			this._applyScaleToObject();
+			this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
 
 		} else if (this.data.size) {
-
-			const heightWidthRatio = this.sprite.height / this.sprite.width;
-			const widthHeightRatio = this.sprite.width / this.sprite.height;
-
-			const baseScaleX =
-				(this.data.scale?.x ?? 1.0) *
-				(this.data.spriteScale?.x ?? 1.0) *
-				this.flipX;
-			const baseScaleY =
-				(this.data.scale?.y ?? 1.0) *
-				(this.data.spriteScale?.y ?? 1.0) *
-				this.flipY;
 
 			let { height, width } = this.data.size;
 
@@ -2544,33 +2567,20 @@ export default class CanvasEffect extends PIXI.Container {
 				width *= canvas.grid.size;
 			}
 
-			this.sprite.width = width * baseScaleX;
-			this.sprite.height = height * baseScaleY;
+			this.scaleContainer.width = width * baseScaleX;
+			this.scaleContainer.height = height * baseScaleY;
 		} else {
-			this.sprite.scale.set(
+			this.scaleContainer.scale.set(
 				baseScaleX * this.gridSizeDifference,
 				baseScaleY * this.gridSizeDifference
 			);
 		}
 	}
 
-	_applyScaleToObject() {
+	_applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY) {
 
 		try {
 			let { width, height } = this.getSourceData();
-
-			const heightWidthRatio = this.sprite.height / this.sprite.width;
-			const widthHeightRatio = this.sprite.width / this.sprite.height;
-			const ratioToUse = heightWidthRatio > widthHeightRatio;
-
-			const baseScaleX =
-				(this.data.scale?.x ?? 1.0) *
-				(this.data.spriteScale?.x ?? 1.0) *
-				this.flipX;
-			const baseScaleY =
-				(this.data.scale?.y ?? 1.0) *
-				(this.data.spriteScale?.y ?? 1.0) *
-				this.flipY;
 
 			if (this.sourceDocument instanceof TokenDocument) {
 				width *= this.data.scaleToObject?.considerTokenScale
@@ -2581,6 +2591,12 @@ export default class CanvasEffect extends PIXI.Container {
 					: 1.0;
 			}
 
+			if (width === this._lastDimensions.width && height === this._lastDimensions.height) return;
+
+			this._lastDimensions = { width, height };
+
+			const ratioToUse = heightWidthRatio > widthHeightRatio;
+
 			if (this.data.scaleToObject?.uniform) {
 				let newWidth = Math.max(width, height);
 				height = Math.max(width, height);
@@ -2590,10 +2606,8 @@ export default class CanvasEffect extends PIXI.Container {
 				height = height * (!ratioToUse ? heightWidthRatio : 1.0);
 			}
 
-			this.sprite.width =
-				width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
-			this.sprite.height =
-				height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
+			this.scaleContainer.width = width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
+			this.scaleContainer.height = height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
 
 		} catch (err) {
 
@@ -3293,13 +3307,14 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 		if (creationTimeDifference < this._animationDuration) {
 			this.mediaCurrentTime = creationTimeDifference / 1000;
+			if (this._endTime !== this.mediaDuration) {
+				setTimeout(() => {
+					this.mediaCurrentTime = this._endTime;
+					this.updateTexture();
+					this.pauseMedia();
+				}, this._endTime * 1000 - creationTimeDifference);
+			}
 			if (!this.data.noLoop) {
-				if (this._endTime !== this.mediaDuration) {
-					setTimeout(() => {
-						this.mediaCurrentTime = this._endTime;
-						this.updateTexture();
-					}, this._endTime * 1000 - creationTimeDifference);
-				}
 				await this.playMedia();
 			}
 			return;
