@@ -396,7 +396,7 @@ export default class SequencerEffectManager {
     if (data.temporary && effect.owner) {
       let lastSourcePosition = {};
       let lastTargetPosition = {};
-      effect._ticker.add(() => {
+      effect._addToTicker(() => {
         if (effect.source && !effect.isSourceDestroyed) {
           const sourceData = effect.getSourceData();
           if (JSON.stringify(sourceData) !== lastSourcePosition) {

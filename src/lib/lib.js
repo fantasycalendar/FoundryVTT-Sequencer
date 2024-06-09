@@ -547,5 +547,10 @@ export function parseColor(inColor) {
 }
 
 export function getCanvasMouse() {
-  return canvas.app.renderer.events.pointer;
+  return canvas?.app?.renderer?.events?.pointer ?? canvas?.app?.renderer?.plugins?.interaction?.pointer;
+}
+
+export function createMersenneTwister(seed){
+	const twister = foundry?.dice?.MersenneTwister ?? MersenneTwister;
+	return new twister(seed);
 }

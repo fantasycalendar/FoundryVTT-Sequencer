@@ -270,7 +270,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get target() {
 		if (!this._target && this.data.target) {
-			this._target = this._getObjectByID(this.data.target, true);
+			this._target = this._getObjectByID(this.data.target);
 			this._target = this._target?._object ?? this._target;
 		}
 		return this._target;
@@ -1038,7 +1038,7 @@ export default class CanvasEffect extends PIXI.Container {
 				: false;
 			const repetition = this.data.repetition % inOffsetMap.repetitions;
 			const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
-			inOffsetMap.twister = new foundry.dice.MersenneTwister(seed);
+			inOffsetMap.twister = lib.createMersenneTwister(seed);
 		}
 
 		return inOffsetMap;
@@ -1313,7 +1313,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.effectFilters = {};
 		this._animationDuration = 0;
 		this._animationTimes = {};
-		this._twister = new foundry.dice.MersenneTwister(this.data.creationTimestamp);
+		this._twister = lib.createMersenneTwister(this.data.creationTimestamp);
 		this._video = null;
 		this._distanceCache = null;
 		this._isRangeFind = false;
@@ -1433,17 +1433,14 @@ export default class CanvasEffect extends PIXI.Container {
 	 * coordinate object, or if it's an UUID that needs to be fetched from the scene
 	 *
 	 * @param inIdentifier
-	 * @param isTarget
 	 * @returns {*}
 	 * @private
 	 */
-	_getObjectByID(inIdentifier, isTarget = false) {
+	_getObjectByID(inIdentifier) {
 		let source = inIdentifier;
 		let offsetMap = this._nameOffsetMap?.[inIdentifier];
 		if (offsetMap) {
-			source = (isTarget
-				? (offsetMap?.targetObj || offsetMap?.sourceObj)
-				: (offsetMap?.sourceObj || offsetMap?.targetObj)) || source;
+			source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
 		} else {
 			source = this._validateObject(source);
 		}
@@ -1688,8 +1685,9 @@ export default class CanvasEffect extends PIXI.Container {
 		// Resolve duration promise so that owner of effect may know when it is finished
 		this._durationResolve(this._animationDuration);
 
-		this.mediaLooping =
-			this._animationDuration / 1000 >= this.mediaDuration && !this.data.noLoop;
+		const animationDurationSec = this._animationDuration / 1000;
+
+		this.mediaLooping = animationDurationSec >= this.mediaDuration && !this.data.noLoop && this.data.noLoop !== null;
 
 	}
 
@@ -3304,17 +3302,17 @@ class PersistentCanvasEffect extends CanvasEffect {
 		}
 
 		if (creationTimeDifference < this._animationDuration) {
-			this.mediaCurrentTime = creationTimeDifference / 1000;
 			if (this._endTime !== this.mediaDuration) {
 				setTimeout(() => {
 					this.mediaCurrentTime = this._endTime;
 					this.updateTexture();
 					this.pauseMedia();
-				}, this._endTime * 1000 - creationTimeDifference);
+				}, (this._endTime * 1000) - creationTimeDifference);
 			}
 			if (!this.data.noLoop) {
-				await this.playMedia();
+				this.mediaCurrentTime = creationTimeDifference / 1000;
 			}
+			await this.playMedia();
 			return;
 		}
 
