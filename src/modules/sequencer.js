@@ -180,7 +180,7 @@ export default class Sequence {
               );
             }
             macro = new Macro(macroData);
-            macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
+            macro.ownership.default = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
           }
 
           if (foundry.utils.isNewerVersion(game.version, "11")) {
