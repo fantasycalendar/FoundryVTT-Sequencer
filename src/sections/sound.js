@@ -33,7 +33,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	radius(inNumber){
+	radius(inNumber) {
 		if (!lib.is_real_number(inNumber))
 			throw this.sequence._customError(
 				this,
@@ -44,7 +44,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	constrainedByWalls(inBool){
+	constrainedByWalls(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -55,7 +55,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	distanceEasing(inBool){
+	distanceEasing(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -66,7 +66,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	alwaysForGMs(inBool){
+	alwaysForGMs(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -77,7 +77,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	baseEffect(options={}){
+	baseEffect(options = {}) {
 		options = foundry.utils.mergeObject({
 			type: "",
 			intensity: 0
@@ -101,7 +101,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	muffledEffect(options={}){
+	muffledEffect(options = {}) {
 		options = foundry.utils.mergeObject({
 			type: "",
 			intensity: 0
@@ -143,6 +143,30 @@ class SoundSection extends Section {
 	 */
 	async run() {
 		const playData = await this._sanitizeSoundData();
+
+		if (typeof playData.src !== "string" || playData.src === "") {
+			if (this.sequence.softFail) {
+				playData.play = false;
+			} else {
+				throw this.sequence._customError(
+					this,
+					"file",
+					"a sound must have a src of type string!",
+				);
+			}
+		}
+
+		if (playData.location && game.version.split(".")[0] === "12") {
+			if (this.sequence.softFail) {
+				playData.play = false;
+			} else {
+				throw this.sequence._customError(
+					this,
+					"atLocation",
+					"a sound cannot have a location in v11",
+				);
+			}
+		}
 
 		if (!playData.play && this.sequence.softFail) {
 			return new Promise((reject) => {
@@ -255,22 +279,6 @@ class SoundSection extends Section {
 
 		for (let override of this._overrides) {
 			data = await override(this, data);
-		}
-
-		if (typeof data.src !== "string" || data.src === "") {
-			throw this.sequence._customError(
-				this,
-				"file",
-				"a sound must have a src of type string!",
-			);
-		}
-
-		if(data.location && game.version.split(".")[0] === "12"){
-			throw this.sequence._customError(
-				this,
-				"atLocation",
-				"a sound cannot have a location in v11",
-			);
 		}
 
 		return data;

@@ -1,7 +1,7 @@
 ## Changelog
 
 ## Version 3.2.0
-- *Sequencer* - Added support for FoundryVTT v12
+- *Sequencer* - Added support for FoundryVTT v12 while remaining backwards compatible with v11
 - *Sequencer* - Added startup chat message with links to relevant external resources
 - *Sequencer* - Added support for the [Isometric module](https://foundryvtt.com/packages/grape_juice-isometrics) (thanks grape_fruit for their assistance with this integration!) 
 - *Sequencer* - Added `Sequencer.SoundManager` which is a sound interface that mirrors `Sequencer.EffectManager`
@@ -14,13 +14,14 @@
 - *Sounds* - Added support for the following methods (see the [`.sound()` documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/sound) for more info):
   - `.name()`
   - `.origin()`
-  - `.atLocation()`
-  - `.radius()`
-  - `.constrainedByWalls()`
-  - `.distanceEasing()`
-  - `.alwaysForGMs()`
-  - `.baseEffect()`
-  - `.muffledEffect()`
+  - Below only in Foundry v12:
+    - `.atLocation()`
+    - `.radius()`
+    - `.constrainedByWalls()`
+    - `.distanceEasing()`
+    - `.alwaysForGMs()`
+    - `.baseEffect()`
+    - `.muffledEffect()`
 
 ## Version 3.1.4
 - *Effects* - Added better support for the Walled Templates module
