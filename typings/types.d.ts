@@ -86,10 +86,14 @@ type CrosshairsData = {
     dx: number,
     dy: number,
   },
-  lockLocation: {
-    location: null | VisibleFoundryTypes,
-    offsetDistance: number,
-    edge: boolean
+  location: {
+    obj: null | VisibleFoundryTypes,
+    limit: boolean,
+    minDistance: number | null,
+    maxDistance: number | null,
+    lock: boolean,
+    edge: boolean,
+    offsetDistance: number | null
   },
   lockManualRotation: boolean,
   textureTile: number,

@@ -168,6 +168,8 @@ export default class CrosshairSection extends Section {
 		inOptions = foundry.utils.mergeObject(
 			{
 				offsetDistance: 0,
+				minDistance: null,
+				maxDistance: null,
 				edge: false
 			},
 			inOptions,
@@ -185,9 +187,43 @@ export default class CrosshairSection extends Section {
 				"inOptions.edge must be of type boolean",
 			);
 		this._config["lockLocation"] = {
-			location: inLocation?.object ?? inLocation,
+			lock: true,
+			limit: false,
+			obj: inLocation?.object ?? inLocation,
 			offsetDistance: inOptions.offsetDistance,
+			minDistance: inOptions.minDistance,
+			maxDistance: inOptions.maxDistance,
 			edge: inOptions.edge
+		};
+		return this;
+	}
+
+	limitLocation(inLocation, inOptions = {}) {
+		inOptions = foundry.utils.mergeObject(
+			{
+				minDistance: null,
+				maxDistance: null
+			},
+			inOptions,
+		);
+		if (typeof inOptions.minDistance !== "number")
+			throw this.sequence._customError(
+				this,
+				"limitLocation",
+				"inOptions.minDistance must be of type number",
+			);
+		if (typeof inOptions.maxDistance !== "number")
+			throw this.sequence._customError(
+				this,
+				"limitLocation",
+				"inOptions.maxDistance must be of type number",
+			);
+		this._config["location"] = {
+			lock: false,
+			limit: true,
+			obj: inLocation?.object ?? inLocation,
+			minDistance: inOptions.minDistance,
+			maxDistance: inOptions.maxDistance
 		};
 		return this;
 	}

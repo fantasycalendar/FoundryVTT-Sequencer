@@ -47,10 +47,17 @@ export default class Crosshairs extends MeasuredTemplateDocument {
 				dx: 0,
 				dy: 0,
 			},
-			lockLocation: {
-				location: null,
-				offsetDistance: 0,
-				edge: false
+			location: {
+				obj: null,
+
+				limit: false,
+				minDistance: null,
+				maxDistance: null,
+				showDistance: false,
+
+				lock: false,
+				edge: false,
+				offsetDistance: 0
 			},
 			lockManualRotation: false,
 			textureTile: 0,
