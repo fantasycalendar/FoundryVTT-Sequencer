@@ -114,7 +114,7 @@ function initializeModule() {
     Preloader: SequencerPreloader,
     EffectManager: SequencerEffectManager,
     SoundManager: SequencerSoundManager,
-    SectionManager: new SequencerSectionManager(),
+    SectionManager: SequencerSectionManager,
     registerEase: registerEase,
     BaseSection: Section,
     CONSTANTS: {

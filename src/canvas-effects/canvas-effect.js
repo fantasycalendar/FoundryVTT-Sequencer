@@ -81,8 +81,6 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.uuid = false;
 
-		this._sanitizeData();
-
 	}
 
 	static get protectedValues() {
@@ -107,14 +105,6 @@ export default class CanvasEffect extends PIXI.Container {
 			"nameOffsetMap",
 			"persist",
 		];
-	}
-
-	_sanitizeData() {
-		if (this.data.scaleToObject && (!this.data.attachTo?.active || !this.data.attachTo?.bindScale)) {
-			this.data.scaleToObject = false;
-			const { width, height } = this.getSourceData();
-			this.data.size = { width, height };
-		}
 	}
 
 	/** @type {number} */
@@ -1252,8 +1242,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this._createShapes();
 		await this._setupMasks();
 		await this._transformSprite();
-		this._playCustomAnimations();
 		this._playPresetAnimations();
+		this._playCustomAnimations();
 		this._setEndTimeout();
 		this._timeoutVisibility();
 		if (play) await this.playMedia();
@@ -1293,13 +1283,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.isometricContainer.id = this.id + "-isometricContainer";
 
 		// An offset container for the sprite
-		this.scaleContainer = this.isometricContainer.addChild(
-			new PIXI.Container()
-		);
-		this.scaleContainer.id = this.id + "-scaleContainer";
-
-		// An offset container for the sprite
-		this.spriteContainer = this.scaleContainer.addChild(
+		this.spriteContainer = this.isometricContainer.addChild(
 			new PIXI.Container()
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
@@ -2528,7 +2512,7 @@ export default class CanvasEffect extends PIXI.Container {
 			(this.data.spriteScale?.y ?? 1.0) *
 			this.flipY;
 
-		if (this.data.scaleToObject && this.source) {
+		if (this.data.scaleToObject) {
 
 			if (this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
 				this._addToTicker(() => {
@@ -2563,10 +2547,10 @@ export default class CanvasEffect extends PIXI.Container {
 				width *= canvas.grid.size;
 			}
 
-			this.scaleContainer.width = width * baseScaleX;
-			this.scaleContainer.height = height * baseScaleY;
+			this.sprite.width = width * baseScaleX;
+			this.sprite.height = height * baseScaleY;
 		} else {
-			this.scaleContainer.scale.set(
+			this.sprite.scale.set(
 				baseScaleX * this.gridSizeDifference,
 				baseScaleY * this.gridSizeDifference
 			);
@@ -2602,8 +2586,13 @@ export default class CanvasEffect extends PIXI.Container {
 				height = height * (!ratioToUse ? heightWidthRatio : 1.0);
 			}
 
-			this.scaleContainer.width = width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
-			this.scaleContainer.height = height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
+			this.sprite.width = width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
+			this.sprite.height = height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
+
+			SequencerAnimationEngine.updateStartValues(this.sprite, "width");
+			SequencerAnimationEngine.updateStartValues(this.sprite, "height");
+			SequencerAnimationEngine.updateStartValues(this.sprite, "scale.x");
+			SequencerAnimationEngine.updateStartValues(this.sprite, "scale.y");
 
 		} catch (err) {
 
@@ -2964,14 +2953,16 @@ export default class CanvasEffect extends PIXI.Container {
 				0
 			);
 
-		SequencerAnimationEngine.addAnimation(this.id, {
-			target: this,
-			propertyName: "video.volume",
-			to: 0.0,
-			duration: fadeOutAudio.duration,
-			ease: fadeOutAudio.ease,
-			delay: fadeOutAudio.delay,
-			absolute: true,
+		setTimeout(() => {
+			SequencerAnimationEngine.addAnimation(this.id, {
+				target: this,
+				propertyName: "video.volume",
+				to: 0.0,
+				duration: fadeOutAudio.duration,
+				ease: fadeOutAudio.ease,
+				delay: fadeOutAudio.delay,
+				absolute: true,
+			});
 		});
 
 		return fadeOutAudio.duration + fadeOutAudio.delay;

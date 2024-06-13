@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
+  import { localize } from "#runtime/svelte/helper";
   import SequenceManager from "../../modules/sequence-manager.js";
   import EffectEntry from "./components/EffectEntry.svelte";
   import SoundEntry from "./components/SoundEntry.svelte";
