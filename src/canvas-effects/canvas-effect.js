@@ -55,6 +55,39 @@ const hooksManager = {
 	},
 };
 
+const SyncGroups = {
+	times: new Map(),
+	effectIds: new Map(),
+
+	get(effect) {
+		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
+		const effectIds = new Set(this.effectIds.get(fullName));
+		if(effectIds && !effectIds.has(effect.id)){
+			effectIds.add(effect.id);
+			this.effectIds.set(fullName, Array.from(effectIds));
+		}
+		return this.times.get(fullName);
+	},
+
+	set(effect) {
+		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
+		this.times.set(fullName, effect.data.creationTimestamp);
+		this.effectIds.set(fullName, [effect.id]);
+	},
+
+	remove(effect) {
+		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
+		const effectIds = new Set(this.effectIds.get(fullName));
+		effectIds.delete(effect.id);
+		if(effectIds.size){
+			this.effectIds.set(fullName, Array.from(effectIds));
+		}else{
+			this.effectIds.delete(fullName);
+			this.times.delete(fullName);
+		}
+	}
+};
+
 export default class CanvasEffect extends PIXI.Container {
 	#elevation = 0;
 	#sort = 0;
@@ -137,6 +170,15 @@ export default class CanvasEffect extends PIXI.Container {
 			CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
 		);
 		return CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && sceneIsIsometric;
+	}
+
+	get creationTimestamp(){
+		if(this.data.syncGroup){
+			const time = SyncGroups.get(this);
+			if(time) return time;
+			SyncGroups.set(this)
+		}
+		return this.data.creationTimestamp;
 	}
 
 	/**
@@ -1297,7 +1339,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.effectFilters = {};
 		this._animationDuration = 0;
 		this._animationTimes = {};
-		this._twister = lib.createMersenneTwister(this.data.creationTimestamp);
+		this._twister = lib.createMersenneTwister(this.creationTimestamp);
 		this._video = null;
 		this._distanceCache = null;
 		this._isRangeFind = false;
@@ -1388,6 +1430,10 @@ export default class CanvasEffect extends PIXI.Container {
 				SequencerAboveUILayer.removeContainerByEffect(this);
 			}
 		} catch (err) {
+		}
+
+		if(this.data.syncGroup){
+			SyncGroups.remove(this);
 		}
 
 		this.removeChildren().forEach((child) => child.destroy({ children: true }));
@@ -2702,7 +2748,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._playAnimations(
 			foundry.utils.deepClone(this.data.animations) ?? [],
-			this.actualCreationTime - this.data.creationTimestamp
+			this.actualCreationTime - this.creationTimestamp
 		);
 	}
 
@@ -2849,7 +2895,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + fadeIn.duration + fadeIn.delay) >
+			(this.creationTimestamp + fadeIn.duration + fadeIn.delay) >
 			0
 		) {
 			return;
@@ -2883,7 +2929,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp +
+			(this.creationTimestamp +
 				fadeInAudio.duration +
 				fadeInAudio.delay) >
 			0
@@ -3005,7 +3051,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + scaleIn.duration + scaleIn.delay) >
+			(this.creationTimestamp + scaleIn.duration + scaleIn.delay) >
 			0
 		)
 			return;
@@ -3099,7 +3145,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + rotateIn.duration + rotateIn.delay) >
+			(this.creationTimestamp + rotateIn.duration + rotateIn.delay) >
 			0
 		)
 			return;
@@ -3183,7 +3229,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + duration + moves.delay) >
+			(this.creationTimestamp + duration + moves.delay) >
 			0
 		)
 			return;
@@ -3286,7 +3332,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 		if (!this.hasAnimatedMedia) return;
 
 		let creationTimeDifference =
-			this.actualCreationTime - this.data.creationTimestamp;
+			this.actualCreationTime - this.creationTimestamp;
 
 		if (!this.data.noLoop) {
 			return this._startLoop(creationTimeDifference);
@@ -3378,7 +3424,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 	/** @OVERRIDE */
 	_timeoutVisibility() {
 		let creationTimeDifference =
-			this.actualCreationTime - this.data.creationTimestamp;
+			this.actualCreationTime - this.creationTimestamp;
 		let timeout =
 			creationTimeDifference === 0 && !this.data.animations ? 0 : 50;
 		setTimeout(() => {
@@ -3389,7 +3435,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 	/** @OVERRIDE */
 	_setEndTimeout() {
 		let creationTimeDifference =
-			this.actualCreationTime - this.data.creationTimestamp;
+			this.actualCreationTime - this.creationTimestamp;
 		if (
 			!this.data.noLoop ||
 			creationTimeDifference >= this._animationDuration ||

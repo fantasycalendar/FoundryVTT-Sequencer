@@ -34,6 +34,7 @@ export default class EffectSection extends Section {
     this._offset = null;
     this._spriteOffset = null;
     this._size = null;
+    this._syncGroup = null;
     this._persist = null;
     this._persistOptions = null;
     this._zeroSpriteRotation = null;
@@ -121,6 +122,17 @@ export default class EffectSection extends Section {
     this._persistOptions = inOptions;
     return this;
   }
+
+	syncGroup(inString) {
+		if (typeof inString !== "string")
+			throw this.sequence._customError(
+				this,
+				"syncGroup",
+				"inString must be of type string"
+			);
+		this._syncGroup = inString;
+		return this;
+	}
 
   /**
    * Causes the effect to become temporary, which means it will not be stored in the flags of any object,
@@ -2284,6 +2296,7 @@ export default class EffectSection extends Section {
       shapes: this._shapes,
       volume: this._volume,
       isometric: this._isometric,
+	    syncGroup: this._syncGroup,
 
       // Transforms
       scale: this._getCalculatedScale("scale"),
