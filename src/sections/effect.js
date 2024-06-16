@@ -18,7 +18,6 @@ export default class EffectSection extends Section {
     this._stretchTo = null;
     this._attachTo = null;
     this._from = null;
-    this._origin = null;
     this._anchor = null;
     this._spriteAnchor = null;
     this._randomOffset = null;
@@ -31,11 +30,11 @@ export default class EffectSection extends Section {
     this._playbackRate = null;
     this._template = null;
     this._overrides = [];
-    this._name = null;
     this._zIndex = null;
     this._offset = null;
     this._spriteOffset = null;
     this._size = null;
+    this._syncGroup = null;
     this._persist = null;
     this._persistOptions = null;
     this._zeroSpriteRotation = null;
@@ -86,24 +85,6 @@ export default class EffectSection extends Section {
   }
 
   /**
-   * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
-   * and .rotateTowards() to refer to previous effects' locations
-   *
-   * @param {String} inName
-   * @returns {EffectSection}
-   */
-  name(inName) {
-    if (typeof inName !== "string")
-      throw this.sequence._customError(
-        this,
-        "name",
-        "inName must be of type string"
-      );
-    this._name = lib.safe_str(inName);
-    return this;
-  }
-
-  /**
    * Causes the effect to persist indefinitely on the canvas until _ended via SequencerEffectManager.endAllEffects() or
    * name the effect with .name() and then end it through SequencerEffectManager.endEffect()
    *
@@ -126,7 +107,7 @@ export default class EffectSection extends Section {
       );
     inOptions = foundry.utils.mergeObject(
       {
-        id: randomID(),
+        id: foundry.utils.randomID(),
         persistTokenPrototype: false,
       },
       inOptions
@@ -141,6 +122,17 @@ export default class EffectSection extends Section {
     this._persistOptions = inOptions;
     return this;
   }
+
+	syncGroup(inString) {
+		if (typeof inString !== "string")
+			throw this.sequence._customError(
+				this,
+				"syncGroup",
+				"inString must be of type string"
+			);
+		this._syncGroup = inString;
+		return this;
+	}
 
   /**
    * Causes the effect to become temporary, which means it will not be stored in the flags of any object,
@@ -223,7 +215,7 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   attachTo(inObject, inOptions = {}) {
-    if (!(typeof inObject === "object" || typeof inObject === "string")) {
+    if (!inObject || !(typeof inObject === "object" || typeof inObject === "string")) {
       throw this.sequence._customError(
         this,
         "attachTo",
@@ -243,7 +235,8 @@ export default class EffectSection extends Section {
         bindVisibility: true,
         bindAlpha: true,
         bindElevation: true,
-        followRotation: true,
+	      bindScale: true,
+        bindRotation: true,
         offset: false,
         randomOffset: false,
         gridUnits: false,
@@ -312,11 +305,19 @@ export default class EffectSection extends Section {
         "attachTo",
         `inOptions.bindVisibility must be of type boolean`
       );
-    if (typeof inOptions.followRotation !== "boolean")
+		if (inOptions.followRotation !== undefined) {
+			inOptions.bindRotation = inOptions.followRotation;
+			this.sequence._showWarning(
+				this,
+				"attachTo",
+				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead"
+			);
+		}
+    if (typeof inOptions.bindRotation !== "boolean")
       throw this.sequence._customError(
         this,
         "attachTo",
-        `inOptions.followRotation must be of type boolean`
+        `inOptions.bindRotation must be of type boolean`
       );
     if (typeof inOptions.bindAlpha !== "boolean")
       throw this.sequence._customError(
@@ -329,6 +330,12 @@ export default class EffectSection extends Section {
         this,
         "attachTo",
         "inOptions.bindElevation must be of type boolean"
+      );
+    if (typeof inOptions.bindScale !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "attachTo",
+        "inOptions.bindScale must be of type boolean"
       );
     if (
       !(
@@ -343,13 +350,6 @@ export default class EffectSection extends Section {
       );
 
     this._source = validatedObject;
-
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (validatedObject instanceof foundry.abstract.Document ||
-      validatedObject instanceof MeasuredTemplate
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -374,8 +374,9 @@ export default class EffectSection extends Section {
       edge: inOptions.edge,
       bindVisibility: inOptions.bindVisibility,
       bindAlpha: inOptions.bindAlpha,
+      bindScale: inOptions.bindScale,
       bindElevation: inOptions.bindElevation,
-      followRotation: inOptions.followRotation,
+      bindRotation: inOptions.bindRotation,
     };
     return this;
   }
@@ -389,7 +390,7 @@ export default class EffectSection extends Section {
    * @returns {EffectSection}
    */
   stretchTo(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+    if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
       throw this.sequence._customError(
         this,
         "stretchTo",
@@ -502,12 +503,6 @@ export default class EffectSection extends Section {
 
     if (inOptions.tiling) this.tilingTexture();
 
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (validatedObject instanceof foundry.abstract.Document
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : this._temporaryEffect || false);
-
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
         "stretchTo",
@@ -546,7 +541,7 @@ export default class EffectSection extends Section {
    * @returns this
    */
   rotateTowards(inLocation, inOptions = {}) {
-    if (!(typeof inLocation === "object" || typeof inLocation === "string")) {
+    if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
       throw this.sequence._customError(
         this,
         "inLocation",
@@ -590,12 +585,6 @@ export default class EffectSection extends Section {
         "rotateTowards",
         "could not find position of given object"
       );
-
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (validatedObject instanceof foundry.abstract.Document
-        ? !lib.is_UUID(validatedObject?.uuid)
-        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -688,12 +677,6 @@ export default class EffectSection extends Section {
         "from",
         "inOptions.randomOffset must be of type boolean or number"
       );
-
-    this._temporaryEffect =
-      this._temporaryEffect ||
-      (inObject instanceof foundry.abstract.Document
-        ? !lib.is_UUID(inObject?.uuid)
-        : this._temporaryEffect || false);
 
     if (inOptions.offset) {
       const offsetData = this._validateOffset(
@@ -918,36 +901,6 @@ export default class EffectSection extends Section {
   }
 
   /**
-   *  Causes the effect to be offset relative to its location based on a given vector
-   *
-   * @param {Object} inOffset
-   * @param {Object} inOptions
-   * @returns {EffectSection}
-   */
-  offset(inOffset, inOptions = {}) {
-    this.sequence._showWarning(
-      this,
-      "offset",
-      "This method is becoming deprecated, please use the secondary offset option in atLocation, attachTo, stretchTo instead.",
-      true
-    );
-    if (inOffset === undefined)
-      throw this.sequence._customError(
-        this,
-        "offset",
-        "inOffset must not be undefined"
-      );
-    if (typeof inOptions !== "object")
-      throw this.sequence._customError(
-        this,
-        "offset",
-        "options must be of type object"
-      );
-    this._offsetLegacy = this._validateOffset("offset", inOffset, inOptions);
-    return this;
-  }
-
-  /**
    *  Causes the effect's sprite to be offset relative to its location based on a given vector
    *
    * @param {Object} inOffset
@@ -1016,15 +969,21 @@ export default class EffectSection extends Section {
       {
         scale: inScale,
         considerTokenScale: false,
-        uniform: false,
+        uniform: false
       },
       inOptions
     );
+    if (typeof inOptions.considerTokenScale !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "scaleToObject",
+        "inOptions.considerTokenScale must be of type boolean"
+      );
     if (typeof inOptions.uniform !== "boolean")
       throw this.sequence._customError(
         this,
         "scaleToObject",
-        "inBool must be of type boolean"
+        "inOptions.uniform must be of type boolean"
       );
     this._scaleToObject = inOptions;
     return this;
@@ -1315,30 +1274,6 @@ export default class EffectSection extends Section {
    */
   center() {
     this.anchor(0.5);
-    return this;
-  }
-
-  /**
-   * The sprite gets a random offset on its target location, usually within the object's bounds. The optional parameter
-   * scales how much offset should be added. Defaults to 1.0, which covers the entire target position, 0.5 would cover half.
-   *
-   * @param {Number} inOffsetScale
-   * @returns {EffectSection}
-   */
-  randomOffset(inOffsetScale = 1.0) {
-    this.sequence._showWarning(
-      this,
-      "randomOffset",
-      "This method has been deprecated, please use randomOffset as a second parameter on atLocation, stretchTo, etc.",
-      true
-    );
-    if (!lib.is_real_number(inOffsetScale))
-      throw this.sequence._customError(
-        this,
-        "randomOffset",
-        "inBool must be of type number"
-      );
-    this._randomOffsetLegacy = inOffsetScale;
     return this;
   }
 
@@ -1817,34 +1752,6 @@ export default class EffectSection extends Section {
   }
 
   /**
-   *  This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
-   *  The method accepts a string or a Document that has an UUID.
-   *
-   * @param {string|document} inOrigin
-   * @returns {Section}
-   */
-  origin(inOrigin) {
-    inOrigin = lib.validate_document(inOrigin);
-    if (inOrigin instanceof foundry.abstract.Document) {
-      inOrigin = inOrigin?.uuid;
-      if (!inOrigin)
-        throw this.sequence._customError(
-          this,
-          "origin",
-          "could not find the UUID for the given Document"
-        );
-    }
-    if (typeof inOrigin !== "string")
-      throw this.sequence._customError(
-        this,
-        "origin",
-        "inOrigin must be of type string"
-      );
-    this._origin = inOrigin;
-    return this;
-  }
-
-  /**
    * Ties the effect to any number of documents in Foundry - if those get deleted, the effect is ended.
    *
    * @param {String|PlaceableObject|foundry.abstract.Document|Array<String|PlaceableObject|foundry.abstract.Document>} inDocuments
@@ -2102,7 +2009,7 @@ export default class EffectSection extends Section {
   async run() {
     if (!lib.user_can_do("permissions-effect-create") || !this._playEffect) {
       if (!lib.user_can_do("permissions-effect-create")) {
-        debounce(EffectSection.debounceWarning, 1000);
+	      foundry.utils.debounce(EffectSection.debounceWarning, 1000);
       }
       return new Promise((resolve) => {
         resolve();
@@ -2142,6 +2049,7 @@ export default class EffectSection extends Section {
     Object.assign(this.constructor.prototype, traits.location);
     Object.assign(this.constructor.prototype, traits.offset);
     Object.assign(this.constructor.prototype, traits.text);
+    Object.assign(this.constructor.prototype, traits.name);
   }
 
   /**
@@ -2172,7 +2080,7 @@ export default class EffectSection extends Section {
         }
 
         this.sequence.nameOffsetMap[this._name] = {
-          seed: `${this._name}-${randomID()}`,
+          seed: `${this._name}-${foundry.utils.randomID()}`,
           source: source,
           target: target,
           randomOffset: this._randomOffset,
@@ -2279,6 +2187,13 @@ export default class EffectSection extends Section {
     const source = this._getSourceObject();
     const target = this._getTargetObject();
 
+	  this._temporaryEffect =
+		  this._temporaryEffect ||
+		  (source instanceof foundry.abstract.Document ||
+		  source instanceof MeasuredTemplate
+			  ? !lib.is_UUID(source?.uuid)
+			  : this._temporaryEffect || false);
+
     if (this._offsetLegacy) {
       this._offset = {
         source:
@@ -2329,7 +2244,7 @@ export default class EffectSection extends Section {
       /**
        * Core properties
        */
-      _id: randomID(),
+      _id: foundry.utils.randomID(),
       flagVersion: flagManager.latestFlagVersion,
       sequenceId: this.sequence.id,
       creationTimestamp: +new Date(),
@@ -2381,6 +2296,7 @@ export default class EffectSection extends Section {
       shapes: this._shapes,
       volume: this._volume,
       isometric: this._isometric,
+	    syncGroup: this._syncGroup,
 
       // Transforms
       scale: this._getCalculatedScale("scale"),

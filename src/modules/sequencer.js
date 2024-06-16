@@ -21,7 +21,7 @@ export default class Sequence {
     },
     softFail = false
   ) {
-    this.id = randomID();
+    this.id = foundry.utils.randomID();
     this.moduleName =
       typeof options === "string"
         ? options
@@ -68,7 +68,7 @@ export default class Sequence {
       } else {
         promises.push(section._execute());
       }
-      if (get(this.status) === CONSTANTS.STATUS.ABORTED) {
+      if (this.status === CONSTANTS.STATUS.ABORTED) {
         continue;
       }
       if (!section._isLastSection) {
@@ -142,7 +142,7 @@ export default class Sequence {
       );
     }
 
-    if (isNewerVersion(game.version, "11")) {
+    if (foundry.utils.isNewerVersion(game.version, "11")) {
       args = args.length ? args?.[0] : {};
       if (typeof args !== "object") {
         throw lib.custom_error(
@@ -180,20 +180,20 @@ export default class Sequence {
               );
             }
             macro = new Macro(macroData);
-            macro.ownership.default = CONST.DOCUMENT_PERMISSION_LEVELS.OWNER;
+            macro.ownership.default = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
           }
 
-          if (isNewerVersion(game.version, "11")) {
+          if (foundry.utils.isNewerVersion(game.version, "11")) {
             await macro.execute(args);
           } else {
             const version = game.modules.get("advanced-macros")?.version;
             const bugAdvancedMacros =
               game.modules.get("advanced-macros")?.active &&
-              isNewerVersion(
+              foundry.utils.isNewerVersion(
                 version.startsWith("v") ? version.slice(1) : version,
                 "1.18.2"
               ) &&
-              !isNewerVersion(
+              !foundry.utils.isNewerVersion(
                 version.startsWith("v") ? version.slice(1) : version,
                 "1.19.1"
               );
@@ -390,7 +390,7 @@ export default class Sequence {
     return func;
   }
 
-  _showWarning(self, func, warning, notify) {
+  _showWarning(self, func, warning, notify=false) {
     lib.custom_warning(
       this.moduleName,
       `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`,
@@ -418,7 +418,7 @@ export default class Sequence {
   }
 
   get status() {
-    return this._status;
+    return get(this._status);
   }
 
   _abort() {

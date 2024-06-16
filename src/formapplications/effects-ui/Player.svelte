@@ -1,5 +1,5 @@
 <script>
-  import { localize } from '@typhonjs-fvtt/runtime/svelte/helper';
+  import { localize } from '#runtime/svelte/helper';
   import { PlayerSettings } from "./effect-player-store.js";
   import { get } from "svelte/store";
   import SequencerDatabase from "../../modules/sequencer-database.js";

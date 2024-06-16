@@ -1049,3 +1049,10 @@ Masks the effect to the given object or objects. If no object is given, the effe
 `.tieToDocuments(token)` or `.tieToDocuments([ActiveEffect, Token])`
 
 Ties the effect to any number of documents in Foundry - if those get deleted, the effect is ended.
+
+
+## Sync Group
+
+`.syncGroup(string)` or `.syncGroup("test")`
+
+Causes effects with this sync group to share the same start time - useful if you have multiple duplicated effects that need to play at the same time. 

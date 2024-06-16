@@ -7,7 +7,7 @@ export function createShape(shape) {
 
   graphic.beginFill(
     shape?.fillColor ?? 0xffffff,
-    shape?.fillAlpha ?? shape?.isMask ? 1 : 0
+    shape?.isMask ? 1 : shape?.fillAlpha ?? 1
   );
 
   graphic.lineStyle(
@@ -330,7 +330,7 @@ export function get_mouse_position(snapToGrid = false, gridSnap = 2) {
   const pos = lib.getCanvasMouse().getLocalPosition(canvas.app.stage);
   return !snapToGrid
     ? new PIXI.Point(pos.x, pos.y)
-    : canvas.grid.getSnappedPosition(pos.x, pos.y, gridSnap);
+    : canvas.grid.getSnappedPoint({ x: pos.x, y: pos.y }, gridSnap);
 }
 
 export function distance_between(p1, p2) {

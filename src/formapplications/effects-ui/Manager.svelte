@@ -1,24 +1,30 @@
 <script>
-  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
+  import { localize } from "#runtime/svelte/helper";
   import SequenceManager from "../../modules/sequence-manager.js";
   import EffectEntry from "./components/EffectEntry.svelte";
   import SoundEntry from "./components/SoundEntry.svelte";
-  import SequencerAudioHelper from "../../modules/sequencer-audio-helper.js";
+  import SequencerSoundManager from "../../modules/sequencer-sound-manager.js";
 
   const VisibleEffects = SequenceManager.VisibleEffects;
   const RunningSounds = SequenceManager.RunningSounds;
 
   $: effects = Object.values($VisibleEffects);
-  $: sounds = Object.entries($RunningSounds);
+  $: sounds = Object.entries($RunningSounds).filter(e => e[1].sound_playing);
   $: persistentEffects = effects.filter(effect => effect.data.persist);
   $: temporaryEffects = effects.filter(effect => !effect.data.persist);
 
   function endAllEffects() {
-    Sequencer.EffectManager.endEffects({ effects: effects.filter(effect => effect.userCanDelete && !effect.data.private) });
+    Sequencer.EffectManager.endEffects({
+      effects: effects.filter(effect => effect.userCanDelete && !effect.data.private)
+		});
   }
 
   function endAllSounds() {
-    SequencerAudioHelper.stop(RunningSounds.keys());
+    SequencerSoundManager.endSounds({
+      sounds: Object.entries($RunningSounds)
+        .filter(e => e[1].sound_playing)
+        .map(e => e[0])
+		});
   }
 
 </script>

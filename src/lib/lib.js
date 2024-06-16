@@ -305,7 +305,7 @@ export function get_object_from_scene(
 /**
  * Gets all documents from the given scene
  *
- * @param inSceneId [inSceneId]
+ * @param {Boolean/String} inSceneId
  * @returns {Array<Document>}
  */
 export function get_all_documents_from_scene(inSceneId = false) {
@@ -314,7 +314,7 @@ export function get_all_documents_from_scene(inSceneId = false) {
     : game.scenes.get(game.user?.viewedScene);
   if (!scene) return [];
   return [
-    ...(canvas.templates?.preview?.children ?? []),
+	  ...canvas.layers.map(layer => layer?.preview?.children ?? []),
     ...Array.from(scene?.tokens ?? []),
     ...Array.from(scene?.lights ?? []),
     ...Array.from(scene?.sounds ?? []),
@@ -424,7 +424,7 @@ export function user_can_do(inSetting) {
 
 export function group_by(xs, key) {
   return xs.reduce(function (acc, obj) {
-    let property = getProperty(obj, key);
+    let property = foundry.utils.getProperty(obj, key);
     acc[property] = acc[property] || [];
     acc[property].push(obj);
     return acc;
@@ -547,7 +547,10 @@ export function parseColor(inColor) {
 }
 
 export function getCanvasMouse() {
-  return game.release.generation === 11
-    ? canvas.app.renderer.plugins.interaction.pointer
-    : canvas.app.renderer.plugins.interaction.mouse;
+  return canvas?.app?.renderer?.events?.pointer ?? canvas?.app?.renderer?.plugins?.interaction?.pointer;
+}
+
+export function createMersenneTwister(seed){
+	const twister = foundry?.dice?.MersenneTwister ?? MersenneTwister;
+	return new twister(seed);
 }

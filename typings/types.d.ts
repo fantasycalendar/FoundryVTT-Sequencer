@@ -396,6 +396,18 @@ declare abstract class HasLocation<T> {
   ): this;
 }
 
+declare abstract class HasName<T> {
+
+  /**
+   * Causes the effect to be stored and can then be used  with .atLocation(), .stretchTowards(),
+   * and .rotateTowards() to refer to previous effects' locations
+   *
+   * Named effects and sounds can be ended with their respective managers through the name.
+   */
+  name(inName: string): this;
+
+}
+
 declare abstract class HasText<T> {
   /**
    * Creates a text element, attached to the sprite. The options for the text are available here:
@@ -487,14 +499,10 @@ declare interface EffectSection
     HasTint<EffectSection>,
     HasLocation<EffectSection>,
     HasText<EffectSection>,
+    HasName<EffectSection>,
     AnimatedSection<EffectSection> {}
 
 declare abstract class EffectSection {
-  /**
-   * Causes the effect's position to be stored and can then be used  with .atLocation(), .stretchTowards(),
-   * and .rotateTowards() to refer to previous effects' locations
-   */
-  name(inName: string): this;
 
   /**
    * Causes the effect to persist indefinitely on the canvas until _ended via SequencerEffectManager.endAllEffects() or
@@ -534,6 +542,7 @@ declare abstract class EffectSection {
       edge?: string;
       bindVisibility?: boolean;
       bindAlpha?: boolean;
+      bindScale?: boolean;
       bindElevation?: boolean;
       followRotation?: boolean;
       offset?: Vector2;
@@ -836,9 +845,11 @@ declare abstract class EffectSection {
 declare interface SoundSection
   extends CoreMethods,
     Section<SoundSection>,
-    HasFiles<EffectSection>,
-    HasAudio<EffectSection>,
-    HasTime<EffectSection> {}
+    HasFiles<SoundSection>,
+    HasAudio<SoundSection>,
+    HasName<SoundSection>,
+    HasTime<SoundSection> ,
+    HasLocation<SoundSection> {}
 
 declare abstract class SoundSection {
   /**
@@ -846,7 +857,42 @@ declare abstract class SoundSection {
    * modifications of sound's data.
    */
   addOverride(inFunc: Function): this;
+
+  /**
+   * Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.
+   */
+  radius(inNumber: Number): this;
+
+  /**
+   * Whether the sound will be completely blocked by walls.
+   */
+  constrainedByWalls(inBool: Boolean): this;
+
+  /**
+   * Whether the sound will have its volume eased by the distance from its origin.
+   */
+  distanceEasing(inBool: Boolean): this;
+
+  /**
+   * Whether the sound will play for GMs as if they were hearing it at the origin of the sound.
+   */
+  alwaysForGMs(inBool: Boolean): this;
+
+  /**
+   * An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
+   */
+  baseEffect(options: SoundEffect): this;
+
+  /**
+   * An effect to be applied on the sound when it is heard through a wall.
+   */
+  muffledEffect(options: SoundEffect): this;
 }
+
+type SoundEffect = {
+  type: string;
+  intensity: number;
+};
 
 declare interface ScrollingTextSection
   extends CoreMethods,
@@ -1103,6 +1149,41 @@ declare abstract class SequencerEffectManager {
   getEffectPositionByName(inName: string): Vector2;
 }
 
+declare abstract class SequencerSoundManager {
+  /**
+   * Opens the Sequencer Manager UI with the sounds tab open
+   */
+  show(): Promise<void>;
+
+  /**
+   * Returns all the currently running sounds
+   */
+  get sounds(): Array<any>;
+
+  /**
+   * Get sounds that are playing based on a set of filters
+   */
+  getSounds(options: {
+    name?: string;
+    sceneId?: string;
+  }): Array<any>;
+
+  /**
+   * End sounds that are playing based on a set of filters
+   */
+  endSounds(options: {
+    name?: string;
+    sceneId?: string;
+    effects: string | Sound | Array<string> | Array<Sound>;
+  }): Promise<void>;
+
+  /**
+   * End all sounds that are playing
+   */
+  endAllSounds(inSceneId?: string, push?: boolean): Promise<void>;
+
+}
+
 declare abstract class SequencerPresets {
   /**
    * Adds a preset that can then be used in sequences through .preset()
@@ -1133,6 +1214,7 @@ declare namespace Sequencer {
   const Player: SequencerEffectPlayer;
   const SectionManager: SequencerSectionManager;
   const EffectManager: SequencerEffectManager;
+  const SoundManager: SequencerSoundManager;
   function registerEase(
     easeName: string,
     easeFunction: Function,

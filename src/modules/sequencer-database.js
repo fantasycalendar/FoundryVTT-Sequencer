@@ -433,7 +433,7 @@ class Database {
       let combinedPath = "";
       for (let part of dbPath) {
         combinedPath = combinedPath ? combinedPath + "." + part : part;
-        const entry = getProperty(entries, combinedPath);
+        const entry = foundry.utils.getProperty(entries, combinedPath);
         if (Array.isArray(entry) || typeof entry === "string" || entry?.file) {
           metadata = this._getCleanData(entry, { existingData: metadata });
           break;
@@ -447,7 +447,7 @@ class Database {
           allTemplates?.[metadata.template] ?? allTemplates?.["default"];
       }
 
-      let data = getProperty(entries, dbPath.join("."));
+      let data = foundry.utils.getProperty(entries, dbPath.join("."));
       if (!Array.isArray(data) && !(typeof data === "string")) {
         data = this._getCleanData(data, { metadata: false });
       }

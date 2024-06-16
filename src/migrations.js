@@ -3,7 +3,7 @@ import { custom_warning, debug } from "./lib/lib.js";
 
 export default async function runMigrations() {
   const sortedMigrations = Object.entries(migrations).sort((a, b) => {
-    return isNewerVersion(b[0], a[0]) ? -1 : 1;
+    return foundry.utils.isNewerVersion(b[0], a[0]) ? -1 : 1;
   });
 
   for (const [version, migration] of sortedMigrations) {
@@ -30,9 +30,9 @@ function getSequencerEffectTokens(version, tokenFilter = false) {
           if (tokenFilter) {
             return tokenFilter(token, index);
           }
-          const effects = getProperty(token, CONSTANTS.EFFECTS_FLAG) ?? [];
+          const effects = foundry.utils.getProperty(token, CONSTANTS.EFFECTS_FLAG) ?? [];
           const effectsOutOfDate = effects.filter((e) =>
-            isNewerVersion(version, e[1].flagVersion)
+            foundry.utils.isNewerVersion(version, e[1].flagVersion)
           );
           return effectsOutOfDate.length;
         }),
@@ -47,9 +47,9 @@ function getSequencerEffectActors(version, actorFilter = false) {
       if (actorFilter) {
         return actorFilter(actor, index);
       }
-      const effects = getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
+      const effects = foundry.utils.getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
       const effectsOutOfDate = effects.filter((e) =>
-        isNewerVersion(version, e[1].flagVersion)
+        foundry.utils.isNewerVersion(version, e[1].flagVersion)
       );
       return effectsOutOfDate.length;
     });
@@ -59,15 +59,15 @@ const migrations = {
   "3.0.0": async (version) => {
     const actorsToUpdate = getSequencerEffectActors(version, (actor) => {
       const effects =
-        getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
+        foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
       const effectsOutOfDate = effects.filter((e) =>
-        isNewerVersion(version, e[1].flagVersion)
+        foundry.utils.isNewerVersion(version, e[1].flagVersion)
       );
       return effectsOutOfDate.length;
     });
 
     const actorUpdateArray = actorsToUpdate.map((actor) => {
-      const effectsToMoveFromTokenPrototype = getProperty(
+      const effectsToMoveFromTokenPrototype = foundry.utils.getProperty(
         actor.prototypeToken,
         CONSTANTS.EFFECTS_FLAG
       )
@@ -79,7 +79,7 @@ const migrations = {
           return [id, effect];
         });
 
-      const effectsToKeepOnTokenPrototype = getProperty(
+      const effectsToKeepOnTokenPrototype = foundry.utils.getProperty(
         actor.prototypeToken,
         CONSTANTS.EFFECTS_FLAG
       )
@@ -106,14 +106,14 @@ const migrations = {
       } catch (err) {
         return false;
       }
-      const effects = getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
+      const effects = foundry.utils.getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
       const prototypeTokenEffects =
-        getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
+        foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
       const effectsOutOfDate = effects.filter((e) =>
-        isNewerVersion(version, e[1].flagVersion)
+        foundry.utils.isNewerVersion(version, e[1].flagVersion)
       );
       const prototypeEffectsOutOfDate = prototypeTokenEffects.filter((e) =>
-        isNewerVersion(version, e[1].flagVersion)
+        foundry.utils.isNewerVersion(version, e[1].flagVersion)
       );
       return (
         t.actorLink &&
@@ -124,7 +124,7 @@ const migrations = {
     for (const [scene, tokens] of tokensOnScenes) {
       const updates = [];
       for (const token of tokens) {
-        const effectsToKeepOnToken = getProperty(token, CONSTANTS.EFFECTS_FLAG)
+        const effectsToKeepOnToken = foundry.utils.getProperty(token, CONSTANTS.EFFECTS_FLAG)
           .filter(([_, effect]) => {
             return !effect.persistOptions?.persistTokenPrototype;
           })

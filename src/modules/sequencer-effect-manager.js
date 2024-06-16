@@ -11,7 +11,7 @@ const TemporaryPositionsContainer = new Map();
 
 export default class SequencerEffectManager {
   /**
-   * Returns all of the currently running effects on the canvas
+   * Returns all the currently running effects on the canvas
    *
    * @returns {Array}
    */
@@ -28,7 +28,7 @@ export default class SequencerEffectManager {
   }
 
   /**
-   * Opens the Sequencer Effects UI with the effects tab open
+   * Opens the Sequencer Manager UI with the effects tab open
    */
   static show() {
     return EffectsUIApp.show({ tab: "manager" });
@@ -205,7 +205,7 @@ export default class SequencerEffectManager {
       effects = lib
         .get_all_documents_from_scene(inFilter.sceneId)
         .map((doc) => {
-          return getProperty(doc, CONSTANTS.EFFECTS_FLAG);
+          return foundry.utils.getProperty(doc, CONSTANTS.EFFECTS_FLAG);
         })
         .filter((flags) => !!flags)
         .map((flags) => {
@@ -375,7 +375,7 @@ export default class SequencerEffectManager {
       !data.temporary &&
       !data.remote
     ) {
-      flagManager.addFlags(effect.context.uuid, effect.data);
+      flagManager.addEffectFlags(effect.context.uuid, effect.data);
     }
 
     if (!effect.shouldPlay) return;
@@ -396,12 +396,12 @@ export default class SequencerEffectManager {
     if (data.temporary && effect.owner) {
       let lastSourcePosition = {};
       let lastTargetPosition = {};
-      effect._ticker.add(() => {
+      effect._addToTicker(() => {
         if (effect.source && !effect.isSourceDestroyed) {
           const sourceData = effect.getSourceData();
           if (JSON.stringify(sourceData) !== lastSourcePosition) {
             sequencerSocket.executeForOthers(
-              SOCKET_HANDLERS.UPDATE_POSITION,
+              SOCKET_HANDLERS.UPDATE_EFFECT_POSITION,
               data.source,
               sourceData
             );
@@ -412,7 +412,7 @@ export default class SequencerEffectManager {
           const targetData = effect.getTargetData();
           if (JSON.stringify(targetData) !== lastTargetPosition) {
             sequencerSocket.executeForOthers(
-              SOCKET_HANDLERS.UPDATE_POSITION,
+              SOCKET_HANDLERS.UPDATE_EFFECT_POSITION,
               data.target,
               targetData
             );
@@ -468,16 +468,16 @@ export default class SequencerEffectManager {
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
     const docEffectsMap = allObjects.reduce((acc, doc) => {
-      let effects = flagManager.getFlags(doc);
+      let effects = flagManager.getEffectFlags(doc);
       effects.forEach((e) => {
         if (lib.is_UUID(e[1].source) && e[1].source !== doc.uuid) {
           e[1].delete = true;
         }
       });
       if (doc instanceof TokenDocument && doc?.actorLink) {
-        const actorEffects = flagManager.getFlags(doc?.actor);
+        const actorEffects = flagManager.getEffectFlags(doc?.actor);
         actorEffects.forEach((e) => {
-          e[1]._id = randomID();
+          e[1]._id = foundry.utils.randomID();
           e[1].source = doc.uuid;
           e[1].sceneId = doc.parent.id;
         });
@@ -530,7 +530,7 @@ export default class SequencerEffectManager {
    * @returns {*}
    */
   static async _patchCreationData(inDocument, data, options) {
-    const effects = flagManager.getFlags(inDocument);
+    const effects = flagManager.getEffectFlags(inDocument);
 
     if (!effects?.length) return;
 
@@ -538,7 +538,7 @@ export default class SequencerEffectManager {
 
     let documentUuid;
     if (!inDocument._id) {
-      const documentId = randomID();
+      const documentId = foundry.utils.randomID();
       documentUuid = inDocument.uuid + documentId;
       updates["_id"] = documentId;
       options.keepId = true;
@@ -556,7 +556,7 @@ export default class SequencerEffectManager {
 
   static _patchEffectDataForDocument(inDocumentUuid, effects) {
     return effects.map((effect) => {
-      effect[0] = randomID();
+      effect[0] = foundry.utils.randomID();
       const effectData = effect[1];
       effectData._id = effect[0];
       if (lib.is_UUID(effectData.source)) {
@@ -578,9 +578,9 @@ export default class SequencerEffectManager {
    * @returns {*}
    */
   static async _documentCreated(inDocument) {
-    let effects = flagManager.getFlags(inDocument);
+    let effects = flagManager.getEffectFlags(inDocument);
     if (inDocument instanceof TokenDocument && inDocument?.actorLink) {
-      let actorEffects = flagManager.getFlags(inDocument.actor);
+      let actorEffects = flagManager.getEffectFlags(inDocument.actor);
       if (actorEffects.length) {
         actorEffects = this._patchEffectDataForDocument(
           inDocument.uuid,
@@ -611,7 +611,7 @@ export default class SequencerEffectManager {
             `Sequencer`,
             `Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
           );
-          return flagManager.removeFlags(inDocument.uuid, effect);
+          return flagManager.removeEffectFlags(inDocument.uuid, effect);
         }
         return this._playEffect(effect[1], false)
           .then((result) => {
@@ -661,7 +661,7 @@ export default class SequencerEffectManager {
       );
       if (!effects.length) return;
       const effectData = effects.map((effect) => effect.data);
-      flagManager.removeFlags(
+      flagManager.removeEffectFlags(
         effects[0].context.uuid,
         effectData,
         !inEffectIds
@@ -692,7 +692,7 @@ export default class SequencerEffectManager {
       );
       if (!persistentEffectData.length) return;
 
-      const actorEffects = flagManager.getFlags(effectContext.actor);
+      const actorEffects = flagManager.getEffectFlags(effectContext.actor);
       const applicableActorEffects = actorEffects
         .filter((effect) => {
           return (
@@ -706,7 +706,7 @@ export default class SequencerEffectManager {
         })
         .map((e) => e[0]);
 
-      flagManager.removeFlags(
+      flagManager.removeEffectFlags(
         effectContext.actor.uuid,
         applicableActorEffects,
         !inEffectIds
@@ -744,7 +744,7 @@ export default class SequencerEffectManager {
 
     const documentEffectsToEnd = documentsToCheck
       .map((obj) => {
-        const objEffects = flagManager.getFlags(obj);
+        const objEffects = flagManager.getEffectFlags(obj);
         const effectsToEnd = objEffects.filter(([effectId, effectData]) =>
           this._effectContextFilter(inUUID, effectData)
         );
@@ -762,7 +762,7 @@ export default class SequencerEffectManager {
     return Promise.allSettled([
       this._endManyEffects(visibleEffectsToEnd),
       ...documentEffectsToEnd.map((obj) => {
-        return flagManager.removeFlags(obj.document.uuid, obj.effects);
+        return flagManager.removeEffectFlags(obj.document.uuid, obj.effects);
       }),
     ]);
   }
@@ -800,7 +800,7 @@ export default class SequencerEffectManager {
 
     for (const tokenDocument of tokenEffectsToPlay) {
       const duplicatedData = foundry.utils.deepClone(data);
-      duplicatedData._id = randomID();
+      duplicatedData._id = foundry.utils.randomID();
       duplicatedData.sceneId = tokenDocument.uuid.split(".")[1];
       duplicatedData.masks = duplicatedData.masks
         .map((uuid) => uuid.replace(duplicatedData.source, tokenDocument.uuid))

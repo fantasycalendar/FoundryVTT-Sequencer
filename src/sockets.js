@@ -1,8 +1,9 @@
-import SequencerAudioHelper from "./modules/sequencer-audio-helper.js";
 import CONSTANTS from "./constants.js";
-import FlagManager from "./utils/flag-manager.js";
-import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 import * as lib from "./lib/lib.js";
+import FlagManager from "./utils/flag-manager.js";
+import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
+import SequencerEffectManager from "./modules/sequencer-effect-manager.js";
+import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
 export const SOCKET_HANDLERS = {
   PLAY_EFFECT: "playEffect",
@@ -10,15 +11,19 @@ export const SOCKET_HANDLERS = {
   UPDATE_EFFECT: "updateEffects",
   ADD_EFFECT_ANIMATIONS: "addEffectAnimations",
   PLAY_SOUND: "playSound",
-  STOP_SOUNDS: "stopSounds",
+  END_SOUNDS: "endSounds",
   PRELOAD: "preload",
   PRELOAD_RESPONSE: "preloadResponse",
   PRELOAD_DONE: "preloadDone",
   UPDATE_DOCUMENT: "updateDocument",
-  ADD_FLAGS: "addFlags",
-  REMOVE_FLAGS: "removeFlags",
-  UPDATE_POSITION: "updatePosition",
+  ADD_EFFECT_FLAGS: "addEffectFlags",
+  REMOVE_EFFECT_FLAGS: "removeEffectFlags",
+  UPDATE_EFFECT_POSITION: "updateEffectPosition",
+  ADD_SOUND_FLAGS: "addSoundFlags",
+  REMOVE_SOUND_FLAGS: "removeSoundFlags",
+  UPDATE_SOUND_POSITION: "updateSoundPosition",
   CREATE_SCROLLING_TEXT: "createScrollingText",
+  CREATE_LIGHT_SOURCE: "createLightSource",
   PAN_CANVAS: "panCanvas",
   RUN_SEQUENCE_LOCALLY: "runSequenceLocally",
 };
@@ -29,41 +34,47 @@ export function registerSocket() {
   if (sequencerSocket) return;
   sequencerSocket = socketlib.registerModule(CONSTANTS.MODULE_NAME);
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) =>
-    Sequencer.EffectManager._playEffect(...args)
+    SequencerEffectManager._playEffect(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.END_EFFECTS, (...args) =>
-    Sequencer.EffectManager._endManyEffects(...args)
+    SequencerEffectManager._endManyEffects(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.UPDATE_EFFECT, (...args) =>
-    Sequencer.EffectManager._updateEffect(...args)
+    SequencerEffectManager._updateEffect(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.ADD_EFFECT_ANIMATIONS, (...args) =>
-    Sequencer.EffectManager._addEffectAnimations(...args)
+    SequencerEffectManager._addEffectAnimations(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) =>
-    SequencerAudioHelper._play(...args)
+    SequencerSoundManager._play(...args)
   );
-  sequencerSocket.register(SOCKET_HANDLERS.STOP_SOUNDS, (...args) =>
-    SequencerAudioHelper._stop(...args)
+  sequencerSocket.register(SOCKET_HANDLERS.END_SOUNDS, (...args) =>
+    SequencerSoundManager._endSounds(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) =>
-    Sequencer.Preloader.respond(...args)
+    SequencerPreloader.respond(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) =>
-    Sequencer.Preloader.handleResponse(...args)
+    SequencerPreloader.handleResponse(...args)
   );
   sequencerSocket.register(SOCKET_HANDLERS.UPDATE_DOCUMENT, (...args) =>
     updateDocument(...args)
   );
-  sequencerSocket.register(SOCKET_HANDLERS.ADD_FLAGS, (...args) =>
-    FlagManager._addFlags(...args)
+  sequencerSocket.register(SOCKET_HANDLERS.ADD_EFFECT_FLAGS, (...args) =>
+    FlagManager._addEffectFlags(...args)
   );
-  sequencerSocket.register(SOCKET_HANDLERS.REMOVE_FLAGS, (...args) =>
-    FlagManager._removeFlags(...args)
+  sequencerSocket.register(SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS, (...args) =>
+    FlagManager._removeEffectFlags(...args)
   );
-  sequencerSocket.register(SOCKET_HANDLERS.UPDATE_POSITION, (...args) =>
-    Sequencer.EffectManager._updatePosition(...args)
+  sequencerSocket.register(SOCKET_HANDLERS.UPDATE_EFFECT_POSITION, (...args) =>
+    SequencerEffectManager._updatePosition(...args)
   );
+	sequencerSocket.register(SOCKET_HANDLERS.ADD_SOUND_FLAGS, (...args) =>
+		FlagManager._addSoundFlags(...args)
+	);
+	sequencerSocket.register(SOCKET_HANDLERS.REMOVE_SOUND_FLAGS, (...args) =>
+		FlagManager._removeSoundFlags(...args)
+	);
   sequencerSocket.register(SOCKET_HANDLERS.CREATE_SCROLLING_TEXT, (data) =>
     SequencerFoundryReplicator._playScrollingText(data)
   );

@@ -1,10 +1,13 @@
 import Section from "../sections/section.js";
 import * as lib from "../lib/lib.js";
 
-export default class SequencerSectionManager {
-  constructor() {
-    this.externalSections = {};
-  }
+class SequencerSectionManager {
+
+	#sections = {};
+
+	get externalSections(){
+		return this.#sections;
+	}
 
   /**
    * Registers a class by a name that will then be available through the Sequencer
@@ -36,14 +39,14 @@ export default class SequencerSectionManager {
       );
     }
 
-    if (this.externalSections[inMethodName] && !overwrite) {
+    if (this.#sections[inMethodName] && !overwrite) {
       throw lib.custom_error(
         inModuleName,
-        `${inMethodName} is already a registered Section with the class ${this.externalSections[inMethodName].constructor.name}`
+        `${inMethodName} is already a registered Section with the class ${this.#sections[inMethodName].constructor.name}`
       );
     }
 
-    coreMethods = coreMethods.concat(Object.keys(this.externalSections));
+    coreMethods = coreMethods.concat(Object.keys(this.#sections));
 
     const clashingMethods = Object.getOwnPropertyNames(
       inClass.prototype
@@ -61,8 +64,12 @@ export default class SequencerSectionManager {
       `SectionManager | Successfully registered ${inMethodName} with Sequencer!`
     );
 
-    this.externalSections[inMethodName] = inClass;
+    this.#sections[inMethodName] = inClass;
 
     return true;
   }
 }
+
+const sectionManager = new SequencerSectionManager();
+
+export default sectionManager;

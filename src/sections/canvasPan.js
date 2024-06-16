@@ -15,7 +15,7 @@ export default class CanvasPanSection extends Section {
     this._scale = scale ?? 1.0;
     this._lockView = null;
     this._shake = null;
-    this._seed = lib.get_hash(randomID());
+    this._seed = lib.get_hash(foundry.utils.randomID());
     if (target) {
       this.atLocation(target);
     }

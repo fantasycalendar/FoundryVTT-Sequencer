@@ -82,7 +82,7 @@ await Sequencer.EffectManager.endEffects({ name: "test_effect" })
 await Sequencer.EffectManager.endEffects({ name: "test_effect", object: token })
 
 // Ends effects that have "test" in their name
-const effects = Sequencer.EffectManager.getEffects({ name: "*test*" })
+await Sequencer.EffectManager.endEffects({ name: "*test*" })
 
 ```
 <strong>--------------------------------</strong>

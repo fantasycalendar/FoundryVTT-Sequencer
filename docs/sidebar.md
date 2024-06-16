@@ -28,6 +28,7 @@
   * [Database](database.md)
   * [How to: Sequencer Database](database-basics.md)
   * [Effect Manager](effect-manager.md)
+  * [Sound Manager](sound-manager.md)
   * [Effect Player](player.md)
   * [Preloader](preloader.md)
   * [Section Manager](section-manager.md)

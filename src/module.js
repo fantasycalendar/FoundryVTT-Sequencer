@@ -22,35 +22,35 @@ import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
-import { EffectsUIApp } from "./formapplications/effects-ui/effects-ui-app.js";
 import CONSTANTS from "./constants.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
+import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
+
 let moduleValid = false;
 let moduleReady = false;
 let canvasReady = false;
 
-Hooks.once("init", async function () {
+Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
   if (!game.modules.get("socketlib")?.active) return;
   moduleValid = true;
-  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = false;
-  //   !!game.modules.get(
-  //   CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME
-  // )?.active;
+  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
+    CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
+  )?.active;
   initializeModule();
   registerSocket();
 });
 
 Hooks.once("socketlib.ready", registerSocket);
 
-Hooks.once("ready", async function () {
+Hooks.once("ready", async function() {
   if (!game.modules.get("socketlib")?.active) {
     ui.notifications.error(
       "Sequencer requires the SocketLib module to be active and will not work without it!",
-      { console: true }
+      { console: true },
     );
     return;
   }
@@ -76,7 +76,7 @@ Hooks.on("canvasTearDown", () => {
   SequencerEffectManager.tearDownPersists();
 });
 
-const setupModule = debounce(() => {
+const setupModule = foundry.utils.debounce(() => {
   if (!moduleValid) return;
   if (!moduleReady) {
     moduleReady = true;
@@ -113,7 +113,8 @@ function initializeModule() {
     DatabaseViewer: DatabaseViewerApp,
     Preloader: SequencerPreloader,
     EffectManager: SequencerEffectManager,
-    SectionManager: new SequencerSectionManager(),
+    SoundManager: SequencerSoundManager,
+    SectionManager: SequencerSectionManager,
     registerEase: registerEase,
     BaseSection: Section,
     CONSTANTS: {
@@ -139,6 +140,26 @@ function initializeModule() {
 
   SequencerAboveUILayer.setup();
   SequencerEffectManager.setup();
+
 }
+
+Hooks.on("sequencer.ready", () => {
+
+	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
+	game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+
+	ChatMessage.create({
+		content: `
+<div class="sequencer-welcome">
+<img src="modules/sequencer/images/sequencer.png"/>
+<div class="sequencer-divider"></div>
+<p>Sequencer remains open, free, and regularly updated with the support of the Foundry community.</p>
+<p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
+<div class="sequencer-divider"></div>
+<p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://ko-fi.com/fantasycomputerworks">Donate</a></p>
+</div>`,
+	});
+
+});
 
 Hooks.once("monaco-editor.ready", registerTypes);

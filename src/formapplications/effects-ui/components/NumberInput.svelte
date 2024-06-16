@@ -1,6 +1,6 @@
 <script>
-	import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
-  import { applyStyles } from "@typhonjs-fvtt/runtime/svelte/action";
+	import { localize } from "#runtime/svelte/helper";
+  import { applyStyles } from "#runtime/svelte/action/dom";
   import { writable } from "svelte/store";
 
   export let setting;
@@ -8,7 +8,7 @@
   export let inverse = false;
   export let styles = {};
 
-  const id = "sequencer-input-" + randomID();
+  const id = "sequencer-input-" + foundry.utils.randomID();
   const store = setting.store;
   const isLocked = lock ? lock.store : writable(inverse);
 </script>
