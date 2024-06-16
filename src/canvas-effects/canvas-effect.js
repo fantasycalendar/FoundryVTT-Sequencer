@@ -1717,7 +1717,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		const animationDurationSec = this._animationDuration / 1000;
 
-		this.mediaLooping = animationDurationSec >= this.mediaDuration && !this.data.noLoop && this.data.noLoop !== null;
+		this.mediaLooping = animationDurationSec >= this.mediaDuration && !this.data.noLoop;
 
 	}
 
