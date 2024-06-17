@@ -143,12 +143,12 @@ function initializeModule() {
 
 }
 
-Hooks.on("sequencer.ready", () => {
+Hooks.on("sequencer.ready", async () => {
 
 	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
-	game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
 
-	ChatMessage.create({
+	await ChatMessage.create({
 		content: `
 <div class="sequencer-welcome">
 <img src="modules/sequencer/images/sequencer.png"/>

@@ -1,6 +1,7 @@
 ## Changelog
 
 ## Version 3.2.1
+- *Sequencer* - Fixed welcome message being posted multiple times on The Forge - my apologies for this
 - *Sequencer* - Fixed `Sequencer.Preloader` not being properly set up (thanks Codas on github!)
 - *Effects* - Added `antialiasing` optional argument to `.file()` - expects `PIXI.SCALEMODES.LINEAR` or `PIXI.SCALEMODES.NEAREST`
 - *Effects* - Fixed `.moveTowards()` not working
