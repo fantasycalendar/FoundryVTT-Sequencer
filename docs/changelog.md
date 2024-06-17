@@ -1,9 +1,12 @@
 ## Changelog
 
 ## Version 3.2.1
+- *Sequencer* - Fixed `Sequencer.Preloader` not being properly set up (thanks Codas on github!)
 - *Effects* - Added `antialiasing` optional argument to `.file()` - expects `PIXI.SCALEMODES.LINEAR` or `PIXI.SCALEMODES.NEAREST`
 - *Effects* - Fixed `.moveTowards()` not working
 - *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not properly animating effects
+- *Effects* - Fixed `.timeRange()` and `.endTime()` not working properly
+- *Sounds* - Fixed `.atLocation()` incorrectly throwing errors when on Foundry v12 (thanks Codas on github!)
 
 ## Version 3.2.0
 - *Sequencer* - Added support for FoundryVTT v12 while remaining backwards compatible with v11

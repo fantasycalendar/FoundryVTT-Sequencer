@@ -62,7 +62,7 @@ const SyncGroups = {
 	get(effect) {
 		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
 		const effectIds = new Set(this.effectIds.get(fullName));
-		if(effectIds && !effectIds.has(effect.id)){
+		if (effectIds && !effectIds.has(effect.id)) {
 			effectIds.add(effect.id);
 			this.effectIds.set(fullName, Array.from(effectIds));
 		}
@@ -79,9 +79,9 @@ const SyncGroups = {
 		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
 		const effectIds = new Set(this.effectIds.get(fullName));
 		effectIds.delete(effect.id);
-		if(effectIds.size){
+		if (effectIds.size) {
 			this.effectIds.set(fullName, Array.from(effectIds));
-		}else{
+		} else {
 			this.effectIds.delete(fullName);
 			this.times.delete(fullName);
 		}
@@ -172,10 +172,10 @@ export default class CanvasEffect extends PIXI.Container {
 		return CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && sceneIsIsometric;
 	}
 
-	get creationTimestamp(){
-		if(this.data.syncGroup){
+	get creationTimestamp() {
+		if (this.data.syncGroup) {
 			const time = SyncGroups.get(this);
-			if(time) return time;
+			if (time) return time;
 			SyncGroups.set(this)
 		}
 		return this.data.creationTimestamp;
@@ -1432,7 +1432,7 @@ export default class CanvasEffect extends PIXI.Container {
 		} catch (err) {
 		}
 
-		if(this.data.syncGroup){
+		if (this.data.syncGroup) {
 			SyncGroups.remove(this);
 		}
 
@@ -1684,20 +1684,21 @@ export default class CanvasEffect extends PIXI.Container {
 				? this.data.time.start.value ?? 0
 				: this._animationDuration * this.data.time.start.value;
 			this.mediaCurrentTime = currentTime / 1000;
-			this._startTime = this.mediaCurrentTime;
+			this._startTime = currentTime;
 		}
 
+		this._endTime = this._animationDuration;
 		if (this.data.time?.end) {
-			this._animationDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange
-					? this.data.time.end.value - this.data.time.start.value
-					: this._animationDuration - this.data.time.end.value
-				: this._animationDuration * this.data.time.end.value;
+			if(this.data.time.end.isPerc){
+				this._endTime = this._animationDuration * this.data.time.end.value;
+			}else{
+				this._endTime = this.data.time.isRange
+					? this.data.time.end.value
+					: this._animationDuration - this.data.time.end.value;
+			}
 		}
 
-		this._animationDuration = Math.max(0, this._animationDuration - this._startTime * 1000);
-
-		this._endTime = this._animationDuration / 1000;
+		this._animationDuration = lib.clamp(this._endTime - this._startTime, 0, this._animationDuration);
 
 		if (
 			this._file?.markers &&
@@ -2529,7 +2530,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	set texture(inTexture) {
-		if(this.data?.fileOptions?.antialiasing !== null){
+		if (this.data?.fileOptions?.antialiasing !== null) {
 			inTexture.baseTexture.setStyle(0, this.data?.fileOptions?.antialiasing)
 		}
 		this._texture = inTexture;
