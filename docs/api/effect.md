@@ -1060,3 +1060,9 @@ Ties the effect to any number of documents in Foundry - if those get deleted, th
 `.syncGroup(string)` or `.syncGroup("test")`
 
 Causes effects with this sync group to share the same start time - useful if you have multiple duplicated effects that need to play at the same time. 
+
+## Isometric
+
+`.isometric(inObject)` or `.isometric({ overlay: true })`
+
+If the Isometric module is installed and active, this causes the effect to play not on the floor under the target, but on the same plane as the target - ie, flat on the screen as if top down. 
