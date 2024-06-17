@@ -2,6 +2,7 @@
 
 ## Version 3.2.1
 - *Effects* - Added `antialiasing` optional argument to `.file()` - expects `PIXI.SCALEMODES.LINEAR` or `PIXI.SCALEMODES.NEAREST`
+- *Effects* - Fixed `.moveTowards()` not working
 - *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not properly animating effects
 
 ## Version 3.2.0

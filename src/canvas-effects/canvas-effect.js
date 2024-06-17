@@ -3253,6 +3253,7 @@ export default class CanvasEffect extends PIXI.Container {
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
+				absolute: true
 			},
 			{
 				target: this,
@@ -3261,6 +3262,7 @@ export default class CanvasEffect extends PIXI.Container {
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
+				absolute: true
 			},
 		]);
 
