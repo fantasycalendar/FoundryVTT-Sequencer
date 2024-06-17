@@ -243,7 +243,7 @@ class SoundSection extends Section {
 			file = file.getFile();
 		}
 
-		let soundFile = await foundry.audio.AudioHelper.preloadSound(file);
+		let soundFile = await SequencerSoundManager.AudioHelper.preloadSound(file);
 		if (!soundFile || soundFile.failed) {
 			return {
 				play: false,

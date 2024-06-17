@@ -1,4 +1,5 @@
 import CONSTANTS from "../constants.js";
+import SequencerSoundManager from "./sequencer-sound-manager.js";
 
 const SequencerFileCache = {
   _videos: {},
@@ -59,9 +60,9 @@ const SequencerFileCache = {
       this._preloadedFiles.add(inSrc);
       if (preload) return true;
       return get_video_texture(blob);
-    } else if (foundry.audio.AudioHelper.hasAudioExtension(inSrc)) {
+    } else if (SequencerSoundManager.AudioHelper.hasAudioExtension(inSrc)) {
       try {
-        const audio = await foundry.audio.AudioHelper.preloadSound(inSrc);
+        const audio = await SequencerSoundManager.AudioHelper.preloadSound(inSrc);
         if (audio) {
           this._preloadedFiles.add(inSrc);
         }

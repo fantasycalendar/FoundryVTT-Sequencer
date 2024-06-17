@@ -6,6 +6,10 @@ import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 
 export default class SequencerSoundManager {
+
+	static AudioHelper = foundry?.audio?.AudioHelper ?? AudioHelper;
+	static Sound = foundry?.audio?.Sound ?? Sound;
+
 	/**
 	 * Returns all the currently running sounds
 	 *
@@ -142,12 +146,12 @@ export default class SequencerSoundManager {
 				inFilter.sounds = [inFilter.sounds];
 			}
 			inFilter.sounds = inFilter.sounds.map((sound) => {
-				if (!(typeof sound === "string" || sound instanceof foundry.audio.Sound))
+				if (!(typeof sound === "string" || sound instanceof SequencerSoundManager.Sound))
 					throw lib.custom_error(
 						"Sequencer",
 						"SoundManager | collections in inFilter.sounds must be of type string or Sound",
 					);
-				if (sound instanceof foundry.audio.Sound) return sound.sound_id;
+				if (sound instanceof SequencerSoundManager.Sound) return sound.sound_id;
 				return sound;
 			});
 		}

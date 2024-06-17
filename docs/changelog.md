@@ -7,6 +7,7 @@
 - *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not properly animating effects
 - *Effects* - Fixed `.timeRange()` and `.endTime()` not working properly
 - *Sounds* - Fixed `.atLocation()` incorrectly throwing errors when on Foundry v12 (thanks Codas on github!)
+- *Sounds* - Fixed sounds not working on Foundry v11
 
 ## Version 3.2.0
 - *Sequencer* - Added support for FoundryVTT v12 while remaining backwards compatible with v11
