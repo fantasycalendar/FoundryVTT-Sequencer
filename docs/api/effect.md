@@ -196,7 +196,7 @@ Defines the base folder that will prepend to the file path. This is mainly just 
 ## File
 
 ```js
-.file(inFilePath = string|array<string)
+.file(inFilePath = string|array<string>, inOptions = Object)
 ```
 
 - Filepath: `.file("modules/jb2a_patreon/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Blue_1200x1200.webm")`
@@ -227,6 +227,10 @@ Lastly, you may pass a range-finding type object to the file method:
 ```
 
 Sequencer will pick the best file to play for the given distance between the source and the target (if any). These are the only supported ranges at this moment.
+
+Also supports a second options object that accepts:
+- `antialiasing: number` - changes the aliasing of the texture, expects either `PIXI.SCALEMODES.NEAREST` (`0`) or `PIXI.SCALEMODES.LINEAR` (`1`)
+
 
 ## From
 

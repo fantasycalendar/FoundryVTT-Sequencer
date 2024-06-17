@@ -16,6 +16,18 @@ class SoundSection extends Section {
 	static niceName = "Sound";
 
 	/**
+	 * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
+	 * time the section is played.
+	 *
+	 * @param {string|array} inFile
+	 * @returns this
+	 */
+	file(inFile) {
+		this._file = inFile;
+		return this;
+	}
+
+	/**
 	 * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
 	 * modifications of sound's data.
 	 *

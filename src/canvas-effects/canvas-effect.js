@@ -473,8 +473,8 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateTexture() {
-		if (this._texture.valid) {
-			this._texture.update();
+		if (this.texture.valid) {
+			this.texture.update();
 		}
 	}
 
@@ -1537,7 +1537,7 @@ export default class CanvasEffect extends PIXI.Container {
 				this.video = this.data.file.toLowerCase().endsWith(".webm")
 					? texture?.baseTexture?.resource?.source ?? false
 					: false;
-				this._texture = texture;
+				this.texture = texture;
 				this._file = texture;
 				this._currentFilePath = this.data.file;
 				return;
@@ -1560,7 +1560,7 @@ export default class CanvasEffect extends PIXI.Container {
 				ray.distance
 			);
 			this._currentFilePath = filePath;
-			this._texture = texture;
+			this.texture = texture;
 			this.spriteSheet = sheet;
 		} else if (
 			!this._isRangeFind ||
@@ -1568,14 +1568,14 @@ export default class CanvasEffect extends PIXI.Container {
 		) {
 			const { filePath, texture, sheet } = await this._file.getTexture();
 			this._currentFilePath = filePath;
-			this._texture = texture;
+			this.texture = texture;
 			this.spriteSheet = sheet;
 		}
 
 		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
 			let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
 			this._relatedSprites[this._currentFilePath] = new spriteType(
-				this._texture,
+				this.texture,
 				this.data.xray ? null : VisionSamplerShader
 			);
 			if (this.data.tint) {
@@ -1604,7 +1604,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._template = this._file.template ?? this._template;
 		this.video = this._currentFilePath.toLowerCase().endsWith(".webm")
-			? this._texture?.baseTexture?.resource?.source
+			? this.texture?.baseTexture?.resource?.source
 			: false;
 	}
 
@@ -2298,7 +2298,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this._currentFilePath !== filePath ||
 			this._relatedSprites[filePath] === undefined
 		) {
-			this._texture = texture;
+			this.texture = texture;
 			this.video = filePath.toLowerCase().endsWith(".webm")
 				? texture?.baseTexture?.resource?.source ?? false
 				: false;
@@ -2465,8 +2465,8 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 			await this._applyDistanceScaling();
 		} else {
-			if (!this.sprite?.texture?.valid && this._texture?.valid) {
-				this.sprite.texture = this._texture;
+			if (!this.sprite?.texture?.valid && this.texture?.valid) {
+				this.sprite.texture = this.texture;
 			}
 		}
 
@@ -2506,7 +2506,7 @@ export default class CanvasEffect extends PIXI.Container {
 			: this.sprite;
 
 		if (!this.data.anchor && this.data.rotateTowards) {
-			const textureWidth = (this._texture?.width ?? spriteToConsider.width) / 2;
+			const textureWidth = (this.texture?.width ?? spriteToConsider.width) / 2;
 			const startPointRatio = this.template.startPoint / textureWidth;
 			this.spriteContainer.pivot.set(
 				spriteToConsider.width * (-0.5 + startPointRatio),
@@ -2526,6 +2526,17 @@ export default class CanvasEffect extends PIXI.Container {
 				)
 			);
 		}
+	}
+
+	set texture(inTexture) {
+		if(this.data?.fileOptions?.antialiasing !== null){
+			inTexture.baseTexture.setStyle(0, this.data?.fileOptions?.antialiasing)
+		}
+		this._texture = inTexture;
+	}
+
+	get texture() {
+		return this._texture;
 	}
 
 	async _transformStretchToAttachedSprite() {
