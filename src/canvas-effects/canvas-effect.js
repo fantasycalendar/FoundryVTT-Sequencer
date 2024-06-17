@@ -651,11 +651,18 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get playNaturally() {
 		return (
-			(!this.data.time ||
-				(this._startTime === 0 && this._endTime === this.mediaDuration)) &&
+			(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
 			this._animationTimes.loopStart === undefined &&
 			this._animationTimes.loopEnd === undefined
 		);
+	}
+
+	get loopDelay() {
+		return (this.data.loopOptions?.loopDelay ?? 0);
+	}
+
+	get loops() {
+		return (this.data.loopOptions?.loops ?? 0);
 	}
 
 	static make(inData) {
@@ -1288,6 +1295,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._playCustomAnimations();
 		this._setEndTimeout();
 		this._timeoutVisibility();
+		await this._startEffect();
 		if (play) await this.playMedia();
 		this.ready = true;
 	}
@@ -1338,6 +1346,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._loopOffset = 0;
 		this.effectFilters = {};
 		this._animationDuration = 0;
+		this._currentLoops = 0;
 		this._animationTimes = {};
 		this._twister = lib.createMersenneTwister(this.creationTimestamp);
 		this._video = null;
@@ -1684,21 +1693,22 @@ export default class CanvasEffect extends PIXI.Container {
 				? this.data.time.start.value ?? 0
 				: this._animationDuration * this.data.time.start.value;
 			this.mediaCurrentTime = currentTime / 1000;
-			this._startTime = currentTime;
+			this._startTime = currentTime / 1000;
 		}
 
 		this._endTime = this._animationDuration;
 		if (this.data.time?.end) {
-			if(this.data.time.end.isPerc){
+			if (this.data.time.end.isPerc) {
 				this._endTime = this._animationDuration * this.data.time.end.value;
-			}else{
+			} else {
 				this._endTime = this.data.time.isRange
 					? this.data.time.end.value
 					: this._animationDuration - this.data.time.end.value;
 			}
 		}
+		this._endTime /= 1000;
 
-		this._animationDuration = lib.clamp(this._endTime - this._startTime, 0, this._animationDuration);
+		this._animationDuration = lib.clamp((this._endTime - this._startTime) * 1000, 0, this._animationDuration);
 
 		if (
 			this._file?.markers &&
@@ -1713,12 +1723,12 @@ export default class CanvasEffect extends PIXI.Container {
 				this._file.markers.forcedEnd / playbackRate / 1000;
 		}
 
+		if (this.loops) {
+			this._animationDuration = (this._animationDuration * this.loops) + (this.loopDelay * (this.loops - 1));
+		}
+
 		// Resolve duration promise so that owner of effect may know when it is finished
 		this._durationResolve(this._animationDuration);
-
-		const animationDurationSec = this._animationDuration / 1000;
-
-		this.mediaLooping = animationDurationSec >= this.mediaDuration && !this.data.noLoop;
 
 	}
 
@@ -3304,35 +3314,6 @@ export default class CanvasEffect extends PIXI.Container {
 			}, realTimestamp);
 		}
 	}
-}
-
-class PersistentCanvasEffect extends CanvasEffect {
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _initialize() {
-		await super._initialize(false);
-		await this._startEffect();
-	}
-
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _reinitialize() {
-		await super._reinitialize(false);
-	}
-
-	/** @OVERRIDE */
-	_playPresetAnimations() {
-		this._moveTowards();
-		this._fadeIn();
-		this._scaleIn();
-		this._rotateIn();
-	}
 
 	/**
 	 * Starts the loop of this effect, calculating the difference between the effect's creation time, and the actual
@@ -3345,26 +3326,27 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 		if (!this.hasAnimatedMedia) return;
 
-		let creationTimeDifference =
-			this.actualCreationTime - this.creationTimestamp;
+		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
 
-		if (!this.data.noLoop) {
-			return this._startLoop(creationTimeDifference);
+		if (this.playNaturally) {
+			if (this.data.persist || this.loops || this.loopDelay) {
+				return this._startLoop(creationTimeDifference);
+			}
+			return this.playMedia();
 		}
 
 		if (creationTimeDifference < this._animationDuration) {
-			if (this._endTime !== this.mediaDuration) {
-				setTimeout(() => {
-					this.mediaCurrentTime = this._endTime;
-					this.updateTexture();
-					this.pauseMedia();
-				}, (this._endTime * 1000) - creationTimeDifference);
-			}
-			if (!this.data.noLoop) {
+			if (!this.loops) {
+				if (this._endTime !== this.mediaDuration) {
+					setTimeout(() => {
+						this.mediaCurrentTime = this._endTime;
+						this.updateTexture();
+						this.pauseMedia();
+					}, (this._endTime * 1000) - creationTimeDifference);
+				}
 				this.mediaCurrentTime = creationTimeDifference / 1000;
 			}
-			await this.playMedia();
-			return;
+			return this.playMedia();
 		}
 
 		await this.pauseMedia();
@@ -3412,11 +3394,8 @@ class PersistentCanvasEffect extends CanvasEffect {
 		let loopWaitTime = 0;
 		if (this._animationTimes.loopStart) {
 			if (this._isEnding) return;
-			this.mediaCurrentTime =
-				(firstLoop ? 0 : this._animationTimes.loopStart) +
-				(this._loopOffset > 0 ? this._loopOffset : 0);
-			loopWaitTime =
-				(this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
+			this.mediaCurrentTime = (firstLoop ? 0 : this._animationTimes.loopStart) + (this._loopOffset > 0 ? this._loopOffset : 0);
+			loopWaitTime = (this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
 		} else {
 			this.mediaCurrentTime = this._startTime + this._loopOffset;
 			loopWaitTime = this._animationDuration - this._loopOffset * 1000;
@@ -3431,14 +3410,37 @@ class PersistentCanvasEffect extends CanvasEffect {
 		this._resetTimeout = setTimeout(() => {
 			if (this._ended) return;
 			this._loopOffset = 0;
+			if (this.loops && this._currentLoops === this.loops) {
+				return this.endEffect()
+			}
+			this._currentLoops++;
 			this._resetLoop(false);
-		}, loopWaitTime);
+		}, loopWaitTime + this.loopDelay);
+	}
+}
+
+class PersistentCanvasEffect extends CanvasEffect {
+
+	/**
+	 * @OVERRIDE
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async _reinitialize() {
+		await super._reinitialize(false);
+	}
+
+	/** @OVERRIDE */
+	_playPresetAnimations() {
+		this._moveTowards();
+		this._fadeIn();
+		this._scaleIn();
+		this._rotateIn();
 	}
 
 	/** @OVERRIDE */
 	_timeoutVisibility() {
-		let creationTimeDifference =
-			this.actualCreationTime - this.creationTimestamp;
+		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
 		let timeout =
 			creationTimeDifference === 0 && !this.data.animations ? 0 : 50;
 		setTimeout(() => {
@@ -3448,14 +3450,10 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 	/** @OVERRIDE */
 	_setEndTimeout() {
-		let creationTimeDifference =
-			this.actualCreationTime - this.creationTimestamp;
-		if (
-			!this.data.noLoop ||
-			creationTimeDifference >= this._animationDuration ||
-			!(this.hasAnimatedMedia || this.data.text)
-		)
+		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
+		if (this.loops || creationTimeDifference >= this._animationDuration || !(this.hasAnimatedMedia || this.data.text)) {
 			return;
+		}
 		setTimeout(() => {
 			this.pauseMedia();
 		}, this._animationDuration);
