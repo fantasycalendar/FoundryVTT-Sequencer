@@ -62,7 +62,7 @@ const SyncGroups = {
 	get(effect) {
 		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
 		const effectIds = new Set(this.effectIds.get(fullName));
-		if(effectIds && !effectIds.has(effect.id)){
+		if (effectIds && !effectIds.has(effect.id)) {
 			effectIds.add(effect.id);
 			this.effectIds.set(fullName, Array.from(effectIds));
 		}
@@ -79,9 +79,9 @@ const SyncGroups = {
 		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
 		const effectIds = new Set(this.effectIds.get(fullName));
 		effectIds.delete(effect.id);
-		if(effectIds.size){
+		if (effectIds.size) {
 			this.effectIds.set(fullName, Array.from(effectIds));
-		}else{
+		} else {
 			this.effectIds.delete(fullName);
 			this.times.delete(fullName);
 		}
@@ -172,10 +172,10 @@ export default class CanvasEffect extends PIXI.Container {
 		return CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && sceneIsIsometric;
 	}
 
-	get creationTimestamp(){
-		if(this.data.syncGroup){
+	get creationTimestamp() {
+		if (this.data.syncGroup) {
 			const time = SyncGroups.get(this);
-			if(time) return time;
+			if (time) return time;
 			SyncGroups.set(this)
 		}
 		return this.data.creationTimestamp;
@@ -473,8 +473,8 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateTexture() {
-		if (this._texture.valid) {
-			this._texture.update();
+		if (this.texture.valid) {
+			this.texture.update();
 		}
 	}
 
@@ -1432,7 +1432,7 @@ export default class CanvasEffect extends PIXI.Container {
 		} catch (err) {
 		}
 
-		if(this.data.syncGroup){
+		if (this.data.syncGroup) {
 			SyncGroups.remove(this);
 		}
 
@@ -1537,7 +1537,7 @@ export default class CanvasEffect extends PIXI.Container {
 				this.video = this.data.file.toLowerCase().endsWith(".webm")
 					? texture?.baseTexture?.resource?.source ?? false
 					: false;
-				this._texture = texture;
+				this.texture = texture;
 				this._file = texture;
 				this._currentFilePath = this.data.file;
 				return;
@@ -1560,7 +1560,7 @@ export default class CanvasEffect extends PIXI.Container {
 				ray.distance
 			);
 			this._currentFilePath = filePath;
-			this._texture = texture;
+			this.texture = texture;
 			this.spriteSheet = sheet;
 		} else if (
 			!this._isRangeFind ||
@@ -1568,14 +1568,14 @@ export default class CanvasEffect extends PIXI.Container {
 		) {
 			const { filePath, texture, sheet } = await this._file.getTexture();
 			this._currentFilePath = filePath;
-			this._texture = texture;
+			this.texture = texture;
 			this.spriteSheet = sheet;
 		}
 
 		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
 			let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
 			this._relatedSprites[this._currentFilePath] = new spriteType(
-				this._texture,
+				this.texture,
 				this.data.xray ? null : VisionSamplerShader
 			);
 			if (this.data.tint) {
@@ -1604,7 +1604,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._template = this._file.template ?? this._template;
 		this.video = this._currentFilePath.toLowerCase().endsWith(".webm")
-			? this._texture?.baseTexture?.resource?.source
+			? this.texture?.baseTexture?.resource?.source
 			: false;
 	}
 
@@ -1684,20 +1684,21 @@ export default class CanvasEffect extends PIXI.Container {
 				? this.data.time.start.value ?? 0
 				: this._animationDuration * this.data.time.start.value;
 			this.mediaCurrentTime = currentTime / 1000;
-			this._startTime = this.mediaCurrentTime;
+			this._startTime = currentTime;
 		}
 
+		this._endTime = this._animationDuration;
 		if (this.data.time?.end) {
-			this._animationDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange
-					? this.data.time.end.value - this.data.time.start.value
-					: this._animationDuration - this.data.time.end.value
-				: this._animationDuration * this.data.time.end.value;
+			if(this.data.time.end.isPerc){
+				this._endTime = this._animationDuration * this.data.time.end.value;
+			}else{
+				this._endTime = this.data.time.isRange
+					? this.data.time.end.value
+					: this._animationDuration - this.data.time.end.value;
+			}
 		}
 
-		this._animationDuration = Math.max(0, this._animationDuration - this._startTime * 1000);
-
-		this._endTime = this._animationDuration / 1000;
+		this._animationDuration = lib.clamp(this._endTime - this._startTime, 0, this._animationDuration);
 
 		if (
 			this._file?.markers &&
@@ -2298,7 +2299,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this._currentFilePath !== filePath ||
 			this._relatedSprites[filePath] === undefined
 		) {
-			this._texture = texture;
+			this.texture = texture;
 			this.video = filePath.toLowerCase().endsWith(".webm")
 				? texture?.baseTexture?.resource?.source ?? false
 				: false;
@@ -2465,8 +2466,8 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 			await this._applyDistanceScaling();
 		} else {
-			if (!this.sprite?.texture?.valid && this._texture?.valid) {
-				this.sprite.texture = this._texture;
+			if (!this.sprite?.texture?.valid && this.texture?.valid) {
+				this.sprite.texture = this.texture;
 			}
 		}
 
@@ -2506,7 +2507,7 @@ export default class CanvasEffect extends PIXI.Container {
 			: this.sprite;
 
 		if (!this.data.anchor && this.data.rotateTowards) {
-			const textureWidth = (this._texture?.width ?? spriteToConsider.width) / 2;
+			const textureWidth = (this.texture?.width ?? spriteToConsider.width) / 2;
 			const startPointRatio = this.template.startPoint / textureWidth;
 			this.spriteContainer.pivot.set(
 				spriteToConsider.width * (-0.5 + startPointRatio),
@@ -2526,6 +2527,17 @@ export default class CanvasEffect extends PIXI.Container {
 				)
 			);
 		}
+	}
+
+	set texture(inTexture) {
+		if (this.data?.fileOptions?.antialiasing !== null) {
+			inTexture.baseTexture.setStyle(0, this.data?.fileOptions?.antialiasing)
+		}
+		this._texture = inTexture;
+	}
+
+	get texture() {
+		return this._texture;
 	}
 
 	async _transformStretchToAttachedSprite() {
@@ -3242,6 +3254,7 @@ export default class CanvasEffect extends PIXI.Container {
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
+				absolute: true
 			},
 			{
 				target: this,
@@ -3250,6 +3263,7 @@ export default class CanvasEffect extends PIXI.Container {
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
+				absolute: true
 			},
 		]);
 
