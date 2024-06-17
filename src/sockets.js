@@ -4,6 +4,7 @@ import FlagManager from "./utils/flag-manager.js";
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import SequencerEffectManager from "./modules/sequencer-effect-manager.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
+import SequencerPreloader from './modules/sequencer-preloader.js'
 
 export const SOCKET_HANDLERS = {
   PLAY_EFFECT: "playEffect",
