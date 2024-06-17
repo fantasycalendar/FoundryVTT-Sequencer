@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.2.1
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not properly animating effects
+
 ## Version 3.2.0
 - *Sequencer* - Added support for FoundryVTT v12 while remaining backwards compatible with v11
 - *Sequencer* - Added startup chat message with links to relevant external resources

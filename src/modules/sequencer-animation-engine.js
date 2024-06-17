@@ -21,6 +21,7 @@ const SequencerAnimationEngine = {
 						lib.get_object_identifier(attribute.target) +
 						"-" +
 						attribute.propertyName;
+					attribute.id = foundry.utils.randomID();
 					attribute.started = false;
 					attribute.initialized = false;
 					attribute.finishing = false;
@@ -148,14 +149,17 @@ const SequencerAnimationEngine = {
 
 		if (!attribute.started) {
 			if (this._coreValues[attribute.targetId] === undefined) {
-				this._coreValues[attribute.targetId] = lib.deep_get(attribute.target, attribute.propertyName);
+				this._coreValues[attribute.targetId] = {
+					id: attribute.id,
+					value: lib.deep_get(attribute.target, attribute.propertyName)
+				};
 			}
 			attribute.started = true;
 		}
 
 		if (this._storedValues[attribute.targetId] === undefined){
 			this._storedValues[attribute.targetId] = {
-				value: this._coreValues[attribute.targetId],
+				value: this._coreValues[attribute.targetId].value,
 				target: attribute.target,
 				propertyName: attribute.propertyName
 			};
@@ -170,18 +174,21 @@ const SequencerAnimationEngine = {
 		}
 
 		if(attribute.absolute) {
-			this._coreValues[attribute.targetId] = attribute.value;
-			const delta = this._coreValues[attribute.targetId] - this._storedValues[attribute.targetId].value;
+			this._coreValues[attribute.targetId].value = attribute.value;
+			const delta = this._coreValues[attribute.targetId].value - this._storedValues[attribute.targetId].value;
 			this._storedValues[attribute.targetId].value += delta;
 		} else {
 			if(attribute.isFunkyProperty){
-				const coreValue = this._coreValues[attribute.targetId];
+				const coreValue = this._coreValues[attribute.targetId].value;
 				attribute.delta = coreValue - (coreValue * attribute.value);
-			}else {
-				attribute.delta = attribute.previousValue - attribute.value;
+			} else {
+				attribute.delta = attribute.value - attribute.previousValue;
 				attribute.previousValue = attribute.value;
 			}
 			this._storedValues[attribute.targetId].value += attribute.delta;
+			if(attribute.id === this._coreValues[attribute.targetId].id){
+				this._coreValues[attribute.targetId].value += attribute.delta;
+			}
 		}
 
 	},
@@ -189,7 +196,7 @@ const SequencerAnimationEngine = {
 	_handleBaseLoop(attribute) {
 		if (!attribute.initialized) {
 			if (attribute.values.length === 1) {
-				attribute.values.unshift(this._coreValues[attribute.targetId]);
+				attribute.values.unshift(this._coreValues[attribute.targetId].value);
 			}
 			attribute.initialized = true;
 		}
@@ -252,7 +259,7 @@ const SequencerAnimationEngine = {
 	_handleDefault(attribute) {
 		if (!attribute.initialized) {
 			if (attribute.from === undefined) {
-				attribute.from = this._coreValues[attribute.targetId];
+				attribute.from = this._coreValues[attribute.targetId].value;
 			}
 			attribute.initialized = true;
 		}
