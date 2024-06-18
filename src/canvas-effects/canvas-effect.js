@@ -3357,7 +3357,7 @@ export default class CanvasEffect extends PIXI.Container {
 					return;
 				}
 
-			} else {
+			} else if(!this.loopDelay) {
 				this.mediaCurrentTime = creationTimeDifference / 1000;
 				return this.playMedia();
 			}
