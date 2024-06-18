@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.2.3 Hotfix
+- *Effects* - Fixed issue with effects not playing their full duration
+
 ## Version 3.2.2
 - *Sequencer* - ACTUALLY fixed welcome message being posted multiple times in bigger worlds (will also get rid of duplicates)
 - *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not working when used on `alphaFilter`

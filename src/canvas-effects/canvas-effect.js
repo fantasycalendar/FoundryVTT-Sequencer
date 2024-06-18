@@ -1608,6 +1608,14 @@ export default class CanvasEffect extends PIXI.Container {
 			: false;
 	}
 
+	get startTimeMs(){
+		return this._startTime * 1000;
+	}
+
+	get endTimeMs(){
+		return this._endTime * 1000;
+	}
+
 	/**
 	 * Calculates the duration of this effect, based on animation durations, the video source duration, end/start times, etc
 	 *
@@ -1684,7 +1692,7 @@ export default class CanvasEffect extends PIXI.Container {
 				? this.data.time.start.value ?? 0
 				: this._animationDuration * this.data.time.start.value;
 			this.mediaCurrentTime = currentTime / 1000;
-			this._startTime = currentTime;
+			this._startTime = currentTime / 1000;
 		}
 
 		this._endTime = this._animationDuration;
@@ -1699,7 +1707,7 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 		this._endTime /= 1000;
 
-		this._animationDuration = lib.clamp(this._endTime - this._startTime, 0, this._animationDuration);
+		this._animationDuration = lib.clamp(this.endTimeMs - this.startTimeMs, 0, this._animationDuration);
 
 		if (
 			this._file?.markers &&
