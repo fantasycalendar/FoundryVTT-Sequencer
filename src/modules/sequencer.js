@@ -324,7 +324,7 @@ export default class Sequence {
       );
       return this;
     }
-    const lastSection = this.sections[this.sections.length - 1];
+    const lastSection = this.sections[this.sections.length - 1] || this;
     return preset(lastSection, ...args);
   }
 
