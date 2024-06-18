@@ -221,7 +221,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isSourceDestroyed() {
 		return (
-			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed)
+			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed || this.source.constructor.name === "Crosshairs")
 		);
 	}
 
@@ -245,7 +245,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isTargetDestroyed() {
 		return (
-			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed)
+			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed || this.target.constructor.name === "Crosshairs")
 		);
 	}
 
@@ -1697,6 +1697,7 @@ export default class CanvasEffect extends PIXI.Container {
 					: this._animationDuration - this.data.time.end.value;
 			}
 		}
+		this._endTime /= 1000;
 
 		this._animationDuration = lib.clamp(this._endTime - this._startTime, 0, this._animationDuration);
 

@@ -1,5 +1,11 @@
 ## Changelog
 
+## Version 3.2.2
+- *Sequencer* - ACTUALLY fixed welcome message being posted multiple times in bigger worlds (will also get rid of duplicates)
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not working when used on `alphaFilter`
+- *Effects* - Fixed effects that were attached to temporary templates (like warpgate's crosshairs) not disappearing after the crosshair had been placed
+- *Effects* - Fixed issue with `complete`-loop type effects not playing correctly
+
 ## Version 3.2.1
 - *Sequencer* - Fixed welcome message being posted multiple times on The Forge - my apologies for this
 - *Sequencer* - Fixed `Sequencer.Preloader` not being properly set up (thanks Codas on github!)

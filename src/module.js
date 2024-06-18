@@ -143,10 +143,18 @@ function initializeModule() {
 
 }
 
-Hooks.on("sequencer.ready", async () => {
+Hooks.once("ready", async () => {
 
 	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
 	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+
+	const chatMessages = game.messages.filter(message => {
+		return message.content.includes("sequencer-welcome")
+	}).map(message => message.id);
+
+	if(chatMessages.length){
+		return ChatMessage.deleteDocuments(chatMessages.slice(0, -1))
+	}
 
 	await ChatMessage.create({
 		content: `

@@ -30,7 +30,7 @@ const SequencerAnimationEngine = {
 					attribute.progress = 0;
 					attribute.value = 0;
 					attribute.coreValue = 0;
-					attribute.isFunkyProperty = attribute.propertyName.startsWith("scale.") || attribute.propertyName === "alpha";
+					attribute.isFunkyProperty = attribute.propertyName.startsWith("scale.");
 
 					attribute.duration = attribute.duration ?? 0;
 					attribute.durationDone = timeDifference ?? 0;
