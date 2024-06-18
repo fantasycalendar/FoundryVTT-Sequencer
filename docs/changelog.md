@@ -3,7 +3,7 @@
 ## Version 3.2.4
 - *Sequencer* - Fixed `.preset()` not working when called directly on a sequence (thanks MrVauxs!)
 - *Effects* - Added deprecation warning to `.file()` instead of an error when giving it a second boolean parameter
-- *Effects* - Fixes to the isometric  
+- *Effects* - Fixes to the isometric module - may still not be 100%, but it shouldn't error anymore
 - *Sounds* - Fixed sounds not playing on v11 (again!)
 
 ## Version 3.2.3 Hotfix
