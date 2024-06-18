@@ -1,5 +1,11 @@
 ## Changelog
 
+## Version 3.2.4
+- *Sequencer* - Fixed `.preset()` not working when called directly on a sequence (thanks MrVauxs!)
+- *Effects* - Added deprecation warning to `.file()` instead of an error when giving it a second boolean parameter
+- *Effects* - Fixes to the isometric  
+- *Sounds* - Fixed sounds not playing on v11 (again!)
+
 ## Version 3.2.3 Hotfix
 - *Effects* - Fixed issue with effects not playing their full duration
 

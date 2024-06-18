@@ -1864,6 +1864,14 @@ export default class EffectSection extends Section {
 	 * @returns this
 	 */
 	file(inFile, inOptions = {}) {
+		if(typeof inOptions === "boolean"){
+			inOptions = {};
+			this.sequence._showWarning(
+				this,
+				"file",
+				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead"
+			);
+		}
 		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,

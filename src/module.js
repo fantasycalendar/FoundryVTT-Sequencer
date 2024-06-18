@@ -40,6 +40,7 @@ Hooks.once("init", async function() {
   CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
     CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
   )?.active;
+	CONSTANTS.IS_V12 = foundry.utils.isNewerVersion(game.version, "12");
   initializeModule();
   registerSocket();
 });

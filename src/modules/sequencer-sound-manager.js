@@ -4,6 +4,19 @@ import * as lib from "../lib/lib.js";
 import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 import * as canvaslib from "../lib/canvas-lib.js";
+import CONSTANTS from "../constants.js";
+
+function createSoundProxy (sound) {
+	return new Proxy(sound, {
+		get: function(target, prop) {
+			if(prop === "addEventListener" && !CONSTANTS.IS_V12){
+				return Reflect.get(target, 'on');
+			}
+			return Reflect.get(target, prop);
+		}
+	})
+}
+
 
 export default class SequencerSoundManager {
 
@@ -90,14 +103,16 @@ export default class SequencerSoundManager {
 
 		if(!sound) return false;
 
-		sound.sound_id = data.id;
-		sound.sound_playing = playSound || game.user.isGM;
+		const soundProxy = createSoundProxy(sound);
 
-		SequenceManager.RunningSounds.add(data.id, sound);
+		soundProxy.sound_id = data.id;
+		soundProxy.sound_playing = playSound || game.user.isGM;
+
+		SequenceManager.RunningSounds.add(data.id, soundProxy);
 
 		if (data.fadeIn && playSound) {
 			SequencerAnimationEngine.addAnimation(data.id, {
-				target: sound,
+				target: soundProxy.sound,
 				propertyName: "volume",
 				from: 0.0,
 				to: data.volume,
@@ -109,7 +124,7 @@ export default class SequencerSoundManager {
 
 		if (data.fadeOut && playSound) {
 			SequencerAnimationEngine.addAnimation(data.id, {
-				target: sound,
+				target: soundProxy.sound,
 				propertyName: "volume",
 				from: data.volume,
 				to: 0.0,
@@ -124,13 +139,13 @@ export default class SequencerSoundManager {
 
 		if (data.duration) {
 			setTimeout(() => {
-				sound.stop();
+				soundProxy.stop();
 			}, data.duration);
 		}
 
 		new Promise((resolve) => {
-			sound.addEventListener("stop", resolve);
-			sound.addEventListener("end", resolve);
+			soundProxy.addEventListener("stop", resolve);
+			soundProxy.addEventListener("end", resolve);
 		}).then(() => {
 			SequenceManager.RunningSounds.delete(data.id);
 			Hooks.callAll("endedSequencerSound", data);
