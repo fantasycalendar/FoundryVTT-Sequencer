@@ -1,5 +1,12 @@
 ## Changelog
 
+## Version 3.2.5
+- *Effects* - Updated documentation to include `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()`
+- *Effects* - Fixed some issues with effect scaling when using `.loopProperty()` and `.animateProperty()`
+- *Sounds* - Fixed `Sequencer.SoundManager.endAllSounds()` not ending all sounds
+- *Sounds* - Fixed `Sequencer.SoundManager.endSounds()` sometimes not correctly ending the right sounds
+- *Sounds* - Fixed calling `.sound()` would break sequences in both Foundry v11 and v12
+
 ## Version 3.2.4
 - *Sequencer* - Fixed `.preset()` not working when called directly on a sequence (thanks MrVauxs!)
 - *Effects* - Added deprecation warning to `.file()` instead of an error when giving it a second boolean parameter

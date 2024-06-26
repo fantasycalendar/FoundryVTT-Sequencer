@@ -6,15 +6,12 @@ import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
-function createSoundProxy (sound) {
-	return new Proxy(sound, {
-		get: function(target, prop) {
-			if(prop === "addEventListener" && !CONSTANTS.IS_V12){
-				return Reflect.get(target, 'on');
-			}
-			return Reflect.get(target, prop);
-		}
-	})
+
+function createSoundListener (sound, name, func) {
+	if(CONSTANTS.IS_V12){
+		return sound.addEventListener(name, func);
+	}
+	return sound.on(name, func);
 }
 
 
@@ -103,16 +100,14 @@ export default class SequencerSoundManager {
 
 		if(!sound) return false;
 
-		const soundProxy = createSoundProxy(sound);
+		sound.sequencer_data = data;
+		sound.sound_playing = playSound || game.user.isGM;
 
-		soundProxy.sound_id = data.id;
-		soundProxy.sound_playing = playSound || game.user.isGM;
-
-		SequenceManager.RunningSounds.add(data.id, soundProxy);
+		SequenceManager.RunningSounds.add(data.id, sound);
 
 		if (data.fadeIn && playSound) {
 			SequencerAnimationEngine.addAnimation(data.id, {
-				target: soundProxy.sound,
+				target: sound.sound,
 				propertyName: "volume",
 				from: 0.0,
 				to: data.volume,
@@ -124,7 +119,7 @@ export default class SequencerSoundManager {
 
 		if (data.fadeOut && playSound) {
 			SequencerAnimationEngine.addAnimation(data.id, {
-				target: soundProxy.sound,
+				target: sound.sound,
 				propertyName: "volume",
 				from: data.volume,
 				to: 0.0,
@@ -139,13 +134,13 @@ export default class SequencerSoundManager {
 
 		if (data.duration) {
 			setTimeout(() => {
-				soundProxy.stop();
+				sound.stop();
 			}, data.duration);
 		}
 
 		new Promise((resolve) => {
-			soundProxy.addEventListener("stop", resolve);
-			soundProxy.addEventListener("end", resolve);
+			createSoundListener(sound, "stop", resolve);
+			createSoundListener(sound, "end", resolve);
 		}).then(() => {
 			SequenceManager.RunningSounds.delete(data.id);
 			Hooks.callAll("endedSequencerSound", data);
@@ -166,7 +161,7 @@ export default class SequencerSoundManager {
 						"Sequencer",
 						"SoundManager | collections in inFilter.sounds must be of type string or Sound",
 					);
-				if (sound instanceof SequencerSoundManager.Sound) return sound.sound_id;
+				if (sound instanceof SequencerSoundManager.Sound) return sound.sequencer_data.id;
 				return sound;
 			});
 		}
@@ -209,10 +204,10 @@ export default class SequencerSoundManager {
 
 		return foundry.utils.mergeObject(
 			{
-				sounds: false,
-				name: false,
-				sceneId: false,
-				origin: false,
+				sounds: null,
+				name: null,
+				sceneId: null,
+				origin: null,
 			},
 			inFilter,
 		);
@@ -227,10 +222,11 @@ export default class SequencerSoundManager {
 		}
 		return this.sounds.filter((sound) => {
 			return (
-				(!inFilter.sounds || inFilter.sounds.includes(sound.sound_id)) &&
-				(!inFilter.name || (sound.data.name && sound.data.name.match(inFilter.name)?.length)) &&
-				(!inFilter.origin || inFilter.origin === sound.data.origin)
-			);
+				(inFilter.sounds === null || inFilter.sounds.includes(sound.sequencer_data.id)) &&
+				(inFilter.name === null || (sound.sequencer_data.name && inFilter.name && sound.sequencer_data.name.match(inFilter.name)?.length)) &&
+				(inFilter.sceneId === null || (sound.sequencer_data.sceneId === inFilter.sceneId)) &&
+				(inFilter.origin === null || inFilter.origin === sound.sequencer_data.origin)
+			)
 		});
 	}
 
@@ -257,7 +253,7 @@ export default class SequencerSoundManager {
 		const filters = this._validateFilters(inFilter);
 		const sounds = this._filterSounds(filters);
 		if (!sounds?.length) return;
-		const ids = sounds.map(sound => sound.sound_id);
+		const ids = sounds.map(sound => sound.sequencer_data.id);
 		if (push && game.user.isGM) {
 			sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_SOUNDS, ids);
 		}
@@ -278,7 +274,7 @@ export default class SequencerSoundManager {
 	}
 
 	static endAllSounds(push = true) {
-		const ids = SequenceManager.RunningSounds.values();
+		const ids = SequenceManager.RunningSounds.keys();
 		if (push && game.user.isGM) {
 			sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_SOUNDS, ids);
 		}

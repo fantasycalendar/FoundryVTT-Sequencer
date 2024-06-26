@@ -17,10 +17,7 @@ const SequencerAnimationEngine = {
 			this._animations.push({
 				origin,
 				attributes: attributes.map((attribute) => {
-					attribute.targetId =
-						lib.get_object_identifier(attribute.target) +
-						"-" +
-						attribute.propertyName;
+					attribute.targetId = lib.get_object_identifier(attribute.target) + "-" + attribute.propertyName;
 					attribute.id = foundry.utils.randomID();
 					attribute.started = false;
 					attribute.initialized = false;
@@ -115,7 +112,7 @@ const SequencerAnimationEngine = {
 
 		for (const targetId of Object.keys(this._coreValues)) {
 			if (
-				this._animations.every((anim) =>{
+				this._animations.every((anim) => {
 					return anim.attributes.every((attr) => {
 						return attr.targetId === targetId && attr.complete;
 					})
@@ -157,7 +154,7 @@ const SequencerAnimationEngine = {
 			attribute.started = true;
 		}
 
-		if (this._storedValues[attribute.targetId] === undefined){
+		if (this._storedValues[attribute.targetId] === undefined) {
 			this._storedValues[attribute.targetId] = {
 				value: this._coreValues[attribute.targetId].value,
 				target: attribute.target,
@@ -173,25 +170,23 @@ const SequencerAnimationEngine = {
 			this._handleDefault(attribute);
 		}
 
-		if(attribute.absolute) {
+		// This is absolutely horrendous, but 50% of the time, it works 90% of the time.
+		if (attribute.absolute) {
 			this._coreValues[attribute.targetId].value = attribute.value;
 			const delta = this._coreValues[attribute.targetId].value - this._storedValues[attribute.targetId].value;
 			this._storedValues[attribute.targetId].value += delta;
 		} else {
-			if(attribute.isFunkyProperty){
+			if (attribute.isFunkyProperty) {
 				const coreValue = this._coreValues[attribute.targetId].value;
-				attribute.delta = coreValue - (coreValue * attribute.value);
+				attribute.delta = (coreValue * attribute.value) - coreValue;
 			} else {
-				if(attribute.previousValue === null){
+				if (attribute.previousValue === null) {
 					attribute.previousValue = this._coreValues[attribute.targetId].value;
 				}
 				attribute.delta = attribute.value - attribute.previousValue;
 				attribute.previousValue = attribute.value;
 			}
 			this._storedValues[attribute.targetId].value += attribute.delta;
-			if(attribute.id === this._coreValues[attribute.targetId].id){
-				this._coreValues[attribute.targetId].value += attribute.delta;
-			}
 		}
 
 	},
