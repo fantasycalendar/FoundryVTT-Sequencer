@@ -185,6 +185,9 @@ const SequencerAnimationEngine = {
 				}
 				attribute.delta = attribute.value - attribute.previousValue;
 				attribute.previousValue = attribute.value;
+				if(attribute.id === this._coreValues[attribute.targetId].id){
+					this._coreValues[attribute.targetId].value = attribute.value;
+				}
 			}
 			this._storedValues[attribute.targetId].value += attribute.delta;
 		}
