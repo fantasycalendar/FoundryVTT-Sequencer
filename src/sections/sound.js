@@ -16,6 +16,18 @@ class SoundSection extends Section {
 	static niceName = "Sound";
 
 	/**
+	 * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
+	 * time the section is played.
+	 *
+	 * @param {string|array} inFile
+	 * @returns this
+	 */
+	file(inFile) {
+		this._file = inFile;
+		return this;
+	}
+
+	/**
 	 * Adds a function that will run at the end of the sound serialization step, but before it is played. Allows direct
 	 * modifications of sound's data.
 	 *
@@ -33,7 +45,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	radius(inNumber){
+	radius(inNumber) {
 		if (!lib.is_real_number(inNumber))
 			throw this.sequence._customError(
 				this,
@@ -44,7 +56,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	constrainedByWalls(inBool){
+	constrainedByWalls(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -55,7 +67,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	distanceEasing(inBool){
+	distanceEasing(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -66,7 +78,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	alwaysForGMs(inBool){
+	alwaysForGMs(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -77,7 +89,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	baseEffect(options={}){
+	baseEffect(options = {}) {
 		options = foundry.utils.mergeObject({
 			type: "",
 			intensity: 0
@@ -101,7 +113,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	muffledEffect(options={}){
+	muffledEffect(options = {}) {
 		options = foundry.utils.mergeObject({
 			type: "",
 			intensity: 0
@@ -143,6 +155,30 @@ class SoundSection extends Section {
 	 */
 	async run() {
 		const playData = await this._sanitizeSoundData();
+
+		if (typeof playData.src !== "string" || playData.src === "") {
+			if (this.sequence.softFail) {
+				playData.play = false;
+			} else {
+				throw this.sequence._customError(
+					this,
+					"file",
+					"a sound must have a src of type string!",
+				);
+			}
+		}
+
+		if (playData.location && CONSTANTS.IS_V12) {
+			if (this.sequence.softFail) {
+				playData.play = false;
+			} else {
+				throw this.sequence._customError(
+					this,
+					"atLocation",
+					"a sound cannot have a location in v11",
+				);
+			}
+		}
 
 		if (!playData.play && this.sequence.softFail) {
 			return new Promise((reject) => {
@@ -207,7 +243,7 @@ class SoundSection extends Section {
 			file = file.getFile();
 		}
 
-		let soundFile = await foundry.audio.AudioHelper.preloadSound(file);
+		let soundFile = await SequencerSoundManager.AudioHelper.preloadSound(file);
 		if (!soundFile || soundFile.failed) {
 			return {
 				play: false,
@@ -255,22 +291,6 @@ class SoundSection extends Section {
 
 		for (let override of this._overrides) {
 			data = await override(this, data);
-		}
-
-		if (typeof data.src !== "string" || data.src === "") {
-			throw this.sequence._customError(
-				this,
-				"file",
-				"a sound must have a src of type string!",
-			);
-		}
-
-		if(data.location && game.version.split(".")[0] === "12"){
-			throw this.sequence._customError(
-				this,
-				"atLocation",
-				"a sound cannot have a location in v11",
-			);
 		}
 
 		return data;

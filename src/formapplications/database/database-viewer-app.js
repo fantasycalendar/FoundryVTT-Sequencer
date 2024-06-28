@@ -1,4 +1,4 @@
-import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
+import { SvelteApplication } from "#runtime/svelte/application";
 import DatabaseShell from "./database-shell.svelte";
 
 export class DatabaseViewerApp extends SvelteApplication {

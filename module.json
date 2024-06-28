@@ -4,7 +4,6 @@
   "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
   "version": "10.0.0",
   "library": "false",
-  "manifestPlusVersion": "1.0.0",
   "compatibility": {
     "minimum": "11",
     "verified": "12"

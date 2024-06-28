@@ -34,7 +34,7 @@ new Sequence()
 
 Calling this method will cause the effect to finish running before starting the next section.
 
-Passing a number as a parameter will cause the effect or sound to wait for the given number (in ms) after finishing playing before continuing to the next section.
+Passing a number as a parameter will cause the effect to wait for the given number (in ms) after finishing playing before continuing to the next section.
 
 If given a negative number, the Sequencer will continue to the next section early but continue playing the effect.
 
@@ -52,7 +52,7 @@ This differs from `.waitUntilFinished()` in the sense that `.async()` is for eac
 
 `.repeats(inRepetitions, inRepeatDelayMin, inRepeatDelayMax)`
 
-Causes the effect or sound to be repeated `inRepetitions` times, with an optional delay.
+Causes the effect to be repeated `inRepetitions` times, with an optional delay.
 
 As an option, you can give it `inRepeatDelayMin` for a static delay between repetitions, or `inRepeatDelayMin` and `inRepeatDelayMax` for a random delay between each call.
 
@@ -62,9 +62,9 @@ It is highly recommended that you do not load too many files at the same time, a
 
 `.playIf(boolean)` or `.playIf(inFunction)`
 
-Causes the effect not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect or sound to play.
+Causes the effect not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the effect to play.
 
-Below is an example of a function used in this method, which would cause this effect or sound to only be played about 50% of the time.
+Below is an example of a function used in this method, which would cause this effect to only be played about 50% of the time.
 ```js
 .playIf(() => {
     return Math.random() < 0.5;
@@ -82,6 +82,45 @@ This will delay the effect from being played for a set amount of milliseconds. I
 `.preset("name")`
 
 Applies a preset to the current effect - read the [Sequencer Presets article](presets.md) for more information.
+
+## Volume
+
+`.volume(0.5)`
+
+A normalized value between `0.0` and `1.0` which determines the volume of the sound (if any). Defaults to `0.8`.
+
+**Notes:**
+- By default, sequencer effects have their volume set to `0.0`, so this is the only way to make it play audio.
+- Not all visual effect videos have audio, so this may not do anything.
+- This is affected by each client's volume settings in Foundry, so if you or your users cannot hear the sound, double-check your Interface Volume.
+
+## Fade In Audio
+
+`.fadeInAudio(duration, options)`
+
+`.fadeInAudio(500)` or `.fadeInAudio(250, {ease: "easeOutQuint"})` or `.fadeInAudio(400, {ease: "easeOutCirc", delay: 100})`
+
+Causes the audio on the given effect fade in when played.
+
+A second options parameter can set the ease of the fade, and the delay before it starts.
+
+Default parameters: `{ ease: "linear", delay: 0 }`
+
+Check out what easings are available here: https://easings.net/
+
+## Fade Out Audio
+
+`.fadeOutAudio(duration, options)`
+
+`.fadeOutAudio(500)` or `.fadeOutAudio(250, {ease: "easeOutQuint"})` or `.fadeOutAudio(400, {ease: "easeOutCirc", delay: -100})`
+
+Causes the effect to fade out its audio as it finishes playing.
+
+A second options parameter can set the ease of the fade, and a delay before it ends. E.g. a delay of -500 means the fade will finish 500ms before the end.
+
+Default parameters: `{ ease: "linear", delay: 0 }`
+
+Check out what easings are available here: https://easings.net/
 
 ## Opacity
 
@@ -196,7 +235,7 @@ Defines the base folder that will prepend to the file path. This is mainly just 
 ## File
 
 ```js
-.file(inFilePath = string|array<string)
+.file(inFilePath = string|array<string>, inOptions = Object)
 ```
 
 - Filepath: `.file("modules/jb2a_patreon/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Blue_1200x1200.webm")`
@@ -227,6 +266,10 @@ Lastly, you may pass a range-finding type object to the file method:
 ```
 
 Sequencer will pick the best file to play for the given distance between the source and the target (if any). These are the only supported ranges at this moment.
+
+Also supports a second options object that accepts:
+- `antialiasing: number` - changes the aliasing of the texture, expects either `PIXI.SCALEMODES.NEAREST` (`0`) or `PIXI.SCALEMODES.LINEAR` (`1`)
+
 
 ## From
 
@@ -442,11 +485,16 @@ Calling this method will cause the effect to not set any flags if `.persist()` w
 
 This method only modifies `.persist()`ed effects and causes them to not immediately end, but stick around for the given duration passed to this method.
 
-## No Loop
+## Loop Options
 
-`.noLoop(boolean)`
+`.loopOptions(inOptions)` or `.loopOptions({ maxLoops: 1 })` or `.loopOptions({ loopDelay: 1000, maxLoops: 5 })`
 
-If the effect would loop due to its duration or persistence, this causes it not to, and freezes once its duration is up.
+Allows you to control the number of loops and the delays between each loop.
+
+Accepts an object that can contain
+- `loopDelay: number` (default `0`) - adds a delay in milliseconds between each loop of the effect
+- `maxLoops: number` (default `0`) - makes the effect only loop this many times before ending
+- `endOnLastLoop: boolean` (default `false`) - whether the effect should end when reaching the last loop (if persistent)
 
 ## Origin
 
@@ -787,9 +835,17 @@ Causes the effect to be played above the interface layer, which makes the effect
 
 `.zIndex(1)`
 
-Sets the z-index of the effect, potentially displaying it on top of or below other effects
+Sets the z-index of the effect, potentially displaying it on top of or below other effects on the same elevation and sortLayer (v12 only).
 
 **Note:** If you have called [`.belowTokens()`](#below-tokens) or [`.belowTiles()`](#below-tiles), the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer.
+
+## Sort Layer
+
+### Only supported in Foundry v12
+
+`sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
+
+Sets the sort layer of the effect. This value is used to determine layer ordering between entities of the same elevation. Foundry sorts canvas object first by elevation, second by their sortLayer and third by their z-index. Default is 800, which is above tokens and below weather effects.
 
 ## Animate Property
 
@@ -1049,3 +1105,16 @@ Masks the effect to the given object or objects. If no object is given, the effe
 `.tieToDocuments(token)` or `.tieToDocuments([ActiveEffect, Token])`
 
 Ties the effect to any number of documents in Foundry - if those get deleted, the effect is ended.
+
+
+## Sync Group
+
+`.syncGroup(string)` or `.syncGroup("test")`
+
+Causes effects with this sync group to share the same start time - useful if you have multiple duplicated effects that need to play at the same time. 
+
+## Isometric
+
+`.isometric(inObject)` or `.isometric({ overlay: true })`
+
+If the Isometric module is installed and active, this causes the effect to play not on the floor under the target, but on the same plane as the target - ie, flat on the screen as if top down. 

@@ -1,6 +1,6 @@
 <script>
 
-  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
+  import { localize } from "#runtime/svelte/helper";
   import SequenceSection from "./SequenceSection.svelte";
   import SequenceStatus from "./SequenceStatus.svelte";
   import SequenceManager from "../../../modules/sequence-manager.js";
@@ -9,7 +9,7 @@
   export let sequence;
   export let index;
 
-  const status = sequence.status;
+  const status = sequence.statusStore;
 
 </script>
 

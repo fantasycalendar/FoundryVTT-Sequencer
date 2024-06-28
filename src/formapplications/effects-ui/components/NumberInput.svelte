@@ -1,6 +1,6 @@
 <script>
-	import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
-  import { applyStyles } from "@typhonjs-fvtt/runtime/svelte/action";
+	import { localize } from "#runtime/svelte/helper";
+  import { applyStyles } from "#runtime/svelte/action/dom";
   import { writable } from "svelte/store";
 
   export let setting;

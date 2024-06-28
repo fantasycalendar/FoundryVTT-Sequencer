@@ -1,309 +1,285 @@
 import * as lib from "../lib/lib.js";
 
 const SequencerAnimationEngine = {
-  _animations: [],
-  _debug: undefined,
-  _deltas: [],
+	_animations: [],
+	_debug: undefined,
+	_deltas: [],
 
-  ticker: false,
-  dt: 0,
+	ticker: false,
+	dt: 0,
 
-  isRunning: false,
+	isRunning: false,
 
-  addAnimation(origin, attributes = [], timeDifference = 0) {
-    if (!Array.isArray(attributes)) attributes = [attributes];
+	addAnimation(origin, attributes = [], timeDifference = 0) {
+		if (!Array.isArray(attributes)) attributes = [attributes];
 
-    return new Promise((resolve) => {
-      this._animations.push({
-        origin,
-        attributes: attributes.map((attribute) => {
-          attribute.targetId =
-            lib.get_object_identifier(attribute.target) +
-            "-" +
-            attribute.propertyName;
-          attribute.started = false;
-          attribute.initialized = false;
-          attribute.finishing = false;
-          attribute.complete = false;
-          attribute.progress = 0;
-          attribute.value = 0;
+		return new Promise((resolve) => {
+			this._animations.push({
+				origin,
+				attributes: attributes.map((attribute) => {
+					attribute.targetId = lib.get_object_identifier(attribute.target) + "-" + attribute.propertyName;
+					attribute.id = foundry.utils.randomID();
+					attribute.started = false;
+					attribute.initialized = false;
+					attribute.finishing = false;
+					attribute.complete = false;
+					attribute.previousValue = null;
+					attribute.progress = 0;
+					attribute.value = 0;
+					attribute.coreValue = 0;
+					attribute.isFunkyProperty = attribute.propertyName.startsWith("scale.");
 
-          attribute.duration = attribute.duration ?? 0;
-          attribute.durationDone = timeDifference ?? 0;
+					attribute.duration = attribute.duration ?? 0;
+					attribute.durationDone = timeDifference ?? 0;
 
-          if (attribute?.looping) {
-            attribute.loopDuration =
-              attribute.loopDuration ?? attribute.duration ?? 0;
-            attribute.loopDurationDone =
-              timeDifference % attribute.loopDuration ?? 0;
-            attribute.loops = attribute.loops ?? 0;
-            attribute.loopsDone = Math.floor(
-              attribute.durationDone / attribute.duration
-            );
-            attribute.index = attribute.loopsDone % attribute.values.length;
-            attribute.nextIndex =
-              (attribute.loopsDone + 1) % attribute.values.length;
-            if (!attribute.pingPong && attribute.nextIndex === 0) {
-              attribute.index = 0;
-              attribute.nextIndex = 1;
-            }
-          }
-          return attribute;
-        }),
-        complete: false,
-        totalDt: timeDifference,
-        resolve: resolve,
-      });
-      if (!this.ticker) {
-        this.start();
-      }
-      lib.debug(`Added animations to Animation Engine`);
-    });
-  },
+					if (attribute?.looping) {
+						attribute.loopDuration = attribute.loopDuration ?? attribute.duration ?? 0;
+						attribute.loopDurationDone = timeDifference % attribute.loopDuration ?? 0;
+						attribute.loops = attribute.loops ?? 0;
+						attribute.loopsDone = Math.floor(
+							attribute.durationDone / attribute.duration
+						);
+						attribute.index = attribute.loopsDone % attribute.values.length;
+						attribute.nextIndex =
+							(attribute.loopsDone + 1) % attribute.values.length;
+						if (!attribute.pingPong && attribute.nextIndex === 0) {
+							attribute.index = 0;
+							attribute.nextIndex = 1;
+						}
+					}
+					return attribute;
+				}),
+				complete: false,
+				totalDt: timeDifference,
+				resolve: resolve,
+			});
 
-  endAnimations(target) {
-    this._animations = this._animations.filter(
-      (animation) => animation.origin !== target
-    );
-  },
+			this._animations.sort((a, b) => {
+				const aNumAbsolute = a.attributes.filter(attr => !attr.complete && attr.absolute).length;
+				const bNumAbsolute = b.attributes.filter(attr => !attr.complete && attr.absolute).length;
+				return bNumAbsolute - aNumAbsolute;
+			});
 
-  start() {
-    lib.debug(`Animation Engine Started`);
-    if (!this.ticker) {
-      this.ticker = CanvasAnimation.ticker;
-      this.ticker.add(this.nextFrame.bind(this));
-    }
-  },
+			if (!this.ticker) {
+				this.start();
+			}
 
-  nextFrame() {
-    if (this._animations.length === 0) {
-      this._startingValues = {};
-      return;
-    }
+			lib.debug(`Added animations to Animation Engine`);
+		});
+	},
 
-    this._animations.forEach((animation) => this._animate(animation));
-    this._animations = this._animations.filter(
-      (animation) => !animation.complete
-    );
-    this._applyDeltas();
-    for (const targetId of Object.keys(this._startingValues)) {
-      if (
-        !this._animations.some((_a) =>
-          _a.attributes.some((_b) => _b.targetId === targetId)
-        )
-      ) {
-        delete this._startingValues[targetId];
-      }
-    }
-  },
+	endAnimations(target) {
+		this._animations = this._animations.filter(
+			(animation) => animation.origin !== target
+		);
+	},
 
-  _startingValues: {},
+	updateStartValues(target, propertyName) {
+		const targetId = lib.get_object_identifier(target) + "-" + propertyName;
+		if (targetId in this._coreValues) {
+			this._coreValues[targetId] = lib.deep_get(target, propertyName);
+			const delta = this._coreValues[targetId] - this._storedValues[targetId].value;
+			this._storedValues[targetId].value += delta;
+		}
+	},
 
-  _applyDeltas() {
-    const deltas = [];
+	start() {
+		if (!this.ticker) {
+			lib.debug(`Animation Engine Started`);
+			this.ticker = CanvasAnimation.ticker;
+			this.ticker.add(this.nextFrame.bind(this));
+		}
+	},
 
-    for (const animation of this._animations) {
-      for (const attribute of animation.attributes) {
-        if (!attribute.started || attribute.complete) continue;
+	nextFrame() {
+		if (this._animations.length === 0) {
+			this._coreValues = {};
+			return;
+		}
 
-        if (attribute.finishing) {
-          attribute.complete = true;
-        }
+		this._storedValues = {};
 
-        let delta = deltas.find(
-          (delta) =>
-            attribute.targetId === delta.targetId &&
-            attribute.setPropertyName === delta.setPropertyName
-        );
+		this._animations.forEach((animation) => this._animate(animation));
 
-        if (!delta) {
-          delta = {
-            targetId: attribute.targetId,
-            target: attribute.target,
-            getPropertyName:
-              attribute.getPropertyName ?? attribute.propertyName,
-            setPropertyName: attribute.propertyName,
-            value: 0,
-          };
+		for (let delta of Object.values(this._storedValues)) {
+			try {
+				lib.deep_set(delta.target, delta.propertyName, delta.value);
+			} catch (err) {
+			}
+		}
 
-          if (attribute.target instanceof PIXI.filters.ColorMatrixFilter) {
-            delta.value = attribute.previousValue;
-          }
+		this._animations = this._animations.filter((animation) => !animation.complete);
 
-          deltas.push(delta);
-        }
+		for (const targetId of Object.keys(this._coreValues)) {
+			if (
+				this._animations.every((anim) => {
+					return anim.attributes.every((attr) => {
+						return attr.targetId === targetId && attr.complete;
+					})
+				})
+			) {
+				delete this._coreValues[targetId];
+			}
+		}
+	},
 
-        delta.value += attribute.delta;
-      }
-    }
+	_coreValues: {},
+	_storedValues: {},
 
-    for (let delta of deltas) {
-      const finalValue =
-        lib.deep_get(delta.target, delta.getPropertyName) + delta.value;
+	_animate(animation) {
+		animation.totalDt += this.ticker.elapsedMS;
 
-      try {
-        lib.deep_set(delta.target, delta.setPropertyName, finalValue);
-      } catch (err) {
+		animation.attributes.filter((attribute) => {
+			return !attribute.complete && animation.totalDt >= attribute.delay;
+		}).forEach((attr) => {
+			this._animateAttribute(attr);
+		})
 
-      }
-    }
-  },
+		animation.complete = animation.attributes.filter((attribute) => !attribute.complete).length === 0;
 
-  _animate(animation) {
-    animation.totalDt += this.ticker.elapsedMS;
+		if (animation.complete) {
+			animation.resolve();
+		}
+	},
 
-    animation.attributes
-      .filter((attribute) => !attribute.complete)
-      .forEach((attribute) =>
-        this._animateAttribute(animation.totalDt, attribute)
-      );
+	_animateAttribute(attribute) {
 
-    animation.complete =
-      animation.attributes.filter((attribute) => !attribute.complete).length ===
-      0;
+		if (!attribute.started) {
+			if (this._coreValues[attribute.targetId] === undefined) {
+				this._coreValues[attribute.targetId] = {
+					id: attribute.id,
+					value: lib.deep_get(attribute.target, attribute.propertyName)
+				};
+			}
+			attribute.started = true;
+		}
 
-    if (animation.complete) {
-      animation.resolve();
-    }
-  },
+		if (this._storedValues[attribute.targetId] === undefined) {
+			this._storedValues[attribute.targetId] = {
+				value: this._coreValues[attribute.targetId].value,
+				target: attribute.target,
+				propertyName: attribute.propertyName
+			};
+		}
 
-  _animateAttribute(totalDt, attribute) {
-    if (totalDt < attribute.delay) return;
+		if (attribute?.looping && attribute?.indefinite) {
+			this._handleIndefiniteLoop(attribute);
+		} else if (attribute?.looping) {
+			this._handleLoops(attribute);
+		} else {
+			this._handleDefault(attribute);
+		}
 
-    if (!attribute.started) {
-      const funkyProperty =
-        attribute.propertyName.includes("scale") ||
-        attribute.propertyName.includes("alpha");
+		// This is absolutely horrendous, but 50% of the time, it works 90% of the time.
+		if (attribute.absolute) {
+			this._coreValues[attribute.targetId].value = attribute.value;
+			const delta = this._coreValues[attribute.targetId].value - this._storedValues[attribute.targetId].value;
+			this._storedValues[attribute.targetId].value += delta;
+		} else {
+			if (attribute.isFunkyProperty) {
+				const coreValue = this._coreValues[attribute.targetId].value;
+				attribute.delta = (coreValue * attribute.value) - coreValue;
+			} else {
+				if (attribute.previousValue === null) {
+					attribute.previousValue = this._coreValues[attribute.targetId].value;
+				}
+				attribute.delta = attribute.value - attribute.previousValue;
+				attribute.previousValue = attribute.value;
+				if(attribute.id === this._coreValues[attribute.targetId].id){
+					this._coreValues[attribute.targetId].value = attribute.value;
+				}
+			}
+			this._storedValues[attribute.targetId].value += attribute.delta;
+		}
 
-      if (
-        this._startingValues[attribute.targetId] === undefined ||
-        attribute.absolute
-      ) {
-        const getProperty = funkyProperty || attribute.from === undefined;
+	},
 
-        this._startingValues[attribute.targetId] = getProperty
-          ? lib.deep_get(
-              attribute.target,
-              attribute.getPropertyName ?? attribute.propertyName
-            )
-          : attribute.from;
+	_handleBaseLoop(attribute) {
+		if (!attribute.initialized) {
+			if (attribute.values.length === 1) {
+				attribute.values.unshift(this._coreValues[attribute.targetId].value);
+			}
+			attribute.initialized = true;
+		}
 
-        if (!attribute.propertyName.includes("scale")) {
-          lib.deep_set(
-            attribute.target,
-            attribute.propertyName,
-            this._startingValues[attribute.targetId]
-          );
-        }
-      }
+		attribute.loopDurationDone += this.ticker.deltaMS;
+		attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
 
-      attribute.previousValue = this._startingValues[attribute.targetId];
+		attribute.value = lib.interpolate(
+			attribute.values[attribute.index],
+			attribute.values[attribute.nextIndex],
+			attribute.progress,
+			attribute.ease
+		);
 
-      if (attribute?.looping) {
-        attribute.values = attribute.values.map((value) => {
-          return value + attribute.previousValue - (funkyProperty ? 1.0 : 0);
-        });
-      } else if (attribute.from === undefined) {
-        attribute.from = attribute.previousValue;
-      }
-    }
+		if (attribute.progress >= 1.0) {
+			attribute.loopDurationDone -= attribute.loopDuration;
 
-    attribute.started = true;
+			attribute.index = (attribute.index + 1) % attribute.values.length;
+			attribute.nextIndex = (attribute.nextIndex + 1) % attribute.values.length;
 
-    if (attribute?.looping && attribute?.indefinite) {
-      this._handleIndefiniteLoop(attribute);
-    } else if (attribute?.looping) {
-      this._handleLoops(attribute);
-    } else {
-      this._handleDefault(attribute);
-    }
+			if (!attribute.pingPong && attribute.nextIndex === 0) {
+				attribute.index = 0;
+				attribute.nextIndex = 1;
+			}
 
-    attribute.delta = attribute.value - attribute.previousValue;
+			attribute.loopsDone++;
 
-    attribute.previousValue = attribute.value;
-  },
+			attribute.value = lib.interpolate(
+				attribute.values[attribute.index],
+				attribute.values[attribute.nextIndex],
+				attribute.progress % 1.0,
+				attribute.ease
+			);
+		}
+	},
 
-  _handleBaseLoop(attribute) {
-    if (!attribute.initialized) {
-      if (attribute.values.length === 1) {
-        attribute.values.unshift(
-          lib.deep_get(attribute.target, attribute.propertyName)
-        );
-      }
-      attribute.initialized = true;
-    }
+	_handleIndefiniteLoop(attribute) {
+		return this._handleBaseLoop(attribute);
+	},
 
-    attribute.loopDurationDone += this.ticker.deltaMS;
-    attribute.progress = attribute.loopDurationDone / attribute.loopDuration;
+	_handleLoops(attribute) {
+		this._handleBaseLoop(attribute);
 
-    attribute.value = lib.interpolate(
-      attribute.values[attribute.index],
-      attribute.values[attribute.nextIndex],
-      attribute.progress,
-      attribute.ease
-    );
+		attribute.durationDone += this.ticker.deltaMS;
+		attribute.overallProgress = attribute.durationDone / attribute.duration;
 
-    if (attribute.progress >= 1.0) {
-      attribute.loopDurationDone -= attribute.loopDuration;
+		if (
+			attribute.progress >= 1.0 &&
+			attribute.loopsDone === attribute.loops * 2
+		) {
+			attribute.finishing = true;
+			attribute.value = attribute.values[attribute.index];
+		}
 
-      attribute.index = (attribute.index + 1) % attribute.values.length;
-      attribute.nextIndex = (attribute.nextIndex + 1) % attribute.values.length;
+		if (attribute.overallProgress >= 1.0) {
+			attribute.finishing = true;
+		}
+	},
 
-      if (!attribute.pingPong && attribute.nextIndex === 0) {
-        attribute.index = 0;
-        attribute.nextIndex = 1;
-      }
+	_handleDefault(attribute) {
+		if (!attribute.initialized) {
+			if (attribute.from === undefined) {
+				attribute.from = this._coreValues[attribute.targetId].value;
+			}
+			attribute.initialized = true;
+		}
 
-      attribute.loopsDone++;
+		attribute.durationDone += this.ticker.deltaMS;
+		attribute.progress = attribute.durationDone / attribute.duration;
 
-      attribute.value = lib.interpolate(
-        attribute.values[attribute.index],
-        attribute.values[attribute.nextIndex],
-        attribute.progress % 1.0,
-        attribute.ease
-      );
-    }
-  },
+		attribute.value = lib.interpolate(
+			attribute.from,
+			attribute.to,
+			lib.clamp(attribute.progress, 0.0, 1.0),
+			attribute.ease
+		);
 
-  _handleIndefiniteLoop(attribute) {
-    return this._handleBaseLoop(attribute);
-  },
-
-  _handleLoops(attribute) {
-    this._handleBaseLoop(attribute);
-
-    attribute.durationDone += this.ticker.deltaMS;
-    attribute.overallProgress = attribute.durationDone / attribute.duration;
-
-    if (
-      attribute.progress >= 1.0 &&
-      attribute.loopsDone === attribute.loops * 2
-    ) {
-      attribute.finishing = true;
-      attribute.value = attribute.values[attribute.index];
-    }
-
-    if (attribute.overallProgress >= 1.0) {
-      attribute.finishing = true;
-    }
-  },
-
-  _handleDefault(attribute) {
-    attribute.durationDone += this.ticker.deltaMS;
-    attribute.progress = attribute.durationDone / attribute.duration;
-
-    attribute.value = lib.interpolate(
-      attribute.from,
-      attribute.to,
-      attribute.progress,
-      attribute.ease
-    );
-
-    if (attribute.progress >= 1.0) {
-      attribute.value = attribute.to;
-      attribute.finishing = true;
-    }
-  },
+		if (attribute.progress >= 1.0) {
+			attribute.value = attribute.to;
+			attribute.finishing = true;
+		}
+	},
 };
 
 export default SequencerAnimationEngine;

@@ -36,16 +36,16 @@ SequenceManager.RunningSounds.get = (id) => {
 };
 
 SequenceManager.RunningSounds.add = (id, data) => {
-  SequenceManager.RunningSounds.update((effects) => {
-    effects[id] = data;
-    return effects;
+  SequenceManager.RunningSounds.update((sounds) => {
+    sounds[id] = data;
+    return sounds;
   });
 };
 
 SequenceManager.RunningSounds.delete = (id) => {
-  SequenceManager.RunningSounds.update((effects) => {
-    delete effects[id];
-    return effects;
+  SequenceManager.RunningSounds.update((sounds) => {
+    delete sounds[id];
+    return sounds;
   });
 };
 

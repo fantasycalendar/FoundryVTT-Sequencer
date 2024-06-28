@@ -1,14 +1,17 @@
 <script>
-  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
-  import { onDestroy } from "svelte";
+  import { localize } from "#runtime/svelte/helper";
+  import { onMount, onDestroy } from "svelte";
   import SequenceManager from "../../modules/sequence-manager.js";
   import Sequence from "./components/Sequence.svelte";
 
   const VisibleEffects = SequenceManager.VisibleEffects;
   const RunningSequences = SequenceManager.RunningSequences;
 
-  $: sequences = Object.values($RunningSequences);
   $: runningSequences = Object.entries($RunningSequences);
+
+  onMount(() => {
+    SequenceManager.RunningSequences.clearFinishedSequences();
+  });
 
   onDestroy(() => {
     SequenceManager.RunningSequences.clearFinishedSequences();

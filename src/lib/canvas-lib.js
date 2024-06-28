@@ -5,10 +5,12 @@ import CONSTANTS from "../constants.js";
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
 
-  graphic.beginFill(
-    shape?.fillColor ?? 0xffffff,
-    shape?.isMask ? 1 : shape?.fillAlpha ?? 1
-  );
+	graphic.id = "sequencer-graphics-" + foundry.utils.randomID();
+
+	graphic.beginFill(
+		shape?.isMask || !shape?.fillColor ? 0xffffff : shape?.fillColor,
+		shape?.isMask ? 1 : (shape?.fillAlpha ?? 0)
+	);
 
   graphic.lineStyle(
     shape.lineSize ?? (shape?.isMask ? 1 : 0),

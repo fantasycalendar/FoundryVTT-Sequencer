@@ -1,8 +1,8 @@
 <script>
 
-  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
+  import { localize } from "#runtime/svelte/helper";
   import { writable } from "svelte/store";
-  import { applyStyles } from "@typhonjs-fvtt/runtime/svelte/action";
+  import { applyStyles } from "#runtime/svelte/action/dom";
 
   export let setting;
   export let lock = false;

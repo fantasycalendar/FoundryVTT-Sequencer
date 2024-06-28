@@ -1,26 +1,68 @@
 ## Changelog
 
+## Version 3.2.6
+- *Sequencer* - Fixed Sequencer Manager throwing an error when trying to see active Sequences
+- *Effects* - Added `.sortLayer()` to be able to more directly control which layer the effect lands on (only in Foundry v12)
+  - This also fixes `.belowTokens()` being below tiles
+  - Thank you Codas on GitHub!
+- *Effects* - Added `.loopOptions()` to allow users to control how an effect loops
+- *Effects* - Deprecated `.noLoop()` in favor of the above, will be elevated to loud deprecation in a future major version
+
+## Version 3.2.5
+- *Effects* - Updated documentation to include `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()`
+- *Effects* - Fixed some issues with effect scaling when using `.loopProperty()` and `.animateProperty()`
+- *Sounds* - Fixed `Sequencer.SoundManager.endAllSounds()` not ending all sounds
+- *Sounds* - Fixed `Sequencer.SoundManager.endSounds()` sometimes not correctly ending the right sounds
+- *Sounds* - Fixed calling `.sound()` would break sequences in both Foundry v11 and v12
+
+## Version 3.2.4
+- *Sequencer* - Fixed `.preset()` not working when called directly on a sequence (thanks MrVauxs!)
+- *Effects* - Added deprecation warning to `.file()` instead of an error when giving it a second boolean parameter
+- *Effects* - Fixes to the isometric module - may still not be 100%, but it shouldn't error anymore
+- *Sounds* - Fixed sounds not playing on v11 (again!)
+
+## Version 3.2.3 Hotfix
+- *Effects* - Fixed issue with effects not playing their full duration
+
+## Version 3.2.2
+- *Sequencer* - ACTUALLY fixed welcome message being posted multiple times in bigger worlds (will also get rid of duplicates)
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not working when used on `alphaFilter`
+- *Effects* - Fixed effects that were attached to temporary templates (like warpgate's crosshairs) not disappearing after the crosshair had been placed
+- *Effects* - Fixed issue with `complete`-loop type effects not playing correctly
+
+## Version 3.2.1
+- *Sequencer* - Fixed welcome message being posted multiple times on The Forge - my apologies for this
+- *Sequencer* - Fixed `Sequencer.Preloader` not being properly set up (thanks Codas on github!)
+- *Effects* - Added `antialiasing` optional argument to `.file()` - expects `PIXI.SCALEMODES.LINEAR` or `PIXI.SCALEMODES.NEAREST`
+- *Effects* - Fixed `.moveTowards()` not working
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not properly animating effects
+- *Effects* - Fixed `.timeRange()` and `.endTime()` not working properly
+- *Sounds* - Fixed `.atLocation()` incorrectly throwing errors when on Foundry v12 (thanks Codas on github!)
+- *Sounds* - Fixed sounds not working on Foundry v11
+
 ## Version 3.2.0
-- *Sequencer* - Added support for FoundryVTT v12
+- *Sequencer* - Added support for FoundryVTT v12 while remaining backwards compatible with v11
 - *Sequencer* - Added startup chat message with links to relevant external resources
-- *Sequencer* - Added support for the [Isometric module](https://foundryvtt.com/packages/grape_juice-isometrics) (thanks grape_fruit for their assistance with this integration!) 
+- *Sequencer* - Added support for the [Isometric module](https://foundryvtt.com/packages/grape_juice-isometrics) (thanks grape_juice for their assistance with this integration!) 
 - *Sequencer* - Added `Sequencer.SoundManager` which is a sound interface that mirrors `Sequencer.EffectManager`
 - *Effects* - Greatly improved responsiveness of attached effects actually following their targets more accurately
 - *Effects* - Removed deprecated methods `.offset()` and `.randomOffset()` as those should now be done with the relevant location-based secondary parameters
-- - *Effects* - Tweaked `.scaleToObject()` to cache its target's scale when first created, unless paired with `.attachTo()` and `bindScale` (see below)
+- *Effects* - Added `.syncGroup()` which allows you to synchronize the playback of multiple effects in the same scene
+- *Effects* - Tweaked `.scaleToObject()` to cache its target's scale when first created, unless paired with `.attachTo()` and `bindScale` (see below)
 - *Effects* - Added `bindScale` (defaults to `true`) to `.attachTo()`, that if combined with `.scaleToObject()` it will always scale with the object
 - *Effects* - Fixed `.tint()` not being applied when used with `.attachTo()` and `.stretchTo()` with `{ attachTo: true }`
-- - *Effects* - Tweaked `.attachTo()`'s `followRotation` to be named `bindRotation` (will remain backwards compatible for a few versions before becoming deprecated)
+- *Effects* - Tweaked `.attachTo()`'s `followRotation` to be named `bindRotation` (will remain backwards compatible until 3.3.0 before becoming deprecated)
 - *Sounds* - Added support for the following methods (see the [`.sound()` documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/sound) for more info):
   - `.name()`
   - `.origin()`
-  - `.atLocation()`
-  - `.radius()`
-  - `.constrainedByWalls()`
-  - `.distanceEasing()`
-  - `.alwaysForGMs()`
-  - `.baseEffect()`
-  - `.muffledEffect()`
+  - Below only in Foundry v12:
+    - `.atLocation()`
+    - `.radius()`
+    - `.constrainedByWalls()`
+    - `.distanceEasing()`
+    - `.alwaysForGMs()`
+    - `.baseEffect()`
+    - `.muffledEffect()`
 
 ## Version 3.1.4
 - *Effects* - Added better support for the Walled Templates module

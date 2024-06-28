@@ -41,6 +41,7 @@ Hooks.once("init", async function() {
   CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
     CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
   )?.active;
+	CONSTANTS.IS_V12 = foundry.utils.isNewerVersion(game.version, "12");
   initializeModule();
   registerSocket();
 });
@@ -115,7 +116,7 @@ function initializeModule() {
     Preloader: SequencerPreloader,
     EffectManager: SequencerEffectManager,
     SoundManager: SequencerSoundManager,
-    SectionManager: new SequencerSectionManager(),
+    SectionManager: SequencerSectionManager,
     registerEase: registerEase,
     BaseSection: Section,
     CONSTANTS: {
@@ -145,12 +146,20 @@ function initializeModule() {
 
 }
 
-Hooks.on("sequencer.ready", () => {
+Hooks.once("ready", async () => {
 
 	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
-	game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
 
-	ChatMessage.create({
+	const chatMessages = game.messages.filter(message => {
+		return message.content.includes("sequencer-welcome")
+	}).map(message => message.id);
+
+	if(chatMessages.length){
+		return ChatMessage.deleteDocuments(chatMessages.slice(0, -1))
+	}
+
+	await ChatMessage.create({
 		content: `
 <div class="sequencer-welcome">
 <img src="modules/sequencer/images/sequencer.png"/>

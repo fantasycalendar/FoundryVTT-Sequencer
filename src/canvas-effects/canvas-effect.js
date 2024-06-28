@@ -55,9 +55,43 @@ const hooksManager = {
 	},
 };
 
+const SyncGroups = {
+	times: new Map(),
+	effectIds: new Map(),
+
+	get(effect) {
+		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
+		const effectIds = new Set(this.effectIds.get(fullName));
+		if (effectIds && !effectIds.has(effect.id)) {
+			effectIds.add(effect.id);
+			this.effectIds.set(fullName, Array.from(effectIds));
+		}
+		return this.times.get(fullName);
+	},
+
+	set(effect) {
+		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
+		this.times.set(fullName, effect.data.creationTimestamp);
+		this.effectIds.set(fullName, [effect.id]);
+	},
+
+	remove(effect) {
+		const fullName = effect.data.sceneId + "-" + effect.data.syncGroup;
+		const effectIds = new Set(this.effectIds.get(fullName));
+		effectIds.delete(effect.id);
+		if (effectIds.size) {
+			this.effectIds.set(fullName, Array.from(effectIds));
+		} else {
+			this.effectIds.delete(fullName);
+			this.times.delete(fullName);
+		}
+	}
+};
+
 export default class CanvasEffect extends PIXI.Container {
 	#elevation = 0;
 	#sort = 0;
+	#sortLayer = 800
 
 	constructor(inData) {
 		super();
@@ -80,8 +114,6 @@ export default class CanvasEffect extends PIXI.Container {
 		this._cachedTargetData = {};
 
 		this.uuid = false;
-
-		this._sanitizeData();
 
 	}
 
@@ -109,14 +141,6 @@ export default class CanvasEffect extends PIXI.Container {
 		];
 	}
 
-	_sanitizeData() {
-		if (this.data.scaleToObject && (!this.data.attachTo?.active || !this.data.attachTo?.bindScale)) {
-			this.data.scaleToObject = false;
-			const { width, height } = this.getSourceData();
-			this.data.size = { width, height };
-		}
-	}
-
 	/** @type {number} */
 	get elevation() {
 		return this.#elevation;
@@ -135,6 +159,15 @@ export default class CanvasEffect extends PIXI.Container {
 		this.#sort = value;
 	}
 
+	/** @type {number} */
+	get sortLayer() {
+		return this.#sortLayer;
+	}
+
+	set sortLayer(value) {
+		this.#sortLayer = value;
+	}
+
 	get context() {
 		return this.data.attachTo?.active && this.sourceDocument
 			? this.sourceDocument
@@ -147,6 +180,15 @@ export default class CanvasEffect extends PIXI.Container {
 			CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
 		);
 		return CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && sceneIsIsometric;
+	}
+
+	get creationTimestamp() {
+		if (this.data.syncGroup) {
+			const time = SyncGroups.get(this);
+			if (time) return time;
+			SyncGroups.set(this)
+		}
+		return this.data.creationTimestamp;
 	}
 
 	/**
@@ -189,7 +231,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isSourceDestroyed() {
 		return (
-			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed)
+			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed || this.source.constructor.name === "Crosshairs")
 		);
 	}
 
@@ -213,7 +255,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isTargetDestroyed() {
 		return (
-			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed)
+			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed || this.target.constructor.name === "Crosshairs")
 		);
 	}
 
@@ -441,8 +483,8 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateTexture() {
-		if (this._texture.valid) {
-			this._texture.update();
+		if (this.texture.valid) {
+			this.texture.update();
 		}
 	}
 
@@ -598,10 +640,7 @@ export default class CanvasEffect extends PIXI.Container {
 			game.settings.get("sequencer", "effectsEnabled") &&
 			game.user.viewedScene === this.data.sceneId;
 
-		if (
-			foundry.utils.isNewerVersion(game.version, "10.289") &&
-			game.settings.get("core", "photosensitiveMode")
-		) {
+		if (game.settings.get("core", "photosensitiveMode")) {
 			playVisible = false;
 			lib.throttled_custom_warning(
 				this.data.moduleName,
@@ -1252,8 +1291,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this._createShapes();
 		await this._setupMasks();
 		await this._transformSprite();
-		this._playCustomAnimations();
 		this._playPresetAnimations();
+		this._playCustomAnimations();
 		this._setEndTimeout();
 		this._timeoutVisibility();
 		if (play) await this.playMedia();
@@ -1293,13 +1332,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.isometricContainer.id = this.id + "-isometricContainer";
 
 		// An offset container for the sprite
-		this.scaleContainer = this.isometricContainer.addChild(
-			new PIXI.Container()
-		);
-		this.scaleContainer.id = this.id + "-scaleContainer";
-
-		// An offset container for the sprite
-		this.spriteContainer = this.scaleContainer.addChild(
+		this.spriteContainer = this.isometricContainer.addChild(
 			new PIXI.Container()
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
@@ -1313,7 +1346,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.effectFilters = {};
 		this._animationDuration = 0;
 		this._animationTimes = {};
-		this._twister = lib.createMersenneTwister(this.data.creationTimestamp);
+		this._twister = lib.createMersenneTwister(this.creationTimestamp);
 		this._video = null;
 		this._distanceCache = null;
 		this._isRangeFind = false;
@@ -1404,6 +1437,10 @@ export default class CanvasEffect extends PIXI.Container {
 				SequencerAboveUILayer.removeContainerByEffect(this);
 			}
 		} catch (err) {
+		}
+
+		if (this.data.syncGroup) {
+			SyncGroups.remove(this);
 		}
 
 		this.removeChildren().forEach((child) => child.destroy({ children: true }));
@@ -1507,7 +1544,7 @@ export default class CanvasEffect extends PIXI.Container {
 				this.video = this.data.file.toLowerCase().endsWith(".webm")
 					? texture?.baseTexture?.resource?.source ?? false
 					: false;
-				this._texture = texture;
+				this.texture = texture;
 				this._file = texture;
 				this._currentFilePath = this.data.file;
 				return;
@@ -1530,7 +1567,7 @@ export default class CanvasEffect extends PIXI.Container {
 				ray.distance
 			);
 			this._currentFilePath = filePath;
-			this._texture = texture;
+			this.texture = texture;
 			this.spriteSheet = sheet;
 		} else if (
 			!this._isRangeFind ||
@@ -1538,14 +1575,14 @@ export default class CanvasEffect extends PIXI.Container {
 		) {
 			const { filePath, texture, sheet } = await this._file.getTexture();
 			this._currentFilePath = filePath;
-			this._texture = texture;
+			this.texture = texture;
 			this.spriteSheet = sheet;
 		}
 
 		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
 			let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
 			this._relatedSprites[this._currentFilePath] = new spriteType(
-				this._texture,
+				this.texture,
 				this.data.xray ? null : VisionSamplerShader
 			);
 			if (this.data.tint) {
@@ -1574,8 +1611,16 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._template = this._file.template ?? this._template;
 		this.video = this._currentFilePath.toLowerCase().endsWith(".webm")
-			? this._texture?.baseTexture?.resource?.source
+			? this.texture?.baseTexture?.resource?.source
 			: false;
+	}
+
+	get startTimeMs(){
+		return this._startTime * 1000;
+	}
+
+	get endTimeMs(){
+		return this._endTime * 1000;
 	}
 
 	/**
@@ -1654,20 +1699,22 @@ export default class CanvasEffect extends PIXI.Container {
 				? this.data.time.start.value ?? 0
 				: this._animationDuration * this.data.time.start.value;
 			this.mediaCurrentTime = currentTime / 1000;
-			this._startTime = this.mediaCurrentTime;
+			this._startTime = currentTime / 1000;
 		}
 
+		this._endTime = this._animationDuration;
 		if (this.data.time?.end) {
-			this._animationDuration = !this.data.time.end.isPerc
-				? this.data.time.isRange
-					? this.data.time.end.value - this.data.time.start.value
-					: this._animationDuration - this.data.time.end.value
-				: this._animationDuration * this.data.time.end.value;
+			if (this.data.time.end.isPerc) {
+				this._endTime = this._animationDuration * this.data.time.end.value;
+			} else {
+				this._endTime = this.data.time.isRange
+					? this.data.time.end.value
+					: this._animationDuration - this.data.time.end.value;
+			}
 		}
+		this._endTime /= 1000;
 
-		this._animationDuration = Math.max(0, this._animationDuration - this._startTime * 1000);
-
-		this._endTime = this._animationDuration / 1000;
+		this._animationDuration = lib.clamp(this.endTimeMs - this.startTimeMs, 0, this._animationDuration);
 
 		if (
 			this._file?.markers &&
@@ -1682,12 +1729,12 @@ export default class CanvasEffect extends PIXI.Container {
 				this._file.markers.forcedEnd / playbackRate / 1000;
 		}
 
+		this._totalDuration = this.loops
+			? (this._animationDuration * this.loops) + (this.loopDelay * (this.loops - 1))
+			: this._animationDuration;
+
 		// Resolve duration promise so that owner of effect may know when it is finished
-		this._durationResolve(this._animationDuration);
-
-		const animationDurationSec = this._animationDuration / 1000;
-
-		this.mediaLooping = animationDurationSec >= this.mediaDuration && !this.data.noLoop && this.data.noLoop !== null;
+		this._durationResolve(this._totalDuration);
 
 	}
 
@@ -1884,11 +1931,11 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateElevation() {
-		const targetElevation =
-			Math.max(
+		let targetElevation = Math.max(
 				canvaslib.get_object_elevation(this.source ?? {}),
 				canvaslib.get_object_elevation(this.target ?? {})
-			) + 1;
+			);
+		if(!CONSTANTS.IS_V12) targetElevation += 1;
 		let effectElevation = this.data.elevation?.elevation ?? 0;
 		if (!this.data.elevation?.absolute) {
 			effectElevation += targetElevation;
@@ -1899,10 +1946,10 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 		if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && isIsometric) {
 			const sourceSort = this.source
-				? this.sourceMesh.sort + (this.data.isometric?.overlay ? 1 : -1)
+				? (this.sourceMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
 				: 0;
 			const targetSort = this.target
-				? this.targetMesh.sort + (this.data.isometric?.overlay ? 1 : -1)
+				? (this.targetMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
 				: 0;
 			this.sort = Math.max(sourceSort, targetSort);
 		} else {
@@ -1913,6 +1960,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.elevation = effectElevation;
 		this.zIndex = this.sort;
 		this.sort += 100;
+		this.sortLayer = this.data.sortLayer
 		if (this.parent) {
 			this.parent.sortChildren();
 		}
@@ -2268,7 +2316,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this._currentFilePath !== filePath ||
 			this._relatedSprites[filePath] === undefined
 		) {
-			this._texture = texture;
+			this.texture = texture;
 			this.video = filePath.toLowerCase().endsWith(".webm")
 				? texture?.baseTexture?.resource?.source ?? false
 				: false;
@@ -2435,8 +2483,8 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 			await this._applyDistanceScaling();
 		} else {
-			if (!this.sprite?.texture?.valid && this._texture?.valid) {
-				this.sprite.texture = this._texture;
+			if (!this.sprite?.texture?.valid && this.texture?.valid) {
+				this.sprite.texture = this.texture;
 			}
 		}
 
@@ -2476,7 +2524,7 @@ export default class CanvasEffect extends PIXI.Container {
 			: this.sprite;
 
 		if (!this.data.anchor && this.data.rotateTowards) {
-			const textureWidth = (this._texture?.width ?? spriteToConsider.width) / 2;
+			const textureWidth = (this.texture?.width ?? spriteToConsider.width) / 2;
 			const startPointRatio = this.template.startPoint / textureWidth;
 			this.spriteContainer.pivot.set(
 				spriteToConsider.width * (-0.5 + startPointRatio),
@@ -2496,6 +2544,17 @@ export default class CanvasEffect extends PIXI.Container {
 				)
 			);
 		}
+	}
+
+	set texture(inTexture) {
+		if (this.data?.fileOptions?.antialiasing !== null) {
+			inTexture.baseTexture.setStyle(0, this.data?.fileOptions?.antialiasing)
+		}
+		this._texture = inTexture;
+	}
+
+	get texture() {
+		return this._texture;
 	}
 
 	async _transformStretchToAttachedSprite() {
@@ -2528,7 +2587,7 @@ export default class CanvasEffect extends PIXI.Container {
 			(this.data.spriteScale?.y ?? 1.0) *
 			this.flipY;
 
-		if (this.data.scaleToObject && this.source) {
+		if (this.data.scaleToObject) {
 
 			if (this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
 				this._addToTicker(() => {
@@ -2563,10 +2622,10 @@ export default class CanvasEffect extends PIXI.Container {
 				width *= canvas.grid.size;
 			}
 
-			this.scaleContainer.width = width * baseScaleX;
-			this.scaleContainer.height = height * baseScaleY;
+			this.sprite.width = width * baseScaleX;
+			this.sprite.height = height * baseScaleY;
 		} else {
-			this.scaleContainer.scale.set(
+			this.sprite.scale.set(
 				baseScaleX * this.gridSizeDifference,
 				baseScaleY * this.gridSizeDifference
 			);
@@ -2602,8 +2661,13 @@ export default class CanvasEffect extends PIXI.Container {
 				height = height * (!ratioToUse ? heightWidthRatio : 1.0);
 			}
 
-			this.scaleContainer.width = width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
-			this.scaleContainer.height = height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
+			this.sprite.width = width * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleX;
+			this.sprite.height = height * (this.data.scaleToObject?.scale ?? 1.0) * baseScaleY;
+
+			SequencerAnimationEngine.updateStartValues(this.sprite, "width");
+			SequencerAnimationEngine.updateStartValues(this.sprite, "height");
+			SequencerAnimationEngine.updateStartValues(this.sprite, "scale.x");
+			SequencerAnimationEngine.updateStartValues(this.sprite, "scale.y");
 
 		} catch (err) {
 
@@ -2713,7 +2777,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._playAnimations(
 			foundry.utils.deepClone(this.data.animations) ?? [],
-			this.actualCreationTime - this.data.creationTimestamp
+			this.actualCreationTime - this.creationTimestamp
 		);
 	}
 
@@ -2820,7 +2884,7 @@ export default class CanvasEffect extends PIXI.Container {
 			animation.delay = lib.is_real_number(immediate)
 				? Math.max(immediate - animation.duration + animation.delay, 0)
 				: Math.max(
-					this._animationDuration - animation.duration + animation.delay,
+					this._totalDuration - animation.duration + animation.delay,
 					0
 				);
 
@@ -2860,7 +2924,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + fadeIn.duration + fadeIn.delay) >
+			(this.creationTimestamp + fadeIn.duration + fadeIn.delay) >
 			0
 		) {
 			return;
@@ -2894,7 +2958,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp +
+			(this.creationTimestamp +
 				fadeInAudio.duration +
 				fadeInAudio.delay) >
 			0
@@ -2931,7 +2995,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		fadeOut.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
-			: Math.max(this._animationDuration - fadeOut.duration + fadeOut.delay, 0);
+			: Math.max(this._totalDuration - fadeOut.duration + fadeOut.delay, 0);
 
 		SequencerAnimationEngine.addAnimation(this.id, {
 			target: this.alphaFilter,
@@ -2960,18 +3024,20 @@ export default class CanvasEffect extends PIXI.Container {
 		fadeOutAudio.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0)
 			: Math.max(
-				this._animationDuration - fadeOutAudio.duration + fadeOutAudio.delay,
+				this._totalDuration - fadeOutAudio.duration + fadeOutAudio.delay,
 				0
 			);
 
-		SequencerAnimationEngine.addAnimation(this.id, {
-			target: this,
-			propertyName: "video.volume",
-			to: 0.0,
-			duration: fadeOutAudio.duration,
-			ease: fadeOutAudio.ease,
-			delay: fadeOutAudio.delay,
-			absolute: true,
+		setTimeout(() => {
+			SequencerAnimationEngine.addAnimation(this.id, {
+				target: this,
+				propertyName: "video.volume",
+				to: 0.0,
+				duration: fadeOutAudio.duration,
+				ease: fadeOutAudio.ease,
+				delay: fadeOutAudio.delay,
+				absolute: true,
+			});
 		});
 
 		return fadeOutAudio.duration + fadeOutAudio.delay;
@@ -3014,7 +3080,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + scaleIn.duration + scaleIn.delay) >
+			(this.creationTimestamp + scaleIn.duration + scaleIn.delay) >
 			0
 		)
 			return;
@@ -3067,7 +3133,7 @@ export default class CanvasEffect extends PIXI.Container {
 		scaleOut.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - scaleOut.duration + scaleOut.delay, 0)
 			: Math.max(
-				this._animationDuration - scaleOut.duration + scaleOut.delay,
+				this._totalDuration - scaleOut.duration + scaleOut.delay,
 				0
 			);
 
@@ -3108,7 +3174,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + rotateIn.duration + rotateIn.delay) >
+			(this.creationTimestamp + rotateIn.duration + rotateIn.delay) >
 			0
 		)
 			return;
@@ -3146,7 +3212,7 @@ export default class CanvasEffect extends PIXI.Container {
 		rotateOut.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - rotateOut.duration + rotateOut.delay, 0)
 			: Math.max(
-				this._animationDuration - rotateOut.duration + rotateOut.delay,
+				this._totalDuration - rotateOut.duration + rotateOut.delay,
 				0
 			);
 
@@ -3177,7 +3243,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let moves = this.data.moves;
 
-		let movementDuration = this._animationDuration;
+		let movementDuration = this._totalDuration;
 		if (this.data.moveSpeed) {
 			const distance = canvaslib.distance_between(
 				this.sourcePosition,
@@ -3192,7 +3258,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (
 			this.actualCreationTime -
-			(this.data.creationTimestamp + duration + moves.delay) >
+			(this.creationTimestamp + duration + moves.delay) >
 			0
 		)
 			return;
@@ -3205,6 +3271,7 @@ export default class CanvasEffect extends PIXI.Container {
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
+				absolute: true
 			},
 			{
 				target: this,
@@ -3213,6 +3280,7 @@ export default class CanvasEffect extends PIXI.Container {
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
+				absolute: true
 			},
 		]);
 
@@ -3228,7 +3296,7 @@ export default class CanvasEffect extends PIXI.Container {
 		setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
-		}, this._animationDuration);
+		}, this._totalDuration);
 	}
 
 	_setupTimestampHook(offset) {
@@ -3253,35 +3321,6 @@ export default class CanvasEffect extends PIXI.Container {
 			}, realTimestamp);
 		}
 	}
-}
-
-class PersistentCanvasEffect extends CanvasEffect {
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _initialize() {
-		await super._initialize(false);
-		await this._startEffect();
-	}
-
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _reinitialize() {
-		await super._reinitialize(false);
-	}
-
-	/** @OVERRIDE */
-	_playPresetAnimations() {
-		this._moveTowards();
-		this._fadeIn();
-		this._scaleIn();
-		this._rotateIn();
-	}
 
 	/**
 	 * Starts the loop of this effect, calculating the difference between the effect's creation time, and the actual
@@ -3294,38 +3333,45 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 		if (!this.hasAnimatedMedia) return;
 
-		let creationTimeDifference =
-			this.actualCreationTime - this.data.creationTimestamp;
+		this.mediaLooping = this.playNaturally && !this.loops && !this.loopDelay;
 
-		if (!this.data.noLoop) {
-			return this._startLoop(creationTimeDifference);
+		if(this.playNaturally && !this.data.persist && !this.loops && !this.loopDelay){
+			return this.playMedia();
 		}
 
-		if (creationTimeDifference < this._animationDuration) {
-			if (this._endTime !== this.mediaDuration) {
-				setTimeout(() => {
+		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
+
+		if (creationTimeDifference > this._totalDuration) {
+
+			if(this.loops) {
+				this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration);
+				if (this._currentLoops >= this.loops) {
+					if(this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
+						return this.endEffect();
+					}
+					await this.pauseMedia();
 					this.mediaCurrentTime = this._endTime;
-					this.updateTexture();
-					this.pauseMedia();
-				}, (this._endTime * 1000) - creationTimeDifference);
-			}
-			if (!this.data.noLoop) {
+					if (this.sprite.texture && this.video) {
+						const oldRenderable = this.renderable;
+						this.renderable = false;
+						setTimeout(() => {
+							this.updateTexture();
+							setTimeout(() => {
+								this.renderable = oldRenderable;
+							}, 150)
+						}, 150);
+					}
+					return;
+				}
+
+			} else if(!this.loopDelay) {
 				this.mediaCurrentTime = creationTimeDifference / 1000;
+				return this.playMedia();
 			}
-			await this.playMedia();
-			return;
+
 		}
 
-		await this.pauseMedia();
-		this.mediaCurrentTime = this._endTime;
-		if (this.sprite.texture && this.video) {
-			const oldRenderable = this.renderable;
-			this.renderable = false;
-			setTimeout(() => {
-				this.renderable = oldRenderable;
-				this.updateTexture();
-			}, 350);
-		}
+		return this._startLoop(creationTimeDifference);
 	}
 
 	/**
@@ -3336,7 +3382,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 	 * @private
 	 */
 	async _startLoop(creationTimeDifference) {
-		this.mediaLooping = this.playNaturally;
+
 		if (!this._animationTimes.loopStart) {
 			this._loopOffset =
 				(creationTimeDifference % this._animationDuration) / 1000;
@@ -3361,11 +3407,8 @@ class PersistentCanvasEffect extends CanvasEffect {
 		let loopWaitTime = 0;
 		if (this._animationTimes.loopStart) {
 			if (this._isEnding) return;
-			this.mediaCurrentTime =
-				(firstLoop ? 0 : this._animationTimes.loopStart) +
-				(this._loopOffset > 0 ? this._loopOffset : 0);
-			loopWaitTime =
-				(this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
+			this.mediaCurrentTime = (firstLoop ? 0 : this._animationTimes.loopStart) + (this._loopOffset > 0 ? this._loopOffset : 0);
+			loopWaitTime = (this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
 		} else {
 			this.mediaCurrentTime = this._startTime + this._loopOffset;
 			loopWaitTime = this._animationDuration - this._loopOffset * 1000;
@@ -3380,14 +3423,40 @@ class PersistentCanvasEffect extends CanvasEffect {
 		this._resetTimeout = setTimeout(() => {
 			if (this._ended) return;
 			this._loopOffset = 0;
+			this._currentLoops++;
+			if (this.loops && this._currentLoops >= this.loops) {
+				if(!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
+					this.endEffect();
+				}
+				return;
+			}
 			this._resetLoop(false);
-		}, loopWaitTime);
+		}, loopWaitTime + this.loopDelay);
+	}
+}
+
+class PersistentCanvasEffect extends CanvasEffect {
+
+	/**
+	 * @OVERRIDE
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async _reinitialize() {
+		await super._reinitialize(false);
+	}
+
+	/** @OVERRIDE */
+	_playPresetAnimations() {
+		this._moveTowards();
+		this._fadeIn();
+		this._scaleIn();
+		this._rotateIn();
 	}
 
 	/** @OVERRIDE */
 	_timeoutVisibility() {
-		let creationTimeDifference =
-			this.actualCreationTime - this.data.creationTimestamp;
+		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
 		let timeout =
 			creationTimeDifference === 0 && !this.data.animations ? 0 : 50;
 		setTimeout(() => {
@@ -3397,17 +3466,13 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 	/** @OVERRIDE */
 	_setEndTimeout() {
-		let creationTimeDifference =
-			this.actualCreationTime - this.data.creationTimestamp;
-		if (
-			!this.data.noLoop ||
-			creationTimeDifference >= this._animationDuration ||
-			!(this.hasAnimatedMedia || this.data.text)
-		)
+		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
+		if (this.loops || creationTimeDifference >= this._totalDuration || !(this.hasAnimatedMedia || this.data.text)) {
 			return;
+		}
 		setTimeout(() => {
 			this.pauseMedia();
-		}, this._animationDuration);
+		}, this._totalDuration);
 	}
 
 	/** @OVERRIDE */

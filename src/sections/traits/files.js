@@ -11,18 +11,6 @@ export default {
   _mustache: null,
 
   /**
-   * Declares which file to be played. This may also be an array of paths, which will be randomly picked from each
-   * time the section is played.
-   *
-   * @param {string|array} inFile
-   * @returns this
-   */
-  file(inFile) {
-    this._file = inFile;
-    return this;
-  },
-
-  /**
    * Defines the base folder that will prepend to the file path. This is mainly just useful to make the file
    * path easier to manage.
    *
