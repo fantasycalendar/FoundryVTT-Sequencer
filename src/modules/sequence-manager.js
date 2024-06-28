@@ -80,8 +80,8 @@ SequenceManager.RunningSequences.clearFinishedSequences = () => {
   SequenceManager.RunningSequences.update((sequences) => {
     for (const sequence of Object.values(sequences)) {
       if (
-        get(sequence.status) === CONSTANTS.STATUS.COMPLETE ||
-        get(sequence.status) === CONSTANTS.STATUS.ABORTED
+        sequence.status === CONSTANTS.STATUS.COMPLETE ||
+        sequence.status === CONSTANTS.STATUS.ABORTED
       ) {
         delete sequences[sequence.id];
       }

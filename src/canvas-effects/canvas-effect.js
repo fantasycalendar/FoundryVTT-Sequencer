@@ -373,6 +373,14 @@ export default class CanvasEffect extends PIXI.Container {
 		return this.data.creatorUserId === game.user.id;
 	}
 
+	get loopDelay() {
+		return (this.data.loopOptions?.loopDelay ?? 0);
+	}
+
+	get loops() {
+		return (this.data.loopOptions?.loops ?? 0);
+	}
+
 	/**
 	 * Whether the current user can update this effect
 	 *
@@ -3334,40 +3342,27 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.mediaLooping = this.playNaturally && !this.loops && !this.loopDelay;
 
-		if(this.playNaturally && !this.data.persist && !this.loops && !this.loopDelay){
-			return this.playMedia();
-		}
-
 		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
 
-		if (creationTimeDifference > this._totalDuration) {
+		this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration);
 
-			if(this.loops) {
-				this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration);
-				if (this._currentLoops >= this.loops) {
-					if(this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
-						return this.endEffect();
-					}
-					await this.pauseMedia();
-					this.mediaCurrentTime = this._endTime;
-					if (this.sprite.texture && this.video) {
-						const oldRenderable = this.renderable;
-						this.renderable = false;
-						setTimeout(() => {
-							this.updateTexture();
-							setTimeout(() => {
-								this.renderable = oldRenderable;
-							}, 150)
-						}, 150);
-					}
-					return;
-				}
-
-			} else if(!this.loopDelay) {
-				this.mediaCurrentTime = creationTimeDifference / 1000;
-				return this.playMedia();
+		if (this.loops && this._currentLoops >= this.loops) {
+			if(this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
+				return this.endEffect();
 			}
-
+			await this.pauseMedia();
+			this.mediaCurrentTime = this._endTime;
+			if (this.sprite.texture && this.video) {
+				const oldRenderable = this.renderable;
+				this.renderable = false;
+				setTimeout(() => {
+					this.updateTexture();
+					setTimeout(() => {
+						this.renderable = oldRenderable;
+					}, 150)
+				}, 150);
+			}
+			return;
 		}
 
 		return this._startLoop(creationTimeDifference);
@@ -3391,6 +3386,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this._loopOffset =
 				(creationTimeDifference % (loopDuration * 1000)) / 1000;
 		}
+
 		return this._resetLoop();
 	}
 
@@ -3466,12 +3462,11 @@ class PersistentCanvasEffect extends CanvasEffect {
 	/** @OVERRIDE */
 	_setEndTimeout() {
 		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
-		if (this.loops || creationTimeDifference >= this._totalDuration || !(this.hasAnimatedMedia || this.data.text)) {
-			return;
+		if(this.loops && creationTimeDifference >= this._totalDuration && this.hasAnimatedMedia){
+			setTimeout(() => {
+				this.pauseMedia();
+			}, this._totalDuration);
 		}
-		setTimeout(() => {
-			this.pauseMedia();
-		}, this._totalDuration);
 	}
 
 	/** @OVERRIDE */
