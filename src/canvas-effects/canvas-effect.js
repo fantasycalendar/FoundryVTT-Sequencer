@@ -1931,11 +1931,11 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateElevation() {
-		const targetElevation =
-			Math.max(
+		let targetElevation = Math.max(
 				canvaslib.get_object_elevation(this.source ?? {}),
 				canvaslib.get_object_elevation(this.target ?? {})
-			) + 1;
+			);
+		if(!CONSTANTS.IS_V12) targetElevation += 1;
 		let effectElevation = this.data.elevation?.elevation ?? 0;
 		if (!this.data.elevation?.absolute) {
 			effectElevation += targetElevation;
