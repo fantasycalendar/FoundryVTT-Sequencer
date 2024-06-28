@@ -1704,9 +1704,9 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._endTime = this._animationDuration;
 		if (this.data.time?.end) {
-			if(this.data.time.end.isPerc){
+			if (this.data.time.end.isPerc) {
 				this._endTime = this._animationDuration * this.data.time.end.value;
-			}else{
+			} else {
 				this._endTime = this.data.time.isRange
 					? this.data.time.end.value
 					: this._animationDuration - this.data.time.end.value;
@@ -1729,12 +1729,12 @@ export default class CanvasEffect extends PIXI.Container {
 				this._file.markers.forcedEnd / playbackRate / 1000;
 		}
 
+		this._totalDuration = this.loops
+			? (this._animationDuration * this.loops) + (this.loopDelay * (this.loops - 1))
+			: this._animationDuration;
+
 		// Resolve duration promise so that owner of effect may know when it is finished
-		this._durationResolve(this._animationDuration);
-
-		const animationDurationSec = this._animationDuration / 1000;
-
-		this.mediaLooping = animationDurationSec >= this.mediaDuration && !this.data.noLoop;
+		this._durationResolve(this._totalDuration);
 
 	}
 
@@ -1931,11 +1931,11 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateElevation() {
-		const targetElevation =
-			Math.max(
+		let targetElevation = Math.max(
 				canvaslib.get_object_elevation(this.source ?? {}),
 				canvaslib.get_object_elevation(this.target ?? {})
-			) + 1;
+			);
+		if(!CONSTANTS.IS_V12) targetElevation += 1;
 		let effectElevation = this.data.elevation?.elevation ?? 0;
 		if (!this.data.elevation?.absolute) {
 			effectElevation += targetElevation;
@@ -2884,7 +2884,7 @@ export default class CanvasEffect extends PIXI.Container {
 			animation.delay = lib.is_real_number(immediate)
 				? Math.max(immediate - animation.duration + animation.delay, 0)
 				: Math.max(
-					this._animationDuration - animation.duration + animation.delay,
+					this._totalDuration - animation.duration + animation.delay,
 					0
 				);
 
@@ -2995,7 +2995,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		fadeOut.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
-			: Math.max(this._animationDuration - fadeOut.duration + fadeOut.delay, 0);
+			: Math.max(this._totalDuration - fadeOut.duration + fadeOut.delay, 0);
 
 		SequencerAnimationEngine.addAnimation(this.id, {
 			target: this.alphaFilter,
@@ -3024,7 +3024,7 @@ export default class CanvasEffect extends PIXI.Container {
 		fadeOutAudio.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0)
 			: Math.max(
-				this._animationDuration - fadeOutAudio.duration + fadeOutAudio.delay,
+				this._totalDuration - fadeOutAudio.duration + fadeOutAudio.delay,
 				0
 			);
 
@@ -3133,7 +3133,7 @@ export default class CanvasEffect extends PIXI.Container {
 		scaleOut.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - scaleOut.duration + scaleOut.delay, 0)
 			: Math.max(
-				this._animationDuration - scaleOut.duration + scaleOut.delay,
+				this._totalDuration - scaleOut.duration + scaleOut.delay,
 				0
 			);
 
@@ -3212,7 +3212,7 @@ export default class CanvasEffect extends PIXI.Container {
 		rotateOut.delay = lib.is_real_number(immediate)
 			? Math.max(immediate - rotateOut.duration + rotateOut.delay, 0)
 			: Math.max(
-				this._animationDuration - rotateOut.duration + rotateOut.delay,
+				this._totalDuration - rotateOut.duration + rotateOut.delay,
 				0
 			);
 
@@ -3243,7 +3243,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let moves = this.data.moves;
 
-		let movementDuration = this._animationDuration;
+		let movementDuration = this._totalDuration;
 		if (this.data.moveSpeed) {
 			const distance = canvaslib.distance_between(
 				this.sourcePosition,
@@ -3296,7 +3296,7 @@ export default class CanvasEffect extends PIXI.Container {
 		setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
-		}, this._animationDuration);
+		}, this._totalDuration);
 	}
 
 	_setupTimestampHook(offset) {
@@ -3321,35 +3321,6 @@ export default class CanvasEffect extends PIXI.Container {
 			}, realTimestamp);
 		}
 	}
-}
-
-class PersistentCanvasEffect extends CanvasEffect {
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _initialize() {
-		await super._initialize(false);
-		await this._startEffect();
-	}
-
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _reinitialize() {
-		await super._reinitialize(false);
-	}
-
-	/** @OVERRIDE */
-	_playPresetAnimations() {
-		this._moveTowards();
-		this._fadeIn();
-		this._scaleIn();
-		this._rotateIn();
-	}
 
 	/**
 	 * Starts the loop of this effect, calculating the difference between the effect's creation time, and the actual
@@ -3362,38 +3333,45 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 		if (!this.hasAnimatedMedia) return;
 
-		let creationTimeDifference =
-			this.actualCreationTime - this.creationTimestamp;
+		this.mediaLooping = this.playNaturally && !this.loops && !this.loopDelay;
 
-		if (!this.data.noLoop) {
-			return this._startLoop(creationTimeDifference);
+		if(this.playNaturally && !this.data.persist && !this.loops && !this.loopDelay){
+			return this.playMedia();
 		}
 
-		if (creationTimeDifference < this._animationDuration) {
-			if (this._endTime !== this.mediaDuration) {
-				setTimeout(() => {
+		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
+
+		if (creationTimeDifference > this._totalDuration) {
+
+			if(this.loops) {
+				this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration);
+				if (this._currentLoops >= this.loops) {
+					if(this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
+						return this.endEffect();
+					}
+					await this.pauseMedia();
 					this.mediaCurrentTime = this._endTime;
-					this.updateTexture();
-					this.pauseMedia();
-				}, (this._endTime * 1000) - creationTimeDifference);
-			}
-			if (!this.data.noLoop) {
+					if (this.sprite.texture && this.video) {
+						const oldRenderable = this.renderable;
+						this.renderable = false;
+						setTimeout(() => {
+							this.updateTexture();
+							setTimeout(() => {
+								this.renderable = oldRenderable;
+							}, 150)
+						}, 150);
+					}
+					return;
+				}
+
+			} else if(!this.loopDelay) {
 				this.mediaCurrentTime = creationTimeDifference / 1000;
+				return this.playMedia();
 			}
-			await this.playMedia();
-			return;
+
 		}
 
-		await this.pauseMedia();
-		this.mediaCurrentTime = this._endTime;
-		if (this.sprite.texture && this.video) {
-			const oldRenderable = this.renderable;
-			this.renderable = false;
-			setTimeout(() => {
-				this.renderable = oldRenderable;
-				this.updateTexture();
-			}, 350);
-		}
+		return this._startLoop(creationTimeDifference);
 	}
 
 	/**
@@ -3404,7 +3382,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 	 * @private
 	 */
 	async _startLoop(creationTimeDifference) {
-		this.mediaLooping = this.playNaturally;
+
 		if (!this._animationTimes.loopStart) {
 			this._loopOffset =
 				(creationTimeDifference % this._animationDuration) / 1000;
@@ -3429,11 +3407,8 @@ class PersistentCanvasEffect extends CanvasEffect {
 		let loopWaitTime = 0;
 		if (this._animationTimes.loopStart) {
 			if (this._isEnding) return;
-			this.mediaCurrentTime =
-				(firstLoop ? 0 : this._animationTimes.loopStart) +
-				(this._loopOffset > 0 ? this._loopOffset : 0);
-			loopWaitTime =
-				(this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
+			this.mediaCurrentTime = (firstLoop ? 0 : this._animationTimes.loopStart) + (this._loopOffset > 0 ? this._loopOffset : 0);
+			loopWaitTime = (this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
 		} else {
 			this.mediaCurrentTime = this._startTime + this._loopOffset;
 			loopWaitTime = this._animationDuration - this._loopOffset * 1000;
@@ -3448,14 +3423,40 @@ class PersistentCanvasEffect extends CanvasEffect {
 		this._resetTimeout = setTimeout(() => {
 			if (this._ended) return;
 			this._loopOffset = 0;
+			this._currentLoops++;
+			if (this.loops && this._currentLoops >= this.loops) {
+				if(!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
+					this.endEffect();
+				}
+				return;
+			}
 			this._resetLoop(false);
-		}, loopWaitTime);
+		}, loopWaitTime + this.loopDelay);
+	}
+}
+
+class PersistentCanvasEffect extends CanvasEffect {
+
+	/**
+	 * @OVERRIDE
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async _reinitialize() {
+		await super._reinitialize(false);
+	}
+
+	/** @OVERRIDE */
+	_playPresetAnimations() {
+		this._moveTowards();
+		this._fadeIn();
+		this._scaleIn();
+		this._rotateIn();
 	}
 
 	/** @OVERRIDE */
 	_timeoutVisibility() {
-		let creationTimeDifference =
-			this.actualCreationTime - this.creationTimestamp;
+		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
 		let timeout =
 			creationTimeDifference === 0 && !this.data.animations ? 0 : 50;
 		setTimeout(() => {
@@ -3465,17 +3466,13 @@ class PersistentCanvasEffect extends CanvasEffect {
 
 	/** @OVERRIDE */
 	_setEndTimeout() {
-		let creationTimeDifference =
-			this.actualCreationTime - this.creationTimestamp;
-		if (
-			!this.data.noLoop ||
-			creationTimeDifference >= this._animationDuration ||
-			!(this.hasAnimatedMedia || this.data.text)
-		)
+		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
+		if (this.loops || creationTimeDifference >= this._totalDuration || !(this.hasAnimatedMedia || this.data.text)) {
 			return;
+		}
 		setTimeout(() => {
 			this.pauseMedia();
-		}, this._animationDuration);
+		}, this._totalDuration);
 	}
 
 	/** @OVERRIDE */

@@ -771,9 +771,9 @@ declare abstract class EffectSection {
   zeroSpriteRotation(inBool?: boolean): this;
 
   /**
-   * If the effect would loop due to its duration or persistence, this causes it not to
+   * Allows you to control the number of loops and the delays between each loop
    */
-  noLoop(inBool?: boolean): this;
+  loopOptions(inOptions?: { loopDelay: number, loops: number, endOnLastLoop: boolean }): this;
 
   /**
    * Causes the effect to not show up in the Effect Manager UI - DO NOT USE UNLESS YOU KNOW WHAT YOU ARE DOING

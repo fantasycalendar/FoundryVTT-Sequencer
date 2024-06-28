@@ -485,11 +485,16 @@ Calling this method will cause the effect to not set any flags if `.persist()` w
 
 This method only modifies `.persist()`ed effects and causes them to not immediately end, but stick around for the given duration passed to this method.
 
-## No Loop
+## Loop Options
 
-`.noLoop(boolean)`
+`.loopOptions(inOptions)` or `.loopOptions({ maxLoops: 1 })` or `.loopOptions({ loopDelay: 1000, maxLoops: 5 })`
 
-If the effect would loop due to its duration or persistence, this causes it not to, and freezes once its duration is up.
+Allows you to control the number of loops and the delays between each loop.
+
+Accepts an object that can contain
+- `loopDelay: number` (default `0`) - adds a delay in milliseconds between each loop of the effect
+- `maxLoops: number` (default `0`) - makes the effect only loop this many times before ending
+- `endOnLastLoop: boolean` (default `false`) - whether the effect should end when reaching the last loop (if persistent)
 
 ## Origin
 

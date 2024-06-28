@@ -39,7 +39,7 @@ export default class EffectSection extends Section {
 		this._persistOptions = null;
 		this._zeroSpriteRotation = null;
 		this._extraEndDuration = null;
-		this._noLoop = null;
+		this._loopOptions = null;
 		this._tilingTexture = null;
 		this._snapToGrid = null;
 		this._scaleToObject = null;
@@ -109,7 +109,7 @@ export default class EffectSection extends Section {
 		inOptions = foundry.utils.mergeObject(
 			{
 				id: foundry.utils.randomID(),
-				persistTokenPrototype: false,
+				persistTokenPrototype: false
 			},
 			inOptions
 		);
@@ -1567,19 +1567,79 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 * If the effect would loop due to its duration or persistence, this causes it not to
-	 *
-	 * @param {Boolean} [inBool=true] inBool
-	 * @returns {EffectSection}
+	 * @deprecated
 	 */
 	noLoop(inBool = true) {
+		this.sequence._showWarning(
+			this,
+			"noLoop",
+			".noLoop() is deprecated, please use .loopOptions({ loops: 1 }) instead"
+		);
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
 				"noLoop",
 				"inBool must be of type boolean"
 			);
-		this._noLoop = inBool;
+
+		this._loopOptions = foundry.utils.mergeObject(
+			this._loopOptions ?? {
+				loopDelay: 0,
+				loops: 0,
+			},
+			{
+				loops: 1
+			}
+		);
+		return this;
+	}
+
+	/**
+	 * Allows you to control the number of loops and the delays between each loop
+	 *
+	 * @param {Object} inOptions
+	 * @returns {EffectSection}
+	 */
+	loopOptions(inOptions={}){
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				`inOptions must be of type object`
+			);
+
+		inOptions = foundry.utils.mergeObject(
+			{
+				loopDelay: 0,
+				loops: 0,
+				endOnLastLoop: false
+			},
+			inOptions
+		);
+
+		if (typeof inOptions.endOnLastLoop !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				"inOptions.endOnLastLoop must be of type boolean"
+			);
+
+		if (typeof inOptions.loopDelay !== "number" || inOptions.loopDelay < 0)
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				"inOptions.loopDelay must be of type number that is not below 0"
+			);
+
+		if (typeof inOptions.loops !== "number" || inOptions.loops < 0)
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				"inOptions.loops must be of type number that is not below 0"
+			);
+
+		this._loopOptions = inOptions;
+
 		return this;
 	}
 
@@ -2384,7 +2444,7 @@ export default class EffectSection extends Section {
 			zIndex: this._zIndex,
 			opacity: lib.is_real_number(this._opacity) ? this._opacity : 1.0,
 			filters: this._filters,
-			noLoop: this._noLoop,
+			loopOptions: this._loopOptions,
 			spriteRotation: this._spriteRotation,
 			randomSpriteRotation: this._randomSpriteRotation,
 			tint: this._tint?.decimal,

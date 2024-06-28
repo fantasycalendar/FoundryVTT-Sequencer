@@ -208,6 +208,18 @@ const flagManager = {
 				}
 			}
 			return effectData;
+		},
+
+		"3.2.1": (inDocument, effectData) => {
+			if(effectData.noLoop !== undefined){
+				effectData.loopOptions = {
+					loops: 1,
+					loopDelay: 0,
+					endOnLastLoop: false
+				}
+				delete effectData.noLoop;
+			}
+			return effectData;
 		}
 	},
 

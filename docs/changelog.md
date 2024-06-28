@@ -5,6 +5,8 @@
 - *Effects* - Added `.sortLayer()` to be able to more directly control which layer the effect lands on (only in Foundry v12)
   - This also fixes `.belowTokens()` being below tiles
   - Thank you Codas on GitHub!
+- *Effects* - Added `.loopOptions()` to allow users to control how an effect loops
+- *Effects* - Deprecated `.noLoop()` in favor of the above, will be elevated to loud deprecation in a future major version
 
 ## Version 3.2.5
 - *Effects* - Updated documentation to include `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()`
