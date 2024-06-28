@@ -9,7 +9,7 @@
   export let sequence;
   export let index;
 
-  const status = sequence.status;
+  const status = sequence.statusStore;
 
 </script>
 

@@ -91,6 +91,7 @@ const SyncGroups = {
 export default class CanvasEffect extends PIXI.Container {
 	#elevation = 0;
 	#sort = 0;
+	#sortLayer = 800
 
 	constructor(inData) {
 		super();
@@ -158,6 +159,15 @@ export default class CanvasEffect extends PIXI.Container {
 		this.#sort = value;
 	}
 
+	/** @type {number} */
+	get sortLayer() {
+		return this.#sortLayer;
+	}
+
+	set sortLayer(value) {
+		this.#sortLayer = value;
+	}
+
 	get context() {
 		return this.data.attachTo?.active && this.sourceDocument
 			? this.sourceDocument
@@ -221,7 +231,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isSourceDestroyed() {
 		return (
-			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed)
+			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed || this.source.constructor.name === "Crosshairs")
 		);
 	}
 
@@ -245,7 +255,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get isTargetDestroyed() {
 		return (
-			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed)
+			this.target && this.target?.destroyed && (!this.targetDocument?.object || this.targetDocument?.object?.destroyed || this.target.constructor.name === "Crosshairs")
 		);
 	}
 
@@ -630,10 +640,7 @@ export default class CanvasEffect extends PIXI.Container {
 			game.settings.get("sequencer", "effectsEnabled") &&
 			game.user.viewedScene === this.data.sceneId;
 
-		if (
-			foundry.utils.isNewerVersion(game.version, "10.289") &&
-			game.settings.get("core", "photosensitiveMode")
-		) {
+		if (game.settings.get("core", "photosensitiveMode")) {
 			playVisible = false;
 			lib.throttled_custom_warning(
 				this.data.moduleName,
@@ -651,18 +658,11 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get playNaturally() {
 		return (
-			(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
+			(!this.data.time ||
+				(this._startTime === 0 && this._endTime === this.mediaDuration)) &&
 			this._animationTimes.loopStart === undefined &&
 			this._animationTimes.loopEnd === undefined
 		);
-	}
-
-	get loopDelay() {
-		return (this.data.loopOptions?.loopDelay ?? 0);
-	}
-
-	get loops() {
-		return (this.data.loopOptions?.loops ?? 0);
 	}
 
 	static make(inData) {
@@ -1295,7 +1295,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._playCustomAnimations();
 		this._setEndTimeout();
 		this._timeoutVisibility();
-		if (play) await this._startEffect();
+		if (play) await this.playMedia();
 		this.ready = true;
 	}
 
@@ -1345,8 +1345,6 @@ export default class CanvasEffect extends PIXI.Container {
 		this._loopOffset = 0;
 		this.effectFilters = {};
 		this._animationDuration = 0;
-		this._totalDuration = 0;
-		this._currentLoops = 0;
 		this._animationTimes = {};
 		this._twister = lib.createMersenneTwister(this.creationTimestamp);
 		this._video = null;
@@ -1617,6 +1615,14 @@ export default class CanvasEffect extends PIXI.Container {
 			: false;
 	}
 
+	get startTimeMs(){
+		return this._startTime * 1000;
+	}
+
+	get endTimeMs(){
+		return this._endTime * 1000;
+	}
+
 	/**
 	 * Calculates the duration of this effect, based on animation durations, the video source duration, end/start times, etc
 	 *
@@ -1708,7 +1714,7 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 		this._endTime /= 1000;
 
-		this._animationDuration = lib.clamp((this._endTime - this._startTime) * 1000, 0, this._animationDuration);
+		this._animationDuration = lib.clamp(this.endTimeMs - this.startTimeMs, 0, this._animationDuration);
 
 		if (
 			this._file?.markers &&

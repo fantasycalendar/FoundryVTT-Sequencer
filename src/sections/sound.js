@@ -168,7 +168,7 @@ class SoundSection extends Section {
 			}
 		}
 
-		if (playData.location && game.version.split(".")[0] !== "12") {
+		if (playData.location && CONSTANTS.IS_V12) {
 			if (this.sequence.softFail) {
 				playData.play = false;
 			} else {

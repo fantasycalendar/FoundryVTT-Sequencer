@@ -49,6 +49,7 @@ export default class EffectSection extends Section {
 		this._screenSpacePosition = null;
 		this._screenSpaceScale = null;
 		this._elevation = null;
+		this._sortLayer = 800;
 		this._masks = [];
 		this._tiedDocuments = [];
 		this._selfMask = false;
@@ -1362,8 +1363,12 @@ export default class EffectSection extends Section {
 				"belowTokens",
 				"inBool must be of type boolean"
 			);
-		if (!inBool) return this;
-		return this.elevation(0, { absolute: true });
+		if (game.release.generation >= 12) {
+			return this.sortLayer(inBool ? 600 : 800);
+		} else {
+			if (!inBool) return this;
+			return this.elevation(0, { absolute: true });
+		}
 	}
 
 	/**
@@ -1379,8 +1384,12 @@ export default class EffectSection extends Section {
 				"belowTokens",
 				"inBool must be of type boolean"
 			);
-		if (!inBool) return this;
-		return this.elevation(-1, { absolute: true });
+		if (game.release.generation >= 12) {
+			return this.sortLayer(inBool ? 300 : 500);
+		} else {
+			if (!inBool) return this;
+			return this.elevation(-1, { absolute: true });
+		}
 	}
 
 	/**
@@ -1460,7 +1469,20 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 * Sets the zIndex of the effect, potentially displaying it on top of other effects the same elevation
+	 * Changes the effect's sortLayer, potentially displaying effects below tiles, above tokens or even weather effects
+	 * in case of identical elevations
+	 *
+	 * @param {Number} inSortLayer
+	 * @param {Object} inOptions
+	 * @returns {EffectSection}
+	 */
+	sortLayer(inSortLayer, inOptions = {}) {
+		this._sortLayer = inSortLayer;
+		return this;
+	}
+
+	/**
+	 * Sets the zIndex of the effect, potentially displaying it on top of other effects the same elevation and sort
 	 *
 	 * @param {Number} inZIndex
 	 * @returns {EffectSection}
@@ -1924,6 +1946,14 @@ export default class EffectSection extends Section {
 	 * @returns this
 	 */
 	file(inFile, inOptions = {}) {
+		if(typeof inOptions === "boolean"){
+			inOptions = {};
+			this.sequence._showWarning(
+				this,
+				"file",
+				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead"
+			);
+		}
 		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,
@@ -2405,6 +2435,7 @@ export default class EffectSection extends Section {
 			randomRotation: this._randomRotation,
 			scaleToObject: this._scaleToObject,
 			elevation: this._elevation,
+			sortLayer: this._sortLayer,
 			aboveLighting: this._aboveLighting,
 			aboveInterface: this._aboveInterface,
 			xray: this._xray,

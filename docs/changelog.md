@@ -1,5 +1,33 @@
 ## Changelog
 
+## Version 3.2.6
+- *Sequencer* - Fixed Sequencer Manager throwing an error when trying to see active Sequences
+- *Effects* - Added `.sortLayer()` to be able to more directly control which layer the effect lands on (only in Foundry v12)
+  - This also fixes `.belowTokens()` being below tiles
+  - Thank you Codas on GitHub!
+
+## Version 3.2.5
+- *Effects* - Updated documentation to include `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()`
+- *Effects* - Fixed some issues with effect scaling when using `.loopProperty()` and `.animateProperty()`
+- *Sounds* - Fixed `Sequencer.SoundManager.endAllSounds()` not ending all sounds
+- *Sounds* - Fixed `Sequencer.SoundManager.endSounds()` sometimes not correctly ending the right sounds
+- *Sounds* - Fixed calling `.sound()` would break sequences in both Foundry v11 and v12
+
+## Version 3.2.4
+- *Sequencer* - Fixed `.preset()` not working when called directly on a sequence (thanks MrVauxs!)
+- *Effects* - Added deprecation warning to `.file()` instead of an error when giving it a second boolean parameter
+- *Effects* - Fixes to the isometric module - may still not be 100%, but it shouldn't error anymore
+- *Sounds* - Fixed sounds not playing on v11 (again!)
+
+## Version 3.2.3 Hotfix
+- *Effects* - Fixed issue with effects not playing their full duration
+
+## Version 3.2.2
+- *Sequencer* - ACTUALLY fixed welcome message being posted multiple times in bigger worlds (will also get rid of duplicates)
+- *Effects* - Fixed `.animateProperty()` and `.loopProperty()` not working when used on `alphaFilter`
+- *Effects* - Fixed effects that were attached to temporary templates (like warpgate's crosshairs) not disappearing after the crosshair had been placed
+- *Effects* - Fixed issue with `complete`-loop type effects not playing correctly
+
 ## Version 3.2.1
 - *Sequencer* - Fixed welcome message being posted multiple times on The Forge - my apologies for this
 - *Sequencer* - Fixed `Sequencer.Preloader` not being properly set up (thanks Codas on github!)

@@ -2,6 +2,7 @@ const CONSTANTS = {
   MODULE_NAME: "sequencer",
   EFFECTS_FLAG_NAME: "effects",
   SOUNDS_FLAG_NAME: "sounds",
+	IS_V12: false,
   COLOR: {
     PRIMARY: 0xee442f,
     SECONDARY: 0x601a4a,

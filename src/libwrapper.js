@@ -2,10 +2,7 @@ import CONSTANTS from "./constants.js";
 import { libWrapper } from "./lib/libWrapper/shim.js";
 
 export default function registerLibwrappers() {
-  const override = foundry.utils.isNewerVersion(game.version, "11")
-    ? "PIXI.BaseImageResource.prototype.upload"
-    : "PIXI.resources.BaseImageResource.prototype.upload";
-  libWrapper.register(CONSTANTS.MODULE_NAME, override, PIXIUPLOAD);
+  libWrapper.register(CONSTANTS.MODULE_NAME, "PIXI.BaseImageResource.prototype.upload", PIXIUPLOAD);
 }
 
 function PIXIUPLOAD(wrapped, ...args) {

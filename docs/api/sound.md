@@ -166,13 +166,13 @@ Unlike `.endTime()`, the last parameter is the absolute end time, not the time f
 
 `.locally()` or `.locally(bool)`
 
-Causes effect to be played only locally, and not push to other connected clients.
+Causes sound to be played only locally, and not push to other connected clients.
 
 ## For Users
 
 `.forUsers(string)` or `.forUsers(array)`
 
-Causes the effect to be played for only a set of users.
+Causes the sound to be played for only a set of users.
 
 Accepts a single user ID or username (case-sensitive), or an array thereof.
 
