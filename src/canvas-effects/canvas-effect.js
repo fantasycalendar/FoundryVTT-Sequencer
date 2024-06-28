@@ -91,6 +91,7 @@ const SyncGroups = {
 export default class CanvasEffect extends PIXI.Container {
 	#elevation = 0;
 	#sort = 0;
+	#sortLayer = 800
 
 	constructor(inData) {
 		super();
@@ -156,6 +157,15 @@ export default class CanvasEffect extends PIXI.Container {
 
 	set sort(value) {
 		this.#sort = value;
+	}
+
+	/** @type {number} */
+	get sortLayer() {
+		return this.#sortLayer;
+	}
+
+	set sortLayer(value) {
+		this.#sortLayer = value;
 	}
 
 	get context() {
@@ -1950,6 +1960,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.elevation = effectElevation;
 		this.zIndex = this.sort;
 		this.sort += 100;
+		this.sortLayer = this.data.sortLayer
 		if (this.parent) {
 			this.parent.sortChildren();
 		}

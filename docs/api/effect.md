@@ -830,9 +830,17 @@ Causes the effect to be played above the interface layer, which makes the effect
 
 `.zIndex(1)`
 
-Sets the z-index of the effect, potentially displaying it on top of or below other effects
+Sets the z-index of the effect, potentially displaying it on top of or below other effects on the same elevation and sortLayer (v12 only).
 
 **Note:** If you have called [`.belowTokens()`](#below-tokens) or [`.belowTiles()`](#below-tiles), the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer.
+
+## Sort Layer
+
+### Only supported in Foundry v12
+
+`sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
+
+Sets the sort layer of the effect. This value is used to determine layer ordering between entities of the same elevation. Foundry sorts canvas object first by elevation, second by their sortLayer and third by their z-index. Default is 800, which is above tokens and below weather effects.
 
 ## Animate Property
 
