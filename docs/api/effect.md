@@ -492,7 +492,7 @@ This method only modifies `.persist()`ed effects and causes them to not immediat
 Allows you to control the number of loops and the delays between each loop.
 
 Accepts an object that can contain
-- `loopDelay: number` (default `0`) - adds a delay between each loop of the effect
+- `loopDelay: number` (default `0`) - adds a delay in milliseconds between each loop of the effect
 - `maxLoops: number` (default `0`) - makes the effect only loop this many times before ending
 - `endOnLastLoop: boolean` (default `false`) - whether the effect should end when reaching the last loop (if persistent)
 
