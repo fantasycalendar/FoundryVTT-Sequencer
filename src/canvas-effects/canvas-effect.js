@@ -1960,6 +1960,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.elevation = effectElevation;
 		this.zIndex = this.sort;
 		this.sort += 100;
+		this.sortLayer = this.data.sortLayer
 		if (this.parent) {
 			this.parent.sortChildren();
 		}
