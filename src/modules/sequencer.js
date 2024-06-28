@@ -390,6 +390,10 @@ export default class Sequence {
     return get(this._status);
   }
 
+	get statusStore(){
+		return this._status;
+	}
+
   _abort() {
     this.status = CONSTANTS.STATUS.ABORTED;
     for (const section of this.sections) {

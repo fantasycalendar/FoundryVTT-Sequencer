@@ -1,5 +1,11 @@
 ## Changelog
 
+## Version 3.2.6
+- *Sequencer* - Fixed Sequencer Manager throwing an error when trying to see active Sequences
+- *Effects* - Added `.sortLayer()` to be able to more directly control which layer the effect lands on (only in Foundry v12)
+  - This also fixes `.belowTokens()` being below tiles
+  - Thank you Codas on GitHub!
+
 ## Version 3.2.5
 - *Effects* - Updated documentation to include `.volume()`, `.fadeInAudio()`, and `.fadeOutAudio()`
 - *Effects* - Fixed some issues with effect scaling when using `.loopProperty()` and `.animateProperty()`
