@@ -1946,10 +1946,10 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 		if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && isIsometric) {
 			const sourceSort = this.source
-				? this.sourceMesh.sort + (this.data.isometric?.overlay ? 1 : -1)
+				? (this.sourceMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
 				: 0;
 			const targetSort = this.target
-				? this.targetMesh.sort + (this.data.isometric?.overlay ? 1 : -1)
+				? (this.targetMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
 				: 0;
 			this.sort = Math.max(sourceSort, targetSort);
 		} else {
