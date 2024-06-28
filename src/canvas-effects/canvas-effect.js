@@ -658,8 +658,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get playNaturally() {
 		return (
-			(!this.data.time ||
-				(this._startTime === 0 && this._endTime === this.mediaDuration)) &&
+			(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
 			this._animationTimes.loopStart === undefined &&
 			this._animationTimes.loopEnd === undefined
 		);
@@ -1295,7 +1294,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._playCustomAnimations();
 		this._setEndTimeout();
 		this._timeoutVisibility();
-		if (play) await this.playMedia();
+		if (play) await this._startEffect();
 		this.ready = true;
 	}
 
