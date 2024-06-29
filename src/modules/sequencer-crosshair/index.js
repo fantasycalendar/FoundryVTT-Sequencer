@@ -1,9 +1,9 @@
-import Crosshairs from './Crosshairs.js';
+import CrosshairsDocument from './CrosshairsDocument.js';
 import CrosshairsPlaceable from './CrosshairsPlaceable.js';
-import TokenCrosshairs from './TokenCrosshairs.js';
+import TokenCrosshairsDocument from './TokenCrosshairsDocument.js';
 
 export default {
-	Crosshairs,
+	CrosshairsDocument,
 	CrosshairsPlaceable,
-	TokenCrosshairs,
+	TokenCrosshairsDocument,
 };

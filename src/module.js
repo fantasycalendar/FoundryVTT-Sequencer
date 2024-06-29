@@ -133,7 +133,7 @@ function initializeModule() {
       random_object_element: lib.random_object_element,
       make_array_unique: lib.make_array_unique,
     },
-	  crosshair: Crosshair
+	  Crosshair: Crosshair
   };
 
   registerSettings();

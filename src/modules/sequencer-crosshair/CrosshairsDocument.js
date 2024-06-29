@@ -7,14 +7,11 @@ import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
  * @mixes ClientDocumentMixin
  *
  */
-export default class Crosshairs extends MeasuredTemplateDocument {
+export default class CrosshairsDocument extends MeasuredTemplateDocument {
 
-	constructor(config = {}, options = {}, crosshair = {}, callbacks = {}) {
-		super(config, options);
-		this.crosshair = foundry.utils.mergeObject(
-			Crosshairs.defaultConfig(),
-			crosshair
-		);
+	constructor(config = {}, context = {}, crosshair = {}, callbacks = {}) {
+		super(config, context);
+		this.crosshair = foundry.utils.mergeObject(CrosshairsDocument.defaultConfig, crosshair);
 		this.callbacks = callbacks;
 	}
 
@@ -26,38 +23,37 @@ export default class Crosshairs extends MeasuredTemplateDocument {
 		return CrosshairsPlaceable;
 	}
 
-	static defaultConfig() {
+	static get defaultConfig() {
 		return foundry.utils.deepClone({
+			gridHighlight: true,
 			icon: {
 				display: false,
 				texture: "",
+				borderVisible: false
 			},
 			snap: {
 				position: CONST.GRID_SNAPPING_MODES.CENTER,
 				size: CONST.GRID_SNAPPING_MODES.CENTER,
 				angle: 0
 			},
+			lockDrag: false,
 			distanceMinMax: {
 				min: null,
 				max: null
 			},
 			label: {
-				display: true,
-				text: "",
-				dx: 0,
-				dy: 0,
+				display: true, text: "", dx: 0, dy: 0,
 			},
 			location: {
 				obj: null,
-
 				limit: false,
 				minDistance: null,
 				maxDistance: null,
 				showDistance: false,
-
 				lock: false,
 				edge: false,
-				offsetDistance: 0
+				offsetDistance: 0,
+				offset: { x: 0, y: 0 }
 			},
 			lockManualRotation: false,
 			textureTile: 0,
@@ -77,7 +73,7 @@ export default class Crosshairs extends MeasuredTemplateDocument {
 	}
 
 	get documentName() {
-		return 'Crosshairs';
+		return 'CrosshairsDocument';
 	}
 
 	get layer() {

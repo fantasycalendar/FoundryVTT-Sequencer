@@ -14,7 +14,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		reject: null,
 	};
 
-	#isDrag = false;
+	isDrag = false;
+	#customText = false;
 
 	get crosshair() {
 		return this.document.crosshair;
@@ -29,8 +30,12 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		this.controlIcon.renderable = this.crosshair.icon.display;
 		if (this.crosshair.icon.texture) {
-			this.controlIcon.icon.iconSrc = this.crosshair.icon.texture;
-			this.controlIcon.draw();
+			this.controlIcon.iconSrc = this.crosshair.icon.texture;
+			this.controlIcon.texture = await loadTexture(this.controlIcon.iconSrc);
+			this.controlIcon.icon.texture = this.controlIcon.texture;
+		}
+		if(!this.crosshair.icon.borderVisible){
+			this.controlIcon.bg.clear();
 		}
 
 		return this;
@@ -40,11 +45,41 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.ruler.renderable = this.crosshair.label.display;
 		if (!this.crosshair.label.display) return;
 		if (this.crosshair.label?.text) {
-			this.ruler.anchor.set(0.5, 2.25);
-			this.ruler.position.set(this.crosshair.label.dx ?? 0, this.crosshair.label.dy ?? 0)
-			this.ruler.text = this.crosshair.label?.text ?? "";
+			if(this.#customText) return;
+			const style = CONFIG.canvasTextStyle.clone();
+			style.align = "center";
+			this.#customText = new PreciseText(this.crosshair.label.text, style);
+			this.#customText.anchor.set(0.5);
+			this.#customText.position.set(
+				this.shape.width/2 + this.crosshair.label.dx ?? 0,
+				this.shape.height/2 + this.crosshair.label.dy ?? 0
+			);
+			this.template.addChild(this.#customText);
 		} else {
 			return super._refreshRulerText();
+		}
+	}
+
+	_refreshTemplate() {
+		const t = this.template.clear();
+
+		// Draw the Template outline
+		t.lineStyle(this._borderThickness, this.document.borderColor, 0.75).beginFill(0x000000, 0.0);
+
+		// Fill Color or Texture
+		if ( this.texture ) t.beginTextureFill({texture: this.texture});
+		else t.beginFill(0x000000, 0.0);
+
+		// Draw the shape
+		t.drawShape(this.shape);
+
+		if(!this.crosshair.lockDrag) {
+			// Draw origin and destination points
+			t.lineStyle(this._borderThickness, 0x000000)
+				.beginFill(0x000000, 0.5)
+				.drawCircle(0, 0, 6)
+				.drawCircle(this.ray.dx, this.ray.dy, 6)
+				.endFill();
 		}
 	}
 
@@ -85,7 +120,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		const now = Date.now();
 		const leftDown = (evt.buttons & 1) > 0;
-		this.#isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
+		this.isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
 
 		canvas.mouseInteractionManager.cancel(evt);
 
@@ -105,6 +140,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	updatePosition() {
 
 		let mouseLocation = get_mouse_position();
+
+		mouseLocation.x += this.crosshair.location.offset.x ?? 0;
+		mouseLocation.y += this.crosshair.location.offset.y ?? 0;
 
 		if (this.crosshair.location.obj) {
 
@@ -203,7 +241,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 			}
 
-		} else if (this.#isDrag) {
+		} else if (this.isDrag) {
 			const { rotation, distance } = this._getDraggedMatrix(this.document, mouseLocation);
 			this.document.updateSource({
 				distance,
@@ -252,8 +290,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	_onConfirm(evt) {
 		evt.preventDefault();
 		canvas.mouseInteractionManager.cancel(evt);
-		if (this.#isDrag) {
-			this.#isDrag = false;
+		if (this.isDrag) {
+			this.isDrag = false;
 			canvas.mouseInteractionManager.reset({
 				interactionData: true,
 				state: false,
@@ -270,8 +308,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	}
 
 	_onCancel(evt) {
-		if (this.#isDrag) {
-			this.#isDrag = false;
+		if (this.isDrag) {
+			this.isDrag = false;
 			canvas.mouseInteractionManager.reset({
 				interactionData: true,
 				state: false,
@@ -288,32 +326,41 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		evt.stopPropagation();
 
-		if (evt.shiftKey) {
+		if (evt.shiftKey) this.updateDirection(evt)
 
-			/* Scroll up = bigger */
-			const step = (this.document.parent.grid.distance / 2);
-			const delta = step * Math.sign(-evt.deltaY);
-			let distance = this.document.distance + delta;
-			distance = Math.max(0.5, distance.toNearest(step));
-			if (this.crosshair.distanceMinMax.min && this.crosshair.distanceMinMax.max) {
-				distance = Math.min(Math.max(distance, this.crosshair.distanceMinMax.min), this.crosshair.distanceMinMax.max);
-			}
-			this.document.updateSource({ distance });
-		}
-
-		if (evt.altKey && !this.crosshair.lockManualRotation) {
-			const scrollDelta = Math.sign(-evt.deltaY);
-			let delta = this.crosshair.snap.direction ? this.crosshair.snap.direction * scrollDelta : scrollDelta * 5;
-			if (delta < 0) delta += 360;
-			if (delta > 360) delta -= 360;
-			const direction = Math.max(1, this.document.direction + delta);
-			this.document.updateSource({ direction });
-		}
+		if (evt.altKey) this.updateDistance(evt);
 
 		if (evt.ctrlKey) {
 			// TODO widen
 		}
 
 		this.refresh();
+	}
+
+	updateDistance(evt) {
+		/* Scroll up = bigger */
+		const step = (this.document.parent.grid.distance / 2);
+		const delta = step * Math.sign(-evt.deltaY);
+		let distance = this.document.distance + delta;
+		distance = Math.max(0.5, distance.toNearest(step));
+		if (this.crosshair.distanceMinMax.min && this.crosshair.distanceMinMax.max) {
+			distance = Math.min(Math.max(distance, this.crosshair.distanceMinMax.min), this.crosshair.distanceMinMax.max);
+		}
+		this.document.updateSource({ distance });
+	}
+
+	updateDirection(evt) {
+		if(this.crosshair.lockManualRotation) return;
+		const scrollDelta = Math.sign(evt.deltaY);
+		let delta = this.crosshair.snap.direction ? this.crosshair.snap.direction * scrollDelta : scrollDelta * 5;
+		if (delta < 0) delta += 360;
+		if (delta > 360) delta -= 360;
+		const direction = Math.max(1, this.document.direction + delta);
+		this.document.updateSource({ direction });
+	}
+
+	_getGridHighlightPositions() {
+		if(!this.crosshair.gridHighlight) return [];
+		return super._getGridHighlightPositions();
 	}
 }

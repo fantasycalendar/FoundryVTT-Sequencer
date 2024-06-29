@@ -7,7 +7,7 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../utils/flag-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
-import Crosshairs from "../modules/sequencer-crosshair/Crosshairs.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 
 export default class CrosshairSection extends Section {
@@ -21,7 +21,7 @@ export default class CrosshairSection extends Section {
 		this._borderColor = null;
 		this._fillColor = null;
 		this._persist = false;
-		this._config = Crosshairs.defaultConfig();
+		this._config = CrosshairsDocument.defaultConfig;
 		this._waitUntilFinished = true;
 	}
 
