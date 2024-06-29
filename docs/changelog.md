@@ -1,5 +1,12 @@
 ## Changelog
 
+## Version 3.2.8
+- *Sequencer* - Fixed Sequencer Manager throwing A DIFFERENT error when trying to see active
+- *Effects* - Fixed `.persist()` effects not looping when first created (but would loop if enough time had passed & user had refreshed - very odd)
+
+## Version 3.2.7 Hotfix
+- *Effects* - Fixed `.persist()` effects not looping
+
 ## Version 3.2.6
 - *Sequencer* - Fixed Sequencer Manager throwing an error when trying to see active Sequences
 - *Effects* - Added `.sortLayer()` to be able to more directly control which layer the effect lands on (only in Foundry v12)

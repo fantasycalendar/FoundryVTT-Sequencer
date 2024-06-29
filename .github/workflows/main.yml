@@ -2,15 +2,17 @@ name: Release Creation
 
 on:
   release:
-    types: [published]
-permissions:
-  contents: write
+    types: [ published ]
+
+env:
+  package_name: Sequencer
+  package_id: sequencer
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       # Substitute the Manifest and Download URLs in the module.json
       # for a FULL RELEASE
@@ -19,7 +21,7 @@ jobs:
         id: sub_release_manifest_version
         uses: microsoft/variable-substitution@v1
         with:
-          files: "module.json"
+          files: 'module.json'
         env:
           version: ${{github.event.release.tag_name}}
           url: https://github.com/${{github.repository}}
@@ -34,7 +36,7 @@ jobs:
         id: sub_prerelease_manifest_version
         uses: microsoft/variable-substitution@v1
         with:
-          files: "module.json"
+          files: 'module.json'
         env:
           version: ${{github.event.release.tag_name}}
           url: https://github.com/${{github.repository}}
@@ -48,35 +50,91 @@ jobs:
       - run: npm run build
 
       # Create a zip file with all files required by the module to add to the release
-      - run: zip -r ./module.zip module.json LICENSE module.js module.js.map style.css samples/ languages/ images/sequencer.png typings/ ext/
+      - run: zip -r ./module.zip module.json LICENSE module.js module.js.map style.css templates/ languages/ packs/
 
       # Create a release for this specific version
       - name: Update Release with Files
         if: "!github.event.release.prerelease"
         id: create_version_release
-        uses: ncipollo/release-action@v1.12.0
+        uses: ncipollo/release-action@v1
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
           name: ${{ github.event.release.name }}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "./module.json, ./module.zip"
+          artifacts: './module.json, ./module.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
+
+      - name: Get Compatibility
+        if: "!github.event.release.prerelease"
+        run: |
+          echo 'COMPATIBILITY<<EOF' >> $GITHUB_ENV
+          cat module.json | jq .compatibility >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Send package to foundry
+        if: "!github.event.release.prerelease"
+        run: |
+          HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}" -X POST 'https://api.foundryvtt.com/_api/packages/release_version/' \
+          --header 'Authorization: ${{ secrets.PACKAGE_TOKEN }}' \
+          --header 'Content-Type: application/json' \
+          --data '{
+              "id": "${{env.package_id}}",
+              "release": {
+                  "version": "${{ github.event.release.tag_name }}",
+                  "manifest": "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.json",
+                  "notes": "https://github.com/${{github.repository}}/releases/tag/${{github.event.release.tag_name}}",
+                  "compatibility": ${{ env.COMPATIBILITY }}
+              }
+          }')
+          
+          # extract the body
+          HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
+          
+          # extract the status
+          HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          
+          # print the body
+          echo "$HTTP_BODY"
+          
+          # example using the status
+          if [ ! $HTTP_STATUS -eq 200  ]; then
+            echo "Error [HTTP status: $HTTP_STATUS]"
+            exit 1
+          fi
+
+      - name: FC Discord notification
+        if: "!github.event.release.prerelease"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "${{github.event.release.body}}"
+
+      - name: JB2A Discord notification
+        if: "!github.event.release.prerelease"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.JB2A_WEBHOOK_URL }}
+          DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "${{github.event.release.body}}"
 
       #  OR create a pre-release for this specific version
       - name: Update Release with Files
         if: "github.event.release.prerelease"
         id: create_version_prerelease
-        uses: ncipollo/release-action@v1.12.0
+        uses: ncipollo/release-action@v1
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
           name: ${{ github.event.release.name }}
           draft: false
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "./module.json, ./module.zip"
+          artifacts: './module.json, ./module.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
 
