@@ -2074,6 +2074,7 @@ export default class CanvasEffect extends PIXI.Container {
 				if (obj instanceof MeasuredTemplate) {
 					mask.position.set(documentObj.x, documentObj.y);
 					let maskObj = documentObj.object;
+					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
 					if (
 						game.modules.get("walledtemplates")?.active &&
 						maskObj.walledtemplates?.walledTemplate
