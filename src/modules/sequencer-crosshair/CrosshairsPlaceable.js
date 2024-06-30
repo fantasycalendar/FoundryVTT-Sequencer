@@ -16,6 +16,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	isDrag = false;
 	#customText = false;
+	#distanceText = false;
 
 	get crosshair() {
 		return this.document.crosshair;
@@ -41,20 +42,44 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this;
 	}
 
+	get shapeWidth () {
+		return this.shape.width ?? 0;
+	}
+
+	get shapeHeight () {
+		return this.shape.height ?? 0;
+	}
+
 	_refreshRulerText() {
+		if (this.crosshair.location.showRange && this.crosshair.location.obj) {
+			const { units } = this.document.parent.grid;
+			const objLocation = this.crosshair.location.obj?.center ?? this.crosshair.location.obj;
+			const distance = canvas.grid.measurePath([objLocation, this.position]).distance + " " + units;
+			if(!this.#distanceText && this.crosshair.location.obj) {
+				const style = CONFIG.canvasTextStyle.clone();
+				style.align = "center";
+				this.#distanceText = this.template.addChild(new PreciseText(distance.toString(), style));
+				const actualHeight = (this.shapeHeight || this.shape.radius * 2) - (canvas.grid.size/4);
+				this.#distanceText.anchor.set(0.5, 0.5);
+				this.#distanceText.position.set(
+					(this.shapeWidth / 2),
+					actualHeight
+				);
+			}
+			this.#distanceText.text = distance.toString();
+		}
 		this.ruler.renderable = this.crosshair.label.display;
 		if (!this.crosshair.label.display) return;
 		if (this.crosshair.label?.text) {
 			if(this.#customText) return;
 			const style = CONFIG.canvasTextStyle.clone();
 			style.align = "center";
-			this.#customText = new PreciseText(this.crosshair.label.text, style);
+			this.#customText = this.template.addChild(new PreciseText(this.crosshair.label.text, style));
 			this.#customText.anchor.set(0.5);
 			this.#customText.position.set(
-				this.shape.width/2 + this.crosshair.label.dx ?? 0,
-				this.shape.height/2 + this.crosshair.label.dy ?? 0
+				(this.shapeWidth / 2) + this.crosshair.label.dx ?? 0,
+				(this.shapeHeight / 2) + this.crosshair.label.dy ?? 0
 			);
-			this.template.addChild(this.#customText);
 		} else {
 			return super._refreshRulerText();
 		}
@@ -144,7 +169,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		mouseLocation.x += this.crosshair.location.offset.x ?? 0;
 		mouseLocation.y += this.crosshair.location.offset.y ?? 0;
 
-		if (this.crosshair.location.obj) {
+		if (this.crosshair.location.obj && (this.crosshair.location.lock || this.crosshair.location.limit)) {
 
 			const location = this.crosshair.location.obj;
 			const locationX = location?.center?.x ?? location?.position?.x ?? location?.x;
@@ -191,13 +216,16 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 						position.y = snappedMouseLocation.y;
 					}
 
-					const { rotation, distance } = this._getDraggedMatrix(position, snappedMouseLocation);
+					const { direction, distance } = this._getDraggedMatrix(position, snappedMouseLocation);
 
+					const validatedLocation = {
+						x: Number.isNaN(position.x) ? this.document.x : position.x,
+						y: Number.isNaN(position.y) ? this.document.y : position.y,
+					}
 					this.document.updateSource({
-						x: position.x,
-						y: position.y,
+						...validatedLocation,
 						distance,
-						direction: rotation
+						direction
 					});
 
 				} else {
@@ -205,70 +233,85 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 					const edgeLocation = Ray.towardsPoint(
 						{ x: locationX, y: locationY },
 						mouseLocation,
-						this.crosshair.location.offsetDistance * this.document.parent.grid.size
+						this.crosshair.location.edgeOffsetDistance * this.document.parent.grid.size
 					).B;
 
 					const snappedPosition = this.getSnappedPoint(edgeLocation);
 
-					const { rotation, distance } = this._getDraggedMatrix(snappedPosition, mouseLocation);
+					const { direction, distance } = this._getDraggedMatrix(snappedPosition, mouseLocation);
 
+					const validatedLocation = {
+						x: Number.isNaN(snappedPosition.x) ? this.document.x : snappedPosition.x,
+						y: Number.isNaN(snappedPosition.y) ? this.document.y : snappedPosition.y,
+					}
 					this.document.updateSource({
-						x: snappedPosition.x,
-						y: snappedPosition.y,
+						...validatedLocation,
 						distance,
-						direction: rotation
+						direction
 					});
 				}
 			} else if (this.crosshair.location.limit) {
 
 				const ray = new Ray({ x: locationX, y: locationY }, mouseLocation);
-				const rayDistance = ray.distance / this.document.parent.grid.size;
+				const rayDistance = Math.max(0.01, canvas.grid.measurePath([{ x: locationX, y: locationY }, mouseLocation]).spaces);
 
-				const min = this.crosshair.location.minDistance ?? 0;
-				const max = this.crosshair.location.maxDistance ?? Infinity;
-				const cappedDistance = Math.max(min, Math.min(max, rayDistance));
+				const min = this.crosshair.location.minRange ?? 0;
+				const max = this.crosshair.location.maxRange ?? Infinity;
+				const cappedDistance = Math.max(0.01, Math.max(min, Math.min(max, rayDistance)));
 
 				const snappedPosition = this.getSnappedPoint(ray.project(cappedDistance / rayDistance));
 
-				const { rotation, distance } = this._getDraggedMatrix(snappedPosition, mouseLocation);
+				const validatedLocation = {
+					x: Number.isNaN(snappedPosition.x) ? this.document.x : snappedPosition.x,
+					y: Number.isNaN(snappedPosition.y) ? this.document.y : snappedPosition.y,
+				}
+				console.log(validatedLocation)
+
+				const { direction, distance } = this._getDraggedMatrix(validatedLocation, mouseLocation);
 
 				this.document.updateSource({
-					x: snappedPosition.x,
-					y: snappedPosition.y,
+					...validatedLocation,
 					distance,
-					direction: rotation
+					direction
 				});
 
 			}
 
 		} else if (this.isDrag) {
-			const { rotation, distance } = this._getDraggedMatrix(this.document, mouseLocation);
+			const { direction, distance } = this._getDraggedMatrix(this.document, mouseLocation);
 			this.document.updateSource({
 				distance,
-				direction: rotation
+				direction
 			});
-		} else if (!this.crosshair.location.obj) {
-			const { x, y } = this.getSnappedPoint(mouseLocation);
-			this.document.updateSource({ x, y });
+		} else  {
+			const snappedPosition = this.getSnappedPoint(mouseLocation);
+			this.document.updateSource({
+				x: snappedPosition.x,
+				y: snappedPosition.y,
+			});
 		}
 
 	}
 
-	_getDraggedMatrix(source, target, snapDirection = this.crosshair.snap.direction) {
+	_getDraggedMatrix(source, target) {
 
-		const drag = new Ray(source, target);
+		const dragAngle = (new Ray(source, target)).angle;
+		const dragDistance = canvas.grid.measurePath([source, target]);
 
-		let distance = Math.max(0.5, drag.distance / this.document.parent.grid.size * this.document.parent.grid.distance);
+		let distance = Math.max(0.5, dragDistance.distance);
 
 		if (this.crosshair.distanceMinMax.min && this.crosshair.distanceMinMax.max) {
 			distance = Math.min(Math.max(distance, this.crosshair.distanceMinMax.min), this.crosshair.distanceMinMax.max);
 		}
 
-		const rotation = snapDirection
-			? Math.round(Math.toDegrees(drag.angle) / snapDirection) * snapDirection
-			: Math.toDegrees(drag.angle);
+		const direction = this.crosshair.snap.direction
+			? Math.round(Math.toDegrees(dragAngle) / this.crosshair.snap.direction) * this.crosshair.snap.direction
+			: Math.toDegrees(dragAngle);
 
-		return { rotation, distance };
+		return {
+			direction: direction || 0,
+			distance: this.crosshair.distanceMinMax.locked ? this.document.distance : distance
+		};
 
 	}
 

@@ -36,23 +36,27 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 				size: CONST.GRID_SNAPPING_MODES.CENTER,
 				angle: 0
 			},
-			lockDrag: false,
+			lockDrag: true,
 			distanceMinMax: {
+				locked: true,
 				min: null,
 				max: null
 			},
 			label: {
-				display: true, text: "", dx: 0, dy: 0,
+				display: false,
+				text: "",
+				dx: 0,
+				dy: 0,
 			},
 			location: {
 				obj: null,
 				limit: false,
-				minDistance: null,
-				maxDistance: null,
-				showDistance: false,
+				minRange: null,
+				maxRange: null,
+				showRange: false,
 				lock: false,
 				edge: false,
-				offsetDistance: 0,
+				edgeOffsetDistance: 0,
 				offset: { x: 0, y: 0 }
 			},
 			lockManualRotation: false,
