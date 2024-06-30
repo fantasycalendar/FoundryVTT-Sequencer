@@ -76,9 +76,10 @@ const SequencerAnimationEngine = {
 
 	updateStartValues(target, propertyName) {
 		const targetId = lib.get_object_identifier(target) + "-" + propertyName;
+		if (!this._coreValues[targetId]) return;
 		if (targetId in this._coreValues) {
-			this._coreValues[targetId] = lib.deep_get(target, propertyName);
-			const delta = this._coreValues[targetId] - this._storedValues[targetId].value;
+			this._coreValues[targetId].value = lib.deep_get(target, propertyName);
+			const delta = this._coreValues[targetId].value - this._storedValues[targetId].value;
 			this._storedValues[targetId].value += delta;
 		}
 	},

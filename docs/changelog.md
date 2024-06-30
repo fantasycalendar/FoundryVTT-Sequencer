@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.2.9
+- *Effects* - Fixed effects with `.attachTo()` sometimes throwing errors and causing the scene to freeze
+
 ## Version 3.2.8
 - *Sequencer* - Fixed Sequencer Manager throwing A DIFFERENT error when trying to see active
 - *Effects* - Fixed `.persist()` effects not looping when first created (but would loop if enough time had passed & user had refreshed - very odd)
