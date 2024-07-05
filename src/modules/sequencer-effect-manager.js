@@ -196,7 +196,7 @@ export default class SequencerEffectManager {
   static _filterEffects(inFilter) {
     if (inFilter.name) {
       inFilter.name = new RegExp(
-        lib.str_to_search_regex_str(lib.safe_str(inFilter.name)),
+        "^" + lib.str_to_search_regex_str(lib.safe_str(inFilter.name)) + "$",
         "gu"
       );
     }

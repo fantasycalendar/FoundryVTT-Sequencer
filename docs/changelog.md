@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.2.10
+- *Sequencer* - Fixed `{ name }` filters on `Sequencer.EffectManager` and `Sequencer.SoundManager` methods not working with regex-like strings
+- *Effects* - Tweaked and improved the animation engine to better handle stacked animations on the same property
+- *Effects* - Fixed `.persist()`ing effects with internal loop assets not finishing the ending portion when the effect was ended
+
 ## Version 3.2.9
 - *Effects* - Fixed effects with `.attachTo()` sometimes throwing errors and causing the scene to freeze
 - *Effects* - Fixed `.mask()`ed effects not following measured templates correctly

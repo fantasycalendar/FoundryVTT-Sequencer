@@ -1728,12 +1728,9 @@ export default class CanvasEffect extends PIXI.Container {
 			this._startTime === 0 &&
 			this._endTime === this.mediaDuration
 		) {
-			this._animationTimes.loopStart =
-				this._file.markers.loop.start / playbackRate / 1000;
-			this._animationTimes.loopEnd =
-				this._file.markers.loop.end / playbackRate / 1000;
-			this._animationTimes.forcedEnd =
-				this._file.markers.forcedEnd / playbackRate / 1000;
+			this._animationTimes.loopStart = this._file.markers.loop.start / playbackRate / 1000;
+			this._animationTimes.loopEnd = this._file.markers.loop.end / playbackRate / 1000;
+			this._animationTimes.forcedEnd = this._file.markers.forcedEnd / playbackRate / 1000;
 		}
 
 		this._totalDuration = this.loops
@@ -2555,7 +2552,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	set texture(inTexture) {
-		if (this.data?.fileOptions?.antialiasing !== null) {
+		if (this.data?.fileOptions?.antialiasing !== PIXI.SCALE_MODES.LINEAR) {
 			inTexture.baseTexture.setStyle(0, this.data?.fileOptions?.antialiasing)
 		}
 		this._texture = inTexture;
@@ -3381,7 +3378,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (!this._animationTimes.loopStart) {
 			this._loopOffset =
 				(creationTimeDifference % this._animationDuration) / 1000;
-		} else if (creationTimeDifference / 1000 > this._animationTimes.loopStart) {
+		} else if ((creationTimeDifference / 1000) > this._animationTimes.loopStart) {
 			const loopDuration =
 				this._animationTimes.loopEnd - this._animationTimes.loopStart;
 			this._loopOffset =
@@ -3474,26 +3471,21 @@ class PersistentCanvasEffect extends CanvasEffect {
 	async endEffect() {
 		if (this._isEnding) return;
 		this._isEnding = true;
-		let fullWaitDuration = 0;
 		let extraEndDuration = this.data.extraEndDuration ?? 0;
+		this.mediaLooping = false;
 		if (this._animationTimes?.forcedEnd) {
 			this.mediaCurrentTime = this._animationTimes.forcedEnd;
-			fullWaitDuration =
-				(this.mediaDuration - (this._animationTimes?.forcedEnd ?? 0)) * 1000;
+			extraEndDuration += (this.mediaDuration - (this._animationTimes?.forcedEnd ?? 0)) * 1000;
 		} else if (this._animationTimes?.loopEnd) {
-			fullWaitDuration = (this.mediaDuration - this.mediaCurrentTime) * 1000;
-			this.mediaLooping = false;
-			extraEndDuration = Math.max(extraEndDuration, fullWaitDuration);
+			extraEndDuration += (this.mediaDuration - this.mediaCurrentTime) * 1000;
 		}
-		const fromEndCustomAnimations =
-			this._getFromEndCustomAnimations(extraEndDuration);
+		const fromEndCustomAnimations = this._getFromEndCustomAnimations(extraEndDuration);
 		const durations = [
 			this._fadeOut(extraEndDuration),
 			this._fadeOutAudio(extraEndDuration),
 			this._scaleOut(extraEndDuration),
 			this._rotateOut(extraEndDuration),
-			this.data.extraEndDuration,
-			fullWaitDuration,
+			extraEndDuration,
 			...fromEndCustomAnimations.map(
 				(animation) => animation.duration + animation.delay
 			),
