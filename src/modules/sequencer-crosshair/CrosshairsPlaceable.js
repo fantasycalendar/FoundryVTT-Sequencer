@@ -1,4 +1,5 @@
 import { get_mouse_position, get_object_position, } from "../../lib/canvas-lib.js";
+import { is_real_number } from "../../lib/lib.js";
 
 export default class CrosshairsPlaceable extends MeasuredTemplate {
 
@@ -253,24 +254,20 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			} else if (this.crosshair.location.limit) {
 
 				const ray = new Ray({ x: locationX, y: locationY }, mouseLocation);
-				const rayDistance = Math.max(0.01, canvas.grid.measurePath([{ x: locationX, y: locationY }, mouseLocation]).spaces);
+				const gridPath = canvas.grid.measurePath([{ x: locationX, y: locationY }, mouseLocation]);
 
-				const min = this.crosshair.location.minRange ?? 0;
-				const max = this.crosshair.location.maxRange ?? Infinity;
-				const cappedDistance = Math.max(0.01, Math.max(min, Math.min(max, rayDistance)));
+				const minRange = is_real_number(this.crosshair.location.minRange) ? this.crosshair.location.minRange : 0;
+				const maxRange = is_real_number(this.crosshair.location.maxRange) ? this.crosshair.location.maxRange - 0.5 : Infinity;
 
-				const snappedPosition = this.getSnappedPoint(ray.project(cappedDistance / rayDistance));
+				const cappedDistance = Math.max(minRange, Math.min(maxRange, gridPath.distance / this.document.parent.grid.distance)) * this.document.parent.grid.size;
 
-				const validatedLocation = {
-					x: Number.isNaN(snappedPosition.x) ? this.document.x : snappedPosition.x,
-					y: Number.isNaN(snappedPosition.y) ? this.document.y : snappedPosition.y,
-				}
-				console.log(validatedLocation)
+				const ratioLocation = maxRange !== Infinity ? ray.project(cappedDistance / ray.distance) : mouseLocation;
+				const snappedPosition = this.getSnappedPoint(ratioLocation);
 
-				const { direction, distance } = this._getDraggedMatrix(validatedLocation, mouseLocation);
+				const { direction, distance } = this._getDraggedMatrix(snappedPosition, mouseLocation);
 
 				this.document.updateSource({
-					...validatedLocation,
+					...snappedPosition,
 					distance,
 					direction
 				});
