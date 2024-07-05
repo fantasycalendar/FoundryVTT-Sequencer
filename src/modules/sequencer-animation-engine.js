@@ -76,11 +76,8 @@ const SequencerAnimationEngine = {
 
 	updateStartValues(target, propertyName) {
 		const targetId = lib.get_object_identifier(target) + "-" + propertyName;
-		if (!this._coreValues[targetId]) return;
 		if (targetId in this._coreValues) {
 			this._coreValues[targetId].value = lib.deep_get(target, propertyName);
-			const delta = this._coreValues[targetId].value - this._storedValues[targetId].value;
-			this._storedValues[targetId].value += delta;
 		}
 	},
 
@@ -111,17 +108,6 @@ const SequencerAnimationEngine = {
 
 		this._animations = this._animations.filter((animation) => !animation.complete);
 
-		for (const targetId of Object.keys(this._coreValues)) {
-			if (
-				this._animations.every((anim) => {
-					return anim.attributes.every((attr) => {
-						return attr.targetId === targetId && attr.complete;
-					})
-				})
-			) {
-				delete this._coreValues[targetId];
-			}
-		}
 	},
 
 	_coreValues: {},
@@ -134,7 +120,13 @@ const SequencerAnimationEngine = {
 			return !attribute.complete && animation.totalDt >= attribute.delay;
 		}).forEach((attr) => {
 			this._animateAttribute(attr);
-		})
+			if(attr.finishing){
+				attr.complete = true;
+				if (this._coreValues[attr.targetId]) {
+					delete this._coreValues[attr.targetId];
+				}
+			}
+		});
 
 		animation.complete = animation.attributes.filter((attribute) => !attribute.complete).length === 0;
 
@@ -145,21 +137,19 @@ const SequencerAnimationEngine = {
 
 	_animateAttribute(attribute) {
 
-		if (!attribute.started) {
-			if (this._coreValues[attribute.targetId] === undefined) {
-				this._coreValues[attribute.targetId] = {
-					id: attribute.id,
-					value: lib.deep_get(attribute.target, attribute.propertyName)
-				};
-			}
-			attribute.started = true;
+		if (this._coreValues[attribute.targetId] === undefined) {
+			this._coreValues[attribute.targetId] = {
+				id: attribute.id,
+				value: lib.deep_get(attribute.target, attribute.propertyName)
+			};
 		}
 
 		if (this._storedValues[attribute.targetId] === undefined) {
 			this._storedValues[attribute.targetId] = {
 				value: this._coreValues[attribute.targetId].value,
 				target: attribute.target,
-				propertyName: attribute.propertyName
+				propertyName: attribute.propertyName,
+				targetId: attribute.targetId
 			};
 		}
 
@@ -180,17 +170,10 @@ const SequencerAnimationEngine = {
 			if (attribute.isFunkyProperty) {
 				const coreValue = this._coreValues[attribute.targetId].value;
 				attribute.delta = (coreValue * attribute.value) - coreValue;
+				this._storedValues[attribute.targetId].value += attribute.delta;
 			} else {
-				if (attribute.previousValue === null) {
-					attribute.previousValue = this._coreValues[attribute.targetId].value;
-				}
-				attribute.delta = attribute.value - attribute.previousValue;
-				attribute.previousValue = attribute.value;
-				if(attribute.id === this._coreValues[attribute.targetId].id){
-					this._coreValues[attribute.targetId].value = attribute.value;
-				}
+				this._storedValues[attribute.targetId].value += attribute.value;
 			}
-			this._storedValues[attribute.targetId].value += attribute.delta;
 		}
 
 	},
