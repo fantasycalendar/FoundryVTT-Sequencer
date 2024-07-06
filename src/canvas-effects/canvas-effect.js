@@ -668,7 +668,9 @@ export default class CanvasEffect extends PIXI.Container {
 		return (
 			(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
 			this._animationTimes.loopStart === undefined &&
-			this._animationTimes.loopEnd === undefined
+			this._animationTimes.loopEnd === undefined &&
+			this.data.persistent &&
+			!this.loops
 		);
 	}
 
@@ -3338,7 +3340,9 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (!this.hasAnimatedMedia) return;
 
-		this.mediaLooping = this.playNaturally && !this.loops && !this.loopDelay;
+
+
+		this.mediaLooping = this.playNaturally;
 
 		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
 
