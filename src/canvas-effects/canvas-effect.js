@@ -97,6 +97,7 @@ export default class CanvasEffect extends PIXI.Container {
 		super();
 
 		this.sortableChildren = true;
+		this.interactiveChildren = false;
 
 		// Set default values
 		this.actualCreationTime = +new Date();
@@ -108,7 +109,6 @@ export default class CanvasEffect extends PIXI.Container {
 		this.ready = false;
 		this._ended = false;
 		this._isEnding = false;
-		this._lastDimensions = {};
 
 		this._cachedSourceData = {};
 		this._cachedTargetData = {};
@@ -468,9 +468,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._video = inVideo;
 
-		this._video.currentTime = this.playNaturally
-			? 0
-			: Math.min(currentTime, this._video.duration);
+		this._video.currentTime = Math.min(currentTime, this._video.duration);
 		this._video.loop = isLooping;
 
 		this.updateTexture();
@@ -584,6 +582,10 @@ export default class CanvasEffect extends PIXI.Container {
 		return 1;
 	}
 
+	get mediaDurationMs(){
+		return this.mediaDuration * 1000;
+	}
+
 	get hasAnimatedMedia() {
 		return !!(this.video || this.animatedSprite);
 	}
@@ -657,21 +659,6 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		return playVisible;
-	}
-
-	/**
-	 * Whether this effect should play naturally, or be constrained to a subsection of the video
-	 *
-	 * @returns {boolean}
-	 */
-	get playNaturally() {
-		return (
-			(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
-			this._animationTimes.loopStart === undefined &&
-			this._animationTimes.loopEnd === undefined &&
-			this.data.persistent &&
-			!this.loops
-		);
 	}
 
 	static make(inData) {
@@ -1285,11 +1272,10 @@ export default class CanvasEffect extends PIXI.Container {
 	/**
 	 * Initializes the effect and places it on the canvas
 	 *
-	 * @param {boolean} play
 	 * @returns {Promise}
 	 * @private
 	 */
-	async _initialize(play = true) {
+	async _initialize() {
 		this.ready = false;
 		this._initializeVariables();
 		await this._contextLostCallback();
@@ -1304,7 +1290,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._playCustomAnimations();
 		this._setEndTimeout();
 		this._timeoutVisibility();
-		if (play) await this._startEffect();
+		await this._startEffect();
 		this.ready = true;
 	}
 
@@ -1315,13 +1301,13 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {Promise}
 	 * @private
 	 */
-	async _reinitialize(play = true) {
+	async _reinitialize() {
 		this.renderable = false;
 		if (!this.shouldPlay) {
 			return Sequencer.EffectManager._removeEffect(this);
 		}
 		this.actualCreationTime = +new Date();
-		return this._initialize(play);
+		return this._initialize();
 	}
 
 	/**
@@ -1363,6 +1349,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._currentFilePath = this.data.file;
 		this._relatedSprites = {};
 		this._hooks = [];
+		this._lastDimensions = {};
 
 		if (this._resetTimeout) {
 			clearTimeout(this._resetTimeout);
@@ -1642,7 +1629,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.mediaPlaybackRate = playbackRate;
 
-		this._animationDuration = this.data.duration || this.mediaDuration * 1000;
+		this._animationDuration = this.data.duration || this.mediaDurationMs;
 
 		// If the effect moves, then infer the duration from the distance divided by the speed
 		if (this.data.moveSpeed && this.data.moves) {
@@ -1738,6 +1725,18 @@ export default class CanvasEffect extends PIXI.Container {
 		this._totalDuration = this.loops
 			? (this._animationDuration * this.loops) + (this.loopDelay * (this.loops - 1))
 			: this._animationDuration;
+
+		if(this.data.persist){
+			this.mediaLooping = (
+				(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
+				this._animationTimes.loopStart === undefined &&
+				this._animationTimes.loopEnd === undefined &&
+				!this.loops &&
+				!this.loopDelay
+			);
+		}else{
+			this.mediaLooping = this._startTime === 0 && this._endTime > this.mediaDuration && !(this.loops && this.loopDelay);
+		}
 
 		// Resolve duration promise so that owner of effect may know when it is finished
 		this._durationResolve(this._totalDuration);
@@ -3340,10 +3339,6 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (!this.hasAnimatedMedia) return;
 
-
-
-		this.mediaLooping = this.playNaturally;
-
 		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
 
 		this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration);
@@ -3433,15 +3428,6 @@ export default class CanvasEffect extends PIXI.Container {
 }
 
 class PersistentCanvasEffect extends CanvasEffect {
-
-	/**
-	 * @OVERRIDE
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _reinitialize() {
-		await super._reinitialize(false);
-	}
 
 	/** @OVERRIDE */
 	_playPresetAnimations() {

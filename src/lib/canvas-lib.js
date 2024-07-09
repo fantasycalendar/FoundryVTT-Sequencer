@@ -328,11 +328,16 @@ export function get_object_elevation(inObject) {
   return inObject?.document?.elevation ?? inObject?.elevation ?? 0;
 }
 
-export function get_mouse_position(snapToGrid = false, gridSnap = 2) {
+export function get_mouse_position(snapToGrid = false) {
   const pos = lib.getCanvasMouse().getLocalPosition(canvas.app.stage);
-  return !snapToGrid
-    ? new PIXI.Point(pos.x, pos.y)
-    : canvas.grid.getSnappedPoint({ x: pos.x, y: pos.y }, gridSnap);
+
+	const snappingOptions = CONSTANTS.IS_V12 ? {
+		mode: CONST.GRID_SNAPPING_MODES.CENTER | CONST.GRID_SNAPPING_MODES.VERTEX | CONST.GRID_SNAPPING_MODES.EDGE_MIDPOINT
+	} : 2;
+
+	return !snapToGrid
+		? new PIXI.Point(pos.x, pos.y)
+		: canvas.grid.getSnappedPoint({ x: pos.x, y: pos.y }, snappingOptions)
 }
 
 export function distance_between(p1, p2) {
