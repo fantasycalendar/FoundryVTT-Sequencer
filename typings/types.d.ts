@@ -274,17 +274,17 @@ declare abstract class HasScale<T> {
    *  - An object with x and y for non-uniform scaling
    *  - Two numbers which the Sequencer will randomly pick a uniform scale between
    */
-  scale(inScaleMin: number, inScaleMax?: number): T;
+  scale(inScaleMin: number | { x: number, y: number }, inScaleMax?: number): T;
 
   /**
    * Causes the effect to scale when it starts playing
    */
-  scaleIn(inScale: number, durationMs: number, options?: EasingOptions): T;
+  scaleIn(inScale: number | { x: number, y: number }, durationMs: number, options?: EasingOptions): T;
 
   /**
    * Causes the effect to scale at the end of the effect's duration
    */
-  scaleOut(inScale: number, durationMs: number, options?: EasingOptions): T;
+  scaleOut(inScale: number | { x: number, y: number }, durationMs: number, options?: EasingOptions): T;
 }
 
 declare abstract class HasTime<T> {
