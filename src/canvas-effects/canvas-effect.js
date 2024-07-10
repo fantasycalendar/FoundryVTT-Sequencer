@@ -1557,6 +1557,12 @@ export default class CanvasEffect extends PIXI.Container {
 		this.spriteSheet = false;
 		if (this.data.stretchTo) {
 			let ray = new Ray(this.sourcePosition, this.targetPosition);
+			if (ray.distance === 0) {
+				lib.custom_error(
+				      "effect",
+				      `stretchTo - You are stretching over a distance of "0", you may be attempting to stretch between two of the same coordinates!`
+				);
+			}
 			this._rotateTowards(ray);
 			ray = new Ray(this.sourcePosition, this.targetPosition);
 			let { filePath, texture, sheet } = await this._getTextureForDistance(
