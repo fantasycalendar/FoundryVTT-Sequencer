@@ -824,9 +824,10 @@ declare abstract class EffectSection {
    */
   tieToDocuments(
     inOrigin:
-      | string
+      | String
+      | PlaceableObject
       | foundry.abstract.Document
-      | Array<string | foundry.abstract.Document>
+      | Array<String | PlaceableObject | foundry.abstract.Document>
   ): this;
 
   /**
