@@ -1135,6 +1135,9 @@ declare abstract class SequencerEffectManager {
     name?: string;
     sceneId?: string;
     effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
+    source: PlaceableObject | Document | String,
+    target: PlaceableObject | Document | String,
+    origin: String
   }): Promise<void>;
 
   /**
