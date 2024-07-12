@@ -829,12 +829,11 @@ declare abstract class EffectSection {
       | Array<String | PlaceableObject | foundry.abstract.Document>
   ): this;
 
+
   /**
-   * This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
-   *
-   * The method accepts a string or a Document that has an UUID.
+   * Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
    */
-  mask(inObject: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
+  mask(inObject?: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
 
   /**
    * Causes the effect to be visible through walls
