@@ -121,10 +121,9 @@ declare interface Sequence extends CoreMethods {}
 declare class Sequence {
   /**
    * Declaring the module name when using new Sequence() will make every error or warning caught during the runtime also
-   * include the module name, which lets you and other users know which module caused the error. The secondary argument
-   * is an object that can contain a number of optional arguments.
+   * include the module name, which lets you and other users know which module caused the error.
    */
-  constructor(inOptions?: { inModuleName?: string; softFail?: boolean });
+  constructor(inOptions?: { inModuleName?: string; softFail?: boolean }, softFail?: boolean);
 }
 
 declare abstract class Section<T> {
