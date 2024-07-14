@@ -114,6 +114,7 @@ Causes the Sequence to play through all of its sections. Returns a `Promise` whi
 Also supports an options object that accepts:
 - `remote: boolean` - causes the sequence to be executed on each users' machine independently. This does not support `.animation()` sections when set to `true`
 - `preload: boolean` - causes any section with `.file()` entries to preload all files that would be played
+- `local: boolean` - causes sections to be played only locally to the user executing the sequence
 
 ### Preset
 

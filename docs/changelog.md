@@ -1,9 +1,12 @@
 ## Changelog
 
 ## Version 3.2.11
-- *Sequencer* - Added `preload` as a secondary optional argument to `Sequence#play` to automatically preload files that will be played in the Sequence 
+- *Sequencer* - Updated `Sequence#play` to have two additional secondary parameters:
+  - `preload: boolean` - causes any section with `.file()` entries to preload all files that would be played
+  - `local: boolean` - causes sections to be played only locally to the user executing the sequence
 - *Effects* - Fixed cyrillic text breaking some effects played with Automated Animations
-- *Effects* - Fixed the alpha of tokens and tiles not being respected with `attachTo()`  
+- *Effects* - Fixed the alpha of tokens and tiles not being respected with `attachTo()`
+- *Effects* - Fixed `.template()` on effects not overwriting database templates
 
 ## Version 3.2.10
 - *Sequencer* - Fixed `{ name }` filters on `Sequencer.EffectManager` and `Sequencer.SoundManager` methods not working with regex-like strings

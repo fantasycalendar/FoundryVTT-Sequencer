@@ -1331,7 +1331,7 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
 
-		this._template = this.data.template;
+		this._template = null;
 		this._ended = null;
 		this._maskContainer = null;
 		this._maskSprite = null;
@@ -1523,6 +1523,9 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	async _loadTexture() {
+
+		this._template = this.data.template;
+
 		if (this.data.file === "") {
 			return;
 		}
@@ -1610,7 +1613,7 @@ export default class CanvasEffect extends PIXI.Container {
 			});
 		}
 
-		this._template = this._file.template ?? this._template;
+		this._template ??= this._file.template;
 		this.video = this._currentFilePath.toLowerCase().endsWith(".webm")
 			? this.texture?.baseTexture?.resource?.source
 			: false;
