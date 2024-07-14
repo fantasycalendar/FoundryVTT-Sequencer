@@ -41,7 +41,7 @@ export default class Sequence {
    *
    * @returns {Promise}
    */
-  async play({ remote = false, preload = false } = {}) {
+  async play({ remote = false, preload = false, local = false  } = {}) {
     if (remote) {
       this.localOnly = true;
       const data = await this.toJSON();
@@ -362,7 +362,7 @@ export default class Sequence {
     return func;
   }
 
-  _showWarning(self, func, warning, notify=false) {
+  _showWarning(self, func, warning, notify = false) {
     lib.custom_warning(
       this.moduleName,
       `${self.constructor.name.replace("Section", "")} | ${func} - ${warning}`,
@@ -393,9 +393,9 @@ export default class Sequence {
     return get(this._status);
   }
 
-	get statusStore(){
-		return this._status;
-	}
+  get statusStore() {
+    return this._status;
+  }
 
   _abort() {
     this.status = CONSTANTS.STATUS.ABORTED;
