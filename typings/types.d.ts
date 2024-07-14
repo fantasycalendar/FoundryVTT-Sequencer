@@ -121,10 +121,9 @@ declare interface Sequence extends CoreMethods {}
 declare class Sequence {
   /**
    * Declaring the module name when using new Sequence() will make every error or warning caught during the runtime also
-   * include the module name, which lets you and other users know which module caused the error. The secondary argument
-   * is an object that can contain a number of optional arguments.
+   * include the module name, which lets you and other users know which module caused the error.
    */
-  constructor(inOptions?: { inModuleName?: string; softFail?: boolean });
+  constructor(inOptions?: { inModuleName?: string; softFail?: boolean }, softFail?: boolean);
 }
 
 declare abstract class Section<T> {
@@ -824,17 +823,17 @@ declare abstract class EffectSection {
    */
   tieToDocuments(
     inOrigin:
-      | string
+      | String
+      | PlaceableObject
       | foundry.abstract.Document
-      | Array<string | foundry.abstract.Document>
+      | Array<String | PlaceableObject | foundry.abstract.Document>
   ): this;
 
+
   /**
-   * This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
-   *
-   * The method accepts a string or a Document that has an UUID.
+   * Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
    */
-  mask(inObject: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
+  mask(inObject?: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
 
   /**
    * Causes the effect to be visible through walls
@@ -1136,6 +1135,9 @@ declare abstract class SequencerEffectManager {
     name?: string;
     sceneId?: string;
     effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
+    source: PlaceableObject | Document | String,
+    target: PlaceableObject | Document | String,
+    origin: String
   }): Promise<void>;
 
   /**
