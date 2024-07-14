@@ -1,7 +1,9 @@
 ## Changelog
 
 ## Version 3.2.11
+- *Sequencer* - Added `preload` as a secondary optional argument to `Sequence#play` to automatically preload files that will be played in the Sequence 
 - *Effects* - Fixed cyrillic text breaking some effects played with Automated Animations
+- *Effects* - Fixed the alpha of tokens and tiles not being respected with `attachTo()`  
 
 ## Version 3.2.10
 - *Sequencer* - Fixed `{ name }` filters on `Sequencer.EffectManager` and `Sequencer.SoundManager` methods not working with regex-like strings

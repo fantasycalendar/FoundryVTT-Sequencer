@@ -822,9 +822,8 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		const alpha =
-			this.sourceDocument instanceof TokenDocument ||
-			this.sourceDocument instanceof TileDocument
-				? this.sourceDocument?.alpha ?? 1.0
+			this.sourceDocument instanceof TokenDocument || this.sourceDocument instanceof TileDocument
+				? this.sourceDocument?._source?.alpha ?? 1.0
 				: 1.0;
 
 		if (alpha !== undefined) {

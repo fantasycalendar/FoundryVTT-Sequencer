@@ -41,7 +41,7 @@ export default class Sequence {
    *
    * @returns {Promise}
    */
-  async play({ remote = false } = {}) {
+  async play({ remote = false, preload = false } = {}) {
     if (remote) {
       this.localOnly = true;
       const data = await this.toJSON();
@@ -55,6 +55,9 @@ export default class Sequence {
     lib.debug("Initializing sections");
     for (let section of this.sections) {
       await section._initialize();
+	    if(preload && section._file){
+		    await Sequencer.Preloader.preloadForClients(section._file)
+	    }
     }
     SequenceManager.RunningSequences.add(this.id, this);
     this.effectIndex = 0;
