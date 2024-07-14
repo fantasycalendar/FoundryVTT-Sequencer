@@ -1101,6 +1101,14 @@ declare abstract class SequencerEffectPlayer {
   show(): Promise<void>;
 }
 
+type inFilters = {
+  object?: string | VisibleFoundryTypes;
+  name?: string;
+  sceneId?: string;
+  source?: PlaceableObject | Document | String,
+  target?: PlaceableObject | Document | String,
+  origin?: String
+}
 declare abstract class SequencerEffectManager {
   /**
    * Opens the Sequencer Effects UI with the effects tab open
@@ -1115,34 +1123,17 @@ declare abstract class SequencerEffectManager {
   /**
    * Get effects that are playing on the canvas based on a set of filters
    */
-  getEffects(options: {
-    object?: string | VisibleFoundryTypes;
-    name?: string;
-    sceneId?: string;
-  }): Array<any>;
+  getEffects(options: inFilters): Array<any>;
 
   /**
    * Updates effects based on a set of filters
    */
-  updateEffects(options: {
-    object?: string | VisibleFoundryTypes;
-    name?: string;
-    sceneId?: string;
-    effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
-  }): Promise<Array<any>>;
+  updateEffects(options: RequireAtLeastOne<inFilters & { effects?: string | CanvasEffect | Array<string> | Array<CanvasEffect>; }>): Promise<Array<any>>;
 
   /**
    * End effects that are playing on the canvas based on a set of filters
    */
-  endEffects(options: RequireAtLeastOne<{
-    object?: string | VisibleFoundryTypes;
-    name?: string;
-    sceneId?: string;
-    effects?: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
-    source?: PlaceableObject | Document | String,
-    target?: PlaceableObject | Document | String,
-    origin?: String
-  }>): Promise<void>;
+  endEffects(options: RequireAtLeastOne<inFilters & { effects?: string | CanvasEffect | Array<string> | Array<CanvasEffect>; }>): Promise<void>;
 
   /**
    * End all effects that are playing on the canvas
