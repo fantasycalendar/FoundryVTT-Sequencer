@@ -3,6 +3,10 @@ type EasingOptions = {
   delay?: number;
 };
 
+type RequireAtLeastOne<T> = {
+  [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>
+}[keyof T]
+
 type EasingOptionsWithTarget = EasingOptions & {
   target: Vector2;
 };
@@ -1130,15 +1134,15 @@ declare abstract class SequencerEffectManager {
   /**
    * End effects that are playing on the canvas based on a set of filters
    */
-  endEffects(options: {
+  endEffects(options: RequireAtLeastOne<{
     object?: string | VisibleFoundryTypes;
     name?: string;
     sceneId?: string;
-    effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
-    source: PlaceableObject | Document | String,
-    target: PlaceableObject | Document | String,
-    origin: String
-  }): Promise<void>;
+    effects?: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
+    source?: PlaceableObject | Document | String,
+    target?: PlaceableObject | Document | String,
+    origin?: String
+  }>): Promise<void>;
 
   /**
    * End all effects that are playing on the canvas
