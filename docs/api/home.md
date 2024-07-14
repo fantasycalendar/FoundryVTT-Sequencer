@@ -105,11 +105,15 @@ Adds the sections from a given Sequence to this Sequence. This is useful if you 
 
 ### Play
 
-`.play()`
+`.play(inOptions)`
 
 Returns `Promise`
 
 Causes the Sequence to play through all of its sections. Returns a `Promise` which resolves when all sections have played.
+
+Also supports an options object that accepts:
+- `remote: boolean` - causes the sequence to be executed on each users' machine independently. This does not support `.animation()` sections when set to `true`
+- `preload: boolean` - causes any section with `.file()` entries to preload all files that would be played
 
 ### Preset
 

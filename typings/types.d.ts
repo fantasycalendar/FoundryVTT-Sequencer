@@ -103,7 +103,7 @@ declare class CoreMethods {
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
    */
-  play(inOptions?: { remote?: boolean, local?: boolean }): Promise<Sequence>;
+  play(inOptions?: { remote?: boolean, preload?: boolean, local?: boolean }): Promise<Sequence>;
 
   /**
    * Turns the sequence into an array of objects to be reconstructed later
