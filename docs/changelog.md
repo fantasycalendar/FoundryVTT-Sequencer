@@ -4,6 +4,7 @@
 - *Sequencer* - Updated `Sequence#play` to have two additional secondary parameters:
   - `preload: boolean` - causes any section with `.file()` entries to preload all files that would be played
   - `local: boolean` - causes sections to be played only locally to the user executing the sequence
+- *Sequencer* - Improved typing information (thank you, Vauxs!)
 - *Effects* - Fixed non-ASCII text breaking some effects played with Automated Animations due to its usage with the Effect Manager
 - *Effects* - Fixed the alpha of tokens and tiles not being respected with `attachTo()`
 - *Effects* - Fixed `.template()` on effects not overwriting database templates
