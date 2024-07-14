@@ -1235,7 +1235,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	async _addAnimations(inAnimations) {
-		this._playAnimations(inAnimations);
+		this._playAnimations(foundry.utils.deepClone(inAnimations));
 		this.data.animations = (this.data.animations ?? []).concat(inAnimations);
 	}
 

@@ -7,6 +7,7 @@
 - *Effects* - Fixed cyrillic text breaking some effects played with Automated Animations
 - *Effects* - Fixed the alpha of tokens and tiles not being respected with `attachTo()`
 - *Effects* - Fixed `.template()` on effects not overwriting database templates
+- *Effects* - Fixed `CanvasEffect#addAnimatedProperties` causing errors when used twice in a row as it would try to incorrectly serialize entire PIXI sprites
 
 ## Version 3.2.10
 - *Sequencer* - Fixed `{ name }` filters on `Sequencer.EffectManager` and `Sequencer.SoundManager` methods not working with regex-like strings
