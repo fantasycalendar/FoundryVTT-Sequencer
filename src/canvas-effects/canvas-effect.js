@@ -561,19 +561,6 @@ export default class CanvasEffect extends PIXI.Container {
 
 		return playVisible;
 	}
-	
-	/**
-	 * Whether this effect should play naturally, or be constrained to a subsection of the video
-	 *
-	 * @returns {boolean}
-	 */
-	get playNaturally() {
-		return (
-			(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
-			this._animationTimes.loopStart === undefined &&
-			this._animationTimes.loopEnd === undefined
-		);
-	}
 
 	static make(inData) {
 		return !inData.persist
@@ -1246,7 +1233,7 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
 
-		this._template = null;
+		this._template = this.data.template;
 		this._ended = null;
 		this._maskContainer = null;
 		this._maskSprite = null;
@@ -1348,15 +1335,17 @@ export default class CanvasEffect extends PIXI.Container {
 	_playPresetAnimations() {
 		this._moveTowards();
 
+		this._fadeOut();
 		this._fadeIn();
-		this._fadeInAudio();
-		this._scaleIn();
+
+		this._rotateOut();
 		this._rotateIn();
 
-		this._fadeOut();
-		this._fadeOutAudio();
 		this._scaleOut();
-		this._rotateOut();
+		this._scaleIn();
+
+		this._fadeOutAudio();
+		this._fadeInAudio();
 	}
 
 	/**
@@ -1633,8 +1622,13 @@ export default class CanvasEffect extends PIXI.Container {
 			this._currentFilePath = this.data.file;
 		}
 
-		if (file.template && !this._template) {
-			this._template = {gridSize: file.template[0], startPoint: file.template[1], endPoint: file.template[2] }
+		if (file.template) {
+			this._template = 
+				foundry.utils.mergeObject(
+					{ gridSize: file.template[0], startPoint: file.template[1], endPoint: file.template[2] },
+					this.data.template
+				)
+			
 		}
 		file.fileIndex = this.data.forcedIndex;
 		file.twister = this._twister;
@@ -3124,11 +3118,6 @@ export default class CanvasEffect extends PIXI.Container {
 			this.mediaCurrentTime = this._loopOffset
 		}
 		await this.playMedia();
-		
-		// if just looping naturally forever, don not register handler
-		if (this.playNaturally && !this.loops && !this.loopDelay) {
-			return
-		}
 		this._addToTicker(this.loopHandler)
 	}
 
@@ -3137,6 +3126,9 @@ export default class CanvasEffect extends PIXI.Container {
 			return;
 		}
 		if (this.mediaCurrentTime < this._endTime) {
+			return;
+		}
+		if (this.restartLoopHandler) {
 			return;
 		}
 
