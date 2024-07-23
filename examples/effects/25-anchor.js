@@ -10,7 +10,6 @@
 		strokeThickness: 5,
 	};
 
-	//TODO
 	new Sequence()
 		.effect()
 		.file("jb2a.braziers.orange.bordered.01.05x05ft")

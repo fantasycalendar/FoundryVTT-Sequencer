@@ -10,7 +10,7 @@
 		strokeThickness: 5,
 	};
 
-	// TODO this does not work since at least v11...
+	// this does not work since at least v11...
 	new Sequence()
 		.effect()
 		.file("jb2a.token_stage.round.blue.01.01")
