@@ -424,7 +424,8 @@ class Database {
 
     const mediaFileExtensions = Object.keys(CONST.FILE_CATEGORIES.IMAGE)
       .concat(Object.keys(CONST.FILE_CATEGORIES.VIDEO))
-      .concat(Object.keys(CONST.FILE_CATEGORIES.AUDIO));
+      .concat(Object.keys(CONST.FILE_CATEGORIES.AUDIO))
+      .concat(['json']);
 
     for (let wholeDBPath of allPaths) {
       let metadata = this._getCleanData(entries);

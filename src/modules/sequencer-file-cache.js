@@ -6,6 +6,7 @@ const SequencerFileCache = {
   _preloadedFiles: new Set(),
   _totalCacheSize: 0,
   _validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
+  _spritesheets: new Map(),
 
   async loadVideo(inSrc) {
     if (!this._videos[inSrc]) {
@@ -49,7 +50,7 @@ const SequencerFileCache = {
   srcExists(inSrc) {
     if (this._preloadedFiles.has(inSrc)) {
       return true;
-    }
+    } 
     return srcExists(inSrc);
   },
 
@@ -79,6 +80,58 @@ const SequencerFileCache = {
     }
     return texture;
   },
+
+  registerSpritesheet(inSrc, inSpriteSheet) {
+    console.log('register', inSrc)
+    const existingSheetRef = this._spritesheets.get(inSrc)
+    if (existingSheetRef ) {
+      existingSheetRef[1] += 1
+    } else {
+      this._spritesheets.set(inSrc, [inSpriteSheet, 1])
+    }
+  },
+  
+  unloadSpritesheet(inSrc) {
+    const existingSheetRef = this._spritesheets.get(inSrc)
+    if (!existingSheetRef) {
+      console.error('trying to unlaod spritesheet that was not loaded:', inSrc)
+    }
+    existingSheetRef[1] -= 1
+    console.log('deregister', inSrc, 'new refscount', existingSheetRef[1])
+    if (existingSheetRef[1] > 0) {
+      return
+    }
+    this._spritesheets.delete(inSrc)
+    /** @type {PIXI.Spritesheet} */ 
+    const sheet = existingSheetRef[0] 
+    const relatedPacks = sheet.data?.meta?.related_multi_packs ?? []
+    const relatedSheets = sheet.linkedSheets
+    const packsSize = Math.max(relatedPacks.length, relatedSheets.length)
+    // clean up related sheets starting with the last (leaf)
+
+    const cacheKeys = [get_sheet_image_url(inSrc, sheet), foundry.utils.getRoute(inSrc)]
+    console.log('unloading', cacheKeys)
+    PIXI.Assets.unload(cacheKeys.filter(src => !!src))
+  }
+};
+
+
+/**
+ * @param {PIXI.Spritesheet} sheet
+ */
+function get_sheet_image_url(inSrc, sheet) {
+  const imageName = sheet?.data?.meta?.image
+  if (!imageName) {
+    return
+  }
+  const srcPrefix = inSrc.split('/').slice(0, -1).join('/')
+  const sheetSrc = `${srcPrefix}/${imageName}`
+  return foundry.utils.getRoute(sheetSrc)
+}
+function get_sheet_source_url(inSrc, sheetFilename) {
+  const srcPrefix = inSrc.split('/').slice(0, -1).join('/')
+  const sheetSrc = `${srcPrefix}/${sheetFilename}`
+  return foundry.utils.getRoute(sheetSrc)
 };
 
 async function get_video_texture(inBlob) {

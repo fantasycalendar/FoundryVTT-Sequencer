@@ -41,6 +41,11 @@ Hooks.once("init", async function() {
     CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
   )?.active;
 	CONSTANTS.IS_V12 = foundry.utils.isNewerVersion(game.version, "12");
+  // Enable basis transcoder for GPU compressible textures.
+  // Decoder is included in Foundry VTT 12 but not enabled by default
+  if (CONSTANTS.IS_V12) {
+    CONFIG.Canvas.transcoders.basis = true
+  }
   initializeModule();
   registerSocket();
 });

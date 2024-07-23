@@ -350,6 +350,7 @@ In addition, a secondary options parameter can be given to this method, which ha
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `template: boolean` - Make the effect use the defined template in the sequencer database. See [Why templates are useful](https://fantasycomputer.works/FoundryVTT-Sequencer/#/database-basics?id=why-templates-are-useful).
 
 ## Rotate Towards
 
@@ -872,8 +873,6 @@ Animatable properties are as follows:
   - `scale.y`
   - `width`
   - `height`
-
-- `alphaFilter`
   - `alpha`
 
 - `spriteContainer`
@@ -924,8 +923,6 @@ Animatable properties are as follows:
   - `scale.y`
   - `width`
   - `height`
-
-- `alphaFilter`
   - `alpha`
 
 - `spriteContainer`
