@@ -28,6 +28,6 @@
 		.file("jb2a.energy_beam.normal.bluepink.03.15ft")
 		.atLocation({ x: 1100, y: 1600 })
 		.stretchTo({ x: 2000, y: 1600 })
-		.template({ gridSize: 100, startPoint: 500, endPoint: 200 })
+		.template({ gridSize: 100, startPoint: 500, endPoint: 300 })
 		.play();
 })();
