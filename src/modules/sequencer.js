@@ -53,12 +53,13 @@ export default class Sequence {
     }
     Hooks.callAll("createSequencerSequence", this);
     lib.debug("Initializing sections");
-    if (preload) {
-      const preloadPromises = this.sections
-        .filter(section => !!section._file)
-        .map(section => Sequencer.Preloader.preloadForClients(section._file))
-      await Promise.allSettled(preloadPromises)
-    }
+    const preloadPromises = this.sections.map(async (section) => {
+      await section._initialize()
+      if (preload && section._file) {
+        await Sequencer.Preloader.preloadForClients(section._file)
+      }
+    })
+    await Promise.allSettled(preloadPromises)
     SequenceManager.RunningSequences.add(this.id, this);
     this.effectIndex = 0;
     lib.debug("Playing sections");
