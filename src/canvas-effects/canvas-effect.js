@@ -3031,7 +3031,7 @@ export default class CanvasEffect extends PIXI.Container {
 		setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
-		}, this._totalDuration);
+		}, this._totalDuration / this.mediaPlaybackRate);
 	}
 
 	_setupTimestampHook(offset) {
@@ -3069,6 +3069,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (!this.hasAnimatedMedia) return;
 
 		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
+		creationTimeDifference *= this.mediaPlaybackRate
 
 		// +1 because "loops: 1" means we run the animation one time, not that it restarts once
 		// whereas 0 means endless looping.
@@ -3128,7 +3129,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.mediaCurrentTime < this._endTime) {
 			return;
 		}
-		if (this.restartLoopHandler) {
+		if (this.restartLoopHandler != null) {
 			return;
 		}
 
@@ -3158,10 +3159,6 @@ export default class CanvasEffect extends PIXI.Container {
 			return;
 		}
 
-		// restart handler already registerd, just return and let it do its thing
-		if (this.restartLoopHandler != null) {
-			return
-		}
 		this._currentLoops++;
 		// register restart handler to trigger after loop delay
 		this.restartLoopHandler = setTimeout(() => {

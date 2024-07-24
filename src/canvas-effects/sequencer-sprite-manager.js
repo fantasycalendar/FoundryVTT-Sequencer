@@ -241,7 +241,7 @@ class VideoPlaybackControls extends PlaybackControls {
         this.#video.pause();
     }
     get duration() {
-        return this.#video.duration / this.playbackRate;
+        return this.#video.duration;
     }
     get isPlaying() {
         return !this.#video.paused;
@@ -289,7 +289,7 @@ class SpritePlaybackControls extends PlaybackControls {
         this.#sprite.stop();
     }
     get duration() {
-        return this.#framecount / this.#framerate / this.playbackRate;
+        return this.#framecount / this.#framerate;
     }
     get isPlaying() {
         return this.#sprite.playing;
@@ -600,7 +600,7 @@ export class SequencerSpriteManager extends PIXI.Container {
         return this.#managedSprites[this.#activePath];
     }
     async #preloadVariants() {
-        if (this.#activePath === "TEXT") {
+        if (this.#activePath === "TEXT" /* SpecialSpriteKeys.Text */) {
             return;
         }
         if (!this.#file || this.#file.isFlipbook) {

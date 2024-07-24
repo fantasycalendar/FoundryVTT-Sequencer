@@ -82,7 +82,6 @@ const SequencerFileCache = {
   },
 
   registerSpritesheet(inSrc, inSpriteSheet) {
-    console.log('register', inSrc)
     const existingSheetRef = this._spritesheets.get(inSrc)
     if (existingSheetRef ) {
       existingSheetRef[1] += 1
@@ -97,7 +96,6 @@ const SequencerFileCache = {
       console.error('trying to unlaod spritesheet that was not loaded:', inSrc)
     }
     existingSheetRef[1] -= 1
-    console.log('deregister', inSrc, 'new refscount', existingSheetRef[1])
     if (existingSheetRef[1] > 0) {
       return
     }
@@ -110,7 +108,6 @@ const SequencerFileCache = {
     // clean up related sheets starting with the last (leaf)
 
     const cacheKeys = [get_sheet_image_url(inSrc, sheet), foundry.utils.getRoute(inSrc)]
-    console.log('unloading', cacheKeys)
     PIXI.Assets.unload(cacheKeys.filter(src => !!src))
   }
 };
