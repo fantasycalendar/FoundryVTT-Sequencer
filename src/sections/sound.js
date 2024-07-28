@@ -3,7 +3,7 @@ import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { SequencerFileBase } from "../modules/sequencer-file.js";
-import CONSTANTS from "../../constants.js";
+import CONSTANTS from "../constants.js";
 
 class SoundSection extends Section {
 	constructor(inSequence, inFile = "") {
