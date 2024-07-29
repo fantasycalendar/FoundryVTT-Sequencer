@@ -11,8 +11,7 @@ import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
 import MaskFilter from "../lib/filters/mask-filter.js";
-import { AnimatedTilingSprite } from "../lib/pixi/AnimatedTilingSprite.js";
-import { SequencerSpriteManager } from "./sequencer-sprite-manager.ts";
+import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 
 const hooksManager = {
 	_hooks: new Map(),
@@ -1663,8 +1662,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this.renderable = false;
 
 		// TODO handle / fix vision sampler shader for advanced vision masking?
-		const useVisionMasking = !this.data.xray && !this.data.screenSpace && !this.data.screenSpaceAboveUI;
-		const shader = useVisionMasking ? VisionSamplerShader : undefined
+		// const useVisionMasking = !this.data.xray && !this.data.screenSpace && !this.data.screenSpaceAboveUI;
+		// const shader = useVisionMasking ? VisionSamplerShader : undefined
 
 		const spriteData = {
 			antialiasing: this.data?.fileOptions?.antialiasing,
@@ -1680,7 +1679,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite.loopDelay = this.loopDelay
 		this.sprite.currentTime = this._startTime
 
-		const activatedSprite = await this.sprite.activate(this._currentFilePath)
+		await this.sprite.activate(this._currentFilePath)
 		
 		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
 			this.sprite.preloadVariants()
@@ -2131,8 +2130,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this._rotateTowards(ray);
 
 		this._updateCurrentFilePath()
-		const activatedSprite = await this.sprite.activate(this._currentFilePath)
-		const texture = activatedSprite.texture
+		await this.sprite.activate(this._currentFilePath)
+		const texture = this.sprite.texture
 
 		let {  scaleX, scaleY, distance } = await this._getDistanceScaling(ray.distance, texture.width);
 
