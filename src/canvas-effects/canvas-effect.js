@@ -266,7 +266,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get source() {
 		if (!this._source && this.data.source) {
-			this._source = this._getObjectByID(this.data.source);
+			this._source = this._getObjectByID(this.data.source?.uuid ?? this.data.source);
 			this._source = this._source?._object ?? this._source;
 		}
 		return this._source;
@@ -312,7 +312,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get target() {
 		if (!this._target && this.data.target) {
-			this._target = this._getObjectByID(this.data.target);
+			this._target = this._getObjectByID(this.data.target?.uuid ?? this.data.target);
 			this._target = this._target?._object ?? this._target;
 		}
 		return this._target;
@@ -866,7 +866,7 @@ export default class CanvasEffect extends PIXI.Container {
 		const { width, height } = canvaslib.get_object_dimensions(this.target);
 
 		if (this.isIsometricActive && this.target instanceof PlaceableObject) {
-			const targetHeight = this.target?.height ?? height;
+			const targetHeight = (this.target?.height ?? height) / 2;
 			position.x +=
 				((this.targetDocument.elevation ?? 0) / canvas.scene.grid.distance) *
 				canvas.grid.size +
