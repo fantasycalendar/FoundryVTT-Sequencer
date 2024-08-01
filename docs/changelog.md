@@ -3,9 +3,11 @@
 ## Version 3.2.12
 - *Sequencer* - Further updates to typing information (thank you, Vauxs!)
 - *Sequencer* - Tweaked `preload` optional argument on `Sequence#play` to batch preload files (thank you, Codas!)
+- *Sequencer* - Fixed `local` optional argument on `Sequence#play` to actually only play effects and sounds locally
 - *Effects* - Added `absolute` optional argument to `.animateProperty()` and `.loopProperty()`
 - *Effects* - Fixed some effects not playing in the correct location, which fixes effect position issues with the Isometric module
 - *Sounds* - Fixed sounds not playing in v11 (thank you, Vauxs!)
+- *Canvas Pan* - Fixed initiating a shake with a frequency or duration of 0 would cause the canvas to freeze
 
 ## Version 3.2.11
 - *Sequencer* - Updated `Sequence#play` to have two additional secondary parameters:
