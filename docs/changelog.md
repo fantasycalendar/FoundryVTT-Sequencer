@@ -1,5 +1,12 @@
 ## Changelog
 
+## Version 3.2.12
+- *Sequencer* - Further updates to typing information (thank you, Vauxs!)
+- *Sequencer* - Tweaked `preload` optional argument on `Sequence#play` to batch preload files (thank you, Codas!)
+- *Effects* - Added `absolute` optional argument to `.animateProperty()` and `.loopProperty()`
+- *Effects* - Fixed some effects not playing in the correct location, which fixes effect position issues with the Isometric module
+- *Sounds* - Fixed sounds not playing in v11 (thank you, Vauxs!)
+
 ## Version 3.2.11
 - *Sequencer* - Updated `Sequence#play` to have two additional secondary parameters:
   - `preload: boolean` - causes any section with `.file()` entries to preload all files that would be played
