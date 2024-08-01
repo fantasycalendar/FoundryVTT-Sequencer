@@ -8,13 +8,13 @@
 
   function getEffectName(effect) {
 
-    let effectName = "Unknown effect";
+    let effectName = "";
     if (effect.data.file) {
       effectName = effect.data.file.split('\\').pop().split('/').pop();
     } else if (effect.data.text) {
       effectName = "Text: " + effect.data.text.text;
     } else {
-      effectName = "Shape: " + effect.data.shapes[0].type
+      effectName =  effect.data?.shapes?.[0]?.type ? "Shape: " + effect.data.shapes[0]?.type : "Unknown effect"
     }
 
     effectName = effect.data.name ? `${effect.data.name} (${effectName})` : effectName;

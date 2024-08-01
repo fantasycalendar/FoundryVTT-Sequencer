@@ -4,6 +4,7 @@
 - *Sequencer* - Further updates to typing information (thank you, Vauxs!)
 - *Sequencer* - Tweaked `preload` optional argument on `Sequence#play` to batch preload files (thank you, Codas!)
 - *Sequencer* - Fixed `local` optional argument on `Sequence#play` to actually only play effects and sounds locally
+- *Sequencer* - Tweaked Sequencer Manager to be more robust and less error prone when invalid effects are active
 - *Effects* - Added `absolute` optional argument to `.animateProperty()` and `.loopProperty()`
 - *Effects* - Fixed some effects not playing in the correct location, which fixes effect position issues with the Isometric module
 - *Sounds* - Fixed sounds not playing in v11 (thank you, Vauxs!)
