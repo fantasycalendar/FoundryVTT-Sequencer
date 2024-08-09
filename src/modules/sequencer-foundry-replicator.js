@@ -152,21 +152,24 @@ export default class SequencerFoundryReplicator {
   }
 
   static _shake(shakeData) {
+
+	  if(!shakeData.duration || !shakeData.frequency) return;
+
     let x = lib.random_float_between(-1, 1);
     let y = lib.random_float_between(-1, 1);
     let rot = shakeData.rotation ? lib.random_float_between(-1, 1) : 0;
     let positions = [{ x, y, rot }];
 
-    for (
-      let index = 0;
-      index < Math.floor(shakeData.duration / shakeData.frequency);
-      index++
-    ) {
-      x = lib.flip_negate(x, Math.random());
-      y = lib.flip_negate(y, Math.random());
-      rot = shakeData.rotation ? lib.flip_negate(rot, Math.random()) : 0;
-      positions.push({ x, y, rot });
-    }
+		for (
+			let index = 0;
+			index < Math.floor(shakeData.duration / shakeData.frequency);
+			index++
+		) {
+			x = lib.flip_negate(x, Math.random());
+			y = lib.flip_negate(y, Math.random());
+			rot = shakeData.rotation ? lib.flip_negate(rot, Math.random()) : 0;
+			positions.push({ x, y, rot });
+		}
 
     let currentDuration = 0;
     positions = positions.map((pos) => {
