@@ -169,7 +169,7 @@ class SoundSection extends Section {
 			}
 		}
 
-		if (playData.location && CONSTANTS.IS_V12) {
+		if (playData.location && !CONSTANTS.IS_V12) {
 			if (this.sequence.softFail) {
 				playData.play = false;
 			} else {
@@ -274,7 +274,7 @@ class SoundSection extends Section {
 			id: foundry.utils.randomID(),
 			play: true,
 			src: file,
-			location: this._source?.uuid || null,
+			location: this._source?.uuid || { x: this._source?.x, y: this._source?.y },
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,

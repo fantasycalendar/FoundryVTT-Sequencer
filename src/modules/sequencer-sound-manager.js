@@ -7,8 +7,8 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
 
-function createSoundListener (sound, name, func) {
-	if(CONSTANTS.IS_V12){
+function createSoundListener(sound, name, func) {
+	if (CONSTANTS.IS_V12) {
 		return sound.addEventListener(name, func);
 	}
 	return sound.on(name, func);
@@ -66,22 +66,25 @@ export default class SequencerSoundManager {
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
 
+		// Given that this is also affected by normal Foundry environment controls, do we want to multiply it by interface volume as well?
 		data.volume = playSound
 			? (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume")
 			: 0.0;
 
 		let sound;
 
-		if(data.location){
-			let location = fromUuidSync(data.location) ?? { x: 0, y: 0, width: canvas.grid.size, height: canvas.grid.size };
-			if(data.offset){
+		if (data.location) {
+			let location =
+				(lib.is_UUID(data.location) ? fromUuidSync(data.location) : null)
+				?? { x: data.location?.x ?? 0, y: data.location?.x ?? 0 };
+			if (data.offset) {
 				location.x += data.offset.x * (data.offset.gridUnits ? canvas.grid.size : 1);
 				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
 			}
-			if(data.randomOffset){
-				location = canvaslib.get_random_offset(location, data.randomOffset);
+			if (data.randomOffset.source) {
+				location = canvaslib.get_random_offset(location, data.randomOffset.source);
 			}
-			sound = await canvas.sounds.playAtPosition(data.src, location, data.radius || 5, {
+			sound = await canvas.sounds.playAtPosition(data.src, location, data.locationOptions?.radius || 5, {
 				gmAlways: false,
 				walls: false,
 				easing: true,
@@ -89,7 +92,7 @@ export default class SequencerSoundManager {
 				...data.locationOptions,
 				volume: data.volume
 			});
-		}else {
+		} else {
 			sound = await game.audio.play(data.src, {
 				...data.locationOptions,
 				volume: data.fadeIn ? 0 : data.volume,
@@ -98,7 +101,7 @@ export default class SequencerSoundManager {
 			});
 		}
 
-		if(!sound) return false;
+		if (!sound) return false;
 
 		sound.sequencer_data = data;
 		sound.sound_playing = playSound || game.user.isGM;
