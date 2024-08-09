@@ -74,7 +74,9 @@ export default class SequencerSoundManager {
 		let sound;
 
 		if (data.location) {
-			let location = fromUuidSync(data.location) ?? { x: 0, y: 0, width: canvas.grid.size, height: canvas.grid.size };
+			let location =
+				(lib.is_UUID(data.location) ? fromUuidSync(data.location) : null)
+				?? { x: data.location?.x ?? 0, y: data.location?.x ?? 0 };
 			if (data.offset) {
 				location.x += data.offset.x * (data.offset.gridUnits ? canvas.grid.size : 1);
 				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
@@ -82,7 +84,7 @@ export default class SequencerSoundManager {
 			if (data.randomOffset.source) {
 				location = canvaslib.get_random_offset(location, data.randomOffset.source);
 			}
-			sound = await canvas.sounds.playAtPosition(data.src, location, data.radius || 5, {
+			sound = await canvas.sounds.playAtPosition(data.src, location, data.locationOptions?.radius || 5, {
 				gmAlways: false,
 				walls: false,
 				easing: true,
