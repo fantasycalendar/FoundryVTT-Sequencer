@@ -274,7 +274,10 @@ class SoundSection extends Section {
 			id: foundry.utils.randomID(),
 			play: true,
 			src: file,
-			location: this._source?.uuid || { x: this._source?.x, y: this._source?.y },
+			location: this._source?.uuid
+				|| (this._source?.x && this._source?.y
+					? { x: this._source?.x, y: this._source?.y }
+					: null),
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
