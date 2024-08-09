@@ -66,6 +66,7 @@ export default class SequencerSoundManager {
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
 
+		// Given that this is also affected by normal Foundry environment controls, do we want to multiply it by interface volume as well?
 		data.volume = playSound
 			? (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume")
 			: 0.0;
