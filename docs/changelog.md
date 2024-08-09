@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.2.14 Hotfix
+- *Sounds* - Fixed sounds again (thank you, Vauxs!)
+
 ## Version 3.2.13
 - *Sequencer* - Tweaks and fixes to documentation (thank you, Vauxs!)
 - *Effects* - Fixed templates getting deleted shortly after being used for an effect would cause a Foundry crash
