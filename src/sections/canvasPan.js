@@ -192,7 +192,7 @@ export default class CanvasPanSection extends Section {
     if (!this._source || typeof this._source !== "object") return this._source;
     return (
       lib.get_object_identifier(this._source) ??
-      canvaslib.get_object_canvas_data(this._source)
+      canvaslib.get_object_canvas_data(this._source, { uuid: false })
     );
   }
 

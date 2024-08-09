@@ -313,15 +313,18 @@ export function is_object_canvas_data(inObj) {
   );
 }
 
-export function get_object_canvas_data(inObject, measure = false) {
+export function get_object_canvas_data(inObject, { measure = false, uuid = true }={}) {
   inObject = inObject?.object ?? inObject;
-  return {
+  const data = {
     ...get_object_position(inObject, { measure }),
     ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject),
     elevation: get_object_elevation(inObject),
-    uuid: inObject?.document?.uuid ?? inObject?.uuid,
     cachedLocation: true,
   };
+	if(uuid) {
+		data["uuid"] = inObject?.document?.uuid ?? inObject?.uuid;
+	}
+	return data;
 }
 
 export function get_object_elevation(inObject) {
