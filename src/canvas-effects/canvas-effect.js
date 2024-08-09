@@ -1572,6 +1572,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		// scaleTo
 		if (this.data.scaleToObject && this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
+			const { heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY } = this._getBaseScale()
 			this._addToTicker(() => {
 				this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
 				this._setAnchors()
@@ -2310,17 +2311,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this.sprite.tilePosition = this.data.tilingTexture.position;
 		}
 
-		const heightWidthRatio = this.sprite.height / this.sprite.width;
-		const widthHeightRatio = this.sprite.width / this.sprite.height;
-
-		const baseScaleX =
-			(this.data.scale?.x ?? 1.0) *
-			(this.data.spriteScale?.x ?? 1.0) *
-			this.flipX;
-		const baseScaleY =
-			(this.data.scale?.y ?? 1.0) *
-			(this.data.spriteScale?.y ?? 1.0) *
-			this.flipY;
+		const { heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY } = this._getBaseScale()
 
 		if (this.data.scaleToObject) {
 			this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
@@ -2358,6 +2349,34 @@ export default class CanvasEffect extends PIXI.Container {
 				baseScaleX * this.gridSizeDifference,
 				baseScaleY * this.gridSizeDifference
 			);
+		}
+	}
+
+	/**
+	 * Calculate the base scale and aspect ratios of the sprite
+	 *
+	 * @returns {{heightWidthRatio: number, widthHeightRatio: number, baseScaleX: number, baseScaleY: number}}
+	 *
+	 * @private
+	 */
+	_getBaseScale() {
+		const heightWidthRatio = this.sprite.height / this.sprite.width;
+		const widthHeightRatio = this.sprite.width / this.sprite.height;
+
+		const baseScaleX =
+			(this.data.scale?.x ?? 1.0) *
+			(this.data.spriteScale?.x ?? 1.0) *
+			this.flipX;
+		const baseScaleY =
+			(this.data.scale?.y ?? 1.0) *
+			(this.data.spriteScale?.y ?? 1.0) *
+			this.flipY;
+
+		return {
+			heightWidthRatio,
+			widthHeightRatio,
+			baseScaleX,
+			baseScaleY,
 		}
 	}
 
