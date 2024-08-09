@@ -558,6 +558,7 @@ export default class EffectSection extends Section {
 				randomOffset: false,
 				local: false,
 				gridUnits: false,
+				template: false,
 			},
 			inOptions
 		);
@@ -594,14 +595,19 @@ export default class EffectSection extends Section {
 				inOptions
 			);
 			this._offset = {
-				source: offsetData,
-				target: this._offset?.target ?? false,
+				target: offsetData ?? this._offset?.target ?? false,
 			};
 		}
 
+		if (typeof inOptions.template !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"rotateTowards",
+				"inOptions.template must be of type boolean"
+			);
+
 		this._randomOffset = {
-			source: inOptions.randomOffset,
-			target: this._randomOffset?.target ?? false,
+			target: inOptions.randomOffset ?? this._randomOffset?.target ?? false,
 		};
 
 		this._rotateTowards = {
@@ -611,6 +617,7 @@ export default class EffectSection extends Section {
 			rotationOffset: inOptions.rotationOffset,
 			cacheLocation: inOptions.cacheLocation,
 			attachTo: inOptions.attachTo,
+			template: inOptions.template,
 		};
 
 		return this;
