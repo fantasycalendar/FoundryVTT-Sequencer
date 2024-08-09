@@ -208,13 +208,14 @@ const SequencerPreloader = {
 
     return new Promise(async (resolve) => {
       let numFilesFailedToLoad = 0;
-      for (let src of inSrcs) {
+      const loadingPromises = inSrcs.map(async (inSrcs) => {
         const blob = await SequencerFileCache.loadFile(src, true);
         if (showProgressBar) LoadingBar.incrementProgress();
         if (!blob) {
           numFilesFailedToLoad++;
         }
-      }
+      })
+      await Promise.allSettled(loadingPromises)
       const timeTaken = (performance.now() - startTime) / 1000;
       let failedToLoad = ` (${numFilesFailedToLoad} failed to load)`;
       lib.debug(

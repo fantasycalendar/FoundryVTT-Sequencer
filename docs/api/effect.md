@@ -883,11 +883,13 @@ Animatable properties are as follows:
   - `scale.x`
   - `scale.y`
 
-Default parameters: `{ ease: "linear", delay: 0, gridUnits: false, fromEnd: false }`
+Default parameters: `{ ease: "linear", delay: 0, gridUnits: false, fromEnd: false, absolute: false }`
 
 Grid units will work if you are animating the `width`, `height`, `position.x`, or `position.y`.
 
 The `fromEnd` optional parameter will play the animation a number of milliseconds equal to the `duration` from the end of the effect's duration.
+
+The `absolute` property ensures that the values that this animation is playing will not be additive, eg; if you animate the width of an effect from 0 to 200 pixels, not enabling `absolute` will cause the animation add on top of the effect's existing width. With `absolute` enabled, it will force it to play between 0 to 200px, regardless of its starting width.
 
 For example, the duration of an effect is 5000ms, and you have added an animation that will animate the `position.y` property on a sprite from 1 to 0 in `gridUnits` with a duration of 1000ms and `fromEnd` set to true - the animation will then start playing at 4000ms into the effect's duration, and finish exactly at the same time as the effect ends.
 
