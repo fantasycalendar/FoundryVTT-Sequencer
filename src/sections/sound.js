@@ -169,7 +169,7 @@ class SoundSection extends Section {
 			}
 		}
 
-		if (playData.location && CONSTANTS.IS_V12) {
+		if (playData.location && !CONSTANTS.IS_V12) {
 			if (this.sequence.softFail) {
 				playData.play = false;
 			} else {

@@ -7,8 +7,8 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
 
-function createSoundListener (sound, name, func) {
-	if(CONSTANTS.IS_V12){
+function createSoundListener(sound, name, func) {
+	if (CONSTANTS.IS_V12) {
 		return sound.addEventListener(name, func);
 	}
 	return sound.on(name, func);
@@ -72,14 +72,14 @@ export default class SequencerSoundManager {
 
 		let sound;
 
-		if(data.location){
+		if (data.location) {
 			let location = fromUuidSync(data.location) ?? { x: 0, y: 0, width: canvas.grid.size, height: canvas.grid.size };
-			if(data.offset){
+			if (data.offset) {
 				location.x += data.offset.x * (data.offset.gridUnits ? canvas.grid.size : 1);
 				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
 			}
-			if(data.randomOffset){
-				location = canvaslib.get_random_offset(location, data.randomOffset);
+			if (data.randomOffset.source) {
+				location = canvaslib.get_random_offset(location, data.randomOffset.source);
 			}
 			sound = await canvas.sounds.playAtPosition(data.src, location, data.radius || 5, {
 				gmAlways: false,
@@ -89,7 +89,7 @@ export default class SequencerSoundManager {
 				...data.locationOptions,
 				volume: data.volume
 			});
-		}else {
+		} else {
 			sound = await game.audio.play(data.src, {
 				...data.locationOptions,
 				volume: data.fadeIn ? 0 : data.volume,
@@ -98,7 +98,7 @@ export default class SequencerSoundManager {
 			});
 		}
 
-		if(!sound) return false;
+		if (!sound) return false;
 
 		sound.sequencer_data = data;
 		sound.sound_playing = playSound || game.user.isGM;
