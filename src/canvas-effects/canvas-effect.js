@@ -767,8 +767,15 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {boolean|object}
 	 */
 	getSourceData() {
+
 		if (this.data.temporary && !this.owner) {
 			return SequencerEffectManager.getPositionForUUID(this.data.source);
+		}
+
+		if (this.source instanceof PlaceableObject && this.isSourceDestroyed){
+			return {
+				...this._cachedSourceData,
+			};
 		}
 
 		const position =
@@ -851,6 +858,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {boolean|object}
 	 */
 	getTargetData() {
+
 		if (this.data.temporary && !this.owner) {
 			return (
 				SequencerEffectManager.getPositionForUUID(this.data.target) ??
@@ -858,8 +866,14 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 		}
 
+		if (this.target instanceof PlaceableObject && this.isTargetDestroyed){
+			return {
+				...this._cachedTargetData,
+			};
+		}
+
 		const position =
-			this.target instanceof PlaceableObject && !this.isTargetTemporary
+			this.target instanceof PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
 				? canvaslib.get_object_position(this.target, { measure: true })
 				: this.target?.worldPosition || this.target?.center || this.target;
 
