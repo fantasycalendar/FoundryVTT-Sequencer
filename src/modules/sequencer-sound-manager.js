@@ -73,6 +73,7 @@ export default class SequencerSoundManager {
 
 		let sound;
 
+		debugger;
 		if (data.location) {
 			let location =
 				(lib.is_UUID(data.location) ? fromUuidSync(data.location) : null)
