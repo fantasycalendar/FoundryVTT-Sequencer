@@ -523,7 +523,7 @@ export default class EffectSection extends Section {
 
 		this._stretchTo = {
 			target: inOptions.cacheLocation
-				? canvaslib.get_object_canvas_data(validatedObject, { measure: true })
+				? canvaslib.get_object_canvas_data(validatedObject, { measure: true, uuid: false })
 				: validatedObject,
 			attachTo: inOptions.attachTo,
 			onlyX: inOptions.onlyX,
@@ -612,7 +612,7 @@ export default class EffectSection extends Section {
 
 		this._rotateTowards = {
 			target: inOptions.cacheLocation
-				? canvaslib.get_object_canvas_data(validatedObject, { measure: true })
+				? canvaslib.get_object_canvas_data(validatedObject, { measure: true, uuid: false })
 				: validatedObject,
 			rotationOffset: inOptions.rotationOffset,
 			cacheLocation: inOptions.cacheLocation,
@@ -2267,7 +2267,7 @@ export default class EffectSection extends Section {
 	_getSourceObject() {
 		if (!this._source || typeof this._source !== "object") return this._source;
 		if (this._source?.cachedLocation || !this._attachTo) {
-			return canvaslib.get_object_canvas_data(this._source);
+			return canvaslib.get_object_canvas_data(this._source, { uuid: false });
 		}
 		return (
 			lib.get_object_identifier(this._source) ??
@@ -2285,11 +2285,11 @@ export default class EffectSection extends Section {
 			this._target?.target?.cachedLocation ||
 			!(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)
 		) {
-			return canvaslib.get_object_canvas_data(this._target.target, true);
+			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: false });
 		}
 		return (
 			lib.get_object_identifier(this._target.target) ??
-			canvaslib.get_object_canvas_data(this._target.target, true)
+			canvaslib.get_object_canvas_data(this._target.target, { measure: true })
 		);
 	}
 
@@ -2351,7 +2351,7 @@ export default class EffectSection extends Section {
 		if (this._selfMask) {
 			this._masks.push(
 				lib.get_object_identifier(this._source) ??
-				canvaslib.get_object_canvas_data(this._source)
+				canvaslib.get_object_canvas_data(this._source, { uuid: false })
 			);
 		}
 

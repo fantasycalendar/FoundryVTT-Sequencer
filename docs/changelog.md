@@ -1,5 +1,14 @@
 ## Changelog
 
+## Version 3.2.14 Hotfix
+- *Sounds* - Fixed sounds again (thank you, Vauxs!)
+
+## Version 3.2.13
+- *Sequencer* - Tweaks and fixes to documentation (thank you, Vauxs!)
+- *Effects* - Fixed templates getting deleted shortly after being used for an effect would cause a Foundry crash
+- *Effects* - Fixed effects sticking around after documents that they were attached to had been deleted
+- *Sounds* - Fixed sounds not working properly in certain macros
+
 ## Version 3.2.12
 - *Sequencer* - Further updates to typing information (thank you, Vauxs!)
 - *Sequencer* - Tweaked `preload` optional argument on `Sequence#play` to batch preload files (thank you, Codas!)

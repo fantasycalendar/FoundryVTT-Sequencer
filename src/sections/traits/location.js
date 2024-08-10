@@ -85,7 +85,7 @@ export default {
 
     this._source =
       inOptions.cacheLocation && typeof inLocation !== "string"
-        ? canvaslib.get_object_canvas_data(inLocation)
+        ? canvaslib.get_object_canvas_data(inLocation, { uuid: false })
         : inLocation;
     return this;
   },

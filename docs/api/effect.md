@@ -386,7 +386,7 @@ Examples:
 .stretchTo("stored_name")
 .stretchTo({ x: 0, y: 0 })
 .stretchTo(token, { tiling: true })
-.stretchTo(token, { onlyX: 90, cacheLocation: true })
+.stretchTo(token, { onlyX: true, cacheLocation: true })
 ```
 
 Causes the effect to be rotated and stretched towards the given token, template, coordinates, or a string reference (see [`.name()`](#name)). This effectively calculates the proper X scale for the effect to stretch to the target.
@@ -455,7 +455,7 @@ A second options parameter accepts the following properties:
 
 ## Random Sprite Rotation
 
-`.randomS[roteRotation()`
+`.randomSpriteRotation()`
 
 Causes the sprite to have a random rotation.
 
@@ -729,7 +729,7 @@ const source = canvas.tokens.controlled[0];
 const target = Array.from(game.user.targets)[0];
 
 // Find effects on source with name "arrow"
-const currentEffects = Sequencer.EffectManager.getEffects({ source: source, name: "arrow" }) 
+const currentEffects = Sequencer.EffectManager.getEffects({ source: source, name: "arrow" })
 
 // If none were found
 if( currentEffects.length != 0 ) {
@@ -1075,10 +1075,10 @@ The optional options are as follows:
 - `radius`: `number` - The radius of `circle` shapes, and the radius of the `roundedRect` edges
 - `width`: `number` - The width of `rectangle`, `ellipse`, and `roundedRect` shapes
 - `height`: `number` - The height of `rectangle`, `ellipse`, and `roundedRect` shapes
-- `points`: `Array<[number, number]|{ x: number, y: number}>` - The points of a `polygon` object 
+- `points`: `Array<[number, number]|{ x: number, y: number}>` - The points of a `polygon` object
 - `gridUnits`: `boolean` - Whether the positions or height/width should be considered grid units (1 = one grid on the canvas grid)
 - `name`: `string` - What name to give this shape, which can be used with `.animateProperty()` and `.loopProperty()` through `shapes.[name]`
-- `fillColor`: `string|number` - The fill color of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)  
+- `fillColor`: `string|number` - The fill color of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)
 - `fillAlpha`: `number` - The alpha of the fill color
 - `alpha`: `number` - The alpha of the entire shape
 - `lineSize`: `number` - The size of the outline of the shape (in pixels)
@@ -1110,10 +1110,10 @@ Ties the effect to any number of documents in Foundry - if those get deleted, th
 
 `.syncGroup(string)` or `.syncGroup("test")`
 
-Causes effects with this sync group to share the same start time - useful if you have multiple duplicated effects that need to play at the same time. 
+Causes effects with this sync group to share the same start time - useful if you have multiple duplicated effects that need to play at the same time.
 
 ## Isometric
 
 `.isometric(inObject)` or `.isometric({ overlay: true })`
 
-If the Isometric module is installed and active, this causes the effect to play not on the floor under the target, but on the same plane as the target - ie, flat on the screen as if top down. 
+If the Isometric module is installed and active, this causes the effect to play not on the floor under the target, but on the same plane as the target - ie, flat on the screen as if top down.

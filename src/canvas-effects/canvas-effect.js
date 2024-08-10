@@ -667,8 +667,15 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {boolean|object}
 	 */
 	getSourceData() {
+
 		if (this.data.temporary && !this.owner) {
 			return SequencerEffectManager.getPositionForUUID(this.data.source);
+		}
+
+		if (this.source instanceof PlaceableObject && this.isSourceDestroyed){
+			return {
+				...this._cachedSourceData,
+			};
 		}
 
 		const position =
@@ -751,6 +758,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {boolean|object}
 	 */
 	getTargetData() {
+
 		if (this.data.temporary && !this.owner) {
 			return (
 				SequencerEffectManager.getPositionForUUID(this.data.target) ??
@@ -758,8 +766,14 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 		}
 
+		if (this.target instanceof PlaceableObject && this.isTargetDestroyed){
+			return {
+				...this._cachedTargetData,
+			};
+		}
+
 		const position =
-			this.target instanceof PlaceableObject && !this.isTargetTemporary
+			this.target instanceof PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
 				? canvaslib.get_object_position(this.target, { measure: true })
 				: this.target?.worldPosition || this.target?.center || this.target;
 
@@ -1542,12 +1556,12 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_timeoutVisibility() {
-		setTimeout(
-			() => {
-				this._setupHooks();
-			},
-			this.data.animations ? 50 : 0
-		);
+		if(!this.data.animations){
+			return this._setupHooks();
+		}
+		setTimeout(() => {
+			this._setupHooks();
+		},50);
 	}
 
 	/**
@@ -1984,6 +1998,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_setupHooks() {
+
 		const attachedToSource =
 			this.data.attachTo?.active && lib.is_UUID(this.data.source);
 		const attachedToTarget =
@@ -2001,6 +2016,10 @@ export default class CanvasEffect extends PIXI.Container {
 				this._source = this._cachedSourceData.position;
 				SequencerEffectManager.objectDeleted(uuid);
 			});
+
+			if(this.isSourceDestroyed){
+				SequencerEffectManager.objectDeleted(this.sourceDocument.uuid);
+			}
 
 			if (this.data.attachTo?.bindVisibility) {
 				hooksManager.addHook(
@@ -2049,6 +2068,9 @@ export default class CanvasEffect extends PIXI.Container {
 				const uuid = doc.uuid;
 				SequencerEffectManager.objectDeleted(uuid);
 			});
+			if(this.isTargetDestroyed){
+				SequencerEffectManager.objectDeleted(this.targetDocument.uuid);
+			}
 			hooksManager.addHook(this.uuid, this.getTargetHook("update"), (doc) => {
 				if (doc !== this.target) return;
 				this.updateElevation();
