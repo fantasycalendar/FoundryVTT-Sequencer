@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.2.15
+- *Effects* - Fixed non-`.xray()` effects showing in the fog of war
+- *Sounds* - Removed stray debugger
+
 ## Version 3.2.14 Hotfix
 - *Sounds* - Fixed sounds again (thank you, Vauxs!)
 
