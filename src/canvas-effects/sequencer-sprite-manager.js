@@ -307,7 +307,7 @@ class SpritePlaybackControls extends PlaybackControls {
         // cannot set volume
     }
     get currentTime() {
-        return this.#sprite.currentFrame / this.#framerate;
+        return (this.#sprite.currentFrame + 1) / this.#framerate;
     }
     set currentTime(value) {
         const newFrame = Math.floor(value * this.#framerate);

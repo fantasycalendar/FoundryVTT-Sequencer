@@ -3183,7 +3183,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 
 		// if we reached maximum loops, stay paused or even end the effect
-		if (this.loops && this._currentLoops >= this.loops) {
+		if ((this.loops || !this.data.persist) && this._currentLoops >= this.loops) {
 			if (!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
 				this.endEffect();
 			}
