@@ -267,7 +267,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get source() {
 		if (!this._source && this.data.source) {
-			this._source = this._getObjectByID(this.data.source?.uuid ?? this.data.source);
+			this._source = this._getObjectByID(this.data.source?.uuid ?? this.data.source) ?? this.data.source;
 			this._source = this._source?._object ?? this._source;
 		}
 		return this._source;
@@ -313,7 +313,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get target() {
 		if (!this._target && this.data.target) {
-			this._target = this._getObjectByID(this.data.target?.uuid ?? this.data.target);
+			this._target = this._getObjectByID(this.data.target?.uuid ?? this.data.target) ?? this.data.target;
 			this._target = this._target?._object ?? this._target;
 		}
 		return this._target;

@@ -47,6 +47,6 @@ export default class VisionSamplerShader extends BaseSamplerShader {
     super._preRender(mesh);
     this.uniforms.maskSampler = canvas.masks.vision.renderTexture;
     this.uniforms.screenDimensions = canvas.screenDimensions;
-    this.uniforms.enableVisionMasking = canvas.visible;
+    this.uniforms.enableVisionMasking = canvas?.visibility?.visible ?? canvas?.effects?.visibility?.visible ?? true;
   }
 }
