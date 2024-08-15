@@ -93,6 +93,10 @@ export default class CanvasEffect extends PIXI.Container {
 	#sort = 0;
 	#sortLayer = 800
 
+	#refreshSightHookId = Hooks.on('sightRefresh', () => {
+		this.#refreshVisibility()
+	})
+
 	constructor(inData) {
 		super();
 
@@ -661,6 +665,43 @@ export default class CanvasEffect extends PIXI.Container {
 		return playVisible;
 	}
 
+	get useVisionMasking() {
+		return !this.data.xray && !this.data.screenSpace && !this.data.screenSpaceAboveUI;
+	}
+
+	/**
+	 * Calculates visibility of this effect based on token vision
+	 * @returns {boolean}
+	 */
+	#isVisible() {
+		// skip if token vision is disabled
+		if (!canvas.visibility.tokenVision) return true;
+
+		// Otherwise, test visibility against current sight polygons
+		if (!this.useVisionMasking) return true;
+		const offsetX = this.width / 2;
+		const offsetY = this.height / 2;
+
+		const corners = [
+			[offsetX, offsetY],
+			[offsetX, -offsetY],
+			[-offsetX, offsetY],
+			[-offsetX, -offsetY],
+		].map(([offsetX, offsetY]) => ({
+			x: this.x + offsetX, y: this.y + offsetY
+		}));
+		const tolerance = Math.min(this.width, this.height) / 2;
+		const cornersVisibility = corners.some((corner) =>
+			canvas.visibility.testVisibility(corner, { tolerance: 0, object: this })
+		);
+		const centerVisibility = canvas.visibility.testVisibility({ x: this.x, y: this.y }, { tolerance, object: this });
+		return cornersVisibility || centerVisibility;
+	}
+
+	#refreshVisibility() {
+		this.visible = this.#isVisible()
+	}
+	
 	static make(inData) {
 		return !inData.persist
 			? new CanvasEffect(inData)
@@ -1121,6 +1162,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	endEffect() {
 		if (this._ended) return;
+		Hooks.off('sightRefresh', this.#refreshSightHookId)
 		Hooks.callAll("endedSequencerEffect", this);
 		this.destroy();
 	}
