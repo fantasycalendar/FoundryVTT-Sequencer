@@ -291,6 +291,7 @@ class SoundSection extends Section {
 			users: this._users ? Array.from(this._users) : null,
 			name: this._name,
 			origin: this._origin,
+			seed: `${this._name}-${foundry.utils.randomID()}-${this._currentRepetition}`
 		};
 
 		for (let override of this._overrides) {

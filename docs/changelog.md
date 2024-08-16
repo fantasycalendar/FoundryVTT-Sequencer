@@ -1,5 +1,11 @@
 ## Changelog
 
+## Version 3.2.16
+- *Effects* - Tweaked flag manager to better handle effects with broken IDs
+- *Sounds* - Fixed sounds not playing on the right channel in v12
+- *Sounds* - Fixed sounds not working with `.fadeInAudio()` and `.fadeOutAudio()`
+- *Sounds* - Fixed sounds with `.atLocation()` and `randomOffset` in v12 not synchronizing the exact location between clients 
+
 ## Version 3.2.15
 - *Effects* - Fixed non-`.xray()` effects showing in the fog of war
 - *Sounds* - Removed stray debugger
