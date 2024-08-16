@@ -246,7 +246,7 @@ class AnimationSection extends Section {
       SOCKET_HANDLERS.UPDATE_DOCUMENT,
       uuid,
       updates,
-      { animate, animation }
+      { animate, animation, teleport: !!this._teleportTo }
     );
   }
 
