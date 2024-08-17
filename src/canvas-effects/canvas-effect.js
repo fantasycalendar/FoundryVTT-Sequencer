@@ -679,8 +679,12 @@ export default class CanvasEffect extends PIXI.Container {
 
 		// Otherwise, test visibility against current sight polygons
 		if (!this.useVisionMasking) return true;
-		const offsetX = this.width / 2;
-		const offsetY = this.height / 2;
+		const width = this.width
+		const height = this.height
+		const x = this.x
+		const y = this.y;
+		const offsetX = width / 2;
+		const offsetY = height / 2;
 
 		const corners = [
 			[offsetX, offsetY],
@@ -688,13 +692,13 @@ export default class CanvasEffect extends PIXI.Container {
 			[-offsetX, offsetY],
 			[-offsetX, -offsetY],
 		].map(([offsetX, offsetY]) => ({
-			x: this.x + offsetX, y: this.y + offsetY
+			x: x + offsetX, y: y + offsetY
 		}));
-		const tolerance = Math.min(this.width, this.height) / 2;
+		const tolerance = Math.min(width, height) / 2;
 		const cornersVisibility = corners.some((corner) =>
 			canvas.visibility.testVisibility(corner, { tolerance: 0, object: this })
 		);
-		const centerVisibility = canvas.visibility.testVisibility({ x: this.x, y: this.y }, { tolerance, object: this });
+		const centerVisibility = canvas.visibility.testVisibility({ x: x, y: y }, { tolerance, object: this });
 		return cornersVisibility || centerVisibility;
 	}
 
