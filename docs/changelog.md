@@ -1,8 +1,9 @@
 ## Changelog
 
 ## Version 3.2.16
-- *Animations* - Fixed `.teleportTo()` triggering regions that react upon movement (thanks Michael on github!)
+- *Effects* - Major improvements to the way that effects are rendered to better support render batching (thank you Codas, you damn legend!)
 - *Effects* - Tweaked flag manager to better handle effects with broken IDs
+- *Animations* - Fixed `.teleportTo()` triggering regions that react upon movement (thanks Michael on github!)
 - *Sounds* - Fixed sounds not playing on the right channel in v12
 - *Sounds* - Fixed sounds not working with `.fadeInAudio()` and `.fadeOutAudio()`
 - *Sounds* - Fixed sounds with `.atLocation()` and `randomOffset` in v12 not synchronizing the exact location between clients 
