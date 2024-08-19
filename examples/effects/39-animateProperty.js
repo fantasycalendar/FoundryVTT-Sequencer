@@ -31,13 +31,13 @@
 		.effect()
 		.file("jb2a.braziers.orange.bordered.01.05x05ft")
 		.atLocation({ x: 2200, y: 1100 })
-		.animateProperty('sprite', 'alpha', {from: 0, to: 1, duration: 2500})
+		.animateProperty('sprite', 'alpha', {from: 0, to: 1, duration: 2500, absolute: true})
 		.text("sprite alpha", textStyle)
 
 		.effect()
 		.file("jb2a.braziers.orange.bordered.01.05x05ft")
 		.atLocation({ x: 2600, y: 1100 })
-		.animateProperty('alphaFilter', 'alpha', {from: 0, to: 1, duration: 2500})
+		.animateProperty('alphaFilter', 'alpha', {from: 0, to: 1, duration: 2500, absolute: true})
 		.text("alphaFilter ", textStyle)
 
 		.effect()
