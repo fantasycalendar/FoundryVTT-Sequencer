@@ -2,6 +2,7 @@ import "./styles/module.scss";
 
 import { registerSettings, migrateSettings } from "./settings.js";
 import registerLayers from "./layers.js";
+import registerBatchShader from "./batchShader.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "../typings/typings.js";
 import { registerSocket } from "./sockets.js";
@@ -143,6 +144,7 @@ function initializeModule() {
   registerLayers();
   registerHotkeys();
   registerLibwrappers();
+  registerBatchShader();
 
   SequencerAboveUILayer.setup();
   SequencerEffectManager.setup();

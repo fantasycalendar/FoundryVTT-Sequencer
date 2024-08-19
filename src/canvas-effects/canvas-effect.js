@@ -2597,6 +2597,9 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 
 		for (let animation of loopingAnimations) {
+			if (animation.target === 'alphaFilter') {
+				animation.target = 'sprite'
+			}
 			animation.target = foundry.utils.getProperty(this, animation.target);
 
 			if (!animation.target) continue;

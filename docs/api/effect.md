@@ -865,6 +865,7 @@ Valid targets are `sprite` (the effect itself) and `spriteContainer` (the effect
 
 Animatable properties are as follows:
 - `sprite`
+  - `alpha`
   - `position.x`
   - `position.y`
   - `rotation` (degrees)
@@ -917,6 +918,7 @@ Valid targets are `sprite` (the effect itself) and `spriteContainer` (the effect
 
 Animatable properties are as follows:
 - `sprite`
+  - `alpha`
   - `position.x`
   - `position.y`
   - `rotation` (degrees)
