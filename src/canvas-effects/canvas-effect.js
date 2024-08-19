@@ -455,8 +455,7 @@ export default class CanvasEffect extends PIXI.Container {
 			: 1.0;
 		inVideo.muted = !this.data.volume;
 		inVideo.volume =
-			(this.data.volume ?? 0) *
-			game.settings.get("core", "globalInterfaceVolume");
+			(this.data.volume ?? 0);
 
 		if (!this._video) {
 			this._video = inVideo;
@@ -3006,9 +3005,7 @@ export default class CanvasEffect extends PIXI.Container {
 		SequencerAnimationEngine.addAnimation(this.id, {
 			target: this,
 			propertyName: "video.volume",
-			to:
-				(this.data.volume ?? 0) *
-				game.settings.get("core", "globalInterfaceVolume"),
+			to: (this.data.volume ?? 0),
 			duration: fadeInAudio.duration,
 			ease: fadeInAudio.ease,
 			delay: fadeInAudio.delay,

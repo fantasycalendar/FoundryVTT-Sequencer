@@ -68,7 +68,7 @@ export default class SequencerSoundManager {
 
 		// Given that this is also affected by normal Foundry environment controls, do we want to multiply it by interface volume as well?
 		data.volume = playSound
-			? (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume")
+			? (data.volume ?? 0.8)
 			: 0.0;
 
 		let sound;
@@ -85,6 +85,7 @@ export default class SequencerSoundManager {
 				location = canvaslib.get_random_offset(location, data.randomOffset.source);
 			}
 			sound = await canvas.sounds.playAtPosition(data.src, location, data.locationOptions?.radius || 5, {
+				context: game.audio.interface,
 				gmAlways: false,
 				walls: false,
 				easing: true,
@@ -94,6 +95,7 @@ export default class SequencerSoundManager {
 			});
 		} else {
 			sound = await game.audio.play(data.src, {
+				context: game.audio.interface,
 				...data.locationOptions,
 				volume: data.fadeIn ? 0 : data.volume,
 				loop: data.loop,
