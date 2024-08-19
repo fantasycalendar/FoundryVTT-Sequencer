@@ -1406,6 +1406,11 @@ export default class EffectSection extends Section {
 				"inBool must be of type boolean"
 			);
 		this._aboveLighting = inBool;
+		if (game.release.generation >= 12) {
+			return this.sortLayer(inBool ? 1200 : 800);
+		} else {
+			if (!inBool) return this;
+		}
 		return this;
 	}
 
@@ -1477,6 +1482,12 @@ export default class EffectSection extends Section {
 	 * @returns {EffectSection}
 	 */
 	sortLayer(inSortLayer, inOptions = {}) {
+		if (!lib.is_real_number(inSortLayer))
+			throw this.sequence._customError(
+				this,
+				"sortLayer",
+				"inSortLayer must be of type number"
+			);
 		this._sortLayer = inSortLayer;
 		return this;
 	}

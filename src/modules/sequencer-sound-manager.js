@@ -66,9 +66,9 @@ export default class SequencerSoundManager {
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
 
-		// Given that this is also affected by normal Foundry environment controls, do we want to multiply it by interface volume as well?
+		// Sound in v11 was not multiplied correctly when played through the AudioHelper, but is in v12
 		data.volume = playSound
-			? (data.volume ?? 0.8) * game.settings.get("core", "globalInterfaceVolume")
+			? (data.volume ?? 0.8) * (!CONSTANTS.IS_V12 ? game.settings.get("core", "globalInterfaceVolume") : 1.0)
 			: 0.0;
 
 		let sound;
@@ -82,7 +82,8 @@ export default class SequencerSoundManager {
 				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
 			}
 			if (data.randomOffset?.source) {
-				location = canvaslib.get_random_offset(location, data.randomOffset.source);
+				const twister = lib.createMersenneTwister(data.seed);
+				location = canvaslib.get_random_offset(location, data.randomOffset.source, twister);
 			}
 			sound = await canvas.sounds.playAtPosition(data.src, location, data.locationOptions?.radius || 5, {
 				gmAlways: false,
@@ -90,39 +91,44 @@ export default class SequencerSoundManager {
 				easing: true,
 				muffledEffect: { type: "lowpass" },
 				...data.locationOptions,
-				volume: data.volume
+				volume: data.volume,
+				channel: "interface"
 			});
 		} else {
-			sound = await game.audio.play(data.src, {
+			sound = await this.AudioHelper.play({
 				...data.locationOptions,
+				src: data.src,
 				volume: data.fadeIn ? 0 : data.volume,
 				loop: data.loop,
 				offset: data.startTime,
-			});
+				channel: "interface"
+			}, false);
 		}
 
 		if (!sound) return false;
 
 		sound.sequencer_data = data;
+		sound.sound_id = data.id;
 		sound.sound_playing = playSound || game.user.isGM;
 
 		SequenceManager.RunningSounds.add(data.id, sound);
 
 		if (data.fadeIn && playSound) {
 			SequencerAnimationEngine.addAnimation(data.id, {
-				target: sound.sound,
+				target: sound,
 				propertyName: "volume",
 				from: 0.0,
 				to: data.volume,
 				duration: Math.min(data.fadeIn.duration, data.duration),
 				ease: data.fadeIn.ease,
 				delay: Math.min(data.fadeIn.delay, data.duration),
+				absolute: true
 			});
 		}
 
 		if (data.fadeOut && playSound) {
 			SequencerAnimationEngine.addAnimation(data.id, {
-				target: sound.sound,
+				target: sound,
 				propertyName: "volume",
 				from: data.volume,
 				to: 0.0,
@@ -132,6 +138,7 @@ export default class SequencerSoundManager {
 					data.duration - data.fadeOut.duration + data.fadeOut.delay,
 					0,
 				),
+				absolute: true
 			});
 		}
 
