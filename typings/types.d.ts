@@ -523,6 +523,12 @@ declare abstract class EffectSection {
   playbackRate(inNumber: number): this;
 
   /**
+   * Causes effects with this sync group to share the same start time - useful if you have multiple 
+   * duplicated effects that need to play at the same time.
+   */
+  syncGroup(string: string): this;
+
+  /**
    * Causes the effect to target a location close to the .stretchTowards() location, but not on it.
    */
   missed(inBool?: boolean): this;
