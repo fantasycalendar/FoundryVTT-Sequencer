@@ -139,12 +139,14 @@ function initializeModule() {
   registerLayers();
   registerHotkeys();
   registerLibwrappers();
-  registerBatchShader();
 
   SequencerAboveUILayer.setup();
   SequencerEffectManager.setup();
-
 }
+
+Hooks.once('canvasInit', () => {
+  registerBatchShader();
+})
 
 Hooks.once("ready", async () => {
 
