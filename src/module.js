@@ -144,7 +144,7 @@ function initializeModule() {
   SequencerEffectManager.setup();
 }
 
-Hooks.once('canvasInit', () => {
+Hooks.once('canvasConfig', () => {
   registerBatchShader();
 })
 
