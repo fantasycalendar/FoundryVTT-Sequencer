@@ -12,6 +12,7 @@ import SequenceManager from "./sequence-manager.js";
 import { get, writable } from "svelte/store";
 import CONSTANTS from "../constants.js";
 import WaitSection from "../sections/wait.js";
+import EngagementSection from "../sections/engagement.js";
 
 export default class Sequence {
 	constructor(
@@ -191,7 +192,7 @@ export default class Sequence {
 	 * Creates an effect section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Effect section.
 	 *
 	 * @param {string} [inFile] inFile
-	 * @returns {Section}
+	 * @returns {EffectSection}
 	 */
 	effect(inFile = "") {
 		const effect = lib.section_proxy_wrap(new EffectSection(this, inFile));
@@ -203,7 +204,7 @@ export default class Sequence {
 	 * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
 	 *
 	 * @param {string} [inFile] inFile
-	 * @returns {Section}
+	 * @returns {SoundSection}
 	 */
 	sound(inFile = "") {
 		const sound = lib.section_proxy_wrap(new SoundSection(this, inFile));
@@ -231,7 +232,7 @@ export default class Sequence {
 	 * @param {Object|String|Boolean} [inTarget=false] inTarget
 	 * @param {String|Boolean} [inText=false] inText
 	 * @param {Object} [inTextOptions={}] inTextOptions
-	 * @returns {AnimationSection}
+	 * @returns {ScrollingTextSection}
 	 */
 	scrollingText(inTarget = false, inText = false, inTextOptions = {}) {
 		const scrolling = lib.section_proxy_wrap(
@@ -247,7 +248,7 @@ export default class Sequence {
 	 * @param {Object|String|Boolean} [inTarget=false] inTarget
 	 * @param {Boolean|Number} inDuration
 	 * @param {Boolean|Number} inSpeed
-	 * @returns {AnimationSection}
+	 * @returns {CanvasPanSection}
 	 */
 	canvasPan(inTarget = false, inDuration = null, inSpeed = null) {
 		const panning = lib.section_proxy_wrap(
@@ -255,6 +256,22 @@ export default class Sequence {
 		);
 		this.sections.push(panning);
 		return panning;
+	}
+
+	/**
+	 * A section that will wait until every user has focused on Foundry, with an optional sound to play to users
+	 * whose browsers are not focused on Foundry, and an optional max wait time (in milliseconds)
+	 *
+	 * @param {Boolean|String} [inSrc=false] inTarget
+	 * @param {Boolean|Number} [inMaxWait=false] inMaxWait
+	 * @returns {AnimationSection}
+	 */
+	engagement(inSrc = null, inMaxWait = null) {
+		const engagement = lib.section_proxy_wrap(
+			new EngagementSection(this, inSrc, inMaxWait)
+		);
+		this.sections.push(engagement);
+		return engagement;
 	}
 
 	/**

@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.2.18
+
+- Added `.engagement()` section and `Sequencer.Helpers.waitForEngagement` - this allows you to curate your Sequences only to play when all users are focused on Foundry
+
 ## Version 3.2.17
 - Fixed some issues with the vision masking shader relating to the batch batching optimizations (Thanks Codas on github!)  
 - Fixed above UI layer not working with recent render batching optimizations (Thanks Codas on github!)

@@ -1,10 +1,14 @@
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import SequencerSoundManager from "./sequencer-sound-manager.js";
 
 let lockedView = false;
 
 export default class SequencerFoundryReplicator {
+
+	static #engagedUsers = new Map();
+
   static registerHooks() {
     Hooks.on("canvasPan", () => {
       if (!lockedView) return;
@@ -14,7 +18,51 @@ export default class SequencerFoundryReplicator {
       canvas.controls._onCanvasPan();
       canvas.hud.align();
     });
+	  Hooks.on("renderPlayerList", () => {
+		  game.users.forEach(user => {
+				if(!user.active){
+					return this.#engagedUsers.delete(user.id);
+				}
+			  this.#engagedUsers.set(user.id, true)
+		  });
+	  });
+		$(window).on("focus", () => {
+			sequencerSocket.executeForEveryone(SOCKET_HANDLERS.RELAY_ENGAGEMENT, game.user.id, true);
+		});
+		$(window).on("blur", () => {
+			sequencerSocket.executeForEveryone(SOCKET_HANDLERS.RELAY_ENGAGEMENT, game.user.id, false);
+		});
+	  sequencerSocket.executeForEveryone(SOCKET_HANDLERS.RELAY_ENGAGEMENT, game.user.id, document.hasFocus());
+	  game.users.forEach(user => {
+		  if(!user.active){
+			  return this.#engagedUsers.delete(user.id);
+		  }
+		  this.#engagedUsers.set(user.id, true)
+	  });
   }
+
+	static _relayEngagement(userId, engaged){
+		this.#engagedUsers.set(userId, engaged);
+	}
+
+	static _pingEngagement(soundSrc = false) {
+		if(this.#engagedUsers.get(game.user.id) || !soundSrc) return;
+		SequencerSoundManager.AudioHelper.play({ src: soundSrc, volume: 1.0, loop: false }, false);
+	}
+
+	static async _waitForEngagement(inSrc = null, maxWaitTime = null) {
+		await sequencerSocket.executeForOthers(SOCKET_HANDLERS.PING_ENGAGEMENT, inSrc);
+		const startTime = Number(Date.now());
+		return new Promise(async (resolve) => {
+			while (true) {
+				const currentTime = Number(Date.now());
+				if(maxWaitTime && (currentTime - startTime) >= maxWaitTime) break;
+				await lib.wait(10);
+				if (Array.from(this.#engagedUsers.values()).every(Boolean)) break;
+			}
+			resolve();
+		});
+	}
 
   static _validateObject(inObject, sceneId) {
     if (lib.is_UUID(inObject) || !canvaslib.is_object_canvas_data(inObject)) {

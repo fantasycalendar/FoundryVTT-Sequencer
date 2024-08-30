@@ -27,6 +27,8 @@ export const SOCKET_HANDLERS = {
   CREATE_LIGHT_SOURCE: "createLightSource",
   PAN_CANVAS: "panCanvas",
   RUN_SEQUENCE_LOCALLY: "runSequenceLocally",
+	RELAY_ENGAGEMENT: "relayEngagement",
+	PING_ENGAGEMENT: "pingEngagement"
 };
 
 export let sequencerSocket;
@@ -85,6 +87,12 @@ export function registerSocket() {
   sequencerSocket.register(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, (data) => {
     lib.debug("Playing remote Sequence");
     new Sequence().fromJSON(data).play();
+  });
+  sequencerSocket.register(SOCKET_HANDLERS.RELAY_ENGAGEMENT, (...args) => {
+	  SequencerFoundryReplicator._relayEngagement(...args);
+  });
+  sequencerSocket.register(SOCKET_HANDLERS.PING_ENGAGEMENT, (...args) => {
+	  SequencerFoundryReplicator._pingEngagement(...args);
   });
 }
 

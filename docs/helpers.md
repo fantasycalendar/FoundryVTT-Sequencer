@@ -10,6 +10,7 @@
 - [Random Array Element](#random-array-element)
 - [Random Object Element](#random-object-element)
 - [Make Array Unique](#make-array-unique)
+- [Wait For Engagement](#wait-for-engagement)
 
 ### Global Reference
 
@@ -98,3 +99,11 @@ Sequencer.Helpers.make_array_unique(array);
 ```
 
 Turns an array containing multiples of the same string, objects, etc, and removes duplications, and returns a fresh array.
+
+### Wait For Engagement
+
+```js
+Sequencer.Helpers.waitForEngagement(inSrc, inMaxWaitTime);
+```
+
+Returns a promise that resolves when every user is focused on Foundry, with an optional sound to play for users who do not have their browsers focused on Foundry, and an optional max wait time.

@@ -91,6 +91,12 @@ In Foundry v10, if you have [Advanced Macros](https://foundryvtt.com/packages/ad
 
 `.macro("New Macro", true, "fire-bolt", token.id)`
 
+### Engagement
+
+`.engagement()` or `.engagement("sounds/drums.wav")` or `.engagement("sounds/drums.wav", 5000)`
+
+Causes the sequence to wait until every user has their browser focused on Foundry, with an optional sound to play for users whose browsers are not focused on Foundry, and an optional max wait time (in milliseconds).
+
 ### Wait
 
 `.wait(1000)` or `.wait(500, 1000)`

@@ -132,6 +132,7 @@ function initializeModule() {
       random_array_element: lib.random_array_element,
       random_object_element: lib.random_object_element,
       make_array_unique: lib.make_array_unique,
+	    waitForEngagement: SequencerFoundryReplicator._waitForEngagement.bind(SequencerFoundryReplicator)
     },
   };
 
