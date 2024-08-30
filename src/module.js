@@ -2,6 +2,7 @@ import "./styles/module.scss";
 
 import { registerSettings, migrateSettings } from "./settings.js";
 import registerLayers from "./layers.js";
+import registerBatchShader from "./batchShader.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "../typings/typings.js";
 import { registerSocket } from "./sockets.js";
@@ -143,8 +144,11 @@ function initializeModule() {
 
   SequencerAboveUILayer.setup();
   SequencerEffectManager.setup();
-
 }
+
+Hooks.once('canvasConfig', () => {
+  registerBatchShader();
+})
 
 Hooks.once("ready", async () => {
 

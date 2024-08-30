@@ -3,6 +3,10 @@ type EasingOptions = {
   delay?: number;
 };
 
+type RequireAtLeastOne<T> = {
+  [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>
+}[keyof T]
+
 type EasingOptionsWithTarget = EasingOptions & {
   target: Vector2;
 };
@@ -178,7 +182,7 @@ declare class CoreMethods {
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
    */
-  play(inOptions?: { remote?: boolean }): Promise<Sequence>;
+  play(inOptions?: { remote?: boolean, preload?: boolean, local?: boolean }): Promise<Sequence>;
 
   /**
    * Turns the sequence into an array of objects to be reconstructed later
@@ -196,10 +200,9 @@ declare interface Sequence extends CoreMethods {}
 declare class Sequence {
   /**
    * Declaring the module name when using new Sequence() will make every error or warning caught during the runtime also
-   * include the module name, which lets you and other users know which module caused the error. The secondary argument
-   * is an object that can contain a number of optional arguments.
+   * include the module name, which lets you and other users know which module caused the error.
    */
-  constructor(inOptions?: { inModuleName?: string; softFail?: boolean });
+  constructor(inOptions?: { inModuleName?: string; softFail?: boolean }, softFail?: boolean);
 }
 
 declare abstract class Section<T> {
@@ -349,17 +352,17 @@ declare abstract class HasScale<T> {
    *  - An object with x and y for non-uniform scaling
    *  - Two numbers which the Sequencer will randomly pick a uniform scale between
    */
-  scale(inScaleMin: number, inScaleMax?: number): T;
+  scale(inScaleMin: number | { x: number, y: number }, inScaleMax?: number): T;
 
   /**
    * Causes the effect to scale when it starts playing
    */
-  scaleIn(inScale: number, durationMs: number, options?: EasingOptions): T;
+  scaleIn(inScale: number | { x: number, y: number }, durationMs: number, options?: EasingOptions): T;
 
   /**
    * Causes the effect to scale at the end of the effect's duration
    */
-  scaleOut(inScale: number, durationMs: number, options?: EasingOptions): T;
+  scaleOut(inScale: number | { x: number, y: number }, durationMs: number, options?: EasingOptions): T;
 }
 
 declare abstract class HasTime<T> {
@@ -593,6 +596,12 @@ declare abstract class EffectSection {
    * it play half as fast.
    */
   playbackRate(inNumber: number): this;
+
+  /**
+   * Causes effects with this sync group to share the same start time - useful if you have multiple 
+   * duplicated effects that need to play at the same time.
+   */
+  syncGroup(string: string): this;
 
   /**
    * Causes the effect to target a location close to the .stretchTowards() location, but not on it.
@@ -899,17 +908,17 @@ declare abstract class EffectSection {
    */
   tieToDocuments(
     inOrigin:
-      | string
+      | String
+      | PlaceableObject
       | foundry.abstract.Document
-      | Array<string | foundry.abstract.Document>
+      | Array<String | PlaceableObject | foundry.abstract.Document>
   ): this;
 
+
   /**
-   * This is for adding extra information to an effect, like the origin of the effect in the form of the item's uuid.
-   *
-   * The method accepts a string or a Document that has an UUID.
+   * Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
    */
-  mask(inObject: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
+  mask(inObject?: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
 
   /**
    * Causes the effect to be visible through walls
@@ -1173,6 +1182,14 @@ declare abstract class SequencerEffectPlayer {
   show(): Promise<void>;
 }
 
+type inFilters = {
+  object?: string | VisibleFoundryTypes;
+  name?: string;
+  sceneId?: string;
+  source?: PlaceableObject | Document | String,
+  target?: PlaceableObject | Document | String,
+  origin?: String
+}
 declare abstract class SequencerEffectManager {
   /**
    * Opens the Sequencer Effects UI with the effects tab open
@@ -1187,31 +1204,17 @@ declare abstract class SequencerEffectManager {
   /**
    * Get effects that are playing on the canvas based on a set of filters
    */
-  getEffects(options: {
-    object?: string | VisibleFoundryTypes;
-    name?: string;
-    sceneId?: string;
-  }): Array<any>;
+  getEffects(options: inFilters): Array<any>;
 
   /**
    * Updates effects based on a set of filters
    */
-  updateEffects(options: {
-    object?: string | VisibleFoundryTypes;
-    name?: string;
-    sceneId?: string;
-    effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
-  }): Promise<Array<any>>;
+  updateEffects(options: RequireAtLeastOne<inFilters & { effects?: string | CanvasEffect | Array<string> | Array<CanvasEffect>; }>): Promise<Array<any>>;
 
   /**
    * End effects that are playing on the canvas based on a set of filters
    */
-  endEffects(options: {
-    object?: string | VisibleFoundryTypes;
-    name?: string;
-    sceneId?: string;
-    effects: string | CanvasEffect | Array<string> | Array<CanvasEffect>;
-  }): Promise<void>;
+  endEffects(options: RequireAtLeastOne<inFilters & { effects?: string | CanvasEffect | Array<string> | Array<CanvasEffect>; }>): Promise<void>;
 
   /**
    * End all effects that are playing on the canvas

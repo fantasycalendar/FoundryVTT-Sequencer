@@ -285,7 +285,7 @@ Examples:
 .radius(15)
 ```
 
-Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.
+Radius in number of feet (or other units) this sound will be played within. The distance is determined by the scene's Grid Scale.
 
 **Note:** Requires `.atLocation()` to be called as well, or the sound will still be global.
 

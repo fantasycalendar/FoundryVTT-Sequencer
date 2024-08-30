@@ -21,6 +21,7 @@ export default {
    *      @param {String} inOptions.ease       - what type of easing the animation should use
    *      @param {Boolean} inOptions.gridUnits - if animating width or height, this will set it to work in the scene's grid units
    *      @param {Boolean} inOptions.fromEnd   - makes this animation play from the end, like fadeOut, scaleOut, etc
+   *      @param {Boolean} inOptions.absolute  - makes this animation's values override the current value
    *
    * @returns this
    */
@@ -57,6 +58,7 @@ export default {
    *      @param {String} inOptions.ease       - what type of easing the animation should use
    *      @param {Boolean} inOptions.pingPong  - sets whether loop should interpolate to the first value after it reaches the first value, or simply set it to the first value
    *      @param {Boolean} inOptions.gridUnits - if animating width or height, this will set it to work in the scene's grid units
+   *      @param {Boolean} inOptions.absolute  - makes this animation's values override the current value
    *
    * @returns this
    */

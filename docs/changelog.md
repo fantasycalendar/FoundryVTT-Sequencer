@@ -1,9 +1,59 @@
 ## Changelog
 
+## Version 3.2.17
+- *Sequencer* - Updated types (Thanks Vauxs on github!)
+- *Effects* - Fixed some issues with the vision masking shader relating to the batch batching optimizations (Thanks Codas on github!)
+- *Effects* - Fixed above UI layer not working with recent render batching optimizations (Thanks Codas on github!)
+
+## Version 3.2.16
+- *Effects* - Major improvements to the way that effects are rendered to better support render batching (thank you Codas, you damn legend!)
+- *Effects* - Tweaked flag manager to better handle effects with broken IDs
+- *Animations* - Fixed `.teleportTo()` triggering regions that react upon movement (thanks Michael on github!)
+- *Sounds* - Fixed sounds not playing on the right channel in v12
+- *Sounds* - Fixed sounds not working with `.fadeInAudio()` and `.fadeOutAudio()`
+- *Sounds* - Fixed sounds with `.atLocation()` and `randomOffset` in v12 not synchronizing the exact location between clients 
+
+## Version 3.2.15
+- *Effects* - Fixed non-`.xray()` effects showing in the fog of war
+- *Sounds* - Removed stray debugger
+
+## Version 3.2.14 Hotfix
+- *Sounds* - Fixed sounds again (thank you, Vauxs!)
+
+## Version 3.2.13
+- *Sequencer* - Tweaks and fixes to documentation (thank you, Vauxs!)
+- *Effects* - Fixed templates getting deleted shortly after being used for an effect would cause a Foundry crash
+- *Effects* - Fixed effects sticking around after documents that they were attached to had been deleted
+- *Sounds* - Fixed sounds not working properly in certain macros
+
+## Version 3.2.12
+- *Sequencer* - Further updates to typing information (thank you, Vauxs!)
+- *Sequencer* - Tweaked `preload` optional argument on `Sequence#play` to batch preload files (thank you, Codas!)
+- *Sequencer* - Fixed `local` optional argument on `Sequence#play` to actually only play effects and sounds locally
+- *Sequencer* - Tweaked Sequencer Manager to be more robust and less error prone when invalid effects are active
+- *Effects* - Added `absolute` optional argument to `.animateProperty()` and `.loopProperty()`
+- *Effects* - Fixed some effects not playing in the correct location, which fixes effect position issues with the Isometric module
+- *Sounds* - Fixed sounds not playing in v11 (thank you, Vauxs!)
+- *Canvas Pan* - Fixed initiating a shake with a frequency or duration of 0 would cause the canvas to freeze
+
+## Version 3.2.11
+- *Sequencer* - Updated `Sequence#play` to have two additional secondary parameters:
+  - `preload: boolean` - causes any section with `.file()` entries to preload all files that would be played
+  - `local: boolean` - causes sections to be played only locally to the user executing the sequence
+- *Sequencer* - Improved typing information (thank you, Vauxs!)
+- *Effects* - Fixed non-ASCII text breaking some effects played with Automated Animations due to its usage with the Effect Manager
+- *Effects* - Fixed the alpha of tokens and tiles not being respected with `attachTo()`
+- *Effects* - Fixed `.template()` on effects not overwriting database templates
+- *Effects* - Fixed `CanvasEffect#addAnimatedProperties` causing errors when used twice in a row as it would try to incorrectly serialize entire PIXI sprites
+
 ## Version 3.2.10
 - *Sequencer* - Fixed `{ name }` filters on `Sequencer.EffectManager` and `Sequencer.SoundManager` methods not working with regex-like strings
 - *Effects* - Tweaked and improved the animation engine to better handle stacked animations on the same property
 - *Effects* - Fixed `.persist()`ing effects with internal loop assets not finishing the ending portion when the effect was ended
+- *Effects* - Fixed one shot effects replaying the first frame before disappearing
+- *Effects* - Fixed `.aboveInterface()` effects blocking mouse interactions
+- *Effects* - Fixed some looping inconsistencies with `.loopOptions()`
+- *Effects* - Fixed being unable to snap effects to the grid when moved with the Sequencer Player
 
 ## Version 3.2.9
 - *Effects* - Fixed effects with `.attachTo()` sometimes throwing errors and causing the scene to freeze

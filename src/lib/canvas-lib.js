@@ -313,26 +313,34 @@ export function is_object_canvas_data(inObj) {
   );
 }
 
-export function get_object_canvas_data(inObject, measure = false) {
+export function get_object_canvas_data(inObject, { measure = false, uuid = true }={}) {
   inObject = inObject?.object ?? inObject;
-  return {
+  const data = {
     ...get_object_position(inObject, { measure }),
     ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject),
     elevation: get_object_elevation(inObject),
-    uuid: inObject?.document?.uuid ?? inObject?.uuid,
     cachedLocation: true,
   };
+	if(uuid) {
+		data["uuid"] = inObject?.document?.uuid ?? inObject?.uuid;
+	}
+	return data;
 }
 
 export function get_object_elevation(inObject) {
   return inObject?.document?.elevation ?? inObject?.elevation ?? 0;
 }
 
-export function get_mouse_position(snapToGrid = false, gridSnap = 2) {
+export function get_mouse_position(snapToGrid = false) {
   const pos = lib.getCanvasMouse().getLocalPosition(canvas.app.stage);
-  return !snapToGrid
-    ? new PIXI.Point(pos.x, pos.y)
-    : canvas.grid.getSnappedPoint({ x: pos.x, y: pos.y }, gridSnap);
+
+	const snappingOptions = CONSTANTS.IS_V12 ? {
+		mode: CONST.GRID_SNAPPING_MODES.CENTER | CONST.GRID_SNAPPING_MODES.VERTEX | CONST.GRID_SNAPPING_MODES.EDGE_MIDPOINT
+	} : 2;
+
+	return !snapToGrid
+		? new PIXI.Point(pos.x, pos.y)
+		: canvas.grid.getSnappedPoint({ x: pos.x, y: pos.y }, snappingOptions)
 }
 
 export function distance_between(p1, p2) {
@@ -480,6 +488,12 @@ export function validateAnimation(inTarget, inPropertyName, inOptions) {
       return `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`;
     }
   }
+	if (
+		inOptions?.absolute !== undefined &&
+		typeof inOptions.absolute !== "boolean"
+	) {
+		return `inOptions.absolute must be of type boolean`;
+	}
 
   return {
     target: inTarget,
@@ -492,6 +506,7 @@ export function validateAnimation(inTarget, inPropertyName, inOptions) {
     looping: false,
     fromEnd: inOptions?.fromEnd ?? false,
     gridUnits: inOptions?.gridUnits ?? false,
+    absolute: inOptions?.absolute ?? false,
   };
 }
 

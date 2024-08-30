@@ -5,6 +5,7 @@
   "license": "MIT",
   "private": true,
   "type": "module",
+  "types": "typings/types.d.ts",
   "author": "Fantasy Computerworks (https://github.com/fantasycalendar)",
   "contributors": [
     "Wasp (https://github.com/haxxer)"

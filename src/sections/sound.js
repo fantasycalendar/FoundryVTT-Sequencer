@@ -3,6 +3,7 @@ import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { SequencerFileBase } from "../modules/sequencer-file.js";
+import CONSTANTS from "../constants.js";
 
 class SoundSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -168,7 +169,7 @@ class SoundSection extends Section {
 			}
 		}
 
-		if (playData.location && CONSTANTS.IS_V12) {
+		if (playData.location && !CONSTANTS.IS_V12) {
 			if (this.sequence.softFail) {
 				playData.play = false;
 			} else {
@@ -273,7 +274,10 @@ class SoundSection extends Section {
 			id: foundry.utils.randomID(),
 			play: true,
 			src: file,
-			location: this._source?.uuid || null,
+			location: this._source?.uuid
+				|| (this._source?.x && this._source?.y
+					? { x: this._source?.x, y: this._source?.y }
+					: null),
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
@@ -287,6 +291,7 @@ class SoundSection extends Section {
 			users: this._users ? Array.from(this._users) : null,
 			name: this._name,
 			origin: this._origin,
+			seed: `${this._name}-${foundry.utils.randomID()}-${this._currentRepetition}`
 		};
 
 		for (let override of this._overrides) {

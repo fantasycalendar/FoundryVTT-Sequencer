@@ -38,6 +38,18 @@ const flagManager = {
 		for (let [effectId, effectData] of effects) {
 			let effectVersion = effectData?.flagVersion ?? "1.0.0";
 
+			let changesAdded = false;
+
+			if(effectData._id !== effectId) {
+				changesAdded = true;
+				effectData._id = effectId;
+				changes.push(effectData);
+
+				lib.debug(
+					`Fixed effect with broken ID ${effectId}`,
+				);
+			}
+
 			if (effectData.flagVersion === this.latestFlagVersion) continue;
 
 			for (let [version, migration] of Object.entries(this.effectMigrations)) {
@@ -52,7 +64,7 @@ const flagManager = {
 
 			effectData.flagVersion = this.latestFlagVersion;
 
-			changes.push(effectData);
+			if(!changesAdded) changes.push(effectData);
 		}
 
 		if (changes.length) {

@@ -353,7 +353,8 @@ export function get_object_identifier(inObject, tryUUID = true) {
     inObject?.document?.name ??
     inObject?.name ??
     (inObject?.tag !== "" ? inObject?.tag : undefined) ??
-    (inObject?.label !== "" ? inObject?.label : undefined)
+    (inObject?.label !== "" ? inObject?.label : undefined) ??
+    inObject?.sound_id
   );
 }
 
@@ -478,7 +479,7 @@ export function section_proxy_wrap(inClass) {
 export function str_to_search_regex_str(str) {
   return str
     .trim()
-    .replace(/([^A-Za-z0-9 .*_-])/g, "\\$1")
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
     .replace(/\*+/g, ".*?");
 }
 
