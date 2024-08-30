@@ -1,5 +1,10 @@
 ## Changelog
 
+## Version 3.2.17
+- *Sequencer* - Updated types (Thanks Vauxs on github!)
+- *Effects* - Fixed some issues with the vision masking shader relating to the batch batching optimizations (Thanks Codas on github!)
+- *Effects* - Fixed above UI layer not working with recent render batching optimizations (Thanks Codas on github!)
+
 ## Version 3.2.16
 - *Effects* - Major improvements to the way that effects are rendered to better support render batching (thank you Codas, you damn legend!)
 - *Effects* - Tweaked flag manager to better handle effects with broken IDs
