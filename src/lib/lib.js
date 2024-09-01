@@ -353,7 +353,8 @@ export function get_object_identifier(inObject, tryUUID = true) {
     inObject?.document?.name ??
     inObject?.name ??
     (inObject?.tag !== "" ? inObject?.tag : undefined) ??
-    (inObject?.label !== "" ? inObject?.label : undefined)
+    (inObject?.label !== "" ? inObject?.label : undefined) ??
+    inObject?.sound_id
   );
 }
 
