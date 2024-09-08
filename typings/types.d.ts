@@ -1264,7 +1264,15 @@ declare abstract class SequencerSoundManager {
 
 declare abstract class SequencerCrosshair {
 
-  show(crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<void>;
+	/**
+	 * Show a configurable crosshair
+	 */
+  show(crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
+
+	/**
+	 * Show a configurable crosshair based a foundry PlaceableObject
+	 */
+	showToken(obj: VisibleFoundryTypes, crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
 
   /**
    * Collect overlapping placeable objects of a crosshair of a given placeable type
@@ -1308,7 +1316,7 @@ declare namespace Sequencer {
   const SectionManager: SequencerSectionManager;
   const EffectManager: SequencerEffectManager;
   const SoundManager: SequencerSoundManager;
-  const crosshair: SequencerCrosshair;
+  const Crosshair: SequencerCrosshair;
   function registerEase(
     easeName: string,
     easeFunction: Function,

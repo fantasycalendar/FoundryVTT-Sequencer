@@ -34,7 +34,7 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 			snap: {
 				position: CONST.GRID_SNAPPING_MODES.CENTER,
 				size: CONST.GRID_SNAPPING_MODES.CENTER,
-				angle: 0
+				direction: 0
 			},
 			lockDrag: true,
 			distanceMinMax: {
@@ -51,12 +51,13 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 			location: {
 				obj: null,
 				limit: false,
-				minRange: null,
-				maxRange: null,
+				limitMinRange: null,
+				limitMaxRange: null,
 				showRange: false,
 				lock: false,
-				edge: false,
-				edgeOffsetDistance: 0,
+				lockToEdge: false,
+				lockToEdgeDirection: false,
+				lockOffsetDistance: 0,
 				offset: { x: 0, y: 0 }
 			},
 			lockManualRotation: false,

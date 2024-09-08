@@ -4,6 +4,8 @@ import TokenCrosshairsDocument from "./TokenCrosshairsDocument.js";
 export default class Crosshair {
 
 	/**
+	 * Show a configurable crosshair
+	 *
 	 * @param {CrosshairData/Object} config
 	 * @param {CrosshairCallbackData/Object} callbacks
 	 * @returns {Promise}
@@ -11,8 +13,9 @@ export default class Crosshair {
 	static show(config = {}, callbacks = {}) {
 
 		const reticle = new CrosshairsDocument({
-			t: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE,
+			t: config.t ?? CONST.MEASURED_TEMPLATE_TYPES.CIRCLE,
 			distance: config?.distance ?? canvas.grid.distance / 2,
+			width: config?.width ?? canvas.grid.distance,
 			borderColor: config.borderColor ?? "#000000",
 			fillColor: config.fillColor ?? "#000000",
 		}, {
@@ -24,14 +27,16 @@ export default class Crosshair {
 	}
 
 	/**
-	 * @param {Token/TokenDocument} token
+	 * Show a configurable crosshair based a foundry PlaceableObject
+	 *
+	 * @param {PlaceableObject} obj
 	 * @param {CrosshairData/Object} config
 	 * @param {CrosshairCallbackData/Object} callbacks
 	 * @returns {Promise}
 	 */
-	static showToken(token, config = {}, callbacks = {}) {
+	static showToken(obj, config = {}, callbacks = {}) {
 
-		const placeable = token instanceof PlaceableObject ? token : token.object;
+		const placeable = obj instanceof PlaceableObject ? obj : obj.object;
 
 		const controlled = placeable.controlled;
 		placeable.release();

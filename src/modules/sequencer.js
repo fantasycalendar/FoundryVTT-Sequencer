@@ -163,9 +163,14 @@ export default class Sequence {
 				this,
 				async () => {
 					if (compendium) {
-						const macroData = (await compendium.getDocuments())
-							.find((i) => i.name === macro[3])
-							?.toObject();
+						const macroIndex = (await compendium.getIndex())
+							.find((i) => {
+								if(macro[3] === "Macro"){
+									return macro[4] === i._id;
+								}
+								return i.name === macro[3]
+							});
+						const macroData = macroIndex ? (await compendium.getDocument(macroIndex?._id)) : false;
 						if (!macroData) {
 							if (this.softFail) {
 								return;
