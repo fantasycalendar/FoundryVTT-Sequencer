@@ -296,7 +296,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 			if (this.crosshair.location.lock) {
 
-				if (this.crosshair.location.edge) {
+				if (this.crosshair.location.lockToEdge) {
 
 					this.handleLockedEdge(mouseLocation);
 

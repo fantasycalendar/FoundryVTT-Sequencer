@@ -1,6 +1,7 @@
 import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
+import traits from "./traits/_traits.js";
 
 export default class CrosshairSection extends Section {
 	constructor(inSequence, inName = "") {
@@ -300,7 +301,7 @@ export default class CrosshairSection extends Section {
 
 	async run() {
 
-		const reticle = new Crosshairs({
+		const reticle = new CrosshairsDocument({
 			t: this._type,
 			distance: this._distance,
 			direction: this._direction,
@@ -337,6 +338,13 @@ export default class CrosshairSection extends Section {
 
 	async _execute(){
 		await this.run();
+	}
+
+	/**
+	 * @private
+	 */
+	_applyTraits() {
+		Object.assign(this.constructor.prototype, traits.name);
 	}
 
 }
