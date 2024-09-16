@@ -368,30 +368,31 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	_onConfirm(evt) {
 		evt.preventDefault();
 		canvas.mouseInteractionManager.cancel(evt);
+		canvas.mouseInteractionManager.reset({
+			interactionData: true,
+			state: false,
+		});
 		if (this.isDrag) {
 			this.isDrag = false;
-			canvas.mouseInteractionManager.reset({
-				interactionData: true,
-				state: false,
-			});
 			return;
 		}
 
-		this.document.endPosition = this.document.t === CONST.MEASURED_TEMPLATE_TYPES.CONE || CONST.MEASURED_TEMPLATE_TYPES.RAY
-			? get_object_position(this, { measure: true })
+		this.document.endPosition = this.document.t === CONST.MEASURED_TEMPLATE_TYPES.CONE || this.document.t === CONST.MEASURED_TEMPLATE_TYPES.RAY
+			? get_object_position(this, { measure: true, bypass: true })
 			: null;
 
-		this.destroy();
 		this.#promise.resolve(this.document);
+		this.destroy();
 	}
 
 	_onCancel(evt) {
+		canvas.mouseInteractionManager.cancel(evt);
+		canvas.mouseInteractionManager.reset({
+			interactionData: true,
+			state: false,
+		});
 		if (this.isDrag) {
 			this.isDrag = false;
-			canvas.mouseInteractionManager.reset({
-				interactionData: true,
-				state: false,
-			});
 			return;
 		}
 		this.destroy();

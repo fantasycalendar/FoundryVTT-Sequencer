@@ -7,6 +7,8 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../utils/flag-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 
 export default class EffectSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -2285,6 +2287,10 @@ export default class EffectSection extends Section {
 	_getTargetObject() {
 		if (!this._target?.target) return this._target;
 		if (typeof this._target.target !== "object") return this._target.target;
+		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
+			const doc = this._target?.target?.document ?? this._target?.target;
+			return doc.getOrientation().end;
+		}
 		if (
 			this._target?.target?.cachedLocation ||
 			!(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)
