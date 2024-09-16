@@ -9,7 +9,7 @@ import flagManager from "../utils/flag-manager.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
-import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
+import VisionSamplerShader from "../lib/filters/vision-sampler-shader.js";
 import MaskFilter from "../lib/filters/mask-filter.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 
@@ -1683,6 +1683,7 @@ export default class CanvasEffect extends PIXI.Container {
 		const spriteData = {
 			antialiasing: this.data?.fileOptions?.antialiasing,
 			tiling: this.data.tilingTexture,
+			xray: this.data.xray || this.data.screenSpace || this.data.screenSpaceAboveUI
 		}
 		/** @type {SequencerSpriteManager} */
 		this.sprite = new SequencerSpriteManager(this._file, spriteData)
@@ -2165,9 +2166,9 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.data.tilingTexture) {
 			const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
 			const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
+			this.sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
 			this.sprite.width = distance / scaleX;
 			this.sprite.height = texture.height;
-			this.sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
 
 			this.sprite.tileScale.x = this.data.tilingTexture.scale.x;
 			this.sprite.tileScale.y = this.data.tilingTexture.scale.y;
