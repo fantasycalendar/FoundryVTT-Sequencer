@@ -1,10 +1,11 @@
-import SequencerDatabase from "../../modules/sequencer-database.js";
-import { SequencerFileBase } from "../../modules/sequencer-file.js";
+import { get, writable } from "svelte/store";
 import CONSTANTS from "../../constants.js";
 import * as lib from "../../lib/lib.js";
-import { writable, get } from "svelte/store";
+import SequencerDatabase from "../../modules/sequencer-database.js";
+import { SequencerFileBase } from "../../modules/sequencer-file.js";
 import TreeViewEntry from "./TreeViewEntry.svelte";
 import TreeViewSeparator from "./TreeViewSeparator.svelte";
+import { cleanupSpritesheet,playSpritesheet } from "./renderSpritesheet.js";
 
 let lastFile = false;
 
@@ -30,10 +31,11 @@ function getFileData(entryText) {
     lowerCaseEntry.endsWith("ogg") ||
     lowerCaseEntry.endsWith("mp3") ||
     lowerCaseEntry.endsWith("wav");
-  const isImage = !lowerCaseEntry.endsWith("webm") && !isAudio;
-  const isVideo = !isAudio && !isImage;
+  const isSpritesheet = lowerCaseEntry.endsWith("json");
+  const isImage = !lowerCaseEntry.endsWith("webm") && !isAudio && !isSpritesheet;
+  const isVideo = !isAudio && !isImage && !isSpritesheet;
   const icon = previewFile
-    ? isVideo
+    ? isVideo || isSpritesheet
       ? "fa-film"
       : isAudio
       ? "fa-volume-high"
@@ -42,6 +44,8 @@ function getFileData(entryText) {
   const title = previewFile
     ? isVideo
       ? "Animated WebM"
+      : isSpritesheet
+      ? "Spritesheet"
       : isAudio
       ? "Audio"
       : "Image"
@@ -54,6 +58,7 @@ function getFileData(entryText) {
     title,
     isAudio,
     isImage,
+    isSpritesheet,
     isVideo,
   };
 }
@@ -96,11 +101,11 @@ function copyPath(dbPath, getFilepath, quotes = false) {
   document.execCommand("copy");
 }
 
-function playFile(entry) {
-  const { file, isAudio, isImage, isVideo } = getFileData(entry);
-
+async function playFile(entry) {
+  await cleanupSpritesheet()
+  const { file, isAudio, isImage, isVideo, isSpritesheet } = getFileData(entry);
   databaseStore.elements.audio.classList.toggle("hidden", !isAudio);
-  databaseStore.elements.image.classList.toggle("hidden", !isImage);
+  databaseStore.elements.image.classList.toggle("hidden", !isImage && !isSpritesheet);
   databaseStore.elements.player.classList.toggle("hidden", !isVideo);
 
   if (isImage) {
@@ -109,6 +114,11 @@ function playFile(entry) {
       type: "Image",
       duration: "n/a",
     });
+    return;
+  }
+
+  if(isSpritesheet) {
+    playSpritesheet(file, databaseStore);
     return;
   }
 
@@ -136,6 +146,7 @@ function playFile(entry) {
   element.src = file;
 }
 
+
 const treeStore = writable({});
 const visibleTreeStore = writable([]);
 let flattenedEntries = [];
@@ -162,6 +173,7 @@ const databaseStore = {
   cleanSearchStore: cleanSearchStore,
   searchRegex: searchRegexStore,
   elements: {},
+  cleanupSpritesheet() { cleanupSpritesheet(true) },
   copyPath,
   playFile,
   openTreePath,

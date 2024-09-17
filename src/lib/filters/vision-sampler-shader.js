@@ -58,6 +58,9 @@ export default class VisionSamplerShader extends BaseSamplerShader {
     precision ${PIXI.settings.PRECISION_VERTEX} float;
 
     uniform vec2 screenDimensions;
+    uniform mat3 projectionMatrix;
+    uniform mat3 translationMatrix;
+    uniform vec4 tint;
 
     in vec2 aVertexPosition;
     in vec2 aTextureCoord;
@@ -70,9 +73,7 @@ export default class VisionSamplerShader extends BaseSamplerShader {
     in float aTextureId;
     in float aTilingEnabled;
     in float aVisionMaskingEnabled;
-    uniform mat3 projectionMatrix;
-    uniform mat3 translationMatrix;
-    uniform vec4 tint;
+	
     out vec2 vTextureCoord;
     out vec2 vVisionCoord;
     flat out vec4 vColor;

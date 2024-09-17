@@ -53,7 +53,7 @@ class VideoSpritesheetAsset extends Asset {
 		this.#register();
 	}
 	destroy() {
-		SequencerFileCache.unloadSpritesheet(this.filepath);
+		return SequencerFileCache.unloadSpritesheet(this.filepath);
 	}
 	#register() {
 		SequencerFileCache.registerSpritesheet(this.filepath, this.spritesheet);

@@ -90,10 +90,11 @@ const SequencerFileCache = {
     }
   },
   
-  unloadSpritesheet(inSrc) {
+  async unloadSpritesheet(inSrc) {
     const existingSheetRef = this._spritesheets.get(inSrc)
     if (!existingSheetRef) {
       console.error('trying to unlaod spritesheet that was not loaded:', inSrc)
+      return;
     }
     existingSheetRef[1] -= 1
     if (existingSheetRef[1] > 0) {
@@ -104,11 +105,11 @@ const SequencerFileCache = {
     const sheet = existingSheetRef[0] 
     const relatedPacks = sheet.data?.meta?.related_multi_packs ?? []
     const relatedSheets = sheet.linkedSheets
-    const packsSize = Math.max(relatedPacks.length, relatedSheets.length)
+    // const packsSize = Math.max(relatedPacks.length, relatedSheets.length)
     // clean up related sheets starting with the last (leaf)
 
     const cacheKeys = [get_sheet_image_url(inSrc, sheet), foundry.utils.getRoute(inSrc)]
-    PIXI.Assets.unload(cacheKeys.filter(src => !!src))
+    await PIXI.Assets.unload(cacheKeys.filter(src => !!src))
   }
 };
 
