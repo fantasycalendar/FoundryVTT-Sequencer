@@ -144,13 +144,14 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	}
 
 	_onMove(evt) {
-		evt.preventDefault();
+
+		evt.preventDefault()
 
 		const now = Date.now();
 		const leftDown = (evt.buttons & 1) > 0;
 		this.isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
 
-		canvas.mouseInteractionManager.cancel(evt);
+		canvas._onDragCanvasPan(evt);
 
 		// Apply a 20ms throttle
 		if (now - this.moveTime <= 20) return;
@@ -362,35 +363,19 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		canvas.stage.off("mouseup", this.#handlers.confirm);
 		canvas.app.view.oncontextmenu = null;
 		canvas.app.view.onwheel = null;
-		canvas.mouseInteractionManager.reset({ interactionData: true, state: false });
 	}
 
 	_onConfirm(evt) {
-		evt.preventDefault();
-		canvas.mouseInteractionManager.cancel(evt);
-		canvas.mouseInteractionManager.reset({
-			interactionData: true,
-			state: false,
-		});
 		if (this.isDrag) {
 			this.isDrag = false;
 			return;
 		}
-
-		this.document.endPosition = this.document.t === CONST.MEASURED_TEMPLATE_TYPES.CONE || this.document.t === CONST.MEASURED_TEMPLATE_TYPES.RAY
-			? get_object_position(this, { measure: true, bypass: true })
-			: null;
-
+		this.document.getOrientation();
 		this.#promise.resolve(this.document);
 		this.destroy();
 	}
 
 	_onCancel(evt) {
-		canvas.mouseInteractionManager.cancel(evt);
-		canvas.mouseInteractionManager.reset({
-			interactionData: true,
-			state: false,
-		});
 		if (this.isDrag) {
 			this.isDrag = false;
 			return;

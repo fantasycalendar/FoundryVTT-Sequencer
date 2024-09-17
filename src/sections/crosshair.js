@@ -322,8 +322,8 @@ export default class CrosshairSection extends Section {
 				}
 				this.sequence.nameOffsetMap[this._name] = {
 					seed: `${this._name}-${foundry.utils.randomID()}`,
-					source: position,
-					target: position?.end ?? null
+					source: position.source,
+					target: position.target
 				}
 			}
 

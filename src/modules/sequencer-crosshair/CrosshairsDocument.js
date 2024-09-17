@@ -1,4 +1,5 @@
 import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
+import { get_object_canvas_data } from "../../lib/canvas-lib.js";
 
 /**
  *
@@ -17,7 +18,7 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 
 	crosshair = {};
 	#layer = null;
-	endPosition = null;
+	cachedPosition = null;
 
 	static get placeableClass() {
 		return CrosshairsPlaceable;
@@ -66,15 +67,13 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 	};
 
 	getOrientation() {
-		return {
-			x: this.x,
-			y: this.y,
-			width: this.token.width * this.parent.grid.size,
-			height: this.token.height * this.parent.grid.size,
-			elevation: 0, // TODO
-			rotation: this.rotation,
-			end: this.endPosition
+		this.cachedPosition ??= {
+			source: get_object_canvas_data(this.object, { uuid: false }),
+			target: this.t === CONST.MEASURED_TEMPLATE_TYPES.CONE || this.t === CONST.MEASURED_TEMPLATE_TYPES.RAY
+				? get_object_canvas_data(this.object, { measure: true, uuid: false })
+				: null
 		};
+		return this.cachedPosition;
 	}
 
 	get documentName() {

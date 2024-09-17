@@ -2272,6 +2272,10 @@ export default class EffectSection extends Section {
 	 */
 	_getSourceObject() {
 		if (!this._source || typeof this._source !== "object") return this._source;
+		if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
+			const doc = this._source?.document ?? this._source;
+			return doc.getOrientation().source;
+		}
 		if (this._source?.cachedLocation || !this._attachTo) {
 			return canvaslib.get_object_canvas_data(this._source, { uuid: false });
 		}
@@ -2289,7 +2293,7 @@ export default class EffectSection extends Section {
 		if (typeof this._target.target !== "object") return this._target.target;
 		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
 			const doc = this._target?.target?.document ?? this._target?.target;
-			return doc.getOrientation().end;
+			return doc.getOrientation().target;
 		}
 		if (
 			this._target?.target?.cachedLocation ||

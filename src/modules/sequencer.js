@@ -80,7 +80,7 @@ export default class Sequence {
 				continue;
 			}
 			if (!section._isLastSection) {
-				await new Promise((resolve) => setTimeout(resolve, 1));
+				await new Promise((resolve) => setTimeout(resolve, 3));
 			}
 		}
 
