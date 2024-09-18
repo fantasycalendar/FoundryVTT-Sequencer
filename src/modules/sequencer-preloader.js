@@ -208,7 +208,7 @@ const SequencerPreloader = {
 
     return new Promise(async (resolve) => {
       let numFilesFailedToLoad = 0;
-      const loadingPromises = inSrcs.map(async (inSrcs) => {
+      const loadingPromises = inSrcs.map(async (src) => {
         const blob = await SequencerFileCache.loadFile(src, true);
         if (showProgressBar) LoadingBar.incrementProgress();
         if (!blob) {
