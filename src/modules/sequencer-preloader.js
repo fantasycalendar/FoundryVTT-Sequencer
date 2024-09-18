@@ -176,8 +176,8 @@ const SequencerPreloader = {
           }
           return src;
         })
-      )
-      .deepFlatten();
+        .deepFlatten()
+      );
 
     if (inSrcs.length >= 750) {
       lib.custom_warning(
