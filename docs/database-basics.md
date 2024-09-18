@@ -259,7 +259,7 @@ Another feature of the database is being able to bundle up files into flipbook a
 
 If you define `_flipbook: true` anywhere near files, they will become a single file that will animate accordingly. This is great for performance, since Foundry keeps all the textures in memory, which means that duplicating the same effect 100 times will cost almost as much as just 10.
 
-The default FPS for these assets is 24 frames per second. 
+The default FPS for these assets is 24 frames per second but can be modified with the `_fps` property.
 
 ```js
 const database = {
@@ -271,7 +271,8 @@ const database = {
       "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00094.webp",
       "flipbook_tests/border/TokenBorderCircle01_12_Regular_Blue_400x400_00095.webp"
     ],
-    _flipbook: true
+    _flipbook: true,
+    _fps: 30
   },
 }
 ```

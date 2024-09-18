@@ -80,6 +80,7 @@
 					"modules/sequencer/samples/flipbooks/fire/fire_01c-63.webp",
 				],
 				_flipbook: true,
+				_fps: 20, // defaults to 24 if not set
 			},
 		},
 	};
@@ -91,7 +92,7 @@
 		.atLocation({ x: 1200, y: 1100 })
 		.playbackRate(1.25)
 		.scale(2)
-		.text("flipbook", {...textStyle, anchor: {x: 0.5, y: -2.5}})
+		.text("flipbook", { ...textStyle, anchor: { x: 0.5, y: -2.5 } })
 		.duration(5000)
 		.play();
 })();

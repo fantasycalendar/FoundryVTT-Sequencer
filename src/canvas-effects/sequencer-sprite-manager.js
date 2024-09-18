@@ -621,7 +621,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 	}
 	async #loadAsset(filepath) {
 		if (this.#file && this.#file.isFlipbook) {
-			return this.#loadFlipbook(this.#file.getAllFiles());
+			return this.#loadFlipbook(this.#file.getAllFiles(), this.#file.originalMetadata);
 		}
 		const texture = await SequencerFileCache.loadFile(filepath);
 		const mipmapDisablingFormats = ["BASISU_ETC1S"];
@@ -639,9 +639,9 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 		return new TextureAsset({ filepath, texture });
 	}
-	async #loadFlipbook(filepaths) {
+	async #loadFlipbook(filepaths, metadata) {
 		const textures = await Promise.all(filepaths.map(async (filepath) => loadTexture(filepath)));
-		return new FlipbookAsset({ filepaths, textures, framerate: 24 });
+		return new FlipbookAsset({ filepaths, textures, framerate: metadata?.fps ?? 24 });
 	}
 	#buildSprite(asset) {
 		if (asset instanceof TextAsset) {
