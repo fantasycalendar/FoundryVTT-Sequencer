@@ -313,8 +313,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		let distance = Math.max(0.5, dragDistance.distance);
 
-		if (this.crosshair.distanceMinMax.min && this.crosshair.distanceMinMax.max) {
-			distance = Math.min(Math.max(distance, this.crosshair.distanceMinMax.min), this.crosshair.distanceMinMax.max);
+		if (this.crosshair.distanceMin && this.crosshair.distanceMax) {
+			distance = Math.min(Math.max(distance, this.crosshair.distanceMin), this.crosshair.distanceMax);
 		}
 
 		const direction = this.crosshair.snap.direction
@@ -323,7 +323,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		return {
 			direction: direction || 0,
-			distance: this.crosshair.distanceMinMax.min || this.crosshair.distanceMinMax.max ? this.document.distance : distance
+			distance: this.crosshair.distanceMin || this.crosshair.distanceMax ? this.document.distance : distance
 		};
 
 	}
@@ -390,8 +390,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const delta = step * Math.sign(-evt.deltaY);
 		let distance = this.document.distance + delta;
 		distance = Math.max(0.5, distance.toNearest(step));
-		if (this.crosshair.distanceMinMax.min && this.crosshair.distanceMinMax.max) {
-			distance = Math.min(Math.max(distance, this.crosshair.distanceMinMax.min), this.crosshair.distanceMinMax.max);
+		if (this.crosshair.distanceMin && this.crosshair.distanceMax) {
+			distance = Math.min(Math.max(distance, this.crosshair.distanceMin), this.crosshair.distanceMax);
 		}
 		this.document.updateSource({ distance });
 	}
