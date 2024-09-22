@@ -28,23 +28,23 @@ type Size = {
 };
 
 type SnappingOptions = {
-  BOTTOM_LEFT_CORNER: 1024,
+	CENTER: 1,
+	EDGE_MIDPOINT: 2,
+	TOP_LEFT_VERTEX: 16,
+	TOP_RIGHT_VERTEX: 32,
   BOTTOM_LEFT_VERTEX: 64,
-  BOTTOM_RIGHT_CORNER: 2048,
-  BOTTOM_RIGHT_VERTEX: 128,
-  BOTTOM_SIDE_MIDPOINT: 8192,
-  CENTER: 1,
-  CORNER: 3840,
-  EDGE_MIDPOINT: 2,
-  LEFT_SIDE_MIDPOINT: 16384,
-  RIGHT_SIDE_MIDPOINT: 32768,
-  SIDE_MIDPOINT: 61440,
-  TOP_LEFT_CORNER: 256,
-  TOP_LEFT_VERTEX: 16,
-  TOP_RIGHT_CORNER: 512,
-  TOP_RIGHT_VERTEX: 32,
-  TOP_SIDE_MIDPOINT: 4096,
-  VERTEX: 240
+	BOTTOM_RIGHT_VERTEX: 128,
+	VERTEX: 240,
+	TOP_LEFT_CORNER: 256,
+	TOP_RIGHT_CORNER: 512,
+	BOTTOM_LEFT_CORNER: 1024,
+	BOTTOM_RIGHT_CORNER: 2048,
+	CORNER: 3840,
+	TOP_SIDE_MIDPOINT: 4096,
+	BOTTOM_SIDE_MIDPOINT: 8192,
+	LEFT_SIDE_MIDPOINT: 16384,
+	RIGHT_SIDE_MIDPOINT: 32768,
+	SIDE_MIDPOINT: 61440,
 }
 
 type VisibleFoundryTypes =
@@ -67,37 +67,40 @@ type TemplateData = {
   distance: Number,
   fillColor: String,
   borderColor: String,
+	direction: Number,
   parent: Scene
 }
 
 type CrosshairsData = {
   icon: {
-    display: boolean,
     texture: string,
+	  borderVisible: boolean
   },
   snap: {
     position: SnappingOptions,
     size: SnappingOptions,
     angle: number
   },
-  distanceMinMax: {
-    min: null | number,
-    max: null | number
-  },
+	lockDrag: boolean,
+  distanceMin: null | number,
+  distanceMax: null | number,
   label: {
-    display: boolean,
     text: string,
     dx: number,
     dy: number,
   },
   location: {
     obj: null | VisibleFoundryTypes,
-    limit: boolean,
-    minDistance: number | null,
-    maxDistance: number | null,
-    lock: boolean,
-    edge: boolean,
-    offsetDistance: number | null
+	  limitMinRange: number | null,
+	  limitMaxRange: number | null,
+	  showRange: boolean,
+    lockToEdge: boolean,
+	  lockToEdgeDirection: boolean,
+	  lockOffsetDistance: number | null,
+	  offset: {
+			x: number,
+		  y: number
+		}
   },
   lockManualRotation: boolean,
   textureTile: number,

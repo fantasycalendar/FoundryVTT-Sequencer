@@ -18,6 +18,8 @@ export default class Crosshair {
 			width: config?.width ?? canvas.grid.distance,
 			borderColor: config.borderColor ?? "#000000",
 			fillColor: config.fillColor ?? "#000000",
+			angle: config.angle ?? 53.13, // Default for Foundry, it seems?
+			direction: config.direction ?? 0
 		}, {
 			parent: canvas.scene
 		}, foundry.utils.mergeObject(CrosshairsDocument.defaultConfig, config), callbacks);

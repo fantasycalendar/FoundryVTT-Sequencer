@@ -4,8 +4,7 @@ import { is_real_number } from "../../lib/lib.js";
 export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	#handlers = {
-		confirm: null,
-		cancel: null,
+		mouseup: null,
 		move: null,
 		wheel: null,
 	};
@@ -14,7 +13,6 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	#promise = {
 		resolve: null,
-		reject: null,
 	};
 
 	isDrag = false;
@@ -32,7 +30,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	async draw() {
 		await super.draw();
 
-		this.controlIcon.renderable = this.crosshair.icon.display;
+		this.controlIcon.renderable = !!this.crosshair.icon.texture;
 		if (this.crosshair.icon.texture) {
 			this.controlIcon.iconSrc = this.crosshair.icon.texture;
 			this.controlIcon.texture = await loadTexture(this.controlIcon.iconSrc);
@@ -71,8 +69,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			}
 			this.#distanceText.text = distance.toString();
 		}
-		this.ruler.renderable = this.crosshair.label.display;
-		if (!this.crosshair.label.display) return;
+		this.ruler.renderable = !!this.crosshair.label?.text;
+		if (!this.ruler.renderable) return;
 		if (this.crosshair.label?.text) {
 			if (this.#customText) return;
 			const style = CONFIG.canvasTextStyle.clone();
@@ -124,17 +122,14 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	}
 
 	async activateShowListeners() {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			this.#promise.resolve = resolve;
-			this.#promise.reject = reject;
 			this.#handlers.move = this._onMove.bind(this);
-			this.#handlers.confirm = this._onConfirm.bind(this);
-			this.#handlers.cancel = this._onCancel.bind(this);
+			this.#handlers.mouseup = this._onMouseUp.bind(this);
 			this.#handlers.wheel = this._onWheel.bind(this);
 			// Canvas.stage.removeAllListeners();
 			canvas.stage.on("mousemove", this.#handlers.move);
-			canvas.stage.on("mouseup", this.#handlers.confirm);
-			canvas.app.view.oncontextmenu = this.#handlers.cancel;
+			canvas.stage.on("pointerup", this.#handlers.mouseup);
 			canvas.app.view.onwheel = this.#handlers.wheel;
 		});
 	}
@@ -145,13 +140,19 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	_onMove(evt) {
 
-		evt.preventDefault()
-
 		const now = Date.now();
 		const leftDown = (evt.buttons & 1) > 0;
+		const rightDown = (evt.buttons & 2) > 0;
 		this.isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
+		this.isPanning = !!(rightDown && canvas.mouseInteractionManager.isDragging);
 
-		canvas._onDragCanvasPan(evt);
+		if(this.isPanning) return;
+
+		if(this.isDrag){
+			canvas.mouseInteractionManager.cancel(evt);
+		}
+
+		evt.preventDefault();
 
 		// Apply a 20ms throttle
 		if (now - this.moveTime <= 20) return;
@@ -238,31 +239,6 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	}
 
-	handleLocked(mouseLocation, targetLocation) {
-
-		const edgeLocation = Ray.towardsPoint(
-			targetLocation,
-			mouseLocation,
-			this.crosshair.location.lockOffsetDistance * this.document.parent.grid.size
-		).B;
-
-		const snappedPosition = this.getSnappedPoint(edgeLocation);
-
-		const { direction, distance } = this._getDraggedMatrix(snappedPosition, mouseLocation);
-
-		const validatedLocation = {
-			x: Number.isNaN(snappedPosition.x) ? this.document.x : snappedPosition.x,
-			y: Number.isNaN(snappedPosition.y) ? this.document.y : snappedPosition.y,
-		};
-
-		this.document.updateSource({
-			...validatedLocation,
-			distance,
-			direction
-		});
-
-	}
-
 	handleLimit(mouseLocation, targetLocation) {
 
 		const ray = new Ray(targetLocation, mouseLocation);
@@ -271,12 +247,21 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const limitMinRange = is_real_number(this.crosshair.location.limitMinRange) ? this.crosshair.location.limitMinRange : 0;
 		const limitMaxRange = is_real_number(this.crosshair.location.limitMaxRange) ? this.crosshair.location.limitMaxRange : Infinity;
 
-		const cappedDistance = Math.max(limitMinRange, Math.min(limitMaxRange, Math.floor(gridPath.distance / this.document.parent.grid.distance))) * this.document.parent.grid.size;
+		let finalLocation = mouseLocation;
+		if(gridPath.spaces < limitMinRange){
+			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMinRange * this.document.parent.grid.distance);
+		}else if(gridPath.spaces > limitMaxRange) {
+			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMaxRange * this.document.parent.grid.distance);
+		}
 
-		const ratioLocation = limitMaxRange !== Infinity ? ray.project(cappedDistance / ray.distance) : mouseLocation;
-		const snappedPosition = this.getSnappedPoint(ratioLocation);
+		const snappedPosition = this.getSnappedPoint(finalLocation);
+		const { direction, distance } = this._getDraggedMatrix(targetLocation, snappedPosition);
 
-		this.document.updateSource(snappedPosition);
+		this.document.updateSource({
+			...snappedPosition,
+			direction,
+			distance
+		});
 
 	}
 
@@ -287,7 +272,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		mouseLocation.x += this.crosshair.location.offset.x ?? 0;
 		mouseLocation.y += this.crosshair.location.offset.y ?? 0;
 
-		if (this.crosshair.location.obj && (this.crosshair.location.lock || this.crosshair.location.limit)) {
+		if (this.crosshair.location.obj && (this.crosshair.location.lockToEdge || this.crosshair.location.limitMinRange || this.crosshair.location.limitMaxRange)) {
 
 			const location = this.crosshair.location.obj;
 			const targetLocation = {
@@ -295,18 +280,11 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 				y: location?.center?.y ?? location?.position?.y ?? location?.y
 			};
 
-			if (this.crosshair.location.lock) {
+			if (this.crosshair.location.lockToEdge) {
 
-				if (this.crosshair.location.lockToEdge) {
+				this.handleLockedEdge(mouseLocation);
 
-					this.handleLockedEdge(mouseLocation);
-
-				} else {
-
-					this.handleLocked(mouseLocation, targetLocation);
-
-				}
-			} else if (this.crosshair.location.limit) {
+			} else if (this.crosshair.location.limitMinRange || this.crosshair.location.limitMaxRange) {
 
 				this.handleLimit(mouseLocation, targetLocation);
 
@@ -345,7 +323,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		return {
 			direction: direction || 0,
-			distance: this.crosshair.distanceMinMax.locked ? this.document.distance : distance
+			distance: this.crosshair.distanceMinMax.min || this.crosshair.distanceMinMax.max ? this.document.distance : distance
 		};
 
 	}
@@ -356,32 +334,37 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this._clearHandlers();
 	}
 
-	_clearHandlers(evt) {
+	_clearHandlers() {
 		this.layer.interactiveChildren = this.oldInteractiveChildren;
 		if (this.newDrawing) this.newDrawing.destroy();
 		canvas.stage.off("mousemove", this.#handlers.move);
-		canvas.stage.off("mouseup", this.#handlers.confirm);
-		canvas.app.view.oncontextmenu = null;
+		canvas.stage.off("pointerup", this.#handlers.mouseup);
 		canvas.app.view.onwheel = null;
 	}
 
-	_onConfirm(evt) {
+	_onMouseUp(evt) {
+		const event = evt?.nativeEvent ?? evt;
+		if(!(event.which === 1 || event.which === 3)) return;
 		if (this.isDrag) {
 			this.isDrag = false;
 			return;
 		}
+		if(this.isPanning){
+			this.isPanning = false;
+			return;
+		}
+		return event.which === 1 ? this._onConfirm() : this._onCancel();
+	}
+
+	_onConfirm() {
 		this.document.getOrientation();
 		this.#promise.resolve(this.document);
 		this.destroy();
 	}
 
-	_onCancel(evt) {
-		if (this.isDrag) {
-			this.isDrag = false;
-			return;
-		}
+	_onCancel() {
+		this.#promise.resolve(false);
 		this.destroy();
-		this.#promise.reject(this.document);
 	}
 
 	_onWheel(evt) {

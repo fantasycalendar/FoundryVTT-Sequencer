@@ -9,7 +9,7 @@ export default class CrosshairSection extends Section {
 		this._name = inName;
 		this._type = CONST.MEASURED_TEMPLATE_TYPES.CIRCLE;
 		this._distance = 0.5;
-		this._angle = 90;
+		this._angle = 53.13;
 		this._direction = 0;
 		this._borderColor = null;
 		this._gridHighlight = null;
@@ -36,46 +36,82 @@ export default class CrosshairSection extends Section {
 		return this;
 	}
 
+	label(inText, inOptions={}){
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"label",
+				"inOptions must be of type object"
+			);
+		inOptions = foundry.utils.mergeObject(
+			{
+				dx: CrosshairsDocument.defaultConfig.label.dx,
+				dy: CrosshairsDocument.defaultConfig.label.dy
+			},
+			inOptions,
+		);
+		if (typeof inText !== "string")
+			throw this.sequence._customError(
+				this,
+				"label",
+				"inText must be of type string",
+			);
+		if (!lib.is_real_number(inOptions.dx))
+			throw this.sequence._customError(
+				this,
+				"label",
+				"inOptions.dx must be of type number",
+			);
+		if (!lib.is_real_number(inOptions.dy))
+			throw this.sequence._customError(
+				this,
+				"label",
+				"inOptions.dy must be of type number",
+			);
+		this._config["label"]["text"] = inText;
+		this._config["label"]["dx"] = inOptions.dx;
+		this._config["label"]["dy"] = inOptions.dy;
+		return this;
+	}
+
 	snapPosition(inSnap) {
-		if (typeof inSnap !== "number")
+		if (!lib.is_real_number(inSnap))
 			throw this.sequence._customError(
 				this,
 				"snapPosition",
 				"inSnap must be of type number, see CONST.GRID_SNAPPING_MODES",
 			);
+
 		this._config["snap"]["position"] = inSnap;
 		return this;
 	}
 
 	distance(inDistance, inOptions={}) {
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"distance",
+				"inOptions must be of type object"
+			);
 		inOptions = foundry.utils.mergeObject(
-			{ locked: true, min: null, max: null},
+			{
+				min: CrosshairsDocument.defaultConfig.distanceMin,
+				max: CrosshairsDocument.defaultConfig.distanceMax
+			},
 			inOptions,
 		);
-		if (typeof inDistance !== "number")
+		if (!lib.is_real_number(inDistance))
 			throw this.sequence._customError(
 				this,
 				"distance",
 				"inDistance must be of type number",
 			);
-		if (typeof inOptions.locked !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"distance",
-				"inOptions.locked must be of type boolean",
-			);
-		if(!inOptions.locked) {
-			if (inOptions.min !== null && typeof inOptions.min !== "number")
+		if(inOptions.min !== null) {
+			if (!lib.is_real_number(inOptions.min))
 				throw this.sequence._customError(
 					this,
 					"distance",
 					"inOptions.min must be of type number",
-				);
-			if (inOptions.max !== null && typeof inOptions.max !== "number")
-				throw this.sequence._customError(
-					this,
-					"distance",
-					"inOptions.max must be of type number",
 				);
 			if(inOptions.min <= 0)
 				throw this.sequence._customError(
@@ -83,29 +119,41 @@ export default class CrosshairSection extends Section {
 					"distance",
 					"inOptions.min must be a non-zero number",
 				);
+		}else {
+			inOptions.min = inDistance;
+		}
+		if(inOptions.max !== null){
+			if (!lib.is_real_number(inOptions.max))
+				throw this.sequence._customError(
+					this,
+					"distance",
+					"inOptions.max must be of type number",
+				);
 			if(inOptions.max <= 0)
 				throw this.sequence._customError(
 					this,
 					"distance",
 					"inOptions.max must be a non-zero number",
 				);
-			if(inOptions.min > inOptions.max)
-				throw this.sequence._customError(
-					this,
-					"distance",
-					"inOptions.min cannot be larger than inOptions.max",
-				);
 		}else{
-			inOptions.min = inDistance;
 			inOptions.max = inDistance;
 		}
+
+		if(inOptions.min > inOptions.max)
+			throw this.sequence._customError(
+				this,
+				"distance",
+				"inOptions.min cannot be larger than inOptions.max",
+			);
+
 		this._distance = inDistance;
-		this._config["distanceMinMax"] = inOptions;
+		this._config["distanceMin"] = inOptions.min;
+		this._config["distanceMax"] = inOptions.max;
 		return this;
 	}
 
 	angle(inAngle) {
-		if (typeof inAngle !== "number")
+		if (!lib.is_real_number(inAngle))
 			throw this.sequence._customError(
 				this,
 				"angle",
@@ -116,7 +164,7 @@ export default class CrosshairSection extends Section {
 	}
 
 	direction(inDirection) {
-		if (typeof inDirection !== "number")
+		if (!lib.is_real_number(inDirection))
 			throw this.sequence._customError(
 				this,
 				"direction",
@@ -127,7 +175,7 @@ export default class CrosshairSection extends Section {
 	}
 
 	snapDirection(inDirectionSnap) {
-		if (typeof inDirectionSnap !== "number")
+		if (!lib.is_real_number(inDirectionSnap))
 			throw this.sequence._customError(
 				this,
 				"snapDirection",
@@ -145,6 +193,45 @@ export default class CrosshairSection extends Section {
 				"inBool must be of type number",
 			);
 		this._config["lockManualRotation"] = inBool;
+		return this;
+	}
+
+	lockDrag(inBool = true){
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"lockDrag",
+				"inBool must be of type number",
+			);
+		this._config["lockDrag"] = inBool;
+		return this;
+	}
+
+	icon(inTexture, inOptions={}) {
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"icon",
+				"inOptions must be of type object"
+			);
+		inOptions = foundry.utils.mergeObject(
+			{ borderVisible: CrosshairsDocument.defaultConfig.icon.borderVisible },
+			inOptions,
+		);
+		if (typeof inTexture !== "string")
+			throw this.sequence._customError(
+				this,
+				"icon",
+				"inTexture must be of type string",
+			);
+		if (typeof inOptions.borderVisible !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"icon",
+				"inOptions.borderVisible must be of type boolean",
+			);
+		this._config["icon"]["texture"] = inTexture;
+		this._config["icon"]["borderVisible"] = inOptions.borderVisible;
 		return this;
 	}
 
@@ -174,15 +261,13 @@ export default class CrosshairSection extends Section {
 			);
 		inOptions = foundry.utils.mergeObject(
 			{
-				limit: false,
-				limitMinRange: null,
-				limitMaxRange: null,
-				showRange: false,
-				lock: false,
-				lockToEdge: false,
-				lockToEdgeDirection: false,
-				lockOffsetDistance: 0,
-				offset: { x: 0, y: 0 }
+				limitMinRange: CrosshairsDocument.defaultConfig.location.limitMinRange,
+				limitMaxRange: CrosshairsDocument.defaultConfig.location.limitMaxRange,
+				showRange: CrosshairsDocument.defaultConfig.location.showRange,
+				lockToEdge: CrosshairsDocument.defaultConfig.location.lockToEdge,
+				lockToEdgeDirection: CrosshairsDocument.defaultConfig.location.lockToEdgeDirection,
+				lockOffsetDistance: CrosshairsDocument.defaultConfig.location.lockOffsetDistance,
+				offset: CrosshairsDocument.defaultConfig.location.offset
 			},
 			inOptions,
 		);
@@ -211,23 +296,11 @@ export default class CrosshairSection extends Section {
 				"lockLocation",
 				"inOptions.lockOffsetDistance must be of type number",
 			);
-		if (typeof inOptions.lock !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.lock must be of type boolean",
-			);
 		if (typeof inOptions.lockToEdge !== "boolean")
 			throw this.sequence._customError(
 				this,
 				"lockLocation",
 				"inOptions.lockToEdge must be of type boolean",
-			);
-		if (typeof inOptions.limit !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.limit must be of type boolean",
 			);
 		if (typeof inOptions.showRange !== "boolean")
 			throw this.sequence._customError(
@@ -266,11 +339,9 @@ export default class CrosshairSection extends Section {
 			obj: inLocation?.object ?? inLocation,
 			limitMinRange: inOptions.limitMinRange,
 			limitMaxRange: inOptions.limitMaxRange,
-			lock: inOptions.lock,
 			lockToEdge: inOptions.lockToEdge,
 			lockOffsetDistance: inOptions.lockOffsetDistance,
 			lockToEdgeDirection: inOptions.lockToEdgeDirection,
-			limit: inOptions.limit,
 			showRange: inOptions.showRange,
 			offset: inOptions.offset
 		};
@@ -293,7 +364,7 @@ export default class CrosshairSection extends Section {
 			throw this.sequence._customError(
 				this,
 				"gridHighlight",
-				"inBool must be of type number",
+				"inBool must be of type boolean",
 			);
 		this.config['gridHighlight'] = inBool;
 		return this;

@@ -28,7 +28,6 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 		return foundry.utils.deepClone({
 			gridHighlight: true,
 			icon: {
-				display: false,
 				texture: "",
 				borderVisible: false
 			},
@@ -38,24 +37,18 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 				direction: 0
 			},
 			lockDrag: true,
-			distanceMinMax: {
-				locked: true,
-				min: null,
-				max: null
-			},
+			distanceMin: null,
+			distanceMax: null,
 			label: {
-				display: false,
 				text: "",
 				dx: 0,
 				dy: 0,
 			},
 			location: {
 				obj: null,
-				limit: false,
 				limitMinRange: null,
 				limitMaxRange: null,
 				showRange: false,
-				lock: false,
 				lockToEdge: false,
 				lockToEdgeDirection: false,
 				lockOffsetDistance: 0,
