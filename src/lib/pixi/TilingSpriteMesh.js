@@ -4,10 +4,20 @@ import VisionSamplerShader from "../filters/vision-sampler-shader.js";
  * Extends SpriteMesh to allow for tiling of sprites
  */
 export default class TilingSpriteMesh extends SpriteMesh {
+	/** @type {PIXI.Transform} */
 	tileTransform;
-	tiling;
-	isVisionMaskingEnabled;
+
+	/** @type {PIXI.TextureMatrix} */
 	uvMatrix;
+
+	/** @type {PIXI.ColorMatrixFilter} */
+	#colorMatrixFilter;
+
+	shaderFlags = new foundry.utils.BitMask({
+		isTiling: false,
+		isVisionMaskingEnabled: true,
+		isColorMatrixEnabled: false,
+	});
 
 	/**
 	 * @param {PIXI.Texture} texture - The {@link PIXI.Texture} bound to this mesh
@@ -22,6 +32,39 @@ export default class TilingSpriteMesh extends SpriteMesh {
 		this.tiling = tiling;
 		this.isVisionMaskingEnabled = isVisionMaskingEnabled;
 		this.uvMatrix = this.texture.uvMatrix || new PIXI.TextureMatrix(texture);
+	}
+
+	get tiling() {
+		return this.shaderFlags.hasState('isTiling')
+	}
+	/**
+	 * @param {boolean} value
+	 */
+	set tiling(value) {
+		this.shaderFlags.toggleState('isTiling', value)
+	}
+
+	
+	get isVisionMaskEnabled() {
+		return this.shaderFlags.hasState('isVisionMaskEnabled')
+	}
+	/**
+	 * @param {boolean} value
+	 */
+	set isVisionMaskEnabled(value) {
+		this.shaderFlags.toggleState('isVisionMaskEnabled', value)
+	}
+
+
+	/**
+	 * @param {PIXI.ColorMatrixFilter | null} value
+	 */
+	set colorMatrixFilter(value) {
+		this.shaderFlags.toggleState('isColorMatrixEnabled', value != null)
+		this.#colorMatrixFilter = value;
+	}
+	get colorMatrixFilter() {
+		return this.#colorMatrixFilter;
 	}
 
 	/** The scaling of the image that is being tiled. */

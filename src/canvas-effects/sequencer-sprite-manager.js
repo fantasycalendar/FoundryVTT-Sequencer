@@ -271,6 +271,7 @@ class VideoPlaybackControls extends PlaybackControls {
 		this.#video.playbackRate = value;
 	}
 }
+
 class SpritePlaybackControls extends PlaybackControls {
 	#sprite;
 	#framerate;
@@ -324,6 +325,7 @@ class SpritePlaybackControls extends PlaybackControls {
 		this.#sprite.animationSpeed = value;
 	}
 }
+
 export class SequencerSpriteManager extends PIXI.Container {
 	#id = foundry.utils.randomID();
 	#file;
@@ -342,7 +344,6 @@ export class SequencerSpriteManager extends PIXI.Container {
 		this.#sharedSpriteConfig = options ?? {
 			antialiasing: PIXI.SCALE_MODES.LINEAR,
 			tiling: false,
-			shader: undefined,
 		};
 		this.#file = file;
 	}
@@ -593,8 +594,27 @@ export class SequencerSpriteManager extends PIXI.Container {
 			}
 		});
 	}
+	/** @return {PIXI.ColorMatrixFilter} */
+	get colorMatrixFilter() {
+		return this.#activeSprite?.view instanceof TilingSpriteMesh
+			? this.#activeSprite?.view.colorMatrixFilter
+			: this.#activeSprite?.filters?.find((filter) => filter instanceof PIXI.ColorMatrixFilter);
+	}
+	set colorMatrixFilter(value) {
+		Object.values(this.#managedSprites).forEach((sprite) => {
+			if (sprite.view instanceof TilingSpriteMesh) {
+				sprite.view.colorMatrixFilter = value;
+			} else if (value) { 
+				sprite.view.filters?.push(value)
+			} else if (Array.isArray(sprite.view.filter)) {
+				sprite.view.filters = sprite.view.filters.filter(filter => !(filter instanceof PIXI.ColorMatrixFilter))
+			}
+		});
+	}
+
 	//#endregion
 	//#region private
+	/** @return {ManagedSprite} */
 	get #activeSprite() {
 		return this.#managedSprites[this.#activePath];
 	}

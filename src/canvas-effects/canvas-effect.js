@@ -1,16 +1,14 @@
 import CONSTANTS from "../constants.js";
-import filters from "../lib/filters.js";
-import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
-import { SequencerFileBase } from "../modules/sequencer-file.js";
-import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
-import SequencerFileCache from "../modules/sequencer-file-cache.js";
-import flagManager from "../utils/flag-manager.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
-import { SequencerAboveUILayer } from "./effects-layer.js";
-import VisionSamplerShader from "../lib/filters/vision-sampler-shader.js";
+import filters from "../lib/filters.js";
 import MaskFilter from "../lib/filters/mask-filter.js";
+import * as lib from "../lib/lib.js";
+import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
+import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
+import { SequencerFileBase } from "../modules/sequencer-file.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import flagManager from "../utils/flag-manager.js";
+import { SequencerAboveUILayer } from "./effects-layer.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 
 const hooksManager = {
@@ -1675,11 +1673,6 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	async _createSprite() {
 		this.renderable = false;
-
-		// TODO handle / fix vision sampler shader for advanced vision masking?
-		// const useVisionMasking = !this.data.xray && !this.data.screenSpace && !this.data.screenSpaceAboveUI;
-		// const shader = useVisionMasking ? VisionSamplerShader : undefined
-
 		const spriteData = {
 			antialiasing: this.data?.fileOptions?.antialiasing,
 			tiling: this.data.tilingTexture,
@@ -1718,7 +1711,11 @@ export default class CanvasEffect extends PIXI.Container {
 				const filterData = this.data.filters[index];
 				const filter = new filters[filterData.className](filterData.data);
 				filter.id = this.id + "-" + filterData.className + "-" + index.toString();
-				this.sprite.filters.push(filter);
+				if (filter instanceof PIXI.ColorMatrixFilter) {
+					this.sprite.colorMatrixFilter = filter;
+				} else {
+					this.sprite.filters.push(filter);
+				}
 				const filterKeyName = filterData.name || filterData.className;
 				this.effectFilters[filterKeyName] = filter;
 			}

@@ -24,6 +24,8 @@ class VisionSamplerShaderGenerator extends BatchShaderGenerator {
 	}
 }
 
+const emptyColorMatrix = new Uint8Array(20);
+
 export default class VisionSamplerShader extends BaseSamplerShader {
 	static classPluginName = "sequencerVisionBatch";
 	static batchShaderGeneratorClass = VisionSamplerShaderGenerator;
@@ -31,20 +33,34 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 	static batchGeometry = [
 		{ id: "aVertexPosition", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aTextureCoord", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
+
+		// { id: "aTextureId", size: 1, normalized: false, type: PIXI.TYPES.FLOAT }, // DELETEME!!!
+
 		{ id: "aClampOffset", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aClampFrame", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
-		{ id: "aTextureCoord", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aMapCoord1", size: 3, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aMapCoord2", size: 3, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aMapCoord3", size: 3, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aColor", size: 4, normalized: true, type: PIXI.TYPES.UNSIGNED_BYTE },
+		{ id: "aColorMatrixR", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
+		{ id: "aColorMatrixG", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
+		{ id: "aColorMatrixB", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
+		{ id: "aColorMatrixA", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
+		{ id: "aColorMatrixOffset", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
+		{ id: "aColorMatrixAlpha", size: 1, normalized: false, type: PIXI.TYPES.FLOAT },
+		{ id: "aShaderFlags", size: 1, normalized: false, type: PIXI.TYPES.UNSIGNED_SHORT },
 		{ id: "aTextureId", size: 1, normalized: false, type: PIXI.TYPES.UNSIGNED_SHORT },
-		{ id: "aVisionMaskingEnabled", size: 1, normalized: false, type: PIXI.TYPES.UNSIGNED_BYTE },
-		{ id: "aTilingEnabled", size: 1, normalized: false, type: PIXI.TYPES.UNSIGNED_BYTE },
 	];
 
+	static #SHADER_FLAGS = foundry.utils.BitMask.generateShaderBitMaskConstants([
+		"IS_TILING",
+		"IS_VISION_MASKING_ENABLED",
+		"IS_COLOR_MATRIX_ENABLED",
+	]);
+
 	/** @override */
-	static batchVertexSize = 21;
+	static batchVertexSize = 42;
+	// static batchVertexSize = 5;
 
 	/** @override */
 	static reservedTextureUnits = 1; // We need a texture unit for the occlusion texture
@@ -53,92 +69,118 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 	 * The batch vertex shader source.
 	 * @type {string}
 	 */
-	static batchVertexShader = `
-    #version 300 es
-    precision ${PIXI.settings.PRECISION_VERTEX} float;
-
-    uniform vec2 screenDimensions;
-    uniform mat3 projectionMatrix;
-    uniform mat3 translationMatrix;
-    uniform vec4 tint;
-
-    in vec2 aVertexPosition;
-    in vec2 aTextureCoord;
-    in vec2 aClampOffset;
-    in vec4 aClampFrame;
-    in vec4 aColor;
-    in vec3 aMapCoord1;
-    in vec3 aMapCoord2;
-    in vec3 aMapCoord3;
-    in float aTextureId;
-    in float aTilingEnabled;
-    in float aVisionMaskingEnabled;
+	static batchVertexShader = /* glsl */ `#version 300 es
+	precision highp float;
 	
-    out vec2 vTextureCoord;
-    out vec2 vVisionCoord;
-    flat out vec4 vColor;
-    flat out vec2 vClampOffset;
-    flat out vec4 vClampFrame;
-    flat out float vTextureId;
-    flat out uint vVisionMaskingEnabled;
-    flat out uint vTilingEnabled;
-    flat out mat3 vMapCoord;
-
-    void main(void){
-      gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
-      vTextureCoord = aTextureCoord;
-      vClampOffset = aClampOffset;
-      vClampFrame = aClampFrame;
-      vMapCoord = mat3(aMapCoord1, aMapCoord2, aMapCoord3);
-      vVisionMaskingEnabled = uint(aVisionMaskingEnabled);
-      vTilingEnabled = uint(aTilingEnabled);
-      vTextureId = aTextureId;
-      vColor = aColor * tint;
-      vVisionCoord = aVertexPosition / screenDimensions;
-    }
-  `;
+	uniform vec2 screenDimensions;
+	uniform mat3 projectionMatrix;
+	uniform mat3 translationMatrix;
+	uniform vec4 tint;
+	
+	in vec2 aVertexPosition;
+	in vec2 aTextureCoord;
+	in vec2 aClampOffset;
+	in vec4 aClampFrame;
+	in vec3 aMapCoord1;
+	in vec3 aMapCoord2;
+	in vec3 aMapCoord3;
+	in vec4 aColor;
+	in vec4 aColorMatrixR;
+	in vec4 aColorMatrixG;
+	in vec4 aColorMatrixB;
+	in vec4 aColorMatrixA;
+	in vec4 aColorMatrixOffset;
+	in float aColorMatrixAlpha;
+	in float aShaderFlags;
+	in float aTextureId;
+	
+	out vec2 vTextureCoord;
+	out vec2 vVisionCoord;
+	flat out vec2 vClampOffset;
+	flat out vec4 vClampFrame;
+	flat out mat3 vMapCoord;
+	flat out vec4 vColor;
+	flat out mat4 vColorMatrix;
+	flat out vec4 vColorMatrixOffset;
+	flat out float vColorMatrixAlpha;
+	flat out uint vShaderFlags;
+	flat out float vTextureId;
+	
+	void main(void) {
+		gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aVertexPosition, 1.0f)).xy, 0.0f, 1.0f);
+		vTextureCoord = aTextureCoord;
+		vVisionCoord = aVertexPosition / screenDimensions;
+		vColor = aColor * tint;
+		vClampOffset = aClampOffset;
+		vClampFrame = aClampFrame;
+		vMapCoord = mat3(aMapCoord1, aMapCoord2, aMapCoord3);
+		vColorMatrix = mat4(aColorMatrixR, aColorMatrixG, aColorMatrixB, aColorMatrixA);
+		vColorMatrixOffset = aColorMatrixOffset;
+		vColorMatrixAlpha = aColorMatrixAlpha;
+		vShaderFlags = uint(aShaderFlags);
+		vTextureId = aTextureId;
+	}
+	`;
 
 	/**
 	 * The batch fragment shader source.
 	 * @type {string}
 	 */
-	static batchFragmentShader = `
-    #version 300 es
-    precision ${PIXI.settings.PRECISION_FRAGMENT} float;
-    in vec2 vTextureCoord;
-    flat in vec4 vColor;
-    flat in float vTextureId;
-    flat in mat3 vMapCoord;
-    flat in uint vVisionMaskingEnabled;
-    flat in uint vTilingEnabled;
-    flat in vec2 vClampOffset;
-    flat in vec4 vClampFrame;
-    
-    in vec2 vVisionCoord;
-    uniform bool enableVisionMasking;
-    uniform sampler2D visionMaskTexture;
-    uniform sampler2D uSamplers[%count%];
-    out vec4 fragColor;
+	static batchFragmentShader = /* glsl */ `#version 300 es
+	precision mediump float;
 
-    #define texture2D texture
+	in vec2 vTextureCoord;
+	in vec2 vVisionCoord;
+	flat in float vTextureId;
+	flat in vec4 vColor;
+	flat in mat3 vMapCoord;
+	flat in uint vShaderFlags;
+	flat in vec2 vClampOffset;
+	flat in vec4 vClampFrame;
+	flat in mat4 vColorMatrix;
+	flat in vec4 vColorMatrixOffset;
+	flat in float vColorMatrixAlpha;
 
-    void main(void){
-      vec2 coord = vTextureCoord;
-      vec2 unclamped;
-      if (bool(vTilingEnabled)) {
-        coord = coord + ceil(vClampOffset - coord);
-        coord = (vMapCoord * vec3(coord, 1.0)).xy;
-        vec2 unclamped = coord;
-        coord = clamp(coord, vClampFrame.xy, vClampFrame.zw);
-      } else {
-        vec2 unclamped = coord;
-      }
-      float mask = bool(vVisionMaskingEnabled) && enableVisionMasking ? texture2D(visionMaskTexture, vVisionCoord).r : 1.0;
-      vec4 color;
-      %forloop%
-      fragColor = color * mask;
-    }
-  `;
+	uniform bool enableVisionMasking;
+	uniform sampler2D visionMaskTexture;
+	uniform sampler2D uSamplers[%count%];
+	out vec4 fragColor;
+
+	${VisionSamplerShader.#SHADER_FLAGS}
+
+	void main(void){
+		bool isTilingEnabled = ((vShaderFlags & IS_TILING) == IS_TILING);
+		bool isVisionMaskingEnabled = ((vShaderFlags & IS_VISION_MASKING_ENABLED) == IS_VISION_MASKING_ENABLED);
+		bool isColorMatrixEnabled = ((vShaderFlags & IS_COLOR_MATRIX_ENABLED) == IS_COLOR_MATRIX_ENABLED);
+
+		vec2 coord = vTextureCoord;
+		vec2 unclamped;
+		if (bool(isTilingEnabled)) {
+			coord = coord + ceil(vClampOffset - coord);
+			coord = (vMapCoord * vec3(coord, 1.0)).xy;
+			unclamped = coord;
+			coord = clamp(coord, vClampFrame.xy, vClampFrame.zw);
+		} else {
+			unclamped = coord;
+	  }
+	  float mask = bool(isVisionMaskingEnabled) && enableVisionMasking ? texture(visionMaskTexture, vVisionCoord).r : 1.0;
+
+	  vec4 color;
+	  %forloop%
+
+		if (isColorMatrixEnabled && vColorMatrixAlpha > 0.0) {
+			if (color.a > 0.0) {
+	      color.rgb /= color.a;
+	    }
+			vec4 result = color * vColorMatrix + vColorMatrixOffset;
+
+			vec3 rgb = mix(color.rgb, result.rgb, vColorMatrixAlpha);
+			rgb *= result.a;
+			color = vec4(rgb, result.a);
+	  }
+	  fragColor = color * mask;
+	}	
+	`;
 
 	/** @override */
 	static batchDefaultUniforms(maxTex) {
@@ -158,8 +200,9 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 
 	/** @override */
 	static _packInterleavedGeometry(element, attributeBuffer, indexBuffer, aIndex, iIndex) {
-		const { float32View, uint32View, uint16View, uint8View } = attributeBuffer;
+		const { float32View, uint32View, uint16View } = attributeBuffer;
 
+		/** @type {import("../pixi/TilingSpriteMesh").default} */
 		const mesh = element.object;
 		// Write indices into buffer
 		const packedVertices = aIndex / this.vertexSize;
@@ -198,6 +241,8 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 
 		// Write attributes into buffer
 		const vertexSize = this.vertexSize;
+		const colorMatrixArray = mesh.colorMatrixFilter?.matrix ?? emptyColorMatrix;
+		const colorMatrixAlpha = mesh.colorMatrixFilter?.alpha ?? 1;
 		for (let i = 0, j = 0; i < vertexData.length; i += 2, j += vertexSize) {
 			uvPoint.set(uvs[i], uvs[i + 1]);
 			if (mesh.tiling) {
@@ -224,11 +269,37 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 			float32View[k++] = mapCoord[7];
 			float32View[k++] = mapCoord[8];
 			uint32View[k++] = argb;
+
+			float32View[k++] = colorMatrixArray[0];
+			float32View[k++] = colorMatrixArray[1];
+			float32View[k++] = colorMatrixArray[2];
+			float32View[k++] = colorMatrixArray[3];
+
+			float32View[k++] = colorMatrixArray[5];
+			float32View[k++] = colorMatrixArray[6];
+			float32View[k++] = colorMatrixArray[7];
+			float32View[k++] = colorMatrixArray[8];
+
+			float32View[k++] = colorMatrixArray[10];
+			float32View[k++] = colorMatrixArray[11];
+			float32View[k++] = colorMatrixArray[12];
+			float32View[k++] = colorMatrixArray[13];
+
+			float32View[k++] = colorMatrixArray[15];
+			float32View[k++] = colorMatrixArray[16];
+			float32View[k++] = colorMatrixArray[17];
+			float32View[k++] = colorMatrixArray[18];
+
+			float32View[k++] = colorMatrixArray[4];
+			float32View[k++] = colorMatrixArray[9];
+			float32View[k++] = colorMatrixArray[14];
+			float32View[k++] = colorMatrixArray[19];
+
+			float32View[k++] = colorMatrixAlpha;
+
 			k <<= 1;
+			uint16View[k++] = mesh.shaderFlags.valueOf();
 			uint16View[k++] = textureId;
-			k <<= 1;
-			uint8View[k++] = mesh.isVisionMaskingEnabled ? 1 : 0;
-			uint8View[k++] = mesh.tiling ? 1 : 0;
 		}
 	}
 }
