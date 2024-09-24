@@ -20,54 +20,20 @@ export default class CrosshairSection extends Section {
 	}
 
 	type(inType = "") {
-		if (typeof inType !== "string")
-			throw this.sequence._customError(
-				this,
-				"type",
-				"inType must be of type string",
-			);
-		if (!Object.values(CONST.MEASURED_TEMPLATE_TYPES).includes(inType))
-			throw this.sequence._customError(
-				this,
-				"type",
-				`inType must be one of valid types: ${Object.values(CONST.MEASURED_TEMPLATE_TYPES).join(" ")} (see CONST.MEASURED_TEMPLATE_TYPES)`,
-			);
+		if (typeof inType !== "string") throw this.sequence._customError(this, "type", "inType must be of type string",);
+		if (!Object.values(CONST.MEASURED_TEMPLATE_TYPES).includes(inType)) throw this.sequence._customError(this, "type", `inType must be one of valid types: ${Object.values(CONST.MEASURED_TEMPLATE_TYPES).join(" ")} (see CONST.MEASURED_TEMPLATE_TYPES)`,);
 		this._type = inType;
 		return this;
 	}
 
-	label(inText, inOptions={}){
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"label",
-				"inOptions must be of type object"
-			);
-		inOptions = foundry.utils.mergeObject(
-			{
-				dx: CrosshairsDocument.defaultConfig.label.dx,
-				dy: CrosshairsDocument.defaultConfig.label.dy
-			},
-			inOptions,
-		);
-		if (typeof inText !== "string")
-			throw this.sequence._customError(
-				this,
-				"label",
-				"inText must be of type string",
-			);
-		if (!lib.is_real_number(inOptions.dx))
-			throw this.sequence._customError(
-				this,
-				"label",
-				"inOptions.dx must be of type number",
-			);
-		if (!lib.is_real_number(inOptions.dy))
-			throw this.sequence._customError(
-				this,
-				"label",
-				"inOptions.dy must be of type number",
-			);
+	label(inText, inOptions = {}) {
+		if (typeof inOptions !== "object") throw this.sequence._customError(this, "label", "inOptions must be of type object");
+		inOptions = foundry.utils.mergeObject({
+			dx: CrosshairsDocument.defaultConfig.label.dx, dy: CrosshairsDocument.defaultConfig.label.dy
+		}, inOptions,);
+		if (typeof inText !== "string") throw this.sequence._customError(this, "label", "inText must be of type string",);
+		if (!lib.is_real_number(inOptions.dx)) throw this.sequence._customError(this, "label", "inOptions.dx must be of type number",);
+		if (!lib.is_real_number(inOptions.dy)) throw this.sequence._customError(this, "label", "inOptions.dy must be of type number",);
 		this._config["label"]["text"] = inText;
 		this._config["label"]["dx"] = inOptions.dx;
 		this._config["label"]["dy"] = inOptions.dy;
@@ -75,76 +41,31 @@ export default class CrosshairSection extends Section {
 	}
 
 	snapPosition(inSnap) {
-		if (!lib.is_real_number(inSnap))
-			throw this.sequence._customError(
-				this,
-				"snapPosition",
-				"inSnap must be of type number, see CONST.GRID_SNAPPING_MODES",
-			);
-
+		if (!lib.is_real_number(inSnap)) throw this.sequence._customError(this, "snapPosition", "inSnap must be of type number, see CONST.GRID_SNAPPING_MODES",);
 		this._config["snap"]["position"] = inSnap;
 		return this;
 	}
 
-	distance(inDistance, inOptions={}) {
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"distance",
-				"inOptions must be of type object"
-			);
-		inOptions = foundry.utils.mergeObject(
-			{
-				min: CrosshairsDocument.defaultConfig.distanceMin,
-				max: CrosshairsDocument.defaultConfig.distanceMax
-			},
-			inOptions,
-		);
-		if (!lib.is_real_number(inDistance))
-			throw this.sequence._customError(
-				this,
-				"distance",
-				"inDistance must be of type number",
-			);
-		if(inOptions.min !== null) {
-			if (!lib.is_real_number(inOptions.min))
-				throw this.sequence._customError(
-					this,
-					"distance",
-					"inOptions.min must be of type number",
-				);
-			if(inOptions.min <= 0)
-				throw this.sequence._customError(
-					this,
-					"distance",
-					"inOptions.min must be a non-zero number",
-				);
-		}else {
+	distance(inDistance, inOptions = {}) {
+		if (typeof inOptions !== "object") throw this.sequence._customError(this, "distance", "inOptions must be of type object");
+		inOptions = foundry.utils.mergeObject({
+			min: CrosshairsDocument.defaultConfig.distanceMin, max: CrosshairsDocument.defaultConfig.distanceMax
+		}, inOptions,);
+		if (!lib.is_real_number(inDistance)) throw this.sequence._customError(this, "distance", "inDistance must be of type number",);
+		if (inOptions.min !== null) {
+			if (!lib.is_real_number(inOptions.min)) throw this.sequence._customError(this, "distance", "inOptions.min must be of type number",);
+			if (inOptions.min <= 0) throw this.sequence._customError(this, "distance", "inOptions.min must be a non-zero number",);
+		} else {
 			inOptions.min = inDistance;
 		}
-		if(inOptions.max !== null){
-			if (!lib.is_real_number(inOptions.max))
-				throw this.sequence._customError(
-					this,
-					"distance",
-					"inOptions.max must be of type number",
-				);
-			if(inOptions.max <= 0)
-				throw this.sequence._customError(
-					this,
-					"distance",
-					"inOptions.max must be a non-zero number",
-				);
-		}else{
+		if (inOptions.max !== null) {
+			if (!lib.is_real_number(inOptions.max)) throw this.sequence._customError(this, "distance", "inOptions.max must be of type number",);
+			if (inOptions.max <= 0) throw this.sequence._customError(this, "distance", "inOptions.max must be a non-zero number",);
+		} else {
 			inOptions.max = inDistance;
 		}
 
-		if(inOptions.min > inOptions.max)
-			throw this.sequence._customError(
-				this,
-				"distance",
-				"inOptions.min cannot be larger than inOptions.max",
-			);
+		if (inOptions.min > inOptions.max) throw this.sequence._customError(this, "distance", "inOptions.min cannot be larger than inOptions.max",);
 
 		this._distance = inDistance;
 		this._config["distanceMin"] = inOptions.min;
@@ -153,83 +74,40 @@ export default class CrosshairSection extends Section {
 	}
 
 	angle(inAngle) {
-		if (!lib.is_real_number(inAngle))
-			throw this.sequence._customError(
-				this,
-				"angle",
-				"inAngle must be of type number",
-			);
+		if (!lib.is_real_number(inAngle)) throw this.sequence._customError(this, "angle", "inAngle must be of type number",);
 		this._angle = inAngle;
 		return this;
 	}
 
 	direction(inDirection) {
-		if (!lib.is_real_number(inDirection))
-			throw this.sequence._customError(
-				this,
-				"direction",
-				"inDirectionSnap must be of type number",
-			);
+		if (!lib.is_real_number(inDirection)) throw this.sequence._customError(this, "direction", "inDirectionSnap must be of type number",);
 		this._direction = inDirection;
 		return this;
 	}
 
-	snapDirection(inDirectionSnap) {
-		if (!lib.is_real_number(inDirectionSnap))
-			throw this.sequence._customError(
-				this,
-				"snapDirection",
-				"inDirectionSnap must be of type number",
-			);
-		this._config["snap"]["direction"] = inDirectionSnap;
+	snapDirection(inSnapDirection) {
+		if (!lib.is_real_number(inSnapDirection)) throw this.sequence._customError(this, "snapDirection", "inDirectionSnap must be of type number",);
+		this._config["snap"]["direction"] = inSnapDirection;
 		return this;
 	}
 
-	lockManualRotation(inBool = true){
-		if (typeof inBool !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"preventUserRotation",
-				"inBool must be of type number",
-			);
+	lockManualRotation(inBool = true) {
+		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "preventUserRotation", "inBool must be of type number",);
 		this._config["lockManualRotation"] = inBool;
 		return this;
 	}
 
-	lockDrag(inBool = true){
-		if (typeof inBool !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"lockDrag",
-				"inBool must be of type number",
-			);
+	lockDrag(inBool = true) {
+		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "lockDrag", "inBool must be of type number",);
 		this._config["lockDrag"] = inBool;
 		return this;
 	}
 
-	icon(inTexture, inOptions={}) {
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"icon",
-				"inOptions must be of type object"
-			);
-		inOptions = foundry.utils.mergeObject(
-			{ borderVisible: CrosshairsDocument.defaultConfig.icon.borderVisible },
-			inOptions,
-		);
-		if (typeof inTexture !== "string")
-			throw this.sequence._customError(
-				this,
-				"icon",
-				"inTexture must be of type string",
-			);
-		if (typeof inOptions.borderVisible !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"icon",
-				"inOptions.borderVisible must be of type boolean",
-			);
+	icon(inTexture, inOptions = {}) {
+		if (typeof inOptions !== "object") throw this.sequence._customError(this, "icon", "inOptions must be of type object");
+		inOptions = foundry.utils.mergeObject({ borderVisible: CrosshairsDocument.defaultConfig.icon.borderVisible }, inOptions,);
+		if (typeof inTexture !== "string") throw this.sequence._customError(this, "icon", "inTexture must be of type string",);
+		if (typeof inOptions.borderVisible !== "boolean") throw this.sequence._customError(this, "icon", "inOptions.borderVisible must be of type boolean",);
 		this._config["icon"]["texture"] = inTexture;
 		this._config["icon"]["borderVisible"] = inOptions.borderVisible;
 		return this;
@@ -247,93 +125,34 @@ export default class CrosshairSection extends Section {
 
 	location(inLocation, inOptions = {}) {
 		if (!inLocation || typeof inLocation !== "object") {
-			throw this.sequence._customError(
-				this,
-				"location",
-				"inLocation is invalid, and must be of type of placeable object, or document"
-			);
+			throw this.sequence._customError(this, "location", "inLocation is invalid, and must be of type of placeable object, or document");
 		}
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"location",
-				"inOptions must be of type object"
-			);
-		inOptions = foundry.utils.mergeObject(
-			{
-				limitMinRange: CrosshairsDocument.defaultConfig.location.limitMinRange,
-				limitMaxRange: CrosshairsDocument.defaultConfig.location.limitMaxRange,
-				showRange: CrosshairsDocument.defaultConfig.location.showRange,
-				lockToEdge: CrosshairsDocument.defaultConfig.location.lockToEdge,
-				lockToEdgeDirection: CrosshairsDocument.defaultConfig.location.lockToEdgeDirection,
-				lockOffsetDistance: CrosshairsDocument.defaultConfig.location.lockOffsetDistance,
-				offset: CrosshairsDocument.defaultConfig.location.offset
-			},
-			inOptions,
-		);
+		if (typeof inOptions !== "object") throw this.sequence._customError(this, "location", "inOptions must be of type object");
+		inOptions = foundry.utils.mergeObject({
+			limitMinRange: CrosshairsDocument.defaultConfig.location.limitMinRange,
+			limitMaxRange: CrosshairsDocument.defaultConfig.location.limitMaxRange,
+			showRange: CrosshairsDocument.defaultConfig.location.showRange,
+			lockToEdge: CrosshairsDocument.defaultConfig.location.lockToEdge,
+			lockToEdgeDirection: CrosshairsDocument.defaultConfig.location.lockToEdgeDirection,
+			lockOffsetDistance: CrosshairsDocument.defaultConfig.location.lockOffsetDistance,
+			offset: CrosshairsDocument.defaultConfig.location.offset
+		}, inOptions,);
 		inLocation = this._validateLocation(inLocation);
-		if (inLocation === undefined)
-			throw this.sequence._customError(
-				this,
-				"location",
-				"could not find position of given object"
-			);
-		if (inOptions.limitMinRange && !lib.is_real_number(inOptions.limitMinRange))
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.limitMinRange must be of type number",
-			);
-		if (inOptions.limitMaxRange && !lib.is_real_number(inOptions.limitMaxRange))
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.limitMaxRange must be of type number",
-			);
-		if (!lib.is_real_number(inOptions.lockOffsetDistance))
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.lockOffsetDistance must be of type number",
-			);
-		if (typeof inOptions.lockToEdge !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.lockToEdge must be of type boolean",
-			);
-		if (typeof inOptions.showRange !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.showRange must be of type boolean",
-			);
-		if (typeof inOptions.lockToEdgeDirection !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"lockLocation",
-				"inOptions.lockToEdgeDirection must be of type boolean",
-			);
+		if (inLocation === undefined) throw this.sequence._customError(this, "location", "could not find position of given object");
+		if (inOptions.limitMinRange && !lib.is_real_number(inOptions.limitMinRange)) throw this.sequence._customError(this, "lockLocation", "inOptions.limitMinRange must be of type number",);
+		if (inOptions.limitMaxRange && !lib.is_real_number(inOptions.limitMaxRange)) throw this.sequence._customError(this, "lockLocation", "inOptions.limitMaxRange must be of type number",);
+		if (!lib.is_real_number(inOptions.lockOffsetDistance)) throw this.sequence._customError(this, "lockLocation", "inOptions.lockOffsetDistance must be of type number",);
+		if (typeof inOptions.lockToEdge !== "boolean") throw this.sequence._customError(this, "lockLocation", "inOptions.lockToEdge must be of type boolean",);
+		if (typeof inOptions.showRange !== "boolean") throw this.sequence._customError(this, "lockLocation", "inOptions.showRange must be of type boolean",);
+		if (typeof inOptions.lockToEdgeDirection !== "boolean") throw this.sequence._customError(this, "lockLocation", "inOptions.lockToEdgeDirection must be of type boolean",);
 		if (typeof inOptions.offset !== "object") {
-			throw this.sequence._customError(
-				this,
-				"location",
-				"inOptions.offset must be of type of object"
-			);
+			throw this.sequence._customError(this, "location", "inOptions.offset must be of type of object");
 		}
 		if (!lib.is_real_number(inOptions.offset.x)) {
-			throw this.sequence._customError(
-				this,
-				"location",
-				"inOptions.offset.x must be of type of number"
-			);
+			throw this.sequence._customError(this, "location", "inOptions.offset.x must be of type of number");
 		}
 		if (!lib.is_real_number(inOptions.offset.y)) {
-			throw this.sequence._customError(
-				this,
-				"location",
-				"inOptions.offset.y must be of type of number"
-			);
+			throw this.sequence._customError(this, "location", "inOptions.offset.y must be of type of number");
 		}
 		this._config["location"] = {
 			obj: inLocation?.object ?? inLocation,
@@ -349,23 +168,13 @@ export default class CrosshairSection extends Section {
 	}
 
 	persist(inBool = true) {
-		if (typeof inBool !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"persist",
-				"inBool must be of type number",
-			);
+		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type number",);
 		this._persist = inBool;
 		return this;
 	}
 
 	gridHighlight(inBool = true) {
-		if (typeof inBool !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"gridHighlight",
-				"inBool must be of type boolean",
-			);
+		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "gridHighlight", "inBool must be of type boolean",);
 		this.config['gridHighlight'] = inBool;
 		return this;
 	}
@@ -387,18 +196,16 @@ export default class CrosshairSection extends Section {
 
 			const position = reticle.getOrientation();
 
-			if(this._name){
+			if (this._name) {
 				if (!this.sequence.nameOffsetMap) {
 					this.sequence.nameOffsetMap = {};
 				}
 				this.sequence.nameOffsetMap[this._name] = {
-					seed: `${this._name}-${foundry.utils.randomID()}`,
-					source: position.source,
-					target: position.target
+					seed: `${this._name}-${foundry.utils.randomID()}`, source: position.source, target: position.target
 				}
 			}
 
-			if(this._persist) {
+			if (this._persist) {
 				await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [reticle.toObject()]);
 			}
 
@@ -407,7 +214,7 @@ export default class CrosshairSection extends Section {
 		});
 	}
 
-	async _execute(){
+	async _execute() {
 		await this.run();
 	}
 

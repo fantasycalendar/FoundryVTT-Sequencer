@@ -1,12 +1,11 @@
-import { get_mouse_position, get_object_position, } from "../../lib/canvas-lib.js";
+import { get_mouse_position, } from "../../lib/canvas-lib.js";
 import { is_real_number } from "../../lib/lib.js";
+import CONSTANTS from "../../constants.js";
 
 export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	#handlers = {
-		mouseup: null,
-		move: null,
-		wheel: null,
+		mouseup: null, move: null, wheel: null
 	};
 
 	newDrawing = null;
@@ -18,6 +17,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	isDrag = false;
 	#customText = false;
 	#distanceText = false;
+	isValid = true;
+
+	#lastPositions = false;
 
 	get crosshair() {
 		return this.document.crosshair;
@@ -62,26 +64,27 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 				this.#distanceText = this.template.addChild(new PreciseText(distance.toString(), style));
 				const actualHeight = (this.shapeHeight || this.shape.radius * 2) - (canvas.grid.size / 4);
 				this.#distanceText.anchor.set(0.5, 0.5);
-				this.#distanceText.position.set(
-					(this.shapeWidth / 2),
-					actualHeight
-				);
+				this.#distanceText.position.set((this.shapeWidth / 2), actualHeight);
 			}
 			this.#distanceText.text = distance.toString();
 		}
 		this.ruler.renderable = !!this.crosshair.label?.text;
 		if (!this.ruler.renderable) return;
 		if (this.crosshair.label?.text) {
-			if (this.#customText) return;
-			const style = CONFIG.canvasTextStyle.clone();
-			style.align = "center";
-			this.#customText = this.template.addChild(new PreciseText(this.crosshair.label.text, style));
+			if (!this.#customText) {
+				const style = CONFIG.canvasTextStyle.clone();
+				style.align = "center";
+				this.#customText = this.template.addChild(new PreciseText("", style));
+			}
+			if (this.#customText.text !== this.crosshair.label.text) this.#customText.text = this.crosshair.label.text;
 			this.#customText.anchor.set(0.5);
-			this.#customText.position.set(
-				(this.shapeWidth / 2) + this.crosshair.label.dx ?? 0,
-				(this.shapeHeight / 2) + this.crosshair.label.dy ?? 0
-			);
+			this.#customText.position.set((this.shapeWidth / 2) + this.crosshair.label.dx ?? 0, (this.shapeHeight / 2) + this.crosshair.label.dy ?? 0);
 		} else {
+			if (this.#customText) {
+				this.#customText.text = "";
+				this.#customText.destroy();
+				this.#customText = null;
+			}
 			return super._refreshRulerText();
 		}
 	}
@@ -93,8 +96,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		t.lineStyle(this._borderThickness, this.document.borderColor, 0.75).beginFill(0x000000, 0.0);
 
 		// Fill Color or Texture
-		if (this.texture) t.beginTextureFill({ texture: this.texture });
-		else t.beginFill(0x000000, 0.0);
+		if (this.texture) t.beginTextureFill({ texture: this.texture }); else t.beginFill(0x000000, 0.0);
 
 		// Draw the shape
 		t.drawShape(this.shape);
@@ -114,10 +116,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.layer.addChild(this);
 		this.oldInteractiveChildren = this.layer.interactiveChildren;
 		this.layer.interactiveChildren = false;
-		this.updatePosition();
-		if (this.callbacks["show"]) {
-			this.callbacks["show"](this);
-		}
+		this.updateLocation();
+		this.#runCallback(CONSTANTS.CALLBACKS.SHOW, this);
 		return this.activateShowListeners();
 	}
 
@@ -134,6 +134,14 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		});
 	}
 
+	get locationObj(){
+		return this.crosshair.location.obj.object ?? this.crosshair.location.obj;
+	}
+
+	get locationObjDocument(){
+		return this.crosshair.location.obj.document ?? this.crosshair.location.obj;
+	}
+
 	getSnappedPoint(point, mode = this.crosshair.snap.position) {
 		return canvas.grid.getSnappedPoint(point, { mode, resolution: 1 });
 	}
@@ -146,9 +154,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
 		this.isPanning = !!(rightDown && canvas.mouseInteractionManager.isDragging);
 
-		if(this.isPanning) return;
+		if (this.isPanning) return;
 
-		if(this.isDrag){
+		if (this.isDrag) {
 			canvas.mouseInteractionManager.cancel(evt);
 		}
 
@@ -157,14 +165,50 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		// Apply a 20ms throttle
 		if (now - this.moveTime <= 20) return;
 
-		this.updatePosition();
+		const moved = this.updateLocation();
 
-		if (this.callbacks["move"]) {
-			this.callbacks["move"](this);
-		}
+		this.#runCallback(CONSTANTS.CALLBACKS.MOUSE_MOVE, this);
+		if(moved) this.#runCallback(CONSTANTS.CALLBACKS.MOVE, this);
+
+		this.updateLineOfSight();
 
 		this.refresh();
 		this.moveTime = now;
+	}
+
+	updateLineOfSight() {
+
+		if(!this.crosshair.location?.obj || this.crosshair.location?.wallBehavior === CONSTANTS.PLACEMENT_RESTRICTIONS.ANYWHERE) return;
+
+		const object = this.crosshair.location.obj;
+		const objLocation = {
+			x: object?.center?.x ?? object?.position?.x ?? object?.x,
+			y: object?.center?.y ?? object?.position?.y ?? object?.y
+		};
+		const location = { x: this.document.x, y: this.document.y };
+
+		const exitEarly = this.#lastPositions && (this.#lastPositions.obj.x === objLocation.x
+			&& this.#lastPositions.obj.y === objLocation.y
+			&& this.#lastPositions.tgt.x === location.x
+			&& this.#lastPositions.tgt.y === location.y);
+
+		this.#lastPositions = {
+			obj: objLocation,
+			tgt: location
+		}
+
+		if(exitEarly) return;
+
+		const type = this.crosshair.location?.wallBehavior === CONSTANTS.PLACEMENT_RESTRICTIONS.LINE_OF_SIGHT
+			? "sight"
+			: "move";
+
+		const collisions = CONFIG.Canvas.polygonBackends.sight.testCollision(objLocation, location, { type, useThreshold: true });
+
+		this.isValid = !collisions.length;
+
+		if(collisions.length) this.#runCallback(CONSTANTS.CALLBACKS.COLLIDE, this, collisions);
+
 	}
 
 	handleLockedEdge(mouseLocation) {
@@ -178,9 +222,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		const shapePoints = shape?.points ?? [0, 0, w, 0, w, h, 0, h];
 		const points = shapePoints.map((point, i) => {
-			const worldCoord = i % 2 === 0
-				? (placeable.document.x)
-				: (placeable.document.y)
+			const worldCoord = i % 2 === 0 ? (placeable.document.x) : (placeable.document.y)
 			return point + worldCoord;
 		});
 
@@ -193,7 +235,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			if (intersection) break;
 		}
 
-		if (!intersection) return;
+		if (!intersection) return {};
 
 		let snappedIntersection = this.getSnappedPoint(intersection, CONST.GRID_SNAPPING_MODES.EDGE_MIDPOINT);
 
@@ -231,11 +273,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		const { direction, distance } = this._getDraggedMatrix(snappedIntersection, snappedMouseLocation);
 
-		this.document.updateSource({
-			...snappedIntersection,
-			direction,
-			distance
-		});
+		return {
+			...snappedIntersection, direction, distance
+		};
 
 	}
 
@@ -248,29 +288,29 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const limitMaxRange = is_real_number(this.crosshair.location.limitMaxRange) ? this.crosshair.location.limitMaxRange : Infinity;
 
 		let finalLocation = mouseLocation;
-		if(gridPath.spaces < limitMinRange){
-			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMinRange * this.document.parent.grid.distance);
-		}else if(gridPath.spaces > limitMaxRange) {
-			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMaxRange * this.document.parent.grid.distance);
+		if (gridPath.spaces < limitMinRange) {
+			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMinRange);
+		} else if (gridPath.spaces > limitMaxRange) {
+			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMaxRange);
 		}
 
 		const snappedPosition = this.getSnappedPoint(finalLocation);
 		const { direction, distance } = this._getDraggedMatrix(targetLocation, snappedPosition);
 
-		this.document.updateSource({
-			...snappedPosition,
-			direction,
-			distance
-		});
+		return {
+			...snappedPosition, direction, distance
+		};
 
 	}
 
-	updatePosition() {
+	updateLocation() {
 
 		let mouseLocation = get_mouse_position();
 
 		mouseLocation.x += this.crosshair.location.offset.x ?? 0;
 		mouseLocation.y += this.crosshair.location.offset.y ?? 0;
+
+		let update;
 
 		if (this.crosshair.location.obj && (this.crosshair.location.lockToEdge || this.crosshair.location.limitMinRange || this.crosshair.location.limitMaxRange)) {
 
@@ -281,29 +321,26 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			};
 
 			if (this.crosshair.location.lockToEdge) {
-
-				this.handleLockedEdge(mouseLocation);
-
+				update = this.handleLockedEdge(mouseLocation);
 			} else if (this.crosshair.location.limitMinRange || this.crosshair.location.limitMaxRange) {
-
-				this.handleLimit(mouseLocation, targetLocation);
-
+				update = this.handleLimit(mouseLocation, targetLocation);
 			}
 
 		} else if (this.isDrag) {
 			const { direction, distance } = this._getDraggedMatrix(this.document, mouseLocation);
-			this.document.updateSource({
-				distance,
-				direction
-			});
+			update = { distance, direction };
 		} else {
 			const snappedPosition = this.getSnappedPoint(mouseLocation);
-			this.document.updateSource({
-				x: snappedPosition.x,
-				y: snappedPosition.y,
-			});
+			update = {
+				x: snappedPosition.x, y: snappedPosition.y
+			};
 		}
 
+		const isChanged = update?.x !== undefined && this.document.x !== update.x || update?.y !== undefined && this.document.y !== update.y || update?.direction !== undefined && this.document.direction !== update.direction || update?.distance !== undefined && this.document.distance !== update.distance;
+
+		this.document.updateSource(update);
+
+		return isChanged;
 	}
 
 	_getDraggedMatrix(source, target) {
@@ -317,15 +354,50 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			distance = Math.min(Math.max(distance, this.crosshair.distanceMin), this.crosshair.distanceMax);
 		}
 
-		const direction = this.crosshair.snap.direction
-			? Math.round(Math.toDegrees(dragAngle) / this.crosshair.snap.direction) * this.crosshair.snap.direction
-			: Math.toDegrees(dragAngle);
+		const direction = this.crosshair.snap.direction ? Math.round(Math.toDegrees(dragAngle) / this.crosshair.snap.direction) * this.crosshair.snap.direction : Math.toDegrees(dragAngle);
 
 		return {
 			direction: direction || 0,
 			distance: this.crosshair.distanceMin || this.crosshair.distanceMax ? this.document.distance : distance
 		};
 
+	}
+
+	_onMouseUp(evt) {
+		const event = evt?.nativeEvent ?? evt;
+		if (!(event.which === 1 || event.which === 3)) return;
+		if (this.isDrag) {
+			this.isDrag = false;
+			return;
+		}
+		if (this.isPanning) {
+			this.isPanning = false;
+			return;
+		}
+		return event.which === 1 ? this._onConfirm() : this._onCancel();
+	}
+
+	_onConfirm() {
+		const position = this.document.getOrientation();
+		if(!this.isValid){
+			this.#runCallback(CONSTANTS.CALLBACKS.INVALID_PLACEMENT, position);
+			return;
+		}
+		const placedCallback = this.#runCallback(CONSTANTS.CALLBACKS.PLACED, position);
+		if(placedCallback === false) return;
+		this.#promise.resolve(this.document);
+		this.destroy();
+	}
+
+	_onCancel() {
+		this.#runCallback(CONSTANTS.CALLBACKS.CANCEL);
+		this.#promise.resolve(false);
+		this.destroy();
+	}
+
+	#runCallback(name, ...params) {
+		if(!this.callbacks[name]) return;
+		return this.callbacks[name](...params);
 	}
 
 	/** @override */
@@ -340,31 +412,6 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		canvas.stage.off("mousemove", this.#handlers.move);
 		canvas.stage.off("pointerup", this.#handlers.mouseup);
 		canvas.app.view.onwheel = null;
-	}
-
-	_onMouseUp(evt) {
-		const event = evt?.nativeEvent ?? evt;
-		if(!(event.which === 1 || event.which === 3)) return;
-		if (this.isDrag) {
-			this.isDrag = false;
-			return;
-		}
-		if(this.isPanning){
-			this.isPanning = false;
-			return;
-		}
-		return event.which === 1 ? this._onConfirm() : this._onCancel();
-	}
-
-	_onConfirm() {
-		this.document.getOrientation();
-		this.#promise.resolve(this.document);
-		this.destroy();
-	}
-
-	_onCancel() {
-		this.#promise.resolve(false);
-		this.destroy();
 	}
 
 	_onWheel(evt) {

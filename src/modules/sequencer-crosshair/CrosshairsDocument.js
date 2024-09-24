@@ -1,5 +1,6 @@
 import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
 import { get_object_canvas_data } from "../../lib/canvas-lib.js";
+import CONSTANTS from "../../constants.js";
 
 /**
  *
@@ -52,7 +53,8 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 				lockToEdge: false,
 				lockToEdgeDirection: false,
 				lockOffsetDistance: 0,
-				offset: { x: 0, y: 0 }
+				offset: { x: 0, y: 0 },
+				wallBehavior: CONSTANTS.PLACEMENT_RESTRICTIONS.ANYWHERE
 			},
 			lockManualRotation: false,
 			textureTile: 0,

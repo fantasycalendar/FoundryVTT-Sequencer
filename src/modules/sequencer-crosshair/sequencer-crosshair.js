@@ -1,7 +1,11 @@
 import CrosshairsDocument from "./CrosshairsDocument.js";
 import TokenCrosshairsDocument from "./TokenCrosshairsDocument.js";
+import CONSTANTS from "../../constants.js";
 
 export default class Crosshair {
+
+	static PLACEMENT_RESTRICTIONS = CONSTANTS.PLACEMENT_RESTRICTIONS;
+	static CALLBACKS = CONSTANTS.CALLBACKS;
 
 	/**
 	 * Show a configurable crosshair
@@ -48,7 +52,7 @@ export default class Crosshair {
 		}, config, callbacks);
 
 		return reticle.show().finally(() => {
-			if(controlled) placeable.control()
+			if (controlled) placeable.control()
 		});
 
 	}

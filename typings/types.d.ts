@@ -27,6 +27,8 @@ type Size = {
   height: number;
 };
 
+type HEX = `#${string}`;
+
 type SnappingOptions = {
 	CENTER: 1,
 	EDGE_MIDPOINT: 2,
@@ -58,16 +60,16 @@ type VisibleFoundryTypes =
   | MeasuredTemplateDocument;
 
 type TemplateData = {
-  angle: Number,
-  t: String,
-  texture: Object,
-  x: Number,
-  y: Number,
-  elevation: Number,
-  distance: Number,
-  fillColor: String,
-  borderColor: String,
-	direction: Number,
+  angle: number,
+  t: string,
+  texture: object,
+  x: number,
+  y: number,
+  elevation: number,
+  distance: number,
+  fillColor: string,
+  borderColor: string,
+	direction: number,
   parent: Scene
 }
 
@@ -166,6 +168,11 @@ declare class CoreMethods {
     inDuration?: number,
     inSpeed?: number
   ): CanvasPanSection;
+
+  /**
+   * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
+   */
+  crosshair(inName?: string): CrosshairSection;
 
   /**
    * Adds the sections from a given Sequence to this Sequence
@@ -399,7 +406,7 @@ declare abstract class HasTint<T> {
   /**
    * Tints the target of this section by the color given to the
    */
-  tint(inColor: number | string): T;
+  tint(inColor: number | HEX): T;
 }
 
 declare abstract class HasUsers<T> {
@@ -701,11 +708,11 @@ declare abstract class EffectSection {
       points?: Array<[number, number] | { x: number; y: number }>;
       gridUnits?: boolean;
       name?: string;
-      fillColor?: string | number;
+      fillColor?: HEX | number;
       fillAlpha?: number;
       alpha?: number;
       lineSize?: number;
-      lineColor?: string | number;
+      lineColor?: HEX | number;
       offset?: {
         x?: number;
         y?: number;
@@ -1038,6 +1045,71 @@ declare abstract class CanvasPanSection {
     fadeOutDuration?: number,
     rotation?: boolean,
   }): this;
+}
+
+declare interface CrosshairSection
+  extends CoreMethods,
+    Section<CrosshairSection>,
+    HasName<EffectSection>{}
+
+declare abstract class CrosshairSection {
+
+	/**
+	 * Sets the type of MeasurableTemplate to create, see CONST.MEASURED_TEMPLATE_TYPES
+	 */
+	type(inType: string): this;
+
+	/**
+	 * Sets a custom label to be set as a part of this crosshair
+	 */
+	label(inText: string, inOptions: {
+		dx?: number;
+		dy?: number;
+	}): this;
+
+	/**
+	 * Sets how the position of the crosshair should snap
+	 */
+	snapPosition(inSnap: number): this;
+
+	distance(inDistance: number, inOptions: {
+		min?: number;
+		max?: number;
+	}): this;
+
+	angle(inAngle: number): this;
+
+	snapDirection(inSnapDirection: number): this;
+
+	lockManualRotation(inBool: boolean): this;
+
+	lockDrag(inBool: boolean): this;
+
+	icon(inTexture: string, inOptions: {
+		borderVisible?: boolean;
+	}): this;
+
+	borderColor(inColor: HEX | number): this;
+
+	fillColor(inColor: HEX | number): this;
+
+	location(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
+		limitMinRange?: null | number;
+		limitMaxRange?: null | number;
+		showRange?: boolean;
+		lockToEdge?: boolean;
+		lockToEdgeDirection?: boolean;
+		lockOffsetDistance?: boolean;
+		offset?: {
+			x?: number;
+			y?: number;
+		}
+	}): this;
+
+	persist(inBool: boolean): this;
+
+	gridHighlight(inBool: boolean): this;
+
 }
 
 declare abstract class SequencerFile {}

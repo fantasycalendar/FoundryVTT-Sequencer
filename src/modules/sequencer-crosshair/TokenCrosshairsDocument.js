@@ -1,6 +1,5 @@
-import CrosshairsDocument from './CrosshairsDocument.js';
-import CrosshairsPlaceable from './CrosshairsPlaceable.js';
-import { get_object_position } from "../../lib/canvas-lib.js";
+import CrosshairsDocument from "./CrosshairsDocument.js";
+import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
 
 export default class TokenCrosshairsDocument extends CrosshairsDocument {
 	/**
@@ -10,10 +9,10 @@ export default class TokenCrosshairsDocument extends CrosshairsDocument {
 
 		const tokenDoc = tokenPlaceable.document
 
-		const {distance, size} = context.parent.grid;
+		const { distance, size } = context.parent.grid;
 		const rayBounds = new Ray(
-			{x: 0, y: 0},
-			{x: tokenDoc.width * distance, y: tokenDoc.height * distance});
+			{ x: 0, y: 0 },
+			{ x: tokenDoc.width * distance, y: tokenDoc.height * distance });
 
 		const initial = {
 			t: 'rect',
@@ -22,7 +21,7 @@ export default class TokenCrosshairsDocument extends CrosshairsDocument {
 			distance: rayBounds.distance,
 		};
 
-		const defaultCrosshair = foundry.utils.mergeObject(TokenCrosshairsDocument.defaultConfig,{
+		const defaultCrosshair = foundry.utils.mergeObject(TokenCrosshairsDocument.defaultConfig, {
 				distanceMinMax: {
 					min: rayBounds.distance,
 					max: rayBounds.distance,
@@ -95,7 +94,7 @@ class TokenCrosshair extends CrosshairsPlaceable {
 	}
 
 	updateDirection(evt) {
-		if(this.crosshair.lockManualRotation) return;
+		if (this.crosshair.lockManualRotation) return;
 		const scrollDelta = Math.sign(evt.deltaY);
 		let delta = this.crosshair.snap.direction ? this.crosshair.snap.direction * scrollDelta : scrollDelta * 10;
 		if (delta < 0) delta += 360;
