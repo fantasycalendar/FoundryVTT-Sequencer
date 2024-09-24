@@ -11,6 +11,7 @@ import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
 import MaskFilter from "../lib/filters/mask-filter.js";
+import TilingSpriteMesh from "../lib/meshes/tiling-sprite-mesh.js";
 
 const hooksManager = {
 	_hooks: new Map(),
@@ -1609,10 +1610,12 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
-			let spriteType = this.data.tilingTexture ? PIXI.TilingSprite : SpriteMesh;
-			this._relatedSprites[this._currentFilePath] = new spriteType(
+			this._relatedSprites[this._currentFilePath] = new TilingSpriteMesh(
 				this.texture,
-				this.data.xray ? null : VisionSamplerShader
+				{
+					isVisionMaskingEnabled: !this.data.xray,
+					tiling: !!this.data.tilingTexture
+				}
 			);
 			if (this.data.tint) {
 				this._relatedSprites[this._currentFilePath].tint = this.data.tint;
@@ -1623,13 +1626,13 @@ export default class CanvasEffect extends PIXI.Container {
 					if (filePath === this._currentFilePath) continue;
 
 					let texture = await this._file._getTexture(filePath);
-					let spriteType = this.data.tilingTexture
-						? PIXI.TilingSprite
-						: SpriteMesh;
-					let sprite = new spriteType(
+					let sprite = new TilingSpriteMesh(
 						texture,
-						this.data.xray ? null : VisionSamplerShader
-					);
+						{
+							isVisionMaskingEnabled: !this.data.xray,
+							tiling: !!this.data.tilingTexture
+						}
+					)
 					sprite.renderable = false;
 					this._relatedSprites[filePath] = sprite;
 				}
@@ -1828,22 +1831,20 @@ export default class CanvasEffect extends PIXI.Container {
 	_createSprite() {
 		this.renderable = false;
 
-		const args = [this.spriteSheet ? this.spriteSheet : PIXI.Texture.EMPTY];
-		if (
-			!this.data.xray &&
-			!this.spriteSheet &&
-			!this.data.screenSpace &&
-			!this.data.screenSpaceAboveUI
-		) {
-			args.push(VisionSamplerShader);
-		}
-
-		const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : SpriteMesh;
-		const sprite = new spriteType(...args);
-		this.sprite = this.spriteContainer.addChild(sprite);
+		const texture = this.spriteSheet ? this.spriteSheet : PIXI.Texture.EMPTY;
+		const isVisionMaskingEnabled = 
+			!this.data.xray && 
+			!this.spriteSheet && 
+			!this.data.screenSpace && 
+			!this.data.screenSpaceAboveUI;
+		
+		const relatedSprites = Object.values(this._relatedSprites);
+		const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : relatedSprites.length ? PIXI.Container : TilingSpriteMesh;
+		this.sprite = this.spriteContainer.addChild(new spriteType(texture));
+		this.sprite.isVisionMaskingEnabled = isVisionMaskingEnabled;
 		this.sprite.id = this.id + "-sprite";
 
-		Object.values(this._relatedSprites).forEach((sprite) => {
+		relatedSprites.forEach((sprite) => {
 			if (this.data.tint) {
 				sprite.tint = this.data.tint;
 			}
@@ -1883,7 +1884,19 @@ export default class CanvasEffect extends PIXI.Container {
 				const filter = new filters[filterData.className](filterData.data);
 				filter.id =
 					this.id + "-" + filterData.className + "-" + index.toString();
-				this.sprite.filters.push(filter);
+				if (filter instanceof PIXI.ColorMatrixFilter) {
+					if (textSprite || this.sprite instanceof PIXI.AnimatedSprite) {
+						this.sprite.filters.push(filter);
+					} else if (this.sprite.children.length > 0) {
+						this.sprite.children.forEach((child) => {
+							child.colorMatrixFilter = filter;
+						})
+					} else {
+						this.sprite.colorMatrixFilter = filter;	
+					}
+				} else {
+					this.sprite.filters.push(filter);
+				}
 				const filterKeyName = filterData.name || filterData.className;
 				this.effectFilters[filterKeyName] = filter;
 			}
@@ -1900,10 +1913,12 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.sprite.position.set(spriteOffsetX, spriteOffsetY);
 
-		this.sprite.anchor.set(
-			this.data.spriteAnchor?.x ?? 0.5,
-			this.data.spriteAnchor?.y ?? 0.5
-		);
+		if (this.sprite.constructor !== PIXI.Container) {
+			this.sprite.anchor.set(
+				this.data.spriteAnchor?.x ?? 0.5,
+				this.data.spriteAnchor?.y ?? 0.5
+			);
+		}
 
 		let spriteRotation = this.data.spriteRotation ?? 0;
 		if (this.data.randomSpriteRotation) {
@@ -2375,15 +2390,11 @@ export default class CanvasEffect extends PIXI.Container {
 			if (this._relatedSprites[filePath]) {
 				this._relatedSprites[filePath].renderable = true;
 			} else {
-				let sprite;
-				let spriteType = this.data.tilingTexture
-					? PIXI.TilingSprite
-					: SpriteMesh;
-				if (this.data.xray) {
-					sprite = new spriteType(texture);
-				} else {
-					sprite = new spriteType(texture, VisionSamplerShader);
-				}
+				const sprite = new TilingSpriteMesh(texture, {
+					isVisionMaskingEnabled: !this.data.xray,
+					tiling: !!this.data.tilingTexture
+				});
+				sprite.colorMatrixFilter = this.effectFilters['ColorMatrix']
 				this._relatedSprites[filePath] = sprite;
 				if (this.data.tint) {
 					sprite.tint = this.data.tint;
@@ -2422,12 +2433,12 @@ export default class CanvasEffect extends PIXI.Container {
 			if (this.data.tilingTexture) {
 				const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
 				const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
-				sprite.width = distance / scaleX;
-				sprite.height = texture.height;
 				sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
+				sprite.width = distance;
+				sprite.height = texture.height * scaleY;
 
-				sprite.tileScale.x = this.data.tilingTexture.scale.x;
-				sprite.tileScale.y = this.data.tilingTexture.scale.y;
+				sprite.tileScale.x = this.data.tilingTexture.scale.x * scaleX;
+				sprite.tileScale.y = this.data.tilingTexture.scale.y * scaleY;
 
 				sprite.tilePosition = this.data.tilingTexture.position;
 			} else {
