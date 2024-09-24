@@ -26,7 +26,7 @@ export default class TilingSpriteMesh extends SpriteMesh {
 	 * @property {boolean} options.tiling Shader class used by this sprite mesh.
 	 * @property {boolean} options.isVisionMaskingEnabled Shader class used by this sprite mesh.
 	 */
-	constructor(texture, { shaderClass = VisionSamplerShader, tiling = false, isVisionMaskingEnabled = true }) {
+	constructor(texture, { shaderClass = VisionSamplerShader, tiling = false, isVisionMaskingEnabled = true } = {}) {
 		super(texture, shaderClass);
 		this.tileTransform = new PIXI.Transform();
 		this.tiling = tiling;

@@ -33,9 +33,6 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 	static batchGeometry = [
 		{ id: "aVertexPosition", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aTextureCoord", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
-
-		// { id: "aTextureId", size: 1, normalized: false, type: PIXI.TYPES.FLOAT }, // DELETEME!!!
-
 		{ id: "aClampOffset", size: 2, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aClampFrame", size: 4, normalized: false, type: PIXI.TYPES.FLOAT },
 		{ id: "aMapCoord1", size: 3, normalized: false, type: PIXI.TYPES.FLOAT },
@@ -60,7 +57,6 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 
 	/** @override */
 	static batchVertexSize = 42;
-	// static batchVertexSize = 5;
 
 	/** @override */
 	static reservedTextureUnits = 1; // We need a texture unit for the occlusion texture
@@ -155,7 +151,7 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 
 		vec2 coord = vTextureCoord;
 		vec2 unclamped;
-		if (bool(isTilingEnabled)) {
+		if (isTilingEnabled) {
 			coord = coord + ceil(vClampOffset - coord);
 			coord = (vMapCoord * vec3(coord, 1.0)).xy;
 			unclamped = coord;
@@ -163,7 +159,7 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 		} else {
 			unclamped = coord;
 	  }
-	  float mask = bool(isVisionMaskingEnabled) && enableVisionMasking ? texture(visionMaskTexture, vVisionCoord).r : 1.0;
+	  float mask = isVisionMaskingEnabled && enableVisionMasking ? texture(visionMaskTexture, vVisionCoord).r : 1.0;
 
 	  vec4 color;
 	  %forloop%

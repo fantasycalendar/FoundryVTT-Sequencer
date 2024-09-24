@@ -2164,12 +2164,11 @@ export default class CanvasEffect extends PIXI.Container {
 			const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
 			const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
 			this.sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
-			this.sprite.width = distance / scaleX;
-			this.sprite.height = texture.height;
+			this.sprite.width = distance;
+			this.sprite.height = texture.height * scaleY;
 
-			this.sprite.tileScale.x = this.data.tilingTexture.scale.x;
-			this.sprite.tileScale.y = this.data.tilingTexture.scale.y;
-
+			this.sprite.tileScale.x = this.data.tilingTexture.scale.x * scaleX;
+			this.sprite.tileScale.y = this.data.tilingTexture.scale.y * scaleY;
 			this.sprite.tilePosition = this.data.tilingTexture.position;
 		} else {
 			this.sprite.scale.set(
