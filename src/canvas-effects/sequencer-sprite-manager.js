@@ -1,6 +1,7 @@
-import SequencerFileCache from "../modules/sequencer-file-cache.js";
+// @ts-check
 import AnimatedSpriteMesh from "../lib/pixi/AnimatedSpriteMesh.js";
 import TilingSpriteMesh from "../lib/pixi/TilingSpriteMesh.js";
+import SequencerFileCache from "../modules/sequencer-file-cache.js";
 class Asset {
 	destroy() {
 		// nothing to do in the general case
@@ -16,9 +17,22 @@ class TextureAsset extends Asset {
 	}
 }
 class VideoAsset extends Asset {
+	/** @type {string} */
 	filepath;
+
+	/** @type {PIXI.Texture} */
 	texture;
+
+	/** @type {HTMLVideoElement  } */
 	video;
+
+	/**
+	 *
+	 * @param {object} params
+	 * @param {string} params.filepath
+	 * @param {PIXI.Texture} params.texture
+	 * @param {HTMLVideoElement} params.video
+	 */
 	constructor({ filepath, texture, video }) {
 		super();
 		this.filepath = filepath;
@@ -30,20 +44,35 @@ class VideoAsset extends Asset {
 			this.video.removeAttribute("src");
 			this.video.pause();
 			this.video.load();
+			// @ts-expect-error can only be null after destroy
 			this.video = null;
 		} catch (err) {}
 		this.texture.destroy();
 	}
 }
 class VideoSpritesheetAsset extends Asset {
+	/** @type {string} */
 	filepath;
+
+	/** @type {PIXI.Spritesheet} */
 	spritesheet;
+
+	/** @type {PIXI.FrameObject[]} */
 	frameObjects;
+
+	/** @type {number} */
 	framerate;
+
+	/**
+	 * @param {object} params
+	 * @param {string} params.filepath
+	 * @param {PIXI.Spritesheet} params.spritesheet
+	 */
 	constructor({ filepath, spritesheet }) {
 		super();
 		this.filepath = filepath;
 		this.spritesheet = spritesheet;
+		// @ts-expect-error framerate is either there or undefined, stop complaining typescript...
 		this.framerate = this.spritesheet.data?.meta?.framerate ?? 30;
 		const frametime = (1 / this.framerate) * 1000;
 		this.frameObjects = (Object.values(spritesheet.animations)[0] ?? []).map((texture) => ({
@@ -60,9 +89,21 @@ class VideoSpritesheetAsset extends Asset {
 	}
 }
 class FlipbookAsset extends Asset {
+	/** @type {string[]} */
 	filepaths;
+
+	/** @type {PIXI.FrameObject[]} */
 	frameObjects;
+
+	/** @type {number} */
 	framerate;
+
+	/**
+	 * @param {object} params
+	 * @param {string[]} params.filepaths
+	 * @param {PIXI.Texture[]} params.textures
+	 * @param {number} params.framerate
+	 */
 	constructor({ filepaths, textures, framerate = 24 }) {
 		super();
 		this.filepaths = filepaths;
@@ -74,157 +115,22 @@ class FlipbookAsset extends Asset {
 		// TODO maybe add spritesheet-like ref counting for flipbooks too?
 	}
 }
-class TextAsset extends Asset {
-	text;
-	constructor({ text }) {
-		super();
-		this.text = text;
-	}
-	// really nothing to do here
-	destroy() {}
-}
-//#endregion
-//#region Managed Sprites
-class ManagedSprite {
-	/** @type {Asset} */
-	asset;
-	get texture() {
-		return this.view.texture;
-	}
-	get renderable() {
-		return this.view.renderable;
-	}
-	set renderable(value) {
-		this.view.renderable = value;
-	}
-	constructor(asset) {
-		this.asset = asset;
-	}
-	get isVideo() {
-		return this.asset instanceof VideoAsset;
-	}
-	get isSpritesheet() {
-		return this.asset instanceof VideoSpritesheetAsset || this.asset instanceof FlipbookAsset;
-	}
-	updateTexture() {
-		if (this.view.texture.valid) {
-			this.view.texture.update();
-		}
-	}
-	destroy() {
-		this.view.destroy();
-		this.view = null;
-		this.asset.destroy();
-		this.asset = null;
-	}
-	deactivate() {
-		this.view.renderable = false;
-	}
-	activate() {
-		this.view.renderable = true;
-	}
-}
-class ManagedTextSprite extends ManagedSprite {
-	view;
-	constructor({ asset, textStyle }) {
-		super(asset);
-		this.view = new PIXI.Text(asset.text, textStyle);
-		this.view.resolution = 5;
-		this.view.zIndex = 1;
-		this.view.anchor.set(0.5, 0.5);
-	}
-	get resolution() {
-		return this.view.resolution;
-	}
-	set resolution(value) {
-		this.view.resolution = value;
-	}
-}
-class ManagedTextureSprite extends ManagedSprite {
-	view;
-	constructor({ asset, tiling = false, xray = false }) {
-		super(asset);
-		this.view = new TilingSpriteMesh(asset.texture, { isVisionMaskingEnabled: !xray, tiling });
-	}
-}
-class ManagedAnimatedSprite extends ManagedSprite {
-	view;
-	controls;
-	// make sure we always return the same texture...
-	get texture() {
-		if (this.asset instanceof VideoSpritesheetAsset || this.asset instanceof FlipbookAsset) {
-			return this.asset.frameObjects[0]?.texture ?? PIXI.Texture.EMPTY;
-		}
-		return super.texture;
-	}
-	constructor({ asset, tiling = false, xray = false }) {
-		super(asset);
-		if (asset instanceof VideoAsset) {
-			this.view = new TilingSpriteMesh(asset.texture, { isVisionMaskingEnabled: !xray, tiling });
-			this.controls = new VideoPlaybackControls(asset.video, asset.texture);
-		} else {
-			this.view = new AnimatedSpriteMesh(asset.frameObjects, {
-				autoUpdate: true,
-				isVisionMaskingEnabled: !xray,
-				tiling,
-			});
-			this.controls = new SpritePlaybackControls(this.view, asset.framerate, asset.frameObjects.length);
-		}
-	}
-	destroy() {
-		this.stop();
-		super.destroy();
-	}
-	activate() {
-		super.activate();
-	}
-	deactivate() {
-		super.deactivate();
-		this.stop();
-	}
-	async play() {
-		this.controls.play();
-	}
-	stop() {
-		this.controls.stop();
-	}
-	get loop() {
-		return this.controls.loop;
-	}
-	set loop(value) {
-		this.controls.loop = value;
-	}
-	get volume() {
-		return this.controls.volume;
-	}
-	set volume(value) {
-		this.controls.volume = value;
-	}
-	get duration() {
-		return this.controls.duration;
-	}
-	get isPlaying() {
-		return this.controls.isPlaying;
-	}
-	get currentTime() {
-		return this.controls.currentTime;
-	}
-	set currentTime(value) {
-		this.controls.currentTime = value;
-	}
-	get playbackRate() {
-		return this.controls.playbackRate;
-	}
-	set playbackRate(value) {
-		this.controls.playbackRate = value;
-	}
-}
 //#endregion
 //#region Playback controls
-class PlaybackControls {}
+class PlaybackControls {
+	destroy() {}
+}
 class VideoPlaybackControls extends PlaybackControls {
+	/** @type {HTMLVideoElement} */
 	#video;
+
+	/** @type {PIXI.Texture} */
 	#texture;
+
+	/**
+	 * @param {HTMLVideoElement} video
+	 * @param {PIXI.Texture} texture
+	 */
 	constructor(video, texture) {
 		super();
 		this.#video = video;
@@ -270,12 +176,29 @@ class VideoPlaybackControls extends PlaybackControls {
 	set playbackRate(value) {
 		this.#video.playbackRate = value;
 	}
+	destroy() {
+		// @ts-expect-error should be null only when destroyed
+		this.#video = null;
+		// @ts-expect-error should be null only when destroyed
+		this.#texture = null;
+	}
 }
 
 class SpritePlaybackControls extends PlaybackControls {
+	/** @type {AnimatedSpriteMesh} */
 	#sprite;
+
+	/** @type {number} */
 	#framerate;
+
+	/** @type {number} */
 	#framecount;
+
+	/**
+	 * @param {AnimatedSpriteMesh} sprite
+	 * @param {number} framerate
+	 * @param {number} framecount
+	 */
 	constructor(sprite, framerate, framecount) {
 		super();
 		this.#sprite = sprite;
@@ -303,9 +226,8 @@ class SpritePlaybackControls extends PlaybackControls {
 	get volume() {
 		return 0;
 	}
-	set volume(_value) {
-		// cannot set volume
-	}
+	set volume(_value) {}
+
 	get currentTime() {
 		return (this.#sprite.currentFrame + 1) / this.#framerate;
 	}
@@ -324,106 +246,132 @@ class SpritePlaybackControls extends PlaybackControls {
 	set playbackRate(value) {
 		this.#sprite.animationSpeed = value;
 	}
+
+	destroy() {
+		// @ts-expect-error should be null only when destroyed
+		this.#sprite = null;
+	}
 }
 
 export class SequencerSpriteManager extends PIXI.Container {
+	// @ts-ignore
 	#id = foundry.utils.randomID();
+
+	/** @type {import("../modules/sequencer-file.js").SequencerFile} */
 	#file;
+
+	/** @type {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; }} */
 	#sharedSpriteConfig;
-	#activePath;
-	#managedSprites = {};
+
+	/** @type {string | undefined} */
+	#activeAssetPath;
+
+	/** @type {Map<string | undefined, VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset>} */
+	#relatedAssets = new Map();
+
+	/** @type {VideoPlaybackControls | SpritePlaybackControls | null} */
+	#playbackControls;
+
+	/** @type {Promise<void> | undefined} */
 	#preloadingPromise;
+
+	/** @type {TilingSpriteMesh | null} */
+	#managedSprite;
+
+	/** @type {PIXI.Text | null} */
+	#textSprite;
+
 	get preloadingPromise() {
 		if (this.#preloadingPromise) {
 			return this.#preloadingPromise;
 		}
 		return Promise.resolve();
 	}
+
+	/**
+	 * @param {import("../modules/sequencer-file.js").SequencerFile} file
+	 * @param {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; }} options
+	 */
 	constructor(file, options) {
 		super();
 		this.#sharedSpriteConfig = options ?? {
 			antialiasing: PIXI.SCALE_MODES.LINEAR,
 			tiling: false,
+			xray: false,
 		};
 		this.#file = file;
 	}
 	//#region public api
 	get activePath() {
-		return this.#activePath;
+		return this.#activeAssetPath;
 	}
+
+	get activeAsset() {
+		return this.#relatedAssets.get(this.activePath);
+	}
+
 	get texture() {
-		if (this.#activePath) {
-			return this.#managedSprites[this.#activePath]?.texture;
-		}
-		return Object.values(this.#managedSprites).find((s) => s?.renderable)?.texture;
+		return this.managedSprite?.texture;
 	}
+
+	get managedSprite() {
+		return this.#managedSprite;
+	}
+
 	updateVideoTextures() {
 		// CHECKME lets see if this works without update texture.
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite && sprite.isVideo && sprite.renderable) {
-				sprite.updateTexture();
-			}
-		});
+		this.#managedSprite?.texture?.update();
 	}
+	/**
+	 * @param {string | undefined} filePath
+	 */
 	async activate(filePath) {
-		if (!filePath) {
-			this.#managedSprites[filePath]?.deactivate();
-			return undefined;
-		}
-		if (this.#activePath === filePath) {
-			return this.#managedSprites[filePath];
-		}
-		// deactivate currently playing animation
-		const lastSprite = this.#managedSprites[this.#activePath];
-		let nextSprite = this.#managedSprites[filePath];
-		// new file is already being loaded, nothing more to do
-		if (filePath in this.#managedSprites && nextSprite == null) {
+		if (!filePath || this.#activeAssetPath === filePath) {
 			return;
 		}
-		if (!nextSprite) {
-			this.#managedSprites[filePath] = undefined;
-			const asset = await this.#loadAsset(filePath);
-			nextSprite = this.#buildSprite(asset);
-			this.#managedSprites[filePath] = nextSprite;
-			this.addChild(nextSprite.view);
+
+		let nextAsset = this.#relatedAssets.get(filePath);
+		// new file is already being loaded, nothing more to do
+		if (this.#relatedAssets.has(filePath) && nextAsset == null) {
+			return;
 		}
-		// apply current values
-		this.#applyCommonSpriteValues(nextSprite, lastSprite);
-		lastSprite?.deactivate();
-		// activate new animation
-		nextSprite.activate();
-		// sync playback time for more seamless transition
-		if (nextSprite instanceof ManagedAnimatedSprite) {
-			if (lastSprite instanceof ManagedAnimatedSprite) {
-				nextSprite.currentTime = lastSprite.currentTime;
-			}
-			nextSprite.play();
-			// CHECKME lets see if this works without update texture.
-			// nextSprite.updateTexture();
+
+		if (!nextAsset) {
+			this.#relatedAssets[filePath] = undefined;
+			nextAsset = await this.#loadAsset(filePath);
+			this.#relatedAssets.set(filePath, nextAsset);
 		}
-		this.#activePath = filePath;
-		return nextSprite;
+
+		if (this.#activateAsset(nextAsset)) {
+			this.#activeAssetPath = filePath;
+		}
 	}
+	/**
+	 * @param {{ text: string | null; textStyle: Partial<PIXI.ITextStyle> | PIXI.TextStyle }} textData
+	 */
 	addText(textData) {
-		const textKey = this.#buildTextKey(textData.text);
-		if (this.#managedSprites[textKey]) {
-			return this.#managedSprites[textKey];
+		if (this.#textSprite) {
+			this.#textSprite.text = textData.text ?? "";
+			return this.#textSprite;
 		}
-		const textAsset = new TextAsset({ text: textData.text ?? "" });
-		const newSprite = new ManagedTextSprite({ asset: textAsset, textStyle: textData.textStyle });
-		this.#applyCommonSpriteValues(newSprite);
-		this.addChild(newSprite.view);
-		this.#managedSprites[textKey] = newSprite;
-		return newSprite;
+		const textSprite = new PIXI.Text(textData.text ?? "", textData.textStyle);
+		textSprite.resolution = 5;
+		textSprite.zIndex = 1;
+		textSprite.anchor.set(0.5, 0.5);
+		this.#textSprite = textSprite;
+		return this.addChild(textSprite);
 	}
-	removeText(text) {
-		const textKey = this.#buildTextKey(text);
-		this.#managedSprites[textKey]?.destroy();
-		delete this.#managedSprites[textKey];
+	removeText() {
+		this.#textSprite?.destroy();
+		this.#textSprite = null;
 	}
+
+	/**
+	 * @param {string | number} filepath
+	 */
 	removeSprite(filepath) {
-		this.#managedSprites[filepath]?.destroy();
-		delete this.#managedSprites[filepath];
+		this.#relatedAssets[filepath]?.destroy();
+		delete this.#relatedAssets[filepath];
 	}
 	async preloadVariants() {
 		if (!this.#preloadingPromise) {
@@ -432,213 +380,164 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return this.#preloadingPromise;
 	}
 	destroy() {
-		Object.values(this.#managedSprites).forEach((sprite) => sprite?.destroy());
+		Object.values(this.#relatedAssets).forEach((sprite) => sprite?.destroy());
 		super.destroy({ children: true });
 	}
 	//#endregion
 	//#region Managed Sprite proxies
 	async play() {
-		if (!(this.#activeSprite instanceof ManagedAnimatedSprite)) {
-			return;
-		}
-		this.#activeSprite.play();
-		// this.#spriteData.playing = true;
+		this.#playbackControls?.play();
 	}
 	stop() {
-		if (!(this.#activeSprite instanceof ManagedAnimatedSprite)) {
-			return;
-		}
-		this.#activeSprite.stop();
-		// this.#spriteData.playing = false;
+		this.#playbackControls?.stop();
 	}
 	get tileScale() {
-		return this.#activeSprite?.view instanceof TilingSpriteMesh ? this.#activeSprite?.view.tileScale : undefined;
+		return this.managedSprite?.tileScale;
 	}
 	set tileScale(point) {
-		if (this.#activeSprite?.view instanceof TilingSpriteMesh) {
-			this.#activeSprite.view.tileScale.copyFrom(point);
+		if (point) {
+			this.managedSprite?.tileScale.copyFrom(point);
 		}
 	}
 	get tilePosition() {
-		return this.#activeSprite?.view instanceof TilingSpriteMesh ? this.#activeSprite?.view.tilePosition : undefined;
+		return this.managedSprite?.tilePosition;
 	}
 	set tilePosition(point) {
-		if (this.#activeSprite?.view instanceof TilingSpriteMesh) {
-			this.#activeSprite.view.tilePosition.copyFrom(point);
+		if (point) {
+			this.managedSprite?.tilePosition.copyFrom(point);
 		}
 	}
 	get anchor() {
-		return this.#activeSprite?.view.anchor;
+		return this.managedSprite?.anchor;
 	}
 	set anchor(point) {
-		this.#activeSprite?.view.anchor.copyFrom(point);
+		if (point) {
+			this.managedSprite?.anchor.copyFrom(point);
+		}
 	}
 	get tint() {
-		return this.#activeSprite?.view.tint ?? 0xffffff;
+		return this.managedSprite?.tint ?? 0xffffff;
 	}
 	set tint(value) {
-		if (this.#activeSprite?.view) {
-			this.#activeSprite.view.tint = typeof value === "number" ? Math.floor(value) : value;
+		if (this.managedSprite) {
+			this.managedSprite.tint = typeof value === "number" ? Math.floor(value) : value;
 		}
 	}
 	get scale() {
-		return this.#activeSprite?.view.scale || super.scale;
+		return this.managedSprite?.scale || super.scale;
 	}
 	set scale(point) {
-		this.#activeSprite?.view.scale.copyFrom(point);
+		this.managedSprite?.scale.copyFrom(point);
 	}
 	get width() {
-		return (
-			this.#activeSprite?.view.width ??
-			Object.values(this.#managedSprites).find((sprite) => sprite?.renderable)?.view.width ??
-			0
-		);
+		return this.managedSprite?.width ?? 0;
 	}
 	set width(value) {
-		if (!this.#activeSprite) {
+		if (!this.managedSprite) {
 			return;
 		}
-		this.#activeSprite.view.width = value;
+		this.managedSprite.width = value;
 	}
 	get height() {
-		return (
-			this.#activeSprite?.view.height ??
-			Object.values(this.#managedSprites).find((sprite) => sprite?.renderable)?.view.height ??
-			0
-		);
+		return this.managedSprite?.height ?? 0;
 	}
 	set height(value) {
-		if (!this.#activeSprite) {
+		if (!this.managedSprite) {
 			return;
 		}
-		this.#activeSprite.view.height = value;
+		this.managedSprite.height = value;
 	}
 	get resolution() {
-		if (this.#activeSprite instanceof ManagedTextSprite) {
-			return this.#activeSprite.resolution;
-		}
-		return undefined;
+		return this.#textSprite?.resolution;
 	}
 	set resolution(value) {
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite instanceof ManagedTextSprite) {
-				sprite.resolution = value;
-			}
-		});
-	}
-	get hasAnimatedMedia() {
-		return this.#activeSprite instanceof ManagedAnimatedSprite;
-	}
-	get playing() {
-		if (this.#activeSprite instanceof ManagedAnimatedSprite) {
-			return this.#activeSprite.isPlaying;
-		}
-		return false;
-	}
-	get duration() {
-		if (this.#activeSprite instanceof ManagedAnimatedSprite) {
-			return this.#activeSprite.duration;
-		}
-		return 0;
-	}
-	get volume() {
-		if (this.#activeSprite instanceof ManagedAnimatedSprite) {
-			return this.#activeSprite.volume;
-		}
-		return 0;
-	}
-	set volume(value) {
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite instanceof ManagedAnimatedSprite) {
-				sprite.volume = value;
-			}
-		});
-	}
-	get loop() {
-		if (this.#activeSprite instanceof ManagedAnimatedSprite) {
-			return this.#activeSprite.loop;
-		}
-		return false;
-	}
-	set loop(value) {
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite instanceof ManagedAnimatedSprite) {
-				sprite.loop = value;
-			}
-		});
-	}
-	get currentTime() {
-		if (this.#activeSprite instanceof ManagedAnimatedSprite) {
-			return this.#activeSprite.currentTime;
-		} else {
-			return undefined;
-		}
-	}
-	set currentTime(value) {
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite instanceof ManagedAnimatedSprite) {
-				sprite.currentTime = value;
-			}
-		});
-	}
-	get playbackRate() {
-		if (this.#activeSprite instanceof ManagedAnimatedSprite) {
-			return this.#activeSprite.playbackRate;
-		}
-		return 1;
-	}
-	set playbackRate(value) {
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite instanceof ManagedAnimatedSprite) {
-				sprite.playbackRate = value;
-			}
-		});
-	}
-	/** @return {PIXI.ColorMatrixFilter} */
-	get colorMatrixFilter() {
-		return this.#activeSprite?.view instanceof TilingSpriteMesh
-			? this.#activeSprite?.view.colorMatrixFilter
-			: this.#activeSprite?.filters?.find((filter) => filter instanceof PIXI.ColorMatrixFilter);
-	}
-	set colorMatrixFilter(value) {
-		Object.values(this.#managedSprites).forEach((sprite) => {
-			if (sprite.view instanceof TilingSpriteMesh) {
-				sprite.view.colorMatrixFilter = value;
-			} else if (value) { 
-				sprite.view.filters?.push(value)
-			} else if (Array.isArray(sprite.view.filter)) {
-				sprite.view.filters = sprite.view.filters.filter(filter => !(filter instanceof PIXI.ColorMatrixFilter))
-			}
-		});
+		if (!this.#textSprite) return;
+		this.#textSprite.resolution = value ?? 5;
 	}
 
-	//#endregion
-	//#region private
-	/** @return {ManagedSprite} */
-	get #activeSprite() {
-		return this.#managedSprites[this.#activePath];
+	/** @type {} */
+	get hasAnimatedMedia() {
+		return (
+			this.activeAsset instanceof VideoAsset ||
+			this.activeAsset instanceof VideoSpritesheetAsset ||
+			this.activeAsset instanceof FlipbookAsset
+		);
 	}
+	get playing() {
+		return this.#playbackControls?.isPlaying ?? false;
+	}
+	get duration() {
+		return this.#playbackControls?.duration ?? 0;
+	}
+	get volume() {
+		return this.#playbackControls?.volume ?? 0;
+	}
+	set volume(value) {
+		if (!this.#playbackControls) return;
+		this.#playbackControls.volume = value;
+	}
+	get loop() {
+		return this.#playbackControls?.loop ?? false;
+	}
+	set loop(value) {
+		if (!this.#playbackControls) return;
+		this.#playbackControls.loop = value;
+	}
+	get currentTime() {
+		return this.#playbackControls?.currentTime ?? 0;
+	}
+	set currentTime(value) {
+		if (!this.#playbackControls) return;
+		this.#playbackControls.currentTime = value;
+	}
+	get playbackRate() {
+		return this.#playbackControls?.playbackRate ?? 1;
+	}
+	set playbackRate(value) {
+		if (!this.#playbackControls) return;
+		this.#playbackControls.playbackRate = value;
+	}
+	/** @return {PIXI.ColorMatrixFilter | null} */
+	get colorMatrixFilter() {
+		return this.managedSprite?.colorMatrixFilter ?? null;
+	}
+	set colorMatrixFilter(value) {
+		if (!this.managedSprite) return;
+		this.managedSprite.colorMatrixFilter = value;
+		if (this.#textSprite) {
+			if (value) {
+				this.#textSprite.filters?.push(value);
+			} else if (this.#textSprite.filters) {
+				this.#textSprite.filters = this.#textSprite.filters.filter(
+					(filter) => !(filter instanceof PIXI.ColorMatrixFilter)
+				);
+			}
+		}
+	}
+
+
 	async #preloadVariants() {
-		if (this.#activePath === "TEXT" /* SpecialSpriteKeys.Text */) {
+		if (this.#activeAssetPath === "TEXT") {
 			return;
 		}
 		if (!this.#file || this.#file.isFlipbook) {
 			return;
 		}
+		/** @type {string[]} */
 		const allFiles = this.#file.getAllFiles();
-		const sprites = await Promise.all(
-			allFiles.map(async (filePath) => {
-				if (this.#managedSprites[filePath]) {
-					return this.#managedSprites[filePath];
-				}
-				const asset = await this.#loadAsset(filePath);
-				const newSprite = this.#buildSprite(asset);
-				newSprite.renderable = false;
-				return newSprite;
-			})
-		);
-		sprites.forEach((sprite) => this.addChild(sprite.view));
+
+		for (const filePath of allFiles) {
+			if (this.#relatedAssets[filePath]) {
+				continue;
+			}
+			const asset = await this.#loadAsset(filePath);
+			this.#relatedAssets.set(filePath, asset);
+		}
 	}
+
+	/**
+	 * @param {string} filepath
+	 */
 	async #loadAsset(filepath) {
 		if (this.#file && this.#file.isFlipbook) {
 			return this.#loadFlipbook(this.#file.getAllFiles(), this.#file.originalMetadata);
@@ -659,58 +558,101 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 		return new TextureAsset({ filepath, texture });
 	}
+
+	/**
+	 * @param {string[]} filepaths
+	 * @param {{ fps: number; }} metadata
+	 */
 	async #loadFlipbook(filepaths, metadata) {
-		const textures = await Promise.all(filepaths.map(async (filepath) => loadTexture(filepath)));
+		const textures = (await Promise.all(filepaths.map(async (filepath) => loadTexture(filepath)))).filter(
+			(t) => t instanceof PIXI.Texture
+		);
 		return new FlipbookAsset({ filepaths, textures, framerate: metadata?.fps ?? 24 });
 	}
-	#buildSprite(asset) {
-		if (asset instanceof TextAsset) {
-			return new ManagedTextSprite({ asset });
+
+	/**
+	 * @param {VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset} nextAsset 
+	 * @returns 
+	 */
+	#activateAsset(nextAsset) {
+		let view;
+		let controls;
+		const tiling = this.#sharedSpriteConfig.tiling;
+		const isVisionMaskingEnabled = !this.#sharedSpriteConfig.xray;
+		if (nextAsset instanceof VideoAsset) {
+			view = new TilingSpriteMesh(nextAsset.texture, { isVisionMaskingEnabled, tiling });
+			controls = new VideoPlaybackControls(nextAsset.video, nextAsset.texture);
+		} else if (nextAsset instanceof VideoSpritesheetAsset || nextAsset instanceof FlipbookAsset) {
+			view = new AnimatedSpriteMesh(nextAsset.frameObjects, {
+				autoUpdate: true,
+				isVisionMaskingEnabled,
+				tiling,
+			});
+			controls = new SpritePlaybackControls(view, nextAsset.framerate, nextAsset.frameObjects.length);
+		} else if (nextAsset instanceof TextureAsset) {
+			view = new TilingSpriteMesh(nextAsset.texture, { isVisionMaskingEnabled, tiling });
+			controls = null;
+		} else {
+			return false;
 		}
-		if (asset instanceof TextureAsset) {
-			return new ManagedTextureSprite({ asset, tiling: this.#sharedSpriteConfig.tiling });
+
+		// apply current values
+		this.#applyPreviousValues(view, controls);
+
+		if (this.managedSprite) {
+			this.removeChild(this.managedSprite)
 		}
-		if (asset instanceof VideoAsset || asset instanceof VideoSpritesheetAsset || asset instanceof FlipbookAsset) {
-			return new ManagedAnimatedSprite({ asset: asset, tiling: this.#sharedSpriteConfig.tiling });
+		this.addChild(view)
+
+		if (!this.#playbackControls) {
+			controls?.play()
 		}
-		throw "unrecognized asset";
+		
+		this.#managedSprite = view;
+		this.#playbackControls = controls;
+		return true
 	}
-	#applyCommonSpriteValues(sprite, previousSprite) {
-		if (sprite instanceof ManagedTextSprite) {
-			this.#applyTextSpriteValues(sprite);
-			return;
+
+	/**
+	 *
+	 * @param {TilingSpriteMesh} view
+	 * @param {VideoPlaybackControls | SpritePlaybackControls | null} controls
+	 */
+	#applyPreviousValues(view, controls) {
+		if (this.#managedSprite) {
+			const prev = this.#managedSprite;
+			view.tint = prev.tint;
+			view.anchor.copyFrom(prev.anchor);
+			view.width = prev.width;
+			view.height = prev.height;
+			view.scale.copyFrom(prev.scale);
+			view.tileScale.copyFrom(prev.tileScale);
+			view.tilePosition.copyFrom(prev.tilePosition);
+			view.pivot.copyFrom(prev.pivot);
+			view.skew.copyFrom(prev.skew);
+			view.alpha = prev.alpha;
+			view.colorMatrixFilter = prev.colorMatrixFilter;
+			view.position.copyFrom(prev.position);
+			view.alphaMode = prev.alphaMode;
+			view.blendMode = prev.blendMode;
+			view.cullable = prev.cullable;
+			view.renderable = prev.renderable;
+			view.visible = prev.visible;
+			view.tiling = prev.tiling;
 		}
-		if (!previousSprite) {
-			return;
+
+		if (controls && this.#playbackControls) {
+			const prev = this.#playbackControls;
+			controls.volume = prev.volume;
+			controls.loop = prev.loop;
+			controls.playbackRate = prev.playbackRate;
+			controls.currentTime = prev.currentTime;
+			if (prev.isPlaying) {
+				controls.play();
+			} else {
+				controls.stop();
+			}
 		}
-		const view = sprite.view;
-		view.tint = previousSprite.view.tint;
-		view.anchor.copyFrom(previousSprite.view.anchor);
-		view.width = previousSprite.view.width;
-		view.height = previousSprite.view.height;
-		if (view instanceof PIXI.TilingSprite && previousSprite.view instanceof PIXI.TilingSprite) {
-			view.tileScale.copyFrom(previousSprite.view.tileScale);
-			view.tilePosition.copyFrom(previousSprite.view.tilePosition);
-		}
-		if (sprite instanceof ManagedAnimatedSprite && previousSprite instanceof ManagedAnimatedSprite) {
-			sprite.volume = previousSprite.volume;
-			sprite.loop = previousSprite.loop;
-			sprite.playbackRate = previousSprite.playbackRate;
-		}
-	}
-	#applyTextSpriteValues(sprite) {
-		const otherTextSprite = Object.values(this.#managedSprites).find(
-			(s) => s !== sprite && s instanceof ManagedTextSprite
-		);
-		if (!otherTextSprite || !(otherTextSprite instanceof ManagedTextSprite)) {
-			return;
-		}
-		const view = sprite.view;
-		view.anchor = otherTextSprite.view.anchor;
-		view.resolution = otherTextSprite.view.resolution;
-	}
-	#buildTextKey(text) {
-		return `${this.#id}-${text}`;
 	}
 }
 //#endregion

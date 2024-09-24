@@ -1699,9 +1699,9 @@ export default class CanvasEffect extends PIXI.Container {
 			const fontSettings = foundry.utils.deepClone(this.data.text);
 			fontSettings.fontSize = (fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
 			const textSprite = this.sprite.addText({text, textStyle: fontSettings})
-			textSprite.view.zIndex = 1;
+			textSprite.zIndex = 1;
 			const textAnchor = this.data.text.anchor
-			textSprite.view.anchor.set(textAnchor?.x ?? 0.5, textAnchor?.y ?? 0.5);
+			textSprite.anchor.set(textAnchor?.x ?? 0.5, textAnchor?.y ?? 0.5);
 		}
 
 		this.sprite.filters = [];
