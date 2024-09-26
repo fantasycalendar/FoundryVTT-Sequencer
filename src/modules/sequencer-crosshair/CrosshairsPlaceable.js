@@ -62,10 +62,10 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 				const style = CONFIG.canvasTextStyle.clone();
 				style.align = "center";
 				this.#distanceText = this.template.addChild(new PreciseText(distance.toString(), style));
-				const actualHeight = (this.shapeHeight || this.shape.radius * 2) - (canvas.grid.size / 4);
-				this.#distanceText.anchor.set(0.5, 0.5);
-				this.#distanceText.position.set((this.shapeWidth / 2), actualHeight);
 			}
+			const actualHeight = (this.shapeHeight || this.shape.radius) + (canvas.grid.size/2);
+			this.#distanceText.anchor.set(0.5, 0.5);
+			this.#distanceText.position.set((this.shapeWidth / 2), actualHeight);
 			this.#distanceText.text = distance.toString();
 		}
 		this.ruler.renderable = !!this.crosshair.label?.text;
@@ -288,9 +288,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const limitMaxRange = is_real_number(this.crosshair.location.limitMaxRange) ? this.crosshair.location.limitMaxRange : Infinity;
 
 		let finalLocation = mouseLocation;
-		if (gridPath.spaces < limitMinRange) {
+		if (gridPath.cost < limitMinRange) {
 			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMinRange);
-		} else if (gridPath.spaces > limitMaxRange) {
+		} else if (gridPath.cost > limitMaxRange) {
 			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMaxRange);
 		}
 

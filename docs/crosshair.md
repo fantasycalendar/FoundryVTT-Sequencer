@@ -3,124 +3,79 @@
 You can access the global Sequencer crosshair API through:
 
 ```js
-Sequencer.crosshair
+Sequencer.Crosshair
 ```
 
 ## Show
 
-`Sequencer.crosshair.show(crosshair={}, callbacks={})`
+`Sequencer.Crosshair.show(crosshair={}, callbacks={})`
 
 ```js
 crosshair = {
-	distance: String, // The radius of the crosshair
-	borderColor: String, // The color of the border of the crosshair
-	fillColor: String, // The fill color of the crosshair
-  
+	gridHighlight: boolean, // Toggles whether this crosshair should highlight the grid
 	icon: {
-		display: Boolean, // Whether to display the icon
-		texture: String, // If so, which texture to use
+		texture: string, // Optional texture to use for the icon of the crosshair
+    borderVisible: boolean // Whether this icon should have a border
 	},
 	snap: {
-		position: CONST.GRID_SNAPPING_MODES,
-		size: CONST.GRID_SNAPPING_MODES,
-		angle: Number
+		position: number, // See CONST.GRID_SNAPPING_MODES
+		size: number, // See CONST.GRID_SNAPPING_MODES
+    direction: mumber // How many degrees the direction of this crosshair should snap at
 	},
-	distanceMinMax: {
-		min: null | Number,
-		max: null | Number
-	},
+  lockDrag: boolean,
+	distanceMin: null | number, // How small or short the crosshair can be at its smallest 
+  distanceMax: null | number, // How big or how far the crosshair can go at its biggest
 	label: {
-		display: Boolean,
-		text: String,
-		dx: Number,
-		dy: Number,
+		text: string,
+		dx: null | number,
+		dy: null | number,
 	},
-	lockLocation: {
-		location: PlaceableObject | Object,
-		offsetDistance: Number,
-		edge: Boolean
+	location: {
+    obj: null | PlaceableObject | Document, // The optional object to tie the crosshair to
+    limitMinRange: null | number, // Causes the crosshair to not be able to be placed within this number of grid units
+    limitMaxRange: null | number, // Causes the crosshair to not be able to be placed beyond this number of grid units of the location 
+    showRange: boolean, // Displays the distance between the crosshair and the location in grid units under the crosshair
+    lockToEdge: boolean, // Whether to lock the crosshair to the edge of the target (mostly used with tokens)
+    lockToEdgeDirection: boolean, // Causes the crosshair to be locked along the normal of the token's edge (and corner, in the case of square tokens)
+    offset: {
+			x: null | number,
+        y: null | number
+    }, // Causes the location to be offset by this many pixels
+		wallBehavior: string // Causes the crosshair to be unable to be placed based on this configuration, eg only within sight, or no walls at all between crosshair and location, or anywhere. See Sequencer.Crosshair.PLACEMENT_RESTRICTIONS
 	},
-	lockManualRotation: boolean,
-	textureTile: Number,
+	lockManualRotation: boolean // Whether to prevent the user from rotating this crosshair's direction
 }
   
-callbacks = { 
-  show: Function,
-  move: Function
+
+// For callbacks, see `Sequencer.Crosshair.CALLBACKS`
+callbacks = {
+	[Sequencer.Crosshair.CALLBACKS.SHOW / "show"]: function,
+	[Sequencer.Crosshair.CALLBACKS.MOUSE_MOVE / "mouseMove"]: function,
+	[Sequencer.Crosshair.CALLBACKS.MOVE / "move"]: function,
+	[Sequencer.Crosshair.CALLBACKS.COLLIDE / "collide"]: function,
+	[Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT / "invalidPlacement"]: function,
+	[Sequencer.Crosshair.CALLBACKS.PLACED / "placed"]: function,
+	[Sequencer.Crosshair.CALLBACKS.CANCEL / "cancel"]: function,
 }
 ```
 
 <details>
   <summary><strong>------ Click for examples ------</strong></summary><br />
 
+Creates a crosshair that returns a position when placed:
 ```js
-// Creates a crosshair that returns a position when placed
 const location = await Sequencer.crosshair.show();
+````
 
-// Creates a crosshair that returns a position when placed
+Creates a crosshair that returns a position when placed, that can only be placed within 20 grid units of the selected token
+```js
 const location = await Sequencer.crosshair.show({
-  
+  location: {
+		obj: token,
+	  limitMaxRange: 20
+  }
 });
 ```
 <strong>--------------------------------</strong>
 
 </details>
-
-This will return any sound(s) that match the given filters.
-
-## End Sounds
-
-`Sequencer.SoundManager.endSounds(inFilters)`
-
-```js
-inFilters = {
-  name: String, // From the .name() method on sounds, can have wildcards in them (such as "fireball_*" to match anything that starts with "fireball_")
-  sounds: Sound | String,  // The actual sound, or an ID of an sound
-  sceneId: String, // Default to current scene ID
-  origin: String, // From the .origin() method on effects
-};
-```
-
-<details>
-  <summary><strong>------ Click for examples ------</strong></summary><br />
-
-```js
-
-// Ends every sound named "test_sound"
-await Sequencer.SoundManager.endSounds({ name: "test_sound" })
-
-// Ends sounds that have "test" in their name
-await Sequencer.SoundManager.endSounds({ name: "*test*" })
-
-```
-<strong>--------------------------------</strong>
-
-</details>
-
-Functionally the same as `getSounds`, except this instead ends any sound(s) that match the given filters.
-
-You can only end sounds you created, unless you are a GM.
-
-## End All Sounds
-
-`Sequencer.SoundManager.endAllSounds(inSceneId)`
-
-<details>
-  <summary><strong>------ Click for examples ------</strong></summary><br />
-
-```js
-
-// Ends all sounds in the current scene
-await Sequencer.SoundManager.endAllSounds()
-
-// Ends all sounds in the scene with the ID of "ULohafjBlsTRST8F"
-await Sequencer.SoundManager.endAllSounds("ULohafjBlsTRST8F")
-
-```
-<strong>--------------------------------</strong>
-
-</details>
-
-This will end _all_ sounds on the current scene (if no scene ID is provided), or on the given scene.
-
-This is a GM only method.

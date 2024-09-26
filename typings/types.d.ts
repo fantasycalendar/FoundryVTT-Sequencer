@@ -1068,46 +1068,85 @@ declare abstract class CrosshairSection {
 	}): this;
 
 	/**
-	 * Sets how the position of the crosshair should snap
+	 * Sets how the position of the crosshair should snap on the grid
 	 */
 	snapPosition(inSnap: number): this;
 
+	/**
+	 * Sets the distance for the crosshair - or radius for a circular crosshair
+	 */
 	distance(inDistance: number, inOptions: {
 		min?: number;
 		max?: number;
 	}): this;
 
+	/**
+	 * Configures the angle of the crosshair - mostly used for the width of cone crosshairs
+	 */
 	angle(inAngle: number): this;
 
+	/**
+	 * Configures the direction degrees for the crosshair - mostly used for cone and ray crosshairs
+	 */
+	direction(inDirection: number): this;
+
+	/**
+	 * Configures the  increments the direction should snap along
+	 */
 	snapDirection(inSnapDirection: number): this;
 
+	/**
+	 * Toggles whether the crosshair can be manually rotated
+	 */
 	lockManualRotation(inBool: boolean): this;
 
+	/**
+	 * Toggles whether the crosshair's end position can be dragged
+	 * @param inBool
+	 */
 	lockDrag(inBool: boolean): this;
 
+	/**
+	 * Configures the custom icon to be used on the crosshair
+	 */
 	icon(inTexture: string, inOptions: {
 		borderVisible?: boolean;
 	}): this;
 
+	/**
+	 * Sets the border color of the crosshair
+	 */
 	borderColor(inColor: HEX | number): this;
 
+	/**
+	 * Sets the fill color of the crosshair
+	 */
 	fillColor(inColor: HEX | number): this;
 
+	/**
+	 * Configures the source location of the crosshair, usually to limit it around the target placeable object, or to
+	 * cause it to be limited within a certain range of the placeable object
+	 */
 	location(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
 		limitMinRange?: null | number;
 		limitMaxRange?: null | number;
 		showRange?: boolean;
 		lockToEdge?: boolean;
 		lockToEdgeDirection?: boolean;
-		lockOffsetDistance?: boolean;
 		offset?: {
 			x?: number;
 			y?: number;
 		}
 	}): this;
 
+	/**
+	 * Causes the crosshair to spawn a measurable template identical to the crosshair
+	 */
 	persist(inBool: boolean): this;
 
+	/**
+	 * Toggles whether this crosshair should highlight the grid
+	 */
 	gridHighlight(inBool: boolean): this;
 
 }

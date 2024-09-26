@@ -52,12 +52,10 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 				showRange: false,
 				lockToEdge: false,
 				lockToEdgeDirection: false,
-				lockOffsetDistance: 0,
 				offset: { x: 0, y: 0 },
 				wallBehavior: CONSTANTS.PLACEMENT_RESTRICTIONS.ANYWHERE
 			},
-			lockManualRotation: false,
-			textureTile: 0,
+			lockManualRotation: false
 		})
 	};
 
