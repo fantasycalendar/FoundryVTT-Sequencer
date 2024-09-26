@@ -61,6 +61,18 @@ Creates a sound section. Until you call any of the [core methods](#sequencer-cor
 
 Creates a scrolling text section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the scrolling text section.
 
+### Canvas Pan
+
+`.canvasPan()`
+
+Creates a canvas pan section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the canvas pan section.
+
+### Crosshair
+
+`.crosshair()` or `.crosshair("target)`
+
+Creates a crosshair section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the crosshair section.
+
 ### Then do
 
 ```js
