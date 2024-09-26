@@ -27,7 +27,27 @@ type Size = {
   height: number;
 };
 
-type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
+type HEX = `#${string}`;
+
+type SnappingOptions = {
+	CENTER: 1,
+	EDGE_MIDPOINT: 2,
+	TOP_LEFT_VERTEX: 16,
+	TOP_RIGHT_VERTEX: 32,
+  BOTTOM_LEFT_VERTEX: 64,
+	BOTTOM_RIGHT_VERTEX: 128,
+	VERTEX: 240,
+	TOP_LEFT_CORNER: 256,
+	TOP_RIGHT_CORNER: 512,
+	BOTTOM_LEFT_CORNER: 1024,
+	BOTTOM_RIGHT_CORNER: 2048,
+	CORNER: 3840,
+	TOP_SIDE_MIDPOINT: 4096,
+	BOTTOM_SIDE_MIDPOINT: 8192,
+	LEFT_SIDE_MIDPOINT: 16384,
+	RIGHT_SIDE_MIDPOINT: 32768,
+	SIDE_MIDPOINT: 61440,
+}
 
 type VisibleFoundryTypes =
   | Token
@@ -38,6 +58,66 @@ type VisibleFoundryTypes =
   | DrawingDocument
   | MeasuredTemplate
   | MeasuredTemplateDocument;
+
+type TemplateData = {
+  angle: number,
+  t: string,
+  texture: object,
+  x: number,
+  y: number,
+  elevation: number,
+  distance: number,
+  fillColor: string,
+  borderColor: string,
+	direction: number,
+  parent: Scene
+}
+
+type CrosshairsData = {
+  icon: {
+    texture: string,
+	  borderVisible: boolean
+  },
+  snap: {
+    position: SnappingOptions,
+    size: SnappingOptions,
+    angle: number
+  },
+	lockDrag: boolean,
+  distanceMin: null | number,
+  distanceMax: null | number,
+  label: {
+    text: string,
+    dx: number,
+    dy: number,
+  },
+  location: {
+    obj: null | VisibleFoundryTypes,
+	  limitMinRange: number | null,
+	  limitMaxRange: number | null,
+	  showRange: boolean,
+    lockToEdge: boolean,
+	  lockToEdgeDirection: boolean,
+	  lockOffsetDistance: number | null,
+	  offset: {
+			x: number,
+		  y: number
+		}
+  },
+  lockManualRotation: boolean,
+  textureTile: number,
+};
+
+declare interface CrosshairData extends
+  TemplateData,
+  CrosshairsData {}
+
+type CrosshairCallbackData = {
+  show: Function,
+  move: Function,
+}
+
+type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
 
 declare class CoreMethods {
   /**
@@ -88,6 +168,11 @@ declare class CoreMethods {
     inDuration?: number,
     inSpeed?: number
   ): CanvasPanSection;
+
+  /**
+   * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
+   */
+  crosshair(inName?: string): CrosshairSection;
 
   /**
    * Adds the sections from a given Sequence to this Sequence
@@ -321,7 +406,7 @@ declare abstract class HasTint<T> {
   /**
    * Tints the target of this section by the color given to the
    */
-  tint(inColor: number | string): T;
+  tint(inColor: number | HEX): T;
 }
 
 declare abstract class HasUsers<T> {
@@ -623,11 +708,11 @@ declare abstract class EffectSection {
       points?: Array<[number, number] | { x: number; y: number }>;
       gridUnits?: boolean;
       name?: string;
-      fillColor?: string | number;
+      fillColor?: HEX | number;
       fillAlpha?: number;
       alpha?: number;
       lineSize?: number;
-      lineColor?: string | number;
+      lineColor?: HEX | number;
       offset?: {
         x?: number;
         y?: number;
@@ -962,6 +1047,110 @@ declare abstract class CanvasPanSection {
   }): this;
 }
 
+declare interface CrosshairSection
+  extends CoreMethods,
+    Section<CrosshairSection>,
+    HasName<EffectSection>{}
+
+declare abstract class CrosshairSection {
+
+	/**
+	 * Sets the type of MeasurableTemplate to create, see CONST.MEASURED_TEMPLATE_TYPES
+	 */
+	type(inType: string): this;
+
+	/**
+	 * Sets a custom label to be set as a part of this crosshair
+	 */
+	label(inText: string, inOptions: {
+		dx?: number;
+		dy?: number;
+	}): this;
+
+	/**
+	 * Sets how the position of the crosshair should snap on the grid
+	 */
+	snapPosition(inSnap: number): this;
+
+	/**
+	 * Sets the distance for the crosshair - or radius for a circular crosshair
+	 */
+	distance(inDistance: number, inOptions: {
+		min?: number;
+		max?: number;
+	}): this;
+
+	/**
+	 * Configures the angle of the crosshair - mostly used for the width of cone crosshairs
+	 */
+	angle(inAngle: number): this;
+
+	/**
+	 * Configures the direction degrees for the crosshair - mostly used for cone and ray crosshairs
+	 */
+	direction(inDirection: number): this;
+
+	/**
+	 * Configures the  increments the direction should snap along
+	 */
+	snapDirection(inSnapDirection: number): this;
+
+	/**
+	 * Toggles whether the crosshair can be manually rotated
+	 */
+	lockManualRotation(inBool: boolean): this;
+
+	/**
+	 * Toggles whether the crosshair's end position can be dragged
+	 * @param inBool
+	 */
+	lockDrag(inBool: boolean): this;
+
+	/**
+	 * Configures the custom icon to be used on the crosshair
+	 */
+	icon(inTexture: string, inOptions: {
+		borderVisible?: boolean;
+	}): this;
+
+	/**
+	 * Sets the border color of the crosshair
+	 */
+	borderColor(inColor: HEX | number): this;
+
+	/**
+	 * Sets the fill color of the crosshair
+	 */
+	fillColor(inColor: HEX | number): this;
+
+	/**
+	 * Configures the source location of the crosshair, usually to limit it around the target placeable object, or to
+	 * cause it to be limited within a certain range of the placeable object
+	 */
+	location(inLocation: VisibleFoundryTypes | Vector2 | string, inOptions?: {
+		limitMinRange?: null | number;
+		limitMaxRange?: null | number;
+		showRange?: boolean;
+		lockToEdge?: boolean;
+		lockToEdgeDirection?: boolean;
+		offset?: {
+			x?: number;
+			y?: number;
+		}
+	}): this;
+
+	/**
+	 * Causes the crosshair to spawn a measurable template identical to the crosshair
+	 */
+	persist(inBool: boolean): this;
+
+	/**
+	 * Toggles whether this crosshair should highlight the grid
+	 */
+	gridHighlight(inBool: boolean): this;
+
+}
+
 declare abstract class SequencerFile {}
 
 declare abstract class SequencerDatabase {
@@ -1187,6 +1376,29 @@ declare abstract class SequencerSoundManager {
 
 }
 
+declare abstract class SequencerCrosshair {
+
+	/**
+	 * Show a configurable crosshair
+	 */
+  show(crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
+
+	/**
+	 * Show a configurable crosshair based a foundry PlaceableObject
+	 */
+	showToken(obj: VisibleFoundryTypes, crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
+
+  /**
+   * Collect overlapping placeable objects of a crosshair of a given placeable type
+   */
+  collect(
+    crosshair?: CrosshairData,
+    types?: String | Array<string>,
+    filterMethod?: Function
+  ): Array<Document>;
+
+}
+
 declare abstract class SequencerPresets {
   /**
    * Adds a preset that can then be used in sequences through .preset()
@@ -1218,6 +1430,7 @@ declare namespace Sequencer {
   const SectionManager: SequencerSectionManager;
   const EffectManager: SequencerEffectManager;
   const SoundManager: SequencerSoundManager;
+  const Crosshair: SequencerCrosshair;
   function registerEase(
     easeName: string,
     easeFunction: Function,

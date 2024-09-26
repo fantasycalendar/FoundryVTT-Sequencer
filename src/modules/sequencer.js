@@ -12,6 +12,7 @@ import SequenceManager from "./sequence-manager.js";
 import { get, writable } from "svelte/store";
 import CONSTANTS from "../constants.js";
 import WaitSection from "../sections/wait.js";
+import CrosshairSection from "../sections/crosshair.js";
 
 export default class Sequence {
 	constructor(
@@ -79,7 +80,7 @@ export default class Sequence {
 				continue;
 			}
 			if (!section._isLastSection) {
-				await new Promise((resolve) => setTimeout(resolve, 1));
+				await new Promise((resolve) => setTimeout(resolve, 3));
 			}
 		}
 
@@ -162,9 +163,14 @@ export default class Sequence {
 				this,
 				async () => {
 					if (compendium) {
-						const macroData = (await compendium.getDocuments())
-							.find((i) => i.name === macro[3])
-							?.toObject();
+						const macroIndex = (await compendium.getIndex())
+							.find((i) => {
+								if(macro[3] === "Macro"){
+									return macro[4] === i._id;
+								}
+								return i.name === macro[3]
+							});
+						const macroData = macroIndex ? (await compendium.getDocument(macroIndex?._id)) : false;
 						if (!macroData) {
 							if (this.softFail) {
 								return;
@@ -178,38 +184,50 @@ export default class Sequence {
 						macro.ownership.default = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
 					}
 
-					await macro.execute(args);
-				},
-				true
-			)
-		);
-		this.sections.push(func);
-		return this;
-	}
+          await macro.execute(args);
+        },
+        true
+      )
+    );
+    this.sections.push(func);
+    return this;
+  }
+
+  /**
+   * Creates an effect section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Effect section.
+   *
+   * @param {string} [inFile] inFile
+   * @returns {Section}
+   */
+  effect(inFile = "") {
+    const effect = lib.section_proxy_wrap(new EffectSection(this, inFile));
+    this.sections.push(effect);
+    return effect;
+  }
 
 	/**
-	 * Creates an effect section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Effect section.
+	 * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
 	 *
-	 * @param {string} [inFile] inFile
+	 * @param {string} [inName] inName
 	 * @returns {Section}
 	 */
-	effect(inFile = "") {
-		const effect = lib.section_proxy_wrap(new EffectSection(this, inFile));
-		this.sections.push(effect);
-		return effect;
+	crosshair(inName = "") {
+		const crosshair = lib.section_proxy_wrap(new CrosshairSection(this, inName));
+		this.sections.push(crosshair);
+		return crosshair;
 	}
 
-	/**
-	 * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
-	 *
-	 * @param {string} [inFile] inFile
-	 * @returns {Section}
-	 */
-	sound(inFile = "") {
-		const sound = lib.section_proxy_wrap(new SoundSection(this, inFile));
-		this.sections.push(sound);
-		return sound;
-	}
+  /**
+   * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
+   *
+   * @param {string} [inFile] inFile
+   * @returns {Section}
+   */
+  sound(inFile = "") {
+    const sound = lib.section_proxy_wrap(new SoundSection(this, inFile));
+    this.sections.push(sound);
+    return sound;
+  }
 
 	/**
 	 * Creates an animation. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Animation section.

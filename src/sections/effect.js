@@ -7,6 +7,8 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../utils/flag-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 
 export default class EffectSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -2270,6 +2272,10 @@ export default class EffectSection extends Section {
 	 */
 	_getSourceObject() {
 		if (!this._source || typeof this._source !== "object") return this._source;
+		if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
+			const doc = this._source?.document ?? this._source;
+			return doc.getOrientation().source;
+		}
 		if (this._source?.cachedLocation || !this._attachTo) {
 			return canvaslib.get_object_canvas_data(this._source, { uuid: false });
 		}
@@ -2285,6 +2291,11 @@ export default class EffectSection extends Section {
 	_getTargetObject() {
 		if (!this._target?.target) return this._target;
 		if (typeof this._target.target !== "object") return this._target.target;
+		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
+			const doc = this._target?.target?.document ?? this._target?.target;
+			const orientation = doc.getOrientation();
+			return orientation.target ?? orientation.source;
+		}
 		if (
 			this._target?.target?.cachedLocation ||
 			!(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)

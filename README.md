@@ -61,6 +61,7 @@ To start running this module locally and developing for it, you will need to run
 ### Feedback and amazing help
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
+* honeybadger (badgerweks on discord) for getting me up to speed with all things crosshairs!
 * ghost (ghost#2000 on discord) for his fixes to the audio sections
 * Kandashi (Kandashi#6698 on discord) for the inspiration and code of persistent effects
 * Naito (Naito#1235 on discord) for his assistance with improving the Database Viewer's speed
