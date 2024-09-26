@@ -2293,7 +2293,8 @@ export default class EffectSection extends Section {
 		if (typeof this._target.target !== "object") return this._target.target;
 		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
 			const doc = this._target?.target?.document ?? this._target?.target;
-			return doc.getOrientation().target;
+			const orientation = doc.getOrientation();
+			return orientation.target ?? orientation.source;
 		}
 		if (
 			this._target?.target?.cachedLocation ||

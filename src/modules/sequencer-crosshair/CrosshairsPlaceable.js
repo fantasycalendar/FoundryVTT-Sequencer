@@ -29,12 +29,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this.document.callbacks;
 	}
 
-	get shapeWidth() {
-		return this.shape.width ?? 0;
-	}
-
-	get shapeHeight() {
-		return this.shape.height ?? 0;
+	get range(){
+		const objLocation = this.crosshair.location.obj?.center ?? this.crosshair.location.obj;
+		return canvas.grid.measurePath([objLocation, this.position]).distance;
 	}
 
 	async #refreshIcon() {
@@ -50,19 +47,19 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	}
 
 	_refreshRulerText() {
+		const shapeWidth = this.shape.width ?? 0;
+		const shapeHeight = this.shape.height ?? 0;
 		if (this.crosshair.location.showRange && this.crosshair.location.obj) {
-			const { units } = this.document.parent.grid;
-			const objLocation = this.crosshair.location.obj?.center ?? this.crosshair.location.obj;
-			const distance = canvas.grid.measurePath([objLocation, this.position]).distance + " " + units;
 			if (!this.#distanceText && this.crosshair.location.obj) {
 				const style = CONFIG.canvasTextStyle.clone();
 				style.align = "center";
-				this.#distanceText = this.template.addChild(new PreciseText(distance.toString(), style));
+				this.#distanceText = this.template.addChild(new PreciseText("", style));
 			}
 			const actualHeight = (this.shapeHeight || this.shape.radius) + (canvas.grid.size / 2);
 			this.#distanceText.anchor.set(0.5, 0.5);
-			this.#distanceText.position.set((this.shapeWidth / 2), actualHeight);
-			this.#distanceText.text = distance.toString();
+			this.#distanceText.position.set((shapeWidth / 2), actualHeight);
+			const { units } = this.document.parent.grid;
+			this.#distanceText.text = this.range.toString() + " " + units;
 		}
 		this.ruler.renderable = !!this.crosshair.label?.text;
 		if (!this.ruler.renderable) return;
@@ -74,7 +71,10 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			}
 			if (this.#customText.text !== this.crosshair.label.text) this.#customText.text = this.crosshair.label.text;
 			this.#customText.anchor.set(0.5);
-			this.#customText.position.set((this.shapeWidth / 2) + this.crosshair.label.dx ?? 0, (this.shapeHeight / 2) + this.crosshair.label.dy ?? 0);
+			this.#customText.position.set(
+				(shapeWidth / 2) + this.crosshair.label.dx ?? 0,
+				(shapeHeight / 2) + this.crosshair.label.dy ?? 0
+			);
 		} else {
 			if (this.#customText) {
 				this.#customText.text = "";
