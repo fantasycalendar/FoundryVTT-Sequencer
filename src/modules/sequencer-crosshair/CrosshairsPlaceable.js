@@ -37,7 +37,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this.shape.height ?? 0;
 	}
 
-	#refreshIcon() {
+	async #refreshIcon() {
 		this.controlIcon.renderable = !!this.crosshair.icon.texture;
 		if (this.crosshair.icon.texture) {
 			this.controlIcon.iconSrc = this.crosshair.icon.texture;
