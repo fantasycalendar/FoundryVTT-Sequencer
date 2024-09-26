@@ -15,11 +15,13 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 		super(config, context);
 		this.crosshair = foundry.utils.mergeObject(CrosshairsDocument.defaultConfig, crosshair);
 		this.callbacks = callbacks;
+		this.originalConfig = foundry.utils.deepClone(config);
 	}
 
 	crosshair = {};
 	#layer = null;
 	cachedPosition = null;
+	originalConfig = {};
 
 	static get placeableClass() {
 		return CrosshairsPlaceable;

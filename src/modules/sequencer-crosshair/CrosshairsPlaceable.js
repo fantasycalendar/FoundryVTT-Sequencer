@@ -29,9 +29,15 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this.document.callbacks;
 	}
 
-	async draw() {
-		await super.draw();
+	get shapeWidth() {
+		return this.shape.width ?? 0;
+	}
 
+	get shapeHeight() {
+		return this.shape.height ?? 0;
+	}
+
+	#refreshIcon() {
 		this.controlIcon.renderable = !!this.crosshair.icon.texture;
 		if (this.crosshair.icon.texture) {
 			this.controlIcon.iconSrc = this.crosshair.icon.texture;
@@ -41,16 +47,6 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		if (!this.crosshair.icon.borderVisible) {
 			this.controlIcon.bg.clear();
 		}
-
-		return this;
-	}
-
-	get shapeWidth() {
-		return this.shape.width ?? 0;
-	}
-
-	get shapeHeight() {
-		return this.shape.height ?? 0;
 	}
 
 	_refreshRulerText() {
@@ -63,7 +59,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 				style.align = "center";
 				this.#distanceText = this.template.addChild(new PreciseText(distance.toString(), style));
 			}
-			const actualHeight = (this.shapeHeight || this.shape.radius) + (canvas.grid.size/2);
+			const actualHeight = (this.shapeHeight || this.shape.radius) + (canvas.grid.size / 2);
 			this.#distanceText.anchor.set(0.5, 0.5);
 			this.#distanceText.position.set((this.shapeWidth / 2), actualHeight);
 			this.#distanceText.text = distance.toString();
@@ -116,7 +112,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.layer.addChild(this);
 		this.oldInteractiveChildren = this.layer.interactiveChildren;
 		this.layer.interactiveChildren = false;
-		this.updateLocation();
+		this.#updateLocation();
 		this.#runCallback(CONSTANTS.CALLBACKS.SHOW, this);
 		return this.activateShowListeners();
 	}
@@ -124,9 +120,9 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	async activateShowListeners() {
 		return new Promise((resolve) => {
 			this.#promise.resolve = resolve;
-			this.#handlers.move = this._onMove.bind(this);
-			this.#handlers.mouseup = this._onMouseUp.bind(this);
-			this.#handlers.wheel = this._onWheel.bind(this);
+			this.#handlers.move = this.#onMove.bind(this);
+			this.#handlers.mouseup = this.#onMouseUp.bind(this);
+			this.#handlers.wheel = this.#onWheel.bind(this);
 			// Canvas.stage.removeAllListeners();
 			canvas.stage.on("mousemove", this.#handlers.move);
 			canvas.stage.on("pointerup", this.#handlers.mouseup);
@@ -134,19 +130,11 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		});
 	}
 
-	get locationObj(){
-		return this.crosshair.location.obj.object ?? this.crosshair.location.obj;
-	}
-
-	get locationObjDocument(){
-		return this.crosshair.location.obj.document ?? this.crosshair.location.obj;
-	}
-
 	getSnappedPoint(point, mode = this.crosshair.snap.position) {
 		return canvas.grid.getSnappedPoint(point, { mode, resolution: 1 });
 	}
 
-	_onMove(evt) {
+	#onMove(evt) {
 
 		const now = Date.now();
 		const leftDown = (evt.buttons & 1) > 0;
@@ -165,20 +153,20 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		// Apply a 20ms throttle
 		if (now - this.moveTime <= 20) return;
 
-		const moved = this.updateLocation();
+		const moved = this.#updateLocation();
 
 		this.#runCallback(CONSTANTS.CALLBACKS.MOUSE_MOVE, this);
-		if(moved) this.#runCallback(CONSTANTS.CALLBACKS.MOVE, this);
+		if (moved) this.#runCallback(CONSTANTS.CALLBACKS.MOVE, this);
 
-		this.updateLineOfSight();
+		this.#updateLineOfSight();
 
 		this.refresh();
 		this.moveTime = now;
 	}
 
-	updateLineOfSight() {
+	#updateLineOfSight() {
 
-		if(!this.crosshair.location?.obj || this.crosshair.location?.wallBehavior === CONSTANTS.PLACEMENT_RESTRICTIONS.ANYWHERE) return;
+		if (!this.crosshair.location?.obj || this.crosshair.location?.wallBehavior === CONSTANTS.PLACEMENT_RESTRICTIONS.ANYWHERE) return;
 
 		const object = this.crosshair.location.obj;
 		const objLocation = {
@@ -197,23 +185,26 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			tgt: location
 		}
 
-		if(exitEarly) return;
+		if (exitEarly) return;
 
 		const type = this.crosshair.location?.wallBehavior === CONSTANTS.PLACEMENT_RESTRICTIONS.LINE_OF_SIGHT
 			? "sight"
 			: "move";
 
-		const collisions = CONFIG.Canvas.polygonBackends.sight.testCollision(objLocation, location, { type, useThreshold: true });
+		const collisions = CONFIG.Canvas.polygonBackends.sight.testCollision(objLocation, location, {
+			type,
+			useThreshold: true
+		});
 
 		this.isValid = !collisions.length;
 
-		if(collisions.length) this.#runCallback(CONSTANTS.CALLBACKS.COLLIDE, this, collisions);
+		if (collisions.length) this.#runCallback(CONSTANTS.CALLBACKS.COLLIDE, this, collisions);
 
 	}
 
-	handleLockedEdge(mouseLocation) {
+	#handleLockedEdge(mouseLocation) {
 
-		let snappedMouseLocation = this.getSnappedPoint(mouseLocation, CONST.GRID_SNAPPING_MODES.CENTER);
+		let snappedMouseLocation = this.#getSnappedPoint(mouseLocation, CONST.GRID_SNAPPING_MODES.CENTER);
 		const { lockToEdgeDirection } = this.crosshair.location;
 
 		const placeable = this.crosshair.location.obj;
@@ -237,7 +228,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		if (!intersection) return {};
 
-		let snappedIntersection = this.getSnappedPoint(intersection, CONST.GRID_SNAPPING_MODES.EDGE_MIDPOINT);
+		let snappedIntersection = this.#getSnappedPoint(intersection, CONST.GRID_SNAPPING_MODES.EDGE_MIDPOINT);
 
 		if (canvas.scene.grid.type === CONST.GRID_TYPES.SQUARE) {
 			const size = this.document.parent.grid.size;
@@ -266,12 +257,12 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 		if (lockToEdgeDirection) {
 			const lockedRay = Ray.towardsPoint(snappedIntersection, snappedMouseLocation, 2)
-			const snappedDirection = this.getSnappedPoint(lockedRay.B, CONST.GRID_SNAPPING_MODES.CENTER)
+			const snappedDirection = this.#getSnappedPoint(lockedRay.B, CONST.GRID_SNAPPING_MODES.CENTER)
 			snappedMouseLocation.x = snappedDirection.x;
 			snappedMouseLocation.y = snappedDirection.y;
 		}
 
-		const { direction, distance } = this._getDraggedMatrix(snappedIntersection, snappedMouseLocation);
+		const { direction, distance } = this.#getDraggedMatrix(snappedIntersection, snappedMouseLocation);
 
 		return {
 			...snappedIntersection, direction, distance
@@ -279,7 +270,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	}
 
-	handleLimit(mouseLocation, targetLocation) {
+	#handleLimit(mouseLocation, targetLocation) {
 
 		const ray = new Ray(targetLocation, mouseLocation);
 		const gridPath = canvas.grid.measurePath([targetLocation, mouseLocation]);
@@ -294,8 +285,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			finalLocation = canvas.grid.getTranslatedPoint(targetLocation, Math.toDegrees(ray.angle), limitMaxRange);
 		}
 
-		const snappedPosition = this.getSnappedPoint(finalLocation);
-		const { direction, distance } = this._getDraggedMatrix(targetLocation, snappedPosition);
+		const snappedPosition = this.#getSnappedPoint(finalLocation);
+		const { direction, distance } = this.#getDraggedMatrix(targetLocation, snappedPosition);
 
 		return {
 			...snappedPosition, direction, distance
@@ -303,7 +294,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	}
 
-	updateLocation() {
+	#updateLocation() {
 
 		let mouseLocation = get_mouse_position();
 
@@ -321,16 +312,16 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			};
 
 			if (this.crosshair.location.lockToEdge) {
-				update = this.handleLockedEdge(mouseLocation);
+				update = this.#handleLockedEdge(mouseLocation);
 			} else if (this.crosshair.location.limitMinRange || this.crosshair.location.limitMaxRange) {
-				update = this.handleLimit(mouseLocation, targetLocation);
+				update = this.#handleLimit(mouseLocation, targetLocation);
 			}
 
 		} else if (this.isDrag) {
-			const { direction, distance } = this._getDraggedMatrix(this.document, mouseLocation);
+			const { direction, distance } = this.#getDraggedMatrix(this.document, mouseLocation);
 			update = { distance, direction };
 		} else {
-			const snappedPosition = this.getSnappedPoint(mouseLocation);
+			const snappedPosition = this.#getSnappedPoint(mouseLocation);
 			update = {
 				x: snappedPosition.x, y: snappedPosition.y
 			};
@@ -343,27 +334,32 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return isChanged;
 	}
 
-	_getDraggedMatrix(source, target) {
+	#getDistance(dragDistance) {
+		if (this.crosshair.distanceMin === null && this.crosshair.distanceMax === null){
+			return this.document.distance;
+		}
+		const min = this.crosshair.distanceMin ?? this.document.originalConfig.distance;
+		const max = this.crosshair.distanceMax ?? this.document.originalConfig.distance;
+		return Math.min(Math.max(0.5, dragDistance, min), max);
+	}
+
+	#getDraggedMatrix(source, target) {
 
 		const dragAngle = (new Ray(source, target)).angle;
 		const dragDistance = canvas.grid.measurePath([source, target]);
 
-		let distance = Math.max(0.5, dragDistance.distance);
-
-		if (this.crosshair.distanceMin && this.crosshair.distanceMax) {
-			distance = Math.min(Math.max(distance, this.crosshair.distanceMin), this.crosshair.distanceMax);
-		}
-
-		const direction = this.crosshair.snap.direction ? Math.round(Math.toDegrees(dragAngle) / this.crosshair.snap.direction) * this.crosshair.snap.direction : Math.toDegrees(dragAngle);
+		const direction = this.crosshair.snap.direction
+			? Math.round(Math.toDegrees(dragAngle) / this.crosshair.snap.direction) * this.crosshair.snap.direction
+			: Math.toDegrees(dragAngle);
 
 		return {
 			direction: direction || 0,
-			distance: this.crosshair.distanceMin || this.crosshair.distanceMax ? this.document.distance : distance
+			distance: this.#getDistance(dragDistance.distance)
 		};
 
 	}
 
-	_onMouseUp(evt) {
+	#onMouseUp(evt) {
 		const event = evt?.nativeEvent ?? evt;
 		if (!(event.which === 1 || event.which === 3)) return;
 		if (this.isDrag) {
@@ -374,39 +370,33 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			this.isPanning = false;
 			return;
 		}
-		return event.which === 1 ? this._onConfirm() : this._onCancel();
+		return event.which === 1 ? this.#onConfirm() : this.#onCancel();
 	}
 
-	_onConfirm() {
+	#onConfirm() {
 		const position = this.document.getOrientation();
-		if(!this.isValid){
+		if (!this.isValid) {
 			this.#runCallback(CONSTANTS.CALLBACKS.INVALID_PLACEMENT, position);
 			return;
 		}
 		const placedCallback = this.#runCallback(CONSTANTS.CALLBACKS.PLACED, position);
-		if(placedCallback === false) return;
+		if (placedCallback === false) return;
 		this.#promise.resolve(this.document);
 		this.destroy();
 	}
 
-	_onCancel() {
+	#onCancel() {
 		this.#runCallback(CONSTANTS.CALLBACKS.CANCEL);
 		this.#promise.resolve(false);
 		this.destroy();
 	}
 
 	#runCallback(name, ...params) {
-		if(!this.callbacks[name]) return;
+		if (!this.callbacks[name]) return;
 		return this.callbacks[name](...params);
 	}
 
-	/** @override */
-	_destroy(options = {}) {
-		super._destroy(options);
-		this._clearHandlers();
-	}
-
-	_clearHandlers() {
+	#clearHandlers() {
 		this.layer.interactiveChildren = this.oldInteractiveChildren;
 		if (this.newDrawing) this.newDrawing.destroy();
 		canvas.stage.off("mousemove", this.#handlers.move);
@@ -414,15 +404,15 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		canvas.app.view.onwheel = null;
 	}
 
-	_onWheel(evt) {
+	#onWheel(evt) {
 
 		if (!evt.altKey && !evt.ctrlKey && !evt.shiftKey) return;
 
 		evt.stopPropagation();
 
-		if (evt.shiftKey) this.updateDirection(evt)
+		if (evt.shiftKey) this.#updateDirection(evt)
 
-		if (evt.altKey) this.updateDistance(evt);
+		if (evt.altKey) this.#updateDistance(evt);
 
 		if (evt.ctrlKey) {
 			// TODO widen
@@ -431,19 +421,16 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.refresh();
 	}
 
-	updateDistance(evt) {
-		/* Scroll up = bigger */
+	#updateDistance(evt) {
 		const step = (this.document.parent.grid.distance / 2);
 		const delta = step * Math.sign(-evt.deltaY);
 		let distance = this.document.distance + delta;
 		distance = Math.max(0.5, distance.toNearest(step));
-		if (this.crosshair.distanceMin && this.crosshair.distanceMax) {
-			distance = Math.min(Math.max(distance, this.crosshair.distanceMin), this.crosshair.distanceMax);
-		}
+		distance = this.#getDistance(distance)
 		this.document.updateSource({ distance });
 	}
 
-	updateDirection(evt) {
+	#updateDirection(evt) {
 		if (this.crosshair.lockManualRotation) return;
 		const scrollDelta = Math.sign(evt.deltaY);
 		let delta = this.crosshair.snap.direction ? this.crosshair.snap.direction * scrollDelta : scrollDelta * 5;
@@ -453,8 +440,22 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.document.updateSource({ direction });
 	}
 
+	/** @override */
 	_getGridHighlightPositions() {
 		if (!this.crosshair.gridHighlight) return [];
 		return super._getGridHighlightPositions();
+	}
+
+	/** @override */
+	_destroy(options = {}) {
+		super._destroy(options);
+		this.#clearHandlers();
+	}
+
+	/** @override */
+	async draw() {
+		await super.draw();
+		this.#refreshIcon();
+		return this;
 	}
 }
