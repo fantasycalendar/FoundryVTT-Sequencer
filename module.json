@@ -34,7 +34,12 @@
       "lang": "es",
       "name": "Español",
       "path": "languages/es-ES.json"
-    }
+    },
+    {
+      "lang": "pl",
+      "name": "Polski",
+      "path": "languages/pl.json"
+    },
   ],
   "relationships": {
     "requires": [
