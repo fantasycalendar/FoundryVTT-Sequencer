@@ -1,5 +1,13 @@
 ## Changelog
 
+# Version 3.3.0
+- *Crosshairs* - Added crosshairs! It can be used with `Sequencer.Crosshair.show()` (like warpgate) or with `.crosshair()` on a sequence. See the documentation ([here](https://fantasycomputer.works/FoundryVTT-Sequencer/#/crosshair) and [here](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/crosshair)) for more info.
+- *Sequencer* - Fixed issues with preloading arrays of files
+- *Sequencer* - Added polish localization (thank you Lioheart!)
+- *Effects* - Greatly improved effect efficiency by improving batching capabilities (thank you Codas, you're a legend)
+
+Unfortunately, Sequencer is now a V12 only module.
+
 ## Version 3.2.17
 - *Sequencer* - Updated types (Thanks Vauxs on github!)
 - *Effects* - Fixed some issues with the vision masking shader relating to the batch batching optimizations (Thanks Codas on github!)

@@ -24,6 +24,22 @@ const CONSTANTS = {
     SKIPPED: 3,
     ABORTED: 4,
   },
+
+	PLACEMENT_RESTRICTIONS: {
+		ANYWHERE: "anywhere",
+		LINE_OF_SIGHT: "lineOfSight",
+		NO_COLLIDABLES: "noCollidables"
+	},
+
+	CALLBACKS: {
+		SHOW: "show",
+		MOUSE_MOVE: "mouseMove",
+		MOVE: "move",
+		COLLIDE: "collide",
+		INVALID_PLACEMENT: "invalidPlacement",
+		PLACED: "placed",
+		CANCEL: "cancel"
+	}
 };
 
 CONSTANTS.INTEGRATIONS = {};

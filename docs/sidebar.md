@@ -23,10 +23,12 @@
   * [Sound](api/sound.md)
   * [Scrolling Text](api/scrolling-text.md)
   * [Canvas Pan](api/canvas-pan.md)
+  * [Crosshair](api/crosshair.md)
 
 * Global
   * [Database](database.md)
   * [How to: Sequencer Database](database-basics.md)
+  * [Crosshairs](crosshair.md)
   * [Effect Manager](effect-manager.md)
   * [Sound Manager](sound-manager.md)
   * [Effect Player](player.md)

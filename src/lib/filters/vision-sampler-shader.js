@@ -174,7 +174,7 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 			rgb *= result.a;
 			color = vec4(rgb, result.a);
 	  }
-	  fragColor = color * mask;
+	  fragColor = color * mask * vColor;
 	}	
 	`;
 

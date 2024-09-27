@@ -265,7 +265,8 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get source() {
 		if (!this._source && this.data.source) {
-			this._source = this._getObjectByID(this.data.source?.uuid ?? this.data.source) ?? this.data.source;
+			const getDifferentTarget = this.data.source === this.data.target;
+			this._source = this._getObjectByID(this.data.source?.uuid ?? this.data.source, getDifferentTarget, true) ?? this.data.source;
 			this._source = this._source?._object ?? this._source;
 		}
 		return this._source;
@@ -311,7 +312,8 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get target() {
 		if (!this._target && this.data.target) {
-			this._target = this._getObjectByID(this.data.target?.uuid ?? this.data.target) ?? this.data.target;
+			const getDifferentTarget = this.data.source === this.data.target;
+			this._target = this._getObjectByID(this.data.target?.uuid ?? this.data.target, getDifferentTarget, false) ?? this.data.target;
 			this._target = this._target?._object ?? this._target;
 		}
 		return this._target;
@@ -1364,14 +1366,23 @@ export default class CanvasEffect extends PIXI.Container {
 	 * coordinate object, or if it's an UUID that needs to be fetched from the scene
 	 *
 	 * @param inIdentifier
+	 * @param specific
+	 * @param returnSource
 	 * @returns {*}
 	 * @private
 	 */
-	_getObjectByID(inIdentifier) {
+	_getObjectByID(inIdentifier, specific = false, returnSource = false) {
 		let source = inIdentifier;
 		let offsetMap = this._nameOffsetMap?.[inIdentifier];
 		if (offsetMap) {
-			source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
+			if(specific){
+				source = (returnSource
+					? offsetMap?.sourceObj || offsetMap?.targetObj
+					: offsetMap?.targetObj || offsetMap?.sourceObj
+				) || source;
+			}else {
+				source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
+			}
 		} else {
 			source = this._validateObject(source);
 		}
@@ -1734,6 +1745,10 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.sprite.position.set(spriteOffsetX, spriteOffsetY);
 
+		this.sprite.anchor.set(
+			this.data.spriteAnchor?.x ?? 0.5,
+			this.data.spriteAnchor?.y ?? 0.5
+		);
 
 		let spriteRotation = this.data.spriteRotation ?? 0;
 		if (this.data.randomSpriteRotation) {
