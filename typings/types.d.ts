@@ -1421,6 +1421,7 @@ declare abstract class SequencerPresets {
 }
 
 declare namespace Sequencer {
+  const BaseSection: Section
   const Database: SequencerDatabase;
   const Presets: SequencerPresets;
   const Preloader: SequencerPreloader;
