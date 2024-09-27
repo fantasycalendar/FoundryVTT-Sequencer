@@ -36,7 +36,7 @@ For example, the Effect Section method for setting the `.name()` of the Effect i
 ```js
 name(inName)
 {
-  if (typeof inName !== "string") throw this.sequence._throwError(this, "name", "inName must be of type string");
+  if (typeof inName !== "string") throw this.sequence._customError(this, "name", "inName must be of type string");
   this._name = inName;
   return this;
 }
