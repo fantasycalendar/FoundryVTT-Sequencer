@@ -213,6 +213,8 @@ declare class Sequence {
    * include the module name, which lets you and other users know which module caused the error.
    */
   constructor(inOptions?: { inModuleName?: string; softFail?: boolean }, softFail?: boolean);
+
+  _customError(self: Section<any>, func: string, error: string): void
 }
 
 declare abstract class Section<T> {
