@@ -220,6 +220,26 @@ declare abstract class Section<T> {
   readonly shouldAsync: boolean;
   readonly shouldPlay: boolean;
 
+  constructor(sequence: Sequence)
+
+  readonly sequence: Sequence;
+  readonly _sectionStatus: Writable<string>;
+  readonly _playIf: boolean;
+  readonly _waitUntilFinished: boolean;
+  readonly _async: boolean;
+  readonly _waitUntilFinishedDelay: [number, number];
+  readonly _repetitions: number;
+  readonly _currentRepetition: number;
+  readonly _repeatDelayMin: number;
+  readonly _repeatDelayMax: number;
+  readonly _repeatDelay: number;
+  readonly _delayMin: number;
+  readonly _delayMax: number;
+  readonly _basicDelay: number;
+  readonly _duration: boolean;
+
+  static niceName: string
+
   /**
    * Causes the section to finish running before starting the next section.
    */
