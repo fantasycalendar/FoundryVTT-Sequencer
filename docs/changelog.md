@@ -1,5 +1,11 @@
 ## Changelog
 
+# Version 3.3.1
+- *Sequencer* - Added `.addNamedLocation()` which allows you to store and cache locations as a string for later use in the sequence
+- *Effects* - Fixed `.tint()` and `.fadeIn()`/`.fadeOut()` not working properly (thank you Codas!)
+- *Effects* - Fixed `.from()` breaking antialiasing on token textures
+- *Animations* - Fixed using named locations and named crosshairs not working in animations
+
 # Version 3.3.0
 - *Crosshairs* - Added crosshairs! It can be used with `Sequencer.Crosshair.show()` (like warpgate) or with `.crosshair()` on a sequence. See the documentation ([here](https://fantasycomputer.works/FoundryVTT-Sequencer/#/crosshair) and [here](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/crosshair)) for more info.
 - *Sequencer* - Fixed issues with preloading arrays of files

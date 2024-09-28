@@ -73,6 +73,20 @@ Creates a canvas pan section. Until you call any of the [core methods](#sequence
 
 Creates a crosshair section. Until you call any of the [core methods](#sequencer-core-methods), you'll be working on the crosshair section.
 
+### Add Named Location
+
+```js
+const position = await Sequencer.Crosshair.show();
+
+new Sequence()
+  .addNamedLocation("target", position)
+  .effect()
+    .atLocation("target")
+    ...
+```
+
+Adds a location to the sequence and ties it to a string so that it may be used later.
+
 ### Then do
 
 ```js
