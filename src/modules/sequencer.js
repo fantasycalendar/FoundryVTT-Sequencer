@@ -13,6 +13,9 @@ import { get, writable } from "svelte/store";
 import CONSTANTS from "../constants.js";
 import WaitSection from "../sections/wait.js";
 import CrosshairSection from "../sections/crosshair.js";
+import { get_object_canvas_data } from "../lib/canvas-lib.js";
+import CrosshairsPlaceable from "./sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "./sequencer-crosshair/CrosshairsDocument.js";
 
 export default class Sequence {
 	constructor(
@@ -205,18 +208,6 @@ export default class Sequence {
     return effect;
   }
 
-	/**
-	 * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
-	 *
-	 * @param {string} [inName] inName
-	 * @returns {Section}
-	 */
-	crosshair(inName = "") {
-		const crosshair = lib.section_proxy_wrap(new CrosshairSection(this, inName));
-		this.sections.push(crosshair);
-		return crosshair;
-	}
-
   /**
    * Creates a sound section. Until you call .then(), .effect(), .sound(), or .wait(), you'll be working on the Sound section.
    *
@@ -273,6 +264,43 @@ export default class Sequence {
 		);
 		this.sections.push(panning);
 		return panning;
+	}
+
+	/**
+	 * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
+	 *
+	 * @param {string} [inName] inName
+	 * @returns {Section}
+	 */
+	crosshair(inName = "") {
+		const crosshair = lib.section_proxy_wrap(new CrosshairSection(this, inName));
+		this.sections.push(crosshair);
+		return crosshair;
+	}
+
+	/**
+	 * Adds a location to the sequence and ties it to a string so that it may be used later
+	 * @param {string} inName
+	 * @param {object/PlaceableObject/Document} inLocation
+	 * @returns {Sequence} this
+	 */
+	addNamedLocation(inName, inLocation){
+		if (typeof inName !== "string")
+			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
+		if (!(typeof inLocation === "object" || inLocation instanceof PlaceableObject || inLocation instanceof Document))
+			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
+		if(inLocation instanceof CrosshairsPlaceable) inLocation = inLocation.document;
+		this.nameOffsetMap ||= {};
+		this.nameOffsetMap[inName] = {
+			seed: `${inName}-${foundry.utils.randomID()}`,
+			source: inLocation instanceof CrosshairsDocument
+				? inLocation.getOrientation().source
+				: get_object_canvas_data(inLocation, { uuid: false }),
+			target: inLocation instanceof CrosshairsDocument
+				? inLocation.getOrientation()?.target ?? inLocation.getOrientation().source
+				: get_object_canvas_data(inLocation, { measure: true, uuid: false })
+		}
+		return this;
 	}
 
 	/**

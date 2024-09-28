@@ -2603,8 +2603,9 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	set texture(inTexture) {
-		if (this.data?.fileOptions?.antialiasing !== PIXI.SCALE_MODES.LINEAR) {
-			inTexture.baseTexture.setStyle(0, this.data?.fileOptions?.antialiasing)
+		const antiAliasing = this.data?.fileOptions?.antialiasing;
+		if (antiAliasing && antiAliasing !== PIXI.SCALE_MODES.LINEAR) {
+			inTexture.baseTexture.setStyle(0, antiAliasing)
 		}
 		this._texture = inTexture;
 	}

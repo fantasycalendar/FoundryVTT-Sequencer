@@ -19,6 +19,18 @@ class AnimationSection extends Section {
 
   static niceName = "Animation";
 
+	/**
+	 * @override
+	 * @private
+	 */
+	_validateLocation(inTarget){
+		let target = super._validateLocation(inTarget);
+		if(typeof target === "string" && this.sequence.nameOffsetMap[target]){
+			target = this.sequence.nameOffsetMap[target].target ?? this.sequence.nameOffsetMap[target].source;
+		}
+		return target;
+	}
+
   /**
    * Sets the target object to be animated
    *

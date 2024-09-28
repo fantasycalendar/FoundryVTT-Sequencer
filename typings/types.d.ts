@@ -174,6 +174,11 @@ declare class CoreMethods {
    */
   crosshair(inName?: string): CrosshairSection;
 
+	/**
+	 * Adds a location to the sequence and ties it to a string so that it may be used later
+	 */
+	addNamedLocation(inName: string, inLocation: VisibleFoundryTypes | Vector2): this;
+
   /**
    * Adds the sections from a given Sequence to this Sequence
    */
