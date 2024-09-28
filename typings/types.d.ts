@@ -123,7 +123,7 @@ declare class CoreMethods {
   /**
    * Creates a section that will run a function.
    */
-  thenDo(inFunc: () => void | (() => Promise<void>)): Sequence;
+  thenDo(inFunc: () => void | Promise<void>): Sequence;
 
   /**
    * Creates a section that will run a macro based on a name, id, UUID, or a direct reference to a macro.
