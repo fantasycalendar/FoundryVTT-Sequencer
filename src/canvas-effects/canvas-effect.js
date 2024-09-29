@@ -1866,7 +1866,7 @@ export default class CanvasEffect extends PIXI.Container {
 			fontSettings.fontSize =
 				(fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
 
-			textSprite = new PIXI.Text(text, fontSettings);
+			textSprite = new PreciseText(text, fontSettings);
 			textSprite.resolution = 5;
 			textSprite.zIndex = 1;
 

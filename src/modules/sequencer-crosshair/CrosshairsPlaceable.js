@@ -4,6 +4,11 @@ import CONSTANTS from "../../constants.js";
 
 export default class CrosshairsPlaceable extends MeasuredTemplate {
 
+	constructor(...args) {
+		super(...args);
+		this.cachedLocation = false;
+	}
+
 	#handlers = {
 		mouseup: null, move: null, wheel: null
 	};
@@ -381,6 +386,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		}
 		const placedCallback = this.#runCallback(CONSTANTS.CALLBACKS.PLACED, position);
 		if (placedCallback === false) return;
+		this.cachedLocation = position;
 		this.#promise.resolve(this.document);
 		this.destroy();
 	}

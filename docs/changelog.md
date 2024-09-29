@@ -1,8 +1,10 @@
 ## Changelog
 
 # Version 3.3.2
+- *Sequencer* - Fixed `.thenDo()` typing (thank you Vauxs!)
+- *Sequencer* - Tweaked `.addNamedLocation()` to better handle nonconforming inputs
 - *Effects* - Fixed `.screenSpaceAboveUI()` not working with recent optimizations (thanks you Codas!)
-- *Sequencer* - Fixed `.thenDo()` typing  
+- *Effects* - Fixed `.text()` not utilizing the `PreciseText` Foundry class
 
 # Version 3.3.1
 - *Sequencer* - Added `.addNamedLocation()` which allows you to store and cache locations as a string for later use in the sequence
