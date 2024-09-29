@@ -65,13 +65,13 @@ callbacks = {
 Creates a crosshair that returns a position when placed:
 
 ```js
-const location = await Sequencer.crosshair.show();
+const location = await Sequencer.Crosshair.show();
 ````
 
 Creates a crosshair that returns a position when placed, that can only be placed within 20 grid units of the selected token
 
 ```js
-const location = await Sequencer.crosshair.show({
+const location = await Sequencer.Crosshair.show({
   location: {
     obj: token,
     limitMaxRange: 20
