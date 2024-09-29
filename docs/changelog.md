@@ -1,5 +1,9 @@
 ## Changelog
 
+# Version 3.3.2
+- *Effects* - Fixed `.screenSpaceAboveUI()` not working with recent optimizations (thanks you Codas!)
+- *Sequencer* - Fixed `.thenDo()` typing  
+
 # Version 3.3.1
 - *Sequencer* - Added `.addNamedLocation()` which allows you to store and cache locations as a string for later use in the sequence
 - *Effects* - Fixed `.tint()` and `.fadeIn()`/`.fadeOut()` not working properly (thank you Codas!)
