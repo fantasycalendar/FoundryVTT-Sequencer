@@ -53,11 +53,17 @@ callbacks = {
   [Sequencer.Crosshair.CALLBACKS.MOUSE_MOVE / "mouseMove"]: function,
   [Sequencer.Crosshair.CALLBACKS.MOVE / "move"]: function,
   [Sequencer.Crosshair.CALLBACKS.COLLIDE / "collide"]: function,
-  [Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT / "invalidPlacement"]: function,
+	[Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING / "stopColliding"]: function,
+	[Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT / "invalidPlacement"]: function,
   [Sequencer.Crosshair.CALLBACKS.PLACED / "placed"]: function,
   [Sequencer.Crosshair.CALLBACKS.CANCEL / "cancel"]: function,
 }
 ```
+
+Crosshair callbacks tend to return the crosshair placeable object, which have a number of useful properties and functions:
+- `crosshair.updateCrosshair()` - method that accepts an object, similar to the config object above, to update the crosshair
+- `crosshair.isValid` - whether the crosshair is currently in a valid position
+- `crosshair.range` - the current range between the location object and the crosshair in grid units (only available if a location object has been set)
 
 <details>
   <summary><strong>------ Click for examples ------</strong></summary><br />
@@ -75,6 +81,29 @@ const location = await Sequencer.Crosshair.show({
   location: {
     obj: token,
     limitMaxRange: 20
+  }
+});
+```
+
+Creates a crosshair that returns a position when placed, that can only be placed within 20 grid units of the selected token, and changes the icon when colliding with any walls between the token and the crosshair.
+
+```js
+const location = await Sequencer.Crosshair.show({
+  location: {
+    obj: token,
+    limitMaxRange: 20,
+    wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+  }
+}, {
+  [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+    crosshair.updateCrosshair({
+      "icon.texture": "icons/svg/bones.svg"
+    })
+  },
+  [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+    crosshair.updateCrosshair({
+      "icon.texture": ""
+    })
   }
 });
 ```
