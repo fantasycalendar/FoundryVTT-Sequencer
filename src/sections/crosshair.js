@@ -177,9 +177,11 @@ export default class CrosshairSection extends Section {
 			showRange: CrosshairsDocument.defaultConfig.location.showRange,
 			lockToEdge: CrosshairsDocument.defaultConfig.location.lockToEdge,
 			lockToEdgeDirection: CrosshairsDocument.defaultConfig.location.lockToEdgeDirection,
-			offset: CrosshairsDocument.defaultConfig.location.offset
+			offset: CrosshairsDocument.defaultConfig.location.offset,
+			wallBehavior: CrosshairsDocument.defaultConfig.location.wallBehavior
 		}, inOptions,);
 		inLocation = this._validateLocation(inLocation);
+		if (typeof inOptions.wallBehavior !== "string") throw this.sequence._customError(this, "wallBehavior", "wallBehavior must be of type string");
 		if (inLocation === undefined) throw this.sequence._customError(this, "location", "could not find position of given object");
 		if (inOptions.limitMinRange && !lib.is_real_number(inOptions.limitMinRange)) throw this.sequence._customError(this, "lockLocation", "inOptions.limitMinRange must be of type number");
 		if (inOptions.limitMaxRange && !lib.is_real_number(inOptions.limitMaxRange)) throw this.sequence._customError(this, "lockLocation", "inOptions.limitMaxRange must be of type number");
@@ -202,7 +204,8 @@ export default class CrosshairSection extends Section {
 			lockToEdge: inOptions.lockToEdge,
 			lockToEdgeDirection: inOptions.lockToEdgeDirection,
 			showRange: inOptions.showRange,
-			offset: inOptions.offset
+			offset: inOptions.offset,
+			wallBehavior: inOptions.wallBehavior
 		};
 		return this;
 	}
