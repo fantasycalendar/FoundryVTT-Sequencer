@@ -219,7 +219,7 @@ declare class Sequence {
    */
   constructor(inOptions?: { inModuleName?: string; softFail?: boolean }, softFail?: boolean);
 
-  _customError(self: Section<any>, func: string, error: string): void
+  _customError(self: Section<any>, func: string, error: string): Error;
 }
 
 declare abstract class Section<T> {

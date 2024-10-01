@@ -1,5 +1,10 @@
 ## Changelog
 
+# Version 3.3.3
+
+- *Crosshairs* - Fixed invalid placement positions being cached and then used even if the crosshair was placed somewhere else
+- *Effects* - Fixed `.attachTo()`'s `align` not playing well with `.stretchTo()`
+
 # Version 3.3.2
 - *Sequencer* - Fixed `.thenDo()` typing (thank you Vauxs!)
 - *Sequencer* - Tweaked `.addNamedLocation()` to better handle nonconforming inputs

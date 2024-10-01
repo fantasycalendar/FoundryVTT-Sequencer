@@ -19,6 +19,8 @@ export default class CrosshairSection extends Section {
 		this._waitUntilFinished = true;
 	}
 
+	static niceName = "Crosshair";
+
 	/**
 	 * Sets the type of MeasurableTemplate to create, see CONST.MEASURED_TEMPLATE_TYPES
 	 */

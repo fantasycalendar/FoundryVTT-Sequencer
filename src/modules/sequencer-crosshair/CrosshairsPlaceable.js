@@ -382,10 +382,14 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const position = this.document.getOrientation();
 		if (!this.isValid) {
 			this.#runCallback(CONSTANTS.CALLBACKS.INVALID_PLACEMENT, position);
+			this.document.cachedPosition = false;
 			return;
 		}
 		const placedCallback = this.#runCallback(CONSTANTS.CALLBACKS.PLACED, position);
-		if (placedCallback === false) return;
+		if (placedCallback === false){
+			this.document.cachedPosition = false;
+			return;
+		}
 		this.cachedLocation = position;
 		this.#promise.resolve(this.document);
 		this.destroy();
