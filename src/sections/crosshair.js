@@ -181,7 +181,7 @@ export default class CrosshairSection extends Section {
 			wallBehavior: CrosshairsDocument.defaultConfig.location.wallBehavior
 		}, inOptions,);
 		inLocation = this._validateLocation(inLocation);
-		if (typeof inOptions.wallBehavior !== "string") throw this.sequence._customError(this, "wallBehavior", "wallBehavior must be of type string");
+		if (typeof inOptions.wallBehavior !== "string") throw this.sequence._customError(this, "wallBehavior", "inOptions.wallBehavior must be of type string");
 		if (inLocation === undefined) throw this.sequence._customError(this, "location", "could not find position of given object");
 		if (inOptions.limitMinRange && !lib.is_real_number(inOptions.limitMinRange)) throw this.sequence._customError(this, "lockLocation", "inOptions.limitMinRange must be of type number");
 		if (inOptions.limitMaxRange && !lib.is_real_number(inOptions.limitMaxRange)) throw this.sequence._customError(this, "lockLocation", "inOptions.limitMaxRange must be of type number");
