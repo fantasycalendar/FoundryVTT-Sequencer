@@ -221,7 +221,7 @@ export default class CrosshairSection extends Section {
 	 */
 	gridHighlight(inBool = true) {
 		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "gridHighlight", "inBool must be of type boolean");
-		this.config['gridHighlight'] = inBool;
+		this._config['gridHighlight'] = inBool;
 		return this;
 	}
 
