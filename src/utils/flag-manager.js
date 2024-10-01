@@ -326,15 +326,21 @@ const flagManager = {
 				continue;
 			}
 
+			const isLinkedToken = object instanceof TokenDocument && object.actorLink;
+			const isLinkedActor =
+				object instanceof Actor && object.prototypeToken.actorLink;
+
 			let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
 			let toRemove = flagsToRemove.get(objectUUID) ?? {
 				effects: [],
 				removeAll: false,
 			};
 
-			const existingFlags = new Map(
-				foundry.utils.getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? [],
-			);
+			let origExistingFlags = foundry.utils.getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? [];
+			if(isLinkedToken){
+				origExistingFlags = origExistingFlags.concat(foundry.utils.getProperty(object.actor, CONSTANTS.EFFECTS_FLAG) ?? []);
+			}
+			const existingFlags = new Map(origExistingFlags);
 
 			if (toRemove?.removeAll) {
 				toRemove.effects = Array.from(existingFlags).map((entry) => entry[0]);
@@ -358,10 +364,6 @@ const flagManager = {
 
 			let flagsToSet = Array.from(existingFlags);
 			const options = {};
-
-			const isLinkedToken = object instanceof TokenDocument && object.actorLink;
-			const isLinkedActor =
-				object instanceof Actor && object.prototypeToken.actorLink;
 
 			if (
 				(isLinkedToken || isLinkedActor) &&
@@ -389,9 +391,8 @@ const flagManager = {
 					updates: {},
 					documents: {},
 				};
-				sceneObjectsToUpdate[sceneId].updates[CONSTANTS.EFFECTS_FLAG] =
-					flagsToSet;
-			} else if (!(object instanceof Actor)) {
+				sceneObjectsToUpdate[sceneId].updates[CONSTANTS.EFFECTS_FLAG] = flagsToSet;
+			} else if (!(object instanceof Actor) && origExistingFlags.length !== flagsToSet.length) {
 				const sceneId = object.parent.id;
 				const docName = object.documentName;
 				sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? {

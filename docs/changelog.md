@@ -4,6 +4,7 @@
 
 - *Crosshairs* - Fixed invalid placement positions being cached and then used even if the crosshair was placed somewhere else
 - *Effects* - Fixed `.attachTo()`'s `align` not playing well with `.stretchTo()`
+- *Effects* - Fixed `.persist(true, { persistTokenPrototype: true })` not storing more than one persistent effect on the token
 
 # Version 3.3.2
 - *Sequencer* - Fixed `.thenDo()` typing (thank you Vauxs!)
