@@ -65,6 +65,7 @@ type TemplateData = {
   texture: object,
   x: number,
   y: number,
+  width: number,
   elevation: number,
   distance: number,
   fillColor: string,
