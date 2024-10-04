@@ -14,6 +14,11 @@ const SequencerFileCache = {
   /** @type {Promise<import("../lib/spritesheets/SpritesheetGenerator.js").SpritesheetGenerator> | null} */
   _spritesheetGenerator: null,
 
+  /**
+   * 
+   * @param {string} inSrc 
+   * @returns {Promise<Blob>} the video blob
+   */
   async loadVideo(inSrc) {
     if (!this._videos[inSrc]) {
       const blob = await fetch(inSrc, {
@@ -104,7 +109,14 @@ const SequencerFileCache = {
     const generator = await this._spritesheetGenerator;
     let job = this._generateSpritesheetJobs.get(inSrc);
     if (!job) {
-      job = generator.spritesheetFromUrl(inSrc)
+      const timeStart = Date.now()
+      console.log('generating spritesheet for', inSrc)
+      const blob = await this.loadVideo(inSrc)
+      const buffer = await blob.arrayBuffer()
+      job = generator.spritesheetFromBuffer({ buffer, id: inSrc }).then((res) => {
+        console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms`)
+        return res
+      })
       this._generateSpritesheetJobs.set(inSrc, job);
     }
     /** @type {PIXI.Spritesheet | undefined} */
