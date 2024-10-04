@@ -50,7 +50,7 @@ class VideoAsset extends Asset {
 			// @ts-expect-error can only be null after destroy
 			this.video = null;
 		} catch (err) {}
-		this.texture.destroy();
+		this.texture.destroy(true);
 	}
 }
 class VideoSpritesheetAsset extends Asset {
@@ -360,11 +360,14 @@ export class SequencerSpriteManager extends PIXI.Container {
 				if (!spritesheet) {
 					return
 				}
+				const previousAsset = this.activeAsset
 				const asset = new VideoSpritesheetAsset({ filepath: filePath, spritesheet })
 				this.#relatedAssets.set(filePath, asset);
-				if (!this.destroyed && this.#activeAssetPath === filePath) {
-					this.#activateAsset(asset)
+				if (this.destroyed || this.#activeAssetPath !== filePath) {
+					return
 				}
+				this.#activateAsset(asset)
+				previousAsset?.destroy()
 			})
 		}
 	}
