@@ -81,8 +81,8 @@ type CrosshairsData = {
 	  borderVisible: boolean
   },
   snap: {
-    position: SnappingOptions,
-    size: SnappingOptions,
+    position: number,
+    size: number,
     direction: number
   },
 	lockDrag: boolean,
