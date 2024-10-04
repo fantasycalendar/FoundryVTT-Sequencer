@@ -83,7 +83,7 @@ type CrosshairsData = {
   snap: {
     position: SnappingOptions,
     size: SnappingOptions,
-    angle: number
+    direction: number
   },
 	lockDrag: boolean,
   distanceMin: null | number,
