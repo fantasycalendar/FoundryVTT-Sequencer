@@ -100,7 +100,6 @@ type CrosshairsData = {
 	  showRange: boolean,
     lockToEdge: boolean,
 	  lockToEdgeDirection: boolean,
-	  lockOffsetDistance: number | null,
 	  offset: {
 			x: number,
 		  y: number
