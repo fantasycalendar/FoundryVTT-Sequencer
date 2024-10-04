@@ -75,6 +75,7 @@ type TemplateData = {
 }
 
 type CrosshairsData = {
+  gridHighlight: boolean,
   icon: {
     texture: string,
 	  borderVisible: boolean
