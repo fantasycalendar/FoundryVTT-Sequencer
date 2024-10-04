@@ -299,6 +299,19 @@ export default class CanvasEffect extends PIXI.Container {
 		let position = this.getSourceData().position;
 		let offset = this._getOffset(this.data.source, true);
 
+		if (this.data.attachTo?.active && this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
+			const additionalOffset = canvaslib.align({
+				context: this.source,
+				spriteWidth: this.sprite.width,
+				spriteHeight: this.sprite.height,
+				align: this.data.attachTo?.align,
+				edge: this.data.attachTo?.edge,
+			});
+
+			offset.x += additionalOffset.x;
+			offset.y += additionalOffset.y;
+		}
+
 		return {
 			x: position.x - offset.x,
 			y: position.y - offset.y,
@@ -2174,7 +2187,10 @@ export default class CanvasEffect extends PIXI.Container {
 		let {  scaleX, scaleY, distance } = await this._getDistanceScaling(ray.distance, texture.width);
 
 		if (this.data.attachTo?.active) {
-			this._applyAttachmentOffset();
+			this.position.set(
+				this.sourcePosition.x,
+				this.sourcePosition.y
+			);
 		}
 
 		if (this.data.tilingTexture) {
@@ -2478,31 +2494,10 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		this._tweakRotationForIsometric();
-		this._setAnchors()
-
-		try {
-			this._applyAttachmentOffset();
-		} catch (err) {
-			lib.debug_error(err);
-		}
-	}
-
-	_applyAttachmentOffset() {
-		let offset = { x: 0, y: 0 };
-
-		if (this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
-			offset = canvaslib.align({
-				context: this.source,
-				spriteWidth: this.sprite.width,
-				spriteHeight: this.sprite.height,
-				align: this.data.attachTo?.align,
-				edge: this.data.attachTo?.edge,
-			});
-		}
 
 		this.position.set(
-			this.sourcePosition.x - offset.x,
-			this.sourcePosition.y - offset.y
+			this.sourcePosition.x,
+			this.sourcePosition.y
 		);
 	}
 

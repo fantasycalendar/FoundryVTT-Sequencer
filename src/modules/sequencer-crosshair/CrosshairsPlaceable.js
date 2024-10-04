@@ -1,20 +1,25 @@
 import { get_mouse_position, } from "../../lib/canvas-lib.js";
 import { is_real_number } from "../../lib/lib.js";
 import CONSTANTS from "../../constants.js";
+import CrosshairsDocument from "./CrosshairsDocument.js";
 
 export default class CrosshairsPlaceable extends MeasuredTemplate {
+
+	constructor(...args) {
+		super(...args);
+		this.cachedLocation = false;
+	}
 
 	#handlers = {
 		mouseup: null, move: null, wheel: null
 	};
 
-	newDrawing = null;
-
 	#promise = {
 		resolve: null,
 	};
 
-	isDrag = false;
+	#isDrag = false;
+	#isPanning = false;
 	#customText = false;
 	#distanceText = false;
 	isValid = true;
@@ -29,9 +34,14 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		return this.document.callbacks;
 	}
 
-	get range(){
+	get range() {
 		const objLocation = this.crosshair.location.obj?.center ?? this.crosshair.location.obj;
 		return canvas.grid.measurePath([objLocation, this.position]).distance;
+	}
+
+	updateCrosshair(data) {
+		this.document.crosshair = foundry.utils.mergeObject(this.document.crosshair, data);
+		return this.draw();
 	}
 
 	async #refreshIcon() {
@@ -114,10 +124,10 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.layer.interactiveChildren = false;
 		this.#updateLocation();
 		this.#runCallback(CONSTANTS.CALLBACKS.SHOW, this);
-		return this.activateShowListeners();
+		return this.#activateShowListeners();
 	}
 
-	async activateShowListeners() {
+	async #activateShowListeners() {
 		return new Promise((resolve) => {
 			this.#promise.resolve = resolve;
 			this.#handlers.move = this.#onMove.bind(this);
@@ -139,12 +149,12 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const now = Date.now();
 		const leftDown = (evt.buttons & 1) > 0;
 		const rightDown = (evt.buttons & 2) > 0;
-		this.isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
-		this.isPanning = !!(rightDown && canvas.mouseInteractionManager.isDragging);
+		this.#isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
+		this.#isPanning = !!(rightDown && canvas.mouseInteractionManager.isDragging);
 
-		if (this.isPanning) return;
+		if (this.#isPanning) return;
 
-		if (this.isDrag) {
+		if (this.#isDrag) {
 			canvas.mouseInteractionManager.cancel(evt);
 		}
 
@@ -196,9 +206,14 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 			useThreshold: true
 		});
 
+		const wasValid = this.isValid;
 		this.isValid = !collisions.length;
 
-		if (collisions.length) this.#runCallback(CONSTANTS.CALLBACKS.COLLIDE, this, collisions);
+		if(!this.isValid && wasValid){
+			this.#runCallback(CONSTANTS.CALLBACKS.COLLIDE, this, collisions);
+		}else if(this.isValid && !wasValid){
+			this.#runCallback(CONSTANTS.CALLBACKS.STOP_COLLIDING, this);
+		}
 
 	}
 
@@ -317,7 +332,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 				update = this.#handleLimit(mouseLocation, targetLocation);
 			}
 
-		} else if (this.isDrag) {
+		} else if (this.#isDrag) {
 			const { direction, distance } = this.#getDraggedMatrix(this.document, mouseLocation);
 			update = { distance, direction };
 		} else {
@@ -335,7 +350,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	}
 
 	#getDistance(dragDistance) {
-		if (this.crosshair.distanceMin === null && this.crosshair.distanceMax === null){
+		if (this.crosshair.distanceMin === null && this.crosshair.distanceMax === null) {
 			return this.document.distance;
 		}
 		const min = this.crosshair.distanceMin ?? this.document.originalConfig.distance;
@@ -362,12 +377,12 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	#onMouseUp(evt) {
 		const event = evt?.nativeEvent ?? evt;
 		if (!(event.which === 1 || event.which === 3)) return;
-		if (this.isDrag) {
-			this.isDrag = false;
+		if (this.#isDrag) {
+			this.#isDrag = false;
 			return;
 		}
-		if (this.isPanning) {
-			this.isPanning = false;
+		if (this.#isPanning) {
+			this.#isPanning = false;
 			return;
 		}
 		return event.which === 1 ? this.#onConfirm() : this.#onCancel();
@@ -377,10 +392,15 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const position = this.document.getOrientation();
 		if (!this.isValid) {
 			this.#runCallback(CONSTANTS.CALLBACKS.INVALID_PLACEMENT, position);
+			this.document.cachedPosition = false;
 			return;
 		}
 		const placedCallback = this.#runCallback(CONSTANTS.CALLBACKS.PLACED, position);
-		if (placedCallback === false) return;
+		if (placedCallback === false) {
+			this.document.cachedPosition = false;
+			return;
+		}
+		this.cachedLocation = position;
 		this.#promise.resolve(this.document);
 		this.destroy();
 	}
@@ -398,7 +418,6 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	#clearHandlers() {
 		this.layer.interactiveChildren = this.oldInteractiveChildren;
-		if (this.newDrawing) this.newDrawing.destroy();
 		canvas.stage.off("mousemove", this.#handlers.move);
 		canvas.stage.off("pointerup", this.#handlers.mouseup);
 		canvas.app.view.onwheel = null;

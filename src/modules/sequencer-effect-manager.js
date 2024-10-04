@@ -49,11 +49,7 @@ export default class SequencerEffectManager {
       );
       return;
     }
-    if (push)
-      sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
-    if (data?.persistOptions?.persistTokenPrototype) {
-      this._playPrototypeTokenEffects(data, push);
-    }
+    if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
     return this._playEffect(data);
   }
 
@@ -365,6 +361,7 @@ export default class SequencerEffectManager {
    * @private
    */
   static async _playEffect(data, setFlags = true) {
+
     const effect = CanvasEffect.make(data);
 
     if (
@@ -779,43 +776,5 @@ export default class SequencerEffectManager {
     TemporaryPositionsContainer.delete(effect.data.source);
     TemporaryPositionsContainer.delete(effect.data.target);
     return effect.endEffect();
-  }
-
-  static async _playPrototypeTokenEffects(data, push) {
-    if (!lib.is_UUID(data.source)) return;
-
-    const object = fromUuidSync(data.source);
-
-    if (!(object instanceof TokenDocument)) return;
-
-    const tokenEffectsToPlay = game.scenes
-      .map((scene) =>
-        scene.tokens.filter((token) => {
-          return (
-            token.actorLink && token.actor === object.actor && token !== object
-          );
-        })
-      )
-      .deepFlatten();
-
-    for (const tokenDocument of tokenEffectsToPlay) {
-      const duplicatedData = foundry.utils.deepClone(data);
-      duplicatedData._id = foundry.utils.randomID();
-      duplicatedData.sceneId = tokenDocument.uuid.split(".")[1];
-      duplicatedData.masks = duplicatedData.masks
-        .map((uuid) => uuid.replace(duplicatedData.source, tokenDocument.uuid))
-        .filter((uuid) => uuid.includes(duplicatedData.sceneId));
-      duplicatedData.source = tokenDocument.uuid;
-      if (CanvasEffect.checkValid(duplicatedData)) {
-        if (push)
-          sequencerSocket.executeForOthers(
-            SOCKET_HANDLERS.PLAY_EFFECT,
-            duplicatedData
-          );
-        if (duplicatedData.sceneId === game.user.viewedScene) {
-          await this._playEffect(duplicatedData, false);
-        }
-      }
-    }
   }
 }

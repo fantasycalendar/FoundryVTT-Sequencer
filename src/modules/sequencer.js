@@ -288,18 +288,28 @@ export default class Sequence {
 		if (typeof inName !== "string")
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
 		if (!(typeof inLocation === "object" || inLocation instanceof PlaceableObject || inLocation instanceof Document))
-			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
+			throw lib.custom_error(this.moduleName, `addNamedLocation - inLocation must be of type object, PlaceableObject, or Document`);
 		if(inLocation instanceof CrosshairsPlaceable) inLocation = inLocation.document;
 		this.nameOffsetMap ||= {};
+
+		const sourceLocation = inLocation?.source ?? inLocation?.cachedPosition?.source ?? (
+			inLocation instanceof CrosshairsDocument
+					? inLocation.getOrientation().source
+					: get_object_canvas_data(inLocation, { uuid: false })
+		)
+
+		const targetLocation = inLocation?.target ?? inLocation?.cachedPosition?.target ?? (
+			inLocation instanceof CrosshairsDocument
+					? inLocation.getOrientation().target ?? sourceLocation
+					: get_object_canvas_data(inLocation, { measure: true, uuid: false })
+		)
+
 		this.nameOffsetMap[inName] = {
 			seed: `${inName}-${foundry.utils.randomID()}`,
-			source: inLocation instanceof CrosshairsDocument
-				? inLocation.getOrientation().source
-				: get_object_canvas_data(inLocation, { uuid: false }),
-			target: inLocation instanceof CrosshairsDocument
-				? inLocation.getOrientation()?.target ?? inLocation.getOrientation().source
-				: get_object_canvas_data(inLocation, { measure: true, uuid: false })
+			source: sourceLocation,
+			target: targetLocation
 		}
+
 		return this;
 	}
 

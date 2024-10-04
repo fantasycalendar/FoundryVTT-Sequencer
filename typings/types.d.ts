@@ -65,6 +65,7 @@ type TemplateData = {
   texture: object,
   x: number,
   y: number,
+  width: number,
   elevation: number,
   distance: number,
   fillColor: string,
@@ -74,6 +75,7 @@ type TemplateData = {
 }
 
 type CrosshairsData = {
+  gridHighlight: boolean,
   icon: {
     texture: string,
 	  borderVisible: boolean
@@ -123,7 +125,7 @@ declare class CoreMethods {
   /**
    * Creates a section that will run a function.
    */
-  thenDo(inFunc: () => void | (() => Promise<void>)): Sequence;
+  thenDo(inFunc: () => void | Promise<void>): Sequence;
 
   /**
    * Creates a section that will run a macro based on a name, id, UUID, or a direct reference to a macro.
@@ -219,7 +221,7 @@ declare class Sequence {
    */
   constructor(inOptions?: { inModuleName?: string; softFail?: boolean }, softFail?: boolean);
 
-  _customError(self: Section<any>, func: string, error: string): void
+  _customError(self: Section<any>, func: string, error: string): Error;
 }
 
 declare abstract class Section<T> {
@@ -1408,7 +1410,7 @@ declare abstract class SequencerCrosshair {
 	/**
 	 * Show a configurable crosshair
 	 */
-  show(crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
+  show(crosshair?: Partial<CrosshairData>, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
 
 	/**
 	 * Show a configurable crosshair based a foundry PlaceableObject

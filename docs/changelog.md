@@ -1,5 +1,19 @@
 ## Changelog
 
+# Version 3.3.3
+
+- *Crosshairs* - Added `Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING` callback
+- *Crosshairs* - Added `updateCrosshair` method to crosshairs
+- *Crosshairs* - Fixed invalid placement positions being cached and then used even if the crosshair was placed somewhere else
+- *Effects* - Fixed `.attachTo()`'s `align` not playing well with `.stretchTo()`
+- *Effects* - Fixed `.persist(true, { persistTokenPrototype: true })` not storing more than one persistent effect on the token
+
+# Version 3.3.2
+- *Sequencer* - Fixed `.thenDo()` typing (thank you Vauxs!)
+- *Sequencer* - Tweaked `.addNamedLocation()` to better handle nonconforming inputs
+- *Effects* - Fixed `.screenSpaceAboveUI()` not working with recent optimizations (thanks you Codas!)
+- *Effects* - Fixed `.text()` not utilizing the `PreciseText` Foundry class
+
 # Version 3.3.1
 - *Sequencer* - Added `.addNamedLocation()` which allows you to store and cache locations as a string for later use in the sequence
 - *Effects* - Fixed `.tint()` and `.fadeIn()`/`.fadeOut()` not working properly (thank you Codas!)

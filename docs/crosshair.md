@@ -12,6 +12,13 @@ Sequencer.Crosshair
 
 ```js
 crosshair = {
+  t: string, // See CONST.MEASURED_TEMPLATE_TYPES, defaults to CIRCLE
+  distance: number // Defaults to half the canvas grid size
+  width: number // Defaults to the canvas grid size
+  borderColor: string // Determines the color of the template border
+  fillColor: string // Determines the color of the template fill
+  angle: number // The starting angle for the template
+  direction: number // The starting direction for the template
   gridHighlight: boolean, // Toggles whether this crosshair should highlight the grid
   icon: {
     texture: string, // Optional texture to use for the icon of the crosshair
@@ -53,11 +60,17 @@ callbacks = {
   [Sequencer.Crosshair.CALLBACKS.MOUSE_MOVE / "mouseMove"]: function,
   [Sequencer.Crosshair.CALLBACKS.MOVE / "move"]: function,
   [Sequencer.Crosshair.CALLBACKS.COLLIDE / "collide"]: function,
-  [Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT / "invalidPlacement"]: function,
+	[Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING / "stopColliding"]: function,
+	[Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT / "invalidPlacement"]: function,
   [Sequencer.Crosshair.CALLBACKS.PLACED / "placed"]: function,
   [Sequencer.Crosshair.CALLBACKS.CANCEL / "cancel"]: function,
 }
 ```
+
+Crosshair callbacks tend to return the crosshair placeable object, which have a number of useful properties and functions:
+- `crosshair.updateCrosshair()` - method that accepts an object, similar to the config object above, to update the crosshair
+- `crosshair.isValid` - whether the crosshair is currently in a valid position
+- `crosshair.range` - the current range between the location object and the crosshair in grid units (only available if a location object has been set)
 
 <details>
   <summary><strong>------ Click for examples ------</strong></summary><br />
@@ -65,16 +78,39 @@ callbacks = {
 Creates a crosshair that returns a position when placed:
 
 ```js
-const location = await Sequencer.crosshair.show();
+const location = await Sequencer.Crosshair.show();
 ````
 
 Creates a crosshair that returns a position when placed, that can only be placed within 20 grid units of the selected token
 
 ```js
-const location = await Sequencer.crosshair.show({
+const location = await Sequencer.Crosshair.show({
   location: {
     obj: token,
     limitMaxRange: 20
+  }
+});
+```
+
+Creates a crosshair that returns a position when placed, that can only be placed within 20 grid units of the selected token, and changes the icon when colliding with any walls between the token and the crosshair.
+
+```js
+const location = await Sequencer.Crosshair.show({
+  location: {
+    obj: token,
+    limitMaxRange: 20,
+    wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+  }
+}, {
+  [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+    crosshair.updateCrosshair({
+      "icon.texture": "icons/svg/bones.svg"
+    })
+  },
+  [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+    crosshair.updateCrosshair({
+      "icon.texture": ""
+    })
   }
 });
 ```
