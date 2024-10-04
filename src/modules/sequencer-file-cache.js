@@ -114,7 +114,10 @@ const SequencerFileCache = {
       const blob = await this.loadVideo(inSrc)
       const buffer = await blob.arrayBuffer()
       job = generator.spritesheetFromBuffer({ buffer, id: inSrc }).then((res) => {
-        console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms`)
+        const w = res.baseTexture.width
+        const h = res.baseTexture.height
+        const megaBytes = Math.round(w * h / 1000 / 100) / 10
+        console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`)
         return res
       })
       this._generateSpritesheetJobs.set(inSrc, job);
