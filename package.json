@@ -23,16 +23,16 @@
     "svelte-virtual-scroll-list": "^1.1.0"
   },
   "devDependencies": {
-    "@league-of-foundry-developers/foundry-vtt-types": "https://github.com/League-of-Foundry-Developers/foundry-vtt-types/archive/refs/tags/v12.331.0-beta.tar.gz",
     "@typhonjs-config/eslint-config": "^0.6.0",
     "@typhonjs-fvtt/eslint-config-foundry.js": "^0.8.0",
     "eslint": "^8",
+    "svelte-preprocess": "^5",
+    "vite": "^4.4.0",
+    "@league-of-foundry-developers/foundry-vtt-types": "^9.238.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.1",
     "prettier": "^2.8.7",
-    "svelte-dnd-action": "^0.9.18",
-    "svelte-preprocess": "^5",
-    "vite": "^4.4.0"
+    "svelte-dnd-action": "^0.9.18"
   },
   "browserslist": [
     ">5%",
