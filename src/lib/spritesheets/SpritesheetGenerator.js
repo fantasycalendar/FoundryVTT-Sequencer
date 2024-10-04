@@ -125,7 +125,7 @@ export class SpritesheetGenerator {
 			})),
 		});
 		const texture = new PIXI.BaseTexture(resource, {
-			alphaMode: PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA,
+			alphaMode: PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA,
 			mipmap: PIXI.MIPMAP_MODES.ON_MANUAL,
 			scaleMode: PIXI.SCALE_MODES.LINEAR,
 			width: firstLevel.width,

@@ -36,18 +36,24 @@ export async function packFrames(frames, alphaFrames) {
 			for (let col = 0; col < data.trimmedRect.w; col++) {
 				const spriteIdx = (x + col + SPRITE_PADDING + (y + row + SPRITE_PADDING) * spriteWidth) * 4;
 				const frameIdx = (col + xStart + (row + yStart) * width) * 4;
-				// spriteBuffer[spriteIdx] = Math.floor(Math.random() * 255)
-				// spriteBuffer[spriteIdx + 1] = Math.floor(Math.random() * 255)
-				// spriteBuffer[spriteIdx + 2] = Math.floor(Math.random() * 255)
-				spriteBuffer[spriteIdx + 3] = 255;
-				spriteBuffer[spriteIdx] = imageBuffer[frameIdx];
-				spriteBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1];
-				spriteBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2];
+				let alpha = 1;
 				if (hasAlpha === true) {
 					const alphaIdx = (col + xStart + (row + yStart) * width) * alphaPack;
-					spriteBuffer[spriteIdx + 3] = alphaBuffer[alphaIdx];
+					const alphaValue = alphaBuffer[alphaIdx];
+					spriteBuffer[spriteIdx + 3] = alphaValue;
+					alpha = alphaValue / 255;
 				} else {
 					spriteBuffer[spriteIdx + 3] = 255;
+				}
+				// zero color info for completely transparent pixels
+				if (alpha === 0) {
+					spriteBuffer[spriteIdx] = 0;
+					spriteBuffer[spriteIdx + 1] = 0;
+					spriteBuffer[spriteIdx + 2] = 0;
+				} else {
+					spriteBuffer[spriteIdx] = imageBuffer[frameIdx] * alpha;
+					spriteBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1] * alpha;
+					spriteBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2] * alpha;
 				}
 			}
 		}
