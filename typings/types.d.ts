@@ -117,6 +117,28 @@ declare interface CrosshairData extends
 type CrosshairCallbackData = {
   show: Function,
   move: Function,
+	mouseMove: Function,
+	collide: Function,
+	invalidPlacement: Function,
+	placed: Function,
+	cancel: Function
+}
+
+type CrosshairCallbacks = {
+	SHOW: "show",
+	MOUSE_MOVE: "mouseMove",
+	MOVE: "move",
+	COLLIDE: "collide",
+	STOP_COLLIDING: "stopColliding",
+	INVALID_PLACEMENT: "invalidPlacement",
+	PLACED: "placed",
+	CANCEL: "cancel"
+}
+
+type CrosshairPlacementRestrictions = {
+	ANYWHERE: "anywhere",
+	LINE_OF_SIGHT: "lineOfSight",
+	NO_COLLIDABLES: "noCollidables"
 }
 
 type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
@@ -1178,6 +1200,11 @@ declare abstract class CrosshairSection {
 	 */
 	gridHighlight(inBool: boolean): this;
 
+	/**
+	 * Adds a callback function for certain crosshair events
+	 */
+	callback(inString: keyof CrosshairCallbackData, inFunction: Function): this;
+
 }
 
 declare abstract class SequencerFile {}
@@ -1406,6 +1433,9 @@ declare abstract class SequencerSoundManager {
 }
 
 declare abstract class SequencerCrosshair {
+
+	CALLBACKS: CrosshairCallbacks;
+	PLACEMENT_RESTRICTIONS: CrosshairPlacementRestrictions;
 
 	/**
 	 * Show a configurable crosshair
