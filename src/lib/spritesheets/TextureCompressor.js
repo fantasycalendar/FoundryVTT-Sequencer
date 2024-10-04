@@ -1,29 +1,39 @@
+// @ts-check
 /** @import { BASISModule, BasisEncoder } from '../basis-encoder/basis_encoder' */
 import BASIS from "../basis-encoder/basis_encoder";
+
+// this is just a typescript-styel enum / bidrectional mapping of values
 export var BASIS_FORMAT;
 (function (BASIS_FORMAT) {
 	BASIS_FORMAT[(BASIS_FORMAT["BC3"] = 3)] = "BC3";
 	BASIS_FORMAT[(BASIS_FORMAT["BC7"] = 6)] = "BC7";
 	BASIS_FORMAT[(BASIS_FORMAT["ASTC"] = 10)] = "ASTC";
 })(BASIS_FORMAT || (BASIS_FORMAT = {}));
+
 export class SpritesheetCompressor {
 	#basis;
 	#supportedCodecs;
+	/** @type {import("./ktx2Filecache").Ktx2FileCache} */
+	#ktx2FileCache;
+
 	/**
 	 * @static
+	 * @param {import("./ktx2Filecache").Ktx2FileCache} ktx2FileCache
 	 * @returns {Promise<SpritesheetCompressor>}
 	 */
-	static async create() {
+	static async create(ktx2FileCache) {
 		const basis = await BASIS();
 		basis.initializeBasis();
-		return new SpritesheetCompressor(basis);
+		return new SpritesheetCompressor(basis, ktx2FileCache);
 	}
 	/**
 	 * @private
 	 * @param {BASISModule} basis
+	 * @param {import("./ktx2Filecache").Ktx2FileCache} ktx2FileCache
 	 */
-	constructor(basis) {
+	constructor(basis, ktx2FileCache) {
 		this.#basis = basis;
+		this.#ktx2FileCache = ktx2FileCache
 		const canvas = new OffscreenCanvas(0, 0);
 		const gl = canvas.getContext("webgl2");
 		this.#supportedCodecs = {
@@ -63,25 +73,45 @@ export class SpritesheetCompressor {
 			return BASIS_FORMAT.BC3;
 		}
 	}
+
 	/**
 	 * @param {ArrayBuffer} imageBuffer
 	 * @param {number} width
 	 * @param {number} height
-	 * @returns {CompressedTextureData | undefined}
+	 * @param {string} id
+	 * @returns {Promise<CompressedTextureData | undefined>}
 	 */
-	getCompressedRessourceInfo(imageBuffer, width, height) {
+	async getCompressedRessourceInfo(imageBuffer, width, height, id) {
 		const format = this.#getTranscoderFormat();
 		if (!format) {
 			return;
 		}
+
 		const encoder = this.#getConfiguredEncoder();
 		encoder.setSliceSourceImage(0, new Uint8Array(imageBuffer), width, height, false);
+		// todo only initialize if needed!
 		let ktx2Buffer = new Uint8Array(width * height * 4);
 		const encodedBytes = encoder.encode(ktx2Buffer);
 		if (!encodedBytes) {
 			return;
 		}
 		ktx2Buffer = new Uint8Array(ktx2Buffer, 0, encodedBytes);
+
+		await this.#ktx2FileCache.saveKtxFileToCache(id, ktx2Buffer);
+		return this.transcodeKtx2Buffer(ktx2Buffer);
+	}
+
+	/**
+	 *
+	 * @param {Uint8Array} ktx2Buffer
+	 * @returns {Promise<CompressedTextureData | undefined>}
+	 */
+	async transcodeKtx2Buffer(ktx2Buffer) {
+		const format = this.#getTranscoderFormat();
+		if (!format) {
+			return;
+		}
+
 		const ktx2File = new this.#basis.KTX2File(ktx2Buffer);
 		if (!ktx2File.isValid()) {
 			console.warn("Encoded KTX2 file not valid.");
@@ -90,8 +120,8 @@ export class SpritesheetCompressor {
 			return;
 		}
 		const levels = ktx2File.getLevels();
-		width = ktx2File.getWidth();
-		height = ktx2File.getHeight();
+		const width = ktx2File.getWidth();
+		const height = ktx2File.getHeight();
 		if (!width || !height || !levels) {
 			console.warn("Encoded KTX2 file has no width, height or levels");
 			ktx2File.close();

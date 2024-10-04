@@ -124,7 +124,7 @@ declare class Vint {
 
 export declare class WebMDemuxer implements IDemuxer {
     tracks: {
-        [id: number]: Track;
+        [id: number]: WebMTrack;
     };
     private data;
     private dataOffset;

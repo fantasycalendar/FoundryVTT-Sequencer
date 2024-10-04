@@ -15,6 +15,8 @@ export class SpritesheetGenerator {
 	/** @type {WorkerId[]} */
 	#workerFreeCallbacks = [];
 
+
+
 	constructor() {
 		const workerCount = Math.max(Math.floor((navigator.hardwareConcurrency - 2) / 2), 1);
 		for (let i = 0; i < workerCount; i++) {

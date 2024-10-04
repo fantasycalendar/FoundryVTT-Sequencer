@@ -219,6 +219,8 @@ async function getAlphaTrimInfo(frame) {
  */
 /**
  * @typedef {Object} PackedSpritesheet
+ * @property {number} w
+ * @property {number} h
  * @property {Uint8ClampedArray} imageBuffer
  * @property {SpriteData[]} sprites
  */
