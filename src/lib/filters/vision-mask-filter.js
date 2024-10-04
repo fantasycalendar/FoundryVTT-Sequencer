@@ -298,4 +298,81 @@ export default class VisionSamplerShader extends BaseSamplerShader {
 			uint16View[k++] = textureId;
 		}
 	}
+
+	// need to override createPlugin as canvas.performance is not defined in foundry when
+	// we need it to be
+	static createPlugin() {
+    const shaderClass = this;
+    const geometryClass = Array.isArray(shaderClass.batchGeometry)
+      ? class BatchGeometry extends PIXI.Geometry {
+        constructor(_static=false) {
+          super();
+          this._buffer = new PIXI.Buffer(null, _static, false);
+          this._indexBuffer = new PIXI.Buffer(null, _static, true);
+          for ( const {id, size, normalized, type} of shaderClass.batchGeometry ) {
+            this.addAttribute(id, this._buffer, size, normalized, type);
+          }
+          this.addIndex(this._indexBuffer);
+        }
+      } : shaderClass.batchGeometry;
+    return class BatchPlugin extends shaderClass.batchRendererClass {
+
+      /** @override */
+      static get shaderGeneratorClass() {
+        return shaderClass.batchShaderGeneratorClass;
+      }
+
+      /* ---------------------------------------- */
+
+      /** @override */
+      static get defaultVertexSrc() {
+        return shaderClass.batchVertexShader;
+      }
+
+      /* ---------------------------------------- */
+
+      /** @override */
+      static get defaultFragmentTemplate() {
+        return shaderClass.batchFragmentShader;
+      }
+
+      /* ---------------------------------------- */
+
+      /** @override */
+      static get defaultUniforms() {
+        return shaderClass.batchDefaultUniforms;
+      }
+
+      /* ---------------------------------------- */
+
+      /**
+       * The batch plugin constructor.
+       * @param {PIXI.Renderer} renderer    The renderer
+       */
+      constructor(renderer) {
+        super(renderer);
+        this.geometryClass = geometryClass;
+        this.vertexSize = shaderClass.batchVertexSize;
+        this.reservedTextureUnits = shaderClass.reservedTextureUnits;
+        this._packInterleavedGeometry = shaderClass._packInterleavedGeometry;
+        this._preRenderBatch = shaderClass._preRenderBatch;
+      }
+
+      /* ---------------------------------------- */
+
+      /** @inheritdoc */
+      setShaderGenerator(options) {
+        // if ( !canvas.performance ) return;
+        super.setShaderGenerator(options);
+      }
+
+      /* ---------------------------------------- */
+
+      /** @inheritdoc */
+      contextChange() {
+        this.shaderGenerator = null;
+        super.contextChange();
+      }
+    };
+  }
 }

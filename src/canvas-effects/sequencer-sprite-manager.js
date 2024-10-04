@@ -1,6 +1,6 @@
 // @ts-check
-import AnimatedSpriteMesh from "../lib/pixi/AnimatedSpriteMesh.js";
-import TilingSpriteMesh from "../lib/pixi/TilingSpriteMesh.js";
+import AnimatedSpriteMesh from "../lib/meshes/AnimatedSpriteMesh.js";
+import TilingSpriteMesh from "../lib/meshes/TilingSpriteMesh.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 class Asset {
 	destroy() {
@@ -41,8 +41,11 @@ class VideoAsset extends Asset {
 	}
 	destroy() {
 		try {
-			this.video.removeAttribute("src");
 			this.video.pause();
+			URL.revokeObjectURL(this.video.src)
+			this.video.removeAttribute("src");
+			this.video.onerror = null
+			this.video.oncanplay = null
 			this.video.load();
 			// @ts-expect-error can only be null after destroy
 			this.video = null;
@@ -177,6 +180,7 @@ class VideoPlaybackControls extends PlaybackControls {
 		this.#video.playbackRate = value;
 	}
 	destroy() {
+		this.stop()
 		// @ts-expect-error should be null only when destroyed
 		this.#video = null;
 		// @ts-expect-error should be null only when destroyed
@@ -248,6 +252,7 @@ class SpritePlaybackControls extends PlaybackControls {
 	}
 
 	destroy() {
+		this.stop()
 		// @ts-expect-error should be null only when destroyed
 		this.#sprite = null;
 	}
@@ -260,7 +265,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 	/** @type {import("../modules/sequencer-file.js").SequencerFile} */
 	#file;
 
-	/** @type {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; }} */
+	/** @type {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} */
 	#sharedSpriteConfig;
 
 	/** @type {string | undefined} */
@@ -290,7 +295,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 
 	/**
 	 * @param {import("../modules/sequencer-file.js").SequencerFile} file
-	 * @param {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; }} options
+	 * @param {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
 	 */
 	constructor(file, options) {
 		super();
@@ -298,6 +303,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			antialiasing: PIXI.SCALE_MODES.LINEAR,
 			tiling: false,
 			xray: false,
+			isPersisted: false,
 		};
 		this.#file = file;
 	}
@@ -339,11 +345,27 @@ export class SequencerSpriteManager extends PIXI.Container {
 		if (!nextAsset) {
 			this.#relatedAssets[filePath] = undefined;
 			nextAsset = await this.#loadAsset(filePath);
+			if (this.destroyed) {
+				return
+			}
 			this.#relatedAssets.set(filePath, nextAsset);
 		}
 
 		if (this.#activateAsset(nextAsset)) {
 			this.#activeAssetPath = filePath;
+		}
+		if (this.#sharedSpriteConfig.isPersisted) {
+			requestAnimationFrame(async () => {
+				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath)
+				if (!spritesheet) {
+					return
+				}
+				const asset = new VideoSpritesheetAsset({ filepath: filePath, spritesheet })
+				this.#relatedAssets.set(filePath, asset);
+				if (!this.destroyed && this.#activeAssetPath === filePath) {
+					this.#activateAsset(asset)
+				}
+			})
 		}
 	}
 	/**
@@ -380,7 +402,13 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return this.#preloadingPromise;
 	}
 	destroy() {
-		Object.values(this.#relatedAssets).forEach((sprite) => sprite?.destroy());
+		this.#playbackControls?.destroy()
+		for (const asset of this.#relatedAssets.values()) {
+			asset?.destroy()
+		}
+		this.#relatedAssets.clear()
+		this.managedSprite?.removeFromParent()
+		this.managedSprite?.destroy()
 		super.destroy({ children: true });
 	}
 	//#endregion
@@ -599,17 +627,20 @@ export class SequencerSpriteManager extends PIXI.Container {
 		// apply current values
 		this.#applyPreviousValues(view, controls);
 
-		if (this.managedSprite) {
-			this.removeChild(this.managedSprite)
-		}
-		this.addChild(view)
-
-		if (!this.#playbackControls) {
+		if (this.#playbackControls) {
+			this.#playbackControls.destroy()
+		} else {
 			controls?.play()
 		}
-		
-		this.#managedSprite = view;
 		this.#playbackControls = controls;
+
+		if (this.managedSprite) {
+			this.managedSprite.removeFromParent()
+			this.managedSprite.destroy()
+		}
+		this.#managedSprite = view;
+		this.addChild(view)
+		
 		return true
 	}
 
@@ -619,8 +650,8 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 * @param {VideoPlaybackControls | SpritePlaybackControls | null} controls
 	 */
 	#applyPreviousValues(view, controls) {
-		if (this.#managedSprite) {
-			const prev = this.#managedSprite;
+		if (this.managedSprite) {
+			const prev = this.managedSprite;
 			view.tint = prev.tint;
 			view.anchor.copyFrom(prev.anchor);
 			view.width = prev.width;

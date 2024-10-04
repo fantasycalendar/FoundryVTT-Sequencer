@@ -6,7 +6,13 @@ const SequencerFileCache = {
   _preloadedFiles: new Set(),
   _totalCacheSize: 0,
   _validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
+  /** @type {Map<string, PIXI.Spritesheet>} */
   _spritesheets: new Map(),
+  /** @type {Map<string, Promise<PIXI.Spritesheet>>} */
+  _generateSpritesheetJobs: new Map(),
+
+  /** @type {Promise<import("../lib/spritesheets/SpritesheetGenerator.js").SpritesheetGenerator> | null} */
+  _spritesheetGenerator: null,
 
   async loadVideo(inSrc) {
     if (!this._videos[inSrc]) {
@@ -50,7 +56,7 @@ const SequencerFileCache = {
   srcExists(inSrc) {
     if (this._preloadedFiles.has(inSrc)) {
       return true;
-    } 
+    }
     return srcExists(inSrc);
   },
 
@@ -81,59 +87,90 @@ const SequencerFileCache = {
     return texture;
   },
 
-  registerSpritesheet(inSrc, inSpriteSheet) {
-    const existingSheetRef = this._spritesheets.get(inSrc)
-    if (existingSheetRef ) {
-      existingSheetRef[1] += 1
-    } else {
-      this._spritesheets.set(inSrc, [inSpriteSheet, 1])
-    }
-  },
-  
-  async unloadSpritesheet(inSrc) {
-    const existingSheetRef = this._spritesheets.get(inSrc)
-    if (!existingSheetRef) {
-      console.error('trying to unlaod spritesheet that was not loaded:', inSrc)
-      return;
-    }
-    existingSheetRef[1] -= 1
-    if (existingSheetRef[1] > 0) {
+  /**
+   * @param {string} inSrc
+   * @return {Promise<PIXI.Spritesheet | undefined>} the compiled spritesheet or
+   * undefined if it cannot be generated
+   */
+  async requestCompiledSpritesheet(inSrc) {
+    if (!inSrc.toLowerCase().endsWith(".webm")) {
       return
     }
-    this._spritesheets.delete(inSrc)
-    /** @type {PIXI.Spritesheet} */ 
-    const sheet = existingSheetRef[0] 
-    const relatedPacks = sheet.data?.meta?.related_multi_packs ?? []
-    const relatedSheets = sheet.linkedSheets
+    if (this._spritesheetGenerator == null) {
+      this._spritesheetGenerator = import("../lib/spritesheets/SpritesheetGenerator.js").then(
+        (m) => new m.SpritesheetGenerator()
+      );
+    }
+    const generator = await this._spritesheetGenerator;
+    let job = this._generateSpritesheetJobs.get(inSrc);
+    if (!job) {
+      job = generator.spritesheetFromUrl(inSrc)
+      this._generateSpritesheetJobs.set(inSrc, job);
+    }
+    /** @type {PIXI.Spritesheet | undefined} */
+    return job;
+  },
+
+  registerSpritesheet(inSrc, inSpriteSheet) {
+    const existingSheetRef = this._spritesheets.get(inSrc);
+    if (existingSheetRef) {
+      existingSheetRef[1] += 1;
+    } else {
+      this._spritesheets.set(inSrc, [inSpriteSheet, 1]);
+    }
+  },
+
+  /**
+   * 
+   * @param {string} inSrc 
+   * @returns {void}
+   */
+  async unloadSpritesheet(inSrc) {
+    const existingSheetRef = this._spritesheets.get(inSrc);
+    this._generateSpritesheetJobs.delete(inSrc)
+    if (!existingSheetRef) {
+      console.error("trying to unlaod spritesheet that was not loaded:", inSrc);
+      return;
+    }
+    existingSheetRef[1] -= 1;
+    if (existingSheetRef[1] > 0) {
+      return;
+    }
+    this._spritesheets.delete(inSrc);
+    /** @type {PIXI.Spritesheet} */
+    const sheet = existingSheetRef[0];
+    const relatedPacks = sheet.data?.meta?.related_multi_packs ?? [];
+    const relatedSheets = sheet.linkedSheets;
     // const packsSize = Math.max(relatedPacks.length, relatedSheets.length)
     // clean up related sheets starting with the last (leaf)
 
-    const cacheKeys = [get_sheet_image_url(inSrc, sheet), foundry.utils.getRoute(inSrc)]
-    await PIXI.Assets.unload(cacheKeys.filter(src => !!src))
-  }
+    const cacheKeys = [get_sheet_image_url(inSrc, sheet), foundry.utils.getRoute(inSrc)];
+    await PIXI.Assets.unload(cacheKeys.filter((src) => !!src));
+  },
 };
-
 
 /**
  * @param {PIXI.Spritesheet} sheet
  */
 function get_sheet_image_url(inSrc, sheet) {
-  const imageName = sheet?.data?.meta?.image
+  const imageName = sheet?.data?.meta?.image;
   if (!imageName) {
-    return
+    return;
   }
-  const srcPrefix = inSrc.split('/').slice(0, -1).join('/')
-  const sheetSrc = `${srcPrefix}/${imageName}`
-  return foundry.utils.getRoute(sheetSrc)
+  const srcPrefix = inSrc.split("/").slice(0, -1).join("/");
+  const sheetSrc = `${srcPrefix}/${imageName}`;
+  return foundry.utils.getRoute(sheetSrc);
 }
 function get_sheet_source_url(inSrc, sheetFilename) {
-  const srcPrefix = inSrc.split('/').slice(0, -1).join('/')
-  const sheetSrc = `${srcPrefix}/${sheetFilename}`
-  return foundry.utils.getRoute(sheetSrc)
-};
+  const srcPrefix = inSrc.split("/").slice(0, -1).join("/");
+  const sheetSrc = `${srcPrefix}/${sheetFilename}`;
+  return foundry.utils.getRoute(sheetSrc);
+}
 
+// TODO: video base textures need to be cleaned up...
+// We should introduce manual reference counting like with spritesheet textures.
 async function get_video_texture(inBlob) {
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     const video = document.createElement("video");
     video.preload = "auto";
     video.crossOrigin = "anonymous";
@@ -162,6 +199,7 @@ async function get_video_texture(inBlob) {
       const texture = new PIXI.Texture(baseTexture);
 
       resolve(texture);
+      video.oncanplay = null
     };
 
     video.onerror = () => {

@@ -1325,7 +1325,8 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 		}
 
-		this.sprite.destroy()
+		this.sprite.destroy();
+		this.sprite = null;
 
 		try {
 			if (this.data.screenSpace) {
@@ -1687,7 +1688,8 @@ export default class CanvasEffect extends PIXI.Container {
 		const spriteData = {
 			antialiasing: this.data?.fileOptions?.antialiasing,
 			tiling: this.data.tilingTexture,
-			xray: this.data.xray || this.data.screenSpace || this.data.screenSpaceAboveUI
+			xray: this.data.xray || this.data.screenSpace || this.data.screenSpaceAboveUI,
+			isPersisted: this.data.persist && !this.data.loopOptions?.endOnLastLoop
 		}
 		/** @type {SequencerSpriteManager} */
 		this.sprite = new SequencerSpriteManager(this._file, spriteData)
