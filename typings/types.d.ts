@@ -65,6 +65,7 @@ type TemplateData = {
   texture: object,
   x: number,
   y: number,
+  width: number,
   elevation: number,
   distance: number,
   fillColor: string,
@@ -1408,7 +1409,7 @@ declare abstract class SequencerCrosshair {
 	/**
 	 * Show a configurable crosshair
 	 */
-  show(crosshair?: CrosshairData, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
+  show(crosshair?: Partial<CrosshairData>, callbacks?: CrosshairCallbackData): Promise<TemplateData>;
 
 	/**
 	 * Show a configurable crosshair based a foundry PlaceableObject

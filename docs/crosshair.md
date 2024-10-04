@@ -12,6 +12,13 @@ Sequencer.Crosshair
 
 ```js
 crosshair = {
+  t: string, // See CONST.MEASURED_TEMPLATE_TYPES, defaults to CIRCLE
+  distance: number // Defaults to half the canvas grid size
+  width: number // Defaults to the canvas grid size
+  borderColor: string // Determines the color of the template border
+  fillColor: string // Determines the color of the template fill
+  angle: number // The starting angle for the template
+  direction: number // The starting direction for the template
   gridHighlight: boolean, // Toggles whether this crosshair should highlight the grid
   icon: {
     texture: string, // Optional texture to use for the icon of the crosshair
