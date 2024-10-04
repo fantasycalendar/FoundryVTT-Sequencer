@@ -216,7 +216,7 @@ export default class CrosshairSection extends Section {
 	 * Causes the crosshair to spawn a measurable template identical to the crosshair
 	 */
 	persist(inBool = true) {
-		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type number");
+		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type boolean");
 		this._persist = inBool;
 		return this;
 	}
