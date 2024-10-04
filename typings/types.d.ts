@@ -119,6 +119,7 @@ type CrosshairCallbackData = {
   move: Function,
 	mouseMove: Function,
 	collide: Function,
+	stopColliding: Function,
 	invalidPlacement: Function,
 	placed: Function,
 	cancel: Function
