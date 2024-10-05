@@ -5,6 +5,7 @@ const BASIS_TO_PIXI_FORMAT = {
 	BC7: PIXI.INTERNAL_FORMATS.COMPRESSED_RGBA_BPTC_UNORM_EXT,
 	BC3: PIXI.INTERNAL_FORMATS.COMPRESSED_RGBA_S3TC_DXT5_EXT,
 };
+
 export class SpritesheetGenerator {
 	/** @type {Record<string, Worker>} */
 	#workers = {};
@@ -15,7 +16,21 @@ export class SpritesheetGenerator {
 	/** @type {WorkerId[]} */
 	#workerFreeCallbacks = [];
 
-
+	/**
+	 * @static
+	 * @return {SpritesheetGenerator | undefined}
+	 */
+	static create() {
+		if (!window.isSecureContext) {
+			console.warn('Cannot initialize Spritesheet Generator. Secure Context Required. Serve Foundry VTT over a https connection to enable Spritesheet Generator')
+			return null
+		}
+		if (VideoDecoder == null || typeof VideoDecoder !== 'function') {
+			console.warn('Cannot initialize Spritesheet Generator. Required VideoDecoder API is not implemented by your browser. All current version of Firefox, Chrome, Edge and Safari support this API. Please make sure your browser is up to date.')
+			return null
+		}
+		return new SpritesheetGenerator()
+	}
 
 	constructor() {
 		const workerCount = Math.max(Math.floor((navigator.hardwareConcurrency - 2) / 2), 1);

@@ -103,7 +103,7 @@ const SequencerFileCache = {
     }
     if (this._spritesheetGenerator == null) {
       this._spritesheetGenerator = import("../lib/spritesheets/SpritesheetGenerator.js").then(
-        (m) => new m.SpritesheetGenerator()
+        (m) => m.SpritesheetGenerator.create()
       );
     }
     const generator = await this._spritesheetGenerator;
