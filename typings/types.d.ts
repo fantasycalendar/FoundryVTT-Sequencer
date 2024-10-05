@@ -75,39 +75,39 @@ type TemplateData = {
 }
 
 type CrosshairsData = {
-  gridHighlight: boolean,
-  icon: {
-    texture: string,
-	  borderVisible: boolean
-  },
-  snap: {
-    position: SnappingOptions,
-    size: SnappingOptions,
-    angle: number
-  },
-	lockDrag: boolean,
-  distanceMin: null | number,
-  distanceMax: null | number,
-  label: {
-    text: string,
-    dx: number,
-    dy: number,
-  },
-  location: {
-    obj: null | VisibleFoundryTypes,
-	  limitMinRange: number | null,
-	  limitMaxRange: number | null,
-	  showRange: boolean,
-    lockToEdge: boolean,
-	  lockToEdgeDirection: boolean,
-	  lockOffsetDistance: number | null,
-	  offset: {
-			x: number,
-		  y: number
-		}
-  },
-  lockManualRotation: boolean,
-  textureTile: number,
+	gridHighlight: boolean;
+	icon: {
+		texture: string;
+		borderVisible: boolean;
+	};
+	snap: {
+		position: number;
+		size: number;
+		direction: number;
+	};
+	lockDrag: boolean;
+	distanceMin: null | number;
+	distanceMax: null | number;
+	label: {
+		text: string;
+		dx: number;
+		dy: number;
+	};
+	location: {
+		obj: null | VisibleFoundryTypes;
+		limitMinRange: number | null;
+		limitMaxRange: number | null;
+		showRange: boolean;
+		lockToEdge: boolean;
+		lockToEdgeDirection: boolean;
+		offset: {
+			x: number;
+			y: number;
+		};
+		wallBehavior: string;
+	};
+	lockManualRotation: boolean;
+	textureTile: number;
 };
 
 declare interface CrosshairData extends
@@ -1193,7 +1193,8 @@ declare abstract class CrosshairSection {
 		offset?: {
 			x?: number;
 			y?: number;
-		}
+		};
+		wallBehavior: string;
 	}): this;
 
 	/**

@@ -40,7 +40,7 @@ export default class TokenCrosshairsDocument extends CrosshairsDocument {
 	}
 
 	static get defaultConfig() {
-		return foundry.utils.deepClone(foundry.utils.mergeObject(super.defaultConfig, {
+		return foundry.utils.mergeObject(super.defaultConfig, {
 			gridHighlight: false,
 			snap: {
 				position: CONST.GRID_SNAPPING_MODES.VERTEX
@@ -50,7 +50,7 @@ export default class TokenCrosshairsDocument extends CrosshairsDocument {
 			},
 			lockDrag: true,
 			alpha: 0.5
-		}));
+		});
 	}
 
 	static get placeableClass() {
