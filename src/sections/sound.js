@@ -10,6 +10,7 @@ class SoundSection extends Section {
 		super(inSequence);
 		this._file = inFile;
 		this._volume = 0.8;
+		this._channel = "interface";
 		this._overrides = [];
 		this._locationOptions = {};
 	}
@@ -86,7 +87,7 @@ class SoundSection extends Section {
 				"setAudioChannel",
 				`inString must be of type string`
 			);
-		this._locationOptions['audioChannel'] = inString;
+		this._channel = inString;
 		return this;
 	}
 
