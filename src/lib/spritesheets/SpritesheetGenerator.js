@@ -22,14 +22,18 @@ export class SpritesheetGenerator {
 	 */
 	static create() {
 		if (!window.isSecureContext) {
-			console.warn('Cannot initialize Spritesheet Generator. Secure Context Required. Serve Foundry VTT over a https connection to enable Spritesheet Generator')
-			return null
+			console.warn(
+				"Cannot initialize Spritesheet Generator. Secure Context Required. Serve Foundry VTT over a https connection to enable Spritesheet Generator"
+			);
+			return null;
 		}
-		if (VideoDecoder == null || typeof VideoDecoder !== 'function') {
-			console.warn('Cannot initialize Spritesheet Generator. Required VideoDecoder API is not implemented by your browser. All current version of Firefox, Chrome, Edge and Safari support this API. Please make sure your browser is up to date.')
-			return null
+		if (VideoDecoder == null || typeof VideoDecoder !== "function") {
+			console.warn(
+				"Cannot initialize Spritesheet Generator. Required VideoDecoder API is not implemented by your browser. All current version of Firefox, Chrome, Edge and Safari support this API. Please make sure your browser is up to date."
+			);
+			return null;
 		}
-		return new SpritesheetGenerator()
+		return new SpritesheetGenerator();
 	}
 
 	constructor() {

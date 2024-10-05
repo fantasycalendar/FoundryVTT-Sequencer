@@ -21,7 +21,7 @@ onmessage = async function (e) {
 			postMessage(
 				{ id, ...result },
 				{
-					transfer: [...result.payload.sheet.levelData.map((l) => l.data.buffer)], // disable transfer for now to test compression
+					transfer: [...result.payload.sheet.levelData.map((l) => l.data.buffer)],
 				}
 			);
 		}

@@ -76,7 +76,7 @@ class VideoSpritesheetAsset extends Asset {
 		this.filepath = filepath;
 		this.spritesheet = spritesheet;
 		// @ts-expect-error framerate is either there or undefined, stop complaining typescript...
-		this.framerate = this.spritesheet.data?.meta?.framerate ?? 30;
+		this.framerate = this.spritesheet.data?.meta?.frameRate ?? 30;
 		const frametime = (1 / this.framerate) * 1000;
 		this.frameObjects = (Object.values(spritesheet.animations)[0] ?? []).map((texture) => ({
 			texture,
