@@ -80,11 +80,11 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	setAudioChannel(inString) {
+	audioChannel(inString) {
 		if (typeof inString !== "string")
 			throw this.sequence._customError(
 				this,
-				"setAudioChannel",
+				"audioChannel",
 				`inString must be of type string`
 			);
 		this._channel = inString;

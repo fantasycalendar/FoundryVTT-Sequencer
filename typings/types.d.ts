@@ -1022,7 +1022,7 @@ declare abstract class SoundSection {
   /**
    * Set the sound output channel.
    */
-  setAudioChannel(inString: String): this;
+  audioChannel(inString: String): this;
 
   /**
    * Whether the sound will play for GMs as if they were hearing it at the origin of the sound.

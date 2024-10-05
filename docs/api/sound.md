@@ -324,14 +324,14 @@ Whether the sound will have its volume eased by the distance from its origin.
 - Defaults to `true`
 - Requires `.atLocation()` to be called as well, or the sound will still be global.
 
-## SetAudioChannel
+## Audio Channel
 
-`.setAudioChannel(inString)`
+`.audioChannel(inString)`
 
 Examples:
 ```js
-.setAudioChannel("interface")
-.setAudioChannel("environment")
+.audioChannel("music")
+.audioChannel("environment")
 ```
 
 Set the sound output channel.
