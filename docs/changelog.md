@@ -4,9 +4,11 @@
 
 - *Crosshairs* - Fixed `.crosshair()`'s `.persist()` option not working with subsequent `.effect()` sections
 - *Crosshairs* - Fixed typos on `.gridHighlight()` (thanks Vauxs!)
-- *Crosshairs* - Fixed crosshair documentation and typing (thanks Vauxs!)
+- *Crosshairs* - Fixed crosshair documentation and typing (thanks Vauxs and Konstantin on github!)
 - *Crosshairs* - Fixed `.crosshair()`'s default size being smaller than the grid
 - *Effects* - Removed `.attachTo()` warning when using `.attachTo()` with a named location (specifically `.persist()`ing crosshairs)
+- *Effects* - Fixed `.name()` not passing mirrorX/Y, rotation, and random rotation to the subsequent effects
+- *Sounds* - Added `.audioChannel()` to sounds, which controls which output they are played through
 
 # Version 3.3.3
 

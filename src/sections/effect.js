@@ -2215,6 +2215,7 @@ export default class EffectSection extends Section {
 					source: source,
 					target: target,
 					randomOffset: this._randomOffset,
+					angle: this._angle,
 					randomRotation: this._randomRotation,
 					mirrorX: this._mirrorX,
 					mirrorY: this._mirrorY,
@@ -2475,6 +2476,8 @@ export default class EffectSection extends Section {
 			spriteRotation: this._spriteRotation,
 			randomSpriteRotation: this._randomSpriteRotation,
 			tint: this._tint?.decimal,
+			flipX: this._mirrorX,
+			flipY: this._mirrorY,
 
 			/**
 			 * Time properties

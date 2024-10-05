@@ -637,11 +637,21 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {number}
 	 */
 	get flipX() {
-		return this.data.flipX ? -1 : 1;
+		const offsetMap = this._nameOffsetMap?.[this.data.source];
+		let flip = this.data.flipX ? -1 : 1
+		if(offsetMap && offsetMap.mirrorX !== undefined) {
+			flip *= offsetMap.mirrorX ? -1 : 1;
+		}
+		return flip;
 	}
 
 	get flipY() {
-		return this.data.flipY ? -1 : 1;
+		const offsetMap = this._nameOffsetMap?.[this.data.source];
+		let flip = this.data.flipY ? -1 : 1
+		if(offsetMap && offsetMap.mirrorY !== undefined) {
+			flip *= offsetMap.mirrorY ? -1 : 1;
+		}
+		return flip;
 	}
 
 	/**
@@ -1945,6 +1955,14 @@ export default class CanvasEffect extends PIXI.Container {
 		this._customAngle = this.data.angle ?? 0;
 		if (this.data.randomRotation) {
 			this._customAngle += lib.random_float_between(-360, 360, this._twister);
+		}
+
+		const offsetMap = this._nameOffsetMap?.[this.data.source];
+		if(offsetMap?.angle !== undefined) {
+			this._customAngle += offsetMap?.angle;
+		}
+		if(offsetMap?.randomRotation) {
+			this._customAngle += lib.random_float_between(-360, 360, offsetMap.twister);
 		}
 
 		this.spriteContainer.rotation = -Math.normalizeRadians(
