@@ -79,6 +79,17 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	setAudioChannel(inString) {
+		if (typeof inString !== "string")
+			throw this.sequence._customError(
+				this,
+				"setAudioChannel",
+				`inString must be of type string`
+			);
+		this._locationOptions['audioChannel'] = inString;
+		return this;
+	}
+
 	alwaysForGMs(inBool) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(

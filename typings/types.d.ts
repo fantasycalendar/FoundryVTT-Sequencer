@@ -1020,6 +1020,11 @@ declare abstract class SoundSection {
   distanceEasing(inBool: Boolean): this;
 
   /**
+   * Set the sound output channel.
+   */
+  setAudioChannel(inString: String): this;
+
+  /**
    * Whether the sound will play for GMs as if they were hearing it at the origin of the sound.
    */
   alwaysForGMs(inBool: Boolean): this;
