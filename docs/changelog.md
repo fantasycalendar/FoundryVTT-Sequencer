@@ -8,7 +8,7 @@
 - *Crosshairs* - Fixed `.crosshair()`'s default size being smaller than the grid
 - *Effects* - Removed `.attachTo()` warning when using `.attachTo()` with a named location (specifically `.persist()`ing crosshairs)
 - *Effects* - Fixed `.name()` not passing mirrorX/Y, rotation, and random rotation to the subsequent effects
-- *Sounds* - Added `.audioChannel()` to sounds, which controls which output they are played through
+- *Sounds* - Added `.audioChannel()` to sounds, which controls which output they are played through (thank you Oxy949 on github!)
 
 # Version 3.3.3
 
