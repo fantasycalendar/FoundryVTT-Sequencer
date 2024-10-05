@@ -8,7 +8,7 @@ const SequencerFileCache = {
 	_validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
 	/** @type {Map<string, PIXI.Spritesheet>} */
 	_spritesheets: new Map(),
-	/** @type {Map<string, Promise<PIXI.Spritesheet>>} */
+	/** @type {Map<string, Promise<PIXI.Spritesheet> | null>} */
 	_generateSpritesheetJobs: new Map(),
 
 	/** @type {Promise<import("../lib/spritesheets/SpritesheetGenerator.js").SpritesheetGenerator> | null} */
@@ -119,13 +119,22 @@ const SequencerFileCache = {
 			job = generator.spritesheetFromBuffer({ buffer, id: inSrc }).then((res) => {
 				const w = res.baseTexture.width;
 				const h = res.baseTexture.height;
-				const megaBytes = Math.round((w * h) / 1000 / 100) / 10;
+				const megaBytes =
+					Math.round(
+						res.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) / 100_000
+					) / 10;
 				console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
 				return res;
+			}).catch((err) => {
+				console.warn(err);
+				return null;
 			});
-			this._generateSpritesheetJobs.set(inSrc, job);
+			this._generateSpritesheetJobs.set(
+				inSrc,
+				job
+			);
 		}
-		/** @type {PIXI.Spritesheet | undefined} */
+
 		return job;
 	},
 

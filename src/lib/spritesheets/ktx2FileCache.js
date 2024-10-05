@@ -26,6 +26,11 @@ deleteOldCaches(cacheName);
 
 
 export class Ktx2FileCache {
+	/**
+	 * 
+	 * @param {string} id 
+	 * @returns {Request}
+	 */
 	#getKtxFileCacheRequest(id) {
 		return new Request(`${id}?spritesheet`);
 	}
@@ -53,8 +58,8 @@ export class Ktx2FileCache {
 	 * @returns {Promise<void>}
 	 */
 	async saveKtxFileToCache(id, ktx2FileBuffer) {
-		// only cache files < 25MB
-		if (ktx2FileBuffer.length > 25 * 1000 * 1000) {
+		// only cache files <= 25MB
+		if (ktx2FileBuffer.byteLength > 25 * 1000 * 1000) {
 			return
 		}
 		const cacheStorage = await ktx2FileCache.catch(() => null);
@@ -67,6 +72,11 @@ export class Ktx2FileCache {
 	}
 
 
+	/**
+	 * 
+	 * @param {string} id 
+	 * @returns {Request}
+	 */
 	#getSpriteDataCacheRequest(id) {
 		return new Request(`${id}?sprites`);
 	}

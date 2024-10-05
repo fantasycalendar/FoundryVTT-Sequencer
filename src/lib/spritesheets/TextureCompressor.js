@@ -95,7 +95,7 @@ export class SpritesheetCompressor {
 		if (!encodedBytes) {
 			return;
 		}
-		ktx2Buffer = new Uint8Array(ktx2Buffer, 0, encodedBytes);
+		ktx2Buffer = ktx2Buffer.slice(0, encodedBytes);
 
 		await this.#ktx2FileCache.saveKtxFileToCache(id, ktx2Buffer);
 		return this.transcodeKtx2Buffer(ktx2Buffer);
