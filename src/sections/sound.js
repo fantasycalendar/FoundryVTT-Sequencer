@@ -295,6 +295,7 @@ class SoundSection extends Section {
 			locationOptions: this._locationOptions,
 			loop: this._duration > duration,
 			volume: this._volume,
+			channel: this._channel,
 			fadeIn: this._fadeInAudio,
 			fadeOut: this._fadeOutAudio,
 			startTime: startTime,
