@@ -42,10 +42,10 @@ class VideoAsset extends Asset {
 	destroy() {
 		try {
 			this.video.pause();
-			URL.revokeObjectURL(this.video.src)
+			URL.revokeObjectURL(this.video.src);
 			this.video.removeAttribute("src");
-			this.video.onerror = null
-			this.video.oncanplay = null
+			this.video.onerror = null;
+			this.video.oncanplay = null;
 			this.video.load();
 			// @ts-expect-error can only be null after destroy
 			this.video = null;
@@ -180,7 +180,7 @@ class VideoPlaybackControls extends PlaybackControls {
 		this.#video.playbackRate = value;
 	}
 	destroy() {
-		this.stop()
+		this.stop();
 		// @ts-expect-error should be null only when destroyed
 		this.#video = null;
 		// @ts-expect-error should be null only when destroyed
@@ -252,7 +252,7 @@ class SpritePlaybackControls extends PlaybackControls {
 	}
 
 	destroy() {
-		this.stop()
+		this.stop();
 		// @ts-expect-error should be null only when destroyed
 		this.#sprite = null;
 	}
@@ -346,7 +346,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			this.#relatedAssets[filePath] = undefined;
 			nextAsset = await this.#loadAsset(filePath);
 			if (this.destroyed) {
-				return
+				return;
 			}
 			this.#relatedAssets.set(filePath, nextAsset);
 		}
@@ -356,19 +356,19 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 		if (this.#sharedSpriteConfig.isPersisted) {
 			requestAnimationFrame(async () => {
-				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath)
+				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath);
 				if (!spritesheet) {
-					return
+					return;
 				}
-				const previousAsset = this.activeAsset
-				const asset = new VideoSpritesheetAsset({ filepath: filePath, spritesheet })
+				const previousAsset = this.activeAsset;
+				const asset = new VideoSpritesheetAsset({ filepath: filePath, spritesheet });
 				this.#relatedAssets.set(filePath, asset);
 				if (this.destroyed || this.#activeAssetPath !== filePath) {
-					return
+					return;
 				}
-				this.#activateAsset(asset)
-				previousAsset?.destroy()
-			})
+				this.#activateAsset(asset);
+				previousAsset?.destroy();
+			});
 		}
 	}
 	/**
@@ -405,13 +405,13 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return this.#preloadingPromise;
 	}
 	destroy() {
-		this.#playbackControls?.destroy()
+		this.#playbackControls?.destroy();
 		for (const asset of this.#relatedAssets.values()) {
-			asset?.destroy()
+			asset?.destroy();
 		}
-		this.#relatedAssets.clear()
-		this.managedSprite?.removeFromParent()
-		this.managedSprite?.destroy()
+		this.#relatedAssets.clear();
+		this.managedSprite?.removeFromParent();
+		this.managedSprite?.destroy();
 		super.destroy({ children: true });
 	}
 	//#endregion
@@ -546,7 +546,6 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 	}
 
-
 	async #preloadVariants() {
 		if (this.#activeAssetPath === "TEXT") {
 			return;
@@ -574,9 +573,13 @@ export class SequencerSpriteManager extends PIXI.Container {
 			return this.#loadFlipbook(this.#file.getAllFiles(), this.#file.originalMetadata);
 		}
 		const texture = await SequencerFileCache.loadFile(filepath);
-		const mipmapDisablingFormats = ["BASISU_ETC1S"];
-		// disable mipmaps if using compressed textures
-		if (mipmapDisablingFormats.includes(texture?.data?.meta?.format)) {
+		// disable mipmaps if using compressed textures and no level information is given.
+		// for some reason, the integrated basis_universal transcoder does not set this
+		// correctly.
+		if (
+			texture?.baseTexture?.resource instanceof PIXI.CompressedTextureResource &&
+			texture?.baseTexture?.resource.levels === 1
+		) {
 			texture?.baseTexture?.setStyle(0, 0);
 		} else if (this.#sharedSpriteConfig.antialiasing !== PIXI.SCALE_MODES.LINEAR) {
 			texture?.baseTexture.setStyle(0, this.#sharedSpriteConfig.antialiasing);
@@ -602,8 +605,8 @@ export class SequencerSpriteManager extends PIXI.Container {
 	}
 
 	/**
-	 * @param {VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset} nextAsset 
-	 * @returns 
+	 * @param {VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset} nextAsset
+	 * @returns
 	 */
 	#activateAsset(nextAsset) {
 		let view;
@@ -631,20 +634,20 @@ export class SequencerSpriteManager extends PIXI.Container {
 		this.#applyPreviousValues(view, controls);
 
 		if (this.#playbackControls) {
-			this.#playbackControls.destroy()
+			this.#playbackControls.destroy();
 		} else {
-			controls?.play()
+			controls?.play();
 		}
 		this.#playbackControls = controls;
 
 		if (this.managedSprite) {
-			this.managedSprite.removeFromParent()
-			this.managedSprite.destroy()
+			this.managedSprite.removeFromParent();
+			this.managedSprite.destroy();
 		}
 		this.#managedSprite = view;
-		this.addChild(view)
-		
-		return true
+		this.addChild(view);
+
+		return true;
 	}
 
 	/**

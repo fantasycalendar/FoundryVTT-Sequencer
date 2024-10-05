@@ -111,30 +111,34 @@ const SequencerFileCache = {
 			return;
 		}
 		let job = this._generateSpritesheetJobs.get(inSrc);
-		if (!job) {
+		if (job) {
+			return job;
+		}
+		job = new Promise(async (resolve) => {
 			const timeStart = Date.now();
 			console.log("generating spritesheet for", inSrc);
 			const blob = await this.loadVideo(inSrc);
 			const buffer = await blob.arrayBuffer();
-			job = generator.spritesheetFromBuffer({ buffer, id: inSrc }).then((res) => {
-				const w = res.baseTexture.width;
-				const h = res.baseTexture.height;
-				const megaBytes =
-					Math.round(
-						res.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) / 100_000
-					) / 10;
-				console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
-				return res;
-			}).catch((err) => {
-				console.warn(err);
-				return null;
-			});
-			this._generateSpritesheetJobs.set(
-				inSrc,
-				job
-			);
-		}
-
+			/** @type {PIXI.Spritesheet | null} */
+			let spritesheet = null;
+			try {
+				spritesheet = await generator.spritesheetFromBuffer({ buffer, id: inSrc });
+			} catch (error) {
+				console.warn(error);
+				resolve(null);
+			}
+			const w = spritesheet.baseTexture.width;
+			const h = spritesheet.baseTexture.height;
+			const megaBytes =
+				Math.round(
+					spritesheet.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) /
+						100_000
+				) / 10;
+			console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
+			resolve(spritesheet);
+		});
+		
+		this._generateSpritesheetJobs.set(inSrc, job);
 		return job;
 	},
 
