@@ -111,6 +111,7 @@ async function getAlphaTrimInfo(frame) {
 	const alphaBuffer = new Uint8Array(frame.allocationSize());
 	const [chromaPlane] = await frame.copyTo(alphaBuffer);
 	const alphaThreshold = frame.format?.startsWith("I") ? 1 : 0;
+	frame.close();
 	let top = null;
 	let right = null;
 	let left = null;
@@ -177,7 +178,6 @@ async function getAlphaTrimInfo(frame) {
 		if (left !== null) break;
 	}
 	const trimmedRect = { x: left, y: top, w: right - left, h: bottom - top };
-	frame.close();
 	return {
 		alphaBuffer,
 		packSize,
