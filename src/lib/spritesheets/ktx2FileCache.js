@@ -58,8 +58,8 @@ export class Ktx2FileCache {
 	 * @returns {Promise<void>}
 	 */
 	async saveKtxFileToCache(id, ktx2FileBuffer) {
-		// only cache files <= 25MB
-		if (ktx2FileBuffer.byteLength > 25 * 1000 * 1000) {
+		// only cache files <= 30MB
+		if (ktx2FileBuffer.byteLength > 30 * 1000 * 1000) {
 			return
 		}
 		const cacheStorage = await ktx2FileCache.catch(() => null);
