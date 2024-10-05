@@ -2072,10 +2072,12 @@ export default class EffectSection extends Section {
 	 */
 	async preRun() {
 
+		const oldSource = this._source;
 		const crosshairSource = this.sequence?.crosshairs?.[this._source];
 		if(typeof this._source === "string" && crosshairSource){
 			this._source = crosshairSource.uuid;
 		}
+		const oldTarget = this._target?.target;
 		const crosshairTarget = this.sequence?.crosshairs?.[this._target?.target];
 		if(typeof this._target?.target === "string" && crosshairTarget){
 			this._target.target = crosshairTarget.uuid;
@@ -2085,6 +2087,10 @@ export default class EffectSection extends Section {
 			this._attachTo.active = !!crosshairSource;
 		}
 
+		if (this._name && (oldSource !== this._source || oldTarget !== this._target?.target)) {
+			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
+			this.sequence.nameOffsetMap[this._name].target = this._getTargetObject();
+		}
 	}
 
 	/**
@@ -2188,9 +2194,8 @@ export default class EffectSection extends Section {
 		}
 
 		if (this._name) {
-			if (!this.sequence.nameOffsetMap) {
-				this.sequence.nameOffsetMap = {};
-			}
+
+			this.sequence.nameOffsetMap ||= {};
 
 			if (!this.sequence.nameOffsetMap[this._name]) {
 				const source = this._getSourceObject();

@@ -259,8 +259,8 @@ export default class CrosshairSection extends Section {
 
 		return reticle.show().then(async () => {
 
-			if (this._name && !this.sequence.nameOffsetMap) {
-				this.sequence.nameOffsetMap = {};
+			if (this._name) {
+				this.sequence.nameOffsetMap ||= {};
 				this.sequence.nameOffsetMap[this._name] = {
 					seed: `${this._name}-${foundry.utils.randomID()}`,
 					twister: {}
@@ -283,7 +283,8 @@ export default class CrosshairSection extends Section {
 				this.sequence.nameOffsetMap[this._name].target = position.target;
 			}
 
-		}).catch(() => {
+		}).catch((err) => {
+			console.log(err)
 			this.sequence._abort();
 		});
 	}
