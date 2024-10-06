@@ -16,9 +16,9 @@
       "website": "http://fantasycomputer.works/"
     }
   ],
-  "esmodules": ["module.js"],
+  "esmodules": ["dist/module.js"],
   "scripts": ["ext/pixi-filters.js"],
-  "styles": ["style.css"],
+  "styles": ["dist/style.css"],
   "languages": [
     {
       "lang": "en",

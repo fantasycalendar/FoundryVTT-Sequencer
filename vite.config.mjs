@@ -1,6 +1,7 @@
 /* eslint-env node */
 import { svelte }    from '@sveltejs/vite-plugin-svelte';
 import resolve       from '@rollup/plugin-node-resolve'; // This resolves NPM modules from node_modules.
+import { resolve as resolvePath } from "path";
 import preprocess    from 'svelte-preprocess';
 import {
 	postcssConfig,
@@ -32,7 +33,7 @@ export default () =>
 	/** @type {import('vite').UserConfig} */
 	return {
 		root: 'src/',                 // Source location / esbuild root.
-		base: `/${s_PACKAGE_ID}/`,    // Base module path that 30001 / served dev directory.
+		base: `/${s_PACKAGE_ID}/dist/`,    // Base module path that 30001 / served dev directory.
 		publicDir: false,             // No public resources to copy.
 		cacheDir: '../.vite-cache',   // Relative from root directory.
 
@@ -72,8 +73,8 @@ export default () =>
 		},
 
 		build: {
-			outDir: __dirname,
-			emptyOutDir: false,
+			outDir: resolvePath(__dirname, "dist"),
+			emptyOutDir: true,
 			sourcemap: s_SOURCEMAPS,
 			brotliSize: true,
 			minify: s_COMPRESS ? 'terser' : false,
