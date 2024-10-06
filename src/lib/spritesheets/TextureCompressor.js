@@ -67,7 +67,7 @@ export class SpritesheetCompressor {
 			return BASIS_FORMAT.ASTC;
 		}
 		if (this.#supportedCodecs.bc7) {
-			return BASIS_FORMAT.ASTC;
+			return BASIS_FORMAT.BC7;
 		}
 		if (this.#supportedCodecs.dxt) {
 			return BASIS_FORMAT.BC3;
