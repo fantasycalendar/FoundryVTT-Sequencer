@@ -1986,10 +1986,10 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (this.shouldShowFadedVersion) {
 			this.filters = [
-				new PIXI.filters.ColorMatrixFilter({
+				new PIXI.ColorMatrixFilter({
 					saturation: -1,
 				}),
-				new PIXI.filters.AlphaFilter(
+				new PIXI.AlphaFilter(
 					game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100
 				),
 			];

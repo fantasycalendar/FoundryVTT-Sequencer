@@ -58,9 +58,9 @@ export class SequencerInterfaceLayer extends InteractionLayer {
         new PIXI.Graphics()
       );
 
-      this.suggestionPoint.filters = [new PIXI.filters.AlphaFilter(0.75)];
-      this.effectSourcePosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
-      this.effectTargetPosition.filters = [new PIXI.filters.AlphaFilter(0.75)];
+      this.suggestionPoint.filters = [new PIXI.AlphaFilter(0.75)];
+      this.effectSourcePosition.filters = [new PIXI.AlphaFilter(0.75)];
+      this.effectTargetPosition.filters = [new PIXI.AlphaFilter(0.75)];
 
       this.effectSelectionBorder.zIndex = 1;
 
