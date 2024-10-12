@@ -25,8 +25,8 @@ class AnimationSection extends Section {
 	 */
 	_validateLocation(inTarget){
 		let target = super._validateLocation(inTarget);
-		if(typeof target === "string" && this.sequence.nameOffsetMap[target]){
-			target = this.sequence.nameOffsetMap[target].target ?? this.sequence.nameOffsetMap[target].source;
+		if(typeof target === "string" && this.sequence.crosshairs[target]){
+			target = this.sequence.crosshairs[target].target ?? this.sequence.crosshairs[target].source;
 		}
 		return target;
 	}
