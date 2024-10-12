@@ -467,12 +467,15 @@ export class SequencerAboveUILayer {
   }
 
   static getLayer() {
-    return layer ? layer.app.stage : canvas.uiEffectsLayer;
+    return layer ? layer.app.stage : canvas.sequencerEffectsUILayer;
   }
 
   static addChild(...args) {
-    const result = this.getLayer().addChild(...args);
-    layer.app.stage.renderable = layer.app.stage.children.length > 0;
+		const layer = this.getLayer();
+    const result = layer.addChild(...args);
+		if (layer.app?.stage) {
+			layer.renderable = layer.children.length > 0;
+		}
     return result;
   }
 
@@ -481,10 +484,11 @@ export class SequencerAboveUILayer {
   }
 
   static removeContainerByEffect(inEffect) {
-    const child = this.getLayer().children.find((child) => child === inEffect);
+		const layer = this.getLayer();
+    const child = layer.children.find((child) => child === inEffect);
     if (!child) return;
-    this.getLayer().removeChild(child);
-    layer.app.stage.renderable = layer.app.stage.children.length > 0;
+    layer.removeChild(child);
+    layer.renderable = layer.children.length > 0;
   }
 
   updateTransform() {
