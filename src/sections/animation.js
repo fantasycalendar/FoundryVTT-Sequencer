@@ -379,6 +379,10 @@ class AnimationSection extends Section {
 		  this._teleportTo.target = this.sequence.nameOffsetMap[this._teleportTo?.target].target ?? this.sequence.nameOffsetMap[this._teleportTo?.target].source;
 	  }
 
+	  if(typeof this._rotateTowards?.target === "string" && this.sequence.nameOffsetMap[this._rotateTowards?.target]){
+		  this._rotateTowards.target = this.sequence.nameOffsetMap[this._rotateTowards?.target].target ?? this.sequence.nameOffsetMap[this._rotateTowards?.target].source;
+	  }
+
     let overallDuration = this._duration ? this._duration : 0;
     const originLocation = canvaslib.get_object_position(this._originObject, {
       exact: true,
