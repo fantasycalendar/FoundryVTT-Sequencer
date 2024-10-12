@@ -259,28 +259,21 @@ export default class CrosshairSection extends Section {
 
 		return reticle.show().then(async () => {
 
-			if (this._name) {
-				this.sequence.nameOffsetMap ||= {};
-				this.sequence.nameOffsetMap[this._name] = {
-					seed: `${this._name}-${foundry.utils.randomID()}`,
-					twister: {}
-				}
-			}
-
 			if (this._persist) {
 				const [template] = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [
 					reticle.toObject()
 				]);
 				this.sequence.crosshairs[this._name] = template;
+			}
 
-				if (this._name) {
-					this.sequence.nameOffsetMap[this._name].source = template.uuid;
-					this.sequence.nameOffsetMap[this._name].target = template.uuid;
+			if (this._name) {
+				this.sequence.nameOffsetMap ||= {};
+				this.sequence.nameOffsetMap[this._name] = {
+					seed: `${this._name}-${foundry.utils.randomID()}`,
+					twister: {},
+					source: this.sequence.crosshairs[this._name]?.uuid ?? reticle.getOrientation().source,
+					target: this.sequence.crosshairs[this._name]?.uuid ?? reticle.getOrientation().target
 				}
-			} if (this._name) {
-				const position = reticle.getOrientation();
-				this.sequence.nameOffsetMap[this._name].source = position.source;
-				this.sequence.nameOffsetMap[this._name].target = position.target;
 			}
 
 		}).catch((err) => {

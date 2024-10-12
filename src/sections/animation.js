@@ -19,18 +19,6 @@ class AnimationSection extends Section {
 
   static niceName = "Animation";
 
-	/**
-	 * @override
-	 * @private
-	 */
-	_validateLocation(inTarget){
-		let target = super._validateLocation(inTarget);
-		if(typeof target === "string" && this.sequence.crosshairs[target]){
-			target = this.sequence.crosshairs[target].target ?? this.sequence.crosshairs[target].source;
-		}
-		return target;
-	}
-
   /**
    * Sets the target object to be animated
    *
@@ -382,6 +370,14 @@ class AnimationSection extends Section {
       lastTimespan: performance.now(),
       totalDt: 0,
     };
+
+	  if(typeof this._moveTowards?.target === "string" && this.sequence.nameOffsetMap[this._moveTowards?.target]){
+		  this._moveTowards.target = this.sequence.nameOffsetMap[this._moveTowards?.target].target ?? this.sequence.nameOffsetMap[this._moveTowards?.target].source;
+	  }
+
+	  if(typeof this._teleportTo?.target === "string" && this.sequence.nameOffsetMap[this._teleportTo?.target]){
+		  this._teleportTo.target = this.sequence.nameOffsetMap[this._teleportTo?.target].target ?? this.sequence.nameOffsetMap[this._teleportTo?.target].source;
+	  }
 
     let overallDuration = this._duration ? this._duration : 0;
     const originLocation = canvaslib.get_object_position(this._originObject, {
