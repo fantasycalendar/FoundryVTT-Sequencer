@@ -36,6 +36,7 @@ const CONSTANTS = {
 		MOUSE_MOVE: "mouseMove",
 		MOVE: "move",
 		COLLIDE: "collide",
+		STOP_COLLIDING: "stopColliding",
 		INVALID_PLACEMENT: "invalidPlacement",
 		PLACED: "placed",
 		CANCEL: "cancel"

@@ -256,27 +256,6 @@ export default class EffectSection extends Section {
 				"could not find given object"
 			);
 
-		let isValidObject = true;
-		if (typeof inObject === "string") {
-			isValidObject =
-				validatedObject instanceof Token ||
-				validatedObject instanceof TokenDocument ||
-				validatedObject instanceof Tile ||
-				validatedObject instanceof TileDocument ||
-				validatedObject instanceof Drawing ||
-				validatedObject instanceof DrawingDocument ||
-				validatedObject instanceof MeasuredTemplate ||
-				validatedObject instanceof MeasuredTemplateDocument ||
-				validatedObject instanceof CanvasEffect;
-			if (!isValidObject) {
-				this.sequence._showWarning(
-					this,
-					"attachTo",
-					"Only Tokens, Tiles, Drawings, and MeasuredTemplates may have attached effects - will play effect on target's location"
-				);
-			}
-		}
-
 		const aligns = Object.keys(canvaslib.alignments);
 		if (
 			typeof inOptions.align !== "string" ||
@@ -372,7 +351,7 @@ export default class EffectSection extends Section {
 		};
 
 		this._attachTo = {
-			active: isValidObject,
+			active: !!validatedObject,
 			align: inOptions.align,
 			edge: inOptions.edge,
 			bindVisibility: inOptions.bindVisibility,
@@ -2099,46 +2078,25 @@ export default class EffectSection extends Section {
 	 * @OVERRIDE
 	 */
 	async preRun() {
-		if (this._from) {
-			this._file = this._file || this._from.object?.texture?.src;
 
-			if (this._source === null) {
-				this._source = this._validateLocation(this._from.object);
-			}
+		const oldSource = this._source;
+		const crosshairSource = this.sequence?.crosshairs?.[this._source];
+		if(typeof this._source === "string" && crosshairSource){
+			this._source = crosshairSource.uuid;
+		}
+		const oldTarget = this._target?.target;
+		const crosshairTarget = this.sequence?.crosshairs?.[this._target?.target];
+		if(typeof this._target?.target === "string" && crosshairTarget){
+			this._target.target = crosshairTarget.uuid;
+		}
 
-			if (this._size === null) {
-				const size = canvaslib.get_object_dimensions(this._from.object);
-				this._size = {
-					width: size?.width ?? canvas.grid.size,
-					height: size?.height ?? canvas.grid.size,
-					gridUnits: false,
-				};
-			}
+		if(this._attachTo && !this._attachTo.active && typeof this._source === "string" && crosshairSource){
+			this._attachTo.active = !!crosshairSource;
+		}
 
-			if (
-				this._mirrorX === null &&
-				(this._from.object.mirrorX ||
-					(this._from.object?.tile && this._from.object?.tile.scale.x < 0))
-			) {
-				this._mirrorX = true;
-			}
-
-			if (
-				this._mirrorY === null &&
-				(this._from.object.mirrorY ||
-					(this._from.object?.tile && this._from.object?.tile.scale.y < 0))
-			) {
-				this._mirrorY = true;
-			}
-
-			if (this._angle === null && this._from.object?.rotation) {
-				this._angle = -this._from.object.rotation;
-			}
-
-			this._randomOffset = {
-				source: this._randomOffset?.source ?? this._from.options.randomOffset,
-				target: this._randomOffset?.target ?? false,
-			};
+		if (this._name && (oldSource !== this._source || oldTarget !== this._target?.target)) {
+			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
+			this.sequence.nameOffsetMap[this._name].target = this._getTargetObject();
 		}
 	}
 
@@ -2196,10 +2154,55 @@ export default class EffectSection extends Section {
 	 * @private
 	 */
 	async _initialize() {
-		if (this._name) {
-			if (!this.sequence.nameOffsetMap) {
-				this.sequence.nameOffsetMap = {};
+
+		this._mirrorX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)
+		this._mirrorY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)
+
+		if (this._from) {
+			this._file = this._file || this._from.object?.texture?.src;
+
+			if (this._source === null) {
+				this._source = this._validateLocation(this._from.object);
 			}
+
+			if (this._size === null) {
+				const size = canvaslib.get_object_dimensions(this._from.object);
+				this._size = {
+					width: size?.width ?? canvas.grid.size,
+					height: size?.height ?? canvas.grid.size,
+					gridUnits: false,
+				};
+			}
+
+			if (
+				this._mirrorX === null &&
+				(this._from.object.mirrorX ||
+					(this._from.object?.tile && this._from.object?.tile.scale.x < 0))
+			) {
+				this._mirrorX = true;
+			}
+
+			if (
+				this._mirrorY === null &&
+				(this._from.object.mirrorY ||
+					(this._from.object?.tile && this._from.object?.tile.scale.y < 0))
+			) {
+				this._mirrorY = true;
+			}
+
+			if (this._angle === null && this._from.object?.rotation) {
+				this._angle = -this._from.object.rotation;
+			}
+
+			this._randomOffset = {
+				source: this._randomOffset?.source ?? this._from.options.randomOffset,
+				target: this._randomOffset?.target ?? false,
+			};
+		}
+
+		if (this._name) {
+
+			this.sequence.nameOffsetMap ||= {};
 
 			if (!this.sequence.nameOffsetMap[this._name]) {
 				const source = this._getSourceObject();
@@ -2224,6 +2227,10 @@ export default class EffectSection extends Section {
 					source: source,
 					target: target,
 					randomOffset: this._randomOffset,
+					angle: this._angle,
+					randomRotation: this._randomRotation,
+					mirrorX: this._mirrorX,
+					mirrorY: this._mirrorY,
 					missed: this._missed,
 					offset: this._offset,
 					repetitions: this._repetitions,
@@ -2278,7 +2285,9 @@ export default class EffectSection extends Section {
 	 * @private
 	 */
 	_getSourceObject() {
-		if (!this._source || typeof this._source !== "object") return this._source;
+		if (!this._source || typeof this._source !== "object"){
+			return this._source;
+		}
 		if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
 			const doc = this._source?.document ?? this._source;
 			return doc.getOrientation().source;
@@ -2296,8 +2305,10 @@ export default class EffectSection extends Section {
 	 * @private
 	 */
 	_getTargetObject() {
-		if (!this._target?.target) return this._target;
-		if (typeof this._target.target !== "object") return this._target.target;
+		if (!this._target) return this._target;
+		if (typeof this._target.target !== "object"){
+			return this._target.target;
+		}
 		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
 			const doc = this._target?.target?.document ?? this._target?.target;
 			const orientation = doc.getOrientation();
@@ -2334,8 +2345,8 @@ export default class EffectSection extends Section {
 					customRange: false,
 				};
 
-		const source = this._getSourceObject();
-		const target = this._getTargetObject();
+		let source = this._getSourceObject();
+		let target = this._getTargetObject();
 
 		this._temporaryEffect =
 			this._temporaryEffect ||
@@ -2477,8 +2488,8 @@ export default class EffectSection extends Section {
 			spriteRotation: this._spriteRotation,
 			randomSpriteRotation: this._randomSpriteRotation,
 			tint: this._tint?.decimal,
-			flipX: this._mirrorX || (this._randomMirrorX && Math.random() < 0.5),
-			flipY: this._mirrorY || (this._randomMirrorY && Math.random() < 0.5),
+			flipX: this._mirrorX,
+			flipY: this._mirrorY,
 
 			/**
 			 * Time properties

@@ -92,7 +92,7 @@ export default class SequencerSoundManager {
 				muffledEffect: { type: "lowpass" },
 				...data.locationOptions,
 				volume: data.volume,
-				channel: "interface"
+				channel: data.channel || "interface"
 			});
 		} else {
 			sound = await this.AudioHelper.play({
@@ -101,7 +101,7 @@ export default class SequencerSoundManager {
 				volume: data.fadeIn ? 0 : data.volume,
 				loop: data.loop,
 				offset: data.startTime,
-				channel: "interface"
+				channel: data.channel || "interface"
 			}, false);
 		}
 

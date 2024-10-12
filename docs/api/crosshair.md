@@ -169,3 +169,19 @@ Causes the crosshair to spawn a measurable template identical to the crosshair
 
 Toggles whether this crosshair should highlight the grid
 
+## Callback
+
+`.callback(inString, inFunction)`
+
+```js
+new Sequence()
+  .crosshair()
+    .callback(Sequencer.Crosshair.CALLBACKS.SHOW, function(crosshair) {
+      console.log(crosshair)
+    })
+  .play()
+```
+This allows you to run functions when certain events happens with the crosshair, such as changing the icon. Most functions are passed the crosshair object.
+
+This requires the use of `Sequencer.Crosshair.CALLBACKS` as the first parameter.
+

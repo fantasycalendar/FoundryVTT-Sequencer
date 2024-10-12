@@ -33,6 +33,7 @@ export default class Sequence {
 		this.softFail = options?.softFail ?? softFail;
 		this.sections = [];
 		this.nameOffsetMap = false;
+		this.crosshairs = {}
 		this.effectIndex = 0;
 		this.sectionToCreate = undefined;
 		this.localOnly = false;

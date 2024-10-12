@@ -1,5 +1,22 @@
 ## Changelog
 
+# Version 3.3.5
+
+- *Effects* - Fixed `.screenSpaceAboveUI()` not correctly falling back to the below UI screenspace layer if the above UI layer is disabled
+- *Animations* - Fixed named sequence-crosshairs not working as a target position
+- *Sequencer* - Fixed minor Foundry v12 deprecation warnings
+- *Sequencer* - Updated PIXI filters
+
+# Version 3.3.4
+
+- *Crosshairs* - Fixed `.crosshair()`'s `.persist()` option not working with subsequent `.effect()` sections
+- *Crosshairs* - Fixed typos on `.gridHighlight()` (thanks Vauxs!)
+- *Crosshairs* - Fixed crosshair documentation and typing (thanks Vauxs and Spappz on github!)
+- *Crosshairs* - Fixed `.crosshair()`'s default size being smaller than the grid
+- *Effects* - Removed `.attachTo()` warning when using `.attachTo()` with a named location (specifically `.persist()`ing crosshairs)
+- *Effects* - Fixed `.name()` not passing mirrorX/Y, rotation, and random rotation to the subsequent effects
+- *Sounds* - Added `.audioChannel()` to sounds, which controls which output they are played through (thank you Oxy949 on github!)
+
 # Version 3.3.3
 
 - *Crosshairs* - Added `Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING` callback

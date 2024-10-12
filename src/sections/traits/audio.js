@@ -5,6 +5,7 @@ export default {
    * Base properties
    */
   _volume: null,
+  _channel: "interface",
   _fadeInAudio: null,
   _fadeOutAudio: null,
 

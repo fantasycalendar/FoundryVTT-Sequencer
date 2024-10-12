@@ -2,13 +2,14 @@ import * as lib from "../lib/lib.js";
 import Section from "./section.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import traits from "./traits/_traits.js";
+import CONSTANTS from "../constants.js";
 
 export default class CrosshairSection extends Section {
 	constructor(inSequence, inName = "") {
 		super(inSequence);
 		this._name = inName;
 		this._type = CONST.MEASURED_TEMPLATE_TYPES.CIRCLE;
-		this._distance = 0.5;
+		this._distance = canvas.grid.distance/2;
 		this._angle = 53.13;
 		this._direction = 0;
 		this._borderColor = null;
@@ -17,6 +18,7 @@ export default class CrosshairSection extends Section {
 		this._persist = false;
 		this._config = CrosshairsDocument.defaultConfig;
 		this._waitUntilFinished = true;
+		this._callbacks = {}
 	}
 
 	static niceName = "Crosshair";
@@ -214,7 +216,7 @@ export default class CrosshairSection extends Section {
 	 * Causes the crosshair to spawn a measurable template identical to the crosshair
 	 */
 	persist(inBool = true) {
-		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type number");
+		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "persist", "inBool must be of type boolean");
 		this._persist = inBool;
 		return this;
 	}
@@ -225,6 +227,20 @@ export default class CrosshairSection extends Section {
 	gridHighlight(inBool = true) {
 		if (typeof inBool !== "boolean") throw this.sequence._customError(this, "gridHighlight", "inBool must be of type boolean");
 		this._config['gridHighlight'] = inBool;
+		return this;
+	}
+
+	/**
+	 * Adds a callback function for certain crosshair events
+	 */
+	callback(inString, inCallback) {
+		if (typeof inString !== "string" || !Object.values(CONSTANTS.CALLBACKS).some(str => str === inString)) {
+			throw this.sequence._customError(this, "callback", "inString must be of type string and one of Sequencer.Crosshair.CALLBACKS");
+		}
+		if (!lib.is_function(inCallback)) {
+			throw this.sequence._customError(this, "callback", "inCallback must be of type Function");
+		}
+		this._callbacks[inString] = inCallback;
 		return this;
 	}
 
@@ -239,26 +255,29 @@ export default class CrosshairSection extends Section {
 			fillColor: this._fillColor,
 		}, {
 			parent: canvas.scene
-		}, this._config);
+		}, this._config, this._callbacks);
 
 		return reticle.show().then(async () => {
 
-			const position = reticle.getOrientation();
+			if (this._persist) {
+				const [template] = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [
+					reticle.toObject()
+				]);
+				this.sequence.crosshairs[this._name] = template;
+			}
 
 			if (this._name) {
-				if (!this.sequence.nameOffsetMap) {
-					this.sequence.nameOffsetMap = {};
-				}
+				this.sequence.nameOffsetMap ||= {};
 				this.sequence.nameOffsetMap[this._name] = {
-					seed: `${this._name}-${foundry.utils.randomID()}`, source: position.source, target: position.target
+					seed: `${this._name}-${foundry.utils.randomID()}`,
+					twister: {},
+					source: this.sequence.crosshairs[this._name]?.uuid ?? reticle.getOrientation().source,
+					target: this.sequence.crosshairs[this._name]?.uuid ?? reticle.getOrientation().target
 				}
 			}
 
-			if (this._persist) {
-				await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [reticle.toObject()]);
-			}
-
-		}).catch(() => {
+		}).catch((err) => {
+			console.log(err)
 			this.sequence._abort();
 		});
 	}

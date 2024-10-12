@@ -17,7 +17,7 @@ export async function getFiles(
 
   if (/\.s3\./.test(inFile)) {
     source = "s3";
-    const { bucket, keyPrefix } = FilePicker.parseS3URL(inFile);
+    const { bucket, keyPrefix } = foundry.utils.parseS3URL(inFile);
     if (bucket) {
       browseOptions.bucket = bucket;
       inFile = keyPrefix;

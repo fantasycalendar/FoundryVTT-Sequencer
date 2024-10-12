@@ -10,6 +10,7 @@ class SoundSection extends Section {
 		super(inSequence);
 		this._file = inFile;
 		this._volume = 0.8;
+		this._channel = "interface";
 		this._overrides = [];
 		this._locationOptions = {};
 	}
@@ -76,6 +77,17 @@ class SoundSection extends Section {
 				`inBool must be of type boolean`
 			);
 		this._locationOptions['easing'] = inBool;
+		return this;
+	}
+
+	audioChannel(inString) {
+		if (typeof inString !== "string")
+			throw this.sequence._customError(
+				this,
+				"audioChannel",
+				`inString must be of type string`
+			);
+		this._channel = inString;
 		return this;
 	}
 
@@ -283,6 +295,7 @@ class SoundSection extends Section {
 			locationOptions: this._locationOptions,
 			loop: this._duration > duration,
 			volume: this._volume,
+			channel: this._channel,
 			fadeIn: this._fadeInAudio,
 			fadeOut: this._fadeOutAudio,
 			startTime: startTime,

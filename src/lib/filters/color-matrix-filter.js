@@ -1,5 +1,4 @@
-export default class ColorMatrixFilter extends globalThis.PIXI.filters
-  .ColorMatrixFilter {
+export default class ColorMatrixFilter extends globalThis.PIXI.ColorMatrixFilter {
   /**
    * Properties & default values:
    *     - hue [false]

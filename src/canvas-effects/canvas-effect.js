@@ -534,11 +534,21 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {number}
 	 */
 	get flipX() {
-		return this.data.flipX ? -1 : 1;
+		const offsetMap = this._nameOffsetMap?.[this.data.source];
+		let flip = this.data.flipX ? -1 : 1
+		if(offsetMap && offsetMap.mirrorX !== undefined) {
+			flip *= offsetMap.mirrorX ? -1 : 1;
+		}
+		return flip;
 	}
 
 	get flipY() {
-		return this.data.flipY ? -1 : 1;
+		const offsetMap = this._nameOffsetMap?.[this.data.source];
+		let flip = this.data.flipY ? -1 : 1
+		if(offsetMap && offsetMap.mirrorY !== undefined) {
+			flip *= offsetMap.mirrorY ? -1 : 1;
+		}
+		return flip;
 	}
 
 	/**
@@ -1779,6 +1789,14 @@ export default class CanvasEffect extends PIXI.Container {
 			this._customAngle += lib.random_float_between(-360, 360, this._twister);
 		}
 
+		const offsetMap = this._nameOffsetMap?.[this.data.source];
+		if(offsetMap?.angle !== undefined) {
+			this._customAngle += offsetMap?.angle;
+		}
+		if(offsetMap?.randomRotation) {
+			this._customAngle += lib.random_float_between(-360, 360, offsetMap.twister);
+		}
+
 		this.spriteContainer.rotation = -Math.normalizeRadians(
 			Math.toRadians(this._customAngle)
 		);
@@ -1795,8 +1813,8 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.shouldShowFadedVersion) {
 			this.alpha = game.settings.get(CONSTANTS.MODULE_NAME,"user-effect-opacity") / 100;
 			this.filters = [
-				new PIXI.filters.ColorMatrixFilter({
-					saturation: this.shouldShowFadedVersion ? -1 : 1,
+				new PIXI.ColorMatrixFilter({
+					saturation: -1,
 				}),
 			];
 		}

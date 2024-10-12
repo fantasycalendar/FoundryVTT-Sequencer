@@ -28,7 +28,7 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 	}
 
 	static get defaultConfig() {
-		return foundry.utils.deepClone({
+		return {
 			gridHighlight: true,
 			icon: {
 				texture: "",
@@ -58,7 +58,7 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 				wallBehavior: CONSTANTS.PLACEMENT_RESTRICTIONS.ANYWHERE
 			},
 			lockManualRotation: false
-		})
+		};
 	};
 
 	getOrientation() {

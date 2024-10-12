@@ -75,39 +75,39 @@ type TemplateData = {
 }
 
 type CrosshairsData = {
-  gridHighlight: boolean,
-  icon: {
-    texture: string,
-	  borderVisible: boolean
-  },
-  snap: {
-    position: SnappingOptions,
-    size: SnappingOptions,
-    angle: number
-  },
-	lockDrag: boolean,
-  distanceMin: null | number,
-  distanceMax: null | number,
-  label: {
-    text: string,
-    dx: number,
-    dy: number,
-  },
-  location: {
-    obj: null | VisibleFoundryTypes,
-	  limitMinRange: number | null,
-	  limitMaxRange: number | null,
-	  showRange: boolean,
-    lockToEdge: boolean,
-	  lockToEdgeDirection: boolean,
-	  lockOffsetDistance: number | null,
-	  offset: {
-			x: number,
-		  y: number
-		}
-  },
-  lockManualRotation: boolean,
-  textureTile: number,
+	gridHighlight: boolean;
+	icon: {
+		texture: string;
+		borderVisible: boolean;
+	};
+	snap: {
+		position: number;
+		size: number;
+		direction: number;
+	};
+	lockDrag: boolean;
+	distanceMin: null | number;
+	distanceMax: null | number;
+	label: {
+		text: string;
+		dx: number;
+		dy: number;
+	};
+	location: {
+		obj: null | VisibleFoundryTypes;
+		limitMinRange: number | null;
+		limitMaxRange: number | null;
+		showRange: boolean;
+		lockToEdge: boolean;
+		lockToEdgeDirection: boolean;
+		offset: {
+			x: number;
+			y: number;
+		};
+		wallBehavior: string;
+	};
+	lockManualRotation: boolean;
+	textureTile: number;
 };
 
 declare interface CrosshairData extends
@@ -117,6 +117,29 @@ declare interface CrosshairData extends
 type CrosshairCallbackData = {
   show: Function,
   move: Function,
+	mouseMove: Function,
+	collide: Function,
+	stopColliding: Function,
+	invalidPlacement: Function,
+	placed: Function,
+	cancel: Function
+}
+
+type CrosshairCallbacks = {
+	SHOW: "show",
+	MOUSE_MOVE: "mouseMove",
+	MOVE: "move",
+	COLLIDE: "collide",
+	STOP_COLLIDING: "stopColliding",
+	INVALID_PLACEMENT: "invalidPlacement",
+	PLACED: "placed",
+	CANCEL: "cancel"
+}
+
+type CrosshairPlacementRestrictions = {
+	ANYWHERE: "anywhere",
+	LINE_OF_SIGHT: "lineOfSight",
+	NO_COLLIDABLES: "noCollidables"
 }
 
 type Shapes = "polygon" | "rectangle" | "circle" | "ellipse" | "roundedRect";
@@ -997,6 +1020,11 @@ declare abstract class SoundSection {
   distanceEasing(inBool: Boolean): this;
 
   /**
+   * Set the sound output channel.
+   */
+  audioChannel(inString: String): this;
+
+  /**
    * Whether the sound will play for GMs as if they were hearing it at the origin of the sound.
    */
   alwaysForGMs(inBool: Boolean): this;
@@ -1165,7 +1193,8 @@ declare abstract class CrosshairSection {
 		offset?: {
 			x?: number;
 			y?: number;
-		}
+		};
+		wallBehavior: string;
 	}): this;
 
 	/**
@@ -1177,6 +1206,11 @@ declare abstract class CrosshairSection {
 	 * Toggles whether this crosshair should highlight the grid
 	 */
 	gridHighlight(inBool: boolean): this;
+
+	/**
+	 * Adds a callback function for certain crosshair events
+	 */
+	callback(inString: keyof CrosshairCallbackData, inFunction: Function): this;
 
 }
 
@@ -1406,6 +1440,9 @@ declare abstract class SequencerSoundManager {
 }
 
 declare abstract class SequencerCrosshair {
+
+	CALLBACKS: CrosshairCallbacks;
+	PLACEMENT_RESTRICTIONS: CrosshairPlacementRestrictions;
 
 	/**
 	 * Show a configurable crosshair
