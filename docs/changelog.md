@@ -1,5 +1,10 @@
 ## Changelog
 
+# Version 3.3.6
+
+- *Sequencer* - Reverted PIXI filters plugin to more compatible version
+- *Sounds* - Fixed `.startTime()` and `.endTime()` not working
+
 # Version 3.3.5
 
 - *Effects* - Fixed `.screenSpaceAboveUI()` not correctly falling back to the below UI screenspace layer if the above UI layer is disabled

@@ -60,9 +60,9 @@ const SequencerFileCache = {
       this._preloadedFiles.add(inSrc);
       if (preload) return true;
       return get_video_texture(blob);
-    } else if (SequencerSoundManager.AudioHelper.hasAudioExtension(inSrc)) {
+    } else if (foundry.audio.AudioHelper.hasAudioExtension(inSrc)) {
       try {
-        const audio = await SequencerSoundManager.AudioHelper.preloadSound(inSrc);
+        const audio = await foundry.audio.AudioHelper.preloadSound(inSrc);
         if (audio) {
           this._preloadedFiles.add(inSrc);
         }

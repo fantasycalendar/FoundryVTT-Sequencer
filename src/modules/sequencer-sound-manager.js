@@ -17,9 +17,6 @@ function createSoundListener(sound, name, func) {
 
 export default class SequencerSoundManager {
 
-	static AudioHelper = foundry?.audio?.AudioHelper ?? AudioHelper;
-	static Sound = foundry?.audio?.Sound ?? Sound;
-
 	/**
 	 * Returns all the currently running sounds
 	 *
@@ -95,14 +92,13 @@ export default class SequencerSoundManager {
 				channel: data.channel || "interface"
 			});
 		} else {
-			sound = await this.AudioHelper.play({
+			sound = await game.audio.play(data.src, {
 				...data.locationOptions,
-				src: data.src,
 				volume: data.fadeIn ? 0 : data.volume,
 				loop: data.loop,
 				offset: data.startTime,
-				channel: data.channel || "interface"
-			}, false);
+				context: game.audio[data.channel || "interface"]
+			});
 		}
 
 		if (!sound) return false;
@@ -166,12 +162,12 @@ export default class SequencerSoundManager {
 				inFilter.sounds = [inFilter.sounds];
 			}
 			inFilter.sounds = inFilter.sounds.map((sound) => {
-				if (!(typeof sound === "string" || sound instanceof SequencerSoundManager.Sound))
+				if (!(typeof sound === "string" || sound instanceof foundry?.audio?.Sound))
 					throw lib.custom_error(
 						"Sequencer",
 						"SoundManager | collections in inFilter.sounds must be of type string or Sound",
 					);
-				if (sound instanceof SequencerSoundManager.Sound) return sound.sequencer_data.id;
+				if (sound instanceof foundry?.audio?.Sound) return sound.sequencer_data.id;
 				return sound;
 			});
 		}
