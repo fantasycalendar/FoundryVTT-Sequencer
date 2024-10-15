@@ -65,25 +65,25 @@ const SequencerFileCache = {
 		return srcExists(inSrc);
 	},
 
-	async loadFile(inSrc, preload = false) {
-		if (inSrc.toLowerCase().endsWith(".webm")) {
-			let blob = await this.loadVideo(inSrc);
-			if (!blob) return false;
-			this._preloadedFiles.add(inSrc);
-			if (preload) return true;
-			return get_video_texture(blob);
-		} else if (SequencerSoundManager.AudioHelper.hasAudioExtension(inSrc)) {
-			try {
-				const audio = await SequencerSoundManager.AudioHelper.preloadSound(inSrc);
-				if (audio) {
-					this._preloadedFiles.add(inSrc);
-				}
-				return audio;
-			} catch (err) {
-				console.error(`Failed to load audio: ${inSrc}`);
-				return false;
-			}
-		}
+  async loadFile(inSrc, preload = false) {
+    if (inSrc.toLowerCase().endsWith(".webm")) {
+      let blob = await this.loadVideo(inSrc);
+      if (!blob) return false;
+      this._preloadedFiles.add(inSrc);
+      if (preload) return true;
+      return get_video_texture(blob);
+    } else if (foundry.audio.AudioHelper.hasAudioExtension(inSrc)) {
+      try {
+        const audio = await foundry.audio.AudioHelper.preloadSound(inSrc);
+        if (audio) {
+          this._preloadedFiles.add(inSrc);
+        }
+        return audio;
+      } catch (err) {
+        console.error(`Failed to load audio: ${inSrc}`);
+        return false;
+      }
+    }
 
 		const texture = await loadTexture(inSrc);
 		if (texture) {

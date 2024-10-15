@@ -87,6 +87,16 @@ class SoundSection extends Section {
 				"audioChannel",
 				`inString must be of type string`
 			);
+		if (!(game.audio?.[inString] instanceof AudioContext)) {
+			const validChannels = Object.entries(game.audio)
+				.filter(e => e[1] instanceof AudioContext)
+				.map(e => e[0]);
+			throw this.sequence._customError(
+				this,
+				"audioChannel",
+				`inString must be of type ${validChannels.slice(0, -1).join(", ")}, or ${validChannels.slice(-1)}`
+			);
+		}
 		this._channel = inString;
 		return this;
 	}
@@ -256,7 +266,7 @@ class SoundSection extends Section {
 			file = file.getFile();
 		}
 
-		let soundFile = await SequencerSoundManager.AudioHelper.preloadSound(file);
+		let soundFile = await foundry.audio.AudioHelper.preloadSound(file);
 		if (!soundFile || soundFile.failed) {
 			return {
 				play: false,

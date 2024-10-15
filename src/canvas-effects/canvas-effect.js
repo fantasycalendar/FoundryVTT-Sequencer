@@ -449,6 +449,21 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 	}
 
+	set effectAlpha(value) {
+		if (this.sprite) {
+			this.sprite.alpha = value
+		}
+		if (this.shapes) {
+			Object.values(this.shapes).forEach(shape => {
+				shape.alpha = value
+			})
+		}
+	}
+
+	get effectAlpha() {
+		return this.sprite?.alpha
+	}
+
 	async playMedia() {
 		if (this.destroyed || this._ended || this.isEnding) {
 			return
@@ -1757,9 +1772,7 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 		}
 
-		// Alpha is identical to using the alpha filter in case there in only one element in
-		// the container. Since we apply alpha directly to the sprite, this is fine.
-		this.sprite.alpha = this.data.opacity;
+		this.effectAlpha = this.data.opacity
 
 		let spriteOffsetX = this.data.spriteOffset?.x ?? 0;
 		let spriteOffsetY = this.data.spriteOffset?.y ?? 0;
@@ -2588,10 +2601,11 @@ export default class CanvasEffect extends PIXI.Container {
 
 		for (let animation of oneShotAnimations) {
 			if (animation.target === 'alphaFilter') {
-				animation.target = 'sprite'
+				animation.target = this
+				animation.propertyName = 'effectAlpha'
+			} else {
+				animation.target = foundry.utils.getProperty(this, animation.target);
 			}
-
-			animation.target = foundry.utils.getProperty(this, animation.target);
 
 			if (!animation.target) continue;
 
@@ -2625,9 +2639,11 @@ export default class CanvasEffect extends PIXI.Container {
 
 		for (let animation of loopingAnimations) {
 			if (animation.target === 'alphaFilter') {
-				animation.target = 'sprite'
+				animation.target = this
+				animation.propertyName = 'effectAlpha'
+			} else {
+				animation.target = foundry.utils.getProperty(this, animation.target);
 			}
-			animation.target = foundry.utils.getProperty(this, animation.target);
 
 			if (!animation.target) continue;
 
@@ -2735,11 +2751,11 @@ export default class CanvasEffect extends PIXI.Container {
 			return;
 		}
 
-		this.sprite.alpha = 0.0;
+		this.effectAlpha = 0.0;
 
 		SequencerAnimationEngine.addAnimation(this.id, {
-			target: this.sprite,
-			propertyName: "alpha",
+			target: this,
+			propertyName: "effectAlpha",
 			to: this.data.opacity,
 			duration: fadeIn.duration,
 			ease: fadeIn.ease,
@@ -2803,8 +2819,8 @@ export default class CanvasEffect extends PIXI.Container {
 			: Math.max(this._totalDuration - fadeOut.duration + fadeOut.delay, 0);
 
 		SequencerAnimationEngine.addAnimation(this.id, {
-			target: this.sprite,
-			propertyName: "alpha",
+			target: this,
+			propertyName: "effectAlpha",
 			to: 0.0,
 			duration: fadeOut.duration,
 			ease: fadeOut.ease,

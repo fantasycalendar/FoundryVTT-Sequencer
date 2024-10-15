@@ -1,12 +1,10 @@
 /*!
- * pixi-filters - v5.2.1
- * Compiled Fri, 24 Mar 2023 22:12:11 UTC
+ * pixi-filters - v5.3.0
+ * Compiled Thu, 15 Feb 2024 16:39:05 UTC
  *
  * pixi-filters is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- */ var __filters = (function (f, a, Pe, I) {
-  "use strict";
-  var Me = `attribute vec2 aVertexPosition;
+ */var __filters=function(f,a,Pe,I){"use strict";var Me=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -17,8 +15,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    De = `varying vec2 vTextureCoord;
+}`,De=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 
 uniform float gamma;
@@ -49,33 +46,7 @@ void main(void)
 
     gl_FragColor = c * alpha;
 }
-`;
-  class ke extends a.Filter {
-    constructor(e) {
-      super(Me, De),
-        (this.gamma = 1),
-        (this.saturation = 1),
-        (this.contrast = 1),
-        (this.brightness = 1),
-        (this.red = 1),
-        (this.green = 1),
-        (this.blue = 1),
-        (this.alpha = 1),
-        Object.assign(this, e);
-    }
-    apply(e, r, i, o) {
-      (this.uniforms.gamma = Math.max(this.gamma, 1e-4)),
-        (this.uniforms.saturation = this.saturation),
-        (this.uniforms.contrast = this.contrast),
-        (this.uniforms.brightness = this.brightness),
-        (this.uniforms.red = this.red),
-        (this.uniforms.green = this.green),
-        (this.uniforms.blue = this.blue),
-        (this.uniforms.alpha = this.alpha),
-        e.applyFilter(this, r, i, o);
-    }
-  }
-  var Oe = `attribute vec2 aVertexPosition;
+`;class ke extends a.Filter{constructor(e){super(Me,De),this.gamma=1,this.saturation=1,this.contrast=1,this.brightness=1,this.red=1,this.green=1,this.blue=1,this.alpha=1,Object.assign(this,e)}apply(e,r,i,o){this.uniforms.gamma=Math.max(this.gamma,1e-4),this.uniforms.saturation=this.saturation,this.uniforms.contrast=this.contrast,this.uniforms.brightness=this.brightness,this.uniforms.red=this.red,this.uniforms.green=this.green,this.uniforms.blue=this.blue,this.uniforms.alpha=this.alpha,e.applyFilter(this,r,i,o)}}var Oe=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -86,8 +57,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Re = `
+}`,Re=`
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 
@@ -113,8 +83,7 @@ void main(void)
     color *= 0.25;
 
     gl_FragColor = color;
-}`,
-    Ee = `
+}`,$e=`
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 
@@ -142,104 +111,7 @@ void main(void)
 
     gl_FragColor = color;
 }
-`;
-  class T extends a.Filter {
-    constructor(e = 4, r = 3, i = !1) {
-      super(Oe, i ? Ee : Re),
-        (this._kernels = []),
-        (this._blur = 4),
-        (this._quality = 3),
-        (this.uniforms.uOffset = new Float32Array(2)),
-        (this._pixelSize = new a.Point()),
-        (this.pixelSize = 1),
-        (this._clamp = i),
-        Array.isArray(e)
-          ? (this.kernels = e)
-          : ((this._blur = e), (this.quality = r));
-    }
-    apply(e, r, i, o) {
-      const s = this._pixelSize.x / r._frame.width,
-        n = this._pixelSize.y / r._frame.height;
-      let l;
-      if (this._quality === 1 || this._blur === 0)
-        (l = this._kernels[0] + 0.5),
-          (this.uniforms.uOffset[0] = l * s),
-          (this.uniforms.uOffset[1] = l * n),
-          e.applyFilter(this, r, i, o);
-      else {
-        const u = e.getFilterTexture();
-        let h = r,
-          p = u,
-          S;
-        const g = this._quality - 1;
-        for (let x = 0; x < g; x++)
-          (l = this._kernels[x] + 0.5),
-            (this.uniforms.uOffset[0] = l * s),
-            (this.uniforms.uOffset[1] = l * n),
-            e.applyFilter(this, h, p, 1),
-            (S = h),
-            (h = p),
-            (p = S);
-        (l = this._kernels[g] + 0.5),
-          (this.uniforms.uOffset[0] = l * s),
-          (this.uniforms.uOffset[1] = l * n),
-          e.applyFilter(this, h, i, o),
-          e.returnFilterTexture(u);
-      }
-    }
-    _updatePadding() {
-      this.padding = Math.ceil(this._kernels.reduce((e, r) => e + r + 0.5, 0));
-    }
-    _generateKernels() {
-      const e = this._blur,
-        r = this._quality,
-        i = [e];
-      if (e > 0) {
-        let o = e;
-        const s = e / r;
-        for (let n = 1; n < r; n++) (o -= s), i.push(o);
-      }
-      (this._kernels = i), this._updatePadding();
-    }
-    get kernels() {
-      return this._kernels;
-    }
-    set kernels(e) {
-      Array.isArray(e) && e.length > 0
-        ? ((this._kernels = e),
-          (this._quality = e.length),
-          (this._blur = Math.max(...e)))
-        : ((this._kernels = [0]), (this._quality = 1));
-    }
-    get clamp() {
-      return this._clamp;
-    }
-    set pixelSize(e) {
-      typeof e == "number"
-        ? ((this._pixelSize.x = e), (this._pixelSize.y = e))
-        : Array.isArray(e)
-        ? ((this._pixelSize.x = e[0]), (this._pixelSize.y = e[1]))
-        : e instanceof a.Point
-        ? ((this._pixelSize.x = e.x), (this._pixelSize.y = e.y))
-        : ((this._pixelSize.x = 1), (this._pixelSize.y = 1));
-    }
-    get pixelSize() {
-      return this._pixelSize;
-    }
-    get quality() {
-      return this._quality;
-    }
-    set quality(e) {
-      (this._quality = Math.max(1, Math.round(e))), this._generateKernels();
-    }
-    get blur() {
-      return this._blur;
-    }
-    set blur(e) {
-      (this._blur = e), this._generateKernels();
-    }
-  }
-  var L = `attribute vec2 aVertexPosition;
+`;class T extends a.Filter{constructor(e=4,r=3,i=!1){super(Oe,i?$e:Re),this._kernels=[],this._blur=4,this._quality=3,this.uniforms.uOffset=new Float32Array(2),this._pixelSize=new a.Point,this.pixelSize=1,this._clamp=i,Array.isArray(e)?this.kernels=e:(this._blur=e,this.quality=r)}apply(e,r,i,o){const s=this._pixelSize.x/r._frame.width,n=this._pixelSize.y/r._frame.height;let l;if(this._quality===1||this._blur===0)l=this._kernels[0]+.5,this.uniforms.uOffset[0]=l*s,this.uniforms.uOffset[1]=l*n,e.applyFilter(this,r,i,o);else{const u=e.getFilterTexture();let h=r,p=u,S;const g=this._quality-1;for(let x=0;x<g;x++)l=this._kernels[x]+.5,this.uniforms.uOffset[0]=l*s,this.uniforms.uOffset[1]=l*n,e.applyFilter(this,h,p,1),S=h,h=p,p=S;l=this._kernels[g]+.5,this.uniforms.uOffset[0]=l*s,this.uniforms.uOffset[1]=l*n,e.applyFilter(this,h,i,o),e.returnFilterTexture(u)}}_updatePadding(){this.padding=Math.ceil(this._kernels.reduce((e,r)=>e+r+.5,0))}_generateKernels(){const e=this._blur,r=this._quality,i=[e];if(e>0){let o=e;const s=e/r;for(let n=1;n<r;n++)o-=s,i.push(o)}this._kernels=i,this._updatePadding()}get kernels(){return this._kernels}set kernels(e){Array.isArray(e)&&e.length>0?(this._kernels=e,this._quality=e.length,this._blur=Math.max(...e)):(this._kernels=[0],this._quality=1)}get clamp(){return this._clamp}set pixelSize(e){typeof e=="number"?(this._pixelSize.x=e,this._pixelSize.y=e):Array.isArray(e)?(this._pixelSize.x=e[0],this._pixelSize.y=e[1]):e instanceof a.Point?(this._pixelSize.x=e.x,this._pixelSize.y=e.y):(this._pixelSize.x=1,this._pixelSize.y=1)}get pixelSize(){return this._pixelSize}get quality(){return this._quality}set quality(e){this._quality=Math.max(1,Math.round(e)),this._generateKernels()}get blur(){return this._blur}set blur(e){this._blur=e,this._generateKernels()}}var L=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -250,8 +122,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    $e = `
+}`,Ee=`
 uniform sampler2D uSampler;
 varying vec2 vTextureCoord;
 
@@ -272,19 +143,7 @@ void main() {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
 }
-`;
-  class je extends a.Filter {
-    constructor(e = 0.5) {
-      super(L, $e), (this.threshold = e);
-    }
-    get threshold() {
-      return this.uniforms.threshold;
-    }
-    set threshold(e) {
-      this.uniforms.threshold = e;
-    }
-  }
-  var Ie = `uniform sampler2D uSampler;
+`;class je extends a.Filter{constructor(e=.5){super(L,Ee),this.threshold=e}get threshold(){return this.uniforms.threshold}set threshold(e){this.uniforms.threshold=e}}var Ie=`uniform sampler2D uSampler;
 varying vec2 vTextureCoord;
 
 uniform sampler2D bloomTexture;
@@ -298,92 +157,7 @@ void main() {
     bloomColor.rgb *= bloomScale;
     gl_FragColor = color + bloomColor;
 }
-`;
-  const V = class extends a.Filter {
-    constructor(t) {
-      super(L, Ie),
-        (this.bloomScale = 1),
-        (this.brightness = 1),
-        (this._resolution = a.settings.FILTER_RESOLUTION),
-        typeof t == "number" && (t = { threshold: t });
-      const e = Object.assign(V.defaults, t);
-      (this.bloomScale = e.bloomScale), (this.brightness = e.brightness);
-      const {
-        kernels: r,
-        blur: i,
-        quality: o,
-        pixelSize: s,
-        resolution: n,
-      } = e;
-      (this._extractFilter = new je(e.threshold)),
-        (this._extractFilter.resolution = n),
-        (this._blurFilter = r ? new T(r) : new T(i, o)),
-        (this.pixelSize = s),
-        (this.resolution = n);
-    }
-    apply(t, e, r, i, o) {
-      const s = t.getFilterTexture();
-      this._extractFilter.apply(t, e, s, 1, o);
-      const n = t.getFilterTexture();
-      this._blurFilter.apply(t, s, n, 1),
-        (this.uniforms.bloomScale = this.bloomScale),
-        (this.uniforms.brightness = this.brightness),
-        (this.uniforms.bloomTexture = n),
-        t.applyFilter(this, e, r, i),
-        t.returnFilterTexture(n),
-        t.returnFilterTexture(s);
-    }
-    get resolution() {
-      return this._resolution;
-    }
-    set resolution(t) {
-      (this._resolution = t),
-        this._extractFilter && (this._extractFilter.resolution = t),
-        this._blurFilter && (this._blurFilter.resolution = t);
-    }
-    get threshold() {
-      return this._extractFilter.threshold;
-    }
-    set threshold(t) {
-      this._extractFilter.threshold = t;
-    }
-    get kernels() {
-      return this._blurFilter.kernels;
-    }
-    set kernels(t) {
-      this._blurFilter.kernels = t;
-    }
-    get blur() {
-      return this._blurFilter.blur;
-    }
-    set blur(t) {
-      this._blurFilter.blur = t;
-    }
-    get quality() {
-      return this._blurFilter.quality;
-    }
-    set quality(t) {
-      this._blurFilter.quality = t;
-    }
-    get pixelSize() {
-      return this._blurFilter.pixelSize;
-    }
-    set pixelSize(t) {
-      this._blurFilter.pixelSize = t;
-    }
-  };
-  let N = V;
-  N.defaults = {
-    threshold: 0.5,
-    bloomScale: 1,
-    brightness: 1,
-    kernels: null,
-    blur: 8,
-    quality: 4,
-    pixelSize: 1,
-    resolution: a.settings.FILTER_RESOLUTION,
-  };
-  var Le = `attribute vec2 aVertexPosition;
+`;const V=class extends a.Filter{constructor(t){super(L,Ie),this.bloomScale=1,this.brightness=1,this._resolution=a.settings.FILTER_RESOLUTION,typeof t=="number"&&(t={threshold:t});const e=Object.assign(V.defaults,t);this.bloomScale=e.bloomScale,this.brightness=e.brightness;const{kernels:r,blur:i,quality:o,pixelSize:s,resolution:n}=e;this._extractFilter=new je(e.threshold),this._extractFilter.resolution=n,this._blurFilter=r?new T(r):new T(i,o),this.pixelSize=s,this.resolution=n}apply(t,e,r,i,o){const s=t.getFilterTexture();this._extractFilter.apply(t,e,s,1,o);const n=t.getFilterTexture();this._blurFilter.apply(t,s,n,1),this.uniforms.bloomScale=this.bloomScale,this.uniforms.brightness=this.brightness,this.uniforms.bloomTexture=n,t.applyFilter(this,e,r,i),t.returnFilterTexture(n),t.returnFilterTexture(s)}get resolution(){return this._resolution}set resolution(t){this._resolution=t,this._extractFilter&&(this._extractFilter.resolution=t),this._blurFilter&&(this._blurFilter.resolution=t)}get threshold(){return this._extractFilter.threshold}set threshold(t){this._extractFilter.threshold=t}get kernels(){return this._blurFilter.kernels}set kernels(t){this._blurFilter.kernels=t}get blur(){return this._blurFilter.blur}set blur(t){this._blurFilter.blur=t}get quality(){return this._blurFilter.quality}set quality(t){this._blurFilter.quality=t}get pixelSize(){return this._blurFilter.pixelSize}set pixelSize(t){this._blurFilter.pixelSize=t}};let N=V;N.defaults={threshold:.5,bloomScale:1,brightness:1,kernels:null,blur:8,quality:4,pixelSize:1,resolution:a.settings.FILTER_RESOLUTION};var Le=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -394,8 +168,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Ve = `varying vec2 vTextureCoord;
+}`,Ve=`varying vec2 vTextureCoord;
 
 uniform vec4 filterArea;
 uniform float pixelSize;
@@ -471,19 +244,7 @@ void main()
     gl_FragColor = color * character( n, vec2(-1.0) + modd * 2.0);
 
 }
-`;
-  class Ne extends a.Filter {
-    constructor(e = 8) {
-      super(Le, Ve), (this.size = e);
-    }
-    get size() {
-      return this.uniforms.pixelSize;
-    }
-    set size(e) {
-      this.uniforms.pixelSize = e;
-    }
-  }
-  var Ge = `attribute vec2 aVertexPosition;
+`;class Ne extends a.Filter{constructor(e=8){super(Le,Ve),this.size=e}get size(){return this.uniforms.pixelSize}set size(e){this.uniforms.pixelSize=e}}var Ge=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -494,8 +255,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Be = `precision mediump float;
+}`,Be=`precision mediump float;
 
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
@@ -518,110 +278,7 @@ void main(void) {
     color.rgb = mix(color.rgb, shadowColor, clamp((color.a - shadow) * shadowAlpha, 0.0, 1.0));
     gl_FragColor = vec4(color.rgb * color.a, color.a);
 }
-`;
-  class Xe extends a.Filter {
-    constructor(e) {
-      super(Ge, Be),
-        (this._thickness = 2),
-        (this._angle = 0),
-        (this.uniforms.lightColor = new Float32Array(3)),
-        (this.uniforms.shadowColor = new Float32Array(3)),
-        Object.assign(
-          this,
-          {
-            rotation: 45,
-            thickness: 2,
-            lightColor: 16777215,
-            lightAlpha: 0.7,
-            shadowColor: 0,
-            shadowAlpha: 0.7,
-          },
-          e
-        ),
-        (this.padding = 1);
-    }
-    _updateTransform() {
-      (this.uniforms.transformX = this._thickness * Math.cos(this._angle)),
-        (this.uniforms.transformY = this._thickness * Math.sin(this._angle));
-    }
-    get rotation() {
-      return this._angle / a.DEG_TO_RAD;
-    }
-    set rotation(e) {
-      (this._angle = e * a.DEG_TO_RAD), this._updateTransform();
-    }
-    get thickness() {
-      return this._thickness;
-    }
-    set thickness(e) {
-      (this._thickness = e), this._updateTransform();
-    }
-    get lightColor() {
-      return a.utils.rgb2hex(this.uniforms.lightColor);
-    }
-    set lightColor(e) {
-      a.utils.hex2rgb(e, this.uniforms.lightColor);
-    }
-    get lightAlpha() {
-      return this.uniforms.lightAlpha;
-    }
-    set lightAlpha(e) {
-      this.uniforms.lightAlpha = e;
-    }
-    get shadowColor() {
-      return a.utils.rgb2hex(this.uniforms.shadowColor);
-    }
-    set shadowColor(e) {
-      a.utils.hex2rgb(e, this.uniforms.shadowColor);
-    }
-    get shadowAlpha() {
-      return this.uniforms.shadowAlpha;
-    }
-    set shadowAlpha(e) {
-      this.uniforms.shadowAlpha = e;
-    }
-  }
-  class qe extends a.Filter {
-    constructor(e = 2, r = 4, i = a.settings.FILTER_RESOLUTION, o = 5) {
-      super();
-      let s, n;
-      typeof e == "number"
-        ? ((s = e), (n = e))
-        : e instanceof a.Point
-        ? ((s = e.x), (n = e.y))
-        : Array.isArray(e) && ((s = e[0]), (n = e[1])),
-        (this.blurXFilter = new I.BlurFilterPass(!0, s, r, i, o)),
-        (this.blurYFilter = new I.BlurFilterPass(!1, n, r, i, o)),
-        (this.blurYFilter.blendMode = a.BLEND_MODES.SCREEN),
-        (this.defaultFilter = new Pe.AlphaFilter());
-    }
-    apply(e, r, i, o) {
-      const s = e.getFilterTexture();
-      this.defaultFilter.apply(e, r, i, o),
-        this.blurXFilter.apply(e, r, s, 1),
-        this.blurYFilter.apply(e, s, i, 0),
-        e.returnFilterTexture(s);
-    }
-    get blur() {
-      return this.blurXFilter.blur;
-    }
-    set blur(e) {
-      this.blurXFilter.blur = this.blurYFilter.blur = e;
-    }
-    get blurX() {
-      return this.blurXFilter.blur;
-    }
-    set blurX(e) {
-      this.blurXFilter.blur = e;
-    }
-    get blurY() {
-      return this.blurYFilter.blur;
-    }
-    set blurY(e) {
-      this.blurYFilter.blur = e;
-    }
-  }
-  var Ke = `attribute vec2 aVertexPosition;
+`;class Xe extends a.Filter{constructor(e){super(Ge,Be),this._thickness=2,this._angle=0,this.uniforms.lightColor=new Float32Array(3),this.uniforms.shadowColor=new Float32Array(3),Object.assign(this,{rotation:45,thickness:2,lightColor:16777215,lightAlpha:.7,shadowColor:0,shadowAlpha:.7},e),this.padding=1}_updateTransform(){this.uniforms.transformX=this._thickness*Math.cos(this._angle),this.uniforms.transformY=this._thickness*Math.sin(this._angle)}get rotation(){return this._angle/a.DEG_TO_RAD}set rotation(e){this._angle=e*a.DEG_TO_RAD,this._updateTransform()}get thickness(){return this._thickness}set thickness(e){this._thickness=e,this._updateTransform()}get lightColor(){return a.utils.rgb2hex(this.uniforms.lightColor)}set lightColor(e){a.utils.hex2rgb(e,this.uniforms.lightColor)}get lightAlpha(){return this.uniforms.lightAlpha}set lightAlpha(e){this.uniforms.lightAlpha=e}get shadowColor(){return a.utils.rgb2hex(this.uniforms.shadowColor)}set shadowColor(e){a.utils.hex2rgb(e,this.uniforms.shadowColor)}get shadowAlpha(){return this.uniforms.shadowAlpha}set shadowAlpha(e){this.uniforms.shadowAlpha=e}}class qe extends a.Filter{constructor(e=2,r=4,i=a.settings.FILTER_RESOLUTION,o=5){super();let s,n;typeof e=="number"?(s=e,n=e):e instanceof a.Point?(s=e.x,n=e.y):Array.isArray(e)&&(s=e[0],n=e[1]),this.blurXFilter=new I.BlurFilterPass(!0,s,r,i,o),this.blurYFilter=new I.BlurFilterPass(!1,n,r,i,o),this.blurYFilter.blendMode=a.BLEND_MODES.SCREEN,this.defaultFilter=new Pe.AlphaFilter}apply(e,r,i,o){const s=e.getFilterTexture();this.defaultFilter.apply(e,r,i,o),this.blurXFilter.apply(e,r,s,1),this.blurYFilter.apply(e,s,i,0),e.returnFilterTexture(s)}get blur(){return this.blurXFilter.blur}set blur(e){this.blurXFilter.blur=this.blurYFilter.blur=e}get blurX(){return this.blurXFilter.blur}set blurX(e){this.blurXFilter.blur=e}get blurY(){return this.blurYFilter.blur}set blurY(e){this.blurYFilter.blur=e}}var Ke=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -632,8 +289,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    We = `uniform float radius;
+}`,We=`uniform float radius;
 uniform float strength;
 uniform vec2 center;
 uniform sampler2D uSampler;
@@ -666,41 +322,7 @@ void main()
 
     gl_FragColor = color;
 }
-`;
-  const G = class extends a.Filter {
-    constructor(t) {
-      super(Ke, We),
-        (this.uniforms.dimensions = new Float32Array(2)),
-        Object.assign(this, G.defaults, t);
-    }
-    apply(t, e, r, i) {
-      const { width: o, height: s } = e.filterFrame;
-      (this.uniforms.dimensions[0] = o),
-        (this.uniforms.dimensions[1] = s),
-        t.applyFilter(this, e, r, i);
-    }
-    get radius() {
-      return this.uniforms.radius;
-    }
-    set radius(t) {
-      this.uniforms.radius = t;
-    }
-    get strength() {
-      return this.uniforms.strength;
-    }
-    set strength(t) {
-      this.uniforms.strength = t;
-    }
-    get center() {
-      return this.uniforms.center;
-    }
-    set center(t) {
-      this.uniforms.center = t;
-    }
-  };
-  let B = G;
-  B.defaults = { center: [0.5, 0.5], radius: 100, strength: 1 };
-  var Ye = `const float PI = 3.1415926538;
+`;const G=class extends a.Filter{constructor(t){super(Ke,We),this.uniforms.dimensions=new Float32Array(2),Object.assign(this,G.defaults,t)}apply(t,e,r,i){const{width:o,height:s}=e.filterFrame;this.uniforms.dimensions[0]=o,this.uniforms.dimensions[1]=s,t.applyFilter(this,e,r,i)}get radius(){return this.uniforms.radius}set radius(t){this.uniforms.radius=t}get strength(){return this.uniforms.strength}set strength(t){this.uniforms.strength=t}get center(){return this.uniforms.center}set center(t){this.uniforms.center=t}};let B=G;B.defaults={center:[.5,.5],radius:100,strength:1};var Ye=`const float PI = 3.1415926538;
 const float PI_2 = PI*2.;
 
 varying vec2 vTextureCoord;
@@ -720,6 +342,7 @@ uniform int uType;
 uniform float uAngle;
 uniform float uAlpha;
 uniform int uMaxColors;
+uniform bool uReplace;
 
 struct ColorStop {
     float offset;
@@ -824,11 +447,15 @@ void main(void) {
     float gradientAlpha = uAlpha * currentColor.a;
     vec4 gradientColor = mix(colorFrom, colorTo, relativePercent) * gradientAlpha;
 
-    // mix resulting color with current color
-    gl_FragColor = gradientColor + currentColor*(1.-gradientColor.a);
+    if (uReplace == false) {
+        // mix resulting color with current color
+        gl_FragColor = gradientColor + currentColor*(1.-gradientColor.a);
+    } else {
+        // replace with gradient color
+        gl_FragColor = gradientColor;
+    }
 }
-`,
-    Ue = `attribute vec2 aVertexPosition;
+`,Ue=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -844,853 +471,7 @@ void main(void)
     vTextureCoord = aTextureCoord;
     vFilterCoord = vTextureCoord * inputSize.xy / outputFrame.zw;
 }
-`,
-    _ = _ || {};
-  _.stringify = (function () {
-    var t = {
-      "visit_linear-gradient": function (e) {
-        return t.visit_gradient(e);
-      },
-      "visit_repeating-linear-gradient": function (e) {
-        return t.visit_gradient(e);
-      },
-      "visit_radial-gradient": function (e) {
-        return t.visit_gradient(e);
-      },
-      "visit_repeating-radial-gradient": function (e) {
-        return t.visit_gradient(e);
-      },
-      visit_gradient: function (e) {
-        var r = t.visit(e.orientation);
-        return r && (r += ", "), e.type + "(" + r + t.visit(e.colorStops) + ")";
-      },
-      visit_shape: function (e) {
-        var r = e.value,
-          i = t.visit(e.at),
-          o = t.visit(e.style);
-        return o && (r += " " + o), i && (r += " at " + i), r;
-      },
-      "visit_default-radial": function (e) {
-        var r = "",
-          i = t.visit(e.at);
-        return i && (r += i), r;
-      },
-      "visit_extent-keyword": function (e) {
-        var r = e.value,
-          i = t.visit(e.at);
-        return i && (r += " at " + i), r;
-      },
-      "visit_position-keyword": function (e) {
-        return e.value;
-      },
-      visit_position: function (e) {
-        return t.visit(e.value.x) + " " + t.visit(e.value.y);
-      },
-      "visit_%": function (e) {
-        return e.value + "%";
-      },
-      visit_em: function (e) {
-        return e.value + "em";
-      },
-      visit_px: function (e) {
-        return e.value + "px";
-      },
-      visit_literal: function (e) {
-        return t.visit_color(e.value, e);
-      },
-      visit_hex: function (e) {
-        return t.visit_color("#" + e.value, e);
-      },
-      visit_rgb: function (e) {
-        return t.visit_color("rgb(" + e.value.join(", ") + ")", e);
-      },
-      visit_rgba: function (e) {
-        return t.visit_color("rgba(" + e.value.join(", ") + ")", e);
-      },
-      visit_color: function (e, r) {
-        var i = e,
-          o = t.visit(r.length);
-        return o && (i += " " + o), i;
-      },
-      visit_angular: function (e) {
-        return e.value + "deg";
-      },
-      visit_directional: function (e) {
-        return "to " + e.value;
-      },
-      visit_array: function (e) {
-        var r = "",
-          i = e.length;
-        return (
-          e.forEach(function (o, s) {
-            (r += t.visit(o)), s < i - 1 && (r += ", ");
-          }),
-          r
-        );
-      },
-      visit: function (e) {
-        if (!e) return "";
-        var r = "";
-        if (e instanceof Array) return t.visit_array(e, r);
-        if (e.type) {
-          var i = t["visit_" + e.type];
-          if (i) return i(e);
-          throw Error("Missing visitor visit_" + e.type);
-        } else throw Error("Invalid node.");
-      },
-    };
-    return function (e) {
-      return t.visit(e);
-    };
-  })();
-  var _ = _ || {};
-  _.parse = (function () {
-    var t = {
-        linearGradient: /^(\-(webkit|o|ms|moz)\-)?(linear\-gradient)/i,
-        repeatingLinearGradient:
-          /^(\-(webkit|o|ms|moz)\-)?(repeating\-linear\-gradient)/i,
-        radialGradient: /^(\-(webkit|o|ms|moz)\-)?(radial\-gradient)/i,
-        repeatingRadialGradient:
-          /^(\-(webkit|o|ms|moz)\-)?(repeating\-radial\-gradient)/i,
-        sideOrCorner:
-          /^to (left (top|bottom)|right (top|bottom)|left|right|top|bottom)/i,
-        extentKeywords:
-          /^(closest\-side|closest\-corner|farthest\-side|farthest\-corner|contain|cover)/,
-        positionKeywords: /^(left|center|right|top|bottom)/i,
-        pixelValue: /^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))px/,
-        percentageValue: /^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))\%/,
-        emValue: /^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))em/,
-        angleValue: /^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))deg/,
-        startCall: /^\(/,
-        endCall: /^\)/,
-        comma: /^,/,
-        hexColor: /^\#([0-9a-fA-F]+)/,
-        literalColor: /^([a-zA-Z]+)/,
-        rgbColor: /^rgb/i,
-        rgbaColor: /^rgba/i,
-        number: /^(([0-9]*\.[0-9]+)|([0-9]+\.?))/,
-      },
-      e = "";
-    function r(c) {
-      var d = new Error(e + ": " + c);
-      throw ((d.source = e), d);
-    }
-    function i() {
-      var c = o();
-      return e.length > 0 && r("Invalid input not EOF"), c;
-    }
-    function o() {
-      return z(s);
-    }
-    function s() {
-      return (
-        n("linear-gradient", t.linearGradient, u) ||
-        n("repeating-linear-gradient", t.repeatingLinearGradient, u) ||
-        n("radial-gradient", t.radialGradient, S) ||
-        n("repeating-radial-gradient", t.repeatingRadialGradient, S)
-      );
-    }
-    function n(c, d, m) {
-      return l(d, function (C) {
-        var we = m();
-        return (
-          we && (y(t.comma) || r("Missing comma before color stops")),
-          { type: c, orientation: we, colorStops: z(Vr) }
-        );
-      });
-    }
-    function l(c, d) {
-      var m = y(c);
-      if (m) {
-        y(t.startCall) || r("Missing (");
-        var C = d(m);
-        return y(t.endCall) || r("Missing )"), C;
-      }
-    }
-    function u() {
-      return h() || p();
-    }
-    function h() {
-      return v("directional", t.sideOrCorner, 1);
-    }
-    function p() {
-      return v("angular", t.angleValue, 1);
-    }
-    function S() {
-      var c,
-        d = g(),
-        m;
-      return (
-        d &&
-          ((c = []),
-          c.push(d),
-          (m = e),
-          y(t.comma) && ((d = g()), d ? c.push(d) : (e = m))),
-        c
-      );
-    }
-    function g() {
-      var c = x() || Ir();
-      if (c) c.at = Se();
-      else {
-        var d = j();
-        if (d) {
-          c = d;
-          var m = Se();
-          m && (c.at = m);
-        } else {
-          var C = Te();
-          C && (c = { type: "default-radial", at: C });
-        }
-      }
-      return c;
-    }
-    function x() {
-      var c = v("shape", /^(circle)/i, 0);
-      return c && (c.style = Ae() || j()), c;
-    }
-    function Ir() {
-      var c = v("shape", /^(ellipse)/i, 0);
-      return c && (c.style = w() || j()), c;
-    }
-    function j() {
-      return v("extent-keyword", t.extentKeywords, 1);
-    }
-    function Se() {
-      if (v("position", /^at/, 0)) {
-        var c = Te();
-        return c || r("Missing positioning value"), c;
-      }
-    }
-    function Te() {
-      var c = Lr();
-      if (c.x || c.y) return { type: "position", value: c };
-    }
-    function Lr() {
-      return { x: w(), y: w() };
-    }
-    function z(c) {
-      var d = c(),
-        m = [];
-      if (d)
-        for (m.push(d); y(t.comma); )
-          (d = c()), d ? m.push(d) : r("One extra comma");
-      return m;
-    }
-    function Vr() {
-      var c = Nr();
-      return c || r("Expected color definition"), (c.length = w()), c;
-    }
-    function Nr() {
-      return Br() || qr() || Xr() || Gr();
-    }
-    function Gr() {
-      return v("literal", t.literalColor, 0);
-    }
-    function Br() {
-      return v("hex", t.hexColor, 1);
-    }
-    function Xr() {
-      return l(t.rgbColor, function () {
-        return { type: "rgb", value: z(Fe) };
-      });
-    }
-    function qr() {
-      return l(t.rgbaColor, function () {
-        return { type: "rgba", value: z(Fe) };
-      });
-    }
-    function Fe() {
-      return y(t.number)[1];
-    }
-    function w() {
-      return v("%", t.percentageValue, 1) || Kr() || Ae();
-    }
-    function Kr() {
-      return v("position-keyword", t.positionKeywords, 1);
-    }
-    function Ae() {
-      return v("px", t.pixelValue, 1) || v("em", t.emValue, 1);
-    }
-    function v(c, d, m) {
-      var C = y(d);
-      if (C) return { type: c, value: C[m] };
-    }
-    function y(c) {
-      var d, m;
-      return (
-        (m = /^[\n\r\t\s]+/.exec(e)),
-        m && ze(m[0].length),
-        (d = c.exec(e)),
-        d && ze(d[0].length),
-        d
-      );
-    }
-    function ze(c) {
-      e = e.substr(c);
-    }
-    return function (c) {
-      return (e = c.toString()), i();
-    };
-  })();
-  var Ze = _.parse;
-  _.stringify;
-  var X = {
-      aliceblue: [240, 248, 255],
-      antiquewhite: [250, 235, 215],
-      aqua: [0, 255, 255],
-      aquamarine: [127, 255, 212],
-      azure: [240, 255, 255],
-      beige: [245, 245, 220],
-      bisque: [255, 228, 196],
-      black: [0, 0, 0],
-      blanchedalmond: [255, 235, 205],
-      blue: [0, 0, 255],
-      blueviolet: [138, 43, 226],
-      brown: [165, 42, 42],
-      burlywood: [222, 184, 135],
-      cadetblue: [95, 158, 160],
-      chartreuse: [127, 255, 0],
-      chocolate: [210, 105, 30],
-      coral: [255, 127, 80],
-      cornflowerblue: [100, 149, 237],
-      cornsilk: [255, 248, 220],
-      crimson: [220, 20, 60],
-      cyan: [0, 255, 255],
-      darkblue: [0, 0, 139],
-      darkcyan: [0, 139, 139],
-      darkgoldenrod: [184, 134, 11],
-      darkgray: [169, 169, 169],
-      darkgreen: [0, 100, 0],
-      darkgrey: [169, 169, 169],
-      darkkhaki: [189, 183, 107],
-      darkmagenta: [139, 0, 139],
-      darkolivegreen: [85, 107, 47],
-      darkorange: [255, 140, 0],
-      darkorchid: [153, 50, 204],
-      darkred: [139, 0, 0],
-      darksalmon: [233, 150, 122],
-      darkseagreen: [143, 188, 143],
-      darkslateblue: [72, 61, 139],
-      darkslategray: [47, 79, 79],
-      darkslategrey: [47, 79, 79],
-      darkturquoise: [0, 206, 209],
-      darkviolet: [148, 0, 211],
-      deeppink: [255, 20, 147],
-      deepskyblue: [0, 191, 255],
-      dimgray: [105, 105, 105],
-      dimgrey: [105, 105, 105],
-      dodgerblue: [30, 144, 255],
-      firebrick: [178, 34, 34],
-      floralwhite: [255, 250, 240],
-      forestgreen: [34, 139, 34],
-      fuchsia: [255, 0, 255],
-      gainsboro: [220, 220, 220],
-      ghostwhite: [248, 248, 255],
-      gold: [255, 215, 0],
-      goldenrod: [218, 165, 32],
-      gray: [128, 128, 128],
-      green: [0, 128, 0],
-      greenyellow: [173, 255, 47],
-      grey: [128, 128, 128],
-      honeydew: [240, 255, 240],
-      hotpink: [255, 105, 180],
-      indianred: [205, 92, 92],
-      indigo: [75, 0, 130],
-      ivory: [255, 255, 240],
-      khaki: [240, 230, 140],
-      lavender: [230, 230, 250],
-      lavenderblush: [255, 240, 245],
-      lawngreen: [124, 252, 0],
-      lemonchiffon: [255, 250, 205],
-      lightblue: [173, 216, 230],
-      lightcoral: [240, 128, 128],
-      lightcyan: [224, 255, 255],
-      lightgoldenrodyellow: [250, 250, 210],
-      lightgray: [211, 211, 211],
-      lightgreen: [144, 238, 144],
-      lightgrey: [211, 211, 211],
-      lightpink: [255, 182, 193],
-      lightsalmon: [255, 160, 122],
-      lightseagreen: [32, 178, 170],
-      lightskyblue: [135, 206, 250],
-      lightslategray: [119, 136, 153],
-      lightslategrey: [119, 136, 153],
-      lightsteelblue: [176, 196, 222],
-      lightyellow: [255, 255, 224],
-      lime: [0, 255, 0],
-      limegreen: [50, 205, 50],
-      linen: [250, 240, 230],
-      magenta: [255, 0, 255],
-      maroon: [128, 0, 0],
-      mediumaquamarine: [102, 205, 170],
-      mediumblue: [0, 0, 205],
-      mediumorchid: [186, 85, 211],
-      mediumpurple: [147, 112, 219],
-      mediumseagreen: [60, 179, 113],
-      mediumslateblue: [123, 104, 238],
-      mediumspringgreen: [0, 250, 154],
-      mediumturquoise: [72, 209, 204],
-      mediumvioletred: [199, 21, 133],
-      midnightblue: [25, 25, 112],
-      mintcream: [245, 255, 250],
-      mistyrose: [255, 228, 225],
-      moccasin: [255, 228, 181],
-      navajowhite: [255, 222, 173],
-      navy: [0, 0, 128],
-      oldlace: [253, 245, 230],
-      olive: [128, 128, 0],
-      olivedrab: [107, 142, 35],
-      orange: [255, 165, 0],
-      orangered: [255, 69, 0],
-      orchid: [218, 112, 214],
-      palegoldenrod: [238, 232, 170],
-      palegreen: [152, 251, 152],
-      paleturquoise: [175, 238, 238],
-      palevioletred: [219, 112, 147],
-      papayawhip: [255, 239, 213],
-      peachpuff: [255, 218, 185],
-      peru: [205, 133, 63],
-      pink: [255, 192, 203],
-      plum: [221, 160, 221],
-      powderblue: [176, 224, 230],
-      purple: [128, 0, 128],
-      rebeccapurple: [102, 51, 153],
-      red: [255, 0, 0],
-      rosybrown: [188, 143, 143],
-      royalblue: [65, 105, 225],
-      saddlebrown: [139, 69, 19],
-      salmon: [250, 128, 114],
-      sandybrown: [244, 164, 96],
-      seagreen: [46, 139, 87],
-      seashell: [255, 245, 238],
-      sienna: [160, 82, 45],
-      silver: [192, 192, 192],
-      skyblue: [135, 206, 235],
-      slateblue: [106, 90, 205],
-      slategray: [112, 128, 144],
-      slategrey: [112, 128, 144],
-      snow: [255, 250, 250],
-      springgreen: [0, 255, 127],
-      steelblue: [70, 130, 180],
-      tan: [210, 180, 140],
-      teal: [0, 128, 128],
-      thistle: [216, 191, 216],
-      tomato: [255, 99, 71],
-      turquoise: [64, 224, 208],
-      violet: [238, 130, 238],
-      wheat: [245, 222, 179],
-      white: [255, 255, 255],
-      whitesmoke: [245, 245, 245],
-      yellow: [255, 255, 0],
-      yellowgreen: [154, 205, 50],
-    },
-    q = { red: 0, orange: 60, yellow: 120, green: 180, blue: 240, purple: 300 };
-  function He(t) {
-    var e,
-      r = [],
-      i = 1,
-      o;
-    if (typeof t == "string")
-      if (X[t]) (r = X[t].slice()), (o = "rgb");
-      else if (t === "transparent") (i = 0), (o = "rgb"), (r = [0, 0, 0]);
-      else if (/^#[A-Fa-f0-9]+$/.test(t)) {
-        var s = t.slice(1),
-          n = s.length,
-          l = n <= 4;
-        (i = 1),
-          l
-            ? ((r = [
-                parseInt(s[0] + s[0], 16),
-                parseInt(s[1] + s[1], 16),
-                parseInt(s[2] + s[2], 16),
-              ]),
-              n === 4 && (i = parseInt(s[3] + s[3], 16) / 255))
-            : ((r = [
-                parseInt(s[0] + s[1], 16),
-                parseInt(s[2] + s[3], 16),
-                parseInt(s[4] + s[5], 16),
-              ]),
-              n === 8 && (i = parseInt(s[6] + s[7], 16) / 255)),
-          r[0] || (r[0] = 0),
-          r[1] || (r[1] = 0),
-          r[2] || (r[2] = 0),
-          (o = "rgb");
-      } else if (
-        (e =
-          /^((?:rgb|hs[lvb]|hwb|cmyk?|xy[zy]|gray|lab|lchu?v?|[ly]uv|lms)a?)\s*\(([^\)]*)\)/.exec(
-            t
-          ))
-      ) {
-        var u = e[1],
-          h = u === "rgb",
-          s = u.replace(/a$/, "");
-        o = s;
-        var n = s === "cmyk" ? 4 : s === "gray" ? 1 : 3;
-        (r = e[2]
-          .trim()
-          .split(/\s*[,\/]\s*|\s+/)
-          .map(function (g, x) {
-            if (/%$/.test(g))
-              return x === n
-                ? parseFloat(g) / 100
-                : s === "rgb"
-                ? (parseFloat(g) * 255) / 100
-                : parseFloat(g);
-            if (s[x] === "h") {
-              if (/deg$/.test(g)) return parseFloat(g);
-              if (q[g] !== void 0) return q[g];
-            }
-            return parseFloat(g);
-          })),
-          u === s && r.push(1),
-          (i = h || r[n] === void 0 ? 1 : r[n]),
-          (r = r.slice(0, n));
-      } else
-        t.length > 10 &&
-          /[0-9](?:\s|\/)/.test(t) &&
-          ((r = t.match(/([0-9]+)/g).map(function (p) {
-            return parseFloat(p);
-          })),
-          (o = t
-            .match(/([a-z])/gi)
-            .join("")
-            .toLowerCase()));
-    else
-      isNaN(t)
-        ? Array.isArray(t) || t.length
-          ? ((r = [t[0], t[1], t[2]]),
-            (o = "rgb"),
-            (i = t.length === 4 ? t[3] : 1))
-          : t instanceof Object &&
-            (t.r != null || t.red != null || t.R != null
-              ? ((o = "rgb"),
-                (r = [
-                  t.r || t.red || t.R || 0,
-                  t.g || t.green || t.G || 0,
-                  t.b || t.blue || t.B || 0,
-                ]))
-              : ((o = "hsl"),
-                (r = [
-                  t.h || t.hue || t.H || 0,
-                  t.s || t.saturation || t.S || 0,
-                  t.l || t.lightness || t.L || t.b || t.brightness,
-                ])),
-            (i = t.a || t.alpha || t.opacity || 1),
-            t.opacity != null && (i /= 100))
-        : ((o = "rgb"), (r = [t >>> 16, (t & 65280) >>> 8, t & 255]));
-    return { space: o, values: r, alpha: i };
-  }
-  var P = {
-      name: "rgb",
-      min: [0, 0, 0],
-      max: [255, 255, 255],
-      channel: ["red", "green", "blue"],
-      alias: ["RGB"],
-    },
-    M = {
-      name: "hsl",
-      min: [0, 0, 0],
-      max: [360, 100, 100],
-      channel: ["hue", "saturation", "lightness"],
-      alias: ["HSL"],
-      rgb: function (t) {
-        var e = t[0] / 360,
-          r = t[1] / 100,
-          i = t[2] / 100,
-          o,
-          s,
-          n,
-          l,
-          u;
-        if (r === 0) return (u = i * 255), [u, u, u];
-        i < 0.5 ? (s = i * (1 + r)) : (s = i + r - i * r),
-          (o = 2 * i - s),
-          (l = [0, 0, 0]);
-        for (var h = 0; h < 3; h++)
-          (n = e + (1 / 3) * -(h - 1)),
-            n < 0 ? n++ : n > 1 && n--,
-            6 * n < 1
-              ? (u = o + (s - o) * 6 * n)
-              : 2 * n < 1
-              ? (u = s)
-              : 3 * n < 2
-              ? (u = o + (s - o) * (2 / 3 - n) * 6)
-              : (u = o),
-            (l[h] = u * 255);
-        return l;
-      },
-    };
-  P.hsl = function (t) {
-    var e = t[0] / 255,
-      r = t[1] / 255,
-      i = t[2] / 255,
-      o = Math.min(e, r, i),
-      s = Math.max(e, r, i),
-      n = s - o,
-      l,
-      u,
-      h;
-    return (
-      s === o
-        ? (l = 0)
-        : e === s
-        ? (l = (r - i) / n)
-        : r === s
-        ? (l = 2 + (i - e) / n)
-        : i === s && (l = 4 + (e - r) / n),
-      (l = Math.min(l * 60, 360)),
-      l < 0 && (l += 360),
-      (h = (o + s) / 2),
-      s === o ? (u = 0) : h <= 0.5 ? (u = n / (s + o)) : (u = n / (2 - s - o)),
-      [l, u * 100, h * 100]
-    );
-  };
-  function Qe(t) {
-    Array.isArray(t) && t.raw && (t = String.raw(...arguments));
-    var e,
-      r = He(t);
-    if (!r.space) return [];
-    const i = r.space[0] === "h" ? M.min : P.min,
-      o = r.space[0] === "h" ? M.max : P.max;
-    return (
-      (e = Array(3)),
-      (e[0] = Math.min(Math.max(r.values[0], i[0]), o[0])),
-      (e[1] = Math.min(Math.max(r.values[1], i[1]), o[1])),
-      (e[2] = Math.min(Math.max(r.values[2], i[2]), o[2])),
-      r.space[0] === "h" && (e = M.rgb(e)),
-      e.push(Math.min(Math.max(r.alpha, 0), 1)),
-      e
-    );
-  }
-  function K(t) {
-    switch (typeof t) {
-      case "string":
-        return Je(t);
-      case "number":
-        return a.utils.hex2rgb(t);
-      default:
-        return t;
-    }
-  }
-  function Je(t) {
-    const e = Qe(t);
-    if (!e) throw new Error(`Unable to parse color "${t}" as RGBA.`);
-    return [e[0] / 255, e[1] / 255, e[2] / 255, e[3]];
-  }
-  function et(t) {
-    const e = Ze(ut(t));
-    if (e.length === 0) throw new Error("Invalid CSS gradient.");
-    if (e.length !== 1)
-      throw new Error(
-        "Unsupported CSS gradient (multiple gradients is not supported)."
-      );
-    const r = e[0],
-      i = tt(r.type),
-      o = rt(r.colorStops),
-      s = nt(r.orientation);
-    return { type: i, stops: o, angle: s };
-  }
-  function tt(t) {
-    const e = { "linear-gradient": 0, "radial-gradient": 1 };
-    if (!(t in e)) throw new Error(`Unsupported gradient type "${t}"`);
-    return e[t];
-  }
-  function rt(t) {
-    const e = st(t),
-      r = [];
-    for (let i = 0; i < t.length; i++) {
-      const o = it(t[i]);
-      r.push({ offset: e[i], color: o.slice(0, 3), alpha: o[3] });
-    }
-    return r;
-  }
-  function it(t) {
-    return K(ot(t));
-  }
-  function ot(t) {
-    switch (t.type) {
-      case "hex":
-        return `#${t.value}`;
-      case "literal":
-        return t.value;
-      default:
-        return `${t.type}(${t.value.join(",")})`;
-    }
-  }
-  function st(t) {
-    const e = [];
-    for (let o = 0; o < t.length; o++) {
-      const s = t[o];
-      let n = -1;
-      s.type === "literal" &&
-        s.length &&
-        "type" in s.length &&
-        s.length.type === "%" &&
-        "value" in s.length &&
-        (n = parseFloat(s.length.value) / 100),
-        e.push(n);
-    }
-    const r = (o) => {
-      for (let s = o; s < e.length; s++)
-        if (e[s] !== -1) return { indexDelta: s - o, offset: e[s] };
-      return { indexDelta: e.length - 1 - o, offset: 1 };
-    };
-    let i = 0;
-    for (let o = 0; o < e.length; o++) {
-      const s = e[o];
-      if (s !== -1) i = s;
-      else if (o === 0) e[o] = 0;
-      else if (o + 1 === e.length) e[o] = 1;
-      else {
-        const n = r(o),
-          l = (n.offset - i) / (1 + n.indexDelta);
-        for (let u = 0; u <= n.indexDelta; u++) e[o + u] = i + (u + 1) * l;
-        (o += n.indexDelta), (i = e[o]);
-      }
-    }
-    return e.map(at);
-  }
-  function at(t) {
-    return t.toString().length > 6
-      ? parseFloat(t.toString().substring(0, 6))
-      : t;
-  }
-  function nt(t) {
-    if (typeof t == "undefined") return 0;
-    if ("type" in t && "value" in t)
-      switch (t.type) {
-        case "angular":
-          return parseFloat(t.value);
-        case "directional":
-          return lt(t.value);
-      }
-    return 0;
-  }
-  function lt(t) {
-    const e = {
-      left: 270,
-      top: 0,
-      bottom: 180,
-      right: 90,
-      "left top": 315,
-      "top left": 315,
-      "left bottom": 225,
-      "bottom left": 225,
-      "right top": 45,
-      "top right": 45,
-      "right bottom": 135,
-      "bottom right": 135,
-    };
-    if (!(t in e)) throw new Error(`Unsupported directional value "${t}"`);
-    return e[t];
-  }
-  function ut(t) {
-    let e = t.replace(/\s{2,}/gu, " ");
-    return (
-      (e = e.replace(/;/g, "")),
-      (e = e.replace(/ ,/g, ",")),
-      (e = e.replace(/\( /g, "(")),
-      (e = e.replace(/ \)/g, ")")),
-      e.trim()
-    );
-  }
-  var ct = Object.defineProperty,
-    ft = Object.defineProperties,
-    dt = Object.getOwnPropertyDescriptors,
-    W = Object.getOwnPropertySymbols,
-    ht = Object.prototype.hasOwnProperty,
-    mt = Object.prototype.propertyIsEnumerable,
-    Y = (t, e, r) =>
-      e in t
-        ? ct(t, e, { enumerable: !0, configurable: !0, writable: !0, value: r })
-        : (t[e] = r),
-    D = (t, e) => {
-      for (var r in e || (e = {})) ht.call(e, r) && Y(t, r, e[r]);
-      if (W) for (var r of W(e)) mt.call(e, r) && Y(t, r, e[r]);
-      return t;
-    },
-    gt = (t, e) => ft(t, dt(e));
-  const U = 90;
-  function vt(t) {
-    return [...t].sort((e, r) => e.offset - r.offset);
-  }
-  const k = class extends a.Filter {
-    constructor(t) {
-      t &&
-        "css" in t &&
-        (t = gt(D({}, et(t.css || "")), {
-          alpha: t.alpha,
-          maxColors: t.maxColors,
-        }));
-      const e = D(D({}, k.defaults), t);
-      if (!e.stops || e.stops.length < 2)
-        throw new Error("ColorGradientFilter requires at least 2 color stops.");
-      super(Ue, Ye),
-        (this._stops = []),
-        (this.autoFit = !1),
-        Object.assign(this, e);
-    }
-    get stops() {
-      return this._stops;
-    }
-    set stops(t) {
-      const e = vt(t),
-        r = new Float32Array(e.length * 3),
-        i = 0,
-        o = 1,
-        s = 2;
-      for (let n = 0; n < e.length; n++) {
-        const l = K(e[n].color),
-          u = n * 3;
-        (r[u + i] = l[i]), (r[u + o] = l[o]), (r[u + s] = l[s]);
-      }
-      (this.uniforms.uColors = r),
-        (this.uniforms.uOffsets = e.map((n) => n.offset)),
-        (this.uniforms.uAlphas = e.map((n) => n.alpha)),
-        (this.uniforms.uNumStops = e.length),
-        (this._stops = e);
-    }
-    set type(t) {
-      this.uniforms.uType = t;
-    }
-    get type() {
-      return this.uniforms.uType;
-    }
-    set angle(t) {
-      this.uniforms.uAngle = t - U;
-    }
-    get angle() {
-      return this.uniforms.uAngle + U;
-    }
-    set alpha(t) {
-      this.uniforms.uAlpha = t;
-    }
-    get alpha() {
-      return this.uniforms.uAlpha;
-    }
-    set maxColors(t) {
-      this.uniforms.uMaxColors = t;
-    }
-    get maxColors() {
-      return this.uniforms.uMaxColors;
-    }
-  };
-  let F = k;
-  (F.LINEAR = 0),
-    (F.RADIAL = 1),
-    (F.CONIC = 2),
-    (F.defaults = {
-      type: k.LINEAR,
-      stops: [
-        { offset: 0, color: 16711680, alpha: 1 },
-        { offset: 1, color: 255, alpha: 1 },
-      ],
-      alpha: 1,
-      angle: 90,
-      maxColors: 0,
-    });
-  var pt = `attribute vec2 aVertexPosition;
+`,_=_||{};_.stringify=function(){var t={"visit_linear-gradient":function(e){return t.visit_gradient(e)},"visit_repeating-linear-gradient":function(e){return t.visit_gradient(e)},"visit_radial-gradient":function(e){return t.visit_gradient(e)},"visit_repeating-radial-gradient":function(e){return t.visit_gradient(e)},visit_gradient:function(e){var r=t.visit(e.orientation);return r&&(r+=", "),e.type+"("+r+t.visit(e.colorStops)+")"},visit_shape:function(e){var r=e.value,i=t.visit(e.at),o=t.visit(e.style);return o&&(r+=" "+o),i&&(r+=" at "+i),r},"visit_default-radial":function(e){var r="",i=t.visit(e.at);return i&&(r+=i),r},"visit_extent-keyword":function(e){var r=e.value,i=t.visit(e.at);return i&&(r+=" at "+i),r},"visit_position-keyword":function(e){return e.value},visit_position:function(e){return t.visit(e.value.x)+" "+t.visit(e.value.y)},"visit_%":function(e){return e.value+"%"},visit_em:function(e){return e.value+"em"},visit_px:function(e){return e.value+"px"},visit_literal:function(e){return t.visit_color(e.value,e)},visit_hex:function(e){return t.visit_color("#"+e.value,e)},visit_rgb:function(e){return t.visit_color("rgb("+e.value.join(", ")+")",e)},visit_rgba:function(e){return t.visit_color("rgba("+e.value.join(", ")+")",e)},visit_color:function(e,r){var i=e,o=t.visit(r.length);return o&&(i+=" "+o),i},visit_angular:function(e){return e.value+"deg"},visit_directional:function(e){return"to "+e.value},visit_array:function(e){var r="",i=e.length;return e.forEach(function(o,s){r+=t.visit(o),s<i-1&&(r+=", ")}),r},visit:function(e){if(!e)return"";var r="";if(e instanceof Array)return t.visit_array(e,r);if(e.type){var i=t["visit_"+e.type];if(i)return i(e);throw Error("Missing visitor visit_"+e.type)}else throw Error("Invalid node.")}};return function(e){return t.visit(e)}}();var _=_||{};_.parse=function(){var t={linearGradient:/^(\-(webkit|o|ms|moz)\-)?(linear\-gradient)/i,repeatingLinearGradient:/^(\-(webkit|o|ms|moz)\-)?(repeating\-linear\-gradient)/i,radialGradient:/^(\-(webkit|o|ms|moz)\-)?(radial\-gradient)/i,repeatingRadialGradient:/^(\-(webkit|o|ms|moz)\-)?(repeating\-radial\-gradient)/i,sideOrCorner:/^to (left (top|bottom)|right (top|bottom)|left|right|top|bottom)/i,extentKeywords:/^(closest\-side|closest\-corner|farthest\-side|farthest\-corner|contain|cover)/,positionKeywords:/^(left|center|right|top|bottom)/i,pixelValue:/^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))px/,percentageValue:/^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))\%/,emValue:/^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))em/,angleValue:/^(-?(([0-9]*\.[0-9]+)|([0-9]+\.?)))deg/,startCall:/^\(/,endCall:/^\)/,comma:/^,/,hexColor:/^\#([0-9a-fA-F]+)/,literalColor:/^([a-zA-Z]+)/,rgbColor:/^rgb/i,rgbaColor:/^rgba/i,number:/^(([0-9]*\.[0-9]+)|([0-9]+\.?))/},e="";function r(c){var d=new Error(e+": "+c);throw d.source=e,d}function i(){var c=o();return e.length>0&&r("Invalid input not EOF"),c}function o(){return w(s)}function s(){return n("linear-gradient",t.linearGradient,u)||n("repeating-linear-gradient",t.repeatingLinearGradient,u)||n("radial-gradient",t.radialGradient,S)||n("repeating-radial-gradient",t.repeatingRadialGradient,S)}function n(c,d,m){return l(d,function(C){var we=m();return we&&(y(t.comma)||r("Missing comma before color stops")),{type:c,orientation:we,colorStops:w(Vr)}})}function l(c,d){var m=y(c);if(m){y(t.startCall)||r("Missing (");var C=d(m);return y(t.endCall)||r("Missing )"),C}}function u(){return h()||p()}function h(){return v("directional",t.sideOrCorner,1)}function p(){return v("angular",t.angleValue,1)}function S(){var c,d=g(),m;return d&&(c=[],c.push(d),m=e,y(t.comma)&&(d=g(),d?c.push(d):e=m)),c}function g(){var c=x()||Ir();if(c)c.at=Se();else{var d=j();if(d){c=d;var m=Se();m&&(c.at=m)}else{var C=Te();C&&(c={type:"default-radial",at:C})}}return c}function x(){var c=v("shape",/^(circle)/i,0);return c&&(c.style=Ae()||j()),c}function Ir(){var c=v("shape",/^(ellipse)/i,0);return c&&(c.style=P()||j()),c}function j(){return v("extent-keyword",t.extentKeywords,1)}function Se(){if(v("position",/^at/,0)){var c=Te();return c||r("Missing positioning value"),c}}function Te(){var c=Lr();if(c.x||c.y)return{type:"position",value:c}}function Lr(){return{x:P(),y:P()}}function w(c){var d=c(),m=[];if(d)for(m.push(d);y(t.comma);)d=c(),d?m.push(d):r("One extra comma");return m}function Vr(){var c=Nr();return c||r("Expected color definition"),c.length=P(),c}function Nr(){return Br()||qr()||Xr()||Gr()}function Gr(){return v("literal",t.literalColor,0)}function Br(){return v("hex",t.hexColor,1)}function Xr(){return l(t.rgbColor,function(){return{type:"rgb",value:w(Fe)}})}function qr(){return l(t.rgbaColor,function(){return{type:"rgba",value:w(Fe)}})}function Fe(){return y(t.number)[1]}function P(){return v("%",t.percentageValue,1)||Kr()||Ae()}function Kr(){return v("position-keyword",t.positionKeywords,1)}function Ae(){return v("px",t.pixelValue,1)||v("em",t.emValue,1)}function v(c,d,m){var C=y(d);if(C)return{type:c,value:C[m]}}function y(c){var d,m;return m=/^[\n\r\t\s]+/.exec(e),m&&ze(m[0].length),d=c.exec(e),d&&ze(d[0].length),d}function ze(c){e=e.substr(c)}return function(c){return e=c.toString(),i()}}();var Ze=_.parse;_.stringify;var X={aliceblue:[240,248,255],antiquewhite:[250,235,215],aqua:[0,255,255],aquamarine:[127,255,212],azure:[240,255,255],beige:[245,245,220],bisque:[255,228,196],black:[0,0,0],blanchedalmond:[255,235,205],blue:[0,0,255],blueviolet:[138,43,226],brown:[165,42,42],burlywood:[222,184,135],cadetblue:[95,158,160],chartreuse:[127,255,0],chocolate:[210,105,30],coral:[255,127,80],cornflowerblue:[100,149,237],cornsilk:[255,248,220],crimson:[220,20,60],cyan:[0,255,255],darkblue:[0,0,139],darkcyan:[0,139,139],darkgoldenrod:[184,134,11],darkgray:[169,169,169],darkgreen:[0,100,0],darkgrey:[169,169,169],darkkhaki:[189,183,107],darkmagenta:[139,0,139],darkolivegreen:[85,107,47],darkorange:[255,140,0],darkorchid:[153,50,204],darkred:[139,0,0],darksalmon:[233,150,122],darkseagreen:[143,188,143],darkslateblue:[72,61,139],darkslategray:[47,79,79],darkslategrey:[47,79,79],darkturquoise:[0,206,209],darkviolet:[148,0,211],deeppink:[255,20,147],deepskyblue:[0,191,255],dimgray:[105,105,105],dimgrey:[105,105,105],dodgerblue:[30,144,255],firebrick:[178,34,34],floralwhite:[255,250,240],forestgreen:[34,139,34],fuchsia:[255,0,255],gainsboro:[220,220,220],ghostwhite:[248,248,255],gold:[255,215,0],goldenrod:[218,165,32],gray:[128,128,128],green:[0,128,0],greenyellow:[173,255,47],grey:[128,128,128],honeydew:[240,255,240],hotpink:[255,105,180],indianred:[205,92,92],indigo:[75,0,130],ivory:[255,255,240],khaki:[240,230,140],lavender:[230,230,250],lavenderblush:[255,240,245],lawngreen:[124,252,0],lemonchiffon:[255,250,205],lightblue:[173,216,230],lightcoral:[240,128,128],lightcyan:[224,255,255],lightgoldenrodyellow:[250,250,210],lightgray:[211,211,211],lightgreen:[144,238,144],lightgrey:[211,211,211],lightpink:[255,182,193],lightsalmon:[255,160,122],lightseagreen:[32,178,170],lightskyblue:[135,206,250],lightslategray:[119,136,153],lightslategrey:[119,136,153],lightsteelblue:[176,196,222],lightyellow:[255,255,224],lime:[0,255,0],limegreen:[50,205,50],linen:[250,240,230],magenta:[255,0,255],maroon:[128,0,0],mediumaquamarine:[102,205,170],mediumblue:[0,0,205],mediumorchid:[186,85,211],mediumpurple:[147,112,219],mediumseagreen:[60,179,113],mediumslateblue:[123,104,238],mediumspringgreen:[0,250,154],mediumturquoise:[72,209,204],mediumvioletred:[199,21,133],midnightblue:[25,25,112],mintcream:[245,255,250],mistyrose:[255,228,225],moccasin:[255,228,181],navajowhite:[255,222,173],navy:[0,0,128],oldlace:[253,245,230],olive:[128,128,0],olivedrab:[107,142,35],orange:[255,165,0],orangered:[255,69,0],orchid:[218,112,214],palegoldenrod:[238,232,170],palegreen:[152,251,152],paleturquoise:[175,238,238],palevioletred:[219,112,147],papayawhip:[255,239,213],peachpuff:[255,218,185],peru:[205,133,63],pink:[255,192,203],plum:[221,160,221],powderblue:[176,224,230],purple:[128,0,128],rebeccapurple:[102,51,153],red:[255,0,0],rosybrown:[188,143,143],royalblue:[65,105,225],saddlebrown:[139,69,19],salmon:[250,128,114],sandybrown:[244,164,96],seagreen:[46,139,87],seashell:[255,245,238],sienna:[160,82,45],silver:[192,192,192],skyblue:[135,206,235],slateblue:[106,90,205],slategray:[112,128,144],slategrey:[112,128,144],snow:[255,250,250],springgreen:[0,255,127],steelblue:[70,130,180],tan:[210,180,140],teal:[0,128,128],thistle:[216,191,216],tomato:[255,99,71],turquoise:[64,224,208],violet:[238,130,238],wheat:[245,222,179],white:[255,255,255],whitesmoke:[245,245,245],yellow:[255,255,0],yellowgreen:[154,205,50]},q={red:0,orange:60,yellow:120,green:180,blue:240,purple:300};function He(t){var e,r=[],i=1,o;if(typeof t=="string")if(X[t])r=X[t].slice(),o="rgb";else if(t==="transparent")i=0,o="rgb",r=[0,0,0];else if(/^#[A-Fa-f0-9]+$/.test(t)){var s=t.slice(1),n=s.length,l=n<=4;i=1,l?(r=[parseInt(s[0]+s[0],16),parseInt(s[1]+s[1],16),parseInt(s[2]+s[2],16)],n===4&&(i=parseInt(s[3]+s[3],16)/255)):(r=[parseInt(s[0]+s[1],16),parseInt(s[2]+s[3],16),parseInt(s[4]+s[5],16)],n===8&&(i=parseInt(s[6]+s[7],16)/255)),r[0]||(r[0]=0),r[1]||(r[1]=0),r[2]||(r[2]=0),o="rgb"}else if(e=/^((?:rgb|hs[lvb]|hwb|cmyk?|xy[zy]|gray|lab|lchu?v?|[ly]uv|lms)a?)\s*\(([^\)]*)\)/.exec(t)){var u=e[1],h=u==="rgb",s=u.replace(/a$/,"");o=s;var n=s==="cmyk"?4:s==="gray"?1:3;r=e[2].trim().split(/\s*[,\/]\s*|\s+/).map(function(g,x){if(/%$/.test(g))return x===n?parseFloat(g)/100:s==="rgb"?parseFloat(g)*255/100:parseFloat(g);if(s[x]==="h"){if(/deg$/.test(g))return parseFloat(g);if(q[g]!==void 0)return q[g]}return parseFloat(g)}),u===s&&r.push(1),i=h||r[n]===void 0?1:r[n],r=r.slice(0,n)}else t.length>10&&/[0-9](?:\s|\/)/.test(t)&&(r=t.match(/([0-9]+)/g).map(function(p){return parseFloat(p)}),o=t.match(/([a-z])/ig).join("").toLowerCase());else isNaN(t)?Array.isArray(t)||t.length?(r=[t[0],t[1],t[2]],o="rgb",i=t.length===4?t[3]:1):t instanceof Object&&(t.r!=null||t.red!=null||t.R!=null?(o="rgb",r=[t.r||t.red||t.R||0,t.g||t.green||t.G||0,t.b||t.blue||t.B||0]):(o="hsl",r=[t.h||t.hue||t.H||0,t.s||t.saturation||t.S||0,t.l||t.lightness||t.L||t.b||t.brightness]),i=t.a||t.alpha||t.opacity||1,t.opacity!=null&&(i/=100)):(o="rgb",r=[t>>>16,(t&65280)>>>8,t&255]);return{space:o,values:r,alpha:i}}var M={name:"rgb",min:[0,0,0],max:[255,255,255],channel:["red","green","blue"],alias:["RGB"]},D={name:"hsl",min:[0,0,0],max:[360,100,100],channel:["hue","saturation","lightness"],alias:["HSL"],rgb:function(t){var e=t[0]/360,r=t[1]/100,i=t[2]/100,o,s,n,l,u;if(r===0)return u=i*255,[u,u,u];i<.5?s=i*(1+r):s=i+r-i*r,o=2*i-s,l=[0,0,0];for(var h=0;h<3;h++)n=e+1/3*-(h-1),n<0?n++:n>1&&n--,6*n<1?u=o+(s-o)*6*n:2*n<1?u=s:3*n<2?u=o+(s-o)*(2/3-n)*6:u=o,l[h]=u*255;return l}};M.hsl=function(t){var e=t[0]/255,r=t[1]/255,i=t[2]/255,o=Math.min(e,r,i),s=Math.max(e,r,i),n=s-o,l,u,h;return s===o?l=0:e===s?l=(r-i)/n:r===s?l=2+(i-e)/n:i===s&&(l=4+(e-r)/n),l=Math.min(l*60,360),l<0&&(l+=360),h=(o+s)/2,s===o?u=0:h<=.5?u=n/(s+o):u=n/(2-s-o),[l,u*100,h*100]};function Qe(t){Array.isArray(t)&&t.raw&&(t=String.raw(...arguments));var e,r=He(t);if(!r.space)return[];const i=r.space[0]==="h"?D.min:M.min,o=r.space[0]==="h"?D.max:M.max;return e=Array(3),e[0]=Math.min(Math.max(r.values[0],i[0]),o[0]),e[1]=Math.min(Math.max(r.values[1],i[1]),o[1]),e[2]=Math.min(Math.max(r.values[2],i[2]),o[2]),r.space[0]==="h"&&(e=D.rgb(e)),e.push(Math.min(Math.max(r.alpha,0),1)),e}function K(t){switch(typeof t){case"string":return Je(t);case"number":return a.utils.hex2rgb(t);default:return t}}function Je(t){const e=Qe(t);if(!e)throw new Error(`Unable to parse color "${t}" as RGBA.`);return[e[0]/255,e[1]/255,e[2]/255,e[3]]}function et(t){const e=Ze(ut(t));if(e.length===0)throw new Error("Invalid CSS gradient.");if(e.length!==1)throw new Error("Unsupported CSS gradient (multiple gradients is not supported).");const r=e[0],i=tt(r.type),o=rt(r.colorStops),s=nt(r.orientation);return{type:i,stops:o,angle:s}}function tt(t){const e={"linear-gradient":0,"radial-gradient":1};if(!(t in e))throw new Error(`Unsupported gradient type "${t}"`);return e[t]}function rt(t){const e=st(t),r=[];for(let i=0;i<t.length;i++){const o=it(t[i]);r.push({offset:e[i],color:o.slice(0,3),alpha:o[3]})}return r}function it(t){return K(ot(t))}function ot(t){switch(t.type){case"hex":return`#${t.value}`;case"literal":return t.value;default:return`${t.type}(${t.value.join(",")})`}}function st(t){const e=[];for(let o=0;o<t.length;o++){const s=t[o];let n=-1;s.type==="literal"&&s.length&&"type"in s.length&&s.length.type==="%"&&"value"in s.length&&(n=parseFloat(s.length.value)/100),e.push(n)}const r=o=>{for(let s=o;s<e.length;s++)if(e[s]!==-1)return{indexDelta:s-o,offset:e[s]};return{indexDelta:e.length-1-o,offset:1}};let i=0;for(let o=0;o<e.length;o++){const s=e[o];if(s!==-1)i=s;else if(o===0)e[o]=0;else if(o+1===e.length)e[o]=1;else{const n=r(o),l=(n.offset-i)/(1+n.indexDelta);for(let u=0;u<=n.indexDelta;u++)e[o+u]=i+(u+1)*l;o+=n.indexDelta,i=e[o]}}return e.map(at)}function at(t){return t.toString().length>6?parseFloat(t.toString().substring(0,6)):t}function nt(t){if(typeof t=="undefined")return 0;if("type"in t&&"value"in t)switch(t.type){case"angular":return parseFloat(t.value);case"directional":return lt(t.value)}return 0}function lt(t){const e={left:270,top:0,bottom:180,right:90,"left top":315,"top left":315,"left bottom":225,"bottom left":225,"right top":45,"top right":45,"right bottom":135,"bottom right":135};if(!(t in e))throw new Error(`Unsupported directional value "${t}"`);return e[t]}function ut(t){let e=t.replace(/\s{2,}/gu," ");return e=e.replace(/;/g,""),e=e.replace(/ ,/g,","),e=e.replace(/\( /g,"("),e=e.replace(/ \)/g,")"),e.trim()}var ct=Object.defineProperty,ft=Object.defineProperties,dt=Object.getOwnPropertyDescriptors,W=Object.getOwnPropertySymbols,ht=Object.prototype.hasOwnProperty,mt=Object.prototype.propertyIsEnumerable,Y=(t,e,r)=>e in t?ct(t,e,{enumerable:!0,configurable:!0,writable:!0,value:r}):t[e]=r,k=(t,e)=>{for(var r in e||(e={}))ht.call(e,r)&&Y(t,r,e[r]);if(W)for(var r of W(e))mt.call(e,r)&&Y(t,r,e[r]);return t},gt=(t,e)=>ft(t,dt(e));const U=90;function vt(t){return[...t].sort((e,r)=>e.offset-r.offset)}const F=class extends a.Filter{constructor(t){var e,r;let i;if(t&&"css"in t?i=gt(k({},et(t.css||"")),{alpha:(e=t.alpha)!=null?e:F.defaults.alpha,maxColors:(r=t.maxColors)!=null?r:F.defaults.maxColors}):i=k(k({},F.defaults),t),!i.stops||i.stops.length<2)throw new Error("ColorGradientFilter requires at least 2 color stops.");super(Ue,Ye),this._stops=[],this.autoFit=!1,Object.assign(this,i)}get stops(){return this._stops}set stops(t){const e=vt(t),r=new Float32Array(e.length*3),i=0,o=1,s=2;for(let n=0;n<e.length;n++){const l=K(e[n].color),u=n*3;r[u+i]=l[i],r[u+o]=l[o],r[u+s]=l[s]}this.uniforms.uColors=r,this.uniforms.uOffsets=e.map(n=>n.offset),this.uniforms.uAlphas=e.map(n=>n.alpha),this.uniforms.uNumStops=e.length,this._stops=e}set type(t){this.uniforms.uType=t}get type(){return this.uniforms.uType}set angle(t){this.uniforms.uAngle=t-U}get angle(){return this.uniforms.uAngle+U}set alpha(t){this.uniforms.uAlpha=t}get alpha(){return this.uniforms.uAlpha}set maxColors(t){this.uniforms.uMaxColors=t}get maxColors(){return this.uniforms.uMaxColors}set replace(t){this.uniforms.uReplace=t}get replace(){return this.uniforms.uReplace}};let A=F;A.LINEAR=0,A.RADIAL=1,A.CONIC=2,A.defaults={type:F.LINEAR,stops:[{offset:0,color:16711680,alpha:1},{offset:1,color:255,alpha:1}],alpha:1,angle:90,maxColors:0,replace:!1};var pt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -1701,8 +482,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    xt = `varying vec2 vTextureCoord;
+}`,xt=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform sampler2D colorMap;
 uniform float _mix;
@@ -1732,78 +512,7 @@ void main() {
     }
     gl_FragColor = vec4(mix(color, adjusted, _mix).rgb, color.a);
 
-}`;
-  class yt extends a.Filter {
-    constructor(e, r = !1, i = 1) {
-      super(pt, xt),
-        (this.mix = 1),
-        (this._size = 0),
-        (this._sliceSize = 0),
-        (this._slicePixelSize = 0),
-        (this._sliceInnerSize = 0),
-        (this._nearest = !1),
-        (this._scaleMode = null),
-        (this._colorMap = null),
-        (this._scaleMode = null),
-        (this.nearest = r),
-        (this.mix = i),
-        (this.colorMap = e);
-    }
-    apply(e, r, i, o) {
-      (this.uniforms._mix = this.mix), e.applyFilter(this, r, i, o);
-    }
-    get colorSize() {
-      return this._size;
-    }
-    get colorMap() {
-      return this._colorMap;
-    }
-    set colorMap(e) {
-      !e ||
-        (e instanceof a.Texture || (e = a.Texture.from(e)),
-        e != null &&
-          e.baseTexture &&
-          ((e.baseTexture.scaleMode = this._scaleMode),
-          (e.baseTexture.mipmap = a.MIPMAP_MODES.OFF),
-          (this._size = e.height),
-          (this._sliceSize = 1 / this._size),
-          (this._slicePixelSize = this._sliceSize / this._size),
-          (this._sliceInnerSize = this._slicePixelSize * (this._size - 1)),
-          (this.uniforms._size = this._size),
-          (this.uniforms._sliceSize = this._sliceSize),
-          (this.uniforms._slicePixelSize = this._slicePixelSize),
-          (this.uniforms._sliceInnerSize = this._sliceInnerSize),
-          (this.uniforms.colorMap = e)),
-        (this._colorMap = e));
-    }
-    get nearest() {
-      return this._nearest;
-    }
-    set nearest(e) {
-      (this._nearest = e),
-        (this._scaleMode = e ? a.SCALE_MODES.NEAREST : a.SCALE_MODES.LINEAR);
-      const r = this._colorMap;
-      r &&
-        r.baseTexture &&
-        ((r.baseTexture._glTextures = {}),
-        (r.baseTexture.scaleMode = this._scaleMode),
-        (r.baseTexture.mipmap = a.MIPMAP_MODES.OFF),
-        r._updateID++,
-        r.baseTexture.emit("update", r.baseTexture));
-    }
-    updateColorMap() {
-      const e = this._colorMap;
-      e &&
-        e.baseTexture &&
-        (e._updateID++,
-        e.baseTexture.emit("update", e.baseTexture),
-        (this.colorMap = e));
-    }
-    destroy(e = !1) {
-      this._colorMap && this._colorMap.destroy(e), super.destroy();
-    }
-  }
-  var Ct = `attribute vec2 aVertexPosition;
+}`;class yt extends a.Filter{constructor(e,r=!1,i=1){super(pt,xt),this.mix=1,this._size=0,this._sliceSize=0,this._slicePixelSize=0,this._sliceInnerSize=0,this._nearest=!1,this._scaleMode=null,this._colorMap=null,this._scaleMode=null,this.nearest=r,this.mix=i,this.colorMap=e}apply(e,r,i,o){this.uniforms._mix=this.mix,e.applyFilter(this,r,i,o)}get colorSize(){return this._size}get colorMap(){return this._colorMap}set colorMap(e){!e||(e instanceof a.Texture||(e=a.Texture.from(e)),e!=null&&e.baseTexture&&(e.baseTexture.scaleMode=this._scaleMode,e.baseTexture.mipmap=a.MIPMAP_MODES.OFF,this._size=e.height,this._sliceSize=1/this._size,this._slicePixelSize=this._sliceSize/this._size,this._sliceInnerSize=this._slicePixelSize*(this._size-1),this.uniforms._size=this._size,this.uniforms._sliceSize=this._sliceSize,this.uniforms._slicePixelSize=this._slicePixelSize,this.uniforms._sliceInnerSize=this._sliceInnerSize,this.uniforms.colorMap=e),this._colorMap=e)}get nearest(){return this._nearest}set nearest(e){this._nearest=e,this._scaleMode=e?a.SCALE_MODES.NEAREST:a.SCALE_MODES.LINEAR;const r=this._colorMap;r&&r.baseTexture&&(r.baseTexture._glTextures={},r.baseTexture.scaleMode=this._scaleMode,r.baseTexture.mipmap=a.MIPMAP_MODES.OFF,r._updateID++,r.baseTexture.emit("update",r.baseTexture))}updateColorMap(){const e=this._colorMap;e&&e.baseTexture&&(e._updateID++,e.baseTexture.emit("update",e.baseTexture),this.colorMap=e)}destroy(e=!1){this._colorMap&&this._colorMap.destroy(e),super.destroy()}}var Ct=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -1814,8 +523,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    _t = `varying vec2 vTextureCoord;
+}`,_t=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec3 color;
 uniform float alpha;
@@ -1824,36 +532,7 @@ void main(void) {
     vec4 currentColor = texture2D(uSampler, vTextureCoord);
     gl_FragColor = vec4(mix(currentColor.rgb, color.rgb, currentColor.a * alpha), currentColor.a);
 }
-`;
-  class bt extends a.Filter {
-    constructor(e = 0, r = 1) {
-      super(Ct, _t),
-        (this._color = 0),
-        (this._alpha = 1),
-        (this.uniforms.color = new Float32Array(3)),
-        (this.color = e),
-        (this.alpha = r);
-    }
-    set color(e) {
-      const r = this.uniforms.color;
-      typeof e == "number"
-        ? (a.utils.hex2rgb(e, r), (this._color = e))
-        : ((r[0] = e[0]),
-          (r[1] = e[1]),
-          (r[2] = e[2]),
-          (this._color = a.utils.rgb2hex(r)));
-    }
-    get color() {
-      return this._color;
-    }
-    set alpha(e) {
-      (this.uniforms.alpha = e), (this._alpha = e);
-    }
-    get alpha() {
-      return this._alpha;
-    }
-  }
-  var St = `attribute vec2 aVertexPosition;
+`;class bt extends a.Filter{constructor(e=0,r=1){super(Ct,_t),this._color=0,this._alpha=1,this.uniforms.color=new Float32Array(3),this.color=e,this.alpha=r}set color(e){const r=this.uniforms.color;typeof e=="number"?(a.utils.hex2rgb(e,r),this._color=e):(r[0]=e[0],r[1]=e[1],r[2]=e[2],this._color=a.utils.rgb2hex(r))}get color(){return this._color}set alpha(e){this.uniforms.alpha=e,this._alpha=e}get alpha(){return this._alpha}}var St=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -1864,8 +543,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Tt = `varying vec2 vTextureCoord;
+}`,Tt=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec3 originalColor;
 uniform vec3 newColor;
@@ -1877,50 +555,7 @@ void main(void) {
     float doReplace = step(colorDistance, epsilon);
     gl_FragColor = vec4(mix(currentColor.rgb, (newColor + colorDiff) * currentColor.a, doReplace), currentColor.a);
 }
-`;
-  class Ft extends a.Filter {
-    constructor(e = 16711680, r = 0, i = 0.4) {
-      super(St, Tt),
-        (this._originalColor = 16711680),
-        (this._newColor = 0),
-        (this.uniforms.originalColor = new Float32Array(3)),
-        (this.uniforms.newColor = new Float32Array(3)),
-        (this.originalColor = e),
-        (this.newColor = r),
-        (this.epsilon = i);
-    }
-    set originalColor(e) {
-      const r = this.uniforms.originalColor;
-      typeof e == "number"
-        ? (a.utils.hex2rgb(e, r), (this._originalColor = e))
-        : ((r[0] = e[0]),
-          (r[1] = e[1]),
-          (r[2] = e[2]),
-          (this._originalColor = a.utils.rgb2hex(r)));
-    }
-    get originalColor() {
-      return this._originalColor;
-    }
-    set newColor(e) {
-      const r = this.uniforms.newColor;
-      typeof e == "number"
-        ? (a.utils.hex2rgb(e, r), (this._newColor = e))
-        : ((r[0] = e[0]),
-          (r[1] = e[1]),
-          (r[2] = e[2]),
-          (this._newColor = a.utils.rgb2hex(r)));
-    }
-    get newColor() {
-      return this._newColor;
-    }
-    set epsilon(e) {
-      this.uniforms.epsilon = e;
-    }
-    get epsilon() {
-      return this.uniforms.epsilon;
-    }
-  }
-  var At = `attribute vec2 aVertexPosition;
+`;class Ft extends a.Filter{constructor(e=16711680,r=0,i=.4){super(St,Tt),this._originalColor=16711680,this._newColor=0,this.uniforms.originalColor=new Float32Array(3),this.uniforms.newColor=new Float32Array(3),this.originalColor=e,this.newColor=r,this.epsilon=i}set originalColor(e){const r=this.uniforms.originalColor;typeof e=="number"?(a.utils.hex2rgb(e,r),this._originalColor=e):(r[0]=e[0],r[1]=e[1],r[2]=e[2],this._originalColor=a.utils.rgb2hex(r))}get originalColor(){return this._originalColor}set newColor(e){const r=this.uniforms.newColor;typeof e=="number"?(a.utils.hex2rgb(e,r),this._newColor=e):(r[0]=e[0],r[1]=e[1],r[2]=e[2],this._newColor=a.utils.rgb2hex(r))}get newColor(){return this._newColor}set epsilon(e){this.uniforms.epsilon=e}get epsilon(){return this.uniforms.epsilon}}var At=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -1931,8 +566,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    zt = `precision mediump float;
+}`,zt=`precision mediump float;
 
 varying mediump vec2 vTextureCoord;
 
@@ -1961,38 +595,7 @@ void main(void)
 
    gl_FragColor.a = c22.a;
 }
-`;
-  class wt extends a.Filter {
-    constructor(e, r = 200, i = 200) {
-      super(At, zt),
-        (this.uniforms.texelSize = new Float32Array(2)),
-        (this.uniforms.matrix = new Float32Array(9)),
-        e !== void 0 && (this.matrix = e),
-        (this.width = r),
-        (this.height = i);
-    }
-    get matrix() {
-      return this.uniforms.matrix;
-    }
-    set matrix(e) {
-      e.forEach((r, i) => {
-        this.uniforms.matrix[i] = r;
-      });
-    }
-    get width() {
-      return 1 / this.uniforms.texelSize[0];
-    }
-    set width(e) {
-      this.uniforms.texelSize[0] = 1 / e;
-    }
-    get height() {
-      return 1 / this.uniforms.texelSize[1];
-    }
-    set height(e) {
-      this.uniforms.texelSize[1] = 1 / e;
-    }
-  }
-  var Pt = `attribute vec2 aVertexPosition;
+`;class wt extends a.Filter{constructor(e,r=200,i=200){super(At,zt),this.uniforms.texelSize=new Float32Array(2),this.uniforms.matrix=new Float32Array(9),e!==void 0&&(this.matrix=e),this.width=r,this.height=i}get matrix(){return this.uniforms.matrix}set matrix(e){e.forEach((r,i)=>{this.uniforms.matrix[i]=r})}get width(){return 1/this.uniforms.texelSize[0]}set width(e){this.uniforms.texelSize[0]=1/e}get height(){return 1/this.uniforms.texelSize[1]}set height(e){this.uniforms.texelSize[1]=1/e}}var Pt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2003,8 +606,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Mt = `precision mediump float;
+}`,Mt=`precision mediump float;
 
 varying vec2 vTextureCoord;
 
@@ -2048,13 +650,7 @@ void main(void)
         }
     }
 }
-`;
-  class Dt extends a.Filter {
-    constructor() {
-      super(Pt, Mt);
-    }
-  }
-  var kt = `attribute vec2 aVertexPosition;
+`;class Dt extends a.Filter{constructor(){super(Pt,Mt)}}var kt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2065,8 +661,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Ot = `varying vec2 vTextureCoord;
+}`,Ot=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 
 uniform vec4 filterArea;
@@ -2132,93 +727,7 @@ void main(void)
 
     gl_FragColor.rgb = rgb;
 }
-`;
-  const Z = class extends a.Filter {
-    constructor(t) {
-      super(kt, Ot),
-        (this.time = 0),
-        (this.seed = 0),
-        (this.uniforms.dimensions = new Float32Array(2)),
-        Object.assign(this, Z.defaults, t);
-    }
-    apply(t, e, r, i) {
-      const { width: o, height: s } = e.filterFrame;
-      (this.uniforms.dimensions[0] = o),
-        (this.uniforms.dimensions[1] = s),
-        (this.uniforms.seed = this.seed),
-        (this.uniforms.time = this.time),
-        t.applyFilter(this, e, r, i);
-    }
-    set curvature(t) {
-      this.uniforms.curvature = t;
-    }
-    get curvature() {
-      return this.uniforms.curvature;
-    }
-    set lineWidth(t) {
-      this.uniforms.lineWidth = t;
-    }
-    get lineWidth() {
-      return this.uniforms.lineWidth;
-    }
-    set lineContrast(t) {
-      this.uniforms.lineContrast = t;
-    }
-    get lineContrast() {
-      return this.uniforms.lineContrast;
-    }
-    set verticalLine(t) {
-      this.uniforms.verticalLine = t;
-    }
-    get verticalLine() {
-      return this.uniforms.verticalLine;
-    }
-    set noise(t) {
-      this.uniforms.noise = t;
-    }
-    get noise() {
-      return this.uniforms.noise;
-    }
-    set noiseSize(t) {
-      this.uniforms.noiseSize = t;
-    }
-    get noiseSize() {
-      return this.uniforms.noiseSize;
-    }
-    set vignetting(t) {
-      this.uniforms.vignetting = t;
-    }
-    get vignetting() {
-      return this.uniforms.vignetting;
-    }
-    set vignettingAlpha(t) {
-      this.uniforms.vignettingAlpha = t;
-    }
-    get vignettingAlpha() {
-      return this.uniforms.vignettingAlpha;
-    }
-    set vignettingBlur(t) {
-      this.uniforms.vignettingBlur = t;
-    }
-    get vignettingBlur() {
-      return this.uniforms.vignettingBlur;
-    }
-  };
-  let H = Z;
-  H.defaults = {
-    curvature: 1,
-    lineWidth: 1,
-    lineContrast: 0.25,
-    verticalLine: !1,
-    noise: 0,
-    noiseSize: 1,
-    seed: 0,
-    vignetting: 0.3,
-    vignettingAlpha: 1,
-    vignettingBlur: 0.3,
-    time: 0,
-  };
-  var Rt = `attribute vec2 aVertexPosition;
+`;const Z=class extends a.Filter{constructor(t){super(kt,Ot),this.time=0,this.seed=0,this.uniforms.dimensions=new Float32Array(2),Object.assign(this,Z.defaults,t)}apply(t,e,r,i){const{width:o,height:s}=e.filterFrame;this.uniforms.dimensions[0]=o,this.uniforms.dimensions[1]=s,this.uniforms.seed=this.seed,this.uniforms.time=this.time,t.applyFilter(this,e,r,i)}set curvature(t){this.uniforms.curvature=t}get curvature(){return this.uniforms.curvature}set lineWidth(t){this.uniforms.lineWidth=t}get lineWidth(){return this.uniforms.lineWidth}set lineContrast(t){this.uniforms.lineContrast=t}get lineContrast(){return this.uniforms.lineContrast}set verticalLine(t){this.uniforms.verticalLine=t}get verticalLine(){return this.uniforms.verticalLine}set noise(t){this.uniforms.noise=t}get noise(){return this.uniforms.noise}set noiseSize(t){this.uniforms.noiseSize=t}get noiseSize(){return this.uniforms.noiseSize}set vignetting(t){this.uniforms.vignetting=t}get vignetting(){return this.uniforms.vignetting}set vignettingAlpha(t){this.uniforms.vignettingAlpha=t}get vignettingAlpha(){return this.uniforms.vignettingAlpha}set vignettingBlur(t){this.uniforms.vignettingBlur=t}get vignettingBlur(){return this.uniforms.vignettingBlur}};let H=Z;H.defaults={curvature:1,lineWidth:1,lineContrast:.25,verticalLine:!1,noise:0,noiseSize:1,seed:0,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3,time:0};var Rt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2229,8 +738,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Et = `precision mediump float;
+}`,$t=`precision mediump float;
 
 varying vec2 vTextureCoord;
 varying vec4 vColor;
@@ -2265,31 +773,7 @@ void main()
 
    gl_FragColor = vec4(colorRGB * 10.0 - 5.0 + pattern(), color.a);
 }
-`;
-  class $t extends a.Filter {
-    constructor(e = 1, r = 5, i = !0) {
-      super(Rt, Et), (this.scale = e), (this.angle = r), (this.grayscale = i);
-    }
-    get scale() {
-      return this.uniforms.scale;
-    }
-    set scale(e) {
-      this.uniforms.scale = e;
-    }
-    get angle() {
-      return this.uniforms.angle;
-    }
-    set angle(e) {
-      this.uniforms.angle = e;
-    }
-    get grayscale() {
-      return this.uniforms.grayscale;
-    }
-    set grayscale(e) {
-      this.uniforms.grayscale = e;
-    }
-  }
-  var jt = `attribute vec2 aVertexPosition;
+`;class Et extends a.Filter{constructor(e=1,r=5,i=!0){super(Rt,$t),this.scale=e,this.angle=r,this.grayscale=i}get scale(){return this.uniforms.scale}set scale(e){this.uniforms.scale=e}get angle(){return this.uniforms.angle}set angle(e){this.uniforms.angle=e}get grayscale(){return this.uniforms.grayscale}set grayscale(e){this.uniforms.grayscale=e}}var jt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2300,8 +784,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    It = `varying vec2 vTextureCoord;
+}`,It=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform float alpha;
 uniform vec3 color;
@@ -2319,155 +802,7 @@ void main(void){
     sample *= alpha;
 
     gl_FragColor = sample;
-}`,
-    Lt = Object.defineProperty,
-    Q = Object.getOwnPropertySymbols,
-    Vt = Object.prototype.hasOwnProperty,
-    Nt = Object.prototype.propertyIsEnumerable,
-    J = (t, e, r) =>
-      e in t
-        ? Lt(t, e, { enumerable: !0, configurable: !0, writable: !0, value: r })
-        : (t[e] = r),
-    ee = (t, e) => {
-      for (var r in e || (e = {})) Vt.call(e, r) && J(t, r, e[r]);
-      if (Q) for (var r of Q(e)) Nt.call(e, r) && J(t, r, e[r]);
-      return t;
-    };
-  const O = class extends a.Filter {
-    constructor(t) {
-      super(),
-        (this.angle = 45),
-        (this._distance = 5),
-        (this._resolution = a.settings.FILTER_RESOLUTION);
-      const e = t ? ee(ee({}, O.defaults), t) : O.defaults,
-        { kernels: r, blur: i, quality: o, pixelSize: s, resolution: n } = e;
-      (this._offset = new a.ObservablePoint(this._updatePadding, this)),
-        (this._tintFilter = new a.Filter(jt, It)),
-        (this._tintFilter.uniforms.color = new Float32Array(4)),
-        (this._tintFilter.uniforms.shift = this._offset),
-        (this._tintFilter.resolution = n),
-        (this._blurFilter = r ? new T(r) : new T(i, o)),
-        (this.pixelSize = s),
-        (this.resolution = n);
-      const {
-        shadowOnly: l,
-        rotation: u,
-        distance: h,
-        offset: p,
-        alpha: S,
-        color: g,
-      } = e;
-      (this.shadowOnly = l),
-        u !== void 0 && h !== void 0
-          ? ((this.rotation = u), (this.distance = h))
-          : (this.offset = p),
-        (this.alpha = S),
-        (this.color = g);
-    }
-    apply(t, e, r, i) {
-      const o = t.getFilterTexture();
-      this._tintFilter.apply(t, e, o, 1),
-        this._blurFilter.apply(t, o, r, i),
-        this.shadowOnly !== !0 && t.applyFilter(this, e, r, 0),
-        t.returnFilterTexture(o);
-    }
-    _updatePadding() {
-      const t = Math.max(Math.abs(this._offset.x), Math.abs(this._offset.y));
-      this.padding = t + this.blur * 2;
-    }
-    _updateShift() {
-      this._tintFilter.uniforms.shift.set(
-        this.distance * Math.cos(this.angle),
-        this.distance * Math.sin(this.angle)
-      );
-    }
-    set offset(t) {
-      this._offset.copyFrom(t), this._updatePadding();
-    }
-    get offset() {
-      return this._offset;
-    }
-    get resolution() {
-      return this._resolution;
-    }
-    set resolution(t) {
-      (this._resolution = t),
-        this._tintFilter && (this._tintFilter.resolution = t),
-        this._blurFilter && (this._blurFilter.resolution = t);
-    }
-    get distance() {
-      return this._distance;
-    }
-    set distance(t) {
-      a.utils.deprecation(
-        "5.3.0",
-        "DropShadowFilter distance is deprecated, use offset"
-      ),
-        (this._distance = t),
-        this._updatePadding(),
-        this._updateShift();
-    }
-    get rotation() {
-      return this.angle / a.DEG_TO_RAD;
-    }
-    set rotation(t) {
-      a.utils.deprecation(
-        "5.3.0",
-        "DropShadowFilter rotation is deprecated, use offset"
-      ),
-        (this.angle = t * a.DEG_TO_RAD),
-        this._updateShift();
-    }
-    get alpha() {
-      return this._tintFilter.uniforms.alpha;
-    }
-    set alpha(t) {
-      this._tintFilter.uniforms.alpha = t;
-    }
-    get color() {
-      return a.utils.rgb2hex(this._tintFilter.uniforms.color);
-    }
-    set color(t) {
-      a.utils.hex2rgb(t, this._tintFilter.uniforms.color);
-    }
-    get kernels() {
-      return this._blurFilter.kernels;
-    }
-    set kernels(t) {
-      this._blurFilter.kernels = t;
-    }
-    get blur() {
-      return this._blurFilter.blur;
-    }
-    set blur(t) {
-      (this._blurFilter.blur = t), this._updatePadding();
-    }
-    get quality() {
-      return this._blurFilter.quality;
-    }
-    set quality(t) {
-      this._blurFilter.quality = t;
-    }
-    get pixelSize() {
-      return this._blurFilter.pixelSize;
-    }
-    set pixelSize(t) {
-      this._blurFilter.pixelSize = t;
-    }
-  };
-  let te = O;
-  te.defaults = {
-    offset: { x: 4, y: 4 },
-    color: 0,
-    alpha: 0.5,
-    shadowOnly: !1,
-    kernels: null,
-    blur: 2,
-    quality: 3,
-    pixelSize: 1,
-    resolution: a.settings.FILTER_RESOLUTION,
-  };
-  var Gt = `attribute vec2 aVertexPosition;
+}`,Lt=Object.defineProperty,Q=Object.getOwnPropertySymbols,Vt=Object.prototype.hasOwnProperty,Nt=Object.prototype.propertyIsEnumerable,J=(t,e,r)=>e in t?Lt(t,e,{enumerable:!0,configurable:!0,writable:!0,value:r}):t[e]=r,ee=(t,e)=>{for(var r in e||(e={}))Vt.call(e,r)&&J(t,r,e[r]);if(Q)for(var r of Q(e))Nt.call(e,r)&&J(t,r,e[r]);return t};const O=class extends a.Filter{constructor(t){super(),this.angle=45,this._distance=5,this._resolution=a.settings.FILTER_RESOLUTION;const e=t?ee(ee({},O.defaults),t):O.defaults,{kernels:r,blur:i,quality:o,pixelSize:s,resolution:n}=e;this._offset=new a.ObservablePoint(this._updatePadding,this),this._tintFilter=new a.Filter(jt,It),this._tintFilter.uniforms.color=new Float32Array(4),this._tintFilter.uniforms.shift=this._offset,this._tintFilter.resolution=n,this._blurFilter=r?new T(r):new T(i,o),this.pixelSize=s,this.resolution=n;const{shadowOnly:l,rotation:u,distance:h,offset:p,alpha:S,color:g}=e;this.shadowOnly=l,u!==void 0&&h!==void 0?(this.rotation=u,this.distance=h):this.offset=p,this.alpha=S,this.color=g}apply(t,e,r,i){const o=t.getFilterTexture();this._tintFilter.apply(t,e,o,1),this._blurFilter.apply(t,o,r,i),this.shadowOnly!==!0&&t.applyFilter(this,e,r,0),t.returnFilterTexture(o)}_updatePadding(){const t=Math.max(Math.abs(this._offset.x),Math.abs(this._offset.y));this.padding=t+this.blur*2}_updateShift(){this._tintFilter.uniforms.shift.set(this.distance*Math.cos(this.angle),this.distance*Math.sin(this.angle))}set offset(t){this._offset.copyFrom(t),this._updatePadding()}get offset(){return this._offset}get resolution(){return this._resolution}set resolution(t){this._resolution=t,this._tintFilter&&(this._tintFilter.resolution=t),this._blurFilter&&(this._blurFilter.resolution=t)}get distance(){return this._distance}set distance(t){a.utils.deprecation("5.3.0","DropShadowFilter distance is deprecated, use offset"),this._distance=t,this._updatePadding(),this._updateShift()}get rotation(){return this.angle/a.DEG_TO_RAD}set rotation(t){a.utils.deprecation("5.3.0","DropShadowFilter rotation is deprecated, use offset"),this.angle=t*a.DEG_TO_RAD,this._updateShift()}get alpha(){return this._tintFilter.uniforms.alpha}set alpha(t){this._tintFilter.uniforms.alpha=t}get color(){return a.utils.rgb2hex(this._tintFilter.uniforms.color)}set color(t){a.utils.hex2rgb(t,this._tintFilter.uniforms.color)}get kernels(){return this._blurFilter.kernels}set kernels(t){this._blurFilter.kernels=t}get blur(){return this._blurFilter.blur}set blur(t){this._blurFilter.blur=t,this._updatePadding()}get quality(){return this._blurFilter.quality}set quality(t){this._blurFilter.quality=t}get pixelSize(){return this._blurFilter.pixelSize}set pixelSize(t){this._blurFilter.pixelSize=t}};let te=O;te.defaults={offset:{x:4,y:4},color:0,alpha:.5,shadowOnly:!1,kernels:null,blur:2,quality:3,pixelSize:1,resolution:a.settings.FILTER_RESOLUTION};var Gt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2478,8 +813,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Bt = `precision mediump float;
+}`,Bt=`precision mediump float;
 
 varying vec2 vTextureCoord;
 
@@ -2505,19 +839,7 @@ void main(void)
 
 	gl_FragColor = vec4(color.rgb * alpha, alpha);
 }
-`;
-  class Xt extends a.Filter {
-    constructor(e = 5) {
-      super(Gt, Bt), (this.strength = e);
-    }
-    get strength() {
-      return this.uniforms.strength;
-    }
-    set strength(e) {
-      this.uniforms.strength = e;
-    }
-  }
-  var qt = `attribute vec2 aVertexPosition;
+`;class Xt extends a.Filter{constructor(e=5){super(Gt,Bt),this.strength=e}get strength(){return this.uniforms.strength}set strength(e){this.uniforms.strength=e}}var qt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2528,8 +850,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Kt = `// precision highp float;
+}`,Kt=`// precision highp float;
 
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
@@ -2625,184 +946,7 @@ void main(void)
     gl_FragColor.b = texture2D(uSampler, coord + blue * (1.0 - seed * 0.2) / filterArea.xy).b;
     gl_FragColor.a = texture2D(uSampler, coord).a;
 }
-`;
-  const R = class extends a.Filter {
-    constructor(t) {
-      super(qt, Kt),
-        (this.offset = 100),
-        (this.fillMode = R.TRANSPARENT),
-        (this.average = !1),
-        (this.seed = 0),
-        (this.minSize = 8),
-        (this.sampleSize = 512),
-        (this._slices = 0),
-        (this._offsets = new Float32Array(1)),
-        (this._sizes = new Float32Array(1)),
-        (this._direction = -1),
-        (this.uniforms.dimensions = new Float32Array(2)),
-        (this._canvas = document.createElement("canvas")),
-        (this._canvas.width = 4),
-        (this._canvas.height = this.sampleSize),
-        (this.texture = a.Texture.from(this._canvas, {
-          scaleMode: a.SCALE_MODES.NEAREST,
-        })),
-        Object.assign(this, R.defaults, t);
-    }
-    apply(t, e, r, i) {
-      const { width: o, height: s } = e.filterFrame;
-      (this.uniforms.dimensions[0] = o),
-        (this.uniforms.dimensions[1] = s),
-        (this.uniforms.aspect = s / o),
-        (this.uniforms.seed = this.seed),
-        (this.uniforms.offset = this.offset),
-        (this.uniforms.fillMode = this.fillMode),
-        t.applyFilter(this, e, r, i);
-    }
-    _randomizeSizes() {
-      const t = this._sizes,
-        e = this._slices - 1,
-        r = this.sampleSize,
-        i = Math.min(this.minSize / r, 0.9 / this._slices);
-      if (this.average) {
-        const o = this._slices;
-        let s = 1;
-        for (let n = 0; n < e; n++) {
-          const l = s / (o - n),
-            u = Math.max(l * (1 - Math.random() * 0.6), i);
-          (t[n] = u), (s -= u);
-        }
-        t[e] = s;
-      } else {
-        let o = 1;
-        const s = Math.sqrt(1 / this._slices);
-        for (let n = 0; n < e; n++) {
-          const l = Math.max(s * o * Math.random(), i);
-          (t[n] = l), (o -= l);
-        }
-        t[e] = o;
-      }
-      this.shuffle();
-    }
-    shuffle() {
-      const t = this._sizes,
-        e = this._slices - 1;
-      for (let r = e; r > 0; r--) {
-        const i = (Math.random() * r) >> 0,
-          o = t[r];
-        (t[r] = t[i]), (t[i] = o);
-      }
-    }
-    _randomizeOffsets() {
-      for (let t = 0; t < this._slices; t++)
-        this._offsets[t] = Math.random() * (Math.random() < 0.5 ? -1 : 1);
-    }
-    refresh() {
-      this._randomizeSizes(), this._randomizeOffsets(), this.redraw();
-    }
-    redraw() {
-      const t = this.sampleSize,
-        e = this.texture,
-        r = this._canvas.getContext("2d");
-      r.clearRect(0, 0, 8, t);
-      let i,
-        o = 0;
-      for (let s = 0; s < this._slices; s++) {
-        i = Math.floor(this._offsets[s] * 256);
-        const n = this._sizes[s] * t,
-          l = i > 0 ? i : 0,
-          u = i < 0 ? -i : 0;
-        (r.fillStyle = `rgba(${l}, ${u}, 0, 1)`),
-          r.fillRect(0, o >> 0, t, (n + 1) >> 0),
-          (o += n);
-      }
-      e.baseTexture.update(), (this.uniforms.displacementMap = e);
-    }
-    set sizes(t) {
-      const e = Math.min(this._slices, t.length);
-      for (let r = 0; r < e; r++) this._sizes[r] = t[r];
-    }
-    get sizes() {
-      return this._sizes;
-    }
-    set offsets(t) {
-      const e = Math.min(this._slices, t.length);
-      for (let r = 0; r < e; r++) this._offsets[r] = t[r];
-    }
-    get offsets() {
-      return this._offsets;
-    }
-    get slices() {
-      return this._slices;
-    }
-    set slices(t) {
-      this._slices !== t &&
-        ((this._slices = t),
-        (this.uniforms.slices = t),
-        (this._sizes = this.uniforms.slicesWidth = new Float32Array(t)),
-        (this._offsets = this.uniforms.slicesOffset = new Float32Array(t)),
-        this.refresh());
-    }
-    get direction() {
-      return this._direction;
-    }
-    set direction(t) {
-      if (this._direction === t) return;
-      this._direction = t;
-      const e = t * a.DEG_TO_RAD;
-      (this.uniforms.sinDir = Math.sin(e)),
-        (this.uniforms.cosDir = Math.cos(e));
-    }
-    get red() {
-      return this.uniforms.red;
-    }
-    set red(t) {
-      this.uniforms.red = t;
-    }
-    get green() {
-      return this.uniforms.green;
-    }
-    set green(t) {
-      this.uniforms.green = t;
-    }
-    get blue() {
-      return this.uniforms.blue;
-    }
-    set blue(t) {
-      this.uniforms.blue = t;
-    }
-    destroy() {
-      var t;
-      (t = this.texture) == null || t.destroy(!0),
-        (this.texture =
-          this._canvas =
-          this.red =
-          this.green =
-          this.blue =
-          this._sizes =
-          this._offsets =
-            null);
-    }
-  };
-  let b = R;
-  (b.defaults = {
-    slices: 5,
-    offset: 100,
-    direction: 0,
-    fillMode: 0,
-    average: !1,
-    seed: 0,
-    red: [0, 0],
-    green: [0, 0],
-    blue: [0, 0],
-    minSize: 8,
-    sampleSize: 512,
-  }),
-    (b.TRANSPARENT = 0),
-    (b.ORIGINAL = 1),
-    (b.LOOP = 2),
-    (b.CLAMP = 3),
-    (b.MIRROR = 4);
-  var Wt = `attribute vec2 aVertexPosition;
+`;const R=class extends a.Filter{constructor(t){super(qt,Kt),this.offset=100,this.fillMode=R.TRANSPARENT,this.average=!1,this.seed=0,this.minSize=8,this.sampleSize=512,this._slices=0,this._offsets=new Float32Array(1),this._sizes=new Float32Array(1),this._direction=-1,this.uniforms.dimensions=new Float32Array(2),this._canvas=document.createElement("canvas"),this._canvas.width=4,this._canvas.height=this.sampleSize,this.texture=a.Texture.from(this._canvas,{scaleMode:a.SCALE_MODES.NEAREST}),Object.assign(this,R.defaults,t)}apply(t,e,r,i){const{width:o,height:s}=e.filterFrame;this.uniforms.dimensions[0]=o,this.uniforms.dimensions[1]=s,this.uniforms.aspect=s/o,this.uniforms.seed=this.seed,this.uniforms.offset=this.offset,this.uniforms.fillMode=this.fillMode,t.applyFilter(this,e,r,i)}_randomizeSizes(){const t=this._sizes,e=this._slices-1,r=this.sampleSize,i=Math.min(this.minSize/r,.9/this._slices);if(this.average){const o=this._slices;let s=1;for(let n=0;n<e;n++){const l=s/(o-n),u=Math.max(l*(1-Math.random()*.6),i);t[n]=u,s-=u}t[e]=s}else{let o=1;const s=Math.sqrt(1/this._slices);for(let n=0;n<e;n++){const l=Math.max(s*o*Math.random(),i);t[n]=l,o-=l}t[e]=o}this.shuffle()}shuffle(){const t=this._sizes,e=this._slices-1;for(let r=e;r>0;r--){const i=Math.random()*r>>0,o=t[r];t[r]=t[i],t[i]=o}}_randomizeOffsets(){for(let t=0;t<this._slices;t++)this._offsets[t]=Math.random()*(Math.random()<.5?-1:1)}refresh(){this._randomizeSizes(),this._randomizeOffsets(),this.redraw()}redraw(){const t=this.sampleSize,e=this.texture,r=this._canvas.getContext("2d");r.clearRect(0,0,8,t);let i,o=0;for(let s=0;s<this._slices;s++){i=Math.floor(this._offsets[s]*256);const n=this._sizes[s]*t,l=i>0?i:0,u=i<0?-i:0;r.fillStyle=`rgba(${l}, ${u}, 0, 1)`,r.fillRect(0,o>>0,t,n+1>>0),o+=n}e.baseTexture.update(),this.uniforms.displacementMap=e}set sizes(t){const e=Math.min(this._slices,t.length);for(let r=0;r<e;r++)this._sizes[r]=t[r]}get sizes(){return this._sizes}set offsets(t){const e=Math.min(this._slices,t.length);for(let r=0;r<e;r++)this._offsets[r]=t[r]}get offsets(){return this._offsets}get slices(){return this._slices}set slices(t){this._slices!==t&&(this._slices=t,this.uniforms.slices=t,this._sizes=this.uniforms.slicesWidth=new Float32Array(t),this._offsets=this.uniforms.slicesOffset=new Float32Array(t),this.refresh())}get direction(){return this._direction}set direction(t){if(this._direction===t)return;this._direction=t;const e=t*a.DEG_TO_RAD;this.uniforms.sinDir=Math.sin(e),this.uniforms.cosDir=Math.cos(e)}get red(){return this.uniforms.red}set red(t){this.uniforms.red=t}get green(){return this.uniforms.green}set green(t){this.uniforms.green=t}get blue(){return this.uniforms.blue}set blue(t){this.uniforms.blue=t}destroy(){var t;(t=this.texture)==null||t.destroy(!0),this.texture=this._canvas=this.red=this.green=this.blue=this._sizes=this._offsets=null}};let b=R;b.defaults={slices:5,offset:100,direction:0,fillMode:0,average:!1,seed:0,red:[0,0],green:[0,0],blue:[0,0],minSize:8,sampleSize:512},b.TRANSPARENT=0,b.ORIGINAL=1,b.LOOP=2,b.CLAMP=3,b.MIRROR=4;var Wt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2813,8 +957,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Yt = `varying vec2 vTextureCoord;
+}`,Yt=`varying vec2 vTextureCoord;
 varying vec4 vColor;
 
 uniform sampler2D uSampler;
@@ -2880,79 +1023,7 @@ void main(void) {
       gl_FragColor = innerColor + outerGlowColor;
     }
 }
-`;
-  const re = class extends a.Filter {
-    constructor(t) {
-      const e = Object.assign({}, re.defaults, t),
-        {
-          outerStrength: r,
-          innerStrength: i,
-          color: o,
-          knockout: s,
-          quality: n,
-          alpha: l,
-        } = e,
-        u = Math.round(e.distance);
-      super(
-        Wt,
-        Yt.replace(
-          /__ANGLE_STEP_SIZE__/gi,
-          `${(1 / n / u).toFixed(7)}`
-        ).replace(/__DIST__/gi, `${u.toFixed(0)}.0`)
-      ),
-        (this.uniforms.glowColor = new Float32Array([0, 0, 0, 1])),
-        (this.uniforms.alpha = 1),
-        Object.assign(this, {
-          color: o,
-          outerStrength: r,
-          innerStrength: i,
-          padding: u,
-          knockout: s,
-          alpha: l,
-        });
-    }
-    get color() {
-      return a.utils.rgb2hex(this.uniforms.glowColor);
-    }
-    set color(t) {
-      a.utils.hex2rgb(t, this.uniforms.glowColor);
-    }
-    get outerStrength() {
-      return this.uniforms.outerStrength;
-    }
-    set outerStrength(t) {
-      this.uniforms.outerStrength = t;
-    }
-    get innerStrength() {
-      return this.uniforms.innerStrength;
-    }
-    set innerStrength(t) {
-      this.uniforms.innerStrength = t;
-    }
-    get knockout() {
-      return this.uniforms.knockout;
-    }
-    set knockout(t) {
-      this.uniforms.knockout = t;
-    }
-    get alpha() {
-      return this.uniforms.alpha;
-    }
-    set alpha(t) {
-      this.uniforms.alpha = t;
-    }
-  };
-  let ie = re;
-  ie.defaults = {
-    distance: 10,
-    outerStrength: 4,
-    innerStrength: 0,
-    color: 16777215,
-    quality: 0.1,
-    knockout: !1,
-    alpha: 1,
-  };
-  var Ut = `attribute vec2 aVertexPosition;
+`;const re=class extends a.Filter{constructor(t){const e=Object.assign({},re.defaults,t),{outerStrength:r,innerStrength:i,color:o,knockout:s,quality:n,alpha:l}=e,u=Math.round(e.distance);super(Wt,Yt.replace(/__ANGLE_STEP_SIZE__/gi,`${(1/n/u).toFixed(7)}`).replace(/__DIST__/gi,`${u.toFixed(0)}.0`)),this.uniforms.glowColor=new Float32Array([0,0,0,1]),this.uniforms.alpha=1,Object.assign(this,{color:o,outerStrength:r,innerStrength:i,padding:u,knockout:s,alpha:l})}get color(){return a.utils.rgb2hex(this.uniforms.glowColor)}set color(t){a.utils.hex2rgb(t,this.uniforms.glowColor)}get outerStrength(){return this.uniforms.outerStrength}set outerStrength(t){this.uniforms.outerStrength=t}get innerStrength(){return this.uniforms.innerStrength}set innerStrength(t){this.uniforms.innerStrength=t}get knockout(){return this.uniforms.knockout}set knockout(t){this.uniforms.knockout=t}get alpha(){return this.uniforms.alpha}set alpha(t){this.uniforms.alpha=t}};let ie=re;ie.defaults={distance:10,outerStrength:4,innerStrength:0,color:16777215,quality:.1,knockout:!1,alpha:1};var Ut=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -2963,8 +1034,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Zt = `vec3 mod289(vec3 x)
+}`,Zt=`vec3 mod289(vec3 x)
 {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
@@ -3059,8 +1129,7 @@ float turb(vec3 P, vec3 rep, float lacunarity, float gain)
     }
     return abs(sum);
 }
-`,
-    Ht = `varying vec2 vTextureCoord;
+`,Ht=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterArea;
 uniform vec2 dimensions;
@@ -3105,73 +1174,7 @@ void main(void) {
     gl_FragColor = texture2D(uSampler, vTextureCoord) + mist;
 
 }
-`;
-  const oe = class extends a.Filter {
-    constructor(t) {
-      super(Ut, Ht.replace("${perlin}", Zt)),
-        (this.parallel = !0),
-        (this.time = 0),
-        (this._angle = 0),
-        (this.uniforms.dimensions = new Float32Array(2));
-      const e = Object.assign(oe.defaults, t);
-      (this._angleLight = new a.Point()),
-        (this.angle = e.angle),
-        (this.gain = e.gain),
-        (this.lacunarity = e.lacunarity),
-        (this.alpha = e.alpha),
-        (this.parallel = e.parallel),
-        (this.center = e.center),
-        (this.time = e.time);
-    }
-    apply(t, e, r, i) {
-      const { width: o, height: s } = e.filterFrame;
-      (this.uniforms.light = this.parallel ? this._angleLight : this.center),
-        (this.uniforms.parallel = this.parallel),
-        (this.uniforms.dimensions[0] = o),
-        (this.uniforms.dimensions[1] = s),
-        (this.uniforms.aspect = s / o),
-        (this.uniforms.time = this.time),
-        (this.uniforms.alpha = this.alpha),
-        t.applyFilter(this, e, r, i);
-    }
-    get angle() {
-      return this._angle;
-    }
-    set angle(t) {
-      this._angle = t;
-      const e = t * a.DEG_TO_RAD;
-      (this._angleLight.x = Math.cos(e)), (this._angleLight.y = Math.sin(e));
-    }
-    get gain() {
-      return this.uniforms.gain;
-    }
-    set gain(t) {
-      this.uniforms.gain = t;
-    }
-    get lacunarity() {
-      return this.uniforms.lacunarity;
-    }
-    set lacunarity(t) {
-      this.uniforms.lacunarity = t;
-    }
-    get alpha() {
-      return this.uniforms.alpha;
-    }
-    set alpha(t) {
-      this.uniforms.alpha = t;
-    }
-  };
-  let se = oe;
-  se.defaults = {
-    angle: 30,
-    gain: 0.5,
-    lacunarity: 2.5,
-    time: 0,
-    parallel: !0,
-    center: [0, 0],
-    alpha: 1,
-  };
-  var Qt = `attribute vec2 aVertexPosition;
+`;const oe=class extends a.Filter{constructor(t){super(Ut,Ht.replace("${perlin}",Zt)),this.parallel=!0,this.time=0,this._angle=0,this.uniforms.dimensions=new Float32Array(2);const e=Object.assign(oe.defaults,t);this._angleLight=new a.Point,this.angle=e.angle,this.gain=e.gain,this.lacunarity=e.lacunarity,this.alpha=e.alpha,this.parallel=e.parallel,this.center=e.center,this.time=e.time}apply(t,e,r,i){const{width:o,height:s}=e.filterFrame;this.uniforms.light=this.parallel?this._angleLight:this.center,this.uniforms.parallel=this.parallel,this.uniforms.dimensions[0]=o,this.uniforms.dimensions[1]=s,this.uniforms.aspect=s/o,this.uniforms.time=this.time,this.uniforms.alpha=this.alpha,t.applyFilter(this,e,r,i)}get angle(){return this._angle}set angle(t){this._angle=t;const e=t*a.DEG_TO_RAD;this._angleLight.x=Math.cos(e),this._angleLight.y=Math.sin(e)}get gain(){return this.uniforms.gain}set gain(t){this.uniforms.gain=t}get lacunarity(){return this.uniforms.lacunarity}set lacunarity(t){this.uniforms.lacunarity=t}get alpha(){return this.uniforms.alpha}set alpha(t){this.uniforms.alpha=t}};let se=oe;se.defaults={angle:30,gain:.5,lacunarity:2.5,time:0,parallel:!0,center:[0,0],alpha:1};var Qt=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3182,8 +1185,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Jt = `precision mediump float;
+}`,Jt=`precision mediump float;
 
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
@@ -3199,13 +1201,7 @@ void main()
         color.a
     );
 }
-`;
-  class er extends a.Filter {
-    constructor() {
-      super(Qt, Jt);
-    }
-  }
-  var tr = `attribute vec2 aVertexPosition;
+`;class er extends a.Filter{constructor(){super(Qt,Jt)}}var tr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3216,8 +1212,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    rr = `precision mediump float;
+}`,rr=`precision mediump float;
 
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
@@ -3275,47 +1270,7 @@ void main()
     // alpha
     gl_FragColor = mix(color, result, uAlpha);
 }
-`;
-  const ae = class extends a.Filter {
-    constructor(t) {
-      super(tr, rr), (this._hue = 0);
-      const e = Object.assign({}, ae.defaults, t);
-      Object.assign(this, e);
-    }
-    get hue() {
-      return this._hue;
-    }
-    set hue(t) {
-      (this._hue = t), (this.uniforms.uHue = this._hue * (Math.PI / 180));
-    }
-    get alpha() {
-      return this.uniforms.uAlpha;
-    }
-    set alpha(t) {
-      this.uniforms.uAlpha = t;
-    }
-    get colorize() {
-      return this.uniforms.uColorize;
-    }
-    set colorize(t) {
-      this.uniforms.uColorize = t;
-    }
-    get lightness() {
-      return this.uniforms.uLightness;
-    }
-    set lightness(t) {
-      this.uniforms.uLightness = t;
-    }
-    get saturation() {
-      return this.uniforms.uSaturation;
-    }
-    set saturation(t) {
-      this.uniforms.uSaturation = t;
-    }
-  };
-  let ne = ae;
-  ne.defaults = { hue: 0, saturation: 0, lightness: 0, colorize: !1, alpha: 1 };
-  var ir = `attribute vec2 aVertexPosition;
+`;const ae=class extends a.Filter{constructor(t){super(tr,rr),this._hue=0;const e=Object.assign({},ae.defaults,t);Object.assign(this,e)}get hue(){return this._hue}set hue(t){this._hue=t,this.uniforms.uHue=this._hue*(Math.PI/180)}get alpha(){return this.uniforms.uAlpha}set alpha(t){this.uniforms.uAlpha=t}get colorize(){return this.uniforms.uColorize}set colorize(t){this.uniforms.uColorize=t}get lightness(){return this.uniforms.uLightness}set lightness(t){this.uniforms.uLightness=t}get saturation(){return this.uniforms.uSaturation}set saturation(t){this.uniforms.uSaturation=t}};let ne=ae;ne.defaults={hue:0,saturation:0,lightness:0,colorize:!1,alpha:1};var ir=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3326,8 +1281,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    or = `varying vec2 vTextureCoord;
+}`,or=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterArea;
 
@@ -3366,50 +1320,7 @@ void main(void)
     }
     gl_FragColor = color / float(uKernelSize);
 }
-`;
-  class sr extends a.Filter {
-    constructor(e = [0, 0], r = 5, i = 0) {
-      super(ir, or),
-        (this.kernelSize = 5),
-        (this.uniforms.uVelocity = new Float32Array(2)),
-        (this._velocity = new a.ObservablePoint(this.velocityChanged, this)),
-        this.setVelocity(e),
-        (this.kernelSize = r),
-        (this.offset = i);
-    }
-    apply(e, r, i, o) {
-      const { x: s, y: n } = this.velocity;
-      (this.uniforms.uKernelSize = s !== 0 || n !== 0 ? this.kernelSize : 0),
-        e.applyFilter(this, r, i, o);
-    }
-    set velocity(e) {
-      this.setVelocity(e);
-    }
-    get velocity() {
-      return this._velocity;
-    }
-    setVelocity(e) {
-      if (Array.isArray(e)) {
-        const [r, i] = e;
-        this._velocity.set(r, i);
-      } else this._velocity.copyFrom(e);
-    }
-    velocityChanged() {
-      (this.uniforms.uVelocity[0] = this._velocity.x),
-        (this.uniforms.uVelocity[1] = this._velocity.y),
-        (this.padding =
-          (Math.max(Math.abs(this._velocity.x), Math.abs(this._velocity.y)) >>
-            0) +
-          1);
-    }
-    set offset(e) {
-      this.uniforms.uOffset = e;
-    }
-    get offset() {
-      return this.uniforms.uOffset;
-    }
-  }
-  var ar = `attribute vec2 aVertexPosition;
+`;class sr extends a.Filter{constructor(e=[0,0],r=5,i=0){super(ir,or),this.kernelSize=5,this.uniforms.uVelocity=new Float32Array(2),this._velocity=new a.ObservablePoint(this.velocityChanged,this),this.setVelocity(e),this.kernelSize=r,this.offset=i}apply(e,r,i,o){const{x:s,y:n}=this.velocity;this.uniforms.uKernelSize=s!==0||n!==0?this.kernelSize:0,e.applyFilter(this,r,i,o)}set velocity(e){this.setVelocity(e)}get velocity(){return this._velocity}setVelocity(e){if(Array.isArray(e)){const[r,i]=e;this._velocity.set(r,i)}else this._velocity.copyFrom(e)}velocityChanged(){this.uniforms.uVelocity[0]=this._velocity.x,this.uniforms.uVelocity[1]=this._velocity.y,this.padding=(Math.max(Math.abs(this._velocity.x),Math.abs(this._velocity.y))>>0)+1}set offset(e){this.uniforms.uOffset=e}get offset(){return this.uniforms.uOffset}}var ar=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3420,8 +1331,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    nr = `varying vec2 vTextureCoord;
+}`,nr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 
 uniform float epsilon;
@@ -3459,63 +1369,7 @@ void main(void)
       }
     }
 }
-`;
-  class lr extends a.Filter {
-    constructor(e, r = 0.05, i = e.length) {
-      super(ar, nr.replace(/%maxColors%/g, i.toFixed(0))),
-        (this._replacements = []),
-        (this._maxColors = 0),
-        (this.epsilon = r),
-        (this._maxColors = i),
-        (this.uniforms.originalColors = new Float32Array(i * 3)),
-        (this.uniforms.targetColors = new Float32Array(i * 3)),
-        (this.replacements = e);
-    }
-    set replacements(e) {
-      const r = this.uniforms.originalColors,
-        i = this.uniforms.targetColors,
-        o = e.length;
-      if (o > this._maxColors)
-        throw new Error(
-          `Length of replacements (${o}) exceeds the maximum colors length (${this._maxColors})`
-        );
-      r[o * 3] = -1;
-      for (let s = 0; s < o; s++) {
-        const n = e[s];
-        let l = n[0];
-        typeof l == "number"
-          ? (l = a.utils.hex2rgb(l))
-          : (n[0] = a.utils.rgb2hex(l)),
-          (r[s * 3] = l[0]),
-          (r[s * 3 + 1] = l[1]),
-          (r[s * 3 + 2] = l[2]);
-        let u = n[1];
-        typeof u == "number"
-          ? (u = a.utils.hex2rgb(u))
-          : (n[1] = a.utils.rgb2hex(u)),
-          (i[s * 3] = u[0]),
-          (i[s * 3 + 1] = u[1]),
-          (i[s * 3 + 2] = u[2]);
-      }
-      this._replacements = e;
-    }
-    get replacements() {
-      return this._replacements;
-    }
-    refresh() {
-      this.replacements = this._replacements;
-    }
-    get maxColors() {
-      return this._maxColors;
-    }
-    set epsilon(e) {
-      this.uniforms.epsilon = e;
-    }
-    get epsilon() {
-      return this.uniforms.epsilon;
-    }
-  }
-  var ur = `attribute vec2 aVertexPosition;
+`;class lr extends a.Filter{constructor(e,r=.05,i=e.length){super(ar,nr.replace(/%maxColors%/g,i.toFixed(0))),this._replacements=[],this._maxColors=0,this.epsilon=r,this._maxColors=i,this.uniforms.originalColors=new Float32Array(i*3),this.uniforms.targetColors=new Float32Array(i*3),this.replacements=e}set replacements(e){const r=this.uniforms.originalColors,i=this.uniforms.targetColors,o=e.length;if(o>this._maxColors)throw new Error(`Length of replacements (${o}) exceeds the maximum colors length (${this._maxColors})`);r[o*3]=-1;for(let s=0;s<o;s++){const n=e[s];let l=n[0];typeof l=="number"?l=a.utils.hex2rgb(l):n[0]=a.utils.rgb2hex(l),r[s*3]=l[0],r[s*3+1]=l[1],r[s*3+2]=l[2];let u=n[1];typeof u=="number"?u=a.utils.hex2rgb(u):n[1]=a.utils.rgb2hex(u),i[s*3]=u[0],i[s*3+1]=u[1],i[s*3+2]=u[2]}this._replacements=e}get replacements(){return this._replacements}refresh(){this.replacements=this._replacements}get maxColors(){return this._maxColors}set epsilon(e){this.uniforms.epsilon=e}get epsilon(){return this.uniforms.epsilon}}var ur=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3526,8 +1380,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    cr = `varying vec2 vTextureCoord;
+}`,cr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterArea;
 uniform vec2 dimensions;
@@ -3631,94 +1484,7 @@ void main()
 
     gl_FragColor.rgb = color;
 }
-`;
-  const le = class extends a.Filter {
-    constructor(t, e = 0) {
-      super(ur, cr),
-        (this.seed = 0),
-        (this.uniforms.dimensions = new Float32Array(2)),
-        typeof t == "number"
-          ? ((this.seed = t), (t = void 0))
-          : (this.seed = e),
-        Object.assign(this, le.defaults, t);
-    }
-    apply(t, e, r, i) {
-      var o, s;
-      (this.uniforms.dimensions[0] =
-        (o = e.filterFrame) == null ? void 0 : o.width),
-        (this.uniforms.dimensions[1] =
-          (s = e.filterFrame) == null ? void 0 : s.height),
-        (this.uniforms.seed = this.seed),
-        t.applyFilter(this, e, r, i);
-    }
-    set sepia(t) {
-      this.uniforms.sepia = t;
-    }
-    get sepia() {
-      return this.uniforms.sepia;
-    }
-    set noise(t) {
-      this.uniforms.noise = t;
-    }
-    get noise() {
-      return this.uniforms.noise;
-    }
-    set noiseSize(t) {
-      this.uniforms.noiseSize = t;
-    }
-    get noiseSize() {
-      return this.uniforms.noiseSize;
-    }
-    set scratch(t) {
-      this.uniforms.scratch = t;
-    }
-    get scratch() {
-      return this.uniforms.scratch;
-    }
-    set scratchDensity(t) {
-      this.uniforms.scratchDensity = t;
-    }
-    get scratchDensity() {
-      return this.uniforms.scratchDensity;
-    }
-    set scratchWidth(t) {
-      this.uniforms.scratchWidth = t;
-    }
-    get scratchWidth() {
-      return this.uniforms.scratchWidth;
-    }
-    set vignetting(t) {
-      this.uniforms.vignetting = t;
-    }
-    get vignetting() {
-      return this.uniforms.vignetting;
-    }
-    set vignettingAlpha(t) {
-      this.uniforms.vignettingAlpha = t;
-    }
-    get vignettingAlpha() {
-      return this.uniforms.vignettingAlpha;
-    }
-    set vignettingBlur(t) {
-      this.uniforms.vignettingBlur = t;
-    }
-    get vignettingBlur() {
-      return this.uniforms.vignettingBlur;
-    }
-  };
-  let ue = le;
-  ue.defaults = {
-    sepia: 0.3,
-    noise: 0.3,
-    noiseSize: 1,
-    scratch: 0.5,
-    scratchDensity: 0.3,
-    scratchWidth: 1,
-    vignetting: 0.3,
-    vignettingAlpha: 1,
-    vignettingBlur: 0.3,
-  };
-  var fr = `attribute vec2 aVertexPosition;
+`;const le=class extends a.Filter{constructor(t,e=0){super(ur,cr),this.seed=0,this.uniforms.dimensions=new Float32Array(2),typeof t=="number"?(this.seed=t,t=void 0):this.seed=e,Object.assign(this,le.defaults,t)}apply(t,e,r,i){var o,s;this.uniforms.dimensions[0]=(o=e.filterFrame)==null?void 0:o.width,this.uniforms.dimensions[1]=(s=e.filterFrame)==null?void 0:s.height,this.uniforms.seed=this.seed,t.applyFilter(this,e,r,i)}set sepia(t){this.uniforms.sepia=t}get sepia(){return this.uniforms.sepia}set noise(t){this.uniforms.noise=t}get noise(){return this.uniforms.noise}set noiseSize(t){this.uniforms.noiseSize=t}get noiseSize(){return this.uniforms.noiseSize}set scratch(t){this.uniforms.scratch=t}get scratch(){return this.uniforms.scratch}set scratchDensity(t){this.uniforms.scratchDensity=t}get scratchDensity(){return this.uniforms.scratchDensity}set scratchWidth(t){this.uniforms.scratchWidth=t}get scratchWidth(){return this.uniforms.scratchWidth}set vignetting(t){this.uniforms.vignetting=t}get vignetting(){return this.uniforms.vignetting}set vignettingAlpha(t){this.uniforms.vignettingAlpha=t}get vignettingAlpha(){return this.uniforms.vignettingAlpha}set vignettingBlur(t){this.uniforms.vignettingBlur=t}get vignettingBlur(){return this.uniforms.vignettingBlur}};let ue=le;ue.defaults={sepia:.3,noise:.3,noiseSize:1,scratch:.5,scratchDensity:.3,scratchWidth:1,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3};var fr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3729,8 +1495,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    dr = `varying vec2 vTextureCoord;
+}`,dr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterClamp;
 
@@ -3768,64 +1533,7 @@ void main(void) {
     vec4 outlineColor = vec4(vec3(uColor) * outlineAlpha, outlineAlpha);
     gl_FragColor = contentColor + outlineColor;
 }
-`;
-  const A = class extends a.Filter {
-    constructor(t = 1, e = 0, r = 0.1, i = 1, o = !1) {
-      super(fr, dr.replace(/\$\{angleStep\}/, A.getAngleStep(r))),
-        (this._thickness = 1),
-        (this._alpha = 1),
-        (this._knockout = !1),
-        (this.uniforms.uThickness = new Float32Array([0, 0])),
-        (this.uniforms.uColor = new Float32Array([0, 0, 0, 1])),
-        (this.uniforms.uAlpha = i),
-        (this.uniforms.uKnockout = o),
-        Object.assign(this, {
-          thickness: t,
-          color: e,
-          quality: r,
-          alpha: i,
-          knockout: o,
-        });
-    }
-    static getAngleStep(t) {
-      const e = Math.max(t * A.MAX_SAMPLES, A.MIN_SAMPLES);
-      return ((Math.PI * 2) / e).toFixed(7);
-    }
-    apply(t, e, r, i) {
-      (this.uniforms.uThickness[0] = this._thickness / e._frame.width),
-        (this.uniforms.uThickness[1] = this._thickness / e._frame.height),
-        (this.uniforms.uAlpha = this._alpha),
-        (this.uniforms.uKnockout = this._knockout),
-        t.applyFilter(this, e, r, i);
-    }
-    get alpha() {
-      return this._alpha;
-    }
-    set alpha(t) {
-      this._alpha = t;
-    }
-    get color() {
-      return a.utils.rgb2hex(this.uniforms.uColor);
-    }
-    set color(t) {
-      a.utils.hex2rgb(t, this.uniforms.uColor);
-    }
-    get knockout() {
-      return this._knockout;
-    }
-    set knockout(t) {
-      this._knockout = t;
-    }
-    get thickness() {
-      return this._thickness;
-    }
-    set thickness(t) {
-      (this._thickness = t), (this.padding = t);
-    }
-  };
-  let E = A;
-  (E.MIN_SAMPLES = 1), (E.MAX_SAMPLES = 100);
-  var hr = `attribute vec2 aVertexPosition;
+`;const z=class extends a.Filter{constructor(t=1,e=0,r=.1,i=1,o=!1){super(fr,dr.replace(/\$\{angleStep\}/,z.getAngleStep(r))),this._thickness=1,this._alpha=1,this._knockout=!1,this.uniforms.uThickness=new Float32Array([0,0]),this.uniforms.uColor=new Float32Array([0,0,0,1]),this.uniforms.uAlpha=i,this.uniforms.uKnockout=o,Object.assign(this,{thickness:t,color:e,quality:r,alpha:i,knockout:o})}static getAngleStep(t){const e=Math.max(t*z.MAX_SAMPLES,z.MIN_SAMPLES);return(Math.PI*2/e).toFixed(7)}apply(t,e,r,i){this.uniforms.uThickness[0]=this._thickness/e._frame.width,this.uniforms.uThickness[1]=this._thickness/e._frame.height,this.uniforms.uAlpha=this._alpha,this.uniforms.uKnockout=this._knockout,t.applyFilter(this,e,r,i)}get alpha(){return this._alpha}set alpha(t){this._alpha=t}get color(){return a.utils.rgb2hex(this.uniforms.uColor)}set color(t){a.utils.hex2rgb(t,this.uniforms.uColor)}get knockout(){return this._knockout}set knockout(t){this._knockout=t}get thickness(){return this._thickness}set thickness(t){this._thickness=t,this.padding=t}};let $=z;$.MIN_SAMPLES=1,$.MAX_SAMPLES=100;var hr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3836,8 +1544,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    mr = `precision mediump float;
+}`,mr=`precision mediump float;
 
 varying vec2 vTextureCoord;
 
@@ -3877,19 +1584,7 @@ void main(void)
 
     gl_FragColor = texture2D(uSampler, coord);
 }
-`;
-  class gr extends a.Filter {
-    constructor(e = 10) {
-      super(hr, mr), (this.size = e);
-    }
-    get size() {
-      return this.uniforms.size;
-    }
-    set size(e) {
-      typeof e == "number" && (e = [e, e]), (this.uniforms.size = e);
-    }
-  }
-  var vr = `attribute vec2 aVertexPosition;
+`;class gr extends a.Filter{constructor(e=10){super(hr,mr),this.size=e}get size(){return this.uniforms.size}set size(e){typeof e=="number"&&(e=[e,e]),this.uniforms.size=e}}var vr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -3900,8 +1595,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    pr = `varying vec2 vTextureCoord;
+}`,pr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterArea;
 
@@ -3970,40 +1664,7 @@ void main(void)
 
     gl_FragColor = color / float(uKernelSize);
 }
-`;
-  class xr extends a.Filter {
-    constructor(e = 0, r = [0, 0], i = 5, o = -1) {
-      super(vr, pr),
-        (this._angle = 0),
-        (this.angle = e),
-        (this.center = r),
-        (this.kernelSize = i),
-        (this.radius = o);
-    }
-    apply(e, r, i, o) {
-      (this.uniforms.uKernelSize = this._angle !== 0 ? this.kernelSize : 0),
-        e.applyFilter(this, r, i, o);
-    }
-    set angle(e) {
-      (this._angle = e), (this.uniforms.uRadian = (e * Math.PI) / 180);
-    }
-    get angle() {
-      return this._angle;
-    }
-    get center() {
-      return this.uniforms.uCenter;
-    }
-    set center(e) {
-      this.uniforms.uCenter = e;
-    }
-    get radius() {
-      return this.uniforms.uRadius;
-    }
-    set radius(e) {
-      (e < 0 || e === 1 / 0) && (e = -1), (this.uniforms.uRadius = e);
-    }
-  }
-  var yr = `attribute vec2 aVertexPosition;
+`;class xr extends a.Filter{constructor(e=0,r=[0,0],i=5,o=-1){super(vr,pr),this._angle=0,this.angle=e,this.center=r,this.kernelSize=i,this.radius=o}apply(e,r,i,o){this.uniforms.uKernelSize=this._angle!==0?this.kernelSize:0,e.applyFilter(this,r,i,o)}set angle(e){this._angle=e,this.uniforms.uRadian=e*Math.PI/180}get angle(){return this._angle}get center(){return this.uniforms.uCenter}set center(e){this.uniforms.uCenter=e}get radius(){return this.uniforms.uRadius}set radius(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e}}var yr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4014,8 +1675,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Cr = `varying vec2 vTextureCoord;
+}`,Cr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 
 uniform vec4 filterArea;
@@ -4059,68 +1719,7 @@ void main(void)
 
     gl_FragColor = color * _alpha;
 }
-`;
-  const ce = class extends a.Filter {
-    constructor(t) {
-      super(yr, Cr),
-        (this.time = 0),
-        (this.uniforms.amplitude = new Float32Array(2)),
-        (this.uniforms.waveLength = new Float32Array(2)),
-        (this.uniforms.alpha = new Float32Array(2)),
-        (this.uniforms.dimensions = new Float32Array(2)),
-        Object.assign(this, ce.defaults, t);
-    }
-    apply(t, e, r, i) {
-      var o, s;
-      (this.uniforms.dimensions[0] =
-        (o = e.filterFrame) == null ? void 0 : o.width),
-        (this.uniforms.dimensions[1] =
-          (s = e.filterFrame) == null ? void 0 : s.height),
-        (this.uniforms.time = this.time),
-        t.applyFilter(this, e, r, i);
-    }
-    set mirror(t) {
-      this.uniforms.mirror = t;
-    }
-    get mirror() {
-      return this.uniforms.mirror;
-    }
-    set boundary(t) {
-      this.uniforms.boundary = t;
-    }
-    get boundary() {
-      return this.uniforms.boundary;
-    }
-    set amplitude(t) {
-      (this.uniforms.amplitude[0] = t[0]), (this.uniforms.amplitude[1] = t[1]);
-    }
-    get amplitude() {
-      return this.uniforms.amplitude;
-    }
-    set waveLength(t) {
-      (this.uniforms.waveLength[0] = t[0]),
-        (this.uniforms.waveLength[1] = t[1]);
-    }
-    get waveLength() {
-      return this.uniforms.waveLength;
-    }
-    set alpha(t) {
-      (this.uniforms.alpha[0] = t[0]), (this.uniforms.alpha[1] = t[1]);
-    }
-    get alpha() {
-      return this.uniforms.alpha;
-    }
-  };
-  let fe = ce;
-  fe.defaults = {
-    mirror: !0,
-    boundary: 0.5,
-    amplitude: [0, 20],
-    waveLength: [30, 100],
-    alpha: [1, 1],
-    time: 0,
-  };
-  var _r = `attribute vec2 aVertexPosition;
+`;const ce=class extends a.Filter{constructor(t){super(yr,Cr),this.time=0,this.uniforms.amplitude=new Float32Array(2),this.uniforms.waveLength=new Float32Array(2),this.uniforms.alpha=new Float32Array(2),this.uniforms.dimensions=new Float32Array(2),Object.assign(this,ce.defaults,t)}apply(t,e,r,i){var o,s;this.uniforms.dimensions[0]=(o=e.filterFrame)==null?void 0:o.width,this.uniforms.dimensions[1]=(s=e.filterFrame)==null?void 0:s.height,this.uniforms.time=this.time,t.applyFilter(this,e,r,i)}set mirror(t){this.uniforms.mirror=t}get mirror(){return this.uniforms.mirror}set boundary(t){this.uniforms.boundary=t}get boundary(){return this.uniforms.boundary}set amplitude(t){this.uniforms.amplitude[0]=t[0],this.uniforms.amplitude[1]=t[1]}get amplitude(){return this.uniforms.amplitude}set waveLength(t){this.uniforms.waveLength[0]=t[0],this.uniforms.waveLength[1]=t[1]}get waveLength(){return this.uniforms.waveLength}set alpha(t){this.uniforms.alpha[0]=t[0],this.uniforms.alpha[1]=t[1]}get alpha(){return this.uniforms.alpha}};let fe=ce;fe.defaults={mirror:!0,boundary:.5,amplitude:[0,20],waveLength:[30,100],alpha:[1,1],time:0};var _r=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4131,8 +1730,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    br = `precision mediump float;
+}`,br=`precision mediump float;
 
 varying vec2 vTextureCoord;
 
@@ -4149,31 +1747,7 @@ void main(void)
    gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/filterArea.xy).b;
    gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;
 }
-`;
-  class Sr extends a.Filter {
-    constructor(e = [-10, 0], r = [0, 10], i = [0, 0]) {
-      super(_r, br), (this.red = e), (this.green = r), (this.blue = i);
-    }
-    get red() {
-      return this.uniforms.red;
-    }
-    set red(e) {
-      this.uniforms.red = e;
-    }
-    get green() {
-      return this.uniforms.green;
-    }
-    set green(e) {
-      this.uniforms.green = e;
-    }
-    get blue() {
-      return this.uniforms.blue;
-    }
-    set blue(e) {
-      this.uniforms.blue = e;
-    }
-  }
-  var Tr = `attribute vec2 aVertexPosition;
+`;class Sr extends a.Filter{constructor(e=[-10,0],r=[0,10],i=[0,0]){super(_r,br),this.red=e,this.green=r,this.blue=i}get red(){return this.uniforms.red}set red(e){this.uniforms.red=e}get green(){return this.uniforms.green}set green(e){this.uniforms.green=e}get blue(){return this.uniforms.blue}set blue(e){this.uniforms.blue=e}}var Tr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4184,8 +1758,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Fr = `varying vec2 vTextureCoord;
+}`,Fr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterArea;
 uniform vec4 filterClamp;
@@ -4254,63 +1827,7 @@ void main()
 
     gl_FragColor = color;
 }
-`;
-  const de = class extends a.Filter {
-    constructor(t = [0, 0], e, r = 0) {
-      super(Tr, Fr),
-        (this.center = t),
-        Object.assign(this, de.defaults, e),
-        (this.time = r);
-    }
-    apply(t, e, r, i) {
-      (this.uniforms.time = this.time), t.applyFilter(this, e, r, i);
-    }
-    get center() {
-      return this.uniforms.center;
-    }
-    set center(t) {
-      this.uniforms.center = t;
-    }
-    get amplitude() {
-      return this.uniforms.amplitude;
-    }
-    set amplitude(t) {
-      this.uniforms.amplitude = t;
-    }
-    get wavelength() {
-      return this.uniforms.wavelength;
-    }
-    set wavelength(t) {
-      this.uniforms.wavelength = t;
-    }
-    get brightness() {
-      return this.uniforms.brightness;
-    }
-    set brightness(t) {
-      this.uniforms.brightness = t;
-    }
-    get speed() {
-      return this.uniforms.speed;
-    }
-    set speed(t) {
-      this.uniforms.speed = t;
-    }
-    get radius() {
-      return this.uniforms.radius;
-    }
-    set radius(t) {
-      this.uniforms.radius = t;
-    }
-  };
-  let he = de;
-  he.defaults = {
-    amplitude: 30,
-    wavelength: 160,
-    brightness: 1,
-    speed: 500,
-    radius: -1,
-  };
-  var Ar = `attribute vec2 aVertexPosition;
+`;const de=class extends a.Filter{constructor(t=[0,0],e,r=0){super(Tr,Fr),this.center=t,Object.assign(this,de.defaults,e),this.time=r}apply(t,e,r,i){this.uniforms.time=this.time,t.applyFilter(this,e,r,i)}get center(){return this.uniforms.center}set center(t){this.uniforms.center=t}get amplitude(){return this.uniforms.amplitude}set amplitude(t){this.uniforms.amplitude=t}get wavelength(){return this.uniforms.wavelength}set wavelength(t){this.uniforms.wavelength=t}get brightness(){return this.uniforms.brightness}set brightness(t){this.uniforms.brightness=t}get speed(){return this.uniforms.speed}set speed(t){this.uniforms.speed=t}get radius(){return this.uniforms.radius}set radius(t){this.uniforms.radius=t}};let he=de;he.defaults={amplitude:30,wavelength:160,brightness:1,speed:500,radius:-1};var Ar=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4321,8 +1838,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    zr = `varying vec2 vTextureCoord;
+}`,zr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform sampler2D uLightmap;
 uniform vec4 filterArea;
@@ -4337,51 +1853,7 @@ void main() {
     vec3 finalColor = diffuseColor.rgb * intensity;
     gl_FragColor = vec4(finalColor, diffuseColor.a);
 }
-`;
-  class wr extends a.Filter {
-    constructor(e, r = 0, i = 1) {
-      super(Ar, zr),
-        (this._color = 0),
-        (this.uniforms.dimensions = new Float32Array(2)),
-        (this.uniforms.ambientColor = new Float32Array([0, 0, 0, i])),
-        (this.texture = e),
-        (this.color = r);
-    }
-    apply(e, r, i, o) {
-      var s, n;
-      (this.uniforms.dimensions[0] =
-        (s = r.filterFrame) == null ? void 0 : s.width),
-        (this.uniforms.dimensions[1] =
-          (n = r.filterFrame) == null ? void 0 : n.height),
-        e.applyFilter(this, r, i, o);
-    }
-    get texture() {
-      return this.uniforms.uLightmap;
-    }
-    set texture(e) {
-      this.uniforms.uLightmap = e;
-    }
-    set color(e) {
-      const r = this.uniforms.ambientColor;
-      typeof e == "number"
-        ? (a.utils.hex2rgb(e, r), (this._color = e))
-        : ((r[0] = e[0]),
-          (r[1] = e[1]),
-          (r[2] = e[2]),
-          (r[3] = e[3]),
-          (this._color = a.utils.rgb2hex(r)));
-    }
-    get color() {
-      return this._color;
-    }
-    get alpha() {
-      return this.uniforms.ambientColor[3];
-    }
-    set alpha(e) {
-      this.uniforms.ambientColor[3] = e;
-    }
-  }
-  var Pr = `attribute vec2 aVertexPosition;
+`;class wr extends a.Filter{constructor(e,r=0,i=1){super(Ar,zr),this._color=0,this.uniforms.dimensions=new Float32Array(2),this.uniforms.ambientColor=new Float32Array([0,0,0,i]),this.texture=e,this.color=r}apply(e,r,i,o){var s,n;this.uniforms.dimensions[0]=(s=r.filterFrame)==null?void 0:s.width,this.uniforms.dimensions[1]=(n=r.filterFrame)==null?void 0:n.height,e.applyFilter(this,r,i,o)}get texture(){return this.uniforms.uLightmap}set texture(e){this.uniforms.uLightmap=e}set color(e){const r=this.uniforms.ambientColor;typeof e=="number"?(a.utils.hex2rgb(e,r),this._color=e):(r[0]=e[0],r[1]=e[1],r[2]=e[2],r[3]=e[3],this._color=a.utils.rgb2hex(r))}get color(){return this._color}get alpha(){return this.uniforms.ambientColor[3]}set alpha(e){this.uniforms.ambientColor[3]=e}}var Pr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4392,8 +1864,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Mr = `varying vec2 vTextureCoord;
+}`,Mr=`varying vec2 vTextureCoord;
 
 uniform sampler2D uSampler;
 uniform float blur;
@@ -4432,116 +1903,7 @@ void main(void)
 
     gl_FragColor = color;
 }
-`;
-  class $ extends a.Filter {
-    constructor(e) {
-      var r, i;
-      super(Pr, Mr),
-        (this.uniforms.blur = e.blur),
-        (this.uniforms.gradientBlur = e.gradientBlur),
-        (this.uniforms.start =
-          (r = e.start) != null ? r : new a.Point(0, window.innerHeight / 2)),
-        (this.uniforms.end =
-          (i = e.end) != null ? i : new a.Point(600, window.innerHeight / 2)),
-        (this.uniforms.delta = new a.Point(30, 30)),
-        (this.uniforms.texSize = new a.Point(
-          window.innerWidth,
-          window.innerHeight
-        )),
-        this.updateDelta();
-    }
-    updateDelta() {
-      (this.uniforms.delta.x = 0), (this.uniforms.delta.y = 0);
-    }
-    get blur() {
-      return this.uniforms.blur;
-    }
-    set blur(e) {
-      this.uniforms.blur = e;
-    }
-    get gradientBlur() {
-      return this.uniforms.gradientBlur;
-    }
-    set gradientBlur(e) {
-      this.uniforms.gradientBlur = e;
-    }
-    get start() {
-      return this.uniforms.start;
-    }
-    set start(e) {
-      (this.uniforms.start = e), this.updateDelta();
-    }
-    get end() {
-      return this.uniforms.end;
-    }
-    set end(e) {
-      (this.uniforms.end = e), this.updateDelta();
-    }
-  }
-  class me extends $ {
-    updateDelta() {
-      const e = this.uniforms.end.x - this.uniforms.start.x,
-        r = this.uniforms.end.y - this.uniforms.start.y,
-        i = Math.sqrt(e * e + r * r);
-      (this.uniforms.delta.x = e / i), (this.uniforms.delta.y = r / i);
-    }
-  }
-  class ge extends $ {
-    updateDelta() {
-      const e = this.uniforms.end.x - this.uniforms.start.x,
-        r = this.uniforms.end.y - this.uniforms.start.y,
-        i = Math.sqrt(e * e + r * r);
-      (this.uniforms.delta.x = -r / i), (this.uniforms.delta.y = e / i);
-    }
-  }
-  const ve = class extends a.Filter {
-    constructor(t, e, r, i) {
-      super(),
-        typeof t == "number" &&
-          (a.utils.deprecation(
-            "5.3.0",
-            "TiltShiftFilter constructor arguments is deprecated, use options."
-          ),
-          (t = { blur: t, gradientBlur: e, start: r, end: i })),
-        (t = Object.assign({}, ve.defaults, t)),
-        (this.tiltShiftXFilter = new me(t)),
-        (this.tiltShiftYFilter = new ge(t));
-    }
-    apply(t, e, r, i) {
-      const o = t.getFilterTexture();
-      this.tiltShiftXFilter.apply(t, e, o, 1),
-        this.tiltShiftYFilter.apply(t, o, r, i),
-        t.returnFilterTexture(o);
-    }
-    get blur() {
-      return this.tiltShiftXFilter.blur;
-    }
-    set blur(t) {
-      this.tiltShiftXFilter.blur = this.tiltShiftYFilter.blur = t;
-    }
-    get gradientBlur() {
-      return this.tiltShiftXFilter.gradientBlur;
-    }
-    set gradientBlur(t) {
-      this.tiltShiftXFilter.gradientBlur = this.tiltShiftYFilter.gradientBlur =
-        t;
-    }
-    get start() {
-      return this.tiltShiftXFilter.start;
-    }
-    set start(t) {
-      this.tiltShiftXFilter.start = this.tiltShiftYFilter.start = t;
-    }
-    get end() {
-      return this.tiltShiftXFilter.end;
-    }
-    set end(t) {
-      this.tiltShiftXFilter.end = this.tiltShiftYFilter.end = t;
-    }
-  };
-  let pe = ve;
-  pe.defaults = { blur: 100, gradientBlur: 600, start: void 0, end: void 0 };
-  var Dr = `attribute vec2 aVertexPosition;
+`;class E extends a.Filter{constructor(e){var r,i;super(Pr,Mr),this.uniforms.blur=e.blur,this.uniforms.gradientBlur=e.gradientBlur,this.uniforms.start=(r=e.start)!=null?r:new a.Point(0,window.innerHeight/2),this.uniforms.end=(i=e.end)!=null?i:new a.Point(600,window.innerHeight/2),this.uniforms.delta=new a.Point(30,30),this.uniforms.texSize=new a.Point(window.innerWidth,window.innerHeight),this.updateDelta()}updateDelta(){this.uniforms.delta.x=0,this.uniforms.delta.y=0}get blur(){return this.uniforms.blur}set blur(e){this.uniforms.blur=e}get gradientBlur(){return this.uniforms.gradientBlur}set gradientBlur(e){this.uniforms.gradientBlur=e}get start(){return this.uniforms.start}set start(e){this.uniforms.start=e,this.updateDelta()}get end(){return this.uniforms.end}set end(e){this.uniforms.end=e,this.updateDelta()}}class me extends E{updateDelta(){const e=this.uniforms.end.x-this.uniforms.start.x,r=this.uniforms.end.y-this.uniforms.start.y,i=Math.sqrt(e*e+r*r);this.uniforms.delta.x=e/i,this.uniforms.delta.y=r/i}}class ge extends E{updateDelta(){const e=this.uniforms.end.x-this.uniforms.start.x,r=this.uniforms.end.y-this.uniforms.start.y,i=Math.sqrt(e*e+r*r);this.uniforms.delta.x=-r/i,this.uniforms.delta.y=e/i}}const ve=class extends a.Filter{constructor(t,e,r,i){super(),typeof t=="number"&&(a.utils.deprecation("5.3.0","TiltShiftFilter constructor arguments is deprecated, use options."),t={blur:t,gradientBlur:e,start:r,end:i}),t=Object.assign({},ve.defaults,t),this.tiltShiftXFilter=new me(t),this.tiltShiftYFilter=new ge(t)}apply(t,e,r,i){const o=t.getFilterTexture();this.tiltShiftXFilter.apply(t,e,o,1),this.tiltShiftYFilter.apply(t,o,r,i),t.returnFilterTexture(o)}get blur(){return this.tiltShiftXFilter.blur}set blur(t){this.tiltShiftXFilter.blur=this.tiltShiftYFilter.blur=t}get gradientBlur(){return this.tiltShiftXFilter.gradientBlur}set gradientBlur(t){this.tiltShiftXFilter.gradientBlur=this.tiltShiftYFilter.gradientBlur=t}get start(){return this.tiltShiftXFilter.start}set start(t){this.tiltShiftXFilter.start=this.tiltShiftYFilter.start=t}get end(){return this.tiltShiftXFilter.end}set end(t){this.tiltShiftXFilter.end=this.tiltShiftYFilter.end=t}};let pe=ve;pe.defaults={blur:100,gradientBlur:600,start:void 0,end:void 0};var Dr=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4552,8 +1914,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    kr = `varying vec2 vTextureCoord;
+}`,kr=`varying vec2 vTextureCoord;
 
 uniform sampler2D uSampler;
 uniform float radius;
@@ -4609,33 +1970,7 @@ void main(void)
     gl_FragColor = texture2D(uSampler, coord );
 
 }
-`;
-  const xe = class extends a.Filter {
-    constructor(t) {
-      super(Dr, kr), Object.assign(this, xe.defaults, t);
-    }
-    get offset() {
-      return this.uniforms.offset;
-    }
-    set offset(t) {
-      this.uniforms.offset = t;
-    }
-    get radius() {
-      return this.uniforms.radius;
-    }
-    set radius(t) {
-      this.uniforms.radius = t;
-    }
-    get angle() {
-      return this.uniforms.angle;
-    }
-    set angle(t) {
-      this.uniforms.angle = t;
-    }
-  };
-  let ye = xe;
-  ye.defaults = { radius: 200, angle: 4, padding: 20, offset: new a.Point() };
-  var Or = `attribute vec2 aVertexPosition;
+`;const xe=class extends a.Filter{constructor(t){super(Dr,kr),Object.assign(this,xe.defaults,t)}get offset(){return this.uniforms.offset}set offset(t){this.uniforms.offset=t}get radius(){return this.uniforms.radius}set radius(t){this.uniforms.radius=t}get angle(){return this.uniforms.angle}set angle(t){this.uniforms.angle=t}};let ye=xe;ye.defaults={radius:200,angle:4,padding:20,offset:new a.Point};var Or=`attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
 uniform mat3 projectionMatrix;
@@ -4646,8 +1981,7 @@ void main(void)
 {
     gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     vTextureCoord = aTextureCoord;
-}`,
-    Rr = `varying vec2 vTextureCoord;
+}`,Rr=`varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
 uniform vec4 filterArea;
 
@@ -4733,100 +2067,5 @@ void main() {
 
     gl_FragColor = color;
 }
-`,
-    Ce = Object.getOwnPropertySymbols,
-    Er = Object.prototype.hasOwnProperty,
-    $r = Object.prototype.propertyIsEnumerable,
-    jr = (t, e) => {
-      var r = {};
-      for (var i in t) Er.call(t, i) && e.indexOf(i) < 0 && (r[i] = t[i]);
-      if (t != null && Ce)
-        for (var i of Ce(t)) e.indexOf(i) < 0 && $r.call(t, i) && (r[i] = t[i]);
-      return r;
-    };
-  const _e = class extends a.Filter {
-    constructor(t) {
-      const e = Object.assign(_e.defaults, t),
-        { maxKernelSize: r } = e,
-        i = jr(e, ["maxKernelSize"]);
-      super(Or, Rr.replace("${maxKernelSize}", r.toFixed(1))),
-        Object.assign(this, i);
-    }
-    get center() {
-      return this.uniforms.uCenter;
-    }
-    set center(t) {
-      this.uniforms.uCenter = t;
-    }
-    get strength() {
-      return this.uniforms.uStrength;
-    }
-    set strength(t) {
-      this.uniforms.uStrength = t;
-    }
-    get innerRadius() {
-      return this.uniforms.uInnerRadius;
-    }
-    set innerRadius(t) {
-      this.uniforms.uInnerRadius = t;
-    }
-    get radius() {
-      return this.uniforms.uRadius;
-    }
-    set radius(t) {
-      (t < 0 || t === 1 / 0) && (t = -1), (this.uniforms.uRadius = t);
-    }
-  };
-  let be = _e;
-  return (
-    (be.defaults = {
-      strength: 0.1,
-      center: [0, 0],
-      innerRadius: 0,
-      radius: -1,
-      maxKernelSize: 32,
-    }),
-    (f.AdjustmentFilter = ke),
-    (f.AdvancedBloomFilter = N),
-    (f.AsciiFilter = Ne),
-    (f.BevelFilter = Xe),
-    (f.BloomFilter = qe),
-    (f.BulgePinchFilter = B),
-    (f.CRTFilter = H),
-    (f.ColorGradientFilter = F),
-    (f.ColorMapFilter = yt),
-    (f.ColorOverlayFilter = bt),
-    (f.ColorReplaceFilter = Ft),
-    (f.ConvolutionFilter = wt),
-    (f.CrossHatchFilter = Dt),
-    (f.DotFilter = $t),
-    (f.DropShadowFilter = te),
-    (f.EmbossFilter = Xt),
-    (f.GlitchFilter = b),
-    (f.GlowFilter = ie),
-    (f.GodrayFilter = se),
-    (f.GrayscaleFilter = er),
-    (f.HslAdjustmentFilter = ne),
-    (f.KawaseBlurFilter = T),
-    (f.MotionBlurFilter = sr),
-    (f.MultiColorReplaceFilter = lr),
-    (f.OldFilmFilter = ue),
-    (f.OutlineFilter = E),
-    (f.PixelateFilter = gr),
-    (f.RGBSplitFilter = Sr),
-    (f.RadialBlurFilter = xr),
-    (f.ReflectionFilter = fe),
-    (f.ShockwaveFilter = he),
-    (f.SimpleLightmapFilter = wr),
-    (f.TiltShiftAxisFilter = $),
-    (f.TiltShiftFilter = pe),
-    (f.TiltShiftXFilter = me),
-    (f.TiltShiftYFilter = ge),
-    (f.TwistFilter = ye),
-    (f.ZoomBlurFilter = be),
-    Object.defineProperty(f, "__esModule", { value: !0 }),
-    f
-  );
-})({}, PIXI, PIXI.filters, PIXI.filters);
-Object.assign(PIXI.filters, __filters);
+`,Ce=Object.getOwnPropertySymbols,$r=Object.prototype.hasOwnProperty,Er=Object.prototype.propertyIsEnumerable,jr=(t,e)=>{var r={};for(var i in t)$r.call(t,i)&&e.indexOf(i)<0&&(r[i]=t[i]);if(t!=null&&Ce)for(var i of Ce(t))e.indexOf(i)<0&&Er.call(t,i)&&(r[i]=t[i]);return r};const _e=class extends a.Filter{constructor(t){const e=Object.assign(_e.defaults,t),{maxKernelSize:r}=e,i=jr(e,["maxKernelSize"]);super(Or,Rr.replace("${maxKernelSize}",r.toFixed(1))),Object.assign(this,i)}get center(){return this.uniforms.uCenter}set center(t){this.uniforms.uCenter=t}get strength(){return this.uniforms.uStrength}set strength(t){this.uniforms.uStrength=t}get innerRadius(){return this.uniforms.uInnerRadius}set innerRadius(t){this.uniforms.uInnerRadius=t}get radius(){return this.uniforms.uRadius}set radius(t){(t<0||t===1/0)&&(t=-1),this.uniforms.uRadius=t}};let be=_e;return be.defaults={strength:.1,center:[0,0],innerRadius:0,radius:-1,maxKernelSize:32},f.AdjustmentFilter=ke,f.AdvancedBloomFilter=N,f.AsciiFilter=Ne,f.BevelFilter=Xe,f.BloomFilter=qe,f.BulgePinchFilter=B,f.CRTFilter=H,f.ColorGradientFilter=A,f.ColorMapFilter=yt,f.ColorOverlayFilter=bt,f.ColorReplaceFilter=Ft,f.ConvolutionFilter=wt,f.CrossHatchFilter=Dt,f.DotFilter=Et,f.DropShadowFilter=te,f.EmbossFilter=Xt,f.GlitchFilter=b,f.GlowFilter=ie,f.GodrayFilter=se,f.GrayscaleFilter=er,f.HslAdjustmentFilter=ne,f.KawaseBlurFilter=T,f.MotionBlurFilter=sr,f.MultiColorReplaceFilter=lr,f.OldFilmFilter=ue,f.OutlineFilter=$,f.PixelateFilter=gr,f.RGBSplitFilter=Sr,f.RadialBlurFilter=xr,f.ReflectionFilter=fe,f.ShockwaveFilter=he,f.SimpleLightmapFilter=wr,f.TiltShiftAxisFilter=E,f.TiltShiftFilter=pe,f.TiltShiftXFilter=me,f.TiltShiftYFilter=ge,f.TwistFilter=ye,f.ZoomBlurFilter=be,Object.defineProperty(f,"__esModule",{value:!0}),f}({},PIXI,PIXI.filters,PIXI.filters);Object.assign(PIXI.filters,__filters);
 //# sourceMappingURL=pixi-filters.js.map
