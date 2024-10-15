@@ -212,4 +212,8 @@ export default class SequencerFoundryReplicator {
       duration: shakeData.duration,
     });
   }
+
+	static createEmbeddedDocument(){
+
+	}
 }
