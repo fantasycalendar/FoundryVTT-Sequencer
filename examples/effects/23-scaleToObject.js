@@ -9,6 +9,12 @@
 	const token3 = canvas.tokens.placeables.find((t) => t.name === "Tester (3)");
 	const token4 = canvas.tokens.placeables.find((t) => t.name === "Tester (4)");
 
+
+	if (!token1 || !token2 || !token2 || !token4) {
+		ui.notifications.error('Please make sure tokens named "Tester (1)", "Tester (2)", "Tester (3)" and "Tester (4)" exist');
+		return;
+	}
+
 	new Sequence().effect().file("jb2a.token_border.circle.static.blue.001").atLocation({ x: 2000, y: 1500 }).play();
 
 	new Sequence().effect().file("jb2a.token_border.circle.static.blue.001").atLocation(token1).scaleToObject().play();
