@@ -473,9 +473,7 @@ export class SequencerAboveUILayer {
   static addChild(...args) {
 		const layer = this.getLayer();
     const result = layer.addChild(...args);
-		if (layer.app?.stage) {
-			layer.renderable = layer.children.length > 0;
-		}
+		layer.renderable = layer.children.length > 0;
     return result;
   }
 
