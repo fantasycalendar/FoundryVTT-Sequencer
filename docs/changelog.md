@@ -1,5 +1,9 @@
 ## Changelog
 
+# Version 3.3.8
+
+- *Effects* - Fixed `screenSpace` being a required property instead of optional for `.animateProperty()` and `.loopProperty()`
+
 # Version 3.3.7
 
 - *Sequencer* - Fully removed custom PIXI filters in favor of dedicated Sequencer implementation

@@ -470,7 +470,7 @@ export function validateAnimation(inTarget, inPropertyName, inOptions) {
   ) {
     return `inOptions.fromEnd must be of type boolean`;
   }
-	if (typeof inOptions.screenSpace !== "boolean") {
+	if (inOptions?.screenSpace !== undefined && typeof inOptions.screenSpace !== "boolean") {
 		return `inOptions.screenSpace must be of type boolean`;
 	}
 	if (inOptions?.gridUnits !== undefined) {
@@ -565,7 +565,7 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
   ) {
     return `inOptions.pingPong must be of type boolean`;
   }
-	if (typeof inOptions.screenSpace !== "boolean") {
+	if (inOptions?.screenSpace !== undefined && typeof inOptions.screenSpace !== "boolean") {
 		return `inOptions.screenSpace must be of type boolean`;
 	}
 	if (inOptions?.gridUnits !== undefined) {
