@@ -1,5 +1,5 @@
 import CONSTANTS from "../constants.js";
-import SequencerSoundManager from "./sequencer-sound-manager.js";
+import { debug } from "../lib/lib.js";
 
 const SequencerFileCache = {
 	_videos: {},
@@ -116,7 +116,8 @@ const SequencerFileCache = {
 		}
 		job = new Promise(async (resolve) => {
 			const timeStart = Date.now();
-			console.log("generating spritesheet for", inSrc);
+			
+			debug(`generating spritesheet for ${inSrc}`);
 			const blob = await this.loadVideo(inSrc);
 			const buffer = await blob.arrayBuffer();
 			/** @type {PIXI.Spritesheet | null} */
@@ -134,7 +135,7 @@ const SequencerFileCache = {
 					spritesheet.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) /
 						100_000
 				) / 10;
-			console.log(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
+			debug(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
 			resolve(spritesheet);
 		});
 		

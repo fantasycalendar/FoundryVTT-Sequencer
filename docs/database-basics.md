@@ -276,3 +276,79 @@ const database = {
   },
 }
 ```
+
+## Spritesheet textures
+
+Even more advanced and efficient than using flipbooks is the use of spritesheets for animated effects. A Spritesheet acts like a flipbook in a sense that all the frames of an animation are avilable as images. In the case of a spritesheet these images are all packed inside one larger image file together with a json document describing the location, size and timing of the individual frames.
+
+The spritesheet image file can be a regular image (jpeg, webp, png, avif, ...) or a basis universal (gpu compressed texture format, supercompressed for network transfer). For smaller animations (up to about 2048x2048px), a regular image file is fine. For larger files, consider using basis universal to not overload the users RAM and video memory. A texture 8.000x8000 px in size takes up 256MB or RAM and video memory for a regular image file but "only" 64MB if encoded as basis_universal.
+
+The spritesheet json file follows the PIXI.js structure ([official documentation](https://pixijs.com/7.x/guides/components/sprite-sheets)), with one addition: a `frameRate` property can be passed as meta attribute. The `animation` section is mandatory.
+
+Example json file:
+
+```json
+{
+	"frames": {
+		"fire_01c-0": {
+			"frame": { "x": 0, "y": 0, "w": 128, "h": 128 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+			"sourceSize": { "w": 128, "h": 128 }
+		},
+		"fire_01c-1": {
+			"frame": { "x": 128, "y": 0, "w": 128, "h": 128 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+			"sourceSize": { "w": 128, "h": 128 }
+		},
+		"fire_01c-2": {
+			"frame": { "x": 256, "y": 0, "w": 128, "h": 128 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+			"sourceSize": { "w": 128, "h": 128 }
+		},
+		"fire_01c-3": {
+			"frame": { "x": 384, "y": 0, "w": 128, "h": 128 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+			"sourceSize": { "w": 128, "h": 128 }
+		}
+			/* ... more frames */
+	},
+	"animations": {
+		"fire_01c": [
+			"fire_01c-0",
+			"fire_01c-1",
+			"fire_01c-2",
+			"fire_01c-3"
+			
+			/* ... more frames */
+		]
+	},
+	"meta": {
+		"image": "fire.basis",
+		"format": "BASISU_ETC1S",
+		"size": { "w": 1024, "h": 1024 },
+		"scale": "1",
+	}
+}
+
+
+```
+
+The database entry for this file works just like regular image files, except the path should point to the json manifest file, not the image.
+
+```js
+const database = {
+  effects: {
+    generic: {
+      fire: "modules/your_module_name/Library/VFX/Generic/fire.json",
+    }
+  }
+}
+```
