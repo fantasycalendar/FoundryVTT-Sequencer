@@ -79,6 +79,12 @@ Also supports a second options object that accepts:
 
 Configures the angle of the crosshair - mostly used for the width of cone crosshairs
 
+## Width
+
+`.width(number)`
+
+Configures the width for the crosshair - used for ray crosshairs
+
 ## Direction
 
 `.direction(number)`

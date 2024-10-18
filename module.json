@@ -17,7 +17,6 @@
     }
   ],
   "esmodules": ["module.js"],
-  "scripts": ["ext/pixi-filters.js"],
   "styles": ["style.css"],
   "languages": [
     {

@@ -470,9 +470,12 @@ export function validateAnimation(inTarget, inPropertyName, inOptions) {
   ) {
     return `inOptions.fromEnd must be of type boolean`;
   }
-  if (inOptions?.gridUnits !== undefined) {
-    if (typeof inOptions.gridUnits !== "boolean") {
-      return `inOptions.gridUnits must be of type boolean`;
+	if (typeof inOptions.screenSpace !== "boolean") {
+		return `inOptions.screenSpace must be of type boolean`;
+	}
+	if (inOptions?.gridUnits !== undefined) {
+	  if (typeof inOptions.gridUnits !== "boolean") {
+	    return `inOptions.gridUnits must be of type boolean`;
     }
     if (
       inOptions.gridUnits &&
@@ -507,6 +510,7 @@ export function validateAnimation(inTarget, inPropertyName, inOptions) {
     fromEnd: inOptions?.fromEnd ?? false,
     gridUnits: inOptions?.gridUnits ?? false,
     absolute: inOptions?.absolute ?? false,
+	  screenSpace: inOptions?.screenSpace ?? false,
   };
 }
 
@@ -561,7 +565,10 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
   ) {
     return `inOptions.pingPong must be of type boolean`;
   }
-  if (inOptions?.gridUnits !== undefined) {
+	if (typeof inOptions.screenSpace !== "boolean") {
+		return `inOptions.screenSpace must be of type boolean`;
+	}
+	if (inOptions?.gridUnits !== undefined) {
     if (typeof inOptions.gridUnits !== "boolean") {
       return `inOptions.gridUnits must be of type boolean`;
     }
@@ -593,5 +600,6 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
       inOptions?.loops === undefined || !lib.is_real_number(inOptions?.loops),
     pingPong: inOptions?.pingPong ?? false,
     gridUnits: inOptions?.gridUnits ?? false,
+	  screenSpace: inOptions?.screenSpace ?? false,
   };
 }
