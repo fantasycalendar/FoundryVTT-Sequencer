@@ -1,5 +1,22 @@
 ## Changelog
 
+# Version 3.4.0
+
+- *Sequencer* - Added support for custom FPS for flipbooks through a a `_fps` database tag
+- *Sequencer* - Added support for spritesheet type effects through linking the spritesheet `.json` manifest in the database
+- *Sequencer* - Added a just in tile compiler to transform webm video-based effects to gpu-optimized spritesheets
+  - This greatly improves performance when many instances of the same persisted effects are playing at once
+  - Persisted effects are automatically transformed to spritesheets in background threads. Once the compiled spritesheets are available, video effects are seemlessly replaced with spritesheets, greatly reducing the overhead for video decoding for those effects. Depending on size of the effect, spritesheet generation is expected to take anywhere from 5 seconds to 90 seconds. The size of generated Spritesheet textures is limited to 8192x8192px to maximize compatibility and limit memory usage
+  - Generated spritesheets are cached client-side in a semi-persistent, file-based browser cache
+  - Spritesheet generation for video files is only supported in trusted contexts (meaning https or hosted and connected locally on the same machine). This is a hard limitation by the browser vendors and not expected to be lifted in the future
+- Fixed flipbook animations framerate being tied to canvas FPS
+- Fixed offset from `rotateTowards` applying to the source location instead of the target
+- Fixed effects with added text and `rotateTowards` having their anchor point moved to an unexpected location
+- Fixed persisted `stretchTo` effects not correctly looping the effect in certain cases
+- Fixed `loopOptions` not working correctly for persisted effects when combined with `timeRange`
+- Fixed `scaleOut` end value being multiplied by a potentially set `scaleIn` value.
+  - `scaleIn(0.25).scaleOut(2)` now scales the effect in from 0.25 to 1. Plays the animation at 1x size and then scales the animation out to 2x default animation size. Previously, the animation would scale out to 0.5x the default effect size.
+
 # Version 3.3.8
 
 - *Effects* - Fixed `screenSpace` being a required property instead of optional for `.animateProperty()` and `.loopProperty()`
