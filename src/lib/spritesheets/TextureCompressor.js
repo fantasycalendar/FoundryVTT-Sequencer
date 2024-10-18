@@ -76,12 +76,13 @@ export class SpritesheetCompressor {
 
 	/**
 	 * @param {ArrayBuffer} imageBuffer
+	 * @param {string} sourceHash
 	 * @param {number} width
 	 * @param {number} height
 	 * @param {string} id
 	 * @returns {Promise<CompressedTextureData | undefined>}
 	 */
-	async getCompressedRessourceInfo(imageBuffer, width, height, id) {
+	async getCompressedRessourceInfo(imageBuffer, sourceHash, width, height, id) {
 		const format = this.#getTranscoderFormat();
 		if (!format) {
 			return;
@@ -97,7 +98,7 @@ export class SpritesheetCompressor {
 		}
 		ktx2Buffer = ktx2Buffer.slice(0, encodedBytes);
 
-		await this.#ktx2FileCache.saveKtxFileToCache(id, ktx2Buffer);
+		await this.#ktx2FileCache.saveKtxFileToCache(id, sourceHash, ktx2Buffer);
 		return this.transcodeKtx2Buffer(ktx2Buffer);
 	}
 

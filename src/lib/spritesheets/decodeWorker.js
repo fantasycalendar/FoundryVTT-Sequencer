@@ -8,6 +8,7 @@ import { decodeWebmFrames } from "./decodeWebmFrames";
 import { Ktx2FileCache } from "./ktx2Filecache";
 import { packFrames } from "./packFrames";
 import { SpritesheetCompressor } from "./TextureCompressor";
+import { getUint8ArrayHash } from "./hasher";
 
 let ktx2FileCache = new Ktx2FileCache();
 let compressorPromise = SpritesheetCompressor.create(ktx2FileCache);
@@ -43,10 +44,12 @@ function errorResponse(message) {
 async function decodeWebm(buffer, id) {
 	/** @type {import("./TextureCompressor").CompressedTextureData | undefined} */
 	let compressedSheet;
-	const ktx2Buffer = await ktx2FileCache.getCachedKtxFile(id);
+	const data = new Uint8Array(buffer);
+	const sourceHash = getUint8ArrayHash(data)
+	const ktx2Buffer = await ktx2FileCache.getCachedKtxFile(id, sourceHash);
 	let compressor = await compressorPromise;
 
-	let spritesheetData = await ktx2FileCache.getCachedSprites(id);
+	let spritesheetData = await ktx2FileCache.getCachedSprites(id, sourceHash);
 	
 	/** @type {CompressedSpritesheet} */
 	let sheet
@@ -58,7 +61,6 @@ async function decodeWebm(buffer, id) {
 		}
 		sheet = { ...compressedSheet, fps: spritesheetData.frameRate, sprites: spritesheetData.sprites };
 	} else {
-		const data = new Uint8Array(buffer);
 		const demuxer = createWebMDemuxer();
 		demuxer.append(data);
 		demuxer.end();
@@ -99,11 +101,12 @@ async function decodeWebm(buffer, id) {
 			return errorResponse("Could not pack spritesheet");
 		}
 
-		ktx2FileCache.saveSpritesToCache(id, { sprites: packedSheet.sprites, frameRate: metadata.frameRate });
+		ktx2FileCache.saveSpritesToCache(id, sourceHash, { sprites: packedSheet.sprites, frameRate: metadata.frameRate });
 		spritesheetData = { sprites: packedSheet.sprites, frameRate: metadata.frameRate };
 
 		compressedSheet = await compressor.getCompressedRessourceInfo(
 			packedSheet.imageBuffer,
+			sourceHash,
 			packedSheet.w,
 			packedSheet.h,
 			id
