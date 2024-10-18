@@ -7,8 +7,8 @@
 - *Effects* - Added `screenspace` (boolean) parameter to `.animateProperty()` and `.loopProperty()`
   - This makes the values used in these methods for position, width, or height to take the screen-size into account, meaning an `.animateProperty()` with the x position going from 0.0 to 1.0 will have the effect move from the left side of the screen to the right
 - *Effects* - Fixed `.screenSpace()` effects not supporting animating their width when `.screenSpaceScale({ fitX: true, fitY: true })` was set
-- *Effects* - Fixed `.screenSpaceAboveUI()` not correctly setting its renderable status when effects were played on its layer
-- *Effects* - Fixed `.shape()` not being affected by `.fadeIn()`, `.fadeOut()`, or `.opacity()`
+- *Effects* - Fixed `.screenSpaceAboveUI()` not correctly setting its renderable status when effects were played on its layer  (thank you Codas!)
+- *Effects* - Fixed `.shape()` not being affected by `.fadeIn()`, `.fadeOut()`, or `.opacity()`  (thank you Codas!)
 
 # Version 3.3.6
 
