@@ -1302,6 +1302,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._relatedSprites = {};
 		this._hooks = [];
 		this._lastDimensions = {};
+		this._lastScreenDimensions = {};
 
 		if (this._resetTimeout) {
 			clearTimeout(this._resetTimeout);
@@ -1889,6 +1890,13 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.data.screenSpace || this.data.screenSpaceAboveUI) {
 			const [screenWidth, screenHeight] = canvas.screenDimensions;
 
+			if(this._lastScreenDimensions?.screenWidth === screenWidth && this._lastScreenDimensions?.screenHeight === screenHeight){
+				return;
+			}
+
+			this._lastScreenDimensions.screenWidth = screenWidth;
+			this._lastScreenDimensions.screenHeight = screenHeight;
+
 			this.position.set(
 				(this.data.screenSpacePosition?.x ?? 0) +
 				screenWidth *
@@ -1904,12 +1912,15 @@ export default class CanvasEffect extends PIXI.Container {
 				let scaleX = scaleData.x;
 				let scaleY = scaleData.y;
 
+				this._lastScreenDimensions.width ??= this.sprite.width;
+				this._lastScreenDimensions.height ??= this.sprite.height;
+
 				if (scaleData.fitX) {
-					scaleX = scaleX * (screenWidth / this.sprite.width);
+					scaleX = scaleX * (screenWidth / this._lastScreenDimensions.width);
 				}
 
 				if (scaleData.fitY) {
-					scaleY = scaleY * (screenHeight / this.sprite.height);
+					scaleY = scaleY * (screenHeight / this._lastScreenDimensions.height);
 				}
 
 				scaleX = scaleData.ratioX ? scaleY : scaleX;
@@ -2622,6 +2633,20 @@ export default class CanvasEffect extends PIXI.Container {
 			) {
 				animation.from *= canvas.grid.size;
 				animation.to *= canvas.grid.size;
+			}
+
+			if (
+				["position.x", "position.y", "height", "width"].includes(
+					animation.propertyName
+				) &&
+				animation.screenSpace
+			) {
+				const [screenWidth, screenHeight] = canvas.screenDimensions;
+				const dimension = animation.propertyName === "position.x" || animation.propertyName === "width"
+					? screenWidth
+					: screenHeight;
+				animation.from *= dimension;
+				animation.to *= dimension;
 			}
 
 			if (["hue"].includes(animation.propertyName)) {

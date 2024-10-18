@@ -488,6 +488,7 @@ declare abstract class HasAnimations<T> {
       ease?: string;
       fromEnd?: boolean;
       gridUnits?: boolean;
+      screenSpace?: boolean;
     }
   ): this;
 
@@ -508,6 +509,7 @@ declare abstract class HasAnimations<T> {
       ease?: string;
       fromEnd?: boolean;
       gridUnits?: boolean;
+	    screenSpace?: boolean;
     }
   ): this;
 }
@@ -1146,6 +1148,11 @@ declare abstract class CrosshairSection {
 	 * Configures the direction degrees for the crosshair - mostly used for cone and ray crosshairs
 	 */
 	direction(inDirection: number): this;
+
+	/**
+	 * Configures the width for the crosshair - used for ray crosshairs
+	 */
+	width(inWidth: number): this;
 
 	/**
 	 * Configures the  increments the direction should snap along

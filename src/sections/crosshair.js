@@ -11,6 +11,7 @@ export default class CrosshairSection extends Section {
 		this._type = CONST.MEASURED_TEMPLATE_TYPES.CIRCLE;
 		this._distance = canvas.grid.distance/2;
 		this._angle = 53.13;
+		this._width = canvas.grid.distance;
 		this._direction = 0;
 		this._borderColor = null;
 		this._gridHighlight = null;
@@ -99,10 +100,19 @@ export default class CrosshairSection extends Section {
 	}
 
 	/**
-	 * Configures the direction degrees for the crosshair - mostly used for cone and ray crosshairs
+	 * Configures the width for the crosshair - used for ray crosshairs
+	 */
+	width(inWidth) {
+		if (!lib.is_real_number(inWidth)) throw this.sequence._customError(this, "width", "inWidth must be of type number");
+		this._width = inWidth;
+		return this;
+	}
+
+	/**
+	 * Configures the width for the crosshair - used for ray crosshairs
 	 */
 	direction(inDirection) {
-		if (!lib.is_real_number(inDirection)) throw this.sequence._customError(this, "direction", "inDirectionSnap must be of type number");
+		if (!lib.is_real_number(inDirection)) throw this.sequence._customError(this, "direction", "inDirection must be of type number");
 		this._direction = inDirection;
 		return this;
 	}
@@ -249,6 +259,7 @@ export default class CrosshairSection extends Section {
 		const reticle = new CrosshairsDocument({
 			t: this._type,
 			distance: this._distance,
+			width: this._width,
 			direction: this._direction,
 			angle: this._angle,
 			borderColor: this._borderColor,
