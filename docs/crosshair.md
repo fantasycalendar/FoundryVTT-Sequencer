@@ -52,19 +52,6 @@ crosshair = {
   },
   lockManualRotation: boolean // Whether to prevent the user from rotating this crosshair's direction
 }
-
-
-// For callbacks, see `Sequencer.Crosshair.CALLBACKS`
-callbacks = {
-  [Sequencer.Crosshair.CALLBACKS.SHOW / "show"]: function,
-  [Sequencer.Crosshair.CALLBACKS.MOUSE_MOVE / "mouseMove"]: function,
-  [Sequencer.Crosshair.CALLBACKS.MOVE / "move"]: function,
-  [Sequencer.Crosshair.CALLBACKS.COLLIDE / "collide"]: function,
-	[Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING / "stopColliding"]: function,
-	[Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT / "invalidPlacement"]: function,
-  [Sequencer.Crosshair.CALLBACKS.PLACED / "placed"]: function,
-  [Sequencer.Crosshair.CALLBACKS.CANCEL / "cancel"]: function,
-}
 ```
 
 Crosshair callbacks tend to return the crosshair placeable object, which have a number of useful properties and functions:
@@ -118,3 +105,34 @@ const location = await Sequencer.Crosshair.show({
 <strong>--------------------------------</strong>
 
 </details>
+
+### Sequencer.Crosshair.PLACEMENT_RESTRICTIONS
+
+For wall behavior restrictions, see `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS`:
+
+- `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.ANYWHERE` - Placement is valid anywhere
+- `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.LINE_OF_SIGHT` - The crosshair can only be placed where it can be seen from the location of the object in `location.obj`
+- `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES` - No walls of any kind are allowed between the location of the object in `location.obj` and the crosshair
+
+### Sequencer.Crosshair.CALLBACKS
+
+For callbacks, see `Sequencer.Crosshair.CALLBACKS`:
+
+- `Sequencer.Crosshair.CALLBACKS.SHOW` - Runs when the crosshair is first shown
+- `Sequencer.Crosshair.CALLBACKS.MOUSE_MOVE` - Runs anytime the mouse moves
+- `Sequencer.Crosshair.CALLBACKS.MOVE` - Runs when the position of the crosshair updates
+- `Sequencer.Crosshair.CALLBACKS.COLLIDE` - Runs when the crosshair collides as a part of its `wallBehavior`
+- `Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING` - Runs when the crosshair stops colliding as a part of its `wallBehavior`
+- `Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT` - Runs when the crosshair was attempted to be placed in an invalid location as a part of its `wallBehavior`
+- `Sequencer.Crosshair.CALLBACKS.PLACED` - Runs before the crosshair was placed - this can be interrupted by this function returning `false` (a false-y value does not interrupt it)
+- `Sequencer.Crosshair.CALLBACKS.CANCEL` - Runs before the crosshair's placement was cancelled by the user - this can be interrupted by this function returning `false` (a false-y value does not interrupt it)
+
+### CONST.GRID_SNAPPING_MODES
+
+In the case of snapping, this is determined by the core Foundry constant `CONST.GRID_SNAPPING_MODES`, this contains the binary number relating to how anything will snap on the scene grid.
+
+If you set `snap.position` to `CONST.GRID_SNAPPING_MODES.VERTEX`, the crosshair's position will snap to the vertices of the grid, ie, the corner intersections.
+
+If you set it to `CONST.GRID_SNAPPING_MODES.CENTER`, it snaps to the center of the grid squares/hexes;
+
+If you set it to `CONST.GRID_SNAPPING_MODES.VERTEX | CONST.GRID_SNAPPING_MODES.CENTER` (exactly like this), it will snap it to the intersections AND the center of the grid squares/hexes. This is how Foundry determines which ones are valid.
