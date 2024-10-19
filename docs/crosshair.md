@@ -54,11 +54,6 @@ crosshair = {
 }
 ```
 
-Crosshair callbacks tend to return the crosshair placeable object, which have a number of useful properties and functions:
-- `crosshair.updateCrosshair()` - method that accepts an object, similar to the config object above, to update the crosshair
-- `crosshair.isValid` - whether the crosshair is currently in a valid position
-- `crosshair.range` - the current range between the location object and the crosshair in grid units (only available if a location object has been set)
-
 <details>
   <summary><strong>------ Click for examples ------</strong></summary><br />
 
@@ -126,6 +121,11 @@ For callbacks, see `Sequencer.Crosshair.CALLBACKS`:
 - `Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT` - Runs when the crosshair was attempted to be placed in an invalid location as a part of its `wallBehavior`
 - `Sequencer.Crosshair.CALLBACKS.PLACED` - Runs before the crosshair was placed - this can be interrupted by this function returning `false` (a false-y value does not interrupt it)
 - `Sequencer.Crosshair.CALLBACKS.CANCEL` - Runs before the crosshair's placement was cancelled by the user - this can be interrupted by this function returning `false` (a false-y value does not interrupt it)
+
+Crosshair callbacks tend to return the crosshair placeable object, which have a number of useful properties and functions:
+- `crosshair.updateCrosshair()` - method that accepts an object, similar to the config object above, to update the crosshair
+- `crosshair.isValid` - whether the crosshair is currently in a valid position
+- `crosshair.range` - the current range between the location object and the crosshair in grid units (only available if a location object has been set)
 
 ## CONST.GRID_SNAPPING_MODES
 
