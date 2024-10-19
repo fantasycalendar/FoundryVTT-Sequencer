@@ -106,7 +106,7 @@ const location = await Sequencer.Crosshair.show({
 
 </details>
 
-### Sequencer.Crosshair.PLACEMENT_RESTRICTIONS
+## Sequencer.Crosshair.PLACEMENT_RESTRICTIONS
 
 For wall behavior restrictions, see `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS`:
 
@@ -114,7 +114,7 @@ For wall behavior restrictions, see `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS`
 - `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.LINE_OF_SIGHT` - The crosshair can only be placed where it can be seen from the location of the object in `location.obj`
 - `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES` - No walls of any kind are allowed between the location of the object in `location.obj` and the crosshair
 
-### Sequencer.Crosshair.CALLBACKS
+## Sequencer.Crosshair.CALLBACKS
 
 For callbacks, see `Sequencer.Crosshair.CALLBACKS`:
 
@@ -127,7 +127,7 @@ For callbacks, see `Sequencer.Crosshair.CALLBACKS`:
 - `Sequencer.Crosshair.CALLBACKS.PLACED` - Runs before the crosshair was placed - this can be interrupted by this function returning `false` (a false-y value does not interrupt it)
 - `Sequencer.Crosshair.CALLBACKS.CANCEL` - Runs before the crosshair's placement was cancelled by the user - this can be interrupted by this function returning `false` (a false-y value does not interrupt it)
 
-### CONST.GRID_SNAPPING_MODES
+## CONST.GRID_SNAPPING_MODES
 
 In the case of snapping, this is determined by the core Foundry constant `CONST.GRID_SNAPPING_MODES`, this contains the binary number relating to how anything will snap on the scene grid.
 
