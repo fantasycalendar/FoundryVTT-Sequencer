@@ -1500,7 +1500,7 @@ declare abstract class SequencerPresets {
   /**
    * Retrieves preset based on its name
    */
-  get(name: string): Function;
+  get(name: string, exact: boolean): Function;
 }
 
 declare namespace Sequencer {

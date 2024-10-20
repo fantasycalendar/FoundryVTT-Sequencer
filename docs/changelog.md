@@ -8,7 +8,11 @@
   - Persisted effects are automatically transformed to spritesheets in background threads. Once the compiled spritesheets are available, video effects are seamlessly replaced with spritesheets, greatly reducing the overhead for video decoding for those effects. Depending on size of the effect, spritesheet generation is expected to take anywhere from 5 seconds to 90 seconds. The size of generated Spritesheet textures is limited to 8192x8192px to maximize compatibility and limit memory usage
   - Generated spritesheets are cached client-side in a semi-persistent, file-based browser cache
   - Spritesheet generation for video files is only supported in trusted contexts (meaning https or hosted and connected locally on the same machine). This is a hard limitation by the browser vendors and not expected to be lifted in the future
-- *Crosshair* - Added `displayRangePoly` to `.location()` and the `Sequencer.Crosshair.show()` API  
+- *Sequencer* - Tweaked `Sequencer.Presets.get()` to support fall-backs to lower-complexity named entries
+  - If you have added a preset named `spell.ranged` and attempt to get a non-existent `spell.ranged.fire`, it will return the `spell.ranged` entry as a fallback
+  - You can enable the previous behavior by passing `true` as a secondary argument, which causes the method to require an exact match
+- *Crosshairs* - Added `displayRangePoly` to `.location()` and the `Sequencer.Crosshair.show()` API
+- *Crosshairs* - Fixed some minor crosshair issues surrounding utilizing them for effects
 - *Effects* - Fixed flipbook animations framerate being tied to canvas FPS
 - *Effects* - Fixed offset from `.rotateTowards()` applying to the source location instead of the target
 - *Effects* - Fixed effects with added text and `.rotateTowards()` having their anchor point moved to an unexpected location
@@ -17,7 +21,6 @@
 - *Effects* - Fixed `.scaleOut()` end value being multiplied by a potentially set `.scaleIn()` value.
   - `scaleIn(0.25).scaleOut(2)` now scales the effect in from 0.25 to 1. Plays the animation at 1x size and then scales the animation out to 2x default animation size. Previously, the animation would scale out to 0.5x the default effect size.
 - *Effects* - Fixed `attachTo()` not working on in-flight crosshairs
-- *Crosshair* - Fixed some minor crosshair issues surrounding utilizing them for effects  
 
 Big thanks to Codas for his incredible work on the just-in-time compiler, general optimizations, and many fixes! Please support him at the following link: <https://ko-fi.com/Codas>
 
