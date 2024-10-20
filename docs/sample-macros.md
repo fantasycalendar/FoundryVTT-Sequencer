@@ -26,10 +26,10 @@ Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_D
 ```js
 let position = await Sequencer.Crosshair.show({
 	size: 1,
-	tag: randomID(),
-	label: "Teleport to",
-	drawOutline: false,
-	drawIcon: false
+	gridHighlight: false,
+	label: {
+		text: "Teleport to",
+	}
 }, { show: async (crosshair) => {
 
 	new Sequence()
