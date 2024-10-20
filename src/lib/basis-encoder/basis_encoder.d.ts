@@ -2,7 +2,7 @@ export declare class BasisEncoder {
 	setCreateKTX2File(value: boolean): void
 	setKTX2UASTCSupercompression(value: boolean): void
 	setKTX2SRGBTransferFunc(value: boolean): void
-	setSliceSourceImage(slice: number, imageBuffer: Uint8Array, width: number, height: number, isPNG: boolean): void
+	setSliceSourceImage(slice: number, imageBuffer: Uint8Array, width: number, height: number): void
 	setUASTC(value: boolean): void
 	setPackUASTCFlags(qualityFlags: number): void
 	setPerceptual(value: boolean): void
