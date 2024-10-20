@@ -127,6 +127,7 @@ const SequencerFileCache = {
 			} catch (error) {
 				console.warn(error);
 				resolve(null);
+				return
 			}
 			const w = spritesheet.baseTexture.width;
 			const h = spritesheet.baseTexture.height;
