@@ -1,6 +1,6 @@
 // @ts-check
 /** @import { BASISModule, BasisEncoder } from '../basis-encoder/basis_encoder' */
-import BASIS from "../basis-encoder/basis_encoder.js";
+import BASIS from "../basis-encoder/basis_encoder.mjs";
 
 // this is just a typescript-styel enum / bidrectional mapping of values
 export var BASIS_FORMAT;
