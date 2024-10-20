@@ -1,7 +1,6 @@
 ## Changelog
 
 # Version 3.4.0
-
 - *Sequencer* - Added support for custom FPS for flipbooks through an `_fps` database tag
 - *Sequencer* - Added support for spritesheet type effects through linking the spritesheet `.json` manifest in the database
 - *Sequencer* - Added a just-in-time compiler to transform webm video-based effects to gpu-optimized spritesheets
@@ -9,10 +8,11 @@
   - Persisted effects are automatically transformed to spritesheets in background threads. Once the compiled spritesheets are available, video effects are seamlessly replaced with spritesheets, greatly reducing the overhead for video decoding for those effects. Depending on size of the effect, spritesheet generation is expected to take anywhere from 5 seconds to 90 seconds. The size of generated Spritesheet textures is limited to 8192x8192px to maximize compatibility and limit memory usage
   - Generated spritesheets are cached client-side in a semi-persistent, file-based browser cache
   - Spritesheet generation for video files is only supported in trusted contexts (meaning https or hosted and connected locally on the same machine). This is a hard limitation by the browser vendors and not expected to be lifted in the future
+- *Crosshair* - Added `displayRangePoly` to `.location()` and the `Sequencer.Crosshair.show()` API  
 - *Effects* - Fixed flipbook animations framerate being tied to canvas FPS
 - *Effects* - Fixed offset from `.rotateTowards()` applying to the source location instead of the target
 - *Effects* - Fixed effects with added text and `.rotateTowards()` having their anchor point moved to an unexpected location
-- *Effects* - Fixed persisted `stretchTo` effects not correctly looping the effect in certain cases
+- *Effects* - Fixed persisted `.stretchTo()` effects not correctly looping the effect in certain cases
 - *Effects* - Fixed `.loopOptions()` not working correctly for persisted effects when combined with `.timeRange()`
 - *Effects* - Fixed `.scaleOut()` end value being multiplied by a potentially set `.scaleIn()` value.
   - `scaleIn(0.25).scaleOut(2)` now scales the effect in from 0.25 to 1. Plays the animation at 1x size and then scales the animation out to 2x default animation size. Previously, the animation would scale out to 0.5x the default effect size.
@@ -22,11 +22,9 @@
 Big thanks to Codas for his incredible work on the just-in-time compiler, general optimizations, and many fixes! Please support him at the following link: <https://ko-fi.com/Codas>
 
 # Version 3.3.8
-
 - *Effects* - Fixed `screenSpace` being a required property instead of optional for `.animateProperty()` and `.loopProperty()`
 
 # Version 3.3.7
-
 - *Sequencer* - Fully removed custom PIXI filters in favor of dedicated Sequencer implementation
 - *Crosshairs* - Added `.width()` for ray-type crosshairs
 - *Effects* - Added `screenspace` (boolean) parameter to `.animateProperty()` and `.loopProperty()`
@@ -36,19 +34,16 @@ Big thanks to Codas for his incredible work on the just-in-time compiler, genera
 - *Effects* - Fixed `.shape()` not being affected by `.fadeIn()`, `.fadeOut()`, or `.opacity()`  (thank you Codas!)
 
 # Version 3.3.6
-
 - *Sequencer* - Reverted PIXI filters plugin to more compatible version
 - *Sounds* - Fixed `.startTime()` and `.endTime()` not working
 
 # Version 3.3.5
-
 - *Effects* - Fixed `.screenSpaceAboveUI()` not correctly falling back to the below UI screenspace layer if the above UI layer is disabled
 - *Animations* - Fixed named sequence-crosshairs not working as a target position
 - *Sequencer* - Fixed minor Foundry v12 deprecation warnings
 - *Sequencer* - Updated PIXI filters
 
 # Version 3.3.4
-
 - *Crosshairs* - Fixed `.crosshair()`'s `.persist()` option not working with subsequent `.effect()` sections
 - *Crosshairs* - Fixed typos on `.gridHighlight()` (thanks Vauxs!)
 - *Crosshairs* - Fixed crosshair documentation and typing (thanks Vauxs and Spappz on github!)
@@ -58,7 +53,6 @@ Big thanks to Codas for his incredible work on the just-in-time compiler, genera
 - *Sounds* - Added `.audioChannel()` to sounds, which controls which output they are played through (thank you Oxy949 on github!)
 
 # Version 3.3.3
-
 - *Crosshairs* - Added `Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING` callback
 - *Crosshairs* - Added `updateCrosshair` method to crosshairs
 - *Crosshairs* - Fixed invalid placement positions being cached and then used even if the crosshair was placed somewhere else

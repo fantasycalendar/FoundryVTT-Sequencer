@@ -23,6 +23,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	#isPanning = false;
 	#customText = false;
 	#distanceText = false;
+	#rangeHighlight = false;
 	isValid = true;
 
 	#lastPositions = false;
@@ -118,12 +119,46 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		}
 	}
 
+	#refreshRangeHighlight() {
+
+		const loc = this.crosshair.location;
+
+		if(!loc.displayRangePoly || !loc.obj || loc.limitMaxRange === null) return;
+
+		if(this.#rangeHighlight){
+			this.#rangeHighlight.clear();
+		}else{
+			this.#rangeHighlight = new PIXI.Graphics();
+			canvas.tokens.addChild(this.#rangeHighlight);
+			this.#rangeHighlight.zIndex = -1;
+			this.#rangeHighlight.interactive = false;
+			canvas.tokens.sortChildren();
+		}
+
+		const object = loc.obj;
+
+		const position = {
+			x: object?.center?.x ?? object?.position?.x ?? object?.x,
+			y: object?.center?.y ?? object?.position?.y ?? object?.y
+		};
+
+		const { w, h } = object;
+		const distance = loc.limitMaxRange + ((Math.max(w, h) / 2) / canvas.dimensions.distancePixels);
+
+		this.#rangeHighlight
+			.beginFill(loc.rangePolyFillColor ?? 0xFFFFFF, clamp(loc.rangePolyFillAlpha ?? 0.25, 0.0, 1.0))
+			.lineStyle(2, loc.rangePolyLineColor ?? 0xFF0000, clamp(loc.rangePolyLineAlpha ?? 0.5, 0.0, 1.0))
+			.drawPolygon(canvas.grid.getCircle(position, distance));
+
+	}
+
 	async show() {
 		await this.draw();
 		this.layer.addChild(this);
 		this.oldInteractiveChildren = this.layer.interactiveChildren;
 		this.layer.interactiveChildren = false;
 		this.#updateLocation();
+		this.#refreshRangeHighlight();
 		this.#runCallback(CONSTANTS.CALLBACKS.SHOW, this);
 		return this.#activateShowListeners();
 	}
@@ -467,6 +502,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	/** @override */
 	_destroy(options = {}) {
 		super._destroy(options);
+		if(this.#rangeHighlight) this.#rangeHighlight.destroy();
 		this.#clearHandlers();
 	}
 

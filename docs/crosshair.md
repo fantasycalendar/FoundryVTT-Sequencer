@@ -12,45 +12,50 @@ Sequencer.Crosshair
 
 ```js
 crosshair = {
-  t: string, // See CONST.MEASURED_TEMPLATE_TYPES, defaults to CIRCLE
-  distance: number // Defaults to half the canvas grid size
-  width: number // Defaults to the canvas grid size
-  borderColor: string // Determines the color of the template border
-  fillColor: string // Determines the color of the template fill
-  angle: number // The starting angle for the template
-  direction: number // The starting direction for the template
-  gridHighlight: boolean, // Toggles whether this crosshair should highlight the grid
-  icon: {
-    texture: string, // Optional texture to use for the icon of the crosshair
-    borderVisible: boolean // Whether this icon should have a border
-  },
-  snap: {
-    position: number, // See CONST.GRID_SNAPPING_MODES
-    size: number, // See CONST.GRID_SNAPPING_MODES
-    direction: mumber // How many degrees the direction of this crosshair should snap at
-  },
-  lockDrag: boolean,
-  distanceMin: null | number, // How small or short the crosshair can be at its smallest 
-  distanceMax: null | number, // How big or how far the crosshair can go at its biggest
-  label: {
-    text: string,
-    dx: null | number,
-    dy: null | number,
-  },
-  location: {
-    obj: null | PlaceableObject | Document, // The optional object to tie the crosshair to
-    limitMinRange: null | number, // Causes the crosshair to not be able to be placed within this number of grid units
-    limitMaxRange: null | number, // Causes the crosshair to not be able to be placed beyond this number of grid units of the location 
-    showRange: boolean, // Displays the distance between the crosshair and the location in grid units under the crosshair
-    lockToEdge: boolean, // Whether to lock the crosshair to the edge of the target (mostly used with tokens)
-    lockToEdgeDirection: boolean, // Causes the crosshair to be locked along the normal of the token's edge (and corner, in the case of square tokens)
-    offset: {
-      x: null | number,
-      y: null | number
-    }, // Causes the location to be offset by this many pixels
-    wallBehavior: string // Causes the crosshair to be unable to be placed based on this configuration, eg only within sight, or no walls at all between crosshair and location, or anywhere. See Sequencer.Crosshair.PLACEMENT_RESTRICTIONS
-  },
-  lockManualRotation: boolean // Whether to prevent the user from rotating this crosshair's direction
+	t: string, // See CONST.MEASURED_TEMPLATE_TYPES, defaults to CIRCLE
+	distance: number // Defaults to half the canvas grid size
+	width: number // Defaults to the canvas grid size
+	borderColor: string // Determines the color of the template border
+	fillColor: string // Determines the color of the template fill
+	angle: number // The starting angle for the template
+	direction: number // The starting direction for the template
+	gridHighlight: boolean, // Toggles whether this crosshair should highlight the grid
+	icon: {
+		texture: string, // Optional texture to use for the icon of the crosshair
+		borderVisible: boolean // Whether this icon should have a border
+	},
+	snap: {
+		position: number, // See CONST.GRID_SNAPPING_MODES
+		size: number, // See CONST.GRID_SNAPPING_MODES
+		direction: mumber // How many degrees the direction of this crosshair should snap at
+	},
+	lockDrag: boolean,
+	distanceMin: null | number, // How small or short the crosshair can be at its smallest 
+	distanceMax: null | number, // How big or how far the crosshair can go at its biggest
+	label: {
+		text: string,
+		dx: null | number,
+		dy: null | number,
+	},
+	location: {
+		obj: null | PlaceableObject | Document, // The optional object to tie the crosshair to
+		limitMinRange: null | number, // Causes the crosshair to not be able to be placed within this number of grid units
+		limitMaxRange: null | number, // Causes the crosshair to not be able to be placed beyond this number of grid units of the location 
+		showRange: boolean, // Displays the distance between the crosshair and the location in grid units under the crosshair
+		lockToEdge: boolean, // Whether to lock the crosshair to the edge of the target (mostly used with tokens)
+		lockToEdgeDirection: boolean, // Causes the crosshair to be locked along the normal of the token's edge (and corner, in the case of square tokens)
+		offset: {
+			x: null | number,
+			y: null | number
+		}, // Causes the location to be offset by this many pixels
+		wallBehavior: string, // Causes the crosshair to be unable to be placed based on this configuration, eg only within sight, or no walls at all between crosshair and location, or anywhere. See Sequencer.Crosshair.PLACEMENT_RESTRICTIONS,
+		displayRangePoly: boolean, // Causes a polygon to be rendered below the object that shows the limit based on the limitMaxRange set above - this requires both that, and obj to have a position
+		rangePolyFillColor: null | number, // The fill color of the range polygon
+		rangePolyLineColor: null | number, // The line color of the range polygon
+		rangePolyFillAlpha: null | number, // The fill alpha of the range polygon
+		rangePolyLineAlpha: null | number, // The line alpha of the range polygon
+	},
+	lockManualRotation: boolean // Whether to prevent the user from rotating this crosshair's direction
 }
 ```
 
@@ -67,10 +72,10 @@ Creates a crosshair that returns a position when placed, that can only be placed
 
 ```js
 const location = await Sequencer.Crosshair.show({
-  location: {
-    obj: token,
-    limitMaxRange: 20
-  }
+	location: {
+		obj: token,
+		limitMaxRange: 20
+	}
 });
 ```
 
@@ -78,22 +83,22 @@ Creates a crosshair that returns a position when placed, that can only be placed
 
 ```js
 const location = await Sequencer.Crosshair.show({
-  location: {
-    obj: token,
-    limitMaxRange: 20,
-    wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
-  }
+	location: {
+		obj: token,
+		limitMaxRange: 20,
+		wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+	}
 }, {
-  [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
-    crosshair.updateCrosshair({
-      "icon.texture": "icons/svg/bones.svg"
-    })
-  },
-  [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
-    crosshair.updateCrosshair({
-      "icon.texture": ""
-    })
-  }
+	[Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+		crosshair.updateCrosshair({
+			"icon.texture": "icons/svg/bones.svg"
+		})
+	},
+	[Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+		crosshair.updateCrosshair({
+			"icon.texture": ""
+		})
+	}
 });
 ```
 

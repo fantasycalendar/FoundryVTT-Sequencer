@@ -100,6 +100,11 @@ type CrosshairsData = {
 		showRange: boolean;
 		lockToEdge: boolean;
 		lockToEdgeDirection: boolean;
+		displayRangePoly: boolean,
+		rangePolyFillColor: number | null,
+		rangePolyLineColor: number | null,
+		rangePolyFillAlpha: number | null,
+		rangePolyLineAlpha: number | null,
 		offset: {
 			x: number;
 			y: number;
@@ -1201,7 +1206,12 @@ declare abstract class CrosshairSection {
 			x?: number;
 			y?: number;
 		};
-		wallBehavior: string;
+		wallBehavior?: string;
+		displayRangePoly?: boolean;
+		rangePolyFillColor?: null | number;
+		rangePolyLineColor?: null | number;
+		rangePolyFillAlpha?: null | number;
+		rangePolyLineAlpha?: null | number;
 	}): this;
 
 	/**
