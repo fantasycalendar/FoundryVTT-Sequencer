@@ -2,7 +2,7 @@
 
   import { ApplicationShell } from "#runtime/svelte/component/core";
   import { localize } from '#runtime/svelte/helper';
-  import { getContext } from "svelte";
+  import { getContext, onDestroy } from "svelte";
 
   import DatabaseEntry from "./DatabaseEntry.svelte";
   import VirtualScroll from "svelte-virtual-scroll-list"
@@ -62,6 +62,7 @@
     });
   }
 
+  onDestroy(() => databaseStore.cleanupSpritesheet());
 </script>
 
 <svelte:options accessors={true}/>

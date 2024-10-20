@@ -1,4 +1,4 @@
-import VisionSamplerShader from "./lib/filters/vision-mask-filter.js";
+import VisionSamplerShader from "./lib/filters/vision-sampler-shader.js";
 import { debug } from "./lib/lib.js";
 
 export default function registerBatchShader() {

@@ -1,17 +1,15 @@
 import CONSTANTS from "../constants.js";
-import filters from "../lib/filters.js";
-import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
-import { SequencerFileBase } from "../modules/sequencer-file.js";
-import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
-import SequencerFileCache from "../modules/sequencer-file-cache.js";
-import flagManager from "../utils/flag-manager.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
-import { SequencerAboveUILayer } from "./effects-layer.js";
-import VisionSamplerShader from "../lib/filters/vision-mask-filter.js";
+import filters from "../lib/filters.js";
 import MaskFilter from "../lib/filters/mask-filter.js";
-import TilingSpriteMesh from "../lib/meshes/tiling-sprite-mesh.js";
+import * as lib from "../lib/lib.js";
+import SequencerAnimationEngine from "../modules/sequencer-animation-engine.js";
+import SequencerEffectManager from "../modules/sequencer-effect-manager.js";
+import { SequencerFileBase } from "../modules/sequencer-file.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import flagManager from "../utils/flag-manager.js";
+import { SequencerAboveUILayer } from "./effects-layer.js";
+import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 
 const hooksManager = {
 	_hooks: new Map(),
@@ -451,45 +449,6 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 	}
 
-	/**
-	 * Getter for the current playing video of the effect
-	 *
-	 * @returns {null|*}
-	 */
-	get video() {
-		return this._video;
-	}
-
-	/**
-	 * Setter for the current playing video of the effect
-	 */
-	set video(inVideo) {
-		if (!inVideo) return;
-
-		inVideo.playbackRate = this.data.playbackRate
-			? this.data.playbackRate
-			: 1.0;
-		inVideo.muted = !this.data.volume;
-		inVideo.volume =
-			(this.data.volume ?? 0) *
-			game.settings.get("core", "globalInterfaceVolume");
-
-		if (!this._video) {
-			this._video = inVideo;
-			return;
-		}
-
-		const isLooping = this._video?.loop;
-		const currentTime = this._video.currentTime;
-
-		this._video = inVideo;
-
-		this._video.currentTime = Math.min(currentTime, this._video.duration);
-		this._video.loop = isLooping;
-
-		this.updateTexture();
-	}
-
 	set effectAlpha(value) {
 		if (this.sprite) {
 			this.sprite.alpha = value
@@ -506,119 +465,60 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	async playMedia() {
-		if (this.animatedSprite) {
-			await this.sprite.play();
-		} else if (this.video) {
-			try {
-				await this.video.play().then(() => {
-					this.updateTexture();
-				});
-			} catch (err) {
-			}
+		if (this.destroyed || this._ended || this.isEnding) {
+			return
 		}
+		await this.sprite.play()
 		this._setupTimestampHook(this.mediaCurrentTime * 1000);
 	}
 
 	updateTexture() {
-		if (this.texture.valid) {
-			this.texture.update();
-		}
+		this.sprite.updateVideoTextures()
 	}
 
 	async pauseMedia() {
-		if (this.animatedSprite) {
-			return this.sprite.stop();
-		} else if (this.video) {
-			return this.video.pause();
-		}
+		this.sprite.stop()
 	}
 
 	get mediaLooping() {
-		if (this.animatedSprite) {
-			return this.sprite.loop;
-		}
-		return this.video?.loop ?? false;
+		return this.sprite.loop
 	}
 
 	set mediaLooping(looping) {
-		if (this.animatedSprite) {
-			this.sprite.loop = looping;
-			return;
-		}
-		if (this.video) {
-			this.video.loop = looping;
-		}
+		return this.sprite.loop = looping
 	}
 
 	get mediaIsPlaying() {
-		if (this.animatedSprite) {
-			return this.sprite.playing;
-		}
-		return this.video;
+		return this.sprite.playing
 	}
 
 	get mediaCurrentTime() {
-		if (this.animatedSprite) {
-			return (
-				(this.sprite.currentFrame / this.sprite.totalFrames) *
-				(this.sprite.totalFrames / 24)
-			);
-		}
-		return this.video?.currentTime ?? null;
+		return this.sprite.currentTime
 	}
 
 	get mediaPlaybackRate() {
-		if (this.animatedSprite) {
-			return this.sprite.animationSpeed;
-		} else if (this.video) {
-			return this.video.playbackRate;
-		}
+		return this.sprite.playbackRate
 	}
 
 	set mediaPlaybackRate(inPlaybackRate) {
-		if (this.animatedSprite) {
-			this.sprite.animationSpeed = 0.4 * inPlaybackRate;
-		} else if (this.video) {
-			this.video.playbackRate = inPlaybackRate;
-		}
+		// Playbackrate for spritesheets is now handled by timing info in the animation sequence
+		this.sprite.playbackRate = inPlaybackRate;
 	}
 
 	set mediaCurrentTime(newTime) {
-		if (this.animatedSprite) {
-			const newFrame = Math.floor(newTime * this.sprite.totalFrames);
-			const clampedFrame = Math.max(
-				0,
-				Math.min(newFrame, this.sprite.totalFrames)
-			);
-			if (this.mediaIsPlaying) {
-				this.sprite.gotoAndPlay(clampedFrame);
-			} else {
-				this.sprite.gotoAndStop(clampedFrame);
-			}
-		} else if (this.video) {
-			this.video.currentTime = newTime;
-		}
+		this.sprite.currentTime = newTime
 	}
 
 	get mediaDuration() {
-		if (this.animatedSprite) {
-			return (
-				this.sprite.totalFrames /
-				this.sprite.animationSpeed /
-				PIXI.Ticker.shared.FPS
-			);
-		} else if (this.video) {
-			return this.video?.duration / this.mediaPlaybackRate;
-		}
-		return 1;
+		return this.sprite.duration
 	}
 
 	get mediaDurationMs(){
-		return this.mediaDuration * 1000;
+		return this.mediaDuration * 1000
 	}
 
 	get hasAnimatedMedia() {
-		return !!(this.video || this.animatedSprite);
+		return this.sprite.hasAnimatedMedia
 	}
 
 	/**
@@ -627,14 +527,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {object}
 	 */
 	get template() {
-		return foundry.utils.mergeObject(
-			{
-				gridSize: 100,
-				startPoint: 0,
-				endPoint: 0,
-			},
-			this._template ?? {}
-		);
+		return this._template
 	}
 
 	/**
@@ -643,7 +536,11 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {number}
 	 */
 	get gridSizeDifference() {
-		return canvas.grid.size / this.template.gridSize;
+		return canvas.grid.size / (this.template?.gridSize ?? this.defaultGridSize);
+	}
+
+	get defaultGridSize() {
+		return 100
 	}
 
 	/**
@@ -1332,10 +1229,10 @@ export default class CanvasEffect extends PIXI.Container {
 	async _initialize() {
 		this.ready = false;
 		this._initializeVariables();
-		await this._contextLostCallback();
-		await this._loadTexture();
 		this._addToContainer();
-		this._createSprite();
+		this._createFile()
+		this._updateCurrentFilePath(true)
+		await this._createSprite();
 		this._calculateDuration();
 		this._createShapes();
 		await this._setupMasks();
@@ -1343,6 +1240,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._playPresetAnimations();
 		this._playCustomAnimations();
 		this._setEndTimeout();
+		this._registerTickers()
 		this._timeoutVisibility();
 		await this._startEffect();
 		this.ready = true;
@@ -1386,7 +1284,7 @@ export default class CanvasEffect extends PIXI.Container {
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
 
-		this._template = null;
+		this._template = this.data.template;
 		this._ended = null;
 		this._maskContainer = null;
 		this._maskSprite = null;
@@ -1455,10 +1353,6 @@ export default class CanvasEffect extends PIXI.Container {
 		this._tickerMethods.forEach(func => this._ticker.remove(func, this));
 		this._ticker = null;
 
-		Object.values(this._relatedSprites).forEach((sprite) =>
-			sprite.destroy({ children: true })
-		);
-
 		SequencerAnimationEngine.endAnimations(this.id);
 
 		if (this._maskContainer) this._maskContainer.destroy({ children: true });
@@ -1470,18 +1364,8 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 		}
 
-		if (this._file instanceof SequencerFileBase) {
-			this._file.destroy();
-		}
-
-		if (this.video) {
-			try {
-				this.video.removeAttribute("src");
-				this.video.pause();
-				this.video.load();
-			} catch (err) {
-			}
-		}
+		this.sprite.destroy();
+		this.sprite = null;
 
 		try {
 			if (this.data.screenSpace) {
@@ -1493,7 +1377,6 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.data.syncGroup) {
 			SyncGroups.remove(this);
 		}
-
 		this.removeChildren().forEach((child) => child.destroy({ children: true }));
 	}
 
@@ -1505,15 +1388,17 @@ export default class CanvasEffect extends PIXI.Container {
 	_playPresetAnimations() {
 		this._moveTowards();
 
+		this._fadeOut();
 		this._fadeIn();
-		this._fadeInAudio();
-		this._scaleIn();
+
+		this._rotateOut();
 		this._rotateIn();
 
-		this._fadeOut();
-		this._fadeOutAudio();
 		this._scaleOut();
-		this._rotateOut();
+		this._scaleIn();
+
+		this._fadeOutAudio();
+		this._fadeInAudio();
 	}
 
 	/**
@@ -1581,116 +1466,12 @@ export default class CanvasEffect extends PIXI.Container {
 		layer.addChild(this);
 		layer.sortChildren();
 	}
-
-	/**
-	 * Loads the texture for this effect, handling cases where it's a simple path or a database path
-	 *
-	 * @private
-	 */
-	async _loadTexture() {
-
-		this._template = this.data.template;
-
-		if (this.data.file === "") {
-			return;
-		}
-
-		if (this.data.customRange) {
-			this._file = SequencerFileBase.make(
-				this.data.file,
-				Object.values(this.template),
-				"temporary.range.file"
-			);
-		} else {
-			if (!Sequencer.Database.entryExists(this.data.file)) {
-				let texture = await SequencerFileCache.loadFile(this.data.file);
-				this.video = this.data.file.toLowerCase().endsWith(".webm")
-					? texture?.baseTexture?.resource?.source ?? false
-					: false;
-				this.texture = texture;
-				this._file = texture;
-				this._currentFilePath = this.data.file;
-				return;
-			}
-
-			this._file = Sequencer.Database.getEntry(this.data.file).clone();
-		}
-
-		this._file.fileIndex = this.data.forcedIndex;
-		this._file.twister = this._twister;
-
-		this._isRangeFind = this._file?.rangeFind;
-
-		this.spriteSheet = false;
-		if (this.data.stretchTo) {
-			let ray = new Ray(this.sourcePosition, this.targetPosition);
-			if (ray.distance === 0) {
-				lib.custom_error(
-				      "effect",
-				      `stretchTo - You are stretching over a distance of "0", you may be attempting to stretch between two of the same coordinates!`
-				);
-			}
-			this._rotateTowards(ray);
-			ray = new Ray(this.sourcePosition, this.targetPosition);
-			let { filePath, texture, sheet } = await this._getTextureForDistance(
-				ray.distance
-			);
-			this._currentFilePath = filePath;
-			this.texture = texture;
-			this.spriteSheet = sheet;
-		} else if (
-			!this._isRangeFind ||
-			(this._isRangeFind && !this.data.stretchTo)
-		) {
-			const { filePath, texture, sheet } = await this._file.getTexture();
-			this._currentFilePath = filePath;
-			this.texture = texture;
-			this.spriteSheet = sheet;
-		}
-
-		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
-			this._relatedSprites[this._currentFilePath] = new TilingSpriteMesh(
-				this.texture,
-				{
-					isVisionMaskingEnabled: !this.data.xray,
-					tiling: !!this.data.tilingTexture
-				}
-			);
-			if (this.data.tint) {
-				this._relatedSprites[this._currentFilePath].tint = this.data.tint;
-			}
-
-			new Promise(async (resolve) => {
-				for (let filePath of this._file.getAllFiles()) {
-					if (filePath === this._currentFilePath) continue;
-
-					let texture = await this._file._getTexture(filePath);
-					let sprite = new TilingSpriteMesh(
-						texture,
-						{
-							isVisionMaskingEnabled: !this.data.xray,
-							tiling: !!this.data.tilingTexture
-						}
-					)
-					sprite.renderable = false;
-					this._relatedSprites[filePath] = sprite;
-				}
-
-				resolve();
-			});
-		}
-
-		this._template ??= this._file.template;
-		this.video = this._currentFilePath.toLowerCase().endsWith(".webm")
-			? this.texture?.baseTexture?.resource?.source
-			: false;
-	}
-
-	get startTimeMs(){
+	
+	get startTimeMs() {
 		return this._startTime * 1000;
 	}
 
-	get endTimeMs(){
+	get endTimeMs() {
 		return this._endTime * 1000;
 	}
 
@@ -1700,7 +1481,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_calculateDuration() {
-		let playbackRate = this.data.playbackRate ? this.data.playbackRate : 1.0;
+		let playbackRate = this.data.playbackRate || 1.0;
 
 		this.mediaPlaybackRate = playbackRate;
 
@@ -1776,7 +1557,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._endTime = this._animationDuration;
 		if (this.data.time?.end) {
 			if (this.data.time.end.isPerc) {
-				this._endTime = this._animationDuration * this.data.time.end.value;
+				this._endTime = this._animationDuration - (this._animationDuration * this.data.time.end.value);
 			} else {
 				this._endTime = this.data.time.isRange
 					? this.data.time.end.value
@@ -1815,7 +1596,6 @@ export default class CanvasEffect extends PIXI.Container {
 
 		// Resolve duration promise so that owner of effect may know when it is finished
 		this._durationResolve(this._totalDuration);
-
 	}
 
 	/**
@@ -1834,11 +1614,35 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	/**
-	 * If this effect is attached to an object, check whether the object has been destroyed, if so, end the effect
+	 * Add Ticker handler to check for updates to attached objects
 	 *
 	 * @private
 	 */
-	_contextLostCallback() {
+	_registerTickers() {
+		//stretchTo && attached to stretchTo
+		if (this.data.stretchTo && this.data.stretchTo?.attachTo) {
+			this._addToTicker(this._transformStretchToAttachedSprite);
+		}
+		// attachTo, not attached to stretchTo
+		if (this.data.attachTo?.active && !this.data.stretchTo?.attachTo) {
+			this._addToTicker(this._transformAttachedNoStretchSprite);
+		}
+
+		// rotateTowards
+		if (this.rotateTowards && this.data.rotateTowards?.attachTo) {
+			this._addToTicker(this._transformRotateTowardsAttachedSprite);
+		}
+
+		// scaleTo
+		if (this.data.scaleToObject && this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
+			const { heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY } = this._getBaseScale()
+			this._addToTicker(() => {
+				this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
+				this._setAnchors()
+			});
+		}
+
+		// source or target destroy safeguards
 		if (this.isSourceTemporary) {
 			this._addToTicker(this._checkSourceDestroyed);
 		}
@@ -1861,58 +1665,95 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 	}
 
+	_createFile() {
+		if (this.data.file === "") {
+			return;
+		}
+
+		let file
+		if (this.data.customRange) {
+			const template = this.template ? [this.template.gridSize, this.template.startPoint, this.template.endPoint] : []
+			file = SequencerFileBase.make(
+				this.data.file,
+				"temporary.range.file",
+				{template},
+			);
+		} else if (Sequencer.Database.entryExists(this.data.file)) {
+			file = Sequencer.Database.getEntry(this.data.file).clone();
+		} else {
+			file = SequencerFileBase.make(this.data.file)
+			this._currentFilePath = this.data.file;
+		}
+
+		if (file.template) {
+			this._template = 
+				foundry.utils.mergeObject(
+					{ gridSize: file.template[0], startPoint: file.template[1], endPoint: file.template[2] },
+					this.data.template
+				)
+			
+		}
+		file.fileIndex = this.data.forcedIndex;
+		file.twister = this._twister;
+		this._file = file
+		this._isRangeFind = file?.rangeFind;
+	}
+
+	_updateCurrentFilePath(showDistanceWarning = false) {
+		if (!this._file) {
+			return;
+		}
+		if (!this.data.stretchTo) {
+			this._currentFilePath = this._file.getFile();
+			return;
+		}
+		let ray = new Ray(this.sourcePosition, this.targetPosition);
+		if (ray.distance === 0 && showDistanceWarning) {
+			lib.custom_error(
+			      "effect",
+			      `stretchTo - You are stretching over a distance of "0", you may be attempting to stretch between two of the same coordinates!`
+			);
+		}
+		this._currentFilePath = this._file.getFileForDistance(ray.distance);
+	}
 
 	/**
 	 * Creates the sprite, and the relevant containers that manage the position and offsets of the overall visual look of the sprite
 	 *
 	 * @private
 	 */
-	_createSprite() {
+	async _createSprite() {
 		this.renderable = false;
-
-		const texture = this.spriteSheet ? this.spriteSheet : PIXI.Texture.EMPTY;
-		const isVisionMaskingEnabled = 
-			!this.data.xray && 
-			!this.spriteSheet && 
-			!this.data.screenSpace && 
-			!this.data.screenSpaceAboveUI;
-		
-		const relatedSprites = Object.values(this._relatedSprites);
-		const spriteType = this.spriteSheet ? PIXI.AnimatedSprite : relatedSprites.length ? PIXI.Container : TilingSpriteMesh;
-		this.sprite = this.spriteContainer.addChild(new spriteType(texture));
-		this.sprite.isVisionMaskingEnabled = isVisionMaskingEnabled;
+		const spriteData = {
+			antialiasing: this.data?.fileOptions?.antialiasing,
+			tiling: this.data.tilingTexture,
+			xray: this.data.xray || this.data.screenSpace || this.data.screenSpaceAboveUI,
+			isPersisted: this.data.persist && !this.data.loopOptions?.endOnLastLoop
+		}
+		/** @type {SequencerSpriteManager} */
+		this.sprite = new SequencerSpriteManager(this._file, spriteData)
+		this.spriteContainer.addChild(this.sprite)
 		this.sprite.id = this.id + "-sprite";
 
-		relatedSprites.forEach((sprite) => {
-			if (this.data.tint) {
-				sprite.tint = this.data.tint;
-			}
-			this.sprite.addChild(sprite);
-		});
+		this.sprite.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
+		this.sprite.loop = this.loops
+		this.sprite.loopDelay = this.loopDelay
+		this.sprite.currentTime = this._startTime
 
-		this.animatedSprite = false;
-		if (this.spriteSheet) {
-			this.animatedSprite = true;
-			this.sprite.animationSpeed = 0.4;
-			this.sprite.loop = false;
+		await this.sprite.activate(this._currentFilePath)
+		
+		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
+			this.sprite.preloadVariants()
 		}
-
-		let textSprite;
 
 		if (this.data.text) {
 			const text = this.data.text.text;
 			const fontSettings = foundry.utils.deepClone(this.data.text);
-			fontSettings.fontSize =
-				(fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
-
-			textSprite = new PreciseText(text, fontSettings);
-			textSprite.resolution = 5;
+			fontSettings.fontSize = (fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
+			const textSprite = this.sprite.addText({text, textStyle: fontSettings})
 			textSprite.zIndex = 1;
-
-			textSprite.anchor.set(
-				this.data.text?.anchor?.x ?? 0.5,
-				this.data.text?.anchor?.y ?? 0.5
-			);
+			const textAnchor = this.data.text.anchor
+			textSprite.anchor.set(textAnchor?.x ?? 0.5, textAnchor?.y ?? 0.5);
 		}
 
 		this.sprite.filters = [];
@@ -1921,18 +1762,9 @@ export default class CanvasEffect extends PIXI.Container {
 			for (let index = 0; index < this.data.filters.length; index++) {
 				const filterData = this.data.filters[index];
 				const filter = new filters[filterData.className](filterData.data);
-				filter.id =
-					this.id + "-" + filterData.className + "-" + index.toString();
+				filter.id = this.id + "-" + filterData.className + "-" + index.toString();
 				if (filter instanceof PIXI.ColorMatrixFilter) {
-					if (textSprite || this.sprite instanceof PIXI.AnimatedSprite) {
-						this.sprite.filters.push(filter);
-					} else if (this.sprite.children.length > 0) {
-						this.sprite.children.forEach((child) => {
-							child.colorMatrixFilter = filter;
-						})
-					} else {
-						this.sprite.colorMatrixFilter = filter;	
-					}
+					this.sprite.colorMatrixFilter = filter;
 				} else {
 					this.sprite.filters.push(filter);
 				}
@@ -1952,12 +1784,10 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.sprite.position.set(spriteOffsetX, spriteOffsetY);
 
-		if (this.sprite.constructor !== PIXI.Container) {
-			this.sprite.anchor.set(
-				this.data.spriteAnchor?.x ?? 0.5,
-				this.data.spriteAnchor?.y ?? 0.5
-			);
-		}
+		this.sprite.anchor.set(
+			this.data.spriteAnchor?.x ?? 0.5,
+			this.data.spriteAnchor?.y ?? 0.5
+		);
 
 		let spriteRotation = this.data.spriteRotation ?? 0;
 		if (this.data.randomSpriteRotation) {
@@ -1993,24 +1823,15 @@ export default class CanvasEffect extends PIXI.Container {
 			this.sprite.tint = this.data.tint;
 		}
 
-		if (textSprite) {
-			if (this.data.tint) {
-				textSprite.tint = this.data.tint;
-			}
-			this.sprite.addChild(textSprite);
-		}
-
+		// only set filter and fade effects when a faded version should actually be shown
 		if (this.shouldShowFadedVersion) {
+			this.alpha = game.settings.get(CONSTANTS.MODULE_NAME,"user-effect-opacity") / 100;
 			this.filters = [
 				new PIXI.ColorMatrixFilter({
 					saturation: -1,
 				}),
-				new PIXI.AlphaFilter(
-					game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100
-				),
 			];
 		}
-		
 
 		this.updateElevation();
 	}
@@ -2351,61 +2172,36 @@ export default class CanvasEffect extends PIXI.Container {
 	 *
 	 * If the file is a SequencerFileBase instance, it will also pick the appropriate file for the right distance
 	 *
-	 * @param distance
+	 * @param {number} distance
+	 * @param {number} textureWidth
 	 * @returns {Object}
 	 * @private
 	 */
-	async _getTextureForDistance(distance) {
+	async _getDistanceScaling(distance, textureWidth) {
 		if (!this._distanceCache || this._distanceCache?.distance !== distance) {
 			let scaleX = 1.0;
 			let scaleY = 1.0;
-			let texture;
-			let filePath;
-			let spriteAnchor = this.data.anchor?.x ?? 1.0;
 
 			if (this._file instanceof SequencerFileBase) {
 				const scaledDistance = distance / (this.data.scale.x ?? 1.0);
-				const result = await this._file.getTexture(scaledDistance);
 
-				filePath = result.filePath;
-
-				texture = result.texture;
-
-				spriteAnchor = result.spriteAnchor ?? this.data.anchor?.x ?? 0.0;
-
-				scaleX = result.spriteScale;
-
-				if (this.data.stretchTo?.onlyX) {
-					const widthWithPadding =
-						texture.width - (this.template.startPoint + this.template.endPoint);
-					scaleY = widthWithPadding / texture.width;
-				} else {
-					scaleY = result.spriteScale;
-				}
-			} else if (this._file instanceof PIXI.Texture) {
-				filePath = this.data.file;
-
-				texture = this._file;
-
-				spriteAnchor = this.template.startPoint / texture.width;
-
-				const widthWithPadding =
-					texture.width - (this.template.startPoint + this.template.endPoint);
-				let spriteScale = distance / widthWithPadding;
-
+				const spriteScale = (
+					scaledDistance /
+					(textureWidth - (this.template ? this.template.startPoint + this.template.endPoint : 0))
+				)
 				scaleX = spriteScale;
 
 				if (this.data.stretchTo?.onlyX) {
-					scaleY = widthWithPadding / texture.width;
+					const startPoint = this.template?.startPoint ?? 0
+					const endPoint = this.template?.endPoint ?? 0
+					const widthWithPadding = textureWidth - (startPoint + endPoint);
+					scaleY = widthWithPadding / textureWidth;
 				} else {
 					scaleY = spriteScale;
 				}
 			}
 
 			this._distanceCache = {
-				filePath,
-				texture,
-				spriteAnchor,
 				scaleX,
 				scaleY,
 				distance,
@@ -2426,93 +2222,70 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._rotateTowards(ray);
 
-		let { filePath, texture, spriteAnchor, scaleX, scaleY, distance } =
-			await this._getTextureForDistance(ray.distance);
+		this._updateCurrentFilePath()
+		await this.sprite.activate(this._currentFilePath)
+		const texture = this.sprite.texture
 
-		if (
-			this._currentFilePath !== filePath ||
-			this._relatedSprites[filePath] === undefined
-		) {
-			this.texture = texture;
-			this.video = filePath.toLowerCase().endsWith(".webm")
-				? texture?.baseTexture?.resource?.source ?? false
-				: false;
+		let {  scaleX, scaleY, distance } = await this._getDistanceScaling(ray.distance, texture.width);
 
-			Object.values(this._relatedSprites).forEach((subsprite) => {
-				subsprite.renderable = false;
-			});
-
-			this._currentFilePath = filePath;
-
-			if (this._relatedSprites[filePath]) {
-				this._relatedSprites[filePath].renderable = true;
-			} else {
-				const sprite = new TilingSpriteMesh(texture, {
-					isVisionMaskingEnabled: !this.data.xray,
-					tiling: !!this.data.tilingTexture
-				});
-				sprite.colorMatrixFilter = this.effectFilters['ColorMatrix']
-				this._relatedSprites[filePath] = sprite;
-				if (this.data.tint) {
-					sprite.tint = this.data.tint;
-				}
-
-				this.sprite.addChild(sprite);
-			}
-
-			if (this._endTime) {
-				if (this._endTime !== this.mediaCurrentTime) {
-					this.playMedia();
-					setTimeout(() => {
-						this.pauseMedia()
-					}, (this._endTime - this.mediaCurrentTime) * 1000);
-				} else {
-					this.mediaCurrentTime = this._endTime;
-					this.pauseMedia();
-					this.updateTexture();
-				}
-			} else {
-				this.playMedia();
-			}
-		}
-
-		if (this._relatedSprites[filePath]) {
-			if (this.data.attachTo?.active) {
-				this.position.set(
-					this.sourcePosition.x,
-					this.sourcePosition.y
-				);
-			}
-
-			const sprite = this._relatedSprites[filePath];
-
-			if (!sprite.parent) {
-				this.sprite.addChild(sprite);
-			}
-
-			if (this.data.tilingTexture) {
-				const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
-				const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
-				sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
-				sprite.width = distance;
-				sprite.height = texture.height * scaleY;
-
-				sprite.tileScale.x = this.data.tilingTexture.scale.x * scaleX;
-				sprite.tileScale.y = this.data.tilingTexture.scale.y * scaleY;
-
-				sprite.tilePosition = this.data.tilingTexture.position;
-			} else {
-				sprite.scale.set(
-					scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
-					scaleY * (this.data.scale.y ?? 1.0) * this.flipY
-				);
-			}
-
-			sprite.anchor.set(
-				this.flipX === 1 ? spriteAnchor : 1 - spriteAnchor,
-				this.data.anchor?.y ?? 0.5
+		if (this.data.attachTo?.active) {
+			this.position.set(
+				this.sourcePosition.x,
+				this.sourcePosition.y
 			);
 		}
+
+		if (this.data.tilingTexture) {
+			const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
+			const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
+			this.sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
+			this.sprite.width = distance;
+			this.sprite.height = texture.height * scaleY;
+
+			this.sprite.tileScale.x = this.data.tilingTexture.scale.x * scaleX;
+			this.sprite.tileScale.y = this.data.tilingTexture.scale.y * scaleY;
+			this.sprite.tilePosition = this.data.tilingTexture.position;
+		} else {
+			this.sprite.scale.set(
+				scaleX * (this.data.scale.x ?? 1.0) * this.flipX,
+				scaleY * (this.data.scale.y ?? 1.0) * this.flipY
+			);
+		}
+
+	}
+
+	_setAnchors() {
+		let anchor = {x: 0.5, y: 0.5, ...(this.data.spriteAnchor ?? null)}
+
+		if (
+			(this.data.rotateTowards && this.data.rotateTowards.template) || 
+			this.data.stretchTo 
+		) {
+			const textureWidth = this.sprite.texture?.width ?? this.sprite.width;
+			const templateAnchorX = this.template ? this.template.startPoint / textureWidth : undefined;
+			anchor = { x: templateAnchorX, y: 0.5 }
+		}
+		if (this.data.rotateTowards && !this.data.rotateTowards.template && !this.data.anchor) {
+			this.spriteContainer.pivot.set(this.sprite.width * -0.5,0);
+		} else {
+			this.spriteContainer.pivot.set(
+				lib.interpolate(
+					this.sprite.width * -0.5,
+					this.sprite.width * 0.5,
+					this.data.anchor?.x ?? 0.5
+				),
+				lib.interpolate(
+					this.sprite.height * -0.5,
+					this.sprite.height * 0.5,
+					this.data.anchor?.y ?? 0.5
+				)
+			);
+		}
+
+		this.sprite.anchor?.set(
+			this.flipX === 1 ? anchor.x : 1 - anchor.x,
+			anchor.y
+		);
 	}
 
 	_checkWallCollisions() {
@@ -2594,89 +2367,29 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	async _transformSprite() {
 		if (this.data.stretchTo) {
-			if (this.data.stretchTo?.attachTo) {
-				this._addToTicker(this._transformStretchToAttachedSprite);
-			}
 			await this._applyDistanceScaling();
-		} else {
-			if (!this.sprite?.texture?.valid && this.texture?.valid) {
-				this.sprite.texture = this.texture;
-			}
-		}
-
-		if (
-			this.video &&
-			(this._startTime || this._loopOffset > 0) &&
-			this.video?.currentTime !== undefined
-		) {
-			await lib.wait(20);
-			this.updateTexture();
 		}
 
 		if (!this.data.stretchTo) {
 			this._transformNoStretchSprite();
 		}
 
-		if (this.data.attachTo?.active && !this.data.stretchTo?.attachTo) {
-			this._addToTicker(this._transformAttachedNoStretchSprite);
-		} else {
-			if (!this.data.screenSpace) {
-				this.position.set(this.sourcePosition.x, this.sourcePosition.y);
-			}
+		if (!this.data.screenSpace && (!this.data.attachTo?.active || this.data.stretchTo?.attachTo)) {
+			this.position.set(this.sourcePosition.x, this.sourcePosition.y);
 		}
 
 		if (this.data.rotateTowards) {
 			this._rotateTowards();
-
-			if (this.data.rotateTowards?.attachTo) {
-				this._addToTicker(this._transformRotateTowardsAttachedSprite);
-			}
 		}
 
+		this._setAnchors()
 		this._tweakRotationForIsometric();
-
-		const spriteToConsider = this.sprite.children.length
-			? this.sprite.children.find(child => child.renderable)
-			: this.sprite;
-
-		if (!this.data.anchor && this.data.rotateTowards) {
-			const textureWidth = (this.texture?.width ?? spriteToConsider.width) / 2;
-			const startPointRatio = this.template.startPoint / textureWidth;
-			this.spriteContainer.pivot.set(
-				spriteToConsider.width * (-0.5 + startPointRatio),
-				0
-			);
-		} else {
-			this.spriteContainer.pivot.set(
-				lib.interpolate(
-					spriteToConsider.width * -0.5,
-					spriteToConsider.width * 0.5,
-					this.data.anchor?.x ?? 0.5
-				),
-				lib.interpolate(
-					spriteToConsider.height * -0.5,
-					spriteToConsider.height * 0.5,
-					this.data.anchor?.y ?? 0.5
-				)
-			);
-		}
-	}
-
-	set texture(inTexture) {
-		const antiAliasing = this.data?.fileOptions?.antialiasing;
-		if (antiAliasing && antiAliasing !== PIXI.SCALE_MODES.LINEAR) {
-			inTexture.baseTexture.setStyle(0, antiAliasing)
-		}
-		this._texture = inTexture;
-	}
-
-	get texture() {
-		return this._texture;
 	}
 
 	async _transformStretchToAttachedSprite() {
 		try {
 			await this._applyDistanceScaling();
+			this._setAnchors()
 		} catch (err) {
 			//lib.debug_error(err);
 		}
@@ -2692,25 +2405,9 @@ export default class CanvasEffect extends PIXI.Container {
 			this.sprite.tilePosition = this.data.tilingTexture.position;
 		}
 
-		const heightWidthRatio = this.sprite.height / this.sprite.width;
-		const widthHeightRatio = this.sprite.width / this.sprite.height;
-
-		const baseScaleX =
-			(this.data.scale?.x ?? 1.0) *
-			(this.data.spriteScale?.x ?? 1.0) *
-			this.flipX;
-		const baseScaleY =
-			(this.data.scale?.y ?? 1.0) *
-			(this.data.spriteScale?.y ?? 1.0) *
-			this.flipY;
+		const { heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY } = this._getBaseScale()
 
 		if (this.data.scaleToObject) {
-
-			if (this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
-				this._addToTicker(() => {
-					this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
-				});
-			}
 			this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
 
 		} else if (this.data.size) {
@@ -2749,8 +2446,35 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 	}
 
-	_applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY) {
+	/**
+	 * Calculate the base scale and aspect ratios of the sprite
+	 *
+	 * @returns {{heightWidthRatio: number, widthHeightRatio: number, baseScaleX: number, baseScaleY: number}}
+	 *
+	 * @private
+	 */
+	_getBaseScale() {
+		const heightWidthRatio = this.sprite.height / this.sprite.width;
+		const widthHeightRatio = this.sprite.width / this.sprite.height;
 
+		const baseScaleX =
+			(this.data.scale?.x ?? 1.0) *
+			(this.data.spriteScale?.x ?? 1.0) *
+			this.flipX;
+		const baseScaleY =
+			(this.data.scale?.y ?? 1.0) *
+			(this.data.spriteScale?.y ?? 1.0) *
+			this.flipY;
+
+		return {
+			heightWidthRatio,
+			widthHeightRatio,
+			baseScaleX,
+			baseScaleY,
+		}
+	}
+
+	_applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY) {
 		try {
 			let { width, height } = this.getSourceData();
 
@@ -2823,6 +2547,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.isDestroyed) return;
 		try {
 			this._rotateTowards();
+			this._setAnchors()
 		} catch (err) {
 			lib.debug_error(err);
 		}
@@ -3073,7 +2798,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_fadeInAudio() {
-		if (!this.data.fadeInAudio || !this.sprite || !this.video) return 0;
+		if (!this.data.fadeInAudio || !this.sprite || !this.sprite.hasAnimatedMedia) return 0;
 
 		let fadeInAudio = this.data.fadeInAudio;
 
@@ -3086,11 +2811,11 @@ export default class CanvasEffect extends PIXI.Container {
 		)
 			return;
 
-		this.video.volume = 0.0;
+		this.sprite.volume = 0.0;
 
 		SequencerAnimationEngine.addAnimation(this.id, {
-			target: this,
-			propertyName: "video.volume",
+			target: this.sprite,
+			propertyName: "volume",
 			to:
 				(this.data.volume ?? 0) *
 				game.settings.get("core", "globalInterfaceVolume"),
@@ -3138,7 +2863,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_fadeOutAudio(immediate = false) {
-		if (!this.data.fadeOutAudio || !this.sprite || !this.video) return 0;
+		if (!this.data.fadeOutAudio || !this.sprite || !this.sprite.hasAnimatedMedia) return 0;
 
 		let fadeOutAudio = this.data.fadeOutAudio;
 
@@ -3151,8 +2876,8 @@ export default class CanvasEffect extends PIXI.Container {
 
 		setTimeout(() => {
 			SequencerAnimationEngine.addAnimation(this.id, {
-				target: this,
-				propertyName: "video.volume",
+				target: this.sprite,
+				propertyName: "volume",
 				to: 0.0,
 				duration: fadeOutAudio.duration,
 				ease: fadeOutAudio.ease,
@@ -3417,7 +3142,7 @@ export default class CanvasEffect extends PIXI.Container {
 		setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
-		}, this._totalDuration);
+		}, this._totalDuration / this.mediaPlaybackRate);
 	}
 
 	_setupTimestampHook(offset) {
@@ -3455,22 +3180,25 @@ export default class CanvasEffect extends PIXI.Container {
 		if (!this.hasAnimatedMedia) return;
 
 		let creationTimeDifference = this.data.persist ? this.actualCreationTime - this.creationTimestamp : 0;
+		creationTimeDifference *= this.mediaPlaybackRate
 
-		this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration);
+		// +1 because "loops: 1" means we run the animation one time, not that it restarts once
+		// whereas 0 means endless looping.
+		this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration) + 1;
 
-		if (this.loops && this._currentLoops >= this.loops) {
+		if (this.loops && this._currentLoops > this.loops) {
 			if(this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
 				return this.endEffect();
 			}
 			await this.pauseMedia();
 			this.mediaCurrentTime = this._endTime;
-			if (this.sprite.texture && this.video) {
+			if (this.sprite.texture) {
 				const oldRenderable = this.renderable;
 				this.renderable = false;
 				setTimeout(() => {
 					this.updateTexture();
 					setTimeout(() => {
-						this.renderable = oldRenderable;
+						this.renderable ||= oldRenderable;
 					}, 150)
 				}, 150);
 			}
@@ -3488,7 +3216,6 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	async _startLoop(creationTimeDifference) {
-
 		if (!this._animationTimes.loopStart) {
 			this._loopOffset =
 				(creationTimeDifference % this._animationDuration) / 1000;
@@ -3499,46 +3226,57 @@ export default class CanvasEffect extends PIXI.Container {
 				(creationTimeDifference % (loopDuration * 1000)) / 1000;
 		}
 
-		return this._resetLoop();
+		if (this._loopOffset) {
+			this.mediaCurrentTime = this._loopOffset
+		}
+		await this.playMedia();
+		this._addToTicker(this.loopHandler)
 	}
 
-	/**
-	 * Continuously reset the video to the right time so that the start and end time can be preserved
-	 *
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async _resetLoop(firstLoop = true) {
-		if (this._ended) return;
-
-		let loopWaitTime = 0;
-		if (this._animationTimes.loopStart) {
-			if (this._isEnding) return;
-			this.mediaCurrentTime = (firstLoop ? 0 : this._animationTimes.loopStart) + (this._loopOffset > 0 ? this._loopOffset : 0);
-			loopWaitTime = (this._animationTimes.loopEnd - this.mediaCurrentTime) * 1000;
-		} else {
-			this.mediaCurrentTime = this._startTime + this._loopOffset;
-			loopWaitTime = this._animationDuration - this._loopOffset * 1000;
+	async loopHandler() {
+		if (this._ended || this.isEnding) {
+			return;
 		}
-
-		await this.playMedia();
-
-		if (this.mediaLooping) {
+		if (this.mediaCurrentTime < this._endTime) {
+			return;
+		}
+		if (this.restartLoopHandler != null) {
 			return;
 		}
 
-		this._resetTimeout = setTimeout(() => {
-			if (this._ended) return;
-			this._loopOffset = 0;
-			this._currentLoops++;
-			if (this.loops && this._currentLoops >= this.loops) {
-				if(!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
-					this.endEffect();
-				}
-				return;
+		// if we're above end time, we can safely just pause for now
+		this.pauseMedia()
+
+		// default media current time to exactly end time so we don't
+		// continue to trigger certain parts of the following code
+		// unnecessarily
+		this.mediaCurrentTime = this._endTime
+
+
+		// if we reached maximum loops, stay paused or even end the effect
+		if ((this.loops || !this.data.persist) && this._currentLoops >= this.loops) {
+			if (!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
+				this.endEffect();
 			}
-			this._resetLoop(false);
-		}, loopWaitTime + this.loopDelay);
+			this._ticker?.remove(this.loopHandler, this)
+			return;
+		}
+
+		// no loop delay means just start again at the beginning!
+		if (!this.loopDelay) {
+			this._currentLoops++;
+			this.mediaCurrentTime = this._startTime
+			this.playMedia()
+			return;
+		}
+
+		this._currentLoops++;
+		// register restart handler to trigger after loop delay
+		this.restartLoopHandler = setTimeout(() => {
+			this.restartLoopHandler = null
+			this.mediaCurrentTime = this._startTime
+			this.playMedia()
+		}, this.loopDelay)
 	}
 }
 

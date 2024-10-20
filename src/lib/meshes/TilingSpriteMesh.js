@@ -1,4 +1,4 @@
-import VisionSamplerShader from "../filters/vision-mask-filter.js";
+import VisionSamplerShader from "../filters/vision-sampler-shader.js";
 
 /**
  * Extends SpriteMesh to allow for tiling of sprites
@@ -45,14 +45,14 @@ export default class TilingSpriteMesh extends SpriteMesh {
 	}
 
 	
-	get isVisionMaskingEnabled() {
-		return this.shaderFlags.hasState('isVisionMaskingEnabled')
+	get isVisionMaskEnabled() {
+		return this.shaderFlags.hasState('isVisionMaskEnabled')
 	}
 	/**
 	 * @param {boolean} value
 	 */
-	set isVisionMaskingEnabled(value) {
-		this.shaderFlags.toggleState('isVisionMaskingEnabled', value)
+	set isVisionMaskEnabled(value) {
+		this.shaderFlags.toggleState('isVisionMaskEnabled', value)
 	}
 
 

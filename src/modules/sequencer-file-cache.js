@@ -1,57 +1,69 @@
 import CONSTANTS from "../constants.js";
-import SequencerSoundManager from "./sequencer-sound-manager.js";
+import { debug } from "../lib/lib.js";
 
 const SequencerFileCache = {
-  _videos: {},
-  _preloadedFiles: new Set(),
-  _totalCacheSize: 0,
-  _validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
+	_videos: {},
+	_preloadedFiles: new Set(),
+	_totalCacheSize: 0,
+	_validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
+	/** @type {Map<string, PIXI.Spritesheet>} */
+	_spritesheets: new Map(),
+	/** @type {Map<string, Promise<PIXI.Spritesheet> | null>} */
+	_generateSpritesheetJobs: new Map(),
 
-  async loadVideo(inSrc) {
-    if (!this._videos[inSrc]) {
-      const blob = await fetch(inSrc, {
-        mode: "cors",
-        credentials: "same-origin",
-      })
-        .then((r) => r.blob())
-        .catch((err) => {
-          console.error(err);
-        });
+	/** @type {Promise<import("../lib/spritesheets/SpritesheetGenerator.js").SpritesheetGenerator> | null} */
+	_spritesheetGenerator: null,
 
-      if (this._validTypes.indexOf(blob?.type) === -1) return false;
+	/**
+	 *
+	 * @param {string} inSrc
+	 * @returns {Promise<Blob>} the video blob
+	 */
+	async loadVideo(inSrc) {
+		if (!this._videos[inSrc]) {
+			const blob = await fetch(inSrc, {
+				mode: "cors",
+				credentials: "same-origin",
+			})
+				.then((r) => r.blob())
+				.catch((err) => {
+					console.error(err);
+				});
 
-      while (this._totalCacheSize + blob.size > 524288000) {
-        const entries = Object.entries(this._videos);
+			if (this._validTypes.indexOf(blob?.type) === -1) return false;
 
-        entries.sort((a, b) => {
-          return b[1].lastUsed - a[1].lastUsed;
-        });
+			while (this._totalCacheSize + blob.size > 524288000) {
+				const entries = Object.entries(this._videos);
 
-        const [oldSrc] = entries[0];
+				entries.sort((a, b) => {
+					return b[1].lastUsed - a[1].lastUsed;
+				});
 
-        this._preloadedFiles.delete(oldSrc);
-        this._totalCacheSize -= this._videos[oldSrc].blob.size;
-        delete this._videos[oldSrc];
-      }
+				const [oldSrc] = entries[0];
 
-      this._totalCacheSize += blob.size;
-      this._preloadedFiles.add(inSrc);
-      this._videos[inSrc] = {
-        blob,
-        lastUsed: +new Date(),
-      };
-    }
+				this._preloadedFiles.delete(oldSrc);
+				this._totalCacheSize -= this._videos[oldSrc].blob.size;
+				delete this._videos[oldSrc];
+			}
 
-    this._videos[inSrc].lastUsed = +new Date();
-    return this._videos[inSrc].blob;
-  },
+			this._totalCacheSize += blob.size;
+			this._preloadedFiles.add(inSrc);
+			this._videos[inSrc] = {
+				blob,
+				lastUsed: +new Date(),
+			};
+		}
 
-  srcExists(inSrc) {
-    if (this._preloadedFiles.has(inSrc)) {
-      return true;
-    }
-    return srcExists(inSrc);
-  },
+		this._videos[inSrc].lastUsed = +new Date();
+		return this._videos[inSrc].blob;
+	},
+
+	srcExists(inSrc) {
+		if (this._preloadedFiles.has(inSrc)) {
+			return true;
+		}
+		return srcExists(inSrc);
+	},
 
   async loadFile(inSrc, preload = false) {
     if (inSrc.toLowerCase().endsWith(".webm")) {
@@ -73,51 +85,162 @@ const SequencerFileCache = {
       }
     }
 
-    const texture = await loadTexture(inSrc);
-    if (texture) {
-      this._preloadedFiles.add(inSrc);
-    }
-    return texture;
-  },
+		const texture = await loadTexture(inSrc);
+		if (texture) {
+			this._preloadedFiles.add(inSrc);
+		}
+		return texture;
+	},
+
+	/**
+	 * @param {string} inSrc
+	 * @return {Promise<PIXI.Spritesheet | undefined>} the compiled spritesheet or
+	 * undefined if it cannot be generated
+	 */
+	async requestCompiledSpritesheet(inSrc) {
+		if (!inSrc.toLowerCase().endsWith(".webm")) {
+			return;
+		}
+		if (this._spritesheetGenerator == null) {
+			this._spritesheetGenerator = import("../lib/spritesheets/SpritesheetGenerator.js").then((m) =>
+				m.SpritesheetGenerator.create()
+			);
+		}
+		const generator = await this._spritesheetGenerator;
+		if (!generator) {
+			return;
+		}
+		let job = this._generateSpritesheetJobs.get(inSrc);
+		if (job) {
+			return job;
+		}
+		job = new Promise(async (resolve) => {
+			const timeStart = Date.now();
+			
+			debug(`generating spritesheet for ${inSrc}`);
+			const blob = await this.loadVideo(inSrc);
+			const buffer = await blob.arrayBuffer();
+			/** @type {PIXI.Spritesheet | null} */
+			let spritesheet = null;
+			try {
+				spritesheet = await generator.spritesheetFromBuffer({ buffer, id: inSrc });
+			} catch (error) {
+				console.warn(error);
+				resolve(null);
+			}
+			const w = spritesheet.baseTexture.width;
+			const h = spritesheet.baseTexture.height;
+			const megaBytes =
+				Math.round(
+					spritesheet.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) /
+						100_000
+				) / 10;
+			debug(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
+			resolve(spritesheet);
+		});
+		
+		this._generateSpritesheetJobs.set(inSrc, job);
+		return job;
+	},
+
+	registerSpritesheet(inSrc, inSpriteSheet) {
+		const existingSheetRef = this._spritesheets.get(inSrc);
+		if (existingSheetRef) {
+			existingSheetRef[1] += 1;
+		} else {
+			this._spritesheets.set(inSrc, [inSpriteSheet, 1]);
+		}
+	},
+
+	/**
+	 *
+	 * @param {string} inSrc
+	 * @returns {void}
+	 */
+	async unloadSpritesheet(inSrc) {
+		const existingSheetRef = this._spritesheets.get(inSrc);
+		this._generateSpritesheetJobs.delete(inSrc);
+		if (!existingSheetRef) {
+			console.error("trying to unlaod spritesheet that was not loaded:", inSrc);
+			return;
+		}
+		existingSheetRef[1] -= 1;
+		if (existingSheetRef[1] > 0) {
+			return;
+		}
+		this._spritesheets.delete(inSrc);
+		/** @type {PIXI.Spritesheet} */
+		const sheet = existingSheetRef[0];
+		const relatedPacks = sheet.data?.meta?.related_multi_packs ?? [];
+		const relatedSheets = sheet.linkedSheets;
+		// const packsSize = Math.max(relatedPacks.length, relatedSheets.length)
+		// clean up related sheets starting with the last (leaf)
+
+		const cacheKeys = [get_sheet_image_url(inSrc, sheet), foundry.utils.getRoute(inSrc)];
+		await PIXI.Assets.unload(cacheKeys.filter((src) => !!src));
+		Object.values(sheet.textures).forEach((t) => t.destroy());
+		sheet.baseTexture.destroy();
+	},
 };
 
+/**
+ * @param {PIXI.Spritesheet} sheet
+ */
+function get_sheet_image_url(inSrc, sheet) {
+	const imageName = sheet?.data?.meta?.image;
+	if (!imageName) {
+		return;
+	}
+	const srcPrefix = inSrc.split("/").slice(0, -1).join("/");
+	const sheetSrc = `${srcPrefix}/${imageName}`;
+	return foundry.utils.getRoute(sheetSrc);
+}
+function get_sheet_source_url(inSrc, sheetFilename) {
+	const srcPrefix = inSrc.split("/").slice(0, -1).join("/");
+	const sheetSrc = `${srcPrefix}/${sheetFilename}`;
+	return foundry.utils.getRoute(sheetSrc);
+}
+
+// TODO: video base textures need to be cleaned up...
+// We should introduce manual reference counting like with spritesheet textures.
 async function get_video_texture(inBlob) {
-  return new Promise(async (resolve) => {
-    const video = document.createElement("video");
-    video.preload = "auto";
-    video.crossOrigin = "anonymous";
-    video.controls = true;
-    video.autoplay = false;
-    video.autoload = true;
-    video.muted = true;
-    video.src = URL.createObjectURL(inBlob);
+	return new Promise(async (resolve, reject) => {
+		const video = document.createElement("video");
+		video.preload = "auto";
+		video.crossOrigin = "anonymous";
+		video.controls = true;
+		video.autoplay = false;
+		video.autoload = true;
+		video.muted = true;
+		video.src = URL.createObjectURL(inBlob);
 
-    let canplay = true;
-    video.oncanplay = async () => {
-      if (!canplay) return;
-      canplay = false;
+		let canplay = true;
+		video.oncanplay = async () => {
+			if (!canplay) return;
+			canplay = false;
 
-      video.height = video.videoHeight;
-      video.width = video.videoWidth;
+			video.height = video.videoHeight;
+			video.width = video.videoWidth;
 
-      const baseTexture = PIXI.BaseTexture.from(video, {
-        resourceOptions: { autoPlay: false },
-      });
+			const baseTexture = PIXI.BaseTexture.from(video, {
+				resourceOptions: { autoPlay: false },
+			});
 
-      if (game.settings.get(CONSTANTS.MODULE_NAME, "enable-fix-pixi")) {
-        baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA;
-      }
+			if (game.settings.get(CONSTANTS.MODULE_NAME, "enable-fix-pixi")) {
+				baseTexture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA;
+			}
 
-      const texture = new PIXI.Texture(baseTexture);
+			const texture = new PIXI.Texture(baseTexture);
 
-      resolve(texture);
-    };
+			resolve(texture);
+			video.oncanplay = null;
+		};
 
-    video.onerror = () => {
-      URL.revokeObjectURL(video.src);
-      reject();
-    };
-  });
+		video.onerror = () => {
+			URL.revokeObjectURL(video.src);
+			reject();
+		};
+	});
 }
 
 export default SequencerFileCache;
