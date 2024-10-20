@@ -369,6 +369,7 @@ export default class SequencerEffectManager {
       setFlags &&
       effect.context &&
       effect.owner &&
+	    !effect.isSourceTemporary &&
       !data.temporary &&
       !data.remote
     ) {

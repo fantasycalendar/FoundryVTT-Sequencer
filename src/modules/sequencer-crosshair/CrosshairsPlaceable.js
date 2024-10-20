@@ -7,6 +7,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	constructor(...args) {
 		super(...args);
+		this.tag = "sequencer-crosshair-" + foundry.utils.randomID();
 		this.cachedLocation = false;
 	}
 

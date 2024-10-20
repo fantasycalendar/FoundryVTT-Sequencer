@@ -581,7 +581,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			texture?.baseTexture?.resource.levels === 1
 		) {
 			texture?.baseTexture?.setStyle(0, 0);
-		} else if (this.#sharedSpriteConfig.antialiasing !== PIXI.SCALE_MODES.LINEAR) {
+		} else if (this.#sharedSpriteConfig.antialiasing && this.#sharedSpriteConfig.antialiasing !== PIXI.SCALE_MODES.LINEAR) {
 			texture?.baseTexture.setStyle(0, this.#sharedSpriteConfig.antialiasing);
 		}
 		if (texture instanceof PIXI.Spritesheet) {

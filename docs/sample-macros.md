@@ -19,12 +19,12 @@ new Sequence()
 
 ## Lightning Teleport
 
-Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e), requires the [Warp Gate](https://foundryvtt.com/packages/warpgate) module
+Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
 
 ![Animation showing the Sequencer](images/Animation2.gif)
 
 ```js
-let position = await warpgate.crosshairs.show({
+let position = await Sequencer.Crosshair.show({
     size: 1,
     tag: randomID(),
     label: "Teleport to",
@@ -41,6 +41,10 @@ let position = await warpgate.crosshairs.show({
         .play();
 
 }})
+
+if(!position){
+	return;
+}
 
 new Sequence()
     .effect()
@@ -66,26 +70,6 @@ new Sequence()
         .atLocation(token)
         .scaleToObject()
     .play();
-```
-
-## Spawn token with WarpGate and play effect
-
-Uses [JB2A - Jules&Ben's Animated Assets](https://foundryvtt.com/packages/JB2A_DnD5e)
-
-![Two goblins being summoned](images/summon-creature.gif)
-
-```js
-const [spawnedCreature] = await warpgate.spawn("Goblin", { token: { alpha: 0 }});
-
-new Sequence()
-  .effect()
-    .file("jb2a.impact.003.green")
-    .atLocation(spawnedCreature)
-  .wait(300)
-  .animation()
-    .on(spawnedCreature)
-    .opacity(1.0)
-  .play()
 ```
 
 ## Magic Missile

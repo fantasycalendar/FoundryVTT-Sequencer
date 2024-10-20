@@ -62,7 +62,7 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 	};
 
 	getOrientation() {
-		this.cachedPosition ??= {
+		this.cachedPosition = (!this.object || this.object?.destroyed) ? this.cachedPosition : {
 			source: get_object_canvas_data(this.object, { uuid: false }),
 			target: this.t === CONST.MEASURED_TEMPLATE_TYPES.CONE || this.t === CONST.MEASURED_TEMPLATE_TYPES.RAY
 				? get_object_canvas_data(this.object, { measure: true, uuid: false })

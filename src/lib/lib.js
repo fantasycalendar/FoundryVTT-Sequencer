@@ -297,7 +297,8 @@ export function get_object_from_scene(
     if (obj) return obj;
     tryUUID = false;
   }
-  return get_all_documents_from_scene(inSceneId).find((obj) => {
+	const allDocs = get_all_documents_from_scene(inSceneId);
+  return allDocs.find((obj) => {
     return get_object_identifier(obj, tryUUID) === inObjectId;
   });
 }
@@ -314,7 +315,7 @@ export function get_all_documents_from_scene(inSceneId = false) {
     : game.scenes.get(game.user?.viewedScene);
   if (!scene) return [];
   return [
-	  ...canvas.layers.map(layer => layer?.preview?.children ?? []),
+	  ...canvas.layers.map(layer => layer?.children ?? [].concat(layer?.preview?.children ?? [])),
     ...Array.from(scene?.tokens ?? []),
     ...Array.from(scene?.lights ?? []),
     ...Array.from(scene?.sounds ?? []),

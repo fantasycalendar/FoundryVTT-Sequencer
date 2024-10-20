@@ -10,6 +10,7 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import flagManager from "../utils/flag-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 
 const hooksManager = {
 	_hooks: new Map(),
@@ -716,12 +717,15 @@ export default class CanvasEffect extends PIXI.Container {
 			};
 		}
 
+		let crosshairPos = this.source instanceof CrosshairsPlaceable ? this.sourceDocument.getOrientation() : false;
+		crosshairPos = crosshairPos?.source;
+
 		const position =
 			this.source instanceof PlaceableObject && !this.isSourceTemporary
 				? canvaslib.get_object_position(this.source)
-				: this.source?.worldPosition || this.source?.center || this.source;
+				: crosshairPos || this.source?.worldPosition || this.source?.center || this.source;
 
-		const { width, height } = canvaslib.get_object_dimensions(this.source);
+		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.source);
 
 		if (this.isIsometricActive && this.source instanceof PlaceableObject) {
 			position.x +=
@@ -749,10 +753,7 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		let rotation = 0;
-		if (
-			this.source instanceof MeasuredTemplate &&
-			this.sourceDocument?.t !== "rect"
-		) {
+		if (this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect") {
 			rotation = Math.normalizeRadians(
 				Math.toRadians(this.sourceDocument?.direction)
 			);
@@ -810,12 +811,15 @@ export default class CanvasEffect extends PIXI.Container {
 			};
 		}
 
+		let crosshairPos = this.target instanceof CrosshairsPlaceable ? this.targetDocument.getOrientation() : false;
+		crosshairPos = crosshairPos?.target ?? crosshairPos?.source;
+
 		const position =
 			this.target instanceof PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
 				? canvaslib.get_object_position(this.target, { measure: true })
-				: this.target?.worldPosition || this.target?.center || this.target;
+				: crosshairPos || this.target?.worldPosition || this.target?.center || this.target;
 
-		const { width, height } = canvaslib.get_object_dimensions(this.target);
+		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.target);
 
 		if (this.isIsometricActive && this.target instanceof PlaceableObject) {
 			const targetHeight = (this.target?.height ?? height) / 2;

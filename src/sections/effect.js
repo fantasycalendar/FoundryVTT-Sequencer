@@ -2290,6 +2290,9 @@ export default class EffectSection extends Section {
 		}
 		if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
 			const doc = this._source?.document ?? this._source;
+			if(this._attachTo) {
+				return lib.get_object_identifier(doc.object);
+			}
 			return doc.getOrientation().source;
 		}
 		if (this._source?.cachedLocation || !this._attachTo) {
@@ -2311,6 +2314,9 @@ export default class EffectSection extends Section {
 		}
 		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
 			const doc = this._target?.target?.document ?? this._target?.target;
+			if(this._stretchTo?.attachTo || this._rotateTowards?.attachTo){
+				return lib.get_object_identifier(doc.object);
+			}
 			const orientation = doc.getOrientation();
 			return orientation.target ?? orientation.source;
 		}
