@@ -4,11 +4,11 @@
 /** @import { BASIS_FORMAT, MipLevelData } from './TextureCompressor' */
 import { Compress } from "@typhonjs-fvtt/runtime/data/compress";
 import { createWebMDemuxer } from "../inspector-js/inspectorjs-js";
-import { decodeWebmFrames } from "./decodeWebmFrames";
-import { Ktx2FileCache } from "./ktx2Filecache";
-import { packFrames } from "./packFrames";
-import { SpritesheetCompressor } from "./TextureCompressor";
-import { getUint8ArrayHash } from "./hasher";
+import { decodeWebmFrames } from "./decodeWebmFrames.js";
+import { Ktx2FileCache } from "./ktx2FileCache.js";
+import { packFrames } from "./packFrames.js";
+import { SpritesheetCompressor } from "./TextureCompressor.js";
+import { getUint8ArrayHash } from "./hasher.js";
 
 let ktx2FileCache = new Ktx2FileCache();
 let compressorPromise = SpritesheetCompressor.create(ktx2FileCache);

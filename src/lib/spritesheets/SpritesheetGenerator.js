@@ -1,5 +1,5 @@
 /** @import { CompressedSpritesheet, SpritesheetMessageFromWorker } from './decodeWorker' */
-import DecodeWorker from "./decodeWorker?worker";
+import DecodeWorker from "./decodeWorker.js?worker";
 const BASIS_TO_PIXI_FORMAT = {
 	ASTC: PIXI.INTERNAL_FORMATS.COMPRESSED_RGBA_ASTC_4x4_KHR,
 	BC7: PIXI.INTERNAL_FORMATS.COMPRESSED_RGBA_BPTC_UNORM_EXT,
