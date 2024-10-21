@@ -117,7 +117,7 @@ const SequencerFileCache = {
 		job = new Promise(async (resolve) => {
 			const timeStart = Date.now();
 			
-			debug(`generating spritesheet for ${inSrc}`);
+			debug(`Spritesheets | generating ${inSrc}`);
 			const blob = await this.loadVideo(inSrc);
 			const buffer = await blob.arrayBuffer();
 			/** @type {PIXI.Spritesheet | null} */
@@ -127,6 +127,7 @@ const SequencerFileCache = {
 			} catch (error) {
 				console.warn(error);
 				resolve(null);
+				return
 			}
 			const w = spritesheet.baseTexture.width;
 			const h = spritesheet.baseTexture.height;
@@ -135,7 +136,8 @@ const SequencerFileCache = {
 					spritesheet.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) /
 						100_000
 				) / 10;
-			debug(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
+			const time = Math.round((Date.now() - timeStart) / 100) / 10
+			debug(`Spritesheets | ${inSrc} generated in ${time}s. ${w}x${h} ${megaBytes}mb`);
 			resolve(spritesheet);
 		});
 		
