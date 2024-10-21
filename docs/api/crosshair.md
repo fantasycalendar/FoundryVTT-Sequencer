@@ -36,8 +36,7 @@ You can also use the `.name()` method to achieve the same thing.
 
 `.name(string)`
 
-Causes the crosshair's final position to be stored in the sequence, and can then be used in any subsequent section as a placeholder for locations, such as in effect's [
-`.atLocation()`](effect.md#at-location).
+Causes the crosshair's final position to be stored in the sequence, and can then be used in any subsequent section as a placeholder for locations, such as in effect's [`.atLocation()`](effect.md#at-location).
 
 ## Type
 
@@ -150,18 +149,18 @@ cause it to be limited within a certain range of the placeable object.
 
 Also supports a second options object that accepts:
 
--
-`limitMinRange: number` - Causes the crosshair to not be able to be placed within this number of grid units of the location
--
+- `limitMinRange: number` - Causes the crosshair to not be able to be placed within this number of grid units of the location
 `limitMaxRange: number` - Causes the crosshair to not be able to be placed beyond this number of grid units of the location
 - `showRange: boolean` - Displays the distance between the crosshair and the location in grid units under the crosshair
 - `lockToEdge: boolean` - Whether to lock the crosshair to the edge of the target (mostly used with tokens)
--
-`lockToEdgeDirection: boolean` - Causes the crosshair to be locked along the normal of the token's edge (and corner, in the case of square tokens)
+- `lockToEdgeDirection: boolean` - Causes the crosshair to be locked along the normal of the token's edge (and corner, in the case of square tokens)
 - `offset: object` - (default `{ x: 0, y: 0 }`) - causes the location to be offset by this many pixels,
--
-`wallBehavior: string` - Causes the crosshair to be unable to be placed based on this configuration, eg only within sight, or no walls at all between crosshair and location, or anywhere. See
-`Sequencer.Crosshair.PLACEMENT_RESTRICTIONS`
+- `wallBehavior: string` - Causes the crosshair to be unable to be placed based on this configuration, eg only within sight, or no walls at all between crosshair and location, or anywhere. See `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS`
+- `displayRangePoly: boolean` - Causes a polygon to be rendered below the object that shows the limit based on the limitMaxRange set above - this requires both that, and obj to have a position
+- `rangePolyFillColor: number` - The fill color of the range polygon
+- `rangePolyLineColor: number` - The line color of the range polygon
+- `rangePolyFillAlpha: number` - The fill alpha of the range polygon
+- `rangePolyLineAlpha: number` - The line alpha of the range polygon
 
 ## Persist
 

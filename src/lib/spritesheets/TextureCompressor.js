@@ -48,7 +48,7 @@ export class SpritesheetCompressor {
 	#getConfiguredEncoder() {
 		const encoder = new this.#basis.BasisEncoder();
 		encoder.setCreateKTX2File(true);
-		encoder.setKTX2UASTCSupercompression(false);
+		encoder.setKTX2UASTCSupercompression(true);
 		encoder.setKTX2SRGBTransferFunc(true);
 		encoder.setPackUASTCFlags(0);
 		encoder.setPerceptual(true);
@@ -89,7 +89,7 @@ export class SpritesheetCompressor {
 		}
 
 		const encoder = this.#getConfiguredEncoder();
-		encoder.setSliceSourceImage(0, new Uint8Array(imageBuffer), width, height, false);
+		encoder.setSliceSourceImage(0, new Uint8Array(imageBuffer), width, height);
 		// todo only initialize if needed!
 		let ktx2Buffer = new Uint8Array(width * height * 4);
 		const encodedBytes = encoder.encode(ktx2Buffer);

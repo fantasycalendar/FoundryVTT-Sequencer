@@ -51,9 +51,21 @@ export default class SequencerPresets {
    * Retrieves preset based on its name
    *
    * @param {string} name
+   * @param {boolean} exact
    * @returns {Function}
    */
-  static get(name) {
-    return presetMap.get(name);
+  static get(name, exact = false) {
+	  if(presetMap.has(name) || exact) {
+		  return presetMap.get(name);
+	  }
+	  const parts = name.split(".");
+	  parts.pop();
+	  while(parts.length){
+			const newName = parts.join(".")
+		  if(presetMap.has(newName)) {
+			  return presetMap.get(newName);
+		  }
+	  }
+		return false;
   }
 }

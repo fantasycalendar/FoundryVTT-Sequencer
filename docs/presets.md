@@ -51,7 +51,13 @@ Returns every preset as strings mapped to each preset function.
 ## Get Preset
 
 ```js
+Sequencer.Presets.get(string, boolean)
 Sequencer.Presets.get("breatheAnimation")
+Sequencer.Presets.get("spell.ranged.fire", true)
 ```
 
 Returns the function for a given preset.
+
+This supports fall-backs to lower-complexity named entries - eg, if you have added a preset named `spell.ranged` and attempt to get a non-existent `spell.ranged.fire`, it will return the `spell.ranged` entry as a fallback.
+
+You can enable the previous behavior by passing `true` as a secondary argument, which causes the method to require an exact match.
