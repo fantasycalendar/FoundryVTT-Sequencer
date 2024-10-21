@@ -8,7 +8,7 @@ const SequencerFileCache = {
 	_validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
 	/** @type {Map<string, PIXI.Spritesheet>} */
 	_spritesheets: new Map(),
-	/** @type {Map<string, Promise<PIXI.Spritesheet> | null>} */
+	/** @type {Map<string, Promise<{spritesheet: PIXI.Spritesheet, scale: number}> | null>} */
 	_generateSpritesheetJobs: new Map(),
 
 	/** @type {Promise<import("../lib/spritesheets/SpritesheetGenerator.js").SpritesheetGenerator> | null} */
@@ -94,10 +94,12 @@ const SequencerFileCache = {
 
 	/**
 	 * @param {string} inSrc
+	 * @param {Object} options
+	 * @param {number} options.minimumScale
 	 * @return {Promise<PIXI.Spritesheet | undefined>} the compiled spritesheet or
 	 * undefined if it cannot be generated
 	 */
-	async requestCompiledSpritesheet(inSrc) {
+	async requestCompiledSpritesheet(inSrc, {minimumScale}) {
 		if (!inSrc.toLowerCase().endsWith(".webm")) {
 			return;
 		}
@@ -111,36 +113,45 @@ const SequencerFileCache = {
 			return;
 		}
 		let job = this._generateSpritesheetJobs.get(inSrc);
-		if (job) {
-			return job;
+		if (!job) {
+			job = new Promise(async (resolve) => {
+				const timeStart = Date.now();
+				
+				debug(`Spritesheets | generating ${inSrc}. Required scale ${minimumScale}`);
+				const blob = await this.loadVideo(inSrc);
+				const buffer = await blob.arrayBuffer();
+				/** @type {PIXI.Spritesheet | null} */
+				let spritesheet = null;
+				let scale = 1;
+				try {
+					const result = await generator.spritesheetFromBuffer({ buffer, id: inSrc, minimumScale });
+					spritesheet = result.spritesheet
+					scale = result.scale
+				} catch (error) {
+					console.warn(error);
+					resolve(null);
+					return
+				}
+				const w = spritesheet.baseTexture.width;
+				const h = spritesheet.baseTexture.height;
+				const megaBytes =
+					Math.round(
+						spritesheet.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) /
+							100_000
+					) / 10;
+				const time = Math.round((Date.now() - timeStart) / 100) / 10
+				debug(`Spritesheets | ${inSrc} generated in ${time}s. ${w}x${h} ${megaBytes}mb`);
+				resolve({spritesheet, scale});
+			});
+			this._generateSpritesheetJobs.set(inSrc, job);
 		}
-		job = new Promise(async (resolve) => {
-			const timeStart = Date.now();
-			
-			debug(`generating spritesheet for ${inSrc}`);
-			const blob = await this.loadVideo(inSrc);
-			const buffer = await blob.arrayBuffer();
-			/** @type {PIXI.Spritesheet | null} */
-			let spritesheet = null;
-			try {
-				spritesheet = await generator.spritesheetFromBuffer({ buffer, id: inSrc });
-			} catch (error) {
-				console.warn(error);
-				resolve(null);
-			}
-			const w = spritesheet.baseTexture.width;
-			const h = spritesheet.baseTexture.height;
-			const megaBytes =
-				Math.round(
-					spritesheet.baseTexture.resource._levelBuffers.reduce((acc, cur) => acc + cur.levelBuffer.byteLength, 0) /
-						100_000
-				) / 10;
-			debug(`spritesheet for ${inSrc} generated in ${Date.now() - timeStart}ms. ${w}x${h} ${megaBytes}mb`);
-			resolve(spritesheet);
-		});
 		
-		this._generateSpritesheetJobs.set(inSrc, job);
-		return job;
+		const result = await job;
+		if (result && result.scale < minimumScale) {
+			debug(`Spritesheets | ${inSrc} minimum scale of ${minimumScale} requested but only scale ${result.scale} is available`);
+			return undefined
+		}
+		return result.spritesheet
 	},
 
 	registerSpritesheet(inSrc, inSpriteSheet) {

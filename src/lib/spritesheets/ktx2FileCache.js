@@ -139,5 +139,5 @@ export class Ktx2FileCache {
 }
 
 /**
- * @typedef {{sprites: import("./packFrames").SpriteData[], frameRate: number}} CachedSpriteData
+ * @typedef {{sprites: import("./packFrames").SpriteData[], frameRate: number, scale: number}} CachedSpriteData
  */

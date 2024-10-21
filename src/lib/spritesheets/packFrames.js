@@ -1,86 +1,154 @@
+// @ts-check
 import potpack from "potpack";
 export const SPRITE_PADDING = 1;
 /**
  * @param {VideoFrame[]} frames
  * @param {VideoFrame[]} alphaFrames
+ * @param {number} minimumScale
  * @returns {Promise<PackedSpritesheet | undefined>}
  */
-export async function packFrames(frames, alphaFrames) {
+export async function packFrames(frames, alphaFrames, minimumScale) {
 	const combinedFrames = await Promise.all(frames.map((frame, idx) => combineFrames(frame, alphaFrames[idx], idx)));
-	const packedData = combinedFrames.map((data) => ({
-		w: data.trimmedRect.w + 2 * SPRITE_PADDING,
-		h: data.trimmedRect.h + 2 * SPRITE_PADDING,
-		x: undefined,
-		y: undefined,
-		data,
-	}));
-	const { w, h } = potpack(packedData);
-	// round up to nearest multiple of 4 to support uastc compression later on
-	const sprites = new Array(packedData.length);
-	const spriteWidth = Math.ceil(w / 4) * 4;
-	const spriteHeight = Math.ceil(h / 4) * 4;
-	if (spriteWidth > 8192 || spriteHeight > 8192) {
-		console.warn("Packed spritesheet is too large", spriteWidth, spriteHeight);
-		return undefined;
+
+	const packedData = await packScaledFrames(combinedFrames, minimumScale);
+	if (!packedData) {
+		return;
 	}
-	const spriteBuffer = new Uint8ClampedArray(spriteHeight * spriteWidth * 4);
-	for (const { x, y, data } of packedData) {
+
+	const { sheetWidth, sheetHeight, packedFrames, scale } = packedData;
+
+	const sprites = new Array(packedFrames.length);
+	const spriteBuffer = new Uint8ClampedArray(sheetHeight * sheetWidth * 4);
+	for (const { x, y, trimmedRect, data } of packedFrames) {
 		const imageBuffer = data.imageBuffer;
-		const alphaBuffer = data.alphaData?.alphaBuffer;
-		const alphaPack = data.alphaData?.packSize;
-		const hasAlpha = !!alphaBuffer && !!alphaPack;
-		const xStart = data.trimmedRect.x;
-		const yStart = data.trimmedRect.y;
+		const xStart = trimmedRect.x;
+		const yStart = trimmedRect.y;
 		const width = data.sourceSize.w;
-		for (let row = 0; row < data.trimmedRect.h; row++) {
-			for (let col = 0; col < data.trimmedRect.w; col++) {
-				const spriteIdx = (x + col + SPRITE_PADDING + (y + row + SPRITE_PADDING) * spriteWidth) * 4;
+		for (let row = 0; row < trimmedRect.h; row++) {
+			for (let col = 0; col < trimmedRect.w; col++) {
+				const spriteIdx = (x + col + SPRITE_PADDING + (y + row + SPRITE_PADDING) * sheetWidth) * 4;
 				const frameIdx = (col + xStart + (row + yStart) * width) * 4;
-				let alpha = 1;
-				if (hasAlpha === true) {
-					const alphaIdx = (col + xStart + (row + yStart) * width) * alphaPack;
-					const alphaValue = alphaBuffer[alphaIdx];
-					spriteBuffer[spriteIdx + 3] = alphaValue;
-					alpha = alphaValue / 255;
-				} else {
-					spriteBuffer[spriteIdx + 3] = 255;
-				}
-				// zero color info for completely transparent pixels
-				if (alpha === 0) {
-					spriteBuffer[spriteIdx] = 0;
-					spriteBuffer[spriteIdx + 1] = 0;
-					spriteBuffer[spriteIdx + 2] = 0;
-				} else {
-					spriteBuffer[spriteIdx] = imageBuffer[frameIdx] * alpha;
-					spriteBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1] * alpha;
-					spriteBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2] * alpha;
-				}
+				spriteBuffer[spriteIdx] = imageBuffer[frameIdx];
+				spriteBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1];
+				spriteBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2];
+				spriteBuffer[spriteIdx + 3] = imageBuffer[frameIdx + 3];
 			}
 		}
 		sprites[data.idx] = {
 			rotated: false,
 			trimmed:
-				data.trimmedRect.x > 0 ||
-				data.trimmedRect.y > 0 ||
-				data.trimmedRect.w < data.sourceSize.w ||
-				data.trimmedRect.h < data.sourceSize.h,
-			sourceSize: data.sourceSize,
+				trimmedRect.x > 0 ||
+				trimmedRect.y > 0 ||
+				trimmedRect.w < data.sourceSize.w ||
+				trimmedRect.h < data.sourceSize.h,
+			sourceSize: {
+				w: Math.round(data.sourceSize.w * scale),
+				h: Math.round(data.sourceSize.h * scale),
+			},
 			frame: {
 				x: x + SPRITE_PADDING,
 				y: y + SPRITE_PADDING,
-				w: SPRITE_PADDING + data.trimmedRect.w,
-				h: SPRITE_PADDING + data.trimmedRect.h,
+				w: SPRITE_PADDING + trimmedRect.w,
+				h: SPRITE_PADDING + trimmedRect.h,
 			},
-			spriteSourceSize: data.trimmedRect,
+			spriteSourceSize: trimmedRect,
 		};
 	}
 	return {
-		w: spriteWidth,
-		h: spriteHeight,
+		w: sheetWidth,
+		h: sheetHeight,
+		scale,
 		imageBuffer: spriteBuffer,
 		sprites,
 	};
 }
+
+/**
+ * @param {CombinedFrameData[]} frameData
+ * @param {number} minimumScale
+ * @return {Promise<PackedFramesContainer | undefined>}
+ */
+async function packScaledFrames(frameData, minimumScale) {
+	let scale = 1;
+	/** @type {OffscreenCanvasRenderingContext2D | null} */
+
+	let context2d = null;
+	/**
+	 * @param {Uint8Array} buffer
+	 * @param {Size} sourceSize
+	 * @param {number} scaleFactor
+	 * @return {Promise<{buffer: Uint8Array, size: Size}>}
+	 */
+	async function getScaledImageBuffer(buffer, sourceSize, scaleFactor) {
+		if (scaleFactor === 1) {
+			return { buffer, size: sourceSize };
+		}
+		if (!context2d) {
+			const canvas = new OffscreenCanvas(0, 0);
+			context2d = canvas.getContext("2d", { willReadFrequently: true });
+			if (!context2d) {
+				return { buffer, size: sourceSize };
+			}
+			context2d.imageSmoothingQuality = "high";
+		}
+		const scaledWidth = Math.max(Math.round(sourceSize.w * scaleFactor), 1);
+		const scaledHeight = Math.max(Math.round(sourceSize.h * scaleFactor), 1);
+		context2d.canvas.width = scaledWidth;
+		context2d.canvas.height = scaledHeight;
+		const imageData = new ImageData(new Uint8ClampedArray(buffer.buffer), sourceSize.w, sourceSize.h);
+		const imageBitmap = await createImageBitmap(imageData, 0, 0, sourceSize.w, sourceSize.h, {
+			resizeWidth: scaledWidth,
+			resizeHeight: scaledHeight,
+			resizeQuality: "high",
+		});
+		context2d.clearRect(0, 0, scaledWidth, scaledHeight);
+		context2d.drawImage(imageBitmap, 0, 0, scaledWidth, scaledHeight);
+		imageBitmap.close();
+		const scaledBuffer = new Uint8Array(context2d.getImageData(0, 0, scaledWidth, scaledHeight).data.buffer);
+		const scaledSize = { w: scaledWidth, h: scaledHeight };
+		return { size: scaledSize, buffer: scaledBuffer };
+	}
+
+	let spriteWidth, spriteHeight;
+
+	while (scale >= minimumScale) {
+		/** @type {PackedFrame[]} */
+		const packedData = [];
+		for (const data of frameData) {
+			const { buffer, size } = await getScaledImageBuffer(data.imageBuffer, data.sourceSize, scale);
+			const trimmedRect = getAlphaTrimInfo(buffer, size);
+			packedData.push({
+				w: trimmedRect.w + 2 * SPRITE_PADDING,
+				h: trimmedRect.h + 2 * SPRITE_PADDING,
+				// @ts-expect-error temprorary null
+				x: undefined,
+				// @ts-expect-error temprorary null
+				y: undefined,
+				trimmedRect,
+				data,
+			});
+		}
+		const { w, h } = potpack(packedData);
+		// round up to nearest multiple of 4 to support uastc compression later on
+		spriteWidth = Math.ceil(w / 4) * 4;
+		spriteHeight = Math.ceil(h / 4) * 4;
+		if (Math.max(spriteHeight, spriteWidth) > 8192) {
+			scale /= 2;
+			continue;
+		}
+
+		return {
+			scale,
+			sheetWidth: spriteWidth,
+			sheetHeight: spriteHeight,
+			packedFrames: packedData,
+		};
+	}
+
+	console.warn("Packed spritesheet is too large", spriteWidth, spriteHeight);
+	return undefined;
+}
+
 /**
  * @param {VideoFrame} frame
  * @param {VideoFrame | undefined} alphaFrame
@@ -89,40 +157,65 @@ export async function packFrames(frames, alphaFrames) {
  */
 async function combineFrames(frame, alphaFrame, idx) {
 	const sourceSize = { w: frame.displayWidth, h: frame.displayHeight };
-	const copyOptions = { format: "RGBX" };
-	const buffer = new Uint8Array(frame.allocationSize(copyOptions));
-	const alphaDataPromise = await (alphaFrame ? getAlphaTrimInfo(alphaFrame) : Promise.resolve(null));
-	const [alphaData] = await Promise.all([alphaDataPromise, frame.copyTo(buffer, copyOptions)]);
+	/** @type {VideoFrameCopyToOptions} */
+	// @ts-expect-error VideoFrameCopyToOptions is wrongly typed
+	const chromaCopyOptions = { format: "RGBX" };
+	const imageBuffer = new Uint8Array(frame.allocationSize(chromaCopyOptions));
+	await frame.copyTo(imageBuffer, chromaCopyOptions);
 	frame.close();
+
+	if (alphaFrame) {
+		const alphaBuffer = new Uint8Array(alphaFrame.allocationSize());
+		const [chromaPlane] = await alphaFrame.copyTo(alphaBuffer);
+		const alphaPackSize = Math.floor(chromaPlane.stride / sourceSize.w);
+		await alphaFrame.copyTo(alphaBuffer);
+		alphaFrame.close();
+
+		// copy alpha info to image buffer
+		for (let tex = 0; tex < imageBuffer.length; tex += 4) {
+			const alphaIdx = (tex >> 2) * alphaPackSize;
+			const alphaValue = alphaBuffer[alphaIdx];
+			const alpha = alphaValue / 255;
+			// zero color info for completely transparent pixels
+			if (alpha === 0) {
+				imageBuffer[tex] = 0;
+				imageBuffer[tex + 1] = 0;
+				imageBuffer[tex + 2] = 0;
+			} else {
+				// premultiply alpha values
+				imageBuffer[tex] = imageBuffer[tex] * alpha;
+				imageBuffer[tex + 1] = imageBuffer[tex + 1] * alpha;
+				imageBuffer[tex + 2] = imageBuffer[tex + 2] * alpha;
+			}
+			imageBuffer[tex + 3] = alphaValue;
+		}
+	}
+
 	return {
+		hasAlpha: !!alphaFrame,
 		idx,
-		imageBuffer: buffer,
+		imageBuffer,
 		sourceSize,
-		alphaData,
-		trimmedRect: alphaData ? alphaData.trimmedRect : { x: 0, y: 0, w: sourceSize.w, h: sourceSize.h },
 	};
 }
 /**
- * @param {VideoFrame} frame
- * @returns {Promise<AlphaFrameData>}
+ * @param {Uint8Array} imageBuffer
+ * @param {Size} sourceSize
+ * @returns {Rect}
  */
-async function getAlphaTrimInfo(frame) {
-	const sourceSize = { w: frame.displayWidth, h: frame.displayHeight };
-	const alphaBuffer = new Uint8Array(frame.allocationSize());
-	const [chromaPlane] = await frame.copyTo(alphaBuffer);
-	const alphaThreshold = frame.format?.startsWith("I") ? 1 : 0;
-	frame.close();
+function getAlphaTrimInfo(imageBuffer, sourceSize) {
 	let top = null;
 	let right = null;
 	let left = null;
 	let bottom = null;
-	const packSize = Math.floor(chromaPlane.stride / sourceSize.w);
+	const alphaThreshold = 0;
+	const packSize = 4; // rgba hardcoded for image buffer
 	// find top most opaque
 	for (let y = 0; y < sourceSize.h; y++) {
 		let x = 0;
 		while (x < sourceSize.w) {
 			const idx = (x + y * sourceSize.w) * packSize;
-			if (alphaBuffer[idx] > alphaThreshold) {
+			if (imageBuffer[idx] > alphaThreshold) {
 				top = y;
 				break;
 			}
@@ -131,9 +224,7 @@ async function getAlphaTrimInfo(frame) {
 		if (top !== null) break;
 	}
 	if (top == null) {
-		return {
-			trimmedRect: { x: 0, y: 0, w: 0, h: 0 },
-		};
+		return { x: 0, y: 0, w: 0, h: 0 };
 	}
 	const topStart = Math.max(top - 1, 0);
 	// find right most opaque pixel
@@ -141,7 +232,7 @@ async function getAlphaTrimInfo(frame) {
 		let y = topStart;
 		while (y < sourceSize.h) {
 			const idx = (x + y * sourceSize.w) * packSize;
-			if (alphaBuffer[idx] > alphaThreshold) {
+			if (imageBuffer[idx] > alphaThreshold) {
 				right = x;
 				break;
 			}
@@ -149,13 +240,14 @@ async function getAlphaTrimInfo(frame) {
 		}
 		if (right !== null) break;
 	}
+	right ??= sourceSize.w - 1;
 	const rightEnd = Math.min(right + 1, sourceSize.w);
 	// find bottom most opaque pixel
 	for (let y = sourceSize.h - 1; y >= 0; y--) {
 		let x = 0;
 		while (x < rightEnd) {
 			const idx = (x + y * sourceSize.w) * packSize;
-			if (alphaBuffer[idx] > alphaThreshold) {
+			if (imageBuffer[idx] > alphaThreshold) {
 				bottom = y;
 				break;
 			}
@@ -164,12 +256,13 @@ async function getAlphaTrimInfo(frame) {
 		if (bottom !== null) break;
 	}
 	// find left most opaque pixel
+	bottom ??= sourceSize.h - 1;
 	const bottomEnd = Math.min(bottom + 1, sourceSize.h);
 	for (let x = 0; x < rightEnd; x++) {
 		let y = topStart;
 		while (y < bottomEnd) {
 			const idx = (x + y * sourceSize.w) * packSize;
-			if (alphaBuffer[idx] > alphaThreshold) {
+			if (imageBuffer[idx] > alphaThreshold) {
 				left = x;
 				break;
 			}
@@ -177,12 +270,8 @@ async function getAlphaTrimInfo(frame) {
 		}
 		if (left !== null) break;
 	}
-	const trimmedRect = { x: left, y: top, w: right - left, h: bottom - top };
-	return {
-		alphaBuffer,
-		packSize,
-		trimmedRect,
-	};
+	left ??= 0;
+	return { x: left, y: top, w: right - left, h: bottom - top };
 }
 /** @typedef {Size & Point} Rect */
 /**
@@ -196,18 +285,11 @@ async function getAlphaTrimInfo(frame) {
  * @property {number} y
  */
 /**
- * @typedef {Object} AlphaFrameData
- * @property {Uint8Array} [alphaBuffer]
- * @property {Rect} trimmedRect
- * @property {number} [packSize]
- */
-/**
  * @typedef {Object} CombinedFrameData
  * @property {number} idx
  * @property {Uint8Array} imageBuffer
  * @property {Size} sourceSize
- * @property {Rect} trimmedRect
- * @property {AlphaFrameData | null} alphaData
+ * @property {boolean} hasAlpha
  */
 /**
  * @typedef {Object} SpriteData
@@ -218,9 +300,21 @@ async function getAlphaTrimInfo(frame) {
  * @property {Size} sourceSize
  */
 /**
+ *
+ * @typedef {Size & { x: number, y: number, trimmedRect: Rect, data: CombinedFrameData }} PackedFrame
+ */
+/**
+ * @typedef {Object} PackedFramesContainer
+ * @property {number} sheetWidth
+ * @property {number} sheetHeight
+ * @property {number} scale
+ * @property {PackedFrame[]} packedFrames
+ */
+/**
  * @typedef {Object} PackedSpritesheet
  * @property {number} w
  * @property {number} h
+ * @property {number} scale
  * @property {Uint8ClampedArray} imageBuffer
  * @property {SpriteData[]} sprites
  */

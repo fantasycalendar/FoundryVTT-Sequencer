@@ -286,6 +286,12 @@ export class SequencerSpriteManager extends PIXI.Container {
 	/** @type {PIXI.Text | null} */
 	#textSprite;
 
+	/** @type {{width: number, height: number, scaleX: number, scaleY: number}} */
+	#defaultScaling = {
+		width: 0, height: 0, scaleX: 1, scaleY: 1
+	}
+
+
 	get preloadingPromise() {
 		if (this.#preloadingPromise) {
 			return this.#preloadingPromise;
@@ -324,6 +330,18 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return this.#managedSprite;
 	}
 
+	/**
+	 * caches current scaling values to be used for spritesheet scaling if needed
+	 */
+	updateDefaultScaling() {
+		this.#defaultScaling = {
+			scaleX: this.scale.x,
+			scaleY: this.scale.y,
+			width: this.width,
+			height: this.height
+		}
+	}
+
 	updateVideoTextures() {
 		// CHECKME lets see if this works without update texture.
 		this.#managedSprite?.texture?.update();
@@ -356,7 +374,8 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 		if (this.#sharedSpriteConfig.isPersisted) {
 			requestAnimationFrame(async () => {
-				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath);
+				const minimumScale = this.#calculateMinimumSpritesheetScale()
+				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath, {minimumScale: minimumScale});
 				if (!spritesheet) {
 					return;
 				}
@@ -690,6 +709,21 @@ export class SequencerSpriteManager extends PIXI.Container {
 				controls.stop();
 			}
 		}
+	}
+
+	/** 
+	 * calculates the minimum scale required for generated spritesheets 
+	 * @returns {number}
+	 */
+	#calculateMinimumSpritesheetScale() {
+		const defaultScale = this.#defaultScaling
+		// Return the largest of the x, y scaling factors. 
+		// if any of those is 0, fall back to the default 1x scaling.
+		const maxScale = Math.max(defaultScale.scaleX || 1, defaultScale.scaleY || 1)
+
+		// Never return a value larger than 1 as it makes no sense to upscale the video
+		// textures for spritesheets
+		return Math.min(maxScale, 1)
 	}
 }
 //#endregion

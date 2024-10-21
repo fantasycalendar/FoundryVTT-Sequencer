@@ -13,12 +13,12 @@ export var BASIS_FORMAT;
 export class SpritesheetCompressor {
 	#basis;
 	#supportedCodecs;
-	/** @type {import("./ktx2Filecache").Ktx2FileCache} */
+	/** @type {import("./ktx2FileCache.js").Ktx2FileCache} */
 	#ktx2FileCache;
 
 	/**
 	 * @static
-	 * @param {import("./ktx2Filecache").Ktx2FileCache} ktx2FileCache
+	 * @param {import("./ktx2FileCache.js").Ktx2FileCache} ktx2FileCache
 	 * @returns {Promise<SpritesheetCompressor>}
 	 */
 	static async create(ktx2FileCache) {
@@ -29,7 +29,7 @@ export class SpritesheetCompressor {
 	/**
 	 * @private
 	 * @param {BASISModule} basis
-	 * @param {import("./ktx2Filecache").Ktx2FileCache} ktx2FileCache
+	 * @param {import("./ktx2FileCache.js").Ktx2FileCache} ktx2FileCache
 	 */
 	constructor(basis, ktx2FileCache) {
 		this.#basis = basis;

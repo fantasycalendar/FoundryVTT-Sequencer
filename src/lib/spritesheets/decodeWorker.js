@@ -14,7 +14,7 @@ let ktx2FileCache = new Ktx2FileCache();
 let compressorPromise = SpritesheetCompressor.create(ktx2FileCache);
 onmessage = async function (e) {
 	if (e.data?.type === "CreateSpritesheet") {
-		const result = await decodeWebm(e.data.payload.buffer, e.data.id);
+		const result = await decodeWebm(e.data.payload.buffer, e.data.payload.minimumScale, e.data.id);
 		const id = e.data.id;
 		if (result.type === "Cancel") {
 			postMessage({ id, ...result });
@@ -38,28 +38,29 @@ function errorResponse(message) {
 
 /**
  * @param {ArrayBuffer} buffer
+ * @param {number} minimumScale
  * @param {string} id
  * @returns {Promise<SpritesheetDataFromWorker>}
  */
-async function decodeWebm(buffer, id) {
+async function decodeWebm(buffer, minimumScale, id) {
 	/** @type {import("./TextureCompressor").CompressedTextureData | undefined} */
 	let compressedSheet;
 	const data = new Uint8Array(buffer);
-	const sourceHash = getUint8ArrayHash(data)
+	const sourceHash = getUint8ArrayHash(data);
 	const ktx2Buffer = await ktx2FileCache.getCachedKtxFile(id, sourceHash);
 	let compressor = await compressorPromise;
 
 	let spritesheetData = await ktx2FileCache.getCachedSprites(id, sourceHash);
-	
+
 	/** @type {CompressedSpritesheet} */
-	let sheet
+	let sheet;
 
 	if (ktx2Buffer && spritesheetData) {
 		compressedSheet = await compressor.transcodeKtx2Buffer(ktx2Buffer);
 		if (!compressedSheet) {
 			return errorResponse("Could not encode spritesheet to compressed texture");
 		}
-		sheet = { ...compressedSheet, fps: spritesheetData.frameRate, sprites: spritesheetData.sprites };
+		sheet = { ...compressedSheet, fps: spritesheetData.frameRate, sprites: spritesheetData.sprites, scale: spritesheetData.scale };
 	} else {
 		const demuxer = createWebMDemuxer();
 		demuxer.append(data);
@@ -74,12 +75,12 @@ async function decodeWebm(buffer, id) {
 			return errorResponse("File has no Video Tracks");
 		}
 		const metadata = videoTrack.getMetadata();
-		if (metadata.codecSize.width >= 1000 && metadata.codecSize.height >= 1000 && videoTrack.frames.length > 80) {
-			const w = metadata.codecSize.width
-			const h = metadata.codecSize.height
-			const frameCount = videoTrack.frames.length
-			return errorResponse(`Video file is too large for ${id}: ${frameCount} * ${w}x${h}px`);
-		}
+		// if (metadata.codecSize.width >= 1000 && metadata.codecSize.height >= 1000 && videoTrack.frames.length > 80) {
+		// 	const w = metadata.codecSize.width;
+		// 	const h = metadata.codecSize.height;
+		// 	const frameCount = videoTrack.frames.length;
+		// 	return errorResponse(`Video file is too large for ${id}: ${frameCount} * ${w}x${h}px`);
+		// }
 		const codec = videoTrack.getCodec();
 		let frames, alphaFrames;
 		try {
@@ -96,14 +97,13 @@ async function decodeWebm(buffer, id) {
 		if (frames.length !== alphaFrames.length && videoTrack.framesAlpha.length !== 0) {
 			return errorResponse("alpha frame count mismatch");
 		}
-		const packedSheet = await packFrames(frames, alphaFrames);
+		const packedSheet = await packFrames(frames, alphaFrames, minimumScale);
 		if (!packedSheet) {
 			return errorResponse("Could not pack spritesheet");
 		}
 
-		ktx2FileCache.saveSpritesToCache(id, sourceHash, { sprites: packedSheet.sprites, frameRate: metadata.frameRate });
-		spritesheetData = { sprites: packedSheet.sprites, frameRate: metadata.frameRate };
-
+		ktx2FileCache.saveSpritesToCache(id, sourceHash, { sprites: packedSheet.sprites, frameRate: metadata.frameRate, scale: packedSheet.scale });
+		
 		compressedSheet = await compressor.getCompressedRessourceInfo(
 			packedSheet.imageBuffer,
 			sourceHash,
@@ -111,11 +111,12 @@ async function decodeWebm(buffer, id) {
 			packedSheet.h,
 			id
 		);
-
+		
 		if (!compressedSheet) {
 			return errorResponse("Could not encode spritesheet to compressed texture");
 		}
-		sheet = { ...compressedSheet, fps: spritesheetData.frameRate, sprites: spritesheetData.sprites };
+		
+		sheet = { ...compressedSheet, sprites: packedSheet.sprites, fps: metadata.frameRate, scale: packedSheet.scale };
 	}
 
 	return {
@@ -138,6 +139,7 @@ async function decodeWebm(buffer, id) {
  * @property {'CreateSpritesheet'} type
  * @property {Object} payload
  * @property {ArrayBuffer} payload.buffer
+ * @property {number} payload.minimumScale
  */
 /** @typedef {SpritesheetMessageBase & SpritesheetDataToWorker} SpritesheetMessageToWorker */
 /**
@@ -145,5 +147,6 @@ async function decodeWebm(buffer, id) {
  * @property {keyof typeof BASIS_FORMAT} format
  * @property {MipLevelData[]} levelData
  * @property {number} fps
+ * @property {number} scale
  * @property {SpriteData[]} sprites
  */
