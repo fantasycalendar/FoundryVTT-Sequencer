@@ -1,14 +1,13 @@
 // @ts-check
 /** @import { WebMTrack } from '../inspector-js/inspectorjs-js' */
-/** @import { SpriteData } from './packFrames' */
+/** @import { SpriteData } from './FramePacker.js' */
 /** @import { BASIS_FORMAT, MipLevelData } from './TextureCompressor' */
-import { Compress } from "@typhonjs-fvtt/runtime/data/compress";
 import { createWebMDemuxer } from "../inspector-js/inspectorjs-js";
-import { decodeWebmFrames } from "./decodeWebmFrames.js";
-import { Ktx2FileCache } from "./ktx2FileCache.js";
-import { packFrames } from "./packFrames.js";
+import { FramePacker } from "./FramePacker.js";
 import { SpritesheetCompressor } from "./TextureCompressor.js";
+import { decodeWebmFrames } from "./decodeWebmFrames.js";
 import { getUint8ArrayHash } from "./hasher.js";
+import { Ktx2FileCache } from "./ktx2FileCache.js";
 
 let ktx2FileCache = new Ktx2FileCache();
 let compressorPromise = SpritesheetCompressor.create(ktx2FileCache);
@@ -97,7 +96,8 @@ async function decodeWebm(buffer, minimumScale, id) {
 		if (frames.length !== alphaFrames.length && videoTrack.framesAlpha.length !== 0) {
 			return errorResponse("alpha frame count mismatch");
 		}
-		const packedSheet = await packFrames(frames, alphaFrames, minimumScale);
+		const framePacker = new FramePacker()
+		const packedSheet = await framePacker.packFrames(frames, alphaFrames, minimumScale);
 		if (!packedSheet) {
 			return errorResponse("Could not pack spritesheet");
 		}
