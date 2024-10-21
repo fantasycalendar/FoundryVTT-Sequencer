@@ -80,14 +80,43 @@ export default class Crosshair {
 		return Array.isArray(types) ? result : result[types];
 
 	}
-
-	static containsCenter(placeable, crosshair) {
-		const calcDistance = (A, B) => {
-			return Math.hypot(A.x - B.x, A.y - B.y);
-		};
-
-		const distance = calcDistance(placeable.center, crosshair);
-		return distance <= crosshair.distance * crosshair.parent.grid.size;
+	
+	static containsCenter(placeable, crosshair){
+		if (!crosshair) return;
+		const crosshairToShape = (crosshair) =>{
+			let shape;
+		
+			if(crosshair.t === CONST.MEASURED_TEMPLATE_TYPES.CIRCLE){
+				const ratio = canvas.scene.dimensions.distancePixels;
+				shape = new PIXI.Circle(crosshair.x, crosshair.y, crosshair.distance * ratio);
+				return shape;
+			}
+		
+			if(crosshair.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE){
+				shape = new PIXI.Rectangle(crosshair.x, crosshair.y, crosshair.width, crosshair.height);
+				return shape;
+			}
+		
+			if(crosshair.t === CONST.MEASURED_TEMPLATE_TYPES.CONE || crosshair.t === CONST.MEASURED_TEMPLATE_TYPES.RAY){ //  CONE or RAY
+				let template;
+				
+				if (crosshair.t === CONST.MEASURED_TEMPLATE_TYPES.CONE){
+					template = MeasuredTemplate.getConeShape(crosshair.distance, crosshair.direction, crosshair.angle)
+				}
+				else{
+					template = MeasuredTemplate.getRayShape(crosshair.distance, crosshair.direction,crosshair.width)
+				}
+		
+				shape = new PIXI.Polygon(template.points.map((p,i) => {
+					if(i%2 === 0) return p+crosshair.x;
+					else return p+crosshair.y;
+				}));
+				return shape;
+			}
+			if(!shape) return;
+		}
+		const shape = crosshairToShape(crosshair);
+		return shape.contains(placeable.center.x, placeable.center.y)
 	}
 
 }
