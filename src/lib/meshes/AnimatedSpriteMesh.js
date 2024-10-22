@@ -128,11 +128,12 @@ export default class AnimatedSpriteMesh extends TilingSpriteMesh {
 			return;
 		}
 		this._previousFrame = currentFrame;
-		this.texture = this._textures[currentFrame];
+		this._texture = this._textures[currentFrame];
 		this._textureID = -1;
 		this._textureTrimmedID = -1;
 		this._cachedTint = [1, 1, 1, 1];
-		this.updateUvs();
+		this.uvs.set(this._texture._uvs.uvsFloat32);
+		
 		if (this.updateAnchor) {
 			this._anchor.copyFrom(this._texture.defaultAnchor);
 		}
