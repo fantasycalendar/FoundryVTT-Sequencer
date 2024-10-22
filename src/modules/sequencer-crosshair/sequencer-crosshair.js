@@ -58,20 +58,22 @@ export default class Crosshair {
 	}
 
 	/**
-	 * @param {CrosshairData} crosshair
+	 * @param {CrosshairsDocument} crosshair
 	 * @param {String/Array<string>} types
-	 * @param {(object: PlaceableObject, crosshair: CrosshairData) => boolean} filterMethod
+	 * @param {(object: PlaceableObject, crosshair: CrosshairsDocument, shape: PIXI.Graphics) => boolean} filterMethod
 	 * @returns {Array<Document>/Record<String, Array<Document>>}
 	 */
 	static collect(crosshair, types = "Token", filterMethod = this.containsCenter) {
 
 		const typesArray = Array.isArray(types) ? types : [types];
+		const crosshairDoc = crosshair instanceof CrosshairsPlaceable ? crosshair.document : crosshair;
+		const shape = crosshairDoc.getCrosshairShape();
 
 		const result = typesArray.reduce((acc, embeddedName) => {
-			const collection = crosshair.parent.getEmbeddedCollection(embeddedName);
+			const collection = crosshairDoc.parent.getEmbeddedCollection(embeddedName);
 
 			acc[embeddedName] = collection.filter((document) => {
-				return filterMethod(document.object, crosshair);
+				return filterMethod(document.object, crosshairDoc, shape);
 			});
 			return acc;
 		}, {});
@@ -81,13 +83,8 @@ export default class Crosshair {
 
 	}
 
-	static containsCenter(placeable, crosshair) {
-		const calcDistance = (A, B) => {
-			return Math.hypot(A.x - B.x, A.y - B.y);
-		};
-
-		const distance = calcDistance(placeable.center, crosshair);
-		return distance <= crosshair.distance * crosshair.parent.grid.size;
+	static containsCenter(placeable, crosshair, shape) {
+		return shape.contains(placeable.center.x, placeable.center.y);
 	}
 
 }

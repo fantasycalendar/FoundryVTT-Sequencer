@@ -1475,7 +1475,7 @@ declare abstract class SequencerCrosshair {
    * Collect overlapping placeable objects of a crosshair of a given placeable type
    */
   collect(
-    crosshair?: CrosshairData,
+    crosshair?: CrosshairsDocument,
     types?: String | Array<string>,
     filterMethod?: Function
   ): Array<Document>;
