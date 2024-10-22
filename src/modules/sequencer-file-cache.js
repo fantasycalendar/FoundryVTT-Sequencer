@@ -163,7 +163,7 @@ const SequencerFileCache = {
       )
       return undefined
     }
-    return result.spritesheet
+    return result?.spritesheet
   },
 
   registerSpritesheet(inSrc, inSpriteSheet) {
@@ -182,7 +182,6 @@ const SequencerFileCache = {
    */
   async unloadSpritesheet(inSrc) {
     const existingSheetRef = this._spritesheets.get(inSrc)
-    this._generateSpritesheetJobs.delete(inSrc)
     if (!existingSheetRef) {
       console.error("trying to unlaod spritesheet that was not loaded:", inSrc)
       return
@@ -191,6 +190,7 @@ const SequencerFileCache = {
     if (existingSheetRef[1] > 0) {
       return
     }
+    this._generateSpritesheetJobs.delete(inSrc)
     this._spritesheets.delete(inSrc)
     /** @type {PIXI.Spritesheet} */
     const sheet = existingSheetRef[0]

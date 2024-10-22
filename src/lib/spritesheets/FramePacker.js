@@ -125,7 +125,7 @@ export class FramePacker {
 		 * @param {number} scaleFactor
 		 * @return {Promise<{buffer: Uint8Array, size: Size}>}
 		 */
-		async function getScaledImageBuffer(buffer, sourceSize, scaleFactor) {
+		const getScaledImageBuffer = async (buffer, sourceSize, scaleFactor) => {
 			if (scaleFactor === 1) {
 				return { buffer, size: sourceSize };
 			}
