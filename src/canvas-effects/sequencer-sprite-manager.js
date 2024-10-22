@@ -679,9 +679,9 @@ export class SequencerSpriteManager extends PIXI.Container {
 			const prev = this.managedSprite;
 			view.tint = prev.tint;
 			view.anchor.copyFrom(prev.anchor);
+			view.scale.copyFrom(prev.scale);
 			view.width = prev.width;
 			view.height = prev.height;
-			view.scale.copyFrom(prev.scale);
 			view.tileScale.copyFrom(prev.tileScale);
 			view.tilePosition.copyFrom(prev.tilePosition);
 			view.pivot.copyFrom(prev.pivot);
