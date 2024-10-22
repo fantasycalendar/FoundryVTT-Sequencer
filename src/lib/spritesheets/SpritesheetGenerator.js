@@ -25,13 +25,13 @@ export class SpritesheetGenerator {
 			console.warn(
 				"Cannot initialize Spritesheet Generator. Secure Context Required. Serve Foundry VTT over a https connection to enable Spritesheet Generator"
 			);
-			return null;
+			return undefined;
 		}
 		if (VideoDecoder == null || typeof VideoDecoder !== "function") {
 			console.warn(
 				"Cannot initialize Spritesheet Generator. Required VideoDecoder API is not implemented by your browser. All current version of Firefox, Chrome, Edge and Safari support this API. Please make sure your browser is up to date."
 			);
-			return null;
+			return undefined;
 		}
 		return new SpritesheetGenerator();
 	}
@@ -92,15 +92,16 @@ export class SpritesheetGenerator {
 	/**
 	 * @param {string} id
 	 * @param {ArrayBuffer} buffer
+	 * @param {number} minimumScale
 	 * @returns {Promise<SpritesheetMessageFromWorker>}
 	 */
-	async #postJob(id, buffer) {
+	async #postJob(id, buffer, minimumScale) {
 		let worker = await this.#getWorker();
 		const finishedPromise = new Promise((resolve) => {
 			this.#jobMessageCallbacks.set(id, (message) => resolve(message));
 		});
 		worker.postMessage(
-			{ id, type: "CreateSpritesheet", payload: { buffer } },
+			{ id, type: "CreateSpritesheet", payload: { buffer, minimumScale } },
 			{
 				transfer: [buffer.buffer ?? buffer],
 			}
@@ -109,19 +110,20 @@ export class SpritesheetGenerator {
 	}
 	/**
 	 * @param {string} url
+	 * @param {number} minimumScale
 	 * @returns {Promise<PIXI.Spritesheet>}
 	 */
-	async spritesheetFromUrl(url) {
+	async spritesheetFromUrl(url, minimumScale) {
 		const response = await fetch(url);
 		const buffer = await response.arrayBuffer();
-		return this.spritesheetFromBuffer({ buffer, id: url });
+		return this.spritesheetFromBuffer({ buffer, id: url, minimumScale });
 	}
 	/**
-	 * @param {{ buffer: ArrayBuffer; id: string }}
+	 * @param {{ buffer: ArrayBuffer; id: string, minimumScale: number }}
 	 * @returns {Promise<PIXI.Spritesheet>}
 	 */
-	async spritesheetFromBuffer({ buffer, id }) {
-		const result = await this.#postJob(id, buffer);
+	async spritesheetFromBuffer({ buffer, id, minimumScale }) {
+		const result = await this.#postJob(id, buffer, minimumScale);
 		if (result.type === "Cancel") {
 			throw result.payload.message;
 		}
@@ -190,7 +192,7 @@ export class SpritesheetGenerator {
 			cachePrefix: id,
 		});
 		await spritesheet.parse();
-		return spritesheet;
+		return { spritesheet, scale: sheet.scale };
 	}
 }
 /** @typedef {string} JobId */

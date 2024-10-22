@@ -2388,6 +2388,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._setAnchors()
 		this._tweakRotationForIsometric();
+		this.sprite.updateDefaultScaling()
 	}
 
 	async _transformStretchToAttachedSprite() {
