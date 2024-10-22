@@ -13,6 +13,7 @@
   - You can enable the previous behavior by passing `true` as a secondary argument, which causes the method to require an exact match
 - *Crosshairs* - Added `displayRangePoly` to `.location()` and the `Sequencer.Crosshair.show()` API
 - *Crosshairs* - Fixed some minor crosshair issues surrounding utilizing them for effects
+- *Crosshairs* - Fixed `Sequencer.Crosshair.collect()` not working correctly with some crosshair shapes
 - *Effects* - Fixed flipbook animations framerate being tied to canvas FPS
 - *Effects* - Fixed offset from `.rotateTowards()` applying to the source location instead of the target
 - *Effects* - Fixed effects with added text and `.rotateTowards()` having their anchor point moved to an unexpected location
