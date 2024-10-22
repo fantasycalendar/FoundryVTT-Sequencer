@@ -74,12 +74,6 @@ async function decodeWebm(buffer, minimumScale, id) {
 			return errorResponse("File has no Video Tracks");
 		}
 		const metadata = videoTrack.getMetadata();
-		// if (metadata.codecSize.width >= 1000 && metadata.codecSize.height >= 1000 && videoTrack.frames.length > 80) {
-		// 	const w = metadata.codecSize.width;
-		// 	const h = metadata.codecSize.height;
-		// 	const frameCount = videoTrack.frames.length;
-		// 	return errorResponse(`Video file is too large for ${id}: ${frameCount} * ${w}x${h}px`);
-		// }
 		const codec = videoTrack.getCodec();
 		let frames, alphaFrames;
 		try {

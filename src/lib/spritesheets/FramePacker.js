@@ -66,7 +66,7 @@ export class FramePacker {
 		const { sheetWidth, sheetHeight, packedFrames, scale } = packedData;
 
 		const sprites = new Array(packedFrames.length);
-		const spriteBuffer = new Uint8ClampedArray(sheetHeight * sheetWidth * 4);
+		const sheetBuffer = new Uint8ClampedArray(sheetHeight * sheetWidth * 4);
 		for (const { x, y, trimmedRect, data } of packedFrames) {
 			const imageBuffer = data.imageBuffer;
 			const xStart = trimmedRect.x;
@@ -76,10 +76,10 @@ export class FramePacker {
 				for (let col = 0; col < trimmedRect.w; col++) {
 					const spriteIdx = (x + col + SPRITE_PADDING + (y + row + SPRITE_PADDING) * sheetWidth) * 4;
 					const frameIdx = (col + xStart + (row + yStart) * width) * 4;
-					spriteBuffer[spriteIdx] = imageBuffer[frameIdx];
-					spriteBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1];
-					spriteBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2];
-					spriteBuffer[spriteIdx + 3] = imageBuffer[frameIdx + 3];
+					sheetBuffer[spriteIdx] = imageBuffer[frameIdx];
+					sheetBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1];
+					sheetBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2];
+					sheetBuffer[spriteIdx + 3] = imageBuffer[frameIdx + 3];
 				}
 			}
 			sprites[data.idx] = {
@@ -90,8 +90,8 @@ export class FramePacker {
 					trimmedRect.w < data.sourceSize.w ||
 					trimmedRect.h < data.sourceSize.h,
 				sourceSize: {
-					w: Math.round(data.sourceSize.w * scale),
-					h: Math.round(data.sourceSize.h * scale),
+					w: Math.round(data.sourceSize.w),
+					h: Math.round(data.sourceSize.h),
 				},
 				frame: {
 					x: x + SPRITE_PADDING,
@@ -106,7 +106,7 @@ export class FramePacker {
 			w: sheetWidth,
 			h: sheetHeight,
 			scale,
-			imageBuffer: spriteBuffer,
+			imageBuffer: sheetBuffer,
 			sprites,
 		};
 	}
@@ -144,7 +144,7 @@ export class FramePacker {
 				resizeQuality: "high",
 			});
 			context2d.clearRect(0, 0, scaledWidth, scaledHeight);
-			context2d.drawImage(imageBitmap, 0, 0, scaledWidth, scaledHeight);
+			context2d.drawImage(imageBitmap, 0, 0);
 			imageBitmap.close();
 			const scaledBuffer = new Uint8Array(context2d.getImageData(0, 0, scaledWidth, scaledHeight).data.buffer);
 			const scaledSize = { w: scaledWidth, h: scaledHeight };
@@ -167,7 +167,11 @@ export class FramePacker {
 					// @ts-expect-error temprorary null
 					y: undefined,
 					trimmedRect,
-					data,
+					data: {
+						...data,
+						imageBuffer: buffer,
+						sourceSize: size
+					},
 				});
 			}
 			const { w, h } = potpack(packedData);
@@ -248,11 +252,12 @@ export class FramePacker {
 		let bottom = null;
 		const alphaThreshold = 0;
 		const packSize = 4; // rgba hardcoded for image buffer
+		const alphaOffset = 3; // rgba hardcoded for image buffer
 		// find top most opaque
 		for (let y = 0; y < sourceSize.h; y++) {
 			let x = 0;
 			while (x < sourceSize.w) {
-				const idx = (x + y * sourceSize.w) * packSize;
+				const idx = (x + y * sourceSize.w) * packSize + alphaOffset;
 				if (imageBuffer[idx] > alphaThreshold) {
 					top = y;
 					break;
@@ -269,7 +274,7 @@ export class FramePacker {
 		for (let x = sourceSize.w - 1; x >= 0; x--) {
 			let y = topStart;
 			while (y < sourceSize.h) {
-				const idx = (x + y * sourceSize.w) * packSize;
+				const idx = (x + y * sourceSize.w) * packSize + alphaOffset;
 				if (imageBuffer[idx] > alphaThreshold) {
 					right = x;
 					break;
@@ -284,7 +289,7 @@ export class FramePacker {
 		for (let y = sourceSize.h - 1; y >= 0; y--) {
 			let x = 0;
 			while (x < rightEnd) {
-				const idx = (x + y * sourceSize.w) * packSize;
+				const idx = (x + y * sourceSize.w) * packSize + alphaOffset;
 				if (imageBuffer[idx] > alphaThreshold) {
 					bottom = y;
 					break;
@@ -299,7 +304,7 @@ export class FramePacker {
 		for (let x = 0; x < rightEnd; x++) {
 			let y = topStart;
 			while (y < bottomEnd) {
-				const idx = (x + y * sourceSize.w) * packSize;
+				const idx = (x + y * sourceSize.w) * packSize + alphaOffset;
 				if (imageBuffer[idx] > alphaThreshold) {
 					left = x;
 					break;
