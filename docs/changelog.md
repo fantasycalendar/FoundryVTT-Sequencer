@@ -1,5 +1,10 @@
 ## Changelog
 
+# Version 3.4.1
+
+- *Effects* - Fixed effects with internal loops not playing & looping correctly (thanks Codas!)
+- *Effects* - Tweaked just-in-time spritesheet generation to not scale resulting spritesheets as much (thanks Codas!) 
+
 # Version 3.4.0
 - *Sequencer* - Added support for custom FPS for flipbooks through an `_fps` database tag
 - *Sequencer* - Added support for spritesheet type effects through linking the spritesheet `.json` manifest in the database
