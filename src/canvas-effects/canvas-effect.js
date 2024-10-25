@@ -466,7 +466,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	async playMedia() {
-		if (this.destroyed || this._ended || this.isEnding) {
+		if (this.destroyed || this._ended || this._isEnding) {
 			return
 		}
 		await this.sprite.play()
@@ -3235,14 +3235,14 @@ export default class CanvasEffect extends PIXI.Container {
 			this.mediaCurrentTime = this._loopOffset
 		}
 		await this.playMedia();
-		this._addToTicker(this.loopHandler)
+		this._addToTicker(this.loopHandler);
 	}
 
 	async loopHandler() {
-		if (this._ended || this.isEnding) {
+		if (this._ended || this._isEnding) {
 			return;
 		}
-		if (this.mediaCurrentTime < this._endTime) {
+		if (this.mediaCurrentTime < (this._animationTimes.loopEnd ?? this._endTime)) {
 			return;
 		}
 		if (this.restartLoopHandler != null) {
@@ -3250,12 +3250,12 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		// if we're above end time, we can safely just pause for now
-		this.pauseMedia()
+		this.pauseMedia();
 
 		// default media current time to exactly end time so we don't
 		// continue to trigger certain parts of the following code
 		// unnecessarily
-		this.mediaCurrentTime = this._endTime
+		this.mediaCurrentTime = this._endTime;
 
 
 		// if we reached maximum loops, stay paused or even end the effect
@@ -3263,24 +3263,25 @@ export default class CanvasEffect extends PIXI.Container {
 			if (!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
 				this.endEffect();
 			}
-			this._ticker?.remove(this.loopHandler, this)
+			this._ticker?.remove(this.loopHandler, this);
 			return;
 		}
 
+		const restartTime = this._startTime || this._animationTimes.loopStart;
 		// no loop delay means just start again at the beginning!
 		if (!this.loopDelay) {
 			this._currentLoops++;
-			this.mediaCurrentTime = this._startTime
-			this.playMedia()
+			this.mediaCurrentTime = restartTime;
+			this.playMedia();
 			return;
 		}
 
 		this._currentLoops++;
 		// register restart handler to trigger after loop delay
 		this.restartLoopHandler = setTimeout(() => {
-			this.restartLoopHandler = null
-			this.mediaCurrentTime = this._startTime
-			this.playMedia()
+			this.restartLoopHandler = null;
+			this.mediaCurrentTime = restartTime;
+			this.playMedia();
 		}, this.loopDelay)
 	}
 }
