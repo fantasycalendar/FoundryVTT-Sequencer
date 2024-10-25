@@ -58,7 +58,7 @@ export class FramePacker {
 			frames.map((frame, idx) => this.#combineFrames(frame, alphaFrames[idx], idx))
 		);
 
-		const packedData = await this.#packScaledFrames(combinedFrames, minimumScale);
+		const packedData = await this.scaleAndPackFrames(combinedFrames, minimumScale);
 		if (!packedData) {
 			return;
 		}
@@ -116,7 +116,7 @@ export class FramePacker {
 	 * @param {number} minimumScale
 	 * @return {Promise<PackedFramesContainer | undefined>}
 	 */
-	async #packScaledFrames(frameData, minimumScale) {
+	async scaleAndPackFrames(frameData, minimumScale) {
 		let scale = 1;
 
 		/**
@@ -179,7 +179,7 @@ export class FramePacker {
 			spriteWidth = Math.ceil(w / 4) * 4;
 			spriteHeight = Math.ceil(h / 4) * 4;
 			if (Math.max(spriteHeight, spriteWidth) > 8192) {
-				scale /= 2;
+				scale -= 0.1;
 				continue;
 			}
 
