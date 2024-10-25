@@ -233,7 +233,12 @@ class SpritePlaybackControls extends PlaybackControls {
 	set volume(_value) {}
 
 	get currentTime() {
-		return (this.#sprite.currentFrame + 1) / this.#framerate;
+		// return currentTime rounded with ms accuracy.
+		// This solves issues with videos vor example having 265 frames, 24 fps.
+		// This resolves to an accurate total time of 11.04166.. s, whereas
+		// the reported time from the video file would be 11.042s.
+		const accurateTime = (this.#sprite.currentFrame + 1) / this.#framerate;
+		return Math.round(accurateTime * 1000) / 1000;
 	}
 	set currentTime(value) {
 		const newFrame = Math.floor(value * this.#framerate);
@@ -288,9 +293,11 @@ export class SequencerSpriteManager extends PIXI.Container {
 
 	/** @type {{width: number, height: number, scaleX: number, scaleY: number}} */
 	#defaultScaling = {
-		width: 0, height: 0, scaleX: 1, scaleY: 1
-	}
-
+		width: 0,
+		height: 0,
+		scaleX: 1,
+		scaleY: 1,
+	};
 
 	get preloadingPromise() {
 		if (this.#preloadingPromise) {
@@ -338,8 +345,8 @@ export class SequencerSpriteManager extends PIXI.Container {
 			scaleX: this.scale.x,
 			scaleY: this.scale.y,
 			width: this.width,
-			height: this.height
-		}
+			height: this.height,
+		};
 	}
 
 	updateVideoTextures() {
@@ -374,8 +381,10 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 		if (this.#sharedSpriteConfig.isPersisted) {
 			requestAnimationFrame(async () => {
-				const minimumScale = this.#calculateMinimumSpritesheetScale()
-				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath, {minimumScale: minimumScale});
+				const minimumScale = this.#calculateMinimumSpritesheetScale();
+				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath, {
+					minimumScale: minimumScale,
+				});
 				if (!spritesheet) {
 					return;
 				}
@@ -600,7 +609,10 @@ export class SequencerSpriteManager extends PIXI.Container {
 			texture?.baseTexture?.resource.levels === 1
 		) {
 			texture?.baseTexture?.setStyle(0, 0);
-		} else if (this.#sharedSpriteConfig.antialiasing && this.#sharedSpriteConfig.antialiasing !== PIXI.SCALE_MODES.LINEAR) {
+		} else if (
+			this.#sharedSpriteConfig.antialiasing &&
+			this.#sharedSpriteConfig.antialiasing !== PIXI.SCALE_MODES.LINEAR
+		) {
 			texture?.baseTexture.setStyle(0, this.#sharedSpriteConfig.antialiasing);
 		}
 		if (texture instanceof PIXI.Spritesheet) {
@@ -711,19 +723,19 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 	}
 
-	/** 
-	 * calculates the minimum scale required for generated spritesheets 
+	/**
+	 * calculates the minimum scale required for generated spritesheets
 	 * @returns {number}
 	 */
 	#calculateMinimumSpritesheetScale() {
-		const defaultScale = this.#defaultScaling
-		// Return the largest of the x, y scaling factors. 
+		const defaultScale = this.#defaultScaling;
+		// Return the largest of the x, y scaling factors.
 		// if any of those is 0, fall back to the default 1x scaling.
-		const maxScale = Math.max(defaultScale.scaleX || 1, defaultScale.scaleY || 1)
+		const maxScale = Math.max(defaultScale.scaleX || 1, defaultScale.scaleY || 1);
 
 		// Never return a value larger than 1 as it makes no sense to upscale the video
 		// textures for spritesheets
-		return Math.min(maxScale, 1)
+		return Math.min(maxScale, 1);
 	}
 }
 //#endregion
