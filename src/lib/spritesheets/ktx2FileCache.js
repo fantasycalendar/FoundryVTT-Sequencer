@@ -4,7 +4,8 @@
 // cache version history:
 // 1: initial
 // 2: zstandard compressed ktx2 files and response metadata
-const cacheVersion = 2;
+// 3: Remove cache size limit and increase scaled spritesheet resolutions
+const cacheVersion = 3;
 const cacheName = `SequencerKTX2Cache-${cacheVersion}`;
 /** @type {Promise<Cache | null>} */
 let ktx2FileCache;
@@ -82,10 +83,6 @@ export class Ktx2FileCache {
 	 * @returns {Promise<void>}
 	 */
 	async saveKtxFileToCache(id, sourceHash, ktx2FileBuffer) {
-		// only cache files <= 30MB
-		if (ktx2FileBuffer.byteLength > 30 * 1000 * 1000) {
-			return;
-		}
 		const cacheStorage = await ktx2FileCache.catch(() => null);
 		if (!cacheStorage) {
 			return;
@@ -156,5 +153,5 @@ export class Ktx2FileCache {
 }
 
 /**
- * @typedef {{sprites: import("./FramePacker").SpriteData[], frameRate: number, scale: number}} CachedSpriteData
+ * @typedef {{sprites: import("./FramePacker.js").SpriteData[], frameRate: number, scale: number}} CachedSpriteData
  */

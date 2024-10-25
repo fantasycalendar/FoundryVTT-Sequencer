@@ -33,13 +33,13 @@ export class SpritesheetCompressor {
 	 */
 	constructor(basis, ktx2FileCache) {
 		this.#basis = basis;
-		this.#ktx2FileCache = ktx2FileCache
+		this.#ktx2FileCache = ktx2FileCache;
 		const canvas = new OffscreenCanvas(0, 0);
 		const gl = canvas.getContext("webgl2");
 		this.#supportedCodecs = {
-			astc: !!gl.getExtension("WEBGL_compressed_texture_astc"),
-			bc7: !!gl.getExtension("EXT_texture_compression_bptc"),
-			dxt: !!gl.getExtension("WEBGL_compressed_texture_s3tc"),
+			astc: !!gl?.getExtension("WEBGL_compressed_texture_astc"),
+			bc7: !!gl?.getExtension("EXT_texture_compression_bptc"),
+			dxt: !!gl?.getExtension("WEBGL_compressed_texture_s3tc"),
 		};
 	}
 	/**
