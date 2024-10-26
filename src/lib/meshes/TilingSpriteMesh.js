@@ -45,16 +45,15 @@ export default class TilingSpriteMesh extends SpriteMesh {
 	}
 
 	
-	get isVisionMaskEnabled() {
-		return this.shaderFlags.hasState('isVisionMaskEnabled')
+	get isVisionMaskingEnabled() {
+		return this.shaderFlags.hasState('isVisionMaskingEnabled')
 	}
 	/**
 	 * @param {boolean} value
 	 */
-	set isVisionMaskEnabled(value) {
-		this.shaderFlags.toggleState('isVisionMaskEnabled', value)
+	set isVisionMaskingEnabled(value) {
+		this.shaderFlags.toggleState('isVisionMaskingEnabled', value)
 	}
-
 
 	/**
 	 * @param {PIXI.ColorMatrixFilter | null} value

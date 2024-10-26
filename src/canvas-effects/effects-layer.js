@@ -483,9 +483,12 @@ export class SequencerAboveUILayer {
 
   static removeContainerByEffect(inEffect) {
 		const layer = this.getLayer();
+		if (!(layer instanceof SequencerAboveUILayer)) return;
+
     const child = layer.children.find((child) => child === inEffect);
     if (!child) return;
     layer.removeChild(child);
+
     layer.renderable = layer.children.length > 0;
   }
 

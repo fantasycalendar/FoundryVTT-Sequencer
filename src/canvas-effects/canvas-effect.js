@@ -1788,7 +1788,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.sprite.position.set(spriteOffsetX, spriteOffsetY);
 
-		this.sprite.anchor.set(
+		this.sprite.anchor?.set(
 			this.data.spriteAnchor?.x ?? 0.5,
 			this.data.spriteAnchor?.y ?? 0.5
 		);

@@ -204,8 +204,10 @@ const SequencerFileCache = {
       foundry.utils.getRoute(inSrc),
     ]
     await PIXI.Assets.unload(cacheKeys.filter((src) => !!src))
-    Object.values(sheet.textures).forEach((t) => t.destroy())
-    sheet.baseTexture.destroy()
+		if (sheet.textures) {
+			Object.values(sheet.textures).forEach((t) => t.destroy())
+		}
+    sheet.baseTexture?.destroy()
   },
 }
 
