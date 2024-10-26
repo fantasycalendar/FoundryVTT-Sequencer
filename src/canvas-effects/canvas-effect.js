@@ -3267,7 +3267,9 @@ export default class CanvasEffect extends PIXI.Container {
 			return;
 		}
 
-		const restartTime = this._startTime || this._animationTimes.loopStart;
+		const restartTime = this._startTime === 0 && this._animationTimes.loopStart 
+		  ? this._animationTimes.loopStart 
+			: this._startTime;
 		// no loop delay means just start again at the beginning!
 		if (!this.loopDelay) {
 			this._currentLoops++;
