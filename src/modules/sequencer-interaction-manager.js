@@ -70,9 +70,9 @@ export const InteractionManager = {
 
     window.addEventListener("mousemove", (event) => {
       if (!canvas.ready) return;
+      if (!this.isLayerActive) return;
       const hover = document.elementFromPoint(event.clientX, event.clientY);
       if (!hover || hover.id !== "board") return;
-      if (!this.isLayerActive) return;
       this._propagateEvent("mouseMove");
       if (this.state.LeftMouseDown && !this.startDragPosition) {
         this.startDragPosition = canvaslib.get_mouse_position();
