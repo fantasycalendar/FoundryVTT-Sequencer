@@ -1,5 +1,5 @@
 (async () => {
-	ui.notifications.info("Looping effect. First is control with one loop, other more loops and combinations");
+	ui.notifications.info("Missed effects. Top row is control, bottom should be offset from the target");
 
 	new Sequence()
 		.effect()

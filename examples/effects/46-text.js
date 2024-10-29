@@ -17,7 +17,7 @@
 
 		.effect()
 		.atLocation({ x: 1200, y: 1200 })
-		.text("control", {
+		.text("textAnchor {x: 0, y: 0}", {
 			...textStyle,
 			anchor: {x: 0, y: 0}
 		})
@@ -25,7 +25,7 @@
 
 		.effect()
 		.atLocation({ x: 1200, y: 1400 })
-		.text("control", {
+		.text("textAnchor {x: 1, y: 1}", {
 			...textStyle,
 			anchor: {x: 1, y: 1}
 		})
