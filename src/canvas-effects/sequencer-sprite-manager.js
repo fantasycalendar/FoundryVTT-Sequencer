@@ -337,6 +337,11 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return this.#managedSprite;
 	}
 
+	/** @return {PreciseText | null} */
+	get textSprite() {
+		return this.#textSprite
+	}
+
 	/**
 	 * caches current scaling values to be used for spritesheet scaling if needed
 	 */
@@ -676,7 +681,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			this.managedSprite.destroy();
 		}
 		this.#managedSprite = view;
-		this.addChild(view);
+		this.addChildAt(view, 0);
 
 		return true;
 	}
