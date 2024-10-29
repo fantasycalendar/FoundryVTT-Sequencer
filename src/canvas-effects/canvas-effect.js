@@ -1894,12 +1894,10 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.data.screenSpace || this.data.screenSpaceAboveUI) {
 			const [screenWidth, screenHeight] = canvas.screenDimensions;
 
-			if(this._lastScreenDimensions?.screenWidth === screenWidth && this._lastScreenDimensions?.screenHeight === screenHeight){
-				return;
+			if(this._lastScreenDimensions?.screenWidth !== screenWidth && this._lastScreenDimensions?.screenHeight !== screenHeight){
+				this._lastScreenDimensions.screenWidth = screenWidth;
+				this._lastScreenDimensions.screenHeight = screenHeight;
 			}
-
-			this._lastScreenDimensions.screenWidth = screenWidth;
-			this._lastScreenDimensions.screenHeight = screenHeight;
 
 			this.position.set(
 				(this.data.screenSpacePosition?.x ?? 0) +
@@ -1916,8 +1914,8 @@ export default class CanvasEffect extends PIXI.Container {
 				let scaleX = scaleData.x;
 				let scaleY = scaleData.y;
 
-				this._lastScreenDimensions.width ??= this.sprite.width;
-				this._lastScreenDimensions.height ??= this.sprite.height;
+				this._lastScreenDimensions.width = this.sprite.texture?.width || this._lastScreenDimensions.width || this.sprite.width;
+				this._lastScreenDimensions.height = this.sprite.texture?.height || this._lastScreenDimensions.height || this.sprite.height;
 
 				if (scaleData.fitX) {
 					scaleX = scaleX * (screenWidth / this._lastScreenDimensions.width);

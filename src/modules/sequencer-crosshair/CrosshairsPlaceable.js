@@ -1,7 +1,7 @@
 import { get_mouse_position, } from "../../lib/canvas-lib.js";
 import { is_real_number } from "../../lib/lib.js";
 import CONSTANTS from "../../constants.js";
-import CrosshairsDocument from "./CrosshairsDocument.js";
+import * as lib from "../../lib/lib.js"
 
 export default class CrosshairsPlaceable extends MeasuredTemplate {
 
@@ -146,8 +146,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const distance = loc.limitMaxRange + ((Math.max(w, h) / 2) / canvas.dimensions.distancePixels);
 
 		this.#rangeHighlight
-			.beginFill(loc.rangePolyFillColor ?? 0xFFFFFF, clamp(loc.rangePolyFillAlpha ?? 0.25, 0.0, 1.0))
-			.lineStyle(2, loc.rangePolyLineColor ?? 0xFF0000, clamp(loc.rangePolyLineAlpha ?? 0.5, 0.0, 1.0))
+			.beginFill(loc.rangePolyFillColor ?? 0xFFFFFF, lib.clamp(loc.rangePolyFillAlpha ?? 0.25, 0.0, 1.0))
+			.lineStyle(2, loc.rangePolyLineColor ?? 0xFF0000, lib.clamp(loc.rangePolyLineAlpha ?? 0.5, 0.0, 1.0))
 			.drawPolygon(canvas.grid.getCircle(position, distance));
 
 	}

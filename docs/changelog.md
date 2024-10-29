@@ -1,7 +1,16 @@
 ## Changelog
 
-# Version 3.4.1
+# Version 3.4.3
+- *Sequencer* - Fixed slight performance issue with the Sequencer layer querying mouse position even when not active (thanks Codas!)
+- *Effects* - Fixed `.shape()` and `.text()` not working on effects without an underlying sprite (thanks Codas!)
+- *Effects* - Fixed `.xray()` not working (thanks Codas!)
+- *Effects* - Fixed `.screenSpace()` not working due to upgrades to `.animateProperty()` messing with sprite width and such
+- *Crosshairs* - Fixed `displayRangePoly` not working due to missing import
 
+# Version 3.4.2
+- *Effects* - Fixed canvas breaking after playing some types of effects
+
+# Version 3.4.1
 - *Effects* - Fixed effects with internal loops not playing & looping correctly (thanks Codas!)
 - *Effects* - Tweaked just-in-time spritesheet generation to not scale resulting spritesheets as much (thanks Codas!) 
 
