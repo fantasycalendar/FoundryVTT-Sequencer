@@ -1859,10 +1859,14 @@ export default class CanvasEffect extends PIXI.Container {
 				canvaslib.get_object_elevation(this.target ?? {})
 			);
 		if(!CONSTANTS.IS_V12) targetElevation += 1;
+
 		let effectElevation = this.data.elevation?.elevation ?? 0;
 		if (!this.data.elevation?.absolute) {
 			effectElevation += targetElevation;
 		}
+		this.elevation = effectElevation;
+
+		let sort;
 		const isIsometric = foundry.utils.getProperty(
 			game.scenes.get(this.data.sceneId),
 			CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
@@ -1874,15 +1878,15 @@ export default class CanvasEffect extends PIXI.Container {
 			const targetSort = this.target
 				? (this.targetMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
 				: 0;
-			this.sort = Math.max(sourceSort, targetSort);
+			sort = Math.max(sourceSort, targetSort);
 		} else {
-			this.sort = !lib.is_real_number(this.data.zIndex)
-				? this.data.index + (this?.parent?.children?.length ?? 0)
-				: 100000 + this.data.zIndex;
+			sort = !lib.is_real_number(this.data.zIndex)
+				? (this?.parent?.children?.length ?? 0)
+				: 100000;
 		}
-		this.elevation = effectElevation;
-		this.zIndex = this.sort;
-		this.sort += 100;
+		sort += 100 + (this.data.aboveLighting ? 300 : 0);
+		this.zIndex = sort + (lib.is_real_number(this.data.zIndex) ? this.data.zIndex : 0);
+		this.sort = sort;
 		this.sortLayer = this.data.sortLayer
 		if (this.parent) {
 			this.parent.sortChildren();
