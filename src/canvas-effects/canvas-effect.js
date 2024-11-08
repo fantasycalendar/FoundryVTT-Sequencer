@@ -1676,7 +1676,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let file
 		if (this.data.customRange) {
-			const template = this.template ? [this.template.gridSize, this.template.startPoint, this.template.endPoint] : []
+			const template = this.template ? [this.template.gridSize, this.template.startPoint, this.template.endPoint] : [100, 0, 0]
 			file = SequencerFileBase.make(
 				this.data.file,
 				"temporary.range.file",
