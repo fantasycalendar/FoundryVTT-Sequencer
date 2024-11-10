@@ -40,7 +40,7 @@ const flagManager = {
 
 			let changesAdded = false;
 
-			if(effectData._id !== effectId) {
+			if (effectData._id !== effectId) {
 				changesAdded = true;
 				effectData._id = effectId;
 				changes.push(effectData);
@@ -64,7 +64,7 @@ const flagManager = {
 
 			effectData.flagVersion = this.latestFlagVersion;
 
-			if(!changesAdded) changes.push(effectData);
+			if (!changesAdded) changes.push(effectData);
 		}
 
 		if (changes.length) {
@@ -207,7 +207,7 @@ const flagManager = {
 		},
 
 		"3.2.0": (inDocument, effectData) => {
-			if(effectData.attachTo?.followRotation !== undefined){
+			if (effectData.attachTo?.followRotation !== undefined) {
 				effectData.attachTo.bindRotation = effectData.attachTo.followRotation;
 				delete effectData.attachTo.followRotation;
 			}
@@ -223,7 +223,7 @@ const flagManager = {
 		},
 
 		"3.2.1": (inDocument, effectData) => {
-			if(effectData.noLoop !== undefined){
+			if (effectData.noLoop !== undefined) {
 				effectData.loopOptions = {
 					loops: 1,
 					loopDelay: 0,
@@ -327,8 +327,7 @@ const flagManager = {
 			}
 
 			const isLinkedToken = object instanceof TokenDocument && object.actorLink;
-			const isLinkedActor =
-				object instanceof Actor && object.prototypeToken.actorLink;
+			const isLinkedActor = object instanceof Actor && object.prototypeToken.actorLink;
 
 			let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
 			let toRemove = flagsToRemove.get(objectUUID) ?? {
@@ -337,7 +336,7 @@ const flagManager = {
 			};
 
 			let origExistingFlags = foundry.utils.getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? [];
-			if(isLinkedToken){
+			if (isLinkedToken) {
 				origExistingFlags = origExistingFlags.concat(foundry.utils.getProperty(object.actor, CONSTANTS.EFFECTS_FLAG) ?? []);
 			}
 			const existingFlags = new Map(origExistingFlags);
@@ -369,7 +368,7 @@ const flagManager = {
 				(isLinkedToken || isLinkedActor) &&
 				(toAdd.original || toRemove.original)
 			) {
-				const actor = isLinkedActor ? object : object.actor;
+				const actor = object?.actor ?? object;
 				actorUpdates[actor.id] = flagsToSet.filter(
 					(effect) => effect[1]?.persistOptions?.persistTokenPrototype,
 				);

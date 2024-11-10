@@ -55,6 +55,21 @@ function getSequencerEffectActors(version, actorFilter = false) {
     });
 }
 
+function getSequencerEffectActorsPrototypeToken(version, actorFilter = false) {
+  return Array.from(game.actors)
+    .filter((actor) => actor.isOwner)
+    .filter((actor, index) => {
+      if (actorFilter) {
+        return actorFilter(actor, index);
+      }
+      const effects = foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
+      const effectsOutOfDate = effects.filter((e) =>
+        foundry.utils.isNewerVersion(version, e[1].flagVersion)
+      );
+      return effectsOutOfDate.length;
+    });
+}
+
 const migrations = {
   "3.0.0": async (version) => {
     const actorsToUpdate = getSequencerEffectActors(version, (actor) => {
@@ -154,4 +169,31 @@ const migrations = {
       await Actor.updateDocuments(actorUpdateArray);
     }
   },
+	"3.4.4": async (version) => {
+		const actorsToUpdate = getSequencerEffectActors(version, (actor) => {
+			const effects =
+				foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
+			const effectsOutOfDate = effects.filter((e) =>
+				foundry.utils.isNewerVersion(version, e[1].flagVersion)
+			);
+			return effectsOutOfDate.length;
+		});
+
+		const actorUpdateArray = actorsToUpdate.map((actor) => {
+			const actorEffects = foundry.utils.getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
+			const prototypeTokenEffects = foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
+			return {
+				"_id": actor.id,
+				["prototypeToken." +CONSTANTS.REMOVE_EFFECTS_FLAG]: null,
+				[CONSTANTS.EFFECTS_FLAG]: actorEffects.concat(prototypeTokenEffects)
+			}
+		})
+
+		if (actorUpdateArray.length) {
+			debug(
+				`Sequencer | Updated ${actorUpdateArray.length} actors' effects to version ${version}`
+			);
+			await Actor.updateDocuments(actorUpdateArray);
+		}
+	}
 };

@@ -4,6 +4,8 @@ import * as lib from "../lib/lib.js";
 import { is_real_number } from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import SequencerFoundryReplicator from "../modules/sequencer-foundry-replicator.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 
 export default class CanvasPanSection extends Section {
   constructor(inSequence, target, duration, scale) {
@@ -176,6 +178,17 @@ export default class CanvasPanSection extends Section {
     return this;
   }
 
+	async preRun() {
+		const oldSource = this._source;
+		const crosshairSource = this.sequence?.crosshairs?.[this._source];
+		if (typeof this._source === "string" && crosshairSource) {
+			this._source = crosshairSource.uuid;
+		}
+		if (this._name && oldSource !== this._source) {
+			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
+		}
+	}
+
   async run() {
     const data = await this._sanitizeData();
     if (Hooks.call("preCanvasPan", data) === false) return;
@@ -190,6 +203,10 @@ export default class CanvasPanSection extends Section {
 
   _getSourceObject() {
     if (!this._source || typeof this._source !== "object") return this._source;
+	  if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
+		  const doc = this._source?.document ?? this._source;
+		  return doc.getOrientation().source;
+	  }
     return (
       lib.get_object_identifier(this._source) ??
       canvaslib.get_object_canvas_data(this._source, { uuid: false })
@@ -216,6 +233,7 @@ export default class CanvasPanSection extends Section {
       scale: this._scale,
       lockView: this._lockView,
       shake: this._shake,
+	    nameOffsetMap: this.sequence.nameOffsetMap,
     };
   }
 

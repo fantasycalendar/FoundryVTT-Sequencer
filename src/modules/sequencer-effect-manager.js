@@ -578,7 +578,7 @@ export default class SequencerEffectManager {
   static async _documentCreated(inDocument) {
     let effects = flagManager.getEffectFlags(inDocument);
     if (inDocument instanceof TokenDocument && inDocument?.actorLink) {
-      let actorEffects = flagManager.getEffectFlags(inDocument.actor);
+      let actorEffects = flagManager.getEffectFlags(inDocument?.actor);
       if (actorEffects.length) {
         actorEffects = this._patchEffectDataForDocument(
           inDocument.uuid,

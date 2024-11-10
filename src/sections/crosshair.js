@@ -14,7 +14,6 @@ export default class CrosshairSection extends Section {
 		this._width = canvas.grid.distance;
 		this._direction = 0;
 		this._borderColor = null;
-		this._gridHighlight = null;
 		this._fillColor = null;
 		this._persist = false;
 		this._config = CrosshairsDocument.defaultConfig;

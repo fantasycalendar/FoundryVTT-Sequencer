@@ -3,6 +3,8 @@ import traits from "./traits/_traits.js";
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import SequencerFoundryReplicator from "../modules/sequencer-foundry-replicator.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 
 export default class ScrollingTextSection extends Section {
   constructor(inSequence, target, text, textOptions) {
@@ -99,6 +101,17 @@ export default class ScrollingTextSection extends Section {
     return this;
   }
 
+	async preRun() {
+		const oldSource = this._source;
+		const crosshairSource = this.sequence?.crosshairs?.[this._source];
+		if (typeof this._source === "string" && crosshairSource) {
+			this._source = crosshairSource.uuid;
+		}
+		if (this._name && oldSource !== this._source) {
+			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
+		}
+	}
+
   async run() {
     const data = await this._sanitizeTextData();
     if (Hooks.call("preCreateScrollingText", data) === false) return;
@@ -113,6 +126,10 @@ export default class ScrollingTextSection extends Section {
 
   _getSourceObject() {
     if (!this._source || typeof this._source !== "object") return this._source;
+	  if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
+		  const doc = this._source?.document ?? this._source;
+		  return doc.getOrientation().source;
+	  }
     return (
       lib.get_object_identifier(this._source) ??
       canvaslib.get_object_canvas_data(this._source)
@@ -135,6 +152,7 @@ export default class ScrollingTextSection extends Section {
       offset: this._offset?.source ?? false,
       randomOffset: this._randomOffset?.source ?? false,
       content: this._text?.text ?? "",
+	    nameOffsetMap: this.sequence.nameOffsetMap,
       options: {
         anchor: this._anchor,
         direction: this._direction,

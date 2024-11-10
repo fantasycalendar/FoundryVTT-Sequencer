@@ -1,9 +1,12 @@
 ## Changelog
 
 # Version 3.4.4
+- *Canvas Pan* - Added support for named locations with in-sequence crosshairs
+- *Scrolling Text* - Added support for named locations with in-sequence crosshairs
 - *Effects* - Fixed effects that should have been invisible to users being visible when utilizing `.attachTo()` with `bindVisibility` set to `true` (Thanks Codas!)
 - *Effects* - Fixed `.file()` with specific range-based effects not correctly using the default grid template data (Thanks Codas!)
 - *Effects* - Fixed `.aboveLighting()` being above lighting but not over certain elements
+- *Effects* - Fixed some effects sticking around on tokens even after being deleted
 - *Effects* - Added missing `anchor` documentation to the `.text()` method
 
 # Version 3.4.3

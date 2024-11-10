@@ -24,7 +24,10 @@ export default class SequencerFoundryReplicator {
   }
 
   static _getPositionFromData(data) {
-    const source = this._validateObject(data.source, data.sceneId);
+
+    const source = data.nameOffsetMap[data.source]
+	    ? data.nameOffsetMap[data.source].source
+	    : this._validateObject(data.source, data.sceneId);
 
     const position =
       source instanceof PlaceableObject
