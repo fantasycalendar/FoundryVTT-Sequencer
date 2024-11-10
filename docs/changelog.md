@@ -1,5 +1,11 @@
 ## Changelog
 
+# Version 3.4.4
+- *Effects* - Fixed effects that should have been invisible to users being visible when utilizing `.attachTo()` with `bindVisibility` set to `true` (Thanks Codas!)
+- *Effects* - Fixed `.file()` with specific range-based effects not correctly using the default grid template data (Thanks Codas!)
+- *Effects* - Fixed `.aboveLighting()` being above lighting but not over certain elements
+- *Effects* - Added missing `anchor` documentation to the `.text()` method
+
 # Version 3.4.3
 - *Sequencer* - Fixed slight performance issue with the Sequencer layer querying mouse position even when not active (thanks Codas!)
 - *Effects* - Fixed `.shape()` and `.text()` not working on effects without an underlying sprite (thanks Codas!)

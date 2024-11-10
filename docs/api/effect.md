@@ -1042,6 +1042,8 @@ Creates a text element, attached to the effect. The options for the text are ava
 
 Use the JSON object as the options parameter for `.text()`
 
+This JSON parameter also accepts `anchor` as an object containing `x` and `y`, which sets the anchor is this text sprite. This is separate from the effect's overall anchor.
+
 
 ## Shape
 
