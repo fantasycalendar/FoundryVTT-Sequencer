@@ -2111,6 +2111,7 @@ export default class CanvasEffect extends PIXI.Container {
 							(!attachedToTarget || (this.targetMesh?.occluded ?? true));
 						this.renderable =
 							baseRenderable &&
+							(!sourceHidden || game.user.isGM) &&
 							(sourceVisible || targetVisible) &&
 							this._checkWallCollisions();
 						this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
