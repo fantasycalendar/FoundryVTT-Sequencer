@@ -151,7 +151,6 @@ export declare class WebMTrack extends Track {
     private _frames;
     private _framesAlpha;
     private lastPts;
-    private nsPerFrame;
     private lastTimecodeBase;
     private timecodeScale;
     private codec;
@@ -161,6 +160,7 @@ export declare class WebMTrack extends Track {
     get framesAlpha(): Frame[];
     private static getType;
     private static getCodecNameFromID;
+    readonly nsPerFrame: number;
     getResolution(): [number, number];
     getFrames(): Frame[];
     getFramesAlpha(): Frame[];
