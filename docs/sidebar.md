@@ -24,6 +24,13 @@
   * [Scrolling Text](api/scrolling-text.md)
   * [Canvas Pan](api/canvas-pan.md)
   * [Crosshair](api/crosshair.md)
+  * [Add Named Location](api/home.md#add-named-location)
+  * [Then Do](api/home.md#then-do)
+  * [Macro](api/home.md#macro)
+  * [Wait](api/home.md#wait)
+  * [Add Sequence](api/home.md#add-sequence)
+  * [Play](api/home.md#play)
+  * [Preset](api/home.md#preset)
 
 * Global
   * [Database](database.md)
