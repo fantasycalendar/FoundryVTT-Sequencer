@@ -27,15 +27,15 @@ That's because the Sequencer is something fancy called a "fluent interface". In 
 If you wanted to play a sound with this sequence, all you'd do is then:
 ```js
 new Sequence()
-    .sound("path/to/sound.wav")
+		.sound("path/to/sound.wav")
 ```
 From then on, all you're working on is the _sound_. Since you did `.sound()`, sequencer then knows that you're going to be working on that specific sound.
 
 But, that's not all, you'll have to tell the sequence that you want it to _play_.
 ```js
 new Sequence()
-    .sound("path/to/sound.wav")
-    .play()
+		.sound("path/to/sound.wav")
+		.play()
 ``` 
 
 Once you run this macro, the sequence will start, play the sound, and finish!
@@ -47,9 +47,9 @@ Keep in mind that `.play()` doesn't play the _sound_, it plays the _Sequence_. T
 Say for example that you wanted to play several sounds at the same time, you would simply do this:
 ```js
 new Sequence()
-    .sound("path/to/sound.wav")
-    .sound("path/to/another/sound.wav")
-    .play()
+		.sound("path/to/sound.wav")
+		.sound("path/to/another/sound.wav")
+		.play()
 ``` 
 Once you run this macro, you'll immediately play both sounds at the same time!
 
@@ -60,7 +60,7 @@ When you write a sequence, you have to keep in mind that each part could be cons
 When you write:
 ```js
 new Sequence()
-    .sound("path/to/sound.wav")
+		.sound("path/to/sound.wav")
 ```
 Anything you do from then on is working on the _sound section_ for the sound `path/to/sound.wav`. When you write another `.sound()` section after that one, you stop working on the first, and you're now working on the **new sound**.
 
@@ -73,10 +73,10 @@ Like I've said multiple times, when you first do `.sound()`, you then work on th
 For example, a sound can be made to wait until it finishes playing by adding `.waitUntilFinished()`, like this:
 ```js
 new Sequence()
-    .sound("path/to/sound.wav")
-        .waitUntilFinished()
-    .sound("path/to/another/sound.wav")
-    .play()
+		.sound("path/to/sound.wav")
+				.waitUntilFinished()
+		.sound("path/to/another/sound.wav")
+		.play()
 ``` 
 You see how I put `.waitUntilFinished()` further to the right than the rest of the code? That helps me identify that it is affecting the first sound. You don't have to do this, but it helps make the code easier to read.
 
@@ -139,8 +139,8 @@ let mySequence = new Sequence();
 
 for(let target of game.user.targets){
 	mySequence.effect()
-    .file("jb2a.explosion.01.orange")
-    .atLocation(target)
+		.file("jb2a.explosion.01.orange")
+		.atLocation(target)
 }
 
 mySequence.play();
@@ -155,9 +155,9 @@ let mySequence = new Sequence();
 
 for(let target of game.user.targets){
 	mySequence.effect()
-    .file("jb2a.explosion.01.orange")
-    .atLocation(target)
-    .wait(250)
+		.file("jb2a.explosion.01.orange")
+		.atLocation(target)
+		.wait(250)
 }
 
 mySequence.play();
@@ -182,11 +182,11 @@ let mySequence = new Sequence();
 
 for(let target of game.user.targets){
 	mySequence.effect()
-    .file("jb2a.explosion.01.orange")
-    .atLocation(target)
-    .fadeOut(1000)
-    
-  mySequence.wait(250)
+		.file("jb2a.explosion.01.orange")
+		.atLocation(target)
+		.fadeOut(1000)
+		
+	mySequence.wait(250)
 }
 
 mySequence.play();
@@ -203,11 +203,11 @@ mySequence.sound("path/to/my_first_sound.wav")
 
 for(let target of game.user.targets){
 	mySequence.effect()
-    .file("jb2a.explosion.01.orange")
-    .atLocation(target)
-    .fadeOut(1000)
-    
-  mySequence.wait(250)
+		.file("jb2a.explosion.01.orange")
+		.atLocation(target)
+		.fadeOut(1000)
+		
+	mySequence.wait(250)
 }
 
 mySequence.sound("path/to/my_second_sound.wav")
