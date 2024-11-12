@@ -81,3 +81,136 @@ new Sequence()
 You see how I put `.waitUntilFinished()` further to the right than the rest of the code? That helps me identify that it is affecting the first sound. You don't have to do this, but it helps make the code easier to read.
 
 If you now run this macro, you'll play the first sound, then _wait until it finishes_, and then play the second sound.
+
+## For loops and sequences
+
+When you want to play multiple effects on the canvas, but the amount of effects change, then you can always use for loops, even with Sequencer.
+
+But, how would you break up sequences effectively? Most of the time, you'll see macros just containing `new Sequence()` and then all of its sections, but you can always assign sequences to variables.
+
+A variable is a keyword that holds information, in this case, this is how you would create a new variable:
+
+```js
+let variable = "I am a variable";
+```
+
+After you have done this, you can use `variable` to refer to this specific string anywhere in your code, such as: 
+
+```js
+let variable = "I am a variable";
+console.log(variable);
+```
+
+The same works for sequences:
+
+```js
+let mySequence = new Sequence();
+```
+
+From now on, you can refer to this sequence with `mySequence` - which allows you to do many cool things. Taking the sound example from above, you could do:
+
+```js
+let mySequence = new Sequence();
+
+mySequence.sound("path/to/sound.wav").waitUntilFinished();
+mySequence.sound("path/to/another/sound.wav");
+
+mySequence.play();
+```
+
+This is functionally the same as the previous sound example. But how would you do this for effects?
+
+Since you've already defined your sequence as `mySequence`, you can then begin to loop through your arrays. In this case, we'll be looping through the current user's targeted tokens. The way we loop through targets is by using the `for` loop functionality in JavaScript:
+
+```js
+let mySequence = new Sequence();
+
+for(let target of game.user.targets){
+	
+}
+
+mySequence.play();
+```
+
+As you can see, we start with declaring our sequence, and storing it in the `mySequence` variable, then we loop through the current user's targets, then we play our stored sequence. However, this will obviously do nothing, since we haven't told the sequence to do anything within the loop, so let's add a simple effect:
+
+```js
+let mySequence = new Sequence();
+
+for(let target of game.user.targets){
+	mySequence.effect()
+    .file("jb2a.explosion.01.orange")
+    .atLocation(target)
+}
+
+mySequence.play();
+```
+
+If you run this macro after having targeted a few tokens, the explosion will play at the same time on top of every target, huzzah!
+
+Since the `.effect()` within the loop is going to happen every time it loops over a token, we can also add a waiting time between each effect, so that they don't all play at the same time:
+
+```js
+let mySequence = new Sequence();
+
+for(let target of game.user.targets){
+	mySequence.effect()
+    .file("jb2a.explosion.01.orange")
+    .atLocation(target)
+    .wait(250)
+}
+
+mySequence.play();
+```
+
+Keep in mind that `.wait()` is **not** an effect method, it breaks up the `.effect()` section, so if you were to try to call another method after `.wait()` that relates to `.effects()` (such as `.fadeOut()`), it won't work. 
+
+That's because you've done the same thing as the sound example - when you call any of these methods on a sequence:
+- `.effect()`
+- `.sound()`
+- `.macro()`
+- `.thenDo()`
+- `.wait()`
+- `.canvasPan()`
+- `.animation()`
+- `.crosshair()`
+
+You **stop** working on the previous section - in this example, you're no longer working on the `.effect()` once `.wait()` has been called. Another way to better visualize this would be to do:
+
+```js
+let mySequence = new Sequence();
+
+for(let target of game.user.targets){
+	mySequence.effect()
+    .file("jb2a.explosion.01.orange")
+    .atLocation(target)
+    .fadeOut(1000)
+    
+  mySequence.wait(250)
+}
+
+mySequence.play();
+```
+
+This way you can clearly see the separation between them, and the functionality works the same way.
+
+Of course, you can add additional bits outside the `for` loop, such as sounds:
+
+```js
+let mySequence = new Sequence();
+
+mySequence.sound("path/to/my_first_sound.wav")
+
+for(let target of game.user.targets){
+	mySequence.effect()
+    .file("jb2a.explosion.01.orange")
+    .atLocation(target)
+    .fadeOut(1000)
+    
+  mySequence.wait(250)
+}
+
+mySequence.sound("path/to/my_second_sound.wav")
+
+mySequence.play();
+```
