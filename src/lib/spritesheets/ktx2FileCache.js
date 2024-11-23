@@ -1,6 +1,5 @@
 // @ts-check
 
-
 // cache version history:
 // 1: initial
 // 2: zstandard compressed ktx2 files and response metadata
@@ -56,6 +55,44 @@ export class Ktx2FileCache {
 	}
 
 	/**
+	 * Verifies the response data entries in case of a hash mismatch
+	 * @param {Response} response
+	 * @returns {Promise<boolean>} true if data passes validation, false otherwise
+	 */
+	async #verifyResponseData(response) {
+		const spriteData = await response.json();
+		if (!spriteData.frameRate) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Delete cache entries for this id and hash
+	 * @param {string} id
+	 * @param {string} hash
+	 * @param {object} options
+	 * @param {boolean} options.deleteSprite
+	 * @param {boolean} options.deleteKtx
+	 */
+	async #deleteEntry(id, hash, {deleteSprite = true, deleteKtx = true} = {deleteSprite: true, deleteKtx: true}) {
+		const ktxRequest = this.#getKtxFileCacheRequest(id, hash);
+		const spriteRequest = this.#getSpriteDataCacheRequest(id, hash);
+		const cacheStorage = await ktx2FileCache.catch(() => null);
+		if (!cacheStorage) {
+			return
+		}
+		if (deleteSprite) {
+			await cacheStorage.delete(spriteRequest)
+		}
+		if (deleteKtx) {
+			await cacheStorage.delete(ktxRequest)
+		}
+		return
+	}
+
+	/**
 	 * @param {string} id
 	 * @param {string} hash
 	 * @returns {Promise<Uint8Array | undefined>}
@@ -71,6 +108,7 @@ export class Ktx2FileCache {
 			return;
 		}
 		if (!this.#verifyResponseHash(cacheResponse, hash)) {
+			await this.#deleteEntry(id, hash)
 			return;
 		}
 		return new Uint8Array(await cacheResponse.arrayBuffer());
@@ -123,6 +161,11 @@ export class Ktx2FileCache {
 			return;
 		}
 		if (!this.#verifyResponseHash(cacheResponse, hash)) {
+			await this.#deleteEntry(id, hash)
+			return;
+		}
+		if (!this.#verifyResponseData(cacheResponse)) {
+			await this.#deleteEntry(id, hash)
 			return;
 		}
 		return await cacheResponse.json();

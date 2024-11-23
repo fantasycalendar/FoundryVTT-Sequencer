@@ -95,8 +95,13 @@ async function decodeWebm(buffer, minimumScale, id) {
 		if (!packedSheet) {
 			return errorResponse("Could not pack spritesheet");
 		}
+		const frameRate = !videoTrack.nsPerFrame || isNaN(videoTrack.nsPerFrame) ? metadata.frameRate : 1e9 / videoTrack.nsPerFrame
 
-		ktx2FileCache.saveSpritesToCache(id, sourceHash, { sprites: packedSheet.sprites, frameRate: metadata.frameRate, scale: packedSheet.scale });
+		if (!frameRate) {
+			return errorResponse("Could not get frameRate for video file");
+		}
+
+		ktx2FileCache.saveSpritesToCache(id, sourceHash, { sprites: packedSheet.sprites, frameRate, scale: packedSheet.scale });
 		
 		compressedSheet = await compressor.getCompressedRessourceInfo(
 			packedSheet.imageBuffer,
@@ -110,7 +115,7 @@ async function decodeWebm(buffer, minimumScale, id) {
 			return errorResponse("Could not encode spritesheet to compressed texture");
 		}
 		
-		sheet = { ...compressedSheet, sprites: packedSheet.sprites, fps: metadata.frameRate, scale: packedSheet.scale };
+		sheet = { ...compressedSheet, sprites: packedSheet.sprites, fps: frameRate, scale: packedSheet.scale };
 	}
 
 	return {
