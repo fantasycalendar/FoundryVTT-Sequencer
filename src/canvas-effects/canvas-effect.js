@@ -1235,7 +1235,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._initializeVariables();
 		this._addToContainer();
 		this._createFile()
-		this._updateCurrentFilePath(true)
+		this._updateCurrentFilePath(false, true)
 		await this._createSprite();
 		this._calculateDuration();
 		this._createShapes();
@@ -1703,7 +1703,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._isRangeFind = file?.rangeFind;
 	}
 
-	_updateCurrentFilePath(showDistanceWarning = false) {
+	_updateCurrentFilePath(distance, showDistanceWarning = false) {
 		if (!this._file) {
 			return;
 		}
@@ -1711,14 +1711,14 @@ export default class CanvasEffect extends PIXI.Container {
 			this._currentFilePath = this._file.getFile();
 			return;
 		}
-		let ray = new Ray(this.sourcePosition, this.targetPosition);
-		if (ray.distance === 0 && showDistanceWarning) {
+		distance = distance || (new Ray(this.sourcePosition, this.targetPosition)).distance;
+		if (distance === 0 && showDistanceWarning) {
 			lib.custom_error(
 			      "effect",
 			      `stretchTo - You are stretching over a distance of "0", you may be attempting to stretch between two of the same coordinates!`
 			);
 		}
-		this._currentFilePath = this._file.getFileForDistance(ray.distance);
+		this._currentFilePath = this._file.getFileForDistance(distance);
 	}
 
 	/**
@@ -1918,8 +1918,8 @@ export default class CanvasEffect extends PIXI.Container {
 				let scaleX = scaleData.x;
 				let scaleY = scaleData.y;
 
-				this._lastScreenDimensions.width = this.sprite.texture?.width || this._lastScreenDimensions.width || this.sprite.width;
-				this._lastScreenDimensions.height = this.sprite.texture?.height || this._lastScreenDimensions.height || this.sprite.height;
+				this._lastScreenDimensions.width = this.sprite.texture?.width || this._lastScreenDimensions.width || this.sprite.width || this.spriteContainer.children[this.spriteContainer.children.length-1].width;
+				this._lastScreenDimensions.height = this.sprite.texture?.height || this._lastScreenDimensions.height || this.sprite.height || this.spriteContainer.children[this.spriteContainer.children.length-1].height;
 
 				if (scaleData.fitX) {
 					scaleX = scaleX * (screenWidth / this._lastScreenDimensions.width);
@@ -2190,22 +2190,15 @@ export default class CanvasEffect extends PIXI.Container {
 			let scaleY = 1.0;
 
 			if (this._file instanceof SequencerFileBase) {
-				const scaledDistance = distance / (this.data.scale.x ?? 1.0);
 
-				const spriteScale = (
-					scaledDistance /
-					(textureWidth - (this.template ? this.template.startPoint + this.template.endPoint : 0))
-				)
+				const startPoint = this.template?.startPoint ?? 0
+				const endPoint = this.template?.endPoint ?? 0
+				const widthWithPadding = textureWidth - (startPoint + endPoint);
+
+				const spriteScale = distance / widthWithPadding
+
 				scaleX = spriteScale;
-
-				if (this.data.stretchTo?.onlyX) {
-					const startPoint = this.template?.startPoint ?? 0
-					const endPoint = this.template?.endPoint ?? 0
-					const widthWithPadding = textureWidth - (startPoint + endPoint);
-					scaleY = widthWithPadding / textureWidth;
-				} else {
-					scaleY = spriteScale;
-				}
+				scaleY = this.data.stretchTo?.onlyX ? widthWithPadding / textureWidth : spriteScale;
 			}
 
 			this._distanceCache = {
@@ -2229,11 +2222,13 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._rotateTowards(ray);
 
-		this._updateCurrentFilePath()
+		const distance = ray.distance / (this.data.scale.x ?? 1.0);
+
+		this._updateCurrentFilePath(distance)
 		await this.sprite.activate(this._currentFilePath)
 		const texture = this.sprite.texture
 
-		let {  scaleX, scaleY, distance } = await this._getDistanceScaling(ray.distance, texture.width);
+		let {  scaleX, scaleY } = await this._getDistanceScaling(distance, texture.width);
 
 		if (this.data.attachTo?.active) {
 			this.position.set(

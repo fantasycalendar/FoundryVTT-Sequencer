@@ -1088,6 +1088,7 @@ The optional options are as follows:
 - `lineSize`: `number` - The size of the outline of the shape (in pixels)
 - `lineColor`: `string|number` - The color of the outline of the shape, must be decimal (`0xFF0000`) or hexadecimal (`"#FF000000"`)
 - `offset`: `object` - An object containing the offset of this shape, with `x` and `y` determining the offset. You can set this to be based on grid units by supplying `offset.gridUnits` to it.
+- `anchor`: `object` - An object containing the anchor of this shape, with `x` and `y` determining the anchor.
 - `isMask`: `boolean` - Whether this shape should be considered a mask. This will make it invisible, and `options.name` will not be considered (animating masks is VERY expensive, thus a no-go).
 
 ## XRay

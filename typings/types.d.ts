@@ -777,6 +777,10 @@ declare abstract class EffectSection {
         y?: number;
         gridUnits?: boolean;
       };
+			anchor?: {
+				x?: number;
+				y?: number;
+			}
       isMask?: boolean;
     }
   );

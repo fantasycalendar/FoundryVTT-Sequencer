@@ -1,6 +1,7 @@
 import CrosshairsDocument from "./CrosshairsDocument.js";
 import TokenCrosshairsDocument from "./TokenCrosshairsDocument.js";
 import CONSTANTS from "../../constants.js";
+import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
 
 export default class Crosshair {
 
