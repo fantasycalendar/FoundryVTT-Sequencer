@@ -242,6 +242,7 @@ export function get_object_dimensions(inObj, half = false) {
     inObj?.w ??
     inObj?.shape?.width ??
     (inObj?.shape?.radius ? inObj?.shape?.radius * 2 : undefined) ??
+    inObj?.bounds?.width ??
     inObj?.width ??
     canvas.grid.size;
 
@@ -250,6 +251,7 @@ export function get_object_dimensions(inObj, half = false) {
     inObj?.h ??
     inObj?.shape?.height ??
     (inObj?.shape?.radius ? inObj?.shape?.radius * 2 : undefined) ??
+    inObj?.bounds?.height ??
     inObj?.height ??
     canvas.grid.size;
 
