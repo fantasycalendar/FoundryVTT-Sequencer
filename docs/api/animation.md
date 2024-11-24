@@ -185,9 +185,19 @@ Sets the speed of the animation if `.moveTowards()` has been called
 
 Causes the target object to rotate towards a given target.
 
-A second options parameter can set the duration of the rotation (0 is instant), the ease, the delay before it starts, and any given offset.
+A second options parameter can set the duration of the rotation (0 is instant), the ease, the delay before it starts, and any given rotation offset.
 
-Default parameters: `{ duration: 0, ease: "linear", delay: 0, offset: 0 }`
+Default parameters:
+```js
+{
+    duration: 0,
+    ease: "linear",
+    delay: 0,
+    rotationOffset: 0,
+    towardsCenter: true,
+    cacheLocation: false,
+}
+```
 
 Check out what easings are available here: https://easings.net/
 
