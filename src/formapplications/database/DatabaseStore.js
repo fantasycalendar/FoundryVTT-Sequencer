@@ -5,7 +5,7 @@ import SequencerDatabase from "../../modules/sequencer-database.js";
 import { SequencerFileBase } from "../../modules/sequencer-file.js";
 import TreeViewEntry from "./TreeViewEntry.svelte";
 import TreeViewSeparator from "./TreeViewSeparator.svelte";
-import { cleanupSpritesheet,playSpritesheet } from "./renderSpritesheet.js";
+import { cleanupSpritesheet, playSpritesheet } from "./renderSpritesheet.js";
 
 let lastFile = false;
 
@@ -38,17 +38,17 @@ function getFileData(entryText) {
     ? isVideo || isSpritesheet
       ? "fa-film"
       : isAudio
-      ? "fa-volume-high"
-      : "fa-image"
+        ? "fa-volume-high"
+        : "fa-image"
     : "fa-question-mark";
   const title = previewFile
     ? isVideo
       ? "Animated WebM"
       : isSpritesheet
-      ? "Spritesheet"
-      : isAudio
-      ? "Audio"
-      : "Image"
+        ? "Spritesheet"
+        : isAudio
+          ? "Audio"
+          : "Image"
     : "Unknown";
 
   return {
@@ -117,7 +117,7 @@ async function playFile(entry) {
     return;
   }
 
-  if(isSpritesheet) {
+  if (isSpritesheet) {
     playSpritesheet(file, databaseStore);
     return;
   }
@@ -164,6 +164,7 @@ SequencerDatabase.entriesStore.subscribe(() => {
 const databaseStore = {
   metadata: writable(false),
   allRanges: writable(false),
+  fileTypes: writable("all"),
   subLists: writable(false),
   listView: writable(false),
   packStore: packStore,

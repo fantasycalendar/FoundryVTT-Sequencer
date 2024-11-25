@@ -22,6 +22,7 @@
 
   const selectedPackStore = databaseStore.selectedPackStore;
   const packStore = databaseStore.packStore;
+  const fileTypes = databaseStore.fileTypes;
   const metadata = databaseStore.metadata;
   const allRanges = databaseStore.allRanges;
   const subLists = databaseStore.subLists;
@@ -39,16 +40,28 @@
   $: {
     $entriesStore;
     const specificRanges = $allRanges
-      ? Sequencer.Database.publicFlattenedEntries
-      : Sequencer.Database.publicFlattenedSimpleEntries;
+    ? Sequencer.Database.publicFlattenedEntriesAdvanced
+    : Sequencer.Database.publicFlattenedSimpleEntries;
     entries = specificRanges.map(
       (entry) => {
+        if (typeof entry === "string"){
         return {
           pack: entry.split(".")[0],
-          entry: entry
+          entry: entry,
         };
+      } else {
+        return {
+          pack: entry.path.split(".")[0],
+          entry: entry.path,
+          isAudio: entry.isAudio,
+        };
+        }
       }
     );
+  }
+
+  $: {
+    if (!$allRanges) $fileTypes = "all"
   }
 
   $: {
@@ -57,7 +70,12 @@
       const matchParts = lib.make_array_unique(part.entry.match($searchRegex) || []);
       return (
         ($selectedPackStore === "all" || $selectedPackStore === part.pack) &&
-        ($search === "" || matchParts.length >= searchParts.length)
+        ($search === "" || matchParts.length >= searchParts.length) &&
+        (
+          $fileTypes === "all"
+          || ($fileTypes === "video" && !part.isAudio)
+          || ($fileTypes === "sound" && part.isAudio)
+        )
       );
     });
   }
@@ -77,6 +95,11 @@
 				{#each $packStore as pack, index}
 					<option>{ pack }</option>
 				{/each}
+			</select>
+      <select name="file-select" disabled={!$allRanges} title={$allRanges ? "" : localize("SEQUENCER.Database.FileTypePredicate")} bind:value={$fileTypes}>
+				<option value="all">{localize("SEQUENCER.Database.All")}</option>
+				<option value="video">{localize("SEQUENCER.Database.Video")}</option>
+				<option value="sound">{localize("SEQUENCER.Database.Sound")}</option>
 			</select>
 			<input bind:value={$search} class="ml-2" placeholder='{localize("SEQUENCER.Database.Search")}' type="text">
 			<input bind:checked={$allRanges} class="ml-2" id="database-all-ranges" type="checkbox">
@@ -158,6 +181,10 @@
         border-radius: 5px 0 0 5px;
         border-right: 0;
         height: 28px;
+
+        & + select {
+          border-radius: 0 0 0 0;
+        }
       }
 
       > input[type="text"] {

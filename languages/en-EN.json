@@ -2,13 +2,10 @@
   "SEQUENCER": {
     "OK": "OK",
     "Cancel": "Cancel",
-
     "PlayerPermissionsWarning": "Hi there! Since you're a GM you can create effects, but by default <strong>so can your players</strong>. If you don't want that, you can configure permissions by clicking this button:",
-
     "Error": {
       "CouldNotPlay": "Could not play"
     },
-
     "Player": {
       "Title": "Player",
       "SwitchToLayer": "Switch to Layer",
@@ -28,7 +25,6 @@
       "OverwritePresetContent": "Are you sure you want to overwrite the \"{preset_name}\" preset?",
       "DeletePresetTitle": "Delete preset?",
       "DeletePresetContent": "Are you sure you want to delete the \"{preset_name}\" preset?",
-
       "Option": {
         "Scale": "Scale",
         "BelowTokens": "Below Tokens",
@@ -39,39 +35,32 @@
         "FadeOut": "Fade Out",
         "ScaleIn": "Scale In",
         "ScaleOut": "Scale Out",
-
         "MirrorX": "Mirror X",
         "MirrorY": "Mirror Y",
-
         "OffsetX": "Offset X",
         "OffsetY": "Offset Y",
         "RandomOffset": "Amount",
         "GridUnits": "Grid Units",
-
         "Repeat": "Repeat",
         "Repetitions": "Repetitions",
         "DelayMin": "(ms)",
         "DelayMax": "",
-
         "DragBehavior": "Drag Behavior",
         "DragStretch": "Stretch",
         "DragMove": "Move",
         "MoveSpeed": "Move speed",
-
         "Preload": "Preload",
         "AttachTo": "Attach to start point",
         "StretchToAttach": "Attach to end point",
         "Persist": "Persistent"
       }
     },
-
     "SidebarButtons": {
       "Select": "Select Effect",
       "Play": "Play Effect",
       "Manager": "Show Sequencer Manager",
       "Database": "Show Sequencer Database"
     },
-
     "Hotkeys": {
       "PlayTool": {
         "Shift": "Player - Play multiple effects at the same time",
@@ -84,7 +73,6 @@
         "Delete": "Select - Delete selected effect"
       }
     },
-
     "Manager": {
       "Title": "Manager",
       "NothingPlaying": "Nothing currently playing",
@@ -96,7 +84,6 @@
       "EndAllEffects": "End All Effects",
       "EndAllSounds": "End All Sounds"
     },
-
     "Sequences": {
       "Title": "Sequences",
       "NoSequences": "No sequences currently running",
@@ -106,7 +93,6 @@
       "Clear": "Clear",
       "StopAll": "Stop All"
     },
-
     "HowTo": {
       "Title": "How-to",
       "Welcome": "Welcome to Sequencer Effects!",
@@ -125,9 +111,7 @@
       "ShiftControlLabel": "Play multiple effects one after another, waiting between them",
       "MoreToCome": "...and more to come in future updates!"
     },
-
     "ManagerUI": "Sequencer Manager",
-
     "Database": {
       "Title": "Sequencer Database Viewer",
       "AllPacks": "All packs",
@@ -136,9 +120,12 @@
       "ButtonDatabasePath": "Database",
       "ShowAllRanges": "Show all ranges",
       "ShowSubLists": "Show sub lists",
-      "ListView": "List View"
+      "ListView": "List View",
+      "Video": "Video",
+      "Sound": "Sound",
+      "All": "All",
+      "FileTypePredicate": "Must enable \"Show All Ranges\" to enable type filtering."
     },
-
     "Setting": {
       "DatabaseViewer": {
         "Title": "Open Sequencer Database Viewer",
@@ -203,7 +190,6 @@
         }
       }
     },
-
     "Permission": {
       "Player": "Players and above",
       "Trusted": "Trusted players and above",

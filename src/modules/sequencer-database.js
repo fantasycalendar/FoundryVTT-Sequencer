@@ -9,6 +9,7 @@ class Database {
 
   privateModules = [];
   flattenedEntries = [];
+  flattenedEntriesAdvanced = [];
   inverseFlattenedEntries = new Map();
 
   get entries() {
@@ -40,6 +41,13 @@ class Database {
       })
     );
   }
+
+  get publicFlattenedEntriesAdvanced() {
+    return this.flattenedEntriesAdvanced.filter((entry) => {
+      return this.privateModules.indexOf(entry.path.split(".")[0]) === -1;
+    });
+  }
+
 
   /**
    *  Retrieves an object of every public entry
@@ -194,8 +202,8 @@ class Database {
       exactEntries.length
         ? exactEntries
         : this.entries[module].filter((entry) => {
-            return entry.dbPath.startsWith(inString);
-          })
+          return entry.dbPath.startsWith(inString);
+        })
     ).map((entry) => {
       let foundFile = entry;
       if (ft) foundFile = entry.file?.[ft] ?? foundFile;
@@ -389,6 +397,17 @@ class Database {
         Object.keys(flattened).map((file) => file.split(".file")[0])
       )
     );
+    this.flattenedEntriesAdvanced = lib.make_array_unique(
+      this.flattenedEntriesAdvanced.concat(
+        Object.entries(flattened).map(([path, file]) => ({
+          path: path.split(".file")[0],
+          file,
+          isAudio: file.endsWith("ogg")
+            || file.endsWith("mp3")
+            || file.endsWith("wav")
+        }))
+      )
+    );
     this.inverseFlattenedEntries = Object.keys(flattened).reduce(
       (acc, entry) => {
         return acc.set(flattened[entry], entry.split(".file")[0]);
@@ -457,7 +476,7 @@ class Database {
         const existingEntry = this.entryExists(data);
         const extension = data
           .split(".")
-          [data.split(".").length - 1].toLowerCase();
+        [data.split(".").length - 1].toLowerCase();
 
         if (
           !existingEntry &&
