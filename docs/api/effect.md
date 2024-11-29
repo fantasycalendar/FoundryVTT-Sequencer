@@ -345,7 +345,8 @@ In addition, a secondary options parameter can be given to this method, which ha
   - inner, on, outer
 - `bindVisibility: boolean` - (default `true`) - causes the effect to become hidden when the attached object is hidden
 - `bindAlpha: boolean` (default `true`) - causes the effect to share the same alpha as the attached object (not the same as above, hidden is on/off, alpha is a sliding scale of visibility)
-- `followRotation: boolean` (default `true`) - causes the effect to also rotate with the attached object
+- `bindScale: boolean` (default `true`) - causes the effect to bind its scale to the object if `.scaleToObject()` is used
+- `bindRotation: boolean` (default `true`) - causes the effect to also rotate with the attached object
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
