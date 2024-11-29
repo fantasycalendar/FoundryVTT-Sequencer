@@ -112,6 +112,8 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._cachedSourceData = {};
 		this._cachedTargetData = {};
+		this.sourceOffset = { x: 0, y: 0 };
+		this.targetOffset = { x: 0, y: 0 };
 
 		this.uuid = false;
 
@@ -314,8 +316,8 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		return {
-			x: position.x - offset.x,
-			y: position.y - offset.y,
+			x: (position.x - offset.x) + this.sourceOffset.x,
+			y: (position.y - offset.y) + this.sourceOffset.y,
 		};
 	}
 
@@ -361,8 +363,8 @@ export default class CanvasEffect extends PIXI.Container {
 		const offset = this._getOffset(this.data.target);
 
 		return {
-			x: position.x - offset.x,
-			y: position.y - offset.y,
+			x: (position.x - offset.x) + this.targetOffset.x,
+			y: (position.y - offset.y) + this.targetOffset.y,
 		};
 	}
 
@@ -1521,7 +1523,7 @@ export default class CanvasEffect extends PIXI.Container {
 						: 1000) + this.data.moves.delay;
 			}
 
-			let animationDurations = this.data.animations
+			let animationDurations = this.data.animations?.length
 				? Math.max(
 					...this.data.animations.map((animation) => {
 						if (animation.looping) {
@@ -2617,6 +2619,8 @@ export default class CanvasEffect extends PIXI.Container {
 			if (animation.target === 'alphaFilter') {
 				animation.target = this
 				animation.propertyName = 'effectAlpha'
+			} else if (animation.target === "effect") {
+				animation.target = this;
 			} else {
 				animation.target = foundry.utils.getProperty(this, animation.target);
 			}
@@ -2669,6 +2673,8 @@ export default class CanvasEffect extends PIXI.Container {
 			if (animation.target === 'alphaFilter') {
 				animation.target = this
 				animation.propertyName = 'effectAlpha'
+			} else if (animation.target === "effect") {
+				animation.target = this;
 			} else {
 				animation.target = foundry.utils.getProperty(this, animation.target);
 			}

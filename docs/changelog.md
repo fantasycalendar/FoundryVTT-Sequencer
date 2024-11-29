@@ -1,10 +1,15 @@
 ## Changelog
 
 # Version 3.4.6
-- *Effects* - Fixed `anchor` not being optional for `.shape()`
-- *Effects* - Fixed `scale()` for tiling textures using `stretchTo()` overly stretching the effect
-- *Effects* - Fixed some issues with caching of generated spritesheets
-- *Effects* - Disabled spriteshet generation for animated tiling textures. Too many visual defects at the moment
+- *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
+- *Effects* - Added `sourceOffset` and `targetOffset` to `.animateProperty()` and `.loopProperty()` property target
+  - This is used as such: `.animateProperty("effect", "targetOffset.x", { from: 0, to: 200, duration: 5000 })`
+- *Effects* - Deprecated `.from()` in favor for `.copySprite()` which is a more descriptive method name
+- *Effects* - Fixed `anchor` not being optional for `.shape()` (Thanks Codas!)
+- *Effects* - Fixed `scale()` for tiling textures using `stretchTo()` overly stretching the effect (Thanks Codas!)
+- *Effects* - Fixed some issues with caching of generated spritesheets (Thanks Codas!)
+- *Effects* - Disabled spriteshet generation for animated tiling textures - too many visual defects at the moment (Thanks Codas!)
+- *Crosshairs* - Fixed issue with `updateCrosshair` causing label text to break the canvas
 
 # Version 3.4.5
 - *Effects* - Added `anchor` as an optional argument to `.shape()` (see docs)

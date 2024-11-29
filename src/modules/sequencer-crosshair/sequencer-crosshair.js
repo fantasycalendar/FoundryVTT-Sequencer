@@ -69,6 +69,8 @@ export default class Crosshair {
 		const typesArray = Array.isArray(types) ? types : [types];
 		const crosshairDoc = crosshair instanceof CrosshairsPlaceable ? crosshair.document : crosshair;
 		const shape = crosshairDoc.getCrosshairShape();
+		shape.x = crosshair.x;
+		shape.y = crosshair.y;
 
 		const result = typesArray.reduce((acc, embeddedName) => {
 			const collection = crosshairDoc.parent.getEmbeddedCollection(embeddedName);

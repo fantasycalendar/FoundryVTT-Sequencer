@@ -271,16 +271,16 @@ Also supports a second options object that accepts:
 - `antialiasing: number` - changes the aliasing of the texture, expects either `PIXI.SCALEMODES.NEAREST` (`0`) or `PIXI.SCALEMODES.LINEAR` (`1`)
 
 
-## From
+## Copy Sprite
 
-`.from(token|tile, object)`
+`.copySprite(token|tile, object)`
 
 Examples:
 ```js
-.from(token)
-.from(tile)
-.from(token, { cacheLocation: true })
-.from(token, { randomOffset: true })
+.copySprite(token)
+.copySprite(tile)
+.copySprite(token, { cacheLocation: true })
+.copySprite(token, { randomOffset: true })
 ```
 
 Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles. When used with a token or a tile, the effect will be placed at the exact same place as the object.
@@ -861,7 +861,7 @@ Examples:
 
 Animates a property on the target of the animation.
 
-Valid targets are `sprite` (the effect itself) and `spriteContainer` (the effect's container).
+Valid targets are `sprite` (the effect itself), `spriteContainer` (the effect's container), and `effect` (the main container that contains every sprite relating to a single effect).
 
 Animatable properties are as follows:
 - `sprite`
@@ -883,6 +883,13 @@ Animatable properties are as follows:
   - `angle` (radians)
   - `scale.x`
   - `scale.y`
+  
+- `effect`
+  - `effectAlpha` (the alpha of the entire effect, and all of its components)
+  - `sourceOffset.x`
+  - `sourceOffset.y`
+  - `targetOffset.x`
+  - `targetOffset.y`
 
 Default parameters: `{ ease: "linear", delay: 0, gridUnits: false, fromEnd: false, absolute: false }`
 
@@ -914,7 +921,7 @@ If no `options.loops` are provided, the animation is indefinite (lasts forever).
 
 `options.values` is an alternative to `options.from` and `options.to` - it must be an array of values to interpolate between.
 
-Valid targets are `sprite` (the effect itself) and `spriteContainer` (the effect's container).
+Valid targets are `sprite` (the effect itself), `spriteContainer` (the effect's container), and `effect` (the main container that contains every sprite relating to a single effect).
 
 Animatable properties are as follows:
 - `sprite`
@@ -936,6 +943,13 @@ Animatable properties are as follows:
   - `angle` (radians)
   - `scale.x`
   - `scale.y`
+
+- `effect`
+  - `effectAlpha` (the alpha of the entire effect, and all of its components)
+  - `sourceOffset.x`
+  - `sourceOffset.y`
+  - `targetOffset.x`
+  - `targetOffset.y`
 
 Default parameters:
 ```js

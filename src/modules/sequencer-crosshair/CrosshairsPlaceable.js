@@ -43,6 +43,18 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 
 	updateCrosshair(data) {
 		this.document.crosshair = foundry.utils.mergeObject(this.document.crosshair, data);
+		if(this.#customText){
+			this.#customText.destroy();
+			this.#customText = null;
+		}
+		if(this.#distanceText){
+			this.#distanceText.destroy();
+			this.#distanceText = null;
+		}
+		if(this.#rangeHighlight){
+			this.#rangeHighlight.destroy();
+			this.#rangeHighlight = null;
+		}
 		return this.draw();
 	}
 

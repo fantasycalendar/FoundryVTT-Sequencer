@@ -19,7 +19,7 @@ export default class EffectSection extends Section {
 		this._source = null;
 		this._stretchTo = null;
 		this._attachTo = null;
-		this._from = null;
+		this._copySprite = null;
 		this._anchor = null;
 		this._spriteAnchor = null;
 		this._randomOffset = null;
@@ -606,12 +606,25 @@ export default class EffectSection extends Section {
 
 	/**
 	 *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
+	 *  @deprecated
+	 */
+	from(...args) {
+		this.sequence._showWarning(
+			this,
+			"from",
+			".from() is deprecated, please use .copySprite() instead"
+		);
+		return this.copySprite(...args)
+	}
+
+	/**
+	 *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
 	 *
 	 * @param {Object} inObject
 	 * @param {Object} inOptions
 	 * @returns {EffectSection}
 	 */
-	from(inObject, inOptions = {}) {
+	copySprite(inObject, inOptions = {}) {
 		if (
 			!(
 				inObject instanceof Token ||
@@ -622,21 +635,21 @@ export default class EffectSection extends Section {
 		) {
 			throw this.sequence._customError(
 				this,
-				"from",
+				"copySprite",
 				"inObject must be of type Token, Tile, TokenDocument, or TileDocument"
 			);
 		}
 		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,
-				"from",
+				"copySprite",
 				`inOptions must be of type object`
 			);
 		inObject = inObject.document ?? inObject;
 		if (!inObject?.texture?.src)
 			throw this.sequence._customError(
 				this,
-				"from",
+				"copySprite",
 				"could not find the image for the given object"
 			);
 		inOptions = foundry.utils.mergeObject(
@@ -652,7 +665,7 @@ export default class EffectSection extends Section {
 		if (typeof inOptions.cacheLocation !== "boolean")
 			throw this.sequence._customError(
 				this,
-				"from",
+				"copySprite",
 				"inOptions.cacheLocation must be of type boolean"
 			);
 		if (
@@ -663,7 +676,7 @@ export default class EffectSection extends Section {
 		)
 			throw this.sequence._customError(
 				this,
-				"from",
+				"copySprite",
 				"inOptions.randomOffset must be of type boolean or number"
 			);
 
@@ -684,7 +697,7 @@ export default class EffectSection extends Section {
 			target: this._randomOffset?.target ?? false,
 		};
 
-		this._from = {
+		this._copySprite = {
 			object: inObject,
 			options: inOptions,
 		};
@@ -2158,15 +2171,15 @@ export default class EffectSection extends Section {
 		this._mirrorX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)
 		this._mirrorY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)
 
-		if (this._from) {
-			this._file = this._file || this._from.object?.texture?.src;
+		if (this._copySprite) {
+			this._file = this._file || this._copySprite.object?.texture?.src;
 
 			if (this._source === null) {
-				this._source = this._validateLocation(this._from.object);
+				this._source = this._validateLocation(this._copySprite.object);
 			}
 
 			if (this._size === null) {
-				const size = canvaslib.get_object_dimensions(this._from.object);
+				const size = canvaslib.get_object_dimensions(this._copySprite.object);
 				this._size = {
 					width: size?.width ?? canvas.grid.size,
 					height: size?.height ?? canvas.grid.size,
@@ -2176,26 +2189,26 @@ export default class EffectSection extends Section {
 
 			if (
 				this._mirrorX === null &&
-				(this._from.object.mirrorX ||
-					(this._from.object?.tile && this._from.object?.tile.scale.x < 0))
+				(this._copySprite.object.mirrorX ||
+					(this._copySprite.object?.tile && this._copySprite.object?.tile.scale.x < 0))
 			) {
 				this._mirrorX = true;
 			}
 
 			if (
 				this._mirrorY === null &&
-				(this._from.object.mirrorY ||
-					(this._from.object?.tile && this._from.object?.tile.scale.y < 0))
+				(this._copySprite.object.mirrorY ||
+					(this._copySprite.object?.tile && this._copySprite.object?.tile.scale.y < 0))
 			) {
 				this._mirrorY = true;
 			}
 
-			if (this._angle === null && this._from.object?.rotation) {
-				this._angle = -this._from.object.rotation;
+			if (this._angle === null && this._copySprite.object?.rotation) {
+				this._angle = -this._copySprite.object.rotation;
 			}
 
 			this._randomOffset = {
-				source: this._randomOffset?.source ?? this._from.options.randomOffset,
+				source: this._randomOffset?.source ?? this._copySprite.options.randomOffset,
 				target: this._randomOffset?.target ?? false,
 			};
 		}
@@ -2241,7 +2254,7 @@ export default class EffectSection extends Section {
 
 		if (
 			!this._file &&
-			!this._from &&
+			!this._copySprite &&
 			!this._text &&
 			!this._shapes.length &&
 			this.sequence.softFail

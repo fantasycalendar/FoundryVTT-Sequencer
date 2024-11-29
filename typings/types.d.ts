@@ -744,7 +744,7 @@ declare abstract class EffectSection {
   /**
    * Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
    */
-  from(
+  copySprite(
     inLocation: Token | Tile | TokenDocument | TileDocument,
     inOptions?: {
       cacheLocation?: boolean;
