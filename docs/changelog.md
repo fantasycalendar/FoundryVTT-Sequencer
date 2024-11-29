@@ -14,7 +14,7 @@
 - *Effects* - Disabled spriteshet generation for animated tiling textures - too many visual defects at the moment (Thanks Codas!)
 - *Sequencer* - Fixed audio controls in the Sequencer Database viewer (Thanks Vauxs!)
 - *Sequencer* - Added audio filtering in the Sequencer Database viewer (Thanks Vauxs!)
-- *Crosshairs* - Fixed issue with `updateCrosshair` causing label text to break the canvas]()
+- *Crosshairs* - Fixed issue with `updateCrosshair` causing label text to break the canvas
 
 # Version 3.4.5
 - *Effects* - Added `anchor` as an optional argument to `.shape()` (see docs)
