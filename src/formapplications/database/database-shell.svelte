@@ -112,6 +112,7 @@
 			{/if}
 
 			<div class="sequencer-database-player-container">
+        <div class="sequencer-database-player-content">
 				<video autoplay bind:this={databaseStore.elements.player} class="database-player" height="335" loop
 							 on:mouseenter={() => { databaseStore.elements.player.controls = true; }}
 							 on:mouseleave={() => { databaseStore.elements.player.controls = false; }}
@@ -120,13 +121,11 @@
 				>
 				</video>
 				<img bind:this={databaseStore.elements.image} class="database-image hidden">
-				<audio bind:this={databaseStore.elements.audio} class="database-audio hidden"
-							 on:mouseenter={() => { databaseStore.elements.audio.controls = true; }}
-							 on:mouseleave={() => { databaseStore.elements.audio.controls = false; }}
-				>
-					<source type="audio/ogg">
+				<audio controls autoplay bind:this={databaseStore.elements.audio} class="database-audio hidden">
+					<source type="audio">
 				</audio>
-				<div class="sequencer-database-metadata-container">
+      </div>
+				<div class="sequencer-database-metadata-footer">
 					{#if $metadata}
 						Type: {$metadata.type} | Duration: {$metadata.duration}
 					{:else}
@@ -216,15 +215,22 @@
       align-items: center;
       width: 335px;
       height: 335px;
-
-      & > * {
-        width: 320px;
-        height: 320px;
-        border-radius: 5px;
-      }
     }
 
-    &-metadata-container {
+    &-player-content {
+      display: flex;
+      flex: 1;
+      height: 100%;
+      vertical-align: middle;
+
+      width: 320px;
+      height: 320px;
+      max-width: 320px;
+      max-height: 320px;
+      border-radius: 5px;
+    }
+
+    &-metadata-footer {
       text-align: center;
       margin-top: 5px;
       flex: 0;
@@ -258,12 +264,7 @@
   }
 
   .database-audio {
-    max-width: 320px;
-    height: 320px;
-    max-height: 320px;
-    min-height: 320px;
-    position: absolute;
-    bottom: 0;
+    margin: auto;
   }
 
 </style>
