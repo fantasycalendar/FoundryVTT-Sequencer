@@ -4,7 +4,7 @@
 - *Effects* - Fixed `.stretchTo(target, { attachTo: true })` with range-finding effects not properly preloading its different files
 
 # Version 3.4.6
-[- *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
+- *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
 - *Effects* - Added `sourceOffset` and `targetOffset` to `.animateProperty()` and `.loopProperty()` property target
   - This is used as such: `.animateProperty("effect", "targetOffset.x", { from: 0, to: 200, duration: 5000 })`
 - *Effects* - Deprecated `.from()` in favor for `.copySprite()` which is a more descriptive method name
