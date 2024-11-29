@@ -1,5 +1,11 @@
 ## Changelog
 
+# Version 3.4.6
+- *Effects* - Fixed `anchor` not being optional for `.shape()`
+- *Effects* - Fixed `scale()` for tiling textures using `stretchTo()` overly stretching the effect
+- *Effects* - Fixed some issues with caching of generated spritesheets
+- *Effects* - Disabled spriteshet generation for animated tiling textures. Too many visual defects at the moment
+
 # Version 3.4.5
 - *Effects* - Added `anchor` as an optional argument to `.shape()` (see docs)
 - *Effects* - Fixed `.shape()` not working if no `.file()` was used with `.screenSpace()` and `.screenSpaceScale({ fitX: true, fitY: true })`

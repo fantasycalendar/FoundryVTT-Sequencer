@@ -77,10 +77,12 @@ export function createShape(shape) {
 
   graphic.endFill();
 
-	graphic.pivot.set(
-		shape.width * (shape.anchor.x ?? 0.0),
-		shape.height * (shape.anchor.y ?? 0.0)
-	)
+	if (shape.anchor) {
+		graphic.pivot.set(
+			shape.width * (shape.anchor.x ?? 0.0),
+			shape.height * (shape.anchor.y ?? 0.0)
+		)
+	}
 
   return graphic;
 }

@@ -384,7 +384,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		if (this.#activateAsset(nextAsset)) {
 			this.#activeAssetPath = filePath;
 		}
-		if (this.#sharedSpriteConfig.isPersisted) {
+		if (this.#sharedSpriteConfig.isPersisted && !this.#sharedSpriteConfig.tiling) {
 			requestAnimationFrame(async () => {
 				const minimumScale = this.#calculateMinimumSpritesheetScale();
 				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath, {
@@ -656,7 +656,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			view = new AnimatedSpriteMesh(nextAsset.frameObjects, {
 				autoUpdate: true,
 				isVisionMaskingEnabled,
-				tiling,
+				tiling: !!tiling,
 			});
 			controls = new SpritePlaybackControls(view, nextAsset.framerate, nextAsset.frameObjects.length);
 		} else if (nextAsset instanceof TextureAsset) {

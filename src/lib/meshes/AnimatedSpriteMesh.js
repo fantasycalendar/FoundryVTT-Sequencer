@@ -140,6 +140,9 @@ export default class AnimatedSpriteMesh extends TilingSpriteMesh {
 		if (this.onFrameChange) {
 			this.onFrameChange(this.currentFrame);
 		}
+		if (this.uvMatrix) {
+			this.uvMatrix.texture = this._texture;
+		}
 	}
 	destroy(options) {
 		this.stop();

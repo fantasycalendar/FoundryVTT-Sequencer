@@ -56,11 +56,10 @@ export class Ktx2FileCache {
 
 	/**
 	 * Verifies the response data entries in case of a hash mismatch
-	 * @param {Response} response
+	 * @param {{frameRate: number}} spriteData
 	 * @returns {Promise<boolean>} true if data passes validation, false otherwise
 	 */
-	async #verifyResponseData(response) {
-		const spriteData = await response.json();
+	async #verifyResponseData(spriteData) {
 		if (!spriteData.frameRate) {
 			return false;
 		}
@@ -164,11 +163,12 @@ export class Ktx2FileCache {
 			await this.#deleteEntry(id, hash)
 			return;
 		}
-		if (!this.#verifyResponseData(cacheResponse)) {
+		const jsonData = await cacheResponse.json()
+		if (!this.#verifyResponseData(jsonData)) {
 			await this.#deleteEntry(id, hash)
 			return;
 		}
-		return await cacheResponse.json();
+		return jsonData;
 	}
 
 	/**
