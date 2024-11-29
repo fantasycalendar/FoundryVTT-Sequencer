@@ -1,7 +1,10 @@
 ## Changelog
 
+# Version 3.4.7
+- *Effects* - Fixed `.stretchTo(target, { attachTo: true })` with range-finding effects not properly preloading its different files
+
 # Version 3.4.6
-- *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
+[- *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
 - *Effects* - Added `sourceOffset` and `targetOffset` to `.animateProperty()` and `.loopProperty()` property target
   - This is used as such: `.animateProperty("effect", "targetOffset.x", { from: 0, to: 200, duration: 5000 })`
 - *Effects* - Deprecated `.from()` in favor for `.copySprite()` which is a more descriptive method name
@@ -11,7 +14,7 @@
 - *Effects* - Disabled spriteshet generation for animated tiling textures - too many visual defects at the moment (Thanks Codas!)
 - *Sequencer* - Fixed audio controls in the Sequencer Database viewer (Thanks Vauxs!)
 - *Sequencer* - Added audio filtering in the Sequencer Database viewer (Thanks Vauxs!)
-- *Crosshairs* - Fixed issue with `updateCrosshair` causing label text to break the canvas
+- *Crosshairs* - Fixed issue with `updateCrosshair` causing label text to break the canvas]()
 
 # Version 3.4.5
 - *Effects* - Added `anchor` as an optional argument to `.shape()` (see docs)
