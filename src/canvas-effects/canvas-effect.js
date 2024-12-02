@@ -2240,8 +2240,8 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		if (this.data.tilingTexture) {
-			const scaleX = (this.data.scale.x ?? 1.0) * this.gridSizeDifference;
-			const scaleY = (this.data.scale.y ?? 1.0) * this.gridSizeDifference;
+			const scaleX = (this.data.scale.x ?? 1.0);
+			const scaleY = (this.data.scale.y ?? 1.0);
 			this.sprite.scale.set(scaleX * this.flipX, scaleY * this.flipY);
 			this.sprite.width = distance * scaleX;
 			this.sprite.height = texture.height * scaleY;
