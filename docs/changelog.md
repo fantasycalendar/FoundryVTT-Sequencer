@@ -1,5 +1,8 @@
 ## Changelog
 
+# Version 3.4.7
+- *Effects* - Fixed `.playbackRate()` not working well with `.fadeOut()` and similar `out` animations
+
 # Version 3.4.6
 - *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
 - *Effects* - Added `sourceOffset` and `targetOffset` to `.animateProperty()` and `.loopProperty()` property target

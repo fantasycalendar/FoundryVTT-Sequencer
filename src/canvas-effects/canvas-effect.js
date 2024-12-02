@@ -1588,6 +1588,8 @@ export default class CanvasEffect extends PIXI.Container {
 			? (this._animationDuration * this.loops) + (this.loopDelay * (this.loops - 1))
 			: this._animationDuration;
 
+		this._totalDuration /= playbackRate;
+
 		if(this.data.persist){
 			this.mediaLooping = (
 				(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
@@ -2197,7 +2199,7 @@ export default class CanvasEffect extends PIXI.Container {
 				const endPoint = this.template?.endPoint ?? 0
 				const widthWithPadding = textureWidth - (startPoint + endPoint);
 
-				const spriteScale = distance / widthWithPadding
+				const spriteScale = (distance / widthWithPadding);
 
 				scaleX = spriteScale;
 				scaleY = this.data.stretchTo?.onlyX ? widthWithPadding / textureWidth : spriteScale;
@@ -2852,6 +2854,8 @@ export default class CanvasEffect extends PIXI.Container {
 			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
 			: Math.max(this._totalDuration - fadeOut.duration + fadeOut.delay, 0);
 
+		console.log(fadeOut.delay)
+
 		SequencerAnimationEngine.addAnimation(this.id, {
 			target: this,
 			propertyName: "effectAlpha",
@@ -3151,7 +3155,7 @@ export default class CanvasEffect extends PIXI.Container {
 		setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
-		}, this._totalDuration / this.mediaPlaybackRate);
+		}, this._totalDuration);
 	}
 
 	_setupTimestampHook(offset) {
