@@ -2854,8 +2854,6 @@ export default class CanvasEffect extends PIXI.Container {
 			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
 			: Math.max(this._totalDuration - fadeOut.duration + fadeOut.delay, 0);
 
-		console.log(fadeOut.delay)
-
 		SequencerAnimationEngine.addAnimation(this.id, {
 			target: this,
 			propertyName: "effectAlpha",
