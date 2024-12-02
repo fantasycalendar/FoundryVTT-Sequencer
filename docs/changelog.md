@@ -3,6 +3,8 @@
 # Version 3.4.7
 - *Effects* - Fixed `.stretchTo(target, { attachTo: true })` with range-finding effects not properly preloading its different files
 - *Effects* - Fixed `.playbackRate()` not working well with `.fadeOut()` and similar `out` animations
+- *Effects* - Fixed `.stretchTo`'s `tiling` option not working on scenes with non-100px grid sizes (thanks Codas!)
+- *Sequencer* - Updated Polish localization (thanks Lioheart!)
 
 # Version 3.4.6
 - *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
