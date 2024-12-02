@@ -1,5 +1,8 @@
 ## Changelog
 
+# Version 3.4.7
+- *Effects* - Fixed `.stretchTo(target, { attachTo: true })` with range-finding effects not properly preloading its different files
+
 # Version 3.4.6
 - *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target
 - *Effects* - Added `sourceOffset` and `targetOffset` to `.animateProperty()` and `.loopProperty()` property target

@@ -1472,7 +1472,7 @@ export default class CanvasEffect extends PIXI.Container {
 		layer.addChild(this);
 		layer.sortChildren();
 	}
-	
+
 	get startTimeMs() {
 		return this._startTime * 1000;
 	}
@@ -1692,12 +1692,12 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		if (file.template) {
-			this._template = 
+			this._template =
 				foundry.utils.mergeObject(
 					{ gridSize: file.template[0], startPoint: file.template[1], endPoint: file.template[2] },
 					this.data.template
 				)
-			
+
 		}
 		file.fileIndex = this.data.forcedIndex;
 		file.twister = this._twister;
@@ -1747,8 +1747,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite.currentTime = this._startTime
 
 		await this.sprite.activate(this._currentFilePath)
-		
-		if (this._isRangeFind && this.data.stretchTo && this.data.attachTo?.active) {
+
+		if (this._isRangeFind && this.data.stretchTo && (this.data.attachTo?.active || this.data.stretchTo?.attachTo?.active)) {
 			this.sprite.preloadVariants()
 		}
 
@@ -2262,8 +2262,8 @@ export default class CanvasEffect extends PIXI.Container {
 		let anchor = {x: 0.5, y: 0.5, ...(this.data.spriteAnchor ?? null)}
 
 		if (
-			(this.data.rotateTowards && this.data.rotateTowards.template) || 
-			this.data.stretchTo 
+			(this.data.rotateTowards && this.data.rotateTowards.template) ||
+			this.data.stretchTo
 		) {
 			const textureWidth = this.sprite.texture?.width ?? this.sprite.width;
 			const templateAnchorX = this.template ? this.template.startPoint / textureWidth : undefined;
