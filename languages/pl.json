@@ -2,13 +2,10 @@
   "SEQUENCER": {
     "OK": "OK",
     "Cancel": "Anuluj",
-
     "PlayerPermissionsWarning": "Cześć! Ponieważ jesteś MG, możesz tworzyć efekty, ale domyślnie <strong>mogą to robić również twoi gracze</strong>. Jeśli tego nie chcesz, możesz skonfigurować uprawnienia, klikając ten przycisk:",
-
     "Error": {
       "CouldNotPlay": "Nie można odtworzyć"
     },
-
     "Player": {
       "Title": "Odtwarzacz",
       "SwitchToLayer": "Przełącz na warstwę",
@@ -28,7 +25,6 @@
       "OverwritePresetContent": "Czy na pewno chcesz zastąpić ustawienie wstępne \"{preset_name}\"?",
       "DeletePresetTitle": "Usunąć ustawienie wstępne?",
       "DeletePresetContent": "Czy na pewno chcesz usunąć ustawienie wstępne \"{preset_name}\"?",
-
       "Option": {
         "Scale": "Skala",
         "BelowTokens": "Poniżej tokenów",
@@ -39,39 +35,32 @@
         "FadeOut": "Zanikanie wyjście",
         "ScaleIn": "Skala wejście",
         "ScaleOut": "Skala wyjście",
-
         "MirrorX": "Lustrzany X",
         "MirrorY": "Lustrzany Y",
-
         "OffsetX": "Przesunięcie X",
         "OffsetY": "Przesunięcie Y",
         "RandomOffset": "Wartość",
         "GridUnits": "Jednostki siatki",
-
         "Repeat": "Powtórzenie",
         "Repetitions": "Powtórzenia",
         "DelayMin": "(ms)",
         "DelayMax": "",
-
         "DragBehavior": "Zachowanie przy przeciąganiu",
         "DragStretch": "Obszar",
         "DragMove": "Ruch",
         "MoveSpeed": "Szybkość ruchu",
-
         "Preload": "Przeładuj",
         "AttachTo": "Przyłączony do punktu początkowego",
         "StretchToAttach": "Przyłączony do punktu końcowego",
         "Persist": "Trwały"
       }
     },
-
     "SidebarButtons": {
       "Select": "Wybierz efekt",
       "Play": "Odtwórz efekt",
       "Manager": "Pokaż menedżera Sequencera",
       "Database": "Pokaż bazę danych Sequencera"
     },
-
     "Hotkeys": {
       "PlayTool": {
         "Shift": "Odtwarzacz - odtwarzanie wielu efektów jednocześnie",
@@ -84,7 +73,6 @@
         "Delete": "Wybierz - usuwanie wybranego efektu"
       }
     },
-
     "Manager": {
       "Title": "Zarządzanie",
       "NothingPlaying": "Obecnie nic nie jest odtwarzane",
@@ -96,7 +84,6 @@
       "EndAllEffects": "Zakończ wszystkie efekty",
       "EndAllSounds": "Zakończ wszystkie dźwięki"
     },
-
     "Sequences": {
       "Title": "Sekwencje",
       "NoSequences": "Brak aktualnie uruchomionych sekwencji",
@@ -106,7 +93,6 @@
       "Clear": "Wyczyść",
       "StopAll": "Zatrzymaj wszystko"
     },
-
     "HowTo": {
       "Title": "Jak to zrobić",
       "Welcome": "Witamy w Sequencer Effects!",
@@ -125,9 +111,7 @@
       "ShiftControlLabel": "Odtwarzaj wiele efektów jeden po drugim, czekając pomiędzy nimi",
       "MoreToCome": "...i wiele więcej w przyszłych aktualizacjach!"
     },
-
     "ManagerUI": "Menedżer Sequencer",
-
     "Database": {
       "Title": "Przeglądarka bazy danych Sequencer",
       "AllPacks": "Wszystkie pakiety",
@@ -136,9 +120,12 @@
       "ButtonDatabasePath": "Baza danych",
       "ShowAllRanges": "Pokaż wszystkie zakresy",
       "ShowSubLists": "Pokaż listy podrzędne",
-      "ListView": "Widok listy"
+      "ListView": "Widok listy",
+      "Video": "Wideo",
+      "Sound": "Dźwięk",
+      "All": "Wszystkie",
+      "FileTypePredicate": "Aby włączyć filtrowanie typów, należy włączyć opcję \"Pokaż wszystkie zakresy\"."
     },
-
     "Setting": {
       "DatabaseViewer": {
         "Title": "Otwórz przeglądarkę bazy danych Sequencera",
@@ -203,7 +190,6 @@
         }
       }
     },
-
     "Permission": {
       "Player": "Gracze i powyżej",
       "Trusted": "Zaufani gracze i powyżej",
