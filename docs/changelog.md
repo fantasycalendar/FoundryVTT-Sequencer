@@ -2,6 +2,7 @@
 
 # Version 3.4.7
 - *Effects* - Fixed `.stretchTo(target, { attachTo: true })` with range-finding effects not properly preloading its different files
+- *Effects* - Fixed `.playbackRate()` not working well with `.fadeOut()` and similar `out` animations
 
 # Version 3.4.6
 - *Effects* - Added `effect` as a valid `.animateProperty()` and `.loopProperty()` target

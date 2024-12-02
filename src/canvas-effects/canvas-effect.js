@@ -1588,6 +1588,8 @@ export default class CanvasEffect extends PIXI.Container {
 			? (this._animationDuration * this.loops) + (this.loopDelay * (this.loops - 1))
 			: this._animationDuration;
 
+		this._totalDuration /= playbackRate;
+
 		if(this.data.persist){
 			this.mediaLooping = (
 				(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
@@ -3151,7 +3153,7 @@ export default class CanvasEffect extends PIXI.Container {
 		setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
-		}, this._totalDuration / this.mediaPlaybackRate);
+		}, this._totalDuration);
 	}
 
 	_setupTimestampHook(offset) {
