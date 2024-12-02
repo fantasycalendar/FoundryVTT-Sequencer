@@ -2199,7 +2199,7 @@ export default class CanvasEffect extends PIXI.Container {
 				const endPoint = this.template?.endPoint ?? 0
 				const widthWithPadding = textureWidth - (startPoint + endPoint);
 
-				const spriteScale = (distance / widthWithPadding);
+				const spriteScale = distance / widthWithPadding;
 
 				scaleX = spriteScale;
 				scaleY = this.data.stretchTo?.onlyX ? widthWithPadding / textureWidth : spriteScale;
