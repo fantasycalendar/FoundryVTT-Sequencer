@@ -144,49 +144,49 @@
         "Label": "This enables the layer for playing effects above all UI elements in Foundry - some users have reported this layer causes a significant performance hit, so disable this if so."
       },
       "Debug": {
-        "Title": "Enable debugging",
-        "Label": "This will make the sequencer log into the console what it is doing"
+        "Title": "Abilita Debug",
+        "Label": "Ciò farà sì che il sequenziatore registri nella console ciò che sta facendo"
       },
       "ShowTools": {
-        "Title": "Show Sequencer Tools",
-        "Label": "Shows or hides the Sequencer tools on the sidebar."
+        "Title": "Mostra Strumenti Sequencer",
+        "Label": "Mostra o nasconde gli strumenti Sequencer nella barra laterale."
       },
       "ShowTokenTools": {
-        "Title": "Show Sequencer Tools In Token Controls",
-        "Label": "Shows or hides the Sequencer tools on the sidebar in the Token Controls."
+        "Title": "Mostra Strumenti Sequencer nei Controlli Token",
+        "Label": "Mostra o nasconde gli strumenti Sequencer sulla barra laterale nei controlli token."
       },
       "EnableEffects": {
-        "Title": "Enable Effects",
-        "Label": "Enables effects to be played on this client"
+        "Title": "Abilita Effetti",
+        "Label": "Abilita la riproduzione degli effetti su questo client"
       },
       "EnableSounds": {
-        "Title": "Enable Sounds",
-        "Label": "Enables sounds to be played on this client"
+        "Title": "Abilita Suoni",
+        "Label": "Abilita la riproduzione dei suoni su questo client"
       },
       "ExternalEffectOpacity": {
-        "Title": "External Effect Opacity",
-        "Label": "If you create effects intended to be played for other players but not you, setting this to anything but 0 will cause the effect shows up for you as well, but muted. All Effects always show up for GMs."
+        "Title": "Opacità Effetto Esterno",
+        "Label": "Se crei effetti destinati ad essere riprodotti per altri giocatori ma non per te, impostando questo valore su un valore diverso da 0, l'effetto verrà visualizzato anche per te, ma disattivato. Tutti gli effetti vengono sempre visualizzati dai DM."
       },
       "Permission": {
         "EffectCreate": {
-          "Title": "Sequencer: Play Effects",
-          "Label": "Allow players with the selected role and above to play effects through Macros and the Sequencer Effect Player."
+          "Title": "Sequencer: Riproduci Effetti",
+          "Label": "Consenti ai giocatori con il ruolo selezionato e superiore di riprodurre effetti tramite Macro e Sequencer Effect Player."
         },
         "EffectDelete": {
-          "Title": "Sequencer: Remove All Effects",
-          "Label": "Allow players with the selected role and above to remove any effects through the Sequencer Effect Manager."
+          "Title": "Sequencer: Rimuovi Tutti gli Effetti",
+          "Label": "Consenti ai giocatori con il ruolo selezionato e superiore di rimuovere eventuali effetti tramite il Sequencer Effect Manager."
         },
         "SoundCreate": {
-          "Title": "Sequencer: Play Sounds",
-          "Label": "Allow players with the selected role and above to play sounds through "
+          "Title": "Sequencer: Riproduci Suoni",
+          "Label": "Consenti ai giocatori con il ruolo selezionato e superiore di riprodurre i suoni"
         },
         "PreloadClients": {
-          "Title": "Sequencer: Preloading for others",
-          "Label": "Allow players with the selected role and above to be able to preload effects and sounds for other players."
+          "Title": "Sequencer: Precaricamento per altri",
+          "Label": "Consenti ai giocatori con il ruolo selezionato e superiore di poter precaricare effetti e suoni per altri giocatori."
         },
         "UseSidebarTools": {
-          "Title": "Sequencer: Use sidebar tools",
-          "Label": "Allow players with the selected role and above to use the sidebar tools (they also need to be able to play effects)."
+          "Title": "Sequencer: Utilizza Strumenti Barra Laterale",
+          "Label": "Consenti ai giocatori con il ruolo selezionato e superiore di utilizzare gli strumenti della barra laterale (devono anche essere in grado di riprodurre effetti)."
         }
       }
     },
