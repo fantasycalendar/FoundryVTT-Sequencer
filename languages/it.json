@@ -96,52 +96,52 @@
     "HowTo": {
       "Title": "Come fare",
       "Welcome": "Benvenuto in Sequencer Effects!",
-      "Explanation": "With the Player <i class=\"fas fa-play-circle\"></i>, you can quickly play effects on the canvas, and with the Manager <i class=\"fas fa-film\"></i> you can end persisting effects whenever you want.",
-      "PermissionsExplanation": "Since you're a GM, you can create effects, and by default, so can your players. You can configure the settings by clicking this button:",
-      "PlayerExplanation": "When using the Player <i class=\"fas fa-play-circle\"></i>, you need to set what effect to play. Click on the <strong>file input</strong> to see what database paths you have or just start typing to search. You can press the <i class=\"fas fa-file-import\"></i> button next to it to search for a file directly.",
-      "LayerExplanation": "Once you've picked a file, you can do any of the following actions while on the <i class=\"fas fa-list-ol\"></i> Sequencer Layer.",
-      "OpenModuleSettings": "Open Module Settings",
-      "Click": "Click",
-      "ClickLabel": "Play an effect on the spot",
-      "ClickDrag": "Click Hold + Drag",
-      "ClickDragLabel": "Play an effect stretched towards a location",
+      "Explanation": "Con il Player <i class=\"fas fa-play-circle\"></i> puoi riprodurre rapidamente gli effetti sul riquadro e con il Manager <i class=\"fas fa-film\">< /i> puoi terminare gli effetti persistenti quando vuoi.",
+      "PermissionsExplanation": "Dato che sei un DM, puoi creare effetti e, per impostazione predefinita, anche i tuoi giocatori. È possibile configurare le impostazioni facendo clic su questo pulsante:",
+      "PlayerExplanation": "Quando usi il Player <i class=\"fas fa-play-circle\"></i>, devi impostare quale effetto riprodurre. Fai clic su <strong>input file</strong> per vedere quali percorsi di database hai o semplicemente inizia a digitare per eseguire la ricerca. Puoi premere il pulsante <i class=\"fas fa-file-import\"></i> accanto ad esso per cercare direttamente un file.",
+      "LayerExplanation": "Una volta selezionato un file, puoi eseguire una delle seguenti azioni mentre sei su <i class=\"fas fa-list-ol\"></i> Sequencer Layer.",
+      "OpenModuleSettings": "Apri Impostazioni Modulo",
+      "Click": "Clicca",
+      "ClickLabel": "Riproduci un effetto sul posto",
+      "ClickDrag": "Tieni premuto e trascina",
+      "ClickDragLabel": "Riproduci un effetto esteso verso una posizione",
       "Shift": "Shift",
-      "ShiftLabel": "Play multiple effects at the same time after releasing shift",
+      "ShiftLabel": "Riproduci più effetti contemporaneamente dopo aver rilasciato Shift",
       "ShiftControl": "Control",
-      "ShiftControlLabel": "Play multiple effects one after another, waiting between them",
-      "MoreToCome": "...and more to come in future updates!"
+      "ShiftControlLabel": "Riproduci più effetti uno dopo l'altro, aspettando tra di loro",
+      "MoreToCome": "...e altro ancora in arrivo nei futuri aggiornamenti!"
     },
-    "ManagerUI": "Sequencer Manager",
+    "ManagerUI": "Manager di Sequencer",
     "Database": {
-      "Title": "Sequencer Database Viewer",
-      "AllPacks": "All packs",
-      "Search": "Search...",
-      "ButtonFilepath": "Filepath",
+      "Title": "Visualizzatore Database Sequencer",
+      "AllPacks": "Tutti i pacchetti",
+      "Search": "Ricerca...",
+      "ButtonFilepath": "Percorso file",
       "ButtonDatabasePath": "Database",
-      "ShowAllRanges": "Show all ranges",
-      "ShowSubLists": "Show sub lists",
-      "ListView": "List View",
+      "ShowAllRanges": "Mostra tutti gli intervalli",
+      "ShowSubLists": "Mostra sottoelenchi",
+      "ListView": "Visualizza elenco",
       "Video": "Video",
-      "Sound": "Sound",
-      "All": "All",
-      "FileTypePredicate": "Must enable \"Show All Ranges\" to enable type filtering."
+      "Sound": "Suono",
+      "All": "Tutto",
+      "FileTypePredicate": "È necessario abilitare \"Mostra tutti gli intervalli\" per abilitare il filtro del tipo."
     },
     "Setting": {
       "DatabaseViewer": {
-        "Title": "Open Sequencer Database Viewer",
-        "Label": "Open Database Viewer"
+        "Title": "Apri Visualizzatore Database Sequencer",
+        "Label": "Apri Visualizzatore Database"
       },
       "EnablePixiFix": {
-        "Title": "Enable PIXI fix",
-        "Label": "This enables a fix for alphas on Sequencer effects in Foundry - some setups (browsers, hardware, softwares, etc) seems to make this fix obsolete."
+        "Title": "Abilita Correzione PIXI",
+        "Label": "Abilita una correzione per le alfa sugli effetti di Sequencer in Foundry: alcune configurazioni (browser, hardware, software, ecc.) sembrano rendere questa correzione obsoleta."
       },
       "EnableGlobalPixiFix": {
-        "Title": "Enable Global PIXI fix",
-        "Label": "This enables a fix for alphas on all animated .webms files in Foundry. Use with caution."
+        "Title": "Abilita Correzione PIXI Globale",
+        "Label": "Abilita una correzione per le alpha su tutti i file animati .webms in Foundry. Usare con cautela."
       },
       "EnableAboveUIScreenspace": {
-        "Title": "Enable Above UI Screenspace Layer",
-        "Label": "This enables the layer for playing effects above all UI elements in Foundry - some users have reported this layer causes a significant performance hit, so disable this if so."
+        "Title": "Abilita Screenspace Layer sopra l'interfaccia utente",
+        "Label": "Abilita il livello per riprodurre effetti sopra tutti gli elementi dell'interfaccia utente in Foundry: alcuni utenti hanno segnalato che questo livello causa un significativo calo delle prestazioni, quindi disabilitalo in tal caso."
       },
       "Debug": {
         "Title": "Abilita Debug",
