@@ -908,6 +908,12 @@ declare abstract class EffectSection {
   elevation(inElevation?: number, inOptions?: { absolute: boolean }): this;
 
   /**
+   * Changes the effect's sortLayer, potentially displaying effects below tiles, above tokens or even weather effects
+   * in case of identical elevations
+   */
+  sortLayer(inSortLayer: number): this;
+	
+  /**
    * Sets the zIndex of the effect, potentially displaying it on top of other effects the same elevation
    */
   zIndex(inZIndex: number): this;
