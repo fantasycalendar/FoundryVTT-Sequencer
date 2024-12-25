@@ -82,6 +82,7 @@ type CrosshairsData = {
 	};
 	snap: {
 		position: number;
+		resolution: number; // See https://github.com/foundryvtt/foundryvtt/issues/10014
 		size: number;
 		direction: number;
 	};
