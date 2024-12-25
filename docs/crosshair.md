@@ -26,6 +26,7 @@ crosshair = {
 	},
 	snap: {
 		position: number, // See CONST.GRID_SNAPPING_MODES
+		resolution: number, // How many sub-squares the snapping should consider (default: 1)
 		size: number, // See CONST.GRID_SNAPPING_MODES
 		direction: mumber // How many degrees the direction of this crosshair should snap at
 	},
