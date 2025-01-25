@@ -1251,7 +1251,8 @@ declare abstract class SequencerDatabase {
   registerEntries(
     inModuleName: string,
     inEntries: object,
-    isPrivate?: boolean
+    isPrivate?: boolean,
+    override?: boolean
   ): boolean;
 
   /**

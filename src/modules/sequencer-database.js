@@ -78,15 +78,16 @@ class Database {
    * @param  {string}      inModuleName  The namespace to assign to the inserted entries
    * @param  {object}      inEntries     The entries to merge into the database
    * @param  {boolean}     isPrivate     Whether to mark these entries as private and not show in Effect Player or Database Viewer
+   * @param  {boolean}     override      Whether to ignore existing entries and completely override the module's previous entries
    * @return {boolean}
    */
-  registerEntries(inModuleName, inEntries, isPrivate = false) {
+  registerEntries(inModuleName, inEntries, isPrivate = false, override = false) {
     if (inModuleName.includes("."))
       return this._throwError(
         "registerEntries",
         "module name must not contain periods"
       );
-    if (this.entries[inModuleName])
+    if (this.entries[inModuleName] && !override)
       lib.custom_warning(
         "Sequencer",
         `registerEntries | module "${inModuleName}" has already been registered to the database! Do you have two similar modules active?`,
@@ -94,10 +95,19 @@ class Database {
       );
     this._flatten(inEntries, inModuleName);
     const processedEntries = this._processEntries(inModuleName, inEntries);
-    if (isPrivate) this.privateModules.push(inModuleName);
-    this.entries = foundry.utils.mergeObject(this.entries, {
-      [inModuleName]: processedEntries,
-    });
+    if (override) {
+      if (isPrivate) { 
+        this.privateModules.push(inModuleName); 
+      } else {
+        this.privateModules = this.privateModules.filter(mod => module !== inModuleName);
+      }
+      this.entries[inModuleName] = processedEntries;
+    } else {
+      if (isPrivate) this.privateModules.push(inModuleName);
+      this.entries = foundry.utils.mergeObject(this.entries, {
+        [inModuleName]: processedEntries,
+      });
+    }
     lib.debug(
       `Sequencer | Database | Entries for "${inModuleName}" registered`
     );
