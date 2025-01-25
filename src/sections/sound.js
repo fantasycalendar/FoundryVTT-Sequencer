@@ -170,6 +170,7 @@ class SoundSection extends Section {
 		Object.assign(this.constructor.prototype, traits.users);
 		Object.assign(this.constructor.prototype, traits.name);
 		Object.assign(this.constructor.prototype, traits.location);
+		Object.assign(this.constructor.prototype, traits.offset);
 	}
 
 	/**
