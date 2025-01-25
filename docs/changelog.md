@@ -1,5 +1,13 @@
 ## Changelog
 
+# Version 3.4.8
+- *Sequencer* - Added Italian localization (thanks GregoryWarn!)
+- *Sequencer* - Added `override` to `Sequencer.Database.registerEntries` (thanks MrVauxs)
+- *Effects* - Fixed `.tint()` not working in v12 (thanks MrVauxs)
+- *Effects* - Added `.sortLayer()` to typing (thanks MrVauxs)
+- *Sounds* - Fixed sound breaking because of missing offset function implementation (thanks MrVauxs)
+- *Crosshairs* - Added grid-snapping resolution to the snap property (thanks Spappz)
+
 # Version 3.4.7
 - *Effects* - Fixed `.stretchTo(target, { attachTo: true })` with range-finding effects not properly preloading its different files
 - *Effects* - Fixed `.playbackRate()` not working well with `.fadeOut()` and similar `out` animations
