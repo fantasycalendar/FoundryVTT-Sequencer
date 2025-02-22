@@ -2445,6 +2445,11 @@ export default class CanvasEffect extends PIXI.Container {
 
 			this.sprite.width = width * baseScaleX;
 			this.sprite.height = height * baseScaleY;
+		} else if (this.data.screenSpace) {
+			this.sprite.scale.set(
+				baseScaleX,
+				baseScaleY
+			);
 		} else {
 			this.sprite.scale.set(
 				baseScaleX * this.gridSizeDifference,
