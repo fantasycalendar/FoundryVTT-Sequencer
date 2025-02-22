@@ -3,6 +3,7 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import CONSTANTS from "../constants.js";
 
 class AnimationSection extends Section {
 	static niceName = "Animation";

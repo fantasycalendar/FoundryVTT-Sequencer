@@ -3,6 +3,7 @@
 
   import { createEventDispatcher } from "svelte";
   import { databaseStore } from "./DatabaseStore.js";
+  import { localize } from "#runtime/svelte/helper";
 
   const dispatch = createEventDispatcher();
 
@@ -24,12 +25,12 @@
 	class="database-entry"
 	data-id="{entry}"
 >
-	<button type="button" class="btn_play" on:click={() => {
+	<button type="button" class="btn_play" title="{localize('SEQUENCER.Database.PlayPreview')}" on:click={() => {
     databaseStore.playFile(entry)
   }}>
 		<i class="fas fa-play"></i>
 	</button>
-	<button type="button" class="btn_copy_filepath" on:click={(e) => {
+	<button type="button" class="btn_copy_filepath" title="{localize('SEQUENCER.Database.CopyFilePath')}" on:click={(e) => {
     databaseStore.copyPath(entry, true, e.ctrlKey)
     flashFilePath = true;
     setTimeout(() => {
@@ -38,7 +39,7 @@
     }}>
 		<i class:flash-it={flashFilePath} class="fas fa-file"></i>
 	</button>
-	<button type="button" class="btn_copy_databasepath" on:click={(e) => {
+	<button type="button" class="btn_copy_databasepath" title="{localize('SEQUENCER.Database.CopyDatabasePath')}" on:click={(e) => {
     databaseStore.copyPath(entry, false, e.ctrlKey)
     flashDBPath = true;
     setTimeout(() => {

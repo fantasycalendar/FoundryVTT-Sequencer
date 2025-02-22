@@ -189,7 +189,8 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 	}
 
 	#getSnappedPoint(point, mode = this.crosshair.snap.position, resolution = this.crosshair.snap.resolution) {
-		return canvas.grid.getSnappedPoint(point, { mode, resolution: resolution ?? 1 });
+		resolution = !resolution || resolution <= 0 ? canvas.grid.size : resolution;
+		return canvas.grid.getSnappedPoint(point, { mode, resolution: resolution });
 	}
 
 	#onMove(evt) {

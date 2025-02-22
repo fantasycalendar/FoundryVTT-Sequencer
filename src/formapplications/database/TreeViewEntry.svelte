@@ -1,6 +1,7 @@
 <script>
 
   import { databaseStore } from "./DatabaseStore.js";
+  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
 
   export let data;
 
@@ -27,7 +28,7 @@
 		{/if}
 		{#if data.fullPath.includes(".")}
 			{#if !data.hasChildren}
-				<a class="database-entry-button" on:click={(e) => {
+				<a class="database-entry-button" title="{localize('SEQUENCER.Database.CopyFilePath')}" on:click={(e) => {
 					databaseStore.copyPath(data.fullPath, true, e.ctrlKey)
 					flashFilePath = true;
 					setTimeout(() => {
@@ -37,7 +38,7 @@
 					<i class="fas fa-file" class:flash-it={flashFilePath}></i>
 				</a>
 			{/if}
-			<a class="database-entry-button" on:click={(e) => {
+			<a class="database-entry-button" title="{localize('SEQUENCER.Database.CopyDatabasePath')}" on:click={(e) => {
 				databaseStore.copyPath(data.fullPath, false, e.ctrlKey)
 				flashDBPath = true;
 				setTimeout(() => {
@@ -46,7 +47,7 @@
 			}}>
 				<i class="fas fa-database" class:flash-it={flashDBPath}></i>
 			</a>
-			<a class="database-entry-button" on:click={() => {
+			<a class="database-entry-button" title="{localize('SEQUENCER.Database.PlayPreview')}" on:click={() => {
 				databaseStore.playFile(data.fullPath)
 			}}>
 				<i class="fas fa-play"></i>

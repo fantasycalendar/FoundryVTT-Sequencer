@@ -5,7 +5,7 @@ const SequencerFileCache = {
   _videos: {},
   _preloadedFiles: new Set(),
   _totalCacheSize: 0,
-  _validTypes: ["video/webm", "video/x-webm", "application/octet-stream"],
+  _validTypes: ["video/webm", "video/x-webm", "application/octet-stream", "binary/octet-stream"],
   /** @type {Map<string, PIXI.Spritesheet>} */
   _spritesheets: new Map(),
   /** @type {Map<string, Promise<{spritesheet: PIXI.Spritesheet, scale: number}> | null>} */

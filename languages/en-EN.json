@@ -124,7 +124,10 @@
       "Video": "Video",
       "Sound": "Sound",
       "All": "All",
-      "FileTypePredicate": "Must enable \"Show All Ranges\" to enable type filtering."
+      "FileTypePredicate": "Must enable \"Show All Ranges\" to enable type filtering.",
+      "PlayPreview": "Play preview",
+      "CopyFilePath": "Copy as direct filepath",
+      "CopyDatabasePath": "Copy as Sequencer database path"
     },
     "Setting": {
       "DatabaseViewer": {
