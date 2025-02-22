@@ -75,8 +75,8 @@ export default class SequencerSoundManager {
 				(lib.is_UUID(data.location) ? fromUuidSync(data.location) : null)
 				?? { x: data.location?.x ?? 0, y: data.location?.x ?? 0 };
 			if (data.offset) {
-				location.x += data.offset.x * (data.offset.gridUnits ? canvas.grid.size : 1);
-				location.y += data.offset.y * (data.offset.gridUnits ? canvas.grid.size : 1);
+				location.x += (data.offset.source.x || 0) * (data.offset.gridUnits ? canvas.grid.size : 1);
+				location.y += (data.offset.source.y || 0) * (data.offset.gridUnits ? canvas.grid.size : 1);
 			}
 			if (data.randomOffset?.source) {
 				const twister = lib.createMersenneTwister(data.seed);
