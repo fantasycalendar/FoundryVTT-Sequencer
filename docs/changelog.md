@@ -3,10 +3,10 @@
 ## Version 3.4.9
 - *Sequencer* - Added tooltips to Sequencer database viewer buttons
 - *Animations* - Fixed animation sections with tint throwing error due to missing import
-- *Effects* - Fixed screenspace effects scaling based on the grid-size of the current scene
-- *Effects* - Fixed `binary/octet-stream` not being considered a valid content type
-- *Sounds* - Fixed once-off location-based sounds crashing Foundry
 - *Crosshairs* - Fixed resolution 0 resulting in Foundry crashing (due to internal Foundry handling of 0 resolution)
+- *Effects* - Fixed `binary/octet-stream` not being considered a valid content type
+- *Effects* - Fixed screenspace effects scaling based on the grid-size of the current scene (thank you Vauxs!)
+- *Sounds* - Fixed once-off location-based sounds crashing Foundry  (thank you Vauxs!)
 
 # Version 3.4.8
 - *Sequencer* - Added Italian localization (thanks GregoryWarn!)
