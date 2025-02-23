@@ -124,7 +124,10 @@
       "Video": "Wideo",
       "Sound": "Dźwięk",
       "All": "Wszystkie",
-      "FileTypePredicate": "Aby włączyć filtrowanie typów, należy włączyć opcję \"Pokaż wszystkie zakresy\"."
+      "FileTypePredicate": "Aby włączyć filtrowanie typów, należy włączyć opcję \"Pokaż wszystkie zakresy\".",
+      "PlayPreview": "Odtwórz podgląd",
+      "CopyFilePath": "Kopiuj jako bezpośrednią ścieżkę pliku",
+      "CopyDatabasePath": "Kopiuj jako ścieżkę bazy danych Sequencera"
     },
     "Setting": {
       "DatabaseViewer": {
