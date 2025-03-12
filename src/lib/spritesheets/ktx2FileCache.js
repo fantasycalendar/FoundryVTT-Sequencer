@@ -4,7 +4,8 @@
 // 1: initial
 // 2: zstandard compressed ktx2 files and response metadata
 // 3: Remove cache size limit and increase scaled spritesheet resolutions
-const cacheVersion = 3;
+// 4: Fix alpha banding issues for scaled spritesheets.
+const cacheVersion = 4;
 const cacheName = `SequencerKTX2Cache-${cacheVersion}`;
 /** @type {Promise<Cache | null>} */
 let ktx2FileCache;
