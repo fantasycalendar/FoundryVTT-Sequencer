@@ -124,7 +124,10 @@
       "Video": "Video",
       "Sound": "Suono",
       "All": "Tutto",
-      "FileTypePredicate": "È necessario abilitare \"Mostra tutti gli intervalli\" per abilitare il filtro del tipo."
+      "FileTypePredicate": "È necessario abilitare \"Mostra tutti gli intervalli\" per abilitare il filtro del tipo.",
+      "PlayPreview": "Riproduci Anteprima",
+      "CopyFilePath": "Copia come percorso file diretto",
+      "CopyDatabasePath": "Copia come percorso del database di Sequencer"
     },
     "Setting": {
       "DatabaseViewer": {
