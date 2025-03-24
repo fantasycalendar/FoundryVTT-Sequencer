@@ -149,13 +149,13 @@ export class SpritesheetGenerator {
 		});
 		const texture = new PIXI.BaseTexture(resource, {
 			alphaMode: PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA,
-			mipmap: PIXI.MIPMAP_MODES.ON_MANUAL,
+			mipmap: PIXI.MIPMAP_MODES.OFF,
 			scaleMode: PIXI.SCALE_MODES.LINEAR,
 			width: firstLevel.width,
 			height: firstLevel.height,
 			wrapMode: PIXI.WRAP_MODES.CLAMP,
 			format: PIXI.FORMATS.RGBA,
-			type: PIXI.TYPES.UNSIGNED_INT,
+			type: PIXI.TYPES.UNSIGNED_BYTE,
 			target: PIXI.TARGETS.TEXTURE_2D,
 			pixiIdPrefix: id,
 		});

@@ -54,7 +54,7 @@ export class SpritesheetCompressor {
 		encoder.setPerceptual(true);
 		encoder.setUASTC(true);
 		encoder.setCheckForAlpha(true);
-		encoder.setMipGen(true);
+		encoder.setMipGen(false);
 		encoder.setMipSRGB(true);
 		encoder.setDebug(false);
 		return encoder;

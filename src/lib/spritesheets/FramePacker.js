@@ -24,13 +24,12 @@ export class FramePacker {
 	/**
 	 *
 	 * @param {VideoFrame} frame
-	 * @returns {Promise<Uint8Array>}
+	 * @returns {Promise<Uint8ClampedArray>}
 	 */
 	async #getVideoFrameRgbxBuffer(frame) {
 		/** @type {VideoFrameCopyToOptions} */
-		// @ts-expect-error VideoFrameCopyToOptions is wrongly typed
 		const chromaCopyOptions = { format: "RGBX" };
-		let imageBuffer = new Uint8Array(frame.allocationSize(chromaCopyOptions));
+		let imageBuffer = new Uint8ClampedArray(frame.allocationSize(chromaCopyOptions));
 		const planes = await frame.copyTo(imageBuffer, chromaCopyOptions);
 		if (planes.length === 1) {
 			return imageBuffer;
@@ -43,7 +42,9 @@ export class FramePacker {
 		context2d.canvas.width = frame.displayWidth;
 		context2d.canvas.height = frame.displayHeight;
 		context2d.drawImage(frame, 0, 0);
-		imageBuffer = new Uint8Array(context2d.getImageData(0, 0, frame.displayWidth, frame.displayHeight).data.buffer);
+		imageBuffer = new Uint8ClampedArray(
+			context2d.getImageData(0, 0, frame.displayWidth, frame.displayHeight).data.buffer
+		);
 		return imageBuffer;
 	}
 
@@ -76,10 +77,12 @@ export class FramePacker {
 				for (let col = 0; col < trimmedRect.w; col++) {
 					const spriteIdx = (x + col + SPRITE_PADDING + (y + row + SPRITE_PADDING) * sheetWidth) * 4;
 					const frameIdx = (col + xStart + (row + yStart) * width) * 4;
-					sheetBuffer[spriteIdx] = imageBuffer[frameIdx];
-					sheetBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1];
-					sheetBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2];
-					sheetBuffer[spriteIdx + 3] = imageBuffer[frameIdx + 3];
+					const alphaValue = imageBuffer[frameIdx + 3]
+					const alpha = alphaValue / 255
+					sheetBuffer[spriteIdx + 0] = imageBuffer[frameIdx + 0] * alpha;
+					sheetBuffer[spriteIdx + 1] = imageBuffer[frameIdx + 1] * alpha;
+					sheetBuffer[spriteIdx + 2] = imageBuffer[frameIdx + 2] * alpha;
+					sheetBuffer[spriteIdx + 3] = alphaValue;
 				}
 			}
 			sprites[data.idx] = {
@@ -120,10 +123,10 @@ export class FramePacker {
 		let scale = 1;
 
 		/**
-		 * @param {Uint8Array} buffer
+		 * @param {Uint8ClampedArray} buffer
 		 * @param {Size} sourceSize
 		 * @param {number} scaleFactor
-		 * @return {Promise<{buffer: Uint8Array, size: Size}>}
+		 * @return {Promise<{buffer: Uint8ClampedArray, size: Size}>}
 		 */
 		const getScaledImageBuffer = async (buffer, sourceSize, scaleFactor) => {
 			if (scaleFactor === 1) {
@@ -146,10 +149,10 @@ export class FramePacker {
 			context2d.clearRect(0, 0, scaledWidth, scaledHeight);
 			context2d.drawImage(imageBitmap, 0, 0);
 			imageBitmap.close();
-			const scaledBuffer = new Uint8Array(context2d.getImageData(0, 0, scaledWidth, scaledHeight).data.buffer);
+			const scaledBuffer = new Uint8ClampedArray(context2d.getImageData(0, 0, scaledWidth, scaledHeight).data.buffer);
 			const scaledSize = { w: scaledWidth, h: scaledHeight };
 			return { size: scaledSize, buffer: scaledBuffer };
-		}
+		};
 
 		let spriteWidth, spriteHeight;
 
@@ -170,7 +173,7 @@ export class FramePacker {
 					data: {
 						...data,
 						imageBuffer: buffer,
-						sourceSize: size
+						sourceSize: size,
 					},
 				});
 			}
@@ -207,29 +210,18 @@ export class FramePacker {
 		frame.close();
 
 		if (alphaFrame) {
-			const alphaBuffer = new Uint8Array(alphaFrame.allocationSize());
+			const alphaBuffer = new Uint8ClampedArray(alphaFrame.allocationSize());
 			const [chromaPlane] = await alphaFrame.copyTo(alphaBuffer);
 			const alphaPackSize = Math.floor(chromaPlane.stride / sourceSize.w);
-			await alphaFrame.copyTo(alphaBuffer);
 			alphaFrame.close();
 
 			// copy alpha info to image buffer
 			for (let tex = 0; tex < imageBuffer.length; tex += 4) {
 				const alphaIdx = (tex >> 2) * alphaPackSize;
-				const alphaValue = alphaBuffer[alphaIdx];
-				const alpha = alphaValue / 255;
-				// zero color info for completely transparent pixels
-				if (alpha === 0) {
-					imageBuffer[tex] = 0;
-					imageBuffer[tex + 1] = 0;
-					imageBuffer[tex + 2] = 0;
-				} else {
-					// premultiply alpha values
-					imageBuffer[tex] = imageBuffer[tex] * alpha;
-					imageBuffer[tex + 1] = imageBuffer[tex + 1] * alpha;
-					imageBuffer[tex + 2] = imageBuffer[tex + 2] * alpha;
-				}
-				imageBuffer[tex + 3] = alphaValue;
+				imageBuffer[tex] = imageBuffer[tex];
+				imageBuffer[tex + 1] = imageBuffer[tex + 1];
+				imageBuffer[tex + 2] = imageBuffer[tex + 2];
+				imageBuffer[tex + 3] = alphaBuffer[alphaIdx];
 			}
 		}
 
@@ -241,7 +233,7 @@ export class FramePacker {
 		};
 	}
 	/**
-	 * @param {Uint8Array} imageBuffer
+	 * @param {Uint8ClampedArray} imageBuffer
 	 * @param {Size} sourceSize
 	 * @returns {Rect}
 	 */
@@ -332,7 +324,7 @@ export class FramePacker {
 /**
  * @typedef {Object} CombinedFrameData
  * @property {number} idx
- * @property {Uint8Array} imageBuffer
+ * @property {Uint8ClampedArray} imageBuffer
  * @property {Size} sourceSize
  * @property {boolean} hasAlpha
  */
