@@ -1,5 +1,11 @@
 ## Changelog
 
+## Version 3.5.0
+- *Sequencer* - Updated TJS implementation to latest versions
+- *Sequencer* - Updated Italian and Polish localization (thank you GregoryWarn and Lioheart on Github!)
+- *Effects* - Improved the sprite sheet generator's premultiplied alpha handling (Thanks Codas!)
+- *Effects* - Fixed issues with effects trying to play before the canvas had been fully initialized (Thanks Codas!)
+
 ## Version 3.4.9
 - *Sequencer* - Added tooltips to Sequencer database viewer buttons
 - *Animations* - Fixed animation sections with tint throwing error due to missing import
