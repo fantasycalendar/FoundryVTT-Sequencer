@@ -1,7 +1,7 @@
 <script>
 
-  import { ApplicationShell } from "#runtime/svelte/component/core";
-  import { localize } from '#runtime/svelte/helper';
+	import { ApplicationShell } from "#runtime/svelte/component/application";
+  import { localize } from '#runtime/util/i18n';
   import { getContext, onDestroy } from "svelte";
 
   import DatabaseEntry from "./DatabaseEntry.svelte";

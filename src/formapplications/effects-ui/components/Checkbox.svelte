@@ -1,6 +1,6 @@
 <script>
-  import { localize } from "#runtime/svelte/helper";
-  import { applyStyles } from "#runtime/svelte/action/dom";
+  import { localize } from '#runtime/util/i18n';
+  import { applyStyles } from '#runtime/svelte/action/dom/style';
   import { writable } from "svelte/store";
 
   export let setting;

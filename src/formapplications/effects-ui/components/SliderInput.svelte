@@ -1,8 +1,8 @@
 <script>
 
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from '#runtime/util/i18n';
   import { writable } from "svelte/store";
-  import { applyStyles } from "#runtime/svelte/action/dom";
+  import { applyStyles } from '#runtime/svelte/action/dom/style';
 
   export let setting;
   export let lock = false;

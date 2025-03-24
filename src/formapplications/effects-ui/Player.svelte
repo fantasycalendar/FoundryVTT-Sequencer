@@ -1,5 +1,5 @@
 <script>
-  import { localize } from '#runtime/svelte/helper';
+  import { localize } from '#runtime/util/i18n';
   import { PlayerSettings } from "./effect-player-store.js";
   import { get } from "svelte/store";
   import SequencerDatabase from "../../modules/sequencer-database.js";

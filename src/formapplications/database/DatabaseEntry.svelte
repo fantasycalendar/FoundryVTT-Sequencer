@@ -3,7 +3,7 @@
 
   import { createEventDispatcher } from "svelte";
   import { databaseStore } from "./DatabaseStore.js";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from '#runtime/util/i18n';
 
   const dispatch = createEventDispatcher();
 

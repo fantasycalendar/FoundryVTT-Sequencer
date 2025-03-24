@@ -12,22 +12,23 @@
   ],
   "imports": {
     "#runtime/*": "@typhonjs-fvtt/runtime/*",
-    "#standard/*": "@typhonjs-fvtt/svelte-standard/*"
+    "#standard/*": "@typhonjs-fvtt/standard/*"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.3.0",
-    "@typhonjs-fvtt/runtime": "^0.1.3",
-    "@typhonjs-fvtt/svelte-standard": "0.1.0",
     "potpack": "^2.0.0",
-    "svelte": "^4.2.0",
+    "@typhonjs-fvtt/runtime": "^0.2.0",
+    "@typhonjs-fvtt/standard": "^0.2.0",
+    "svelte": "^4.0.0",
+    "svelte-select": "^5.7.0",
     "svelte-virtual-scroll-list": "^1.1.0"
   },
   "devDependencies": {
     "@typhonjs-config/eslint-config": "^0.6.0",
     "@typhonjs-fvtt/eslint-config-foundry.js": "^0.8.0",
     "eslint": "^8",
-    "svelte-preprocess": "^5",
-    "vite": "^4.4.0",
+    "svelte-preprocess": "^6.0.0",
+    "vite": "^5.0.0",
     "@league-of-foundry-developers/foundry-vtt-types": "^9.238.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.1",

@@ -1,5 +1,5 @@
 <script>
-  import { localize } from '#runtime/svelte/helper';
+  import { localize } from '#runtime/util/i18n';
   import * as lib from "/lib/lib.js"
 
   async function openSettings(){

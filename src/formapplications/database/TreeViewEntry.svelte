@@ -1,7 +1,7 @@
 <script>
 
   import { databaseStore } from "./DatabaseStore.js";
-  import { localize } from "@typhonjs-fvtt/runtime/svelte/helper";
+  import { localize } from '#runtime/util/i18n';
 
   export let data;
 

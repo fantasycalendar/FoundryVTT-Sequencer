@@ -1,6 +1,6 @@
 <script>
 
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from '#runtime/util/i18n';
   import SequenceSection from "./SequenceSection.svelte";
   import SequenceStatus from "./SequenceStatus.svelte";
   import SequenceManager from "../../../modules/sequence-manager.js";

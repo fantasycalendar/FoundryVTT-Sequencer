@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from '#runtime/util/i18n';
   import { onMount, onDestroy } from "svelte";
   import SequenceManager from "../../modules/sequence-manager.js";
   import Sequence from "./components/Sequence.svelte";
