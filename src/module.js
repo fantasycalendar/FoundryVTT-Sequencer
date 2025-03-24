@@ -92,7 +92,7 @@ const setupModule = foundry.utils.debounce(() => {
     Hooks.callAll("sequencer.ready");
     Hooks.callAll("sequencerReady");
   }
-  if (!canvasReady) {
+  if (!canvasReady && game.canvas?.ready) {
     canvasReady = true;
     SequencerEffectManager.initializePersistentEffects();
   }
