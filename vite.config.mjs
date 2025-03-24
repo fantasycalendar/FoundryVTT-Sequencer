@@ -18,7 +18,7 @@ const s_PACKAGE_ID = `modules/${moduleJSON.id}`;
 // A short additional string to add to Svelte CSS hash values to make yours unique. This reduces the amount of
 // duplicated framework CSS overlap between many TRL packages enabled on Foundry VTT at the same time. 'tse' is chosen
 // by shortening 'template-svelte-esm'.
-const s_SVELTE_HASH_ID = 'ip';
+const s_SVELTE_HASH_ID = 'seq';
 
 const s_COMPRESS = false;  // Set to true to compress the module bundle.
 const s_SOURCEMAPS = true; // Generate sourcemaps for the bundle (recommended).
@@ -84,7 +84,7 @@ export default ({ mode }) => {
 
 		build: {
 			outDir: '../dist',
-			emptyOutDir: false,
+			emptyOutDir: true,
 			sourcemap: s_SOURCEMAPS,
 			brotliSize: true,
 			minify: s_COMPRESS ? 'terser' : false,

@@ -16,8 +16,8 @@
       "website": "http://fantasycomputer.works/"
     }
   ],
-  "esmodules": ["dist/module.js"],
-  "styles": ["dist/style.css"],
+  "esmodules": ["dist/sequencer.js"],
+  "styles": ["dist/sequencer.css"],
   "languages": [
     {
       "lang": "en",
