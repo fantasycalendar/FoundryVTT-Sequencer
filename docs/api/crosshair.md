@@ -118,6 +118,12 @@ Also supports a second options object that accepts:
 
 - `borderVisible: boolean` - Causes the border of the icon to be visible
 
+## Border Alpha
+
+`.borderColor(number)`
+
+Sets the border transparency of the crosshair
+
 ## Border Color
 
 `.borderColor(HEX | number)`
@@ -129,6 +135,18 @@ Sets the border color of the crosshair
 `.fillColor(HEX | number)`
 
 Sets the fill color of the crosshair
+
+## Texture
+
+`.icon(string, inOptions)`
+
+Configures the texture shown within the template
+
+Also supports a second options object that accepts:
+
+- `alpha: number` - The transparency of the texture (default `0.5`)
+- `scale: number` - The scale multiplier for the texture size (default `1`)
+- `tile: boolean` - Whether or not to tile the texture. If false, the texture is automatically resized to the template before `scale` is applied (default `false`)
 
 ## Location
 

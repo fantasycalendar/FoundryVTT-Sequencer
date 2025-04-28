@@ -113,10 +113,73 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const t = this.template.clear();
 
 		// Draw the Template outline
-		t.lineStyle(this._borderThickness, this.document.borderColor, 0.75).beginFill(0x000000, 0.0);
+		t.lineStyle(this._borderThickness, this.document.borderColor, this.document.borderAlpha).beginFill(0x000000, 0.0);
 
 		// Fill Color or Texture
-		if (this.texture) t.beginTextureFill({ texture: this.texture }); else t.beginFill(0x000000, 0.0);
+		if (this.texture) {
+			const d = canvas.dimensions;
+			let { direction, distance } = this.document;
+			distance *= (d.size / d.distance);
+
+			const textureAlpha = this.document.textureAlpha || 0.5;
+			const scaleOverride = this.document.textureScale || 1;
+			// if texture is tile-able, then don't scale up to the document size
+			let textureSize = (this.document.textureTile ? 1 : distance) * scaleOverride;
+
+			let xScale = 1;
+			let yScale = 1;
+			let xOffset = 0;
+			let yOffset = 0;
+
+			switch (this.document.t) {
+				case 'circle':
+					{
+						xOffset = yOffset = textureSize;
+						xScale = yScale = textureSize * 2 / this.texture.width;
+					}
+					break;
+				case 'cone':
+					{
+						textureSize /= 2;
+						yOffset = -textureSize;
+
+						xScale = yScale = textureSize * 2 / this.texture.width;
+					}
+					break;
+				case 'rect':
+					{
+						// textureSize is basically the hypotenuse, multiple by sin(45) to get the width/height of the rect (square)
+						textureSize *= Math.sin(Math.toRadians(45));
+						xScale = textureSize / this.texture.width;
+						yScale = textureSize / this.texture.height;
+
+						direction = 0;
+						textureSize /= 2;
+						template.rotation = this.actualRotation;
+					}
+					break;
+				case 'ray':
+					{
+						yOffset = this.document.width / d.distance * d.size / 2;
+
+						xScale = textureSize / this.texture.width;
+						yScale = textureSize / this.texture.height;
+
+						yScale *= this.document.width / this.document.distance;
+					}
+					break;
+			}
+			t.beginTextureFill({
+				texture: this.texture,
+				matrix: new PIXI.Matrix()
+					.scale(xScale, yScale)
+					.translate(xOffset, yOffset)
+					.rotate(Math.toRadians(direction)),
+				alpha: textureAlpha,
+			});
+		} else {
+			t.beginFill(0x000000, 0.0);
+		}
 
 		// Draw the shape
 		t.drawShape(this.shape);

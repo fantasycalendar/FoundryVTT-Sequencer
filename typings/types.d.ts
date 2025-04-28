@@ -69,8 +69,9 @@ type TemplateData = {
   elevation: number,
   distance: number,
   fillColor: string,
+  borderAlpha: number,
   borderColor: string,
-	direction: number,
+  direction: number,
   parent: Scene
 }
 
@@ -1192,6 +1193,11 @@ declare abstract class CrosshairSection {
 	icon(inTexture: string, inOptions: {
 		borderVisible?: boolean;
 	}): this;
+
+	/**
+	 * Sets the border transparency of the crosshair
+	 */
+	borderAlpha(inColor: number): this;
 
 	/**
 	 * Sets the border color of the crosshair
