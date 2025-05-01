@@ -288,7 +288,7 @@ export default class Sequence {
 	addNamedLocation(inName, inLocation){
 		if (typeof inName !== "string")
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
-		if (!(typeof inLocation === "object" || inLocation instanceof PlaceableObject || inLocation instanceof Document))
+		if (!(typeof inLocation === "object" || inLocation instanceof foundry.canvas.placeables.PlaceableObject || inLocation instanceof Document))
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inLocation must be of type object, PlaceableObject, or Document`);
 		if(inLocation instanceof CrosshairsPlaceable) inLocation = inLocation.document;
 		this.nameOffsetMap ||= {};

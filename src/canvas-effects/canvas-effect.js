@@ -278,7 +278,7 @@ export default class CanvasEffect extends PIXI.Container {
 	/**
 	 * Retrieves the source document
 	 *
-	 * @returns {Document|PlaceableObject}
+	 * @returns {Document|foundry.canvas.placeables.PlaceableObject}
 	 */
 	get sourceDocument() {
 		return this.source?.document ?? this.source;
@@ -338,7 +338,7 @@ export default class CanvasEffect extends PIXI.Container {
 	/**
 	 * Retrieves the document of the target
 	 *
-	 * @returns {Document|PlaceableObject}
+	 * @returns {Document|foundry.canvas.placeables.PlaceableObject}
 	 */
 	get targetDocument() {
 		return this.target?.document ?? this.target;
@@ -713,7 +713,7 @@ export default class CanvasEffect extends PIXI.Container {
 			return SequencerEffectManager.getPositionForUUID(this.data.source);
 		}
 
-		if (this.source instanceof PlaceableObject && this.isSourceDestroyed){
+		if (this.source instanceof foundry.canvas.placeables.PlaceableObject && this.isSourceDestroyed){
 			return {
 				...this._cachedSourceData,
 			};
@@ -723,13 +723,13 @@ export default class CanvasEffect extends PIXI.Container {
 		crosshairPos = crosshairPos?.source;
 
 		const position =
-			this.source instanceof PlaceableObject && !this.isSourceTemporary
+			this.source instanceof foundry.canvas.placeables.PlaceableObject && !this.isSourceTemporary
 				? canvaslib.get_object_position(this.source)
 				: crosshairPos || this.source?.worldPosition || this.source?.center || this.source;
 
 		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.source);
 
-		if (this.isIsometricActive && this.source instanceof PlaceableObject) {
+		if (this.isIsometricActive && this.source instanceof foundry.canvas.placeables.PlaceableObject) {
 			position.x +=
 				((this.sourceDocument.elevation ?? 0) / canvas.scene.grid.distance) *
 				canvas.grid.size;
@@ -738,7 +738,7 @@ export default class CanvasEffect extends PIXI.Container {
 				canvas.grid.size;
 			if (
 				this.data.isometric?.overlay ||
-				this.target instanceof PlaceableObject
+				this.target instanceof foundry.canvas.placeables.PlaceableObject
 			) {
 				position.x += (this.source?.height ?? height) / 2;
 				position.y -= (this.source?.height ?? height) / 2;
@@ -755,11 +755,11 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		let rotation = 0;
-		if (this.source instanceof MeasuredTemplate && this.sourceDocument?.t !== "rect") {
+		if (this.source instanceof foundry.canvas.placeables.MeasuredTemplate && this.sourceDocument?.t !== "rect") {
 			rotation = Math.normalizeRadians(
 				Math.toRadians(this.sourceDocument?.direction)
 			);
-		} else if (!(this.source instanceof MeasuredTemplate)) {
+		} else if (!(this.source instanceof foundry.canvas.placeables.MeasuredTemplate)) {
 			rotation = this.sourceDocument?.rotation
 				? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.rotation))
 				: 0;
@@ -807,7 +807,7 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 		}
 
-		if (this.target instanceof PlaceableObject && this.isTargetDestroyed){
+		if (this.target instanceof foundry.canvas.placeables.PlaceableObject && this.isTargetDestroyed){
 			return {
 				...this._cachedTargetData,
 			};
@@ -817,13 +817,13 @@ export default class CanvasEffect extends PIXI.Container {
 		crosshairPos = crosshairPos?.target ?? crosshairPos?.source;
 
 		const position =
-			this.target instanceof PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
+			this.target instanceof foundry.canvas.placeables.PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
 				? canvaslib.get_object_position(this.target, { measure: true })
 				: crosshairPos || this.target?.worldPosition || this.target?.center || this.target;
 
 		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.target);
 
-		if (this.isIsometricActive && this.target instanceof PlaceableObject) {
+		if (this.isIsometricActive && this.target instanceof foundry.canvas.placeables.PlaceableObject) {
 			const targetHeight = (this.target?.height ?? height) / 2;
 			position.x +=
 				((this.targetDocument.elevation ?? 0) / canvas.scene.grid.distance) *
@@ -846,13 +846,13 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let rotation = 0;
 		if (
-			this.target instanceof MeasuredTemplate &&
+			this.target instanceof foundry.canvas.placeables.MeasuredTemplate &&
 			this.targetDocument?.t !== "rect"
 		) {
 			rotation = Math.normalizeRadians(
 				Math.toRadians(this.targetDocument?.direction)
 			);
-		} else if (!(this.target instanceof MeasuredTemplate)) {
+		} else if (!(this.target instanceof foundry.canvas.placeables.MeasuredTemplate)) {
 			rotation = this.targetDocument?.rotation
 				? Math.normalizeRadians(Math.toRadians(this.targetDocument?.rotation))
 				: 0;
@@ -1334,7 +1334,7 @@ export default class CanvasEffect extends PIXI.Container {
 			? this.id
 			: this.context.uuid + ".data.flags.sequencer.effects." + this.id;
 
-		this._ticker = CanvasAnimation.ticker;
+		this._ticker = foundry.canvas.animation.CanvasAnimation.ticker;
 		this._tickerMethods = [];
 	}
 
@@ -1958,7 +1958,7 @@ export default class CanvasEffect extends PIXI.Container {
 			let shape = obj?.mesh;
 			let shapeToAdd = shape;
 
-			if (obj instanceof MeasuredTemplate || obj instanceof Drawing) {
+			if (obj instanceof foundry.canvas.placeables.MeasuredTemplate || obj instanceof foundry.canvas.placeables.Drawing) {
 				shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
 
 				if (
@@ -1976,7 +1976,7 @@ export default class CanvasEffect extends PIXI.Container {
 					.drawShape(shape)
 					.endFill();
 
-				if (obj instanceof MeasuredTemplate) {
+				if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
 					shapeToAdd.position.set(documentObj.x, documentObj.y);
 				} else {
 					const {
@@ -2003,7 +2003,7 @@ export default class CanvasEffect extends PIXI.Container {
 				if (!mask) return;
 				if (!mask.custom) return;
 				mask.clear();
-				if (obj instanceof MeasuredTemplate) {
+				if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
 					mask.position.set(documentObj.x, documentObj.y);
 					let maskObj = documentObj.object;
 					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;

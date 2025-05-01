@@ -3,7 +3,7 @@ import VisionSamplerShader from "../filters/vision-sampler-shader.js";
 /**
  * Extends SpriteMesh to allow for tiling of sprites
  */
-export default class TilingSpriteMesh extends SpriteMesh {
+export default class TilingSpriteMesh extends foundry.canvas.containers.SpriteMesh {
 	/** @type {PIXI.Transform} */
 	tileTransform;
 

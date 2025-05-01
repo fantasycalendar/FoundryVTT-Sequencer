@@ -627,8 +627,8 @@ export default class EffectSection extends Section {
 	copySprite(inObject, inOptions = {}) {
 		if (
 			!(
-				inObject instanceof Token ||
-				inObject instanceof Tile ||
+				inObject instanceof foundry.canvas.placeables.Token ||
+				inObject instanceof foundry.canvas.placeables.Tile ||
 				inObject instanceof TokenDocument ||
 				inObject instanceof TileDocument
 			)
@@ -1858,7 +1858,7 @@ export default class EffectSection extends Section {
 		for (let doc of inDocuments) {
 			if (
 				typeof doc !== "string" &&
-				!(doc instanceof PlaceableObject) &&
+				!(doc instanceof foundry.canvas.placeables.PlaceableObject) &&
 				!(doc instanceof foundry.abstract.Document)
 			) {
 				throw this.sequence._customError(
@@ -2370,7 +2370,7 @@ export default class EffectSection extends Section {
 		this._temporaryEffect =
 			this._temporaryEffect ||
 			(source instanceof foundry.abstract.Document ||
-			source instanceof MeasuredTemplate
+			source instanceof foundry.canvas.placeables.MeasuredTemplate
 				? !lib.is_UUID(source?.uuid)
 				: this._temporaryEffect || false);
 

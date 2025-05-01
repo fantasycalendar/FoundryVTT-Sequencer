@@ -106,13 +106,13 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 		const {t, distance, direction, angle, width} = this;
 		switch ( t ) {
 			case "circle":
-				return MeasuredTemplate.getCircleShape(distance);
+				return foundry.canvas.placeables.MeasuredTemplate.getCircleShape(distance);
 			case "cone":
-				return MeasuredTemplate.getConeShape(distance, direction, angle);
+				return foundry.canvas.placeables.MeasuredTemplate.getConeShape(distance, direction, angle);
 			case "rect":
-				return MeasuredTemplate.getRectShape(distance, direction);
+				return foundry.canvas.placeables.MeasuredTemplate.getRectShape(distance, direction);
 			case "ray":
-				return MeasuredTemplate.getRayShape(distance, direction, width);
+				return foundry.canvas.placeables.MeasuredTemplate.getRayShape(distance, direction, width);
 		}
 	}
 

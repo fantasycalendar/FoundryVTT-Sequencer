@@ -3,7 +3,7 @@ import { is_real_number } from "../../lib/lib.js";
 import CONSTANTS from "../../constants.js";
 import * as lib from "../../lib/lib.js"
 
-export default class CrosshairsPlaceable extends MeasuredTemplate {
+export default class CrosshairsPlaceable extends foundry.canvas.placeables.MeasuredTemplate {
 
 	constructor(...args) {
 		super(...args);
@@ -62,7 +62,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		this.controlIcon.renderable = !!this.crosshair.icon.texture;
 		if (this.crosshair.icon.texture) {
 			this.controlIcon.iconSrc = this.crosshair.icon.texture;
-			this.controlIcon.texture = await loadTexture(this.controlIcon.iconSrc);
+			this.controlIcon.texture = await foundry.canvas.loadTexture(this.controlIcon.iconSrc);
 			this.controlIcon.icon.texture = this.controlIcon.texture;
 		}
 		if (!this.crosshair.icon.borderVisible) {

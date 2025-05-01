@@ -84,7 +84,7 @@ const SequencerAnimationEngine = {
 	start() {
 		if (!this.ticker) {
 			lib.debug(`Animation Engine Started`);
-			this.ticker = CanvasAnimation.ticker;
+			this.ticker = foundry.canvas.animation.CanvasAnimation.ticker;
 			this.ticker.add(this.nextFrame.bind(this));
 		}
 	},

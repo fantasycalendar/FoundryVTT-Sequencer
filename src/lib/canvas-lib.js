@@ -152,7 +152,7 @@ export function get_object_position(
   obj = obj?._object ?? obj.object ?? obj;
 
   let pos = {};
-  if (obj instanceof MeasuredTemplate) {
+  if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
     if (measure) {
       if (obj.document.t === "cone" || obj.document.t === "ray") {
         pos.x = obj.ray.B.x;
@@ -168,7 +168,7 @@ export function get_object_position(
         pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
       }
     }
-  } else if (obj instanceof Tile) {
+  } else if (obj instanceof foundry.canvas.placeables.Tile) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
@@ -178,7 +178,7 @@ export function get_object_position(
       pos.x += Math.abs(obj.document.width / 2);
       pos.y += Math.abs(obj.document.height / 2);
     }
-  } else if (obj instanceof Token) {
+  } else if (obj instanceof foundry.canvas.placeables.Token) {
     const halfSize = get_object_dimensions(obj, true);
     pos = {
       x: obj.x + halfSize.width,
@@ -189,7 +189,7 @@ export function get_object_position(
       pos.x -= halfSize.width;
       pos.y -= halfSize.height;
     }
-  } else if (obj instanceof Drawing) {
+  } else if (obj instanceof foundry.canvas.placeables.Drawing) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,

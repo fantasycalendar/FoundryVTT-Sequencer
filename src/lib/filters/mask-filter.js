@@ -1,4 +1,4 @@
-export default class MaskFilter extends AbstractBaseFilter {
+export default class MaskFilter extends foundry.canvas.rendering.filters.AbstractBaseFilter {
   /** @override */
   static fragmentShader = `\
         varying vec2 vTextureCoord;

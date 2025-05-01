@@ -30,7 +30,7 @@ export default class SequencerFoundryReplicator {
 	    : this._validateObject(data.source, data.sceneId);
 
     const position =
-      source instanceof PlaceableObject
+      source instanceof foundry.canvas.placeables.PlaceableObject
         ? canvaslib.get_object_position(source)
         : source?.worldPosition || source?.center || source;
 

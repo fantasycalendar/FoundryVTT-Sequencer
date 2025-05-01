@@ -234,7 +234,7 @@ export default class SequencerEffectManager {
     if (
       !(
         object instanceof foundry.abstract.Document ||
-        object instanceof PlaceableObject ||
+        object instanceof foundry.canvas.placeables.PlaceableObject ||
         typeof object === "string"
       )
     ) {
@@ -243,7 +243,7 @@ export default class SequencerEffectManager {
         "EffectManager | object must be instance of PlaceableObject or of type string"
       );
     } else if (
-      object instanceof PlaceableObject ||
+      object instanceof foundry.canvas.placeables.PlaceableObject ||
       object instanceof foundry.abstract.Document
     ) {
       object = lib.get_object_identifier(object?.document ?? object);

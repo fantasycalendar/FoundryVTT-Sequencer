@@ -1,7 +1,7 @@
 const tempMat = new PIXI.Matrix();
 const uvPoint = new PIXI.Point();
 
-class VisionSamplerShaderGenerator extends BatchShaderGenerator {
+class VisionSamplerShaderGenerator extends foundry.canvas.rendering.batching.BatchShaderGenerator {
 	generateSampleSrc(maxTextures) {
 		let src = "\n\n";
 		for (let i = 0; i < maxTextures; i++) {
@@ -26,7 +26,7 @@ class VisionSamplerShaderGenerator extends BatchShaderGenerator {
 
 const emptyColorMatrix = new Uint8Array(20);
 
-export default class VisionSamplerShader extends BaseSamplerShader {
+export default class VisionSamplerShader extends foundry.canvas.rendering.shaders.BaseSamplerShader {
 	static classPluginName = "sequencerVisionBatch";
 	static batchShaderGeneratorClass = VisionSamplerShaderGenerator;
 

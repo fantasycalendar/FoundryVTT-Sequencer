@@ -62,7 +62,7 @@ const SequencerFileCache = {
     if (this._preloadedFiles.has(inSrc)) {
       return true
     }
-    return srcExists(inSrc)
+    return foundry.canvas.srcExists(inSrc)
   },
 
   async loadFile(inSrc, preload = false) {
@@ -85,7 +85,7 @@ const SequencerFileCache = {
       }
     }
 
-    const texture = await loadTexture(inSrc)
+    const texture = await foundry.canvas.loadTexture(inSrc)
     if (texture) {
       this._preloadedFiles.add(inSrc)
     }

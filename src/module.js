@@ -30,6 +30,8 @@ import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.j
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
+import { TJSPosition } from "#runtime/svelte/store/position";
+import { SvelteApplication } from "#runtime/svelte/application";
 
 let moduleValid = false;
 let moduleReady = false;
@@ -43,13 +45,42 @@ Hooks.once("init", async function() {
     CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
   )?.active;
 	CONSTANTS.IS_V12 = foundry.utils.isNewerVersion(game.version, "12");
+	CONSTANTS.IS_V13 = foundry.utils.isNewerVersion(game.version, "13");
   // Enable basis transcoder for GPU compressible textures.
   // Decoder is included in Foundry VTT 12 but not enabled by default
-  if (CONSTANTS.IS_V12) {
+  if (CONSTANTS.IS_V12 && !CONSTANTS.IS_V13) {
     CONFIG.Canvas.transcoders.basis = true
   }
   initializeModule();
   registerSocket();
+
+	// V12 -> 13 SHIM
+	Object.defineProperty(SvelteApplication, 'defaultOptions', {
+		get: () => {
+			return foundry.utils.mergeObject(Application.defaultOptions, {
+				// Copied directly from TRL except for minWidth and minHeight
+				defaultCloseAnimation: true,
+				draggable: true,
+				focusAuto: true,
+				focusKeep: false,
+				focusSource: void 0,
+				focusTrap: true,
+				headerButtonNoClose: false,
+				headerButtonNoLabel: false,
+				headerIcon: void 0,
+				headerNoTitleMinimized: false,
+				minHeight: 50, // MIN_WINDOW_HEIGHT
+				minWidth: 200, // MIN_WINDOW_WIDTH
+				positionable: true,
+				positionInitial: TJSPosition.Initial.browserCentered,
+				positionOrtho: true,
+				positionValidator: TJSPosition.Validators.transformWindow,
+				sessionStorage: void 0,
+				svelte: void 0,
+				transformOrigin: "top left"
+			}, { inPlace: false });
+		}
+	});
 });
 
 Hooks.once("socketlib.ready", registerSocket);
@@ -64,8 +95,8 @@ Hooks.once("ready", async function() {
   }
 
   for (const [name, func] of Object.entries(easeFunctions)) {
-    if (!CanvasAnimation[name]) {
-      CanvasAnimation[name] = func;
+    if (!foundry.canvas.animation.CanvasAnimation[name]) {
+      foundry.canvas.animation.CanvasAnimation[name] = func;
     }
   }
 
@@ -154,8 +185,10 @@ function initializeModule() {
 
 Hooks.once("ready", async () => {
 
-	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
-	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+	const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version")
+
+	if(!game.user.isGM || foundry.utils.isNewerVersion(version, game.version)) return;
+	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown-version", game.version);
 
 	const chatMessages = game.messages.filter(message => {
 		return message.content.includes("sequencer-welcome")

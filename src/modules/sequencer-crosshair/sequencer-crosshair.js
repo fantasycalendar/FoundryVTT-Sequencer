@@ -34,16 +34,16 @@ export default class Crosshair {
 	}
 
 	/**
-	 * Show a configurable crosshair based a foundry PlaceableObject
+	 * Show a configurable crosshair based a foundry foundry.canvas.placeables.PlaceableObject
 	 *
-	 * @param {PlaceableObject} obj
+	 * @param {foundry.canvas.placeables.PlaceableObject} obj
 	 * @param {CrosshairData/Object} config
 	 * @param {CrosshairCallbackData/Object} callbacks
 	 * @returns {Promise}
 	 */
 	static showToken(obj, config = {}, callbacks = {}) {
 
-		const placeable = obj instanceof PlaceableObject ? obj : obj.object;
+		const placeable = obj instanceof foundry.canvas.placeables.foundry.canvas.placeables.PlaceableObject ? obj : obj.object;
 
 		const controlled = placeable.controlled;
 		placeable.release();
@@ -61,7 +61,7 @@ export default class Crosshair {
 	/**
 	 * @param {CrosshairsDocument} crosshair
 	 * @param {String/Array<string>} types
-	 * @param {(object: PlaceableObject, crosshair: CrosshairsDocument, shape: PIXI.Graphics) => boolean} filterMethod
+	 * @param {(object: foundry.canvas.placeables.PlaceableObject, crosshair: CrosshairsDocument, shape: PIXI.Graphics) => boolean} filterMethod
 	 * @returns {Array<Document>/Record<String, Array<Document>>}
 	 */
 	static collect(crosshair, types = "Token", filterMethod = this.containsCenter) {

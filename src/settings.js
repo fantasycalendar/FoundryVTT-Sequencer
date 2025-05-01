@@ -104,11 +104,11 @@ export function registerSettings() {
     type: Boolean,
   });
 
-  game.settings.register(CONSTANTS.MODULE_NAME, "welcome-shown", {
+  game.settings.register(CONSTANTS.MODULE_NAME, "welcome-shown-version", {
     scope: "world",
     config: false,
-    default: false,
-    type: Boolean,
+    default: "0.0.0",
+    type: String,
   });
 
   const permissionLevels = [
@@ -180,74 +180,108 @@ export function registerSettings() {
   });
 
   Hooks.on("getSceneControlButtons", (controls) => {
+
     if (!game.settings.get(CONSTANTS.MODULE_NAME, "showSidebarTools")) return;
 
-    const selectTool = {
-      icon: "fas fa-expand",
-      name: "select-effect",
-      title: "SEQUENCER.SidebarButtons.Select",
-      visible:
-        user_can_do("permissions-effect-create") &&
-        user_can_do("permissions-sidebar-tools"),
-    };
+	  const sidebarTools = {
+		  SELECT: {
+			  name: `${CONSTANTS.MODULE_NAME}-select-effect`,
+			  title: "SEQUENCER.SidebarButtons.Select",
+			  icon: "fas fa-expand",
+			  visible:
+				  user_can_do("permissions-effect-create") &&
+				  user_can_do("permissions-sidebar-tools"),
+			  onChange: () => {}
+		  },
+		  PLAYER: {
+			  name: `${CONSTANTS.MODULE_NAME}-play-effect`,
+			  title: "SEQUENCER.SidebarButtons.Play",
+			  icon: "fas fa-play",
+			  visible:
+				  user_can_do("permissions-effect-create") &&
+				  user_can_do("permissions-sidebar-tools"),
+			  onChange: () => {
+				  EffectsUIApp.show({ inFocus: true, tab: "player" });
+			  },
+		  },
+		  VIEWER: {
+			  name: `${CONSTANTS.MODULE_NAME}-effectviewer`,
+			  title: "SEQUENCER.SidebarButtons.Manager",
+			  icon: "fas fa-film",
+			  button: true,
+			  visible:
+				  user_can_do("permissions-effect-create") &&
+				  user_can_do("permissions-sidebar-tools"),
+			  onChange: () => {
+				  EffectsUIApp.show({ inFocus: true, tab: "manager" });
+			  },
+		  },
+		  DATABASE: {
+			  name: `${CONSTANTS.MODULE_NAME}-effectdatabase`,
+			  title: "SEQUENCER.SidebarButtons.Database",
+			  icon: "fas fa-database",
+			  button: true,
+			  visible: user_can_do("permissions-sidebar-tools"),
+			  onChange: () => {
+				  DatabaseViewerApp.show();
+			  },
+		  }
+	  }
 
-    const playTool = {
-      icon: "fas fa-play",
-      name: "play-effect",
-      title: "SEQUENCER.SidebarButtons.Play",
-      visible:
-        user_can_do("permissions-effect-create") &&
-        user_can_do("permissions-sidebar-tools"),
-      onClick: () => {
-        EffectsUIApp.show({ inFocus: true, tab: "player" });
-      },
-    };
+		if(CONSTANTS.IS_V13){
+			return setupSidebarToolsV13(controls, sidebarTools);
+		}
 
-    const viewer = {
-      icon: "fas fa-film",
-      name: "effectviewer",
-      title: "SEQUENCER.SidebarButtons.Manager",
-      button: true,
-      visible:
-        user_can_do("permissions-effect-create") &&
-        user_can_do("permissions-sidebar-tools"),
-      onClick: () => {
-        EffectsUIApp.show({ inFocus: true, tab: "manager" });
-      },
-    };
+		return setupSidebarToolsV12(controls, sidebarTools);
 
-    const database = {
-      icon: "fas fa-database",
-      name: "effectdatabase",
-      title: "SEQUENCER.SidebarButtons.Database",
-      button: true,
-      visible: user_can_do("permissions-sidebar-tools"),
-      onClick: () => {
-        DatabaseViewerApp.show();
-      },
-    };
-
-    controls.push({
-      name: CONSTANTS.MODULE_NAME,
-      title: "Sequencer Layer",
-      icon: "fas fa-list-ol",
-      layer: "sequencerInterfaceLayer",
-      visible:
-        user_can_do("permissions-effect-create") &&
-        user_can_do("permissions-sidebar-tools"),
-      activeTool: "select-effect",
-      tools: [selectTool, playTool, database, viewer],
-    });
-
-    if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools"))
-      return;
-
-    const bar = controls.find((c) => c.name === "token");
-    bar.tools.push(database);
-    bar.tools.push(viewer);
   });
 
   debug("Sequencer | Registered settings");
+}
+
+function setupSidebarToolsV13(controls, sidebarTools){
+
+	controls[CONSTANTS.MODULE_NAME] = {
+		name: CONSTANTS.MODULE_NAME,
+		title: "Sequencer Layer",
+		icon: "fas fa-list-ol",
+		layer: "sequencerInterfaceLayer",
+		visible:
+			user_can_do("permissions-effect-create") &&
+			user_can_do("permissions-sidebar-tools"),
+		activeTool: "select-effect",
+		tools: Object.values(sidebarTools),
+	}
+
+	if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools")) {
+		return;
+	}
+
+	controls["tokens"].tools[sidebarTools.DATABASE.name] = sidebarTools.DATABASE;
+	controls["tokens"].tools[sidebarTools.VIEWER.name] = sidebarTools.VIEWER;
+}
+
+function setupSidebarToolsV12(controls, sidebarTools){
+
+	controls.push({
+		name: CONSTANTS.MODULE_NAME,
+		title: "Sequencer Layer",
+		icon: "fas fa-list-ol",
+		layer: "sequencerInterfaceLayer",
+		visible:
+			user_can_do("permissions-effect-create") &&
+			user_can_do("permissions-sidebar-tools"),
+		activeTool: "select-effect",
+		tools: Object.values(sidebarTools)
+	});
+
+	if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools"))
+		return;
+
+	const bar = controls.find((c) => c.name === "token");
+	bar.tools.push(sidebarTools.DATABASE);
+	bar.tools.push(sidebarTools.VIEWER);
+
 }
 
 export async function migrateSettings() {

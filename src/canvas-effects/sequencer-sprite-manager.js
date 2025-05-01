@@ -634,7 +634,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 * @param {{ fps: number; }} metadata
 	 */
 	async #loadFlipbook(filepaths, metadata) {
-		const textures = (await Promise.all(filepaths.map(async (filepath) => loadTexture(filepath)))).filter(
+		const textures = (await Promise.all(filepaths.map(async (filepath) => foundry.canvas.loadTexture(filepath)))).filter(
 			(t) => t instanceof PIXI.Texture
 		);
 		return new FlipbookAsset({ filepaths, textures, framerate: metadata?.fps ?? 24 });
