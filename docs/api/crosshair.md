@@ -59,7 +59,13 @@ Also supports a second options object that accepts:
 
 `.snapPosition(number)`
 
-Sets how the position of the crosshair should snap on the grid
+Sets how the position of the crosshair should snap on the grid. 
+
+Use `CONST.GRID_SNAPPING_MODES` to determine this, eg:
+- `.snapPosition(CONST.GRID_SNAPPING_MODES.CENTER)` - snaps to the center of each grid square/hex
+- `.snapPosition(CONST.GRID_SNAPPING_MODES.CENTER | CONST.GRID_SNAPPING_MODES.VERTEX)` - snaps to the center and each vertex (intersections) of each grid square/hex
+
+It is specifically one `|` and not two - this is a bitwise operation, which is a fancy way that maths works for computers. Google bitwise operations if you want to understand it at length.
 
 ## Distance
 
@@ -88,13 +94,13 @@ Configures the width for the crosshair - used for ray crosshairs
 
 `.direction(number)`
 
-Configures the direction degrees for the crosshair - mostly used for cone and ray crosshairs
+Configures the direction degrees for the crosshair - mostly used for cone and ray crosshairs. This configures the starting direction of the crosshair.
 
 ## Snap Direction
 
 `.snapDirection(number)`
 
-Configures the increments the direction should snap along
+Configures the increments the direction should snap along. `45` would make it only snap in diagonal, horizontal, and vertical directions.
 
 ## Lock Manual Rotation
 
@@ -166,13 +172,13 @@ Also supports a second options object that accepts:
 
 `.persist(boolean)`
 
-Causes the crosshair to spawn a measurable template identical to the crosshair
+Causes the crosshair to spawn a measurable template identical to the crosshair.
 
 ## Grid Highlight
 
 `.gridHighlight(boolean)`
 
-Toggles whether this crosshair should highlight the grid
+Toggles whether this crosshair should highlight the grid.
 
 ## Callback
 

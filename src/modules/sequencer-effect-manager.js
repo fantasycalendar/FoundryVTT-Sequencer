@@ -159,7 +159,7 @@ export default class SequencerEffectManager {
       this._filterEffects(inFilter)
         .filter((effect) => effect.userCanDelete)
         .map((effect) => {
-          return effect.data?.persistOptions?.persistTokenPrototype
+          return effect.data?.persistOptions?.persistTokenPrototype && lib.is_UUID(effect?.data.source) && effect.data?.attachTo?.active
             ? effect.data?.persistOptions?.id ?? effect.id
             : effect.id;
         })
@@ -686,7 +686,7 @@ export default class SequencerEffectManager {
       }
 
       const persistentEffectData = effectData.filter(
-        (data) => data?.persistOptions?.persistTokenPrototype
+        (data) => lib.is_UUID(data?.source) && data?.persistOptions?.persistTokenPrototype
       );
       if (!persistentEffectData.length) return;
 
@@ -694,7 +694,8 @@ export default class SequencerEffectManager {
       const applicableActorEffects = actorEffects
         .filter((effect) => {
           return (
-            effect[1]?.persistOptions?.persistTokenPrototype &&
+	          lib.is_UUID(effect[1]?.source) &&
+	          effect[1]?.persistOptions?.persistTokenPrototype &&
             persistentEffectData.some(
               (persistentEffect) =>
                 persistentEffect.persistOptions.id ===

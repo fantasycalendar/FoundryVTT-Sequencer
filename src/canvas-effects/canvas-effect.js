@@ -1742,13 +1742,13 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite = new SequencerSpriteManager(this._file, spriteData)
 		this.spriteContainer.addChild(this.sprite)
 		this.sprite.id = this.id + "-sprite";
-
-		this.sprite.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
-		this.sprite.loop = this.loops
 		this.sprite.loopDelay = this.loopDelay
 		this.sprite.currentTime = this._startTime
+		this.sprite.loop = this.loops
 
 		await this.sprite.activate(this._currentFilePath)
+
+		this.sprite.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
 
 		if (this._isRangeFind && this.data.stretchTo && (this.data.attachTo?.active || this.data.stretchTo?.attachTo?.active)) {
 			this.sprite.preloadVariants()

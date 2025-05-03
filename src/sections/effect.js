@@ -2111,6 +2111,11 @@ export default class EffectSection extends Section {
 			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
 			this.sequence.nameOffsetMap[this._name].target = this._getTargetObject();
 		}
+
+		const source = this._getSourceObject();
+		if(this._persistOptions?.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))){
+			this._persistOptions.persistTokenPrototype = false;
+		}
 	}
 
 	/**
