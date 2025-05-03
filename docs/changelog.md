@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.5.1
+- *Effects* - Fixed issue where effects would get "stuck" on scenes after being played through Automated Animations
+
 ## Version 3.5.0
 - *Sequencer* - Updated TJS implementation to latest versions
 - *Sequencer* - Updated Italian and Polish localization (thank you GregoryWarn and Lioheart on Github!)
