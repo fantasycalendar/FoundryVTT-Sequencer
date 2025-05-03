@@ -2,6 +2,7 @@
 
 ## Version 3.5.1
 - *Effects* - Fixed issue where effects would get "stuck" on scenes after being played through Automated Animations
+- *Effects* - Fixed issue where the effect manager would break if opened with an effect that had pre-defined ranges in its `.file()` method 
 
 ## Version 3.5.0
 - *Sequencer* - Updated TJS implementation to latest versions
