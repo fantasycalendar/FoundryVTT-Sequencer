@@ -2113,7 +2113,7 @@ export default class EffectSection extends Section {
 		}
 
 		const source = this._getSourceObject();
-		if(this._persistOptions.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))){
+		if(this._persistOptions?.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))){
 			this._persistOptions.persistTokenPrototype = false;
 		}
 	}
