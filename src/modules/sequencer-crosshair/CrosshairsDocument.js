@@ -37,6 +37,7 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 			snap: {
 				position: CONST.GRID_SNAPPING_MODES.CENTER,
 				size: CONST.GRID_SNAPPING_MODES.CENTER,
+				resolution: 1,
 				direction: 0
 			},
 			lockDrag: true,
