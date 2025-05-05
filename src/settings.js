@@ -104,11 +104,11 @@ export function registerSettings() {
     type: Boolean,
   });
 
-  game.settings.register(CONSTANTS.MODULE_NAME, "welcome-shown", {
+  game.settings.register(CONSTANTS.MODULE_NAME, "welcome-shown-version", {
     scope: "world",
     config: false,
-    default: false,
-    type: Boolean,
+    default: "0.0.0",
+    type: String,
   });
 
   const permissionLevels = [

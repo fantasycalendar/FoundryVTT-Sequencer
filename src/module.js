@@ -30,6 +30,7 @@ import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.j
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
+import PluginsManager from "./utils/plugins-manager.js";
 
 let moduleValid = false;
 let moduleReady = false;
@@ -39,9 +40,6 @@ Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
   if (!game.modules.get("socketlib")?.active) return;
   moduleValid = true;
-  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
-    CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
-  )?.active;
 	CONSTANTS.IS_V12 = foundry.utils.isNewerVersion(game.version, "12");
   // Enable basis transcoder for GPU compressible textures.
   // Decoder is included in Foundry VTT 12 but not enabled by default
@@ -150,12 +148,16 @@ function initializeModule() {
 
   SequencerEffectManager.setup();
   SequencerAboveUILayer.setup();
+
+	PluginsManager.initialize();
 }
 
 Hooks.once("ready", async () => {
 
-	if(!game.user.isGM || game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown")) return;
-	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown", true);
+	const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version")
+
+	if(!game.user.isGM || foundry.utils.isNewerVersion(version, game.version)) return;
+	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown-version", game.version);
 
 	const chatMessages = game.messages.filter(message => {
 		return message.content.includes("sequencer-welcome")
@@ -170,7 +172,7 @@ Hooks.once("ready", async () => {
 <div class="sequencer-welcome">
 <img src="modules/sequencer/images/sequencer.png"/>
 <div class="sequencer-divider"></div>
-<p>Sequencer remains open, free, and regularly updated with the support of the Foundry community.</p>
+<p>Sequencer can only remain open, free, and regularly updated with the support of the Foundry community.</p>
 <p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
 <div class="sequencer-divider"></div>
 <p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://ko-fi.com/fantasycomputerworks">Donate</a></p>
