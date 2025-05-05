@@ -2,12 +2,12 @@
     "id": "sequencer",
     "title": "Sequencer",
     "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
-    "version": "3.6.!0",
+    "version": "3.5.!2",
     "library": "false",
     "compatibility": {
         "minimum": "12",
-        "verified": "13",
-        "maximum": "13"
+        "verified": "12",
+        "maximum": "12"
     },
     "authors": [
         {
@@ -60,7 +60,7 @@
     "socket": true,
     "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
     "manifest": "https://raw.githubusercontent.com/fantasycalendar/FoundryVTT-Sequencer/next/module.json",
-    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/3.6.!0/module.zip",
+    "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/download/3.5.!2/module.zip",
     "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
     "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
 }
