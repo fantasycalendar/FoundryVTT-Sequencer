@@ -1,5 +1,9 @@
 ## Changelog
 
+## Version 3.5.3
+- *Sequencer* - Fixed overly aggressive welcome chat message
+- *Sequencer* - Sequencer will now fully prevent from launching if socketlib is not properly set up or installed 
+
 ## Version 3.5.2
 - *Effects* - Fixed `complete` effect versions not playing correctly without `.persist()`
 - *Effects* - Fixed isometric support with better plugin implementation

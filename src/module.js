@@ -5,7 +5,7 @@ import registerLayers from "./layers.js";
 import registerBatchShader from "./batchShader.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "../typings/typings.js";
-import { registerSocket } from "./sockets.js";
+import { registerSocket, sequencerSocket } from "./sockets.js";
 import { EASE, easeFunctions, registerEase } from "./canvas-effects/ease.js";
 
 import Sequence from "./modules/sequencer.js";
@@ -54,12 +54,21 @@ Hooks.once("socketlib.ready", registerSocket);
 
 Hooks.once("ready", async function() {
   if (!game.modules.get("socketlib")?.active) {
+	  moduleValid = false;
     ui.notifications.error(
-      "Sequencer requires the SocketLib module to be active and will not work without it!",
+      "Sequencer - Sequencer requires the SocketLib module to be active and will not work without it!",
       { console: true },
     );
     return;
   }
+	if(!sequencerSocket){
+		moduleValid = false;
+		ui.notifications.error(
+			"Sequencer - Failed to set up network socket with socketlib, ensure it is installed correctly!",
+			{ console: true },
+		);
+		return;
+	}
 
   for (const [name, func] of Object.entries(easeFunctions)) {
     if (!CanvasAnimation[name]) {
@@ -156,7 +165,7 @@ Hooks.once("ready", async () => {
 
 	const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version")
 
-	if(!game.user.isGM || foundry.utils.isNewerVersion(version, game.version)) return;
+	if(!game.user.isGM || !foundry.utils.isNewerVersion(version, game.version)) return;
 	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown-version", game.version);
 
 	const chatMessages = game.messages.filter(message => {
