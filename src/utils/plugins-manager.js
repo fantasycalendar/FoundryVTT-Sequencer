@@ -45,7 +45,7 @@ class Plugin {
 		return sort;
 	}
 
-	static createSpriteContainers({ effect, container }={}) {
+	createSpriteContainers({ effect, container }={}) {
 		return container;
 	}
 

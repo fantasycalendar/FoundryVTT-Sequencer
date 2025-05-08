@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.5.4
+- *Effects* - Fixed minor issue with isometric & walled templates plugin implementation
+
 ## Version 3.5.3
 - *Sequencer* - Fixed overly aggressive welcome chat message
 - *Sequencer* - Sequencer will now fully prevent from launching if socketlib is not properly set up or installed 
