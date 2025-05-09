@@ -1,5 +1,6 @@
 import CONSTANTS from "../constants.js"
 import { debug } from "../lib/lib.js"
+import FoundryShim from "../utils/foundry-shim.js";
 
 const SequencerFileCache = {
   _videos: {},
@@ -62,7 +63,7 @@ const SequencerFileCache = {
     if (this._preloadedFiles.has(inSrc)) {
       return true
     }
-    return srcExists(inSrc)
+    return FoundryShim.srcExists(inSrc)
   },
 
   async loadFile(inSrc, preload = false) {
@@ -85,7 +86,7 @@ const SequencerFileCache = {
       }
     }
 
-    const texture = await loadTexture(inSrc)
+    const texture = await FoundryShim.loadTexture(inSrc)
     if (texture) {
       this._preloadedFiles.add(inSrc)
     }

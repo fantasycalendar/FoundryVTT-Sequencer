@@ -1,5 +1,8 @@
 ## Changelog
 
+## Version 3.6.0
+- *Sequencer* - Updated Sequencer for Foundry v13 while still remaining compatible with v12
+
 ## Version 3.5.4
 - *Effects* - Fixed minor issue with isometric & walled templates plugin implementation
 

@@ -5,8 +5,9 @@ import {
 } from "../modules/sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
-export class BaseEffectsLayer extends InteractionLayer {
+export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
@@ -15,7 +16,7 @@ export class BaseEffectsLayer extends InteractionLayer {
   }
 }
 
-export class SequencerInterfaceLayer extends InteractionLayer {
+export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
   constructor(...args) {
     super(...args);
   }
@@ -402,7 +403,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
   }
 }
 
-export class UIEffectsLayer extends InteractionLayer {
+export class UIEffectsLayer extends FoundryShim.InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       zIndex: 999999999999999,

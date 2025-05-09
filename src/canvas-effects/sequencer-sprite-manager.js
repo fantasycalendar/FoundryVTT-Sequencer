@@ -2,6 +2,7 @@
 import AnimatedSpriteMesh from "../lib/meshes/AnimatedSpriteMesh.js";
 import TilingSpriteMesh from "../lib/meshes/TilingSpriteMesh.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
+import FoundryShim from "../utils/foundry-shim.js";
 class Asset {
 	destroy() {
 		// nothing to do in the general case
@@ -634,7 +635,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 * @param {{ fps: number; }} metadata
 	 */
 	async #loadFlipbook(filepaths, metadata) {
-		const textures = (await Promise.all(filepaths.map(async (filepath) => loadTexture(filepath)))).filter(
+		const textures = (await Promise.all(filepaths.map(async (filepath) => FoundryShim.loadTexture(filepath)))).filter(
 			(t) => t instanceof PIXI.Texture
 		);
 		return new FlipbookAsset({ filepaths, textures, framerate: metadata?.fps ?? 24 });

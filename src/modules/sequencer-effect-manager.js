@@ -5,6 +5,7 @@ import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
 import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
@@ -234,7 +235,7 @@ export default class SequencerEffectManager {
     if (
       !(
         object instanceof foundry.abstract.Document ||
-        object instanceof PlaceableObject ||
+        object instanceof FoundryShim.PlaceableObject ||
         typeof object === "string"
       )
     ) {
@@ -243,7 +244,7 @@ export default class SequencerEffectManager {
         "EffectManager | object must be instance of PlaceableObject or of type string"
       );
     } else if (
-      object instanceof PlaceableObject ||
+      object instanceof FoundryShim.PlaceableObject ||
       object instanceof foundry.abstract.Document
     ) {
       object = lib.get_object_identifier(object?.document ?? object);
