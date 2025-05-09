@@ -343,9 +343,9 @@ export function get_object_elevation(inObject) {
 export function get_mouse_position(snapToGrid = false) {
   const pos = lib.getCanvasMouse().getLocalPosition(canvas.app.stage);
 
-	const snappingOptions = CONSTANTS.IS_V12 ? {
+	const snappingOptions = {
 		mode: CONST.GRID_SNAPPING_MODES.CENTER | CONST.GRID_SNAPPING_MODES.VERTEX | CONST.GRID_SNAPPING_MODES.EDGE_MIDPOINT
-	} : 2;
+	};
 
 	return !snapToGrid
 		? new PIXI.Point(pos.x, pos.y)

@@ -795,7 +795,7 @@ class AnimationSection extends Section {
 		}
 
 		if (this._tint) {
-			updateAttributes[CONSTANTS.IS_V12 ? "texture.tint" : "tint"] = this._tint.hexadecimal;
+			updateAttributes["texture.tint"] = this._tint.hexadecimal;
 		}
 
 		if (this._hide !== undefined) {

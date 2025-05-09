@@ -1,5 +1,16 @@
 ## Changelog
 
+## Version 3.5.4
+- *Effects* - Fixed minor issue with isometric & walled templates plugin implementation
+
+## Version 3.5.3
+- *Sequencer* - Fixed overly aggressive welcome chat message
+- *Sequencer* - Sequencer will now fully prevent from launching if socketlib is not properly set up or installed 
+
+## Version 3.5.2
+- *Effects* - Fixed `complete` effect versions not playing correctly without `.persist()`
+- *Effects* - Fixed isometric support with better plugin implementation
+
 ## Version 3.5.1
 - *Effects* - Fixed issue where effects would get "stuck" on scenes after being played through Automated Animations
 - *Effects* - Fixed issue where the effect manager would break if opened with an effect that had pre-defined ranges in its `.file()` method 

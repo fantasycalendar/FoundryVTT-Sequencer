@@ -5,7 +5,7 @@ import registerLayers from "./layers.js";
 import registerBatchShader from "./batchShader.js";
 import registerHotkeys from "./hotkeys.js";
 import registerTypes from "../typings/typings.js";
-import { registerSocket } from "./sockets.js";
+import { registerSocket, sequencerSocket } from "./sockets.js";
 import { EASE, easeFunctions, registerEase } from "./canvas-effects/ease.js";
 
 import Sequence from "./modules/sequencer.js";
@@ -32,6 +32,7 @@ import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
 import { TJSPosition } from "#runtime/svelte/store/position";
 import { SvelteApplication } from "#runtime/svelte/application";
+import PluginsManager from "./utils/plugins-manager.js";
 
 let moduleValid = false;
 let moduleReady = false;
@@ -41,14 +42,10 @@ Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
   if (!game.modules.get("socketlib")?.active) return;
   moduleValid = true;
-  CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE = !!game.modules.get(
-    CONSTANTS.INTEGRATIONS.ISOMETRIC.MODULE_NAME,
-  )?.active;
-	CONSTANTS.IS_V12 = foundry.utils.isNewerVersion(game.version, "12");
 	CONSTANTS.IS_V13 = foundry.utils.isNewerVersion(game.version, "13");
   // Enable basis transcoder for GPU compressible textures.
   // Decoder is included in Foundry VTT 12 but not enabled by default
-  if (CONSTANTS.IS_V12 && !CONSTANTS.IS_V13) {
+  if (!CONSTANTS.IS_V13) {
     CONFIG.Canvas.transcoders.basis = true
   }
   initializeModule();
@@ -87,12 +84,21 @@ Hooks.once("socketlib.ready", registerSocket);
 
 Hooks.once("ready", async function() {
   if (!game.modules.get("socketlib")?.active) {
+	  moduleValid = false;
     ui.notifications.error(
-      "Sequencer requires the SocketLib module to be active and will not work without it!",
+      "Sequencer - Sequencer requires the SocketLib module to be active and will not work without it!",
       { console: true },
     );
     return;
   }
+	if(!sequencerSocket){
+		moduleValid = false;
+		ui.notifications.error(
+			"Sequencer - Failed to set up network socket with socketlib, ensure it is installed correctly!",
+			{ console: true },
+		);
+		return;
+	}
 
   for (const [name, func] of Object.entries(easeFunctions)) {
     if (!foundry.canvas.animation.CanvasAnimation[name]) {
@@ -181,13 +187,15 @@ function initializeModule() {
 
   SequencerEffectManager.setup();
   SequencerAboveUILayer.setup();
+
+	PluginsManager.initialize();
 }
 
 Hooks.once("ready", async () => {
 
 	const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version")
 
-	if(!game.user.isGM || foundry.utils.isNewerVersion(version, game.version)) return;
+	if(!game.user.isGM || !foundry.utils.isNewerVersion(version, game.version)) return;
 	await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown-version", game.version);
 
 	const chatMessages = game.messages.filter(message => {
@@ -203,7 +211,7 @@ Hooks.once("ready", async () => {
 <div class="sequencer-welcome">
 <img src="modules/sequencer/images/sequencer.png"/>
 <div class="sequencer-divider"></div>
-<p>Sequencer remains open, free, and regularly updated with the support of the Foundry community.</p>
+<p>Sequencer can only remain open, free, and regularly updated with the support of the Foundry community.</p>
 <p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
 <div class="sequencer-divider"></div>
 <p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://ko-fi.com/fantasycomputerworks">Donate</a></p>

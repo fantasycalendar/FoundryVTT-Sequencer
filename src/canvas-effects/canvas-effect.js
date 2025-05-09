@@ -11,6 +11,7 @@ import flagManager from "../utils/flag-manager.js";
 import { SequencerAboveUILayer } from "./effects-layer.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import PluginsManager from "../utils/plugins-manager.js";
 
 const hooksManager = {
 	_hooks: new Map(),
@@ -174,14 +175,6 @@ export default class CanvasEffect extends PIXI.Container {
 		return this.data.attachTo?.active && this.sourceDocument
 			? this.sourceDocument
 			: game.scenes.get(this.data.sceneId);
-	}
-
-	get isIsometricActive() {
-		const sceneIsIsometric = foundry.utils.getProperty(
-			game.scenes.get(this.data.sceneId),
-			CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
-		);
-		return CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && sceneIsIsometric;
 	}
 
 	get creationTimestamp() {
@@ -722,28 +715,14 @@ export default class CanvasEffect extends PIXI.Container {
 		let crosshairPos = this.source instanceof CrosshairsPlaceable ? this.sourceDocument.getOrientation() : false;
 		crosshairPos = crosshairPos?.source;
 
-		const position =
+		let position =
 			this.source instanceof foundry.canvas.placeables.PlaceableObject && !this.isSourceTemporary
 				? canvaslib.get_object_position(this.source)
 				: crosshairPos || this.source?.worldPosition || this.source?.center || this.source;
 
 		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.source);
 
-		if (this.isIsometricActive && this.source instanceof foundry.canvas.placeables.PlaceableObject) {
-			position.x +=
-				((this.sourceDocument.elevation ?? 0) / canvas.scene.grid.distance) *
-				canvas.grid.size;
-			position.y -=
-				((this.sourceDocument.elevation ?? 0) / canvas.scene.grid.distance) *
-				canvas.grid.size;
-			if (
-				this.data.isometric?.overlay ||
-				this.target instanceof foundry.canvas.placeables.PlaceableObject
-			) {
-				position.x += (this.source?.height ?? height) / 2;
-				position.y -= (this.source?.height ?? height) / 2;
-			}
-		}
+		position = PluginsManager.sourcePosition({ effect: this, position, height });
 
 		if (position !== undefined) {
 			this._cachedSourceData.position = position;
@@ -816,24 +795,14 @@ export default class CanvasEffect extends PIXI.Container {
 		let crosshairPos = this.target instanceof CrosshairsPlaceable ? this.targetDocument.getOrientation() : false;
 		crosshairPos = crosshairPos?.target ?? crosshairPos?.source;
 
-		const position =
+		let position =
 			this.target instanceof foundry.canvas.placeables.PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
 				? canvaslib.get_object_position(this.target, { measure: true })
 				: crosshairPos || this.target?.worldPosition || this.target?.center || this.target;
 
 		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.target);
 
-		if (this.isIsometricActive && this.target instanceof foundry.canvas.placeables.PlaceableObject) {
-			const targetHeight = (this.target?.height ?? height) / 2;
-			position.x +=
-				((this.targetDocument.elevation ?? 0) / canvas.scene.grid.distance) *
-				canvas.grid.size +
-				targetHeight;
-			position.y -=
-				((this.targetDocument.elevation ?? 0) / canvas.scene.grid.distance) *
-				canvas.grid.size +
-				targetHeight;
-		}
+		position = PluginsManager.targetPosition({ effect: this, position, height });
 
 		if (width !== undefined && height !== undefined) {
 			this._cachedTargetData.width = width;
@@ -1279,13 +1248,10 @@ export default class CanvasEffect extends PIXI.Container {
 		this.rotationContainer = this.addChild(new PIXI.Container());
 		this.rotationContainer.id = this.id + "-rotationContainer";
 
-		this.isometricContainer = this.rotationContainer.addChild(
-			new PIXI.Container()
-		);
-		this.isometricContainer.id = this.id + "-isometricContainer";
+		this.pluginContainer = PluginsManager.createSpriteContainers({ effect: this, container: this.rotationContainer });
 
 		// An offset container for the sprite
-		this.spriteContainer = this.isometricContainer.addChild(
+		this.spriteContainer = this.pluginContainer.addChild(
 			new PIXI.Container()
 		);
 		this.spriteContainer.id = this.id + "-spriteContainer";
@@ -1300,12 +1266,10 @@ export default class CanvasEffect extends PIXI.Container {
 		this._animationDuration = 0;
 		this._animationTimes = {};
 		this._twister = lib.createMersenneTwister(this.creationTimestamp);
-		this._video = null;
 		this._distanceCache = null;
 		this._isRangeFind = false;
 		this._customAngle = 0;
 		this._currentFilePath = this.data.file;
-		this._relatedSprites = {};
 		this._hooks = [];
 		this._lastDimensions = {};
 		this._lastScreenDimensions = {};
@@ -1823,9 +1787,7 @@ export default class CanvasEffect extends PIXI.Container {
 			Math.toRadians(this._customAngle)
 		);
 
-		if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE) {
-			this.isometricContainer.rotation = Math.PI / 4;
-		}
+		PluginsManager.createSprite({ effect: this });
 
 		if (this.data.tint) {
 			this.sprite.tint = this.data.tint;
@@ -1862,32 +1824,16 @@ export default class CanvasEffect extends PIXI.Container {
 				canvaslib.get_object_elevation(this.source ?? {}),
 				canvaslib.get_object_elevation(this.target ?? {})
 			);
-		if(!CONSTANTS.IS_V12) targetElevation += 1;
 
 		let effectElevation = this.data.elevation?.elevation ?? 0;
 		if (!this.data.elevation?.absolute) {
 			effectElevation += targetElevation;
 		}
 		this.elevation = effectElevation;
-
-		let sort;
-		const isIsometric = foundry.utils.getProperty(
-			game.scenes.get(this.data.sceneId),
-			CONSTANTS.INTEGRATIONS.ISOMETRIC.SCENE_ENABLED
-		);
-		if (CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE && isIsometric) {
-			const sourceSort = this.source
-				? (this.sourceMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
-				: 0;
-			const targetSort = this.target
-				? (this.targetMesh?.sort ?? 0) + (this.data.isometric?.overlay ? 1 : -1)
-				: 0;
-			sort = Math.max(sourceSort, targetSort);
-		} else {
-			sort = !lib.is_real_number(this.data.zIndex)
-				? (this?.parent?.children?.length ?? 0)
-				: 100000;
-		}
+		let sort = !lib.is_real_number(this.data.zIndex)
+			? (this?.parent?.children?.length ?? 0)
+			: 100000;
+		sort = PluginsManager.elevation({ effect: this, sort })
 		sort += 100 + (this.data.aboveLighting ? 300 : 0);
 		this.zIndex = sort + (lib.is_real_number(this.data.zIndex) ? this.data.zIndex : 0);
 		this.sort = sort;
@@ -1961,15 +1907,12 @@ export default class CanvasEffect extends PIXI.Container {
 			if (obj instanceof foundry.canvas.placeables.MeasuredTemplate || obj instanceof foundry.canvas.placeables.Drawing) {
 				shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
 
-				if (
-					game.modules.get("walledtemplates")?.active &&
-					obj.walledtemplates?.walledTemplate
-				) {
-					let wt = obj.walledtemplates.walledTemplate;
-					wt.options.padding = 3 * canvas.dimensions.distancePixels;
-					shape = wt.computeShape();
-					wt.options.padding = 0;
-				}
+				shape = PluginsManager.masking({
+					effect: this,
+					doc: documentObj,
+					obj,
+					shape
+				});
 
 				shapeToAdd = new PIXI.LegacyGraphics()
 					.beginFill()
@@ -2007,15 +1950,12 @@ export default class CanvasEffect extends PIXI.Container {
 					mask.position.set(documentObj.x, documentObj.y);
 					let maskObj = documentObj.object;
 					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
-					if (
-						game.modules.get("walledtemplates")?.active &&
-						maskObj.walledtemplates?.walledTemplate
-					) {
-						let wt = maskObj.walledtemplates.walledTemplate;
-						wt.options.padding = 3 * canvas.dimensions.distancePixels;
-						shape = wt.computeShape();
-						wt.options.padding = 0;
-					}
+					shape = PluginsManager.masking({
+						effect: this,
+						doc: documentObj,
+						obj: maskObj,
+						shape
+					});
 				} else {
 					const {
 						x,
@@ -2030,25 +1970,13 @@ export default class CanvasEffect extends PIXI.Container {
 				mask.beginFill().drawShape(shape).endFill();
 			};
 
-			if (game.modules.get("walledtemplates")?.active) {
-				hooksManager.addHook(this.uuid, "createWall", () => {
+			PluginsManager.maskingHooks.forEach(hook => {
+				hooksManager.addHook(this.uuid, hook, (doc) => {
 					setTimeout(() => {
-						updateMethod(documentObj);
+						updateMethod(doc);
 					}, 100);
 				});
-
-				hooksManager.addHook(this.uuid, "updateWall", () => {
-					setTimeout(() => {
-						updateMethod(documentObj);
-					}, 100);
-				});
-
-				hooksManager.addHook(this.uuid, "deleteWall", () => {
-					setTimeout(() => {
-						updateMethod(documentObj);
-					}, 100);
-				});
-			}
+			});
 
 			hooksManager.addHook(this.uuid, this.getHook("update", uuid), (doc) => {
 				setTimeout(() => {
@@ -2330,40 +2258,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this.rotationContainer.rotation = Math.normalizeRadians(
 			ray.angle + Math.toRadians(this.data.rotateTowards?.rotationOffset ?? 0)
 		);
-		this._tweakRotationForIsometric();
-	}
 
-	_tweakRotationForIsometric() {
-		if (!CONSTANTS.INTEGRATIONS.ISOMETRIC.ACTIVE) return;
-
-		if (this.data.stretchTo) {
-			let skew = Math.normalizeRadians(
-				this.rotationContainer.rotation - Math.PI / 4
-			);
-
-			if (
-				Math.abs(skew) >= Math.PI / 2 - 0.5 &&
-				Math.abs(skew) <= Math.PI / 2 + 0.5
-			) {
-				skew -= Math.PI / 2;
-			}
-
-			this.isometricContainer.skew.set(Math.normalizeRadians(skew), 0);
-			this.isometricContainer.rotation = 0;
-		} else if (this.data?.isometric?.overlay) {
-			this.rotationContainer.rotation = 0;
-			let skew = Math.PI / 4 + this.rotationContainer.rotation;
-			this.isometricContainer.skew.set(
-				Math.normalizeRadians(skew - Math.PI / 4),
-				0
-			);
-			this.isometricContainer.scale.set(
-				1.0,
-				window.scale ?? CONSTANTS.INTEGRATIONS.ISOMETRIC.ISOMETRIC_CONVERSION
-			);
-		} else {
-			this.isometricContainer.rotation = 0;
-		}
+		PluginsManager.rotation({ effect: this });
 	}
 
 	/**
@@ -2389,7 +2285,7 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		this._setAnchors()
-		this._tweakRotationForIsometric();
+		PluginsManager.rotation({ effect: this });
 		this.sprite.updateDefaultScaling()
 	}
 
@@ -2547,7 +2443,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this.rotationContainer.rotation = this.getSourceData().rotation;
 		}
 
-		this._tweakRotationForIsometric();
+		PluginsManager.rotation({ effect: this });
 
 		this.position.set(
 			this.sourcePosition.x,
@@ -3253,7 +3149,8 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this._ended || this._isEnding) {
 			return;
 		}
-		if (this.mediaCurrentTime < (this._animationTimes.loopEnd ?? this._endTime)) {
+		const endTime = this.data.persist ? (this._animationTimes.loopEnd ?? this._endTime) : this._endTime;
+		if (this.mediaCurrentTime < endTime) {
 			return;
 		}
 		if (this.restartLoopHandler != null) {
@@ -3267,7 +3164,6 @@ export default class CanvasEffect extends PIXI.Container {
 		// continue to trigger certain parts of the following code
 		// unnecessarily
 		this.mediaCurrentTime = this._endTime;
-
 
 		// if we reached maximum loops, stay paused or even end the effect
 		if ((this.loops || !this.data.persist) && this._currentLoops >= this.loops) {

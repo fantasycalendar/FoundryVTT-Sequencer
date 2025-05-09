@@ -29,10 +29,11 @@ export const SOCKET_HANDLERS = {
   RUN_SEQUENCE_LOCALLY: "runSequenceLocally",
 };
 
-export let sequencerSocket;
+export let sequencerSocket = false;
 
 export function registerSocket() {
   if (sequencerSocket) return;
+	if (!socketlib?.registerModule) return;
   sequencerSocket = socketlib.registerModule(CONSTANTS.MODULE_NAME);
   sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) =>
     SequencerEffectManager._playEffect(...args)

@@ -2314,11 +2314,11 @@ export default class EffectSection extends Section {
 			return doc.getOrientation().source;
 		}
 		if (this._source?.cachedLocation || !this._attachTo) {
-			return canvaslib.get_object_canvas_data(this._source, { uuid: false });
+			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
 		}
 		return (
 			lib.get_object_identifier(this._source) ??
-			canvaslib.get_object_canvas_data(this._source)
+			canvaslib.get_object_canvas_data(this._source, { uuid: true })
 		);
 	}
 
@@ -2342,11 +2342,11 @@ export default class EffectSection extends Section {
 			this._target?.target?.cachedLocation ||
 			!(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)
 		) {
-			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: false });
+			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true });
 		}
 		return (
 			lib.get_object_identifier(this._target.target) ??
-			canvaslib.get_object_canvas_data(this._target.target, { measure: true })
+			canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true })
 		);
 	}
 
