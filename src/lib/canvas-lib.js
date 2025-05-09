@@ -1,6 +1,7 @@
 import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
@@ -152,7 +153,7 @@ export function get_object_position(
   obj = obj?._object ?? obj.object ?? obj;
 
   let pos = {};
-  if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
+  if (obj instanceof FoundryShim.MeasuredTemplate) {
     if (measure) {
       if (obj.document.t === "cone" || obj.document.t === "ray") {
         pos.x = obj.ray.B.x;
@@ -168,7 +169,7 @@ export function get_object_position(
         pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
       }
     }
-  } else if (obj instanceof foundry.canvas.placeables.Tile) {
+  } else if (obj instanceof FoundryShim.Tile) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
@@ -178,7 +179,7 @@ export function get_object_position(
       pos.x += Math.abs(obj.document.width / 2);
       pos.y += Math.abs(obj.document.height / 2);
     }
-  } else if (obj instanceof foundry.canvas.placeables.Token) {
+  } else if (obj instanceof FoundryShim.Token) {
     const halfSize = get_object_dimensions(obj, true);
     pos = {
       x: obj.x + halfSize.width,
@@ -189,7 +190,7 @@ export function get_object_position(
       pos.x -= halfSize.width;
       pos.y -= halfSize.height;
     }
-  } else if (obj instanceof foundry.canvas.placeables.Drawing) {
+  } else if (obj instanceof FoundryShim.Drawing) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,

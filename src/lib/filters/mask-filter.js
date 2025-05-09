@@ -1,4 +1,6 @@
-export default class MaskFilter extends foundry.canvas.rendering.filters.AbstractBaseFilter {
+import FoundryShim from "../../utils/foundry-shim.js";
+
+export default class MaskFilter extends FoundryShim.AbstractBaseFilter {
   /** @override */
   static fragmentShader = `\
         varying vec2 vTextureCoord;

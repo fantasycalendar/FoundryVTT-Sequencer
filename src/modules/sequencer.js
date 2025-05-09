@@ -16,6 +16,7 @@ import CrosshairSection from "../sections/crosshair.js";
 import { get_object_canvas_data } from "../lib/canvas-lib.js";
 import CrosshairsPlaceable from "./sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "./sequencer-crosshair/CrosshairsDocument.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 export default class Sequence {
 	constructor(
@@ -288,7 +289,7 @@ export default class Sequence {
 	addNamedLocation(inName, inLocation){
 		if (typeof inName !== "string")
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
-		if (!(typeof inLocation === "object" || inLocation instanceof foundry.canvas.placeables.PlaceableObject || inLocation instanceof Document))
+		if (!(typeof inLocation === "object" || inLocation instanceof FoundryShim.PlaceableObject || inLocation instanceof Document))
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inLocation must be of type object, PlaceableObject, or Document`);
 		if(inLocation instanceof CrosshairsPlaceable) inLocation = inLocation.document;
 		this.nameOffsetMap ||= {};

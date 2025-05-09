@@ -232,6 +232,10 @@ export function registerSettings() {
 			return setupSidebarToolsV13(controls, sidebarTools);
 		}
 
+		Object.values(sidebarTools).forEach(button => {
+			button.onClick = button.onChange;
+		})
+
 		return setupSidebarToolsV12(controls, sidebarTools);
 
   });

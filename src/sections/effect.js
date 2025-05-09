@@ -9,6 +9,7 @@ import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 export default class EffectSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -627,8 +628,8 @@ export default class EffectSection extends Section {
 	copySprite(inObject, inOptions = {}) {
 		if (
 			!(
-				inObject instanceof foundry.canvas.placeables.Token ||
-				inObject instanceof foundry.canvas.placeables.Tile ||
+				inObject instanceof FoundryShim.Token ||
+				inObject instanceof FoundryShim.Tile ||
 				inObject instanceof TokenDocument ||
 				inObject instanceof TileDocument
 			)
@@ -1858,7 +1859,7 @@ export default class EffectSection extends Section {
 		for (let doc of inDocuments) {
 			if (
 				typeof doc !== "string" &&
-				!(doc instanceof foundry.canvas.placeables.PlaceableObject) &&
+				!(doc instanceof FoundryShim.PlaceableObject) &&
 				!(doc instanceof foundry.abstract.Document)
 			) {
 				throw this.sequence._customError(
@@ -2375,7 +2376,7 @@ export default class EffectSection extends Section {
 		this._temporaryEffect =
 			this._temporaryEffect ||
 			(source instanceof foundry.abstract.Document ||
-			source instanceof foundry.canvas.placeables.MeasuredTemplate
+			source instanceof FoundryShim.MeasuredTemplate
 				? !lib.is_UUID(source?.uuid)
 				: this._temporaryEffect || false);
 

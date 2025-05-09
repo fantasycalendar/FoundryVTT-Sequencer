@@ -1,6 +1,7 @@
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 let lockedView = false;
 
@@ -30,7 +31,7 @@ export default class SequencerFoundryReplicator {
 	    : this._validateObject(data.source, data.sceneId);
 
     const position =
-      source instanceof foundry.canvas.placeables.PlaceableObject
+      source instanceof FoundryShim.PlaceableObject
         ? canvaslib.get_object_position(source)
         : source?.worldPosition || source?.center || source;
 
