@@ -184,8 +184,8 @@ export function registerSettings() {
     if (!game.settings.get(CONSTANTS.MODULE_NAME, "showSidebarTools")) return;
 
 	  const sidebarTools = {
-		  SELECT: {
-			  name: `${CONSTANTS.MODULE_NAME}-select-effect`,
+		  [CONSTANTS.TOOLS.SELECT]: {
+			  name: CONSTANTS.TOOLS.SELECT,
 			  title: "SEQUENCER.SidebarButtons.Select",
 			  icon: "fas fa-expand",
 			  visible:
@@ -193,37 +193,43 @@ export function registerSettings() {
 				  user_can_do("permissions-sidebar-tools"),
 			  onChange: () => {}
 		  },
-		  PLAYER: {
-			  name: `${CONSTANTS.MODULE_NAME}-play-effect`,
+		  [CONSTANTS.TOOLS.PLAY]: {
+			  name: CONSTANTS.TOOLS.PLAY,
 			  title: "SEQUENCER.SidebarButtons.Play",
 			  icon: "fas fa-play",
 			  visible:
 				  user_can_do("permissions-effect-create") &&
 				  user_can_do("permissions-sidebar-tools"),
-			  onChange: () => {
-				  EffectsUIApp.show({ inFocus: true, tab: "player" });
+			  onChange: (event, active) => {
+				  if(active || !CONSTANTS.IS_V13){
+						EffectsUIApp.show({ inFocus: true, tab: "player" });
+				  }
 			  },
 		  },
-		  VIEWER: {
-			  name: `${CONSTANTS.MODULE_NAME}-effectviewer`,
+		  [CONSTANTS.TOOLS.VIEWER]: {
+			  name: CONSTANTS.TOOLS.VIEWER,
 			  title: "SEQUENCER.SidebarButtons.Manager",
 			  icon: "fas fa-film",
 			  button: true,
 			  visible:
 				  user_can_do("permissions-effect-create") &&
 				  user_can_do("permissions-sidebar-tools"),
-			  onChange: () => {
-				  EffectsUIApp.show({ inFocus: true, tab: "manager" });
+			  onChange: (event, active) => {
+				  if(active || !CONSTANTS.IS_V13) {
+					  EffectsUIApp.show({ inFocus: true, tab: "manager" });
+				  }
 			  },
 		  },
-		  DATABASE: {
-			  name: `${CONSTANTS.MODULE_NAME}-effectdatabase`,
+		  [CONSTANTS.TOOLS.DATABASE]: {
+			  name: CONSTANTS.TOOLS.DATABASE,
 			  title: "SEQUENCER.SidebarButtons.Database",
 			  icon: "fas fa-database",
 			  button: true,
 			  visible: user_can_do("permissions-sidebar-tools"),
-			  onChange: () => {
-				  DatabaseViewerApp.show();
+			  onChange: (event, active) => {
+				  if(active || !CONSTANTS.IS_V13) {
+					  DatabaseViewerApp.show();
+				  }
 			  },
 		  }
 	  }
@@ -249,20 +255,23 @@ function setupSidebarToolsV13(controls, sidebarTools){
 		name: CONSTANTS.MODULE_NAME,
 		title: "Sequencer Layer",
 		icon: "fas fa-list-ol",
-		layer: "sequencerInterfaceLayer",
+		layer: CONSTANTS.INTERFACE_LAYER,
 		visible:
 			user_can_do("permissions-effect-create") &&
 			user_can_do("permissions-sidebar-tools"),
-		activeTool: "select-effect",
-		tools: Object.values(sidebarTools),
+		activeTool: CONSTANTS.TOOLS.PLAY,
+		onChange: (event, active) => {
+			if ( active ) canvas.sequencerInterfaceLayer.activate({ tool: CONSTANTS.TOOLS.PLAY });
+		},
+		tools: sidebarTools,
 	}
 
 	if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools")) {
 		return;
 	}
 
-	controls["tokens"].tools[sidebarTools.DATABASE.name] = sidebarTools.DATABASE;
-	controls["tokens"].tools[sidebarTools.VIEWER.name] = sidebarTools.VIEWER;
+	controls["tokens"].tools[CONSTANTS.TOOLS.DATABASE] = sidebarTools[CONSTANTS.TOOLS.DATABASE];
+	controls["tokens"].tools[CONSTANTS.TOOLS.VIEWER] = sidebarTools[CONSTANTS.TOOLS.VIEWER];
 }
 
 function setupSidebarToolsV12(controls, sidebarTools){
@@ -271,20 +280,21 @@ function setupSidebarToolsV12(controls, sidebarTools){
 		name: CONSTANTS.MODULE_NAME,
 		title: "Sequencer Layer",
 		icon: "fas fa-list-ol",
-		layer: "sequencerInterfaceLayer",
+		layer: CONSTANTS.INTERFACE_LAYER,
 		visible:
 			user_can_do("permissions-effect-create") &&
 			user_can_do("permissions-sidebar-tools"),
-		activeTool: "select-effect",
+		activeTool: CONSTANTS.TOOLS.SELECT,
 		tools: Object.values(sidebarTools)
 	});
 
-	if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools"))
+	if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools")) {
 		return;
+	}
 
 	const bar = controls.find((c) => c.name === "token");
-	bar.tools.push(sidebarTools.DATABASE);
-	bar.tools.push(sidebarTools.VIEWER);
+	bar.tools.push(sidebarTools[CONSTANTS.TOOLS.DATABASE]);
+	bar.tools.push(sidebarTools[CONSTANTS.TOOLS.VIEWER]);
 
 }
 

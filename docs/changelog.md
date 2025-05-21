@@ -1,5 +1,8 @@
 ## Changelog
 
+# Version 3.6.1
+- *Sequencer* - Fixed some lingering issues in Foundry v13
+
 ## Version 3.6.0
 - *Sequencer* - Updated Sequencer for Foundry v13 while still remaining compatible with v12
 

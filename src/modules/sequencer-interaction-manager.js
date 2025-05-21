@@ -132,7 +132,7 @@ export const EffectPlayer = {
 
   get isActive() {
     return (
-      InteractionManager.isLayerActive && game?.activeTool === "play-effect"
+      InteractionManager.isLayerActive && game?.activeTool === CONSTANTS.TOOLS.PLAY
     );
   },
 
@@ -414,7 +414,7 @@ export const SelectionManager = {
 
   get isActive() {
     return (
-      InteractionManager.isLayerActive && game?.activeTool === "select-effect"
+      InteractionManager.isLayerActive && game?.activeTool === CONSTANTS.TOOLS.SELECT
     );
   },
 

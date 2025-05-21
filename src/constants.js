@@ -2,6 +2,8 @@ const CONSTANTS = {
   MODULE_NAME: "sequencer",
   EFFECTS_FLAG_NAME: "effects",
   SOUNDS_FLAG_NAME: "sounds",
+	EFFECTS_LAYER: "sequencerEffects",
+	INTERFACE_LAYER: "sequencerInterfaceLayer",
 	IS_V13: false,
   COLOR: {
     PRIMARY: 0xee442f,
@@ -42,5 +44,12 @@ const CONSTANTS = {
 		CANCEL: "cancel"
 	}
 };
+
+CONSTANTS.TOOLS = {
+	SELECT: `${CONSTANTS.MODULE_NAME}-select-effect`,
+	PLAY: `${CONSTANTS.MODULE_NAME}-play-effect`,
+	VIEWER: `${CONSTANTS.MODULE_NAME}-effectviewer`,
+	DATABASE: `${CONSTANTS.MODULE_NAME}-effectdatabase`
+}
 
 export default CONSTANTS;

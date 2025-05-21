@@ -7,6 +7,7 @@
   import Checkbox from "./components/Checkbox.svelte";
   import NumberInput from "./components/NumberInput.svelte";
   import SwitchToggle from "./components/SwitchToggle.svelte";
+  import CONSTANTS from "../../constants.js";
 
   const fileStore = PlayerSettings.file.store;
   const users = game.users.filter(user => user.active);
@@ -35,9 +36,13 @@
   $: searchDebounce($fileStore);
 
   async function activateLayer(){
-    ui.controls.initialize({ control: "sequencer", tool: "play-effect" });
-    canvas.sequencerInterfaceLayer.activate({ tool: "play-effect" });
-	}
+		if(CONSTANTS.IS_V13){
+			ui.controls.activate({ control: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
+		}else{
+			ui.controls.initialize({ layer: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
+		}
+	  canvas.sequencerInterfaceLayer.activate({ tool: CONSTANTS.TOOLS.PLAY });
+  }
 
   let filePicker = false;
 
