@@ -9,6 +9,7 @@ import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 export default class EffectSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -627,8 +628,8 @@ export default class EffectSection extends Section {
 	copySprite(inObject, inOptions = {}) {
 		if (
 			!(
-				inObject instanceof Token ||
-				inObject instanceof Tile ||
+				inObject instanceof FoundryShim.Token ||
+				inObject instanceof FoundryShim.Tile ||
 				inObject instanceof TokenDocument ||
 				inObject instanceof TileDocument
 			)
@@ -1858,7 +1859,7 @@ export default class EffectSection extends Section {
 		for (let doc of inDocuments) {
 			if (
 				typeof doc !== "string" &&
-				!(doc instanceof PlaceableObject) &&
+				!(doc instanceof FoundryShim.PlaceableObject) &&
 				!(doc instanceof foundry.abstract.Document)
 			) {
 				throw this.sequence._customError(
@@ -2111,6 +2112,11 @@ export default class EffectSection extends Section {
 			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
 			this.sequence.nameOffsetMap[this._name].target = this._getTargetObject();
 		}
+
+		const source = this._getSourceObject();
+		if(this._persistOptions?.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))){
+			this._persistOptions.persistTokenPrototype = false;
+		}
 	}
 
 	/**
@@ -2309,11 +2315,11 @@ export default class EffectSection extends Section {
 			return doc.getOrientation().source;
 		}
 		if (this._source?.cachedLocation || !this._attachTo) {
-			return canvaslib.get_object_canvas_data(this._source, { uuid: false });
+			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
 		}
 		return (
 			lib.get_object_identifier(this._source) ??
-			canvaslib.get_object_canvas_data(this._source)
+			canvaslib.get_object_canvas_data(this._source, { uuid: true })
 		);
 	}
 
@@ -2337,11 +2343,11 @@ export default class EffectSection extends Section {
 			this._target?.target?.cachedLocation ||
 			!(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)
 		) {
-			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: false });
+			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true });
 		}
 		return (
 			lib.get_object_identifier(this._target.target) ??
-			canvaslib.get_object_canvas_data(this._target.target, { measure: true })
+			canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true })
 		);
 	}
 
@@ -2370,7 +2376,7 @@ export default class EffectSection extends Section {
 		this._temporaryEffect =
 			this._temporaryEffect ||
 			(source instanceof foundry.abstract.Document ||
-			source instanceof MeasuredTemplate
+			source instanceof FoundryShim.MeasuredTemplate
 				? !lib.is_UUID(source?.uuid)
 				: this._temporaryEffect || false);
 

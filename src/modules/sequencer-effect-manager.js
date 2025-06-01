@@ -5,6 +5,7 @@ import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
 import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
@@ -159,7 +160,7 @@ export default class SequencerEffectManager {
       this._filterEffects(inFilter)
         .filter((effect) => effect.userCanDelete)
         .map((effect) => {
-          return effect.data?.persistOptions?.persistTokenPrototype
+          return effect.data?.persistOptions?.persistTokenPrototype && lib.is_UUID(effect?.data.source) && effect.data?.attachTo?.active
             ? effect.data?.persistOptions?.id ?? effect.id
             : effect.id;
         })
@@ -234,7 +235,7 @@ export default class SequencerEffectManager {
     if (
       !(
         object instanceof foundry.abstract.Document ||
-        object instanceof PlaceableObject ||
+        object instanceof FoundryShim.PlaceableObject ||
         typeof object === "string"
       )
     ) {
@@ -243,7 +244,7 @@ export default class SequencerEffectManager {
         "EffectManager | object must be instance of PlaceableObject or of type string"
       );
     } else if (
-      object instanceof PlaceableObject ||
+      object instanceof FoundryShim.PlaceableObject ||
       object instanceof foundry.abstract.Document
     ) {
       object = lib.get_object_identifier(object?.document ?? object);
@@ -686,7 +687,7 @@ export default class SequencerEffectManager {
       }
 
       const persistentEffectData = effectData.filter(
-        (data) => data?.persistOptions?.persistTokenPrototype
+        (data) => lib.is_UUID(data?.source) && data?.persistOptions?.persistTokenPrototype
       );
       if (!persistentEffectData.length) return;
 
@@ -694,7 +695,8 @@ export default class SequencerEffectManager {
       const applicableActorEffects = actorEffects
         .filter((effect) => {
           return (
-            effect[1]?.persistOptions?.persistTokenPrototype &&
+	          lib.is_UUID(effect[1]?.source) &&
+	          effect[1]?.persistOptions?.persistTokenPrototype &&
             persistentEffectData.some(
               (persistentEffect) =>
                 persistentEffect.persistOptions.id ===

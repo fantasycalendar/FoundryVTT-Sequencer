@@ -370,10 +370,10 @@ const flagManager = {
 			) {
 				const actor = object?.actor ?? object;
 				actorUpdates[actor.id] = flagsToSet.filter(
-					(effect) => effect[1]?.persistOptions?.persistTokenPrototype,
+					(effect) => lib.is_UUID(effect[1]?.source) && effect[1]?.attachTo?.active && effect[1]?.persistOptions?.persistTokenPrototype,
 				);
 				flagsToSet = flagsToSet.filter(
-					(effect) => !effect[1]?.persistOptions?.persistTokenPrototype,
+					(effect) => !effect[1]?.persistOptions?.persistTokenPrototype || !lib.is_UUID(effect[1]?.source) || !effect[1]?.attachTo?.active,
 				);
 				if (
 					isLinkedToken &&

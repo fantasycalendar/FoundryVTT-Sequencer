@@ -5,33 +5,42 @@ import {
 } from "../modules/sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
-export class BaseEffectsLayer extends InteractionLayer {
+export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
-      name: "sequencerEffects",
+      name: CONSTANTS.EFFECTS_LAYER,
     });
   }
 }
 
-export class SequencerInterfaceLayer extends InteractionLayer {
+export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
   constructor(...args) {
     super(...args);
   }
 
+	isActive = false;
+
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
-      name: "sequencerInterfaceEffects",
+      name: CONSTANTS.INTERFACE_LAYER,
     });
   }
 
+	activate(...args){
+		const result = super.activate(...args);
+		this.isActive = true;
+		return result;
+	}
+
   deactivate() {
     super.deactivate();
-    if (!this.active) return;
+    if (!this.isActive) return;
     this._clearChildren();
-    this.active = false;
+    this.isActive = false;
     InteractionManager.tearDown();
   }
 
@@ -83,7 +92,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
     this._setup();
     this._clearChildren();
     this._drawHoveredEffectElements();
-    if (!this.active) return;
+    if (!this.isActive) return;
     this._drawLine();
     this._drawPoints();
     this._drawSelectedEffectElements();
@@ -101,7 +110,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
     if (
       !EffectPlayer.startPos ||
       !EffectPlayer.endPos ||
-      game?.activeTool !== "play-effect"
+      game?.activeTool !== CONSTANTS.TOOLS.PLAY
     )
       return;
 
@@ -112,7 +121,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
   }
 
   _drawPoints() {
-    if (game?.activeTool !== "play-effect") return;
+    if (game?.activeTool !== CONSTANTS.TOOLS.PLAY) return;
 
     const startPos = EffectPlayer.startPos || EffectPlayer.cursorPos;
 
@@ -402,7 +411,7 @@ export class SequencerInterfaceLayer extends InteractionLayer {
   }
 }
 
-export class UIEffectsLayer extends InteractionLayer {
+export class UIEffectsLayer extends FoundryShim.InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       zIndex: 999999999999999,

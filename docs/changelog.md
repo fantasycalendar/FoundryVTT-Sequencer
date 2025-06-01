@@ -1,5 +1,29 @@
 ## Changelog
 
+# Version 3.6.1
+- *Sequencer* - Fixed some lingering issues in Foundry v13
+
+## Version 3.6.0
+- *Sequencer* - Updated Sequencer for Foundry v13 while still remaining compatible with v12
+
+## Version 3.5.4
+- *Effects* - Fixed minor issue with isometric & walled templates plugin implementation
+
+## Version 3.5.3
+- *Sequencer* - Fixed overly aggressive welcome chat message
+- *Sequencer* - Sequencer will now fully prevent from launching if socketlib is not properly set up or installed 
+
+## Version 3.5.2
+- *Effects* - Fixed `complete` effect versions not playing correctly without `.persist()`
+- *Effects* - Fixed isometric support with better plugin implementation
+
+## Version 3.5.1
+- *Effects* - Fixed issue where effects would get "stuck" on scenes after being played through Automated Animations
+- *Effects* - Fixed issue where the effect manager would break if opened with an effect that had pre-defined ranges in its `.file()` method 
+- *Effects* - Fixed .webm's with sounds would not play its sound if played as an effect 
+- *Crosshairs* - Fixed snap position resolution being undefined by default, causing it to not snap if not defined 
+- *Crosshairs* - Elaborated on some crosshairs function documentation
+
 ## Version 3.5.0
 - *Sequencer* - Updated TJS implementation to latest versions
 - *Sequencer* - Updated Italian and Polish localization (thank you GregoryWarn and Lioheart on Github!)

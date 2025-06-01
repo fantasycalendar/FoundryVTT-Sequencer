@@ -7,14 +7,6 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 
 
-function createSoundListener(sound, name, func) {
-	if (CONSTANTS.IS_V12) {
-		return sound.addEventListener(name, func);
-	}
-	return sound.on(name, func);
-}
-
-
 export default class SequencerSoundManager {
 
 	/**
@@ -63,10 +55,7 @@ export default class SequencerSoundManager {
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
 
-		// Sound in v11 was not multiplied correctly when played through the AudioHelper, but is in v12
-		data.volume = playSound
-			? (data.volume ?? 0.8) * (!CONSTANTS.IS_V12 ? game.settings.get("core", "globalInterfaceVolume") : 1.0)
-			: 0.0;
+		data.volume = playSound ? (data.volume ?? 0.8) : 0.0;
 
 		let sound;
 
@@ -145,8 +134,8 @@ export default class SequencerSoundManager {
 		}
 
 		new Promise((resolve) => {
-			createSoundListener(sound, "stop", resolve);
-			createSoundListener(sound, "end", resolve);
+			sound.addEventListener("stop", resolve);
+			sound.addEventListener("end", resolve);
 		}).then(() => {
 			SequenceManager.RunningSounds.delete(data.id);
 			Hooks.callAll("endedSequencerSound", data);

@@ -9,8 +9,10 @@
   function getEffectName(effect) {
 
     let effectName = "";
-    if (effect.data.file) {
-      effectName = effect.data.file.split('\\').pop().split('/').pop();
+    if (effect.data.file && typeof effect.data.file === "string") {
+	    effectName = effect.data.file.split('\\').pop().split('/').pop();
+    } else if (effect.data.file && typeof effect.data.file === "object") {
+      effectName = Object.values(effect.data.file)[0].split('\\').pop().split('/').pop();
     } else if (effect.data.text) {
       effectName = "Text: " + effect.data.text.text;
     } else {

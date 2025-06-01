@@ -192,18 +192,6 @@ class SoundSection extends Section {
 			}
 		}
 
-		if (playData.location && !CONSTANTS.IS_V12) {
-			if (this.sequence.softFail) {
-				playData.play = false;
-			} else {
-				throw this.sequence._customError(
-					this,
-					"atLocation",
-					"a sound cannot have a location in v11",
-				);
-			}
-		}
-
 		if (!playData.play && this.sequence.softFail) {
 			return new Promise((reject) => {
 				reject();

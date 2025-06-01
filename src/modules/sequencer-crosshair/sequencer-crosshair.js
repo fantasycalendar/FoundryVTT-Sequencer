@@ -2,6 +2,7 @@ import CrosshairsDocument from "./CrosshairsDocument.js";
 import TokenCrosshairsDocument from "./TokenCrosshairsDocument.js";
 import CONSTANTS from "../../constants.js";
 import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
+import FoundryShim from "../../utils/foundry-shim.js";
 
 export default class Crosshair {
 
@@ -39,7 +40,7 @@ export default class Crosshair {
 	}
 
 	/**
-	 * Show a configurable crosshair based a foundry PlaceableObject
+	 * Show a configurable crosshair based a PlaceableObject
 	 *
 	 * @param {PlaceableObject} obj
 	 * @param {CrosshairData/Object} config
@@ -48,7 +49,7 @@ export default class Crosshair {
 	 */
 	static showToken(obj, config = {}, callbacks = {}) {
 
-		const placeable = obj instanceof PlaceableObject ? obj : obj.object;
+		const placeable = obj instanceof FoundryShim.PlaceableObject ? obj : obj.object;
 
 		const controlled = placeable.controlled;
 		placeable.release();
