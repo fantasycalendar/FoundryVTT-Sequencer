@@ -232,7 +232,10 @@ export default class CrosshairSection extends Section {
 		return this;
 	}
 
-	texture(inTexture, { alpha = 0.5, scale = 1 } = { alpha: 0.5, scale: 1, tile: false }) {
+	/**
+	 * Sets the texture used by the crosshair
+	 */
+	texture(inTexture, { alpha = 0.5, scale = 1 } = { alpha: 0.5, scale: 1 }) {
 		if (typeof arguments[1] !== "object") {
 			throw this.sequence._customError(this, "texture", "inOptions must be of type object");
 		}
@@ -246,7 +249,11 @@ export default class CrosshairSection extends Section {
 			throw this.sequence._customError(this, "texture", "inTexture must be of type string");
 		}
 		this._texture = inTexture;
+
+		if (alpha < 0) alpha *= -1;
+		while (alpha > 1) alpha /= 10;
 		this._config['textureAlpha'] = alpha;
+
 		this._config['textureScale'] = scale;
 		return this;
 	}

@@ -152,7 +152,6 @@ Also supports a second options object that accepts:
 
 - `alpha: number` - The transparency of the texture (default `0.5`)
 - `scale: number` - The scale multiplier for the texture size (default `1`)
-- `tile: boolean` - Whether or not to tile the texture. If false, the texture is automatically resized to the template before `scale` is applied (default `false`)
 
 ## Location
 
