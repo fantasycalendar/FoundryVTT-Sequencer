@@ -126,7 +126,7 @@ Also supports a second options object that accepts:
 
 ## Border Alpha
 
-`.borderColor(number)`
+`.borderAlpha(number)`
 
 Sets the border transparency of the crosshair
 

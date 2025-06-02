@@ -13,10 +13,8 @@ export default class CrosshairSection extends Section {
 		this._angle = 53.13;
 		this._width = canvas.grid.distance;
 		this._direction = 0;
-		this._borderAlpha = 0.75;
 		this._borderColor = null;
 		this._fillColor = null;
-		this._textureAlpha = undefined;
 		this._persist = false;
 		this._config = CrosshairsDocument.defaultConfig;
 		this._waitUntilFinished = true;
@@ -214,7 +212,7 @@ export default class CrosshairSection extends Section {
 		}
 		if (inAlpha < 0) inAlpha *= -1;
 		while (inAlpha > 1) inAlpha /= 10;
-		this._borderAlpha = inAlpha;
+		this._config['borderAlpha'] = inAlpha;
 		return this;
 	}
 
@@ -234,7 +232,7 @@ export default class CrosshairSection extends Section {
 		return this;
 	}
 
-	texture(inTexture, { alpha = 0.5, scale = 1, tile = false } = { alpha: 0.5, scale: 1, tile: false }) {
+	texture(inTexture, { alpha = 0.5, scale = 1 } = { alpha: 0.5, scale: 1, tile: false }) {
 		if (typeof arguments[1] !== "object") {
 			throw this.sequence._customError(this, "texture", "inOptions must be of type object");
 		}
@@ -244,16 +242,12 @@ export default class CrosshairSection extends Section {
 		if (!lib.is_real_number(scale)) {
 			throw this.sequence._customError(this, "texture", "inOptions.scale must be of type number");
 		}
-		if (typeof tile !== "boolean") {
-			throw this.sequence._customError(this, "texture", "inOptions.tile must be of type boolean");
-		}
 		if (typeof inTexture !== "string") {
 			throw this.sequence._customError(this, "texture", "inTexture must be of type string");
 		}
 		this._texture = inTexture;
-		this._textureAlpha = textureAlpha;
-		this._textureScale = scale;
-		this._textureTile = tile;
+		this._config['textureAlpha'] = alpha;
+		this._config['textureScale'] = scale;
 		return this;
 	}
 
@@ -391,11 +385,7 @@ export default class CrosshairSection extends Section {
 			direction: this._direction,
 			angle: this._angle,
 			borderColor: this._borderColor,
-			borderAlpha: this._borderAlpha,
 			texture: this._texture,
-			textureAlpha: this._textureAlpha,
-			textureScale: this._textureScale,
-			textureTile: this._textureTile,
 			fillColor: this._fillColor,
 		}, {
 			parent: canvas.scene

@@ -76,6 +76,9 @@ type TemplateData = {
 }
 
 type CrosshairsData = {
+	borderAlpha: number;
+	textureAlpha: number;
+	textureScale: number;
 	gridHighlight: boolean;
 	icon: {
 		texture: string;
@@ -114,7 +117,6 @@ type CrosshairsData = {
 		wallBehavior: string;
 	};
 	lockManualRotation: boolean;
-	textureTile: number;
 };
 
 declare interface CrosshairData extends

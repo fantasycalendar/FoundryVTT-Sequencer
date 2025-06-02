@@ -114,7 +114,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		const t = this.template.clear();
 
 		// Draw the Template outline
-		t.lineStyle(this._borderThickness, this.document.borderColor, this.document.borderAlpha).beginFill(0x000000, 0.0);
+		t.lineStyle(this._borderThickness, this.document.borderColor, this.crosshair.borderAlpha).beginFill(0x000000, 0.0);
 
 		// Fill Color or Texture
 		if (this.texture) {
@@ -122,10 +122,8 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 			let { direction, distance } = this.document;
 			distance *= (d.size / d.distance);
 
-			const textureAlpha = this.document.textureAlpha || 0.5;
-			const scaleOverride = this.document.textureScale || 1;
-			// if texture is tile-able, then don't scale up to the document size
-			let textureSize = (this.document.textureTile ? 1 : distance) * scaleOverride;
+			const textureAlpha = this.crosshair.textureAlpha || 0.5;
+			let textureScale = this.crosshair.textureScale || 1;
 
 			let xScale = 1;
 			let yScale = 1;
@@ -135,27 +133,27 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 			switch (this.document.t) {
 				case 'circle':
 					{
-						xOffset = yOffset = textureSize;
-						xScale = yScale = textureSize * 2 / this.texture.width;
+						xOffset = yOffset = textureScale;
+						xScale = yScale = textureScale * 2 / this.texture.width;
 					}
 					break;
 				case 'cone':
 					{
-						textureSize /= 2;
-						yOffset = -textureSize;
+						textureScale /= 2;
+						yOffset = -textureScale;
 
-						xScale = yScale = textureSize * 2 / this.texture.width;
+						xScale = yScale = textureScale * 2 / this.texture.width;
 					}
 					break;
 				case 'rect':
 					{
-						// textureSize is basically the hypotenuse, multiple by sin(45) to get the width/height of the rect (square)
-						textureSize *= Math.sin(Math.toRadians(45));
-						xScale = textureSize / this.texture.width;
-						yScale = textureSize / this.texture.height;
+						// textureScale is basically the hypotenuse, multiple by sin(45) to get the width/height of the rect (square)
+						textureScale *= Math.sin(Math.toRadians(45));
+						xScale = textureScale / this.texture.width;
+						yScale = textureScale / this.texture.height;
 
 						direction = 0;
-						textureSize /= 2;
+						textureScale /= 2;
 						template.rotation = this.actualRotation;
 					}
 					break;
@@ -163,8 +161,8 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 					{
 						yOffset = this.document.width / d.distance * d.size / 2;
 
-						xScale = textureSize / this.texture.width;
-						yScale = textureSize / this.texture.height;
+						xScale = textureScale / this.texture.width;
+						yScale = textureScale / this.texture.height;
 
 						yScale *= this.document.width / this.document.distance;
 					}

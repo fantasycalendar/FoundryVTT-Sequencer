@@ -30,6 +30,9 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 
 	static get defaultConfig() {
 		return {
+			borderAlpha: 0.75,
+			textureAlpha: 0.5,
+			textureScale: 1.0,
 			gridHighlight: true,
 			icon: {
 				texture: "",
