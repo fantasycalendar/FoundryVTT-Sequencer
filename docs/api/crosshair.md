@@ -144,7 +144,7 @@ Sets the fill color of the crosshair
 
 ## Texture
 
-`.icon(string, inOptions)`
+`.texture(string, inOptions)`
 
 Configures the texture shown within the template
 
