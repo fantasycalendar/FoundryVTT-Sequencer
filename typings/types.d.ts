@@ -1251,7 +1251,7 @@ declare abstract class CrosshairSection {
 	/**
 	 * Sets the texture used by the crosshair
 	 */
-	callback(inTexture: string, inOptions?: { alpha: number, scale: 1 }): this;
+	texture(inTexture: string, inOptions?: { alpha: number, scale: 1 }): this;
 }
 
 declare abstract class SequencerFile {}
