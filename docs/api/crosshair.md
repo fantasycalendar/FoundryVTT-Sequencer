@@ -124,17 +124,15 @@ Also supports a second options object that accepts:
 
 - `borderVisible: boolean` - Causes the border of the icon to be visible
 
-## Border Alpha
-
-`.borderAlpha(number)`
-
-Sets the border transparency of the crosshair
-
 ## Border Color
 
-`.borderColor(HEX | number)`
+`.borderColor(HEX | number, inOptions)`
 
 Sets the border color of the crosshair
+
+Also supports a second options object that accepts:
+
+- `alpha: boolean` - The transparency of the border (default `0.5`)
 
 ## Fill Color
 

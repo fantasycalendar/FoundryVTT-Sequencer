@@ -204,23 +204,14 @@ export default class CrosshairSection extends Section {
 	}
 
 	/**
-	 * Sets the border transparency of the crosshair
-	 */
-	borderAlpha(inAlpha) {
-		if (!lib.is_real_number(inAlpha)) {
-			throw this.sequence._customError(this, "borderAlpha", "inAlpha must be of type number");
-		}
-		if (inAlpha < 0) inAlpha *= -1;
-		while (inAlpha > 1) inAlpha /= 10;
-		this._config['borderAlpha'] = inAlpha;
-		return this;
-	}
-
-	/**
 	 * Sets the border color of the crosshair
 	 */
-	borderColor(inColor) {
+	borderColor(inColor, { alpha = 0.5 } = { alpha: 0.5 }) {
 		this._borderColor = lib.parseColor(inColor);
+		if (!lib.is_real_number(alpha)) {
+			throw this.sequence._customError(this, "borderAlpha", "inAlpha must be of type number");
+		}
+		this._config['borderAlpha'] = lib.normalize_alpha_number(alpha);
 		return this;
 	}
 
@@ -249,11 +240,7 @@ export default class CrosshairSection extends Section {
 			throw this.sequence._customError(this, "texture", "inTexture must be of type string");
 		}
 		this._texture = inTexture;
-
-		if (alpha < 0) alpha *= -1;
-		while (alpha > 1) alpha /= 10;
-		this._config['textureAlpha'] = alpha;
-
+		this._config['textureAlpha'] = lib.normalize_alpha_number(alpha);
 		this._config['textureScale'] = scale;
 		return this;
 	}
