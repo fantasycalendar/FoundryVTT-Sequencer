@@ -19,7 +19,7 @@ crosshair = {
 	borderColor: string // Determines the color of the template border
 	texture: string // the texture to show within the template
 	textureAlpha: number // the transparency of the chosen texture (default .5)
-	textureScale: number // texture scale multiplier (default 1)
+	textureScale: number // texture scale relative to the template size (default 1)
 	fillColor: string // Determines the color of the template fill
 	angle: number // The starting angle for the template
 	direction: number // The starting direction for the template

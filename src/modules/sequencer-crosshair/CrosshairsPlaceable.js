@@ -155,7 +155,6 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 						direction = 0;
 						textureSize /= 2;
-						template.rotation = this.actualRotation;
 					}
 					break;
 				case 'ray':
