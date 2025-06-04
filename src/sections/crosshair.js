@@ -207,7 +207,7 @@ export default class CrosshairSection extends Section {
 	 * Sets the border color of the crosshair
 	 */
 	borderColor(inColor, { alpha = 0.5 } = { alpha: 0.5 }) {
-		this._borderColor = lib.parseColor(inColor);
+		this._borderColor = lib.parseColor(inColor).hexadecimal;
 		if (!lib.is_real_number(alpha)) {
 			throw this.sequence._customError(this, "borderAlpha", "inAlpha must be of type number");
 		}
@@ -219,7 +219,7 @@ export default class CrosshairSection extends Section {
 	 * Sets the fill color of the crosshair
 	 */
 	fillColor(inColor) {
-		this._fillColor = lib.parseColor(inColor);
+		this._fillColor = lib.parseColor(inColor).hexadecimal;
 		return this;
 	}
 
