@@ -124,6 +124,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 			const textureAlpha = this.crosshair.textureAlpha || 0.5;
 			let textureScale = this.crosshair.textureScale || 1;
+			let textureSize = distance * textureScale;
 
 			let xScale = 1;
 			let yScale = 1;
@@ -133,27 +134,27 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 			switch (this.document.t) {
 				case 'circle':
 					{
-						xOffset = yOffset = textureScale;
-						xScale = yScale = textureScale * 2 / this.texture.width;
+						xOffset = yOffset = textureSize;
+						xScale = yScale = textureSize * 2 / this.texture.width;
 					}
 					break;
 				case 'cone':
 					{
-						textureScale /= 2;
-						yOffset = -textureScale;
+						textureSize /= 2;
+						yOffset = -textureSize;
 
-						xScale = yScale = textureScale * 2 / this.texture.width;
+						xScale = yScale = textureSize * 2 / this.texture.width;
 					}
 					break;
 				case 'rect':
 					{
-						// textureScale is basically the hypotenuse, multiple by sin(45) to get the width/height of the rect (square)
-						textureScale *= Math.sin(Math.toRadians(45));
-						xScale = textureScale / this.texture.width;
-						yScale = textureScale / this.texture.height;
+						// textureSize is basically the hypotenuse, multiple by sin(45) to get the width/height of the rect (square)
+						textureSize *= Math.sin(Math.toRadians(45));
+						xScale = textureSize / this.texture.width;
+						yScale = textureSize / this.texture.height;
 
 						direction = 0;
-						textureScale /= 2;
+						textureSize /= 2;
 						template.rotation = this.actualRotation;
 					}
 					break;
@@ -161,8 +162,8 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 					{
 						yOffset = this.document.width / d.distance * d.size / 2;
 
-						xScale = textureScale / this.texture.width;
-						yScale = textureScale / this.texture.height;
+						xScale = textureSize / this.texture.width;
+						yScale = textureSize / this.texture.height;
 
 						yScale *= this.document.width / this.document.distance;
 					}
