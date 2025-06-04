@@ -153,7 +153,6 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 						xScale = textureSize / this.texture.width;
 						yScale = textureSize / this.texture.height;
 
-						direction = 0;
 						textureSize /= 2;
 					}
 					break;
