@@ -132,7 +132,7 @@ Sets the border color of the crosshair
 
 Also supports a second options object that accepts:
 
-- `alpha: boolean` - The transparency of the border (default `0.5`)
+- `alpha: number` - The transparency of the border (0-1, default `0.5`)
 
 ## Fill Color
 
@@ -142,7 +142,7 @@ Sets the fill color of the crosshair
 
 Also supports a second options object that accepts:
 
-- `alpha: boolean` - The transparency of the fill color (default `0.25`)
+- `alpha: number` - The transparency of the fill color (0-1, default `0.25`)
 
 ## Texture
 
@@ -152,7 +152,7 @@ Configures the texture shown within the template
 
 Also supports a second options object that accepts:
 
-- `alpha: number` - The transparency of the texture (default `0.5`)
+- `alpha: number` - The transparency of the texture (0-1, default `0.5`)
 - `scale: number` - The scale multiplier for the texture size (default `1`)
 
 ## Location
