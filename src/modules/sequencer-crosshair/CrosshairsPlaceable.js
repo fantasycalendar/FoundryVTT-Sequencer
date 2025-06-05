@@ -114,10 +114,71 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		const t = this.template.clear();
 
 		// Draw the Template outline
-		t.lineStyle(this._borderThickness, this.document.borderColor, 0.75).beginFill(0x000000, 0.0);
+		t.lineStyle(this._borderThickness, this.document.borderColor, this.crosshair.borderAlpha).beginFill(0x000000, 0.0);
 
 		// Fill Color or Texture
-		if (this.texture) t.beginTextureFill({ texture: this.texture }); else t.beginFill(0x000000, 0.0);
+		if (this.texture) {
+			const d = canvas.dimensions;
+			let { direction, distance } = this.document;
+			distance *= (d.size / d.distance);
+
+			const textureAlpha = this.crosshair.textureAlpha || 0.5;
+			let textureScale = this.crosshair.textureScale || 1;
+			let textureSize = distance * textureScale;
+
+			let xScale = 1;
+			let yScale = 1;
+			let xOffset = 0;
+			let yOffset = 0;
+
+			switch (this.document.t) {
+				case 'circle':
+					{
+						xOffset = yOffset = textureSize;
+						xScale = yScale = textureSize * 2 / this.texture.width;
+					}
+					break;
+				case 'cone':
+					{
+						textureSize /= 2;
+						yOffset = -textureSize;
+
+						xScale = yScale = textureSize * 2 / this.texture.width;
+					}
+					break;
+				case 'rect':
+					{
+						// textureSize is basically the hypotenuse, multiple by cos/sin to get the width/height of the rect
+						xScale = textureSize * Math.cos(Math.toRadians(direction)) / this.texture.width;
+						yScale = textureSize * Math.sin(Math.toRadians(direction)) / this.texture.height;
+
+						textureSize /= 2;
+						// don't change angle of texture as the shape of the rect changes width/height
+						direction = 0;
+					}
+					break;
+				case 'ray':
+					{
+						yOffset = this.document.width / d.distance * d.size / 2;
+
+						xScale = textureSize / this.texture.width;
+						yScale = textureSize / this.texture.height;
+
+						yScale *= this.document.width / this.document.distance;
+					}
+					break;
+			}
+			t.beginTextureFill({
+				texture: this.texture,
+				matrix: new PIXI.Matrix()
+					.scale(xScale, yScale)
+					.translate(xOffset, yOffset)
+					.rotate(Math.toRadians(direction)),
+				alpha: textureAlpha,
+			});
+		} else {
+			t.beginFill(0x000000, 0.0);
+		}
 
 		// Draw the shape
 		t.drawShape(this.shape);
@@ -525,5 +586,33 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		await super.draw();
 		this.#refreshIcon();
 		return this;
+	}
+
+	/**
+	 * The only difference between here and `super` is that this passes along an alpha
+	 * @override
+	 */
+	highlightGrid() {
+		// Clear the existing highlight layer
+		canvas.interface.grid.clearHighlightLayer(this.highlightId);
+  
+		// Highlight colors
+		const border = this.document.borderColor;
+		const color = this.document.fillColor;
+		const alpha = this.crosshair.fillAlpha;
+  
+		// If we are in grid-less mode, highlight the shape directly
+		if ( canvas.grid.type === CONST.GRID_TYPES.GRIDLESS ) {
+			const shape = this._getGridHighlightShape();
+			canvas.interface.grid.highlightPosition(this.highlightId, {border, color, alpha, shape});
+		}
+
+		// Otherwise, highlight specific grid positions
+		else {
+			const positions = this._getGridHighlightPositions();
+			for ( const {x, y} of positions ) {
+				canvas.interface.grid.highlightPosition(this.highlightId, {x, y, border, color, alpha});
+			}
+		}
 	}
 }

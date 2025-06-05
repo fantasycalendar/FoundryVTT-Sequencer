@@ -69,12 +69,16 @@ type TemplateData = {
   elevation: number,
   distance: number,
   fillColor: string,
+  borderAlpha: number,
   borderColor: string,
-	direction: number,
+  direction: number,
   parent: Scene
 }
 
 type CrosshairsData = {
+	borderAlpha: number;
+	textureAlpha: number;
+	textureScale: number;
 	gridHighlight: boolean;
 	icon: {
 		texture: string;
@@ -113,7 +117,6 @@ type CrosshairsData = {
 		wallBehavior: string;
 	};
 	lockManualRotation: boolean;
-	textureTile: number;
 };
 
 declare interface CrosshairData extends
@@ -1194,6 +1197,11 @@ declare abstract class CrosshairSection {
 	}): this;
 
 	/**
+	 * Sets the border transparency of the crosshair
+	 */
+	borderAlpha(inColor: number): this;
+
+	/**
 	 * Sets the border color of the crosshair
 	 */
 	borderColor(inColor: HEX | number): this;
@@ -1240,6 +1248,10 @@ declare abstract class CrosshairSection {
 	 */
 	callback(inString: keyof CrosshairCallbackData, inFunction: Function): this;
 
+	/**
+	 * Sets the texture used by the crosshair
+	 */
+	texture(inTexture: string, inOptions?: { alpha: number, scale: 1 }): this;
 }
 
 declare abstract class SequencerFile {}

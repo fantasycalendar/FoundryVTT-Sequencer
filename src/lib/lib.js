@@ -170,6 +170,20 @@ export function is_real_number(inNumber) {
 }
 
 /**
+ *  Coerces a number between 0 and 1
+ *
+ * @param  {any}        inNumber    The parameter to test
+ * @return {number | undefined}     Number normalized between 0 and 1, or undefined if inNumber is NaN
+ */
+export function normalize_alpha_number(inNumber) {
+  if (!is_real_number(inNumber)) return undefined;
+
+  inNumber = Math.abs(inNumber);
+  while (inNumber > 1) inNumber /= 10;
+  return inNumber;
+}
+
+/**
  *  Gets a property in an object based on a path in dot-notated string
  *
  * @param   {object}         obj       The object to be queried

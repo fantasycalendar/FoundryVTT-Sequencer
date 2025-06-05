@@ -18,7 +18,7 @@ export default class CrosshairSection extends Section {
 		this._persist = false;
 		this._config = CrosshairsDocument.defaultConfig;
 		this._waitUntilFinished = true;
-		this._callbacks = {}
+		this._callbacks = {};
 	}
 
 	static niceName = "Crosshair";
@@ -206,16 +206,64 @@ export default class CrosshairSection extends Section {
 	/**
 	 * Sets the border color of the crosshair
 	 */
-	borderColor(inColor) {
-		this._borderColor = lib.parseColor(inColor);
+	borderColor(inColor, inOptions = {}) {
+		if (typeof inOptions !== "object"){
+			throw this.sequence._customError(this, "borderColor", "inOptions must be of type object");
+		}
+		inOptions = foundry.utils.mergeObject({ borderVisible: CrosshairsDocument.defaultConfig.borderAlpha }, inOptions,);
+		const { alpha } = inOptions;
+		if (!lib.is_real_number(alpha)) {
+			throw this.sequence._customError(this, "borderAlpha", "inOptions.alpha must be of type number");
+		}
+		this._borderColor = lib.parseColor(inColor).hexadecimal;
+		this._config['borderAlpha'] = lib.normalize_alpha_number(alpha);
 		return this;
 	}
 
 	/**
 	 * Sets the fill color of the crosshair
 	 */
-	fillColor(inColor) {
-		this._fillColor = lib.parseColor(inColor);
+	fillColor(inColor, inOptions = {}) {
+		if (typeof inOptions !== "object"){
+			throw this.sequence._customError(this, "fillColor", "inOptions must be of type object");
+		}
+		inOptions = foundry.utils.mergeObject({ alpha: CrosshairsDocument.defaultConfig.fillAlpha }, inOptions,);
+		const { alpha } = inOptions;
+		if (!lib.is_real_number(alpha)) {
+			throw this.sequence._customError(this, "fillColor", "inOptions.alpha must be of type number");
+		}
+		this._config['fillAlpha'] = lib.normalize_alpha_number(alpha);
+		this._fillColor = lib.parseColor(inColor).hexadecimal;
+		return this;
+	}
+
+	/**
+	 * Sets the texture used by the crosshair
+	 */
+	texture(inTexture, inOptions = {}) {
+		if (typeof inOptions !== "object"){
+			throw this.sequence._customError(this, "texture", "inOptions must be of type object");
+		}
+		inOptions = foundry.utils.mergeObject(
+			{ 
+				alpha: CrosshairsDocument.defaultConfig.textureAlpha,
+				scale: CrosshairsDocument.defaultConfig.textureScale,
+			}, 
+			inOptions,
+		);
+		const { alpha, scale } = inOptions;
+		if (!lib.is_real_number(alpha)) {
+			throw this.sequence._customError(this, "texture", "inOptions.alpha must be of type number");
+		}
+		if (!lib.is_real_number(scale)) {
+			throw this.sequence._customError(this, "texture", "inOptions.scale must be of type number");
+		}
+		if (typeof inTexture !== "string") {
+			throw this.sequence._customError(this, "texture", "inTexture must be of type string");
+		}
+		this._texture = inTexture;
+		this._config['textureAlpha'] = lib.normalize_alpha_number(alpha);
+		this._config['textureScale'] = scale;
 		return this;
 	}
 
@@ -353,6 +401,7 @@ export default class CrosshairSection extends Section {
 			direction: this._direction,
 			angle: this._angle,
 			borderColor: this._borderColor,
+			texture: this._texture,
 			fillColor: this._fillColor,
 		}, {
 			parent: canvas.scene
