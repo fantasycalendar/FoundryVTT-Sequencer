@@ -206,11 +206,16 @@ export default class CrosshairSection extends Section {
 	/**
 	 * Sets the border color of the crosshair
 	 */
-	borderColor(inColor, { alpha = 0.5 } = { alpha: 0.5 }) {
-		this._borderColor = lib.parseColor(inColor).hexadecimal;
-		if (!lib.is_real_number(alpha)) {
-			throw this.sequence._customError(this, "borderAlpha", "inAlpha must be of type number");
+	borderColor(inColor, inOptions = {}) {
+		if (typeof inOptions !== "object"){
+			throw this.sequence._customError(this, "borderColor", "inOptions must be of type object");
 		}
+		inOptions = foundry.utils.mergeObject({ borderVisible: CrosshairsDocument.defaultConfig.borderAlpha }, inOptions,);
+		const { alpha } = inOptions;
+		if (!lib.is_real_number(alpha)) {
+			throw this.sequence._customError(this, "borderAlpha", "inOptions.alpha must be of type number");
+		}
+		this._borderColor = lib.parseColor(inColor).hexadecimal;
 		this._config['borderAlpha'] = lib.normalize_alpha_number(alpha);
 		return this;
 	}
@@ -218,7 +223,16 @@ export default class CrosshairSection extends Section {
 	/**
 	 * Sets the fill color of the crosshair
 	 */
-	fillColor(inColor) {
+	fillColor(inColor, inOptions = {}) {
+		if (typeof inOptions !== "object"){
+			throw this.sequence._customError(this, "fillColor", "inOptions must be of type object");
+		}
+		inOptions = foundry.utils.mergeObject({ alpha: CrosshairsDocument.defaultConfig.fillAlpha }, inOptions,);
+		const { alpha } = inOptions;
+		if (!lib.is_real_number(alpha)) {
+			throw this.sequence._customError(this, "fillColor", "inOptions.alpha must be of type number");
+		}
+		this._config['fillAlpha'] = lib.normalize_alpha_number(alpha);
 		this._fillColor = lib.parseColor(inColor).hexadecimal;
 		return this;
 	}
@@ -226,10 +240,18 @@ export default class CrosshairSection extends Section {
 	/**
 	 * Sets the texture used by the crosshair
 	 */
-	texture(inTexture, { alpha = 0.5, scale = 1 } = { alpha: 0.5, scale: 1 }) {
-		if (typeof arguments[1] !== "object") {
+	texture(inTexture, inOptions = {}) {
+		if (typeof inOptions !== "object"){
 			throw this.sequence._customError(this, "texture", "inOptions must be of type object");
 		}
+		inOptions = foundry.utils.mergeObject(
+			{ 
+				alpha: CrosshairsDocument.defaultConfig.textureAlpha,
+				scale: CrosshairsDocument.defaultConfig.textureScale,
+			}, 
+			inOptions,
+		);
+		const { alpha, scale } = inOptions;
 		if (!lib.is_real_number(alpha)) {
 			throw this.sequence._customError(this, "texture", "inOptions.alpha must be of type number");
 		}

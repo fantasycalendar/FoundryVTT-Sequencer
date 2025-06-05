@@ -588,4 +588,32 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		this.#refreshIcon();
 		return this;
 	}
+
+	/**
+	 * The only difference between here and `super` is that this passes along an alpha
+	 * @override
+	 */
+	highlightGrid() {
+		// Clear the existing highlight layer
+		canvas.interface.grid.clearHighlightLayer(this.highlightId);
+  
+		// Highlight colors
+		const border = this.document.borderColor;
+		const color = this.document.fillColor;
+		const alpha = this.crosshair.fillAlpha;
+  
+		// If we are in grid-less mode, highlight the shape directly
+		if ( canvas.grid.type === CONST.GRID_TYPES.GRIDLESS ) {
+			const shape = this._getGridHighlightShape();
+			canvas.interface.grid.highlightPosition(this.highlightId, {border, color, alpha, shape});
+		}
+
+		// Otherwise, highlight specific grid positions
+		else {
+			const positions = this._getGridHighlightPositions();
+			for ( const {x, y} of positions ) {
+				canvas.interface.grid.highlightPosition(this.highlightId, {x, y, border, color, alpha});
+			}
+		}
+	}
 }

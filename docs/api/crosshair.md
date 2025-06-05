@@ -136,9 +136,13 @@ Also supports a second options object that accepts:
 
 ## Fill Color
 
-`.fillColor(HEX | number)`
+`.fillColor(HEX | number, inOptions)`
 
 Sets the fill color of the crosshair
+
+Also supports a second options object that accepts:
+
+- `alpha: boolean` - The transparency of the fill color (default `0.25`)
 
 ## Texture
 
