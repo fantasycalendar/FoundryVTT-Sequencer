@@ -23,7 +23,8 @@ export default class Crosshair {
 			distance: config?.distance ?? canvas.grid.distance / 2,
 			width: config?.width ?? canvas.grid.distance,
 			borderColor: config.borderColor ?? "#000000",
-			fillColor: config.fillColor ?? "#000000",
+			fillColor: config.fillColor ?? game.user.color,
+			texture: config.texture,
 			angle: config.angle ?? 53.13, // Default for Foundry, it seems?
 			direction: config.direction ?? 0
 		}, {

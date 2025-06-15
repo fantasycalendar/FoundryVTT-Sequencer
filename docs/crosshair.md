@@ -15,7 +15,12 @@ crosshair = {
 	t: string, // See CONST.MEASURED_TEMPLATE_TYPES, defaults to CIRCLE
 	distance: number // Defaults to half the canvas grid size
 	width: number // Defaults to the canvas grid size
+	borderAlpha: number // Determines the transparency of the template border (0-1, default 0.75)
 	borderColor: string // Determines the color of the template border
+	texture: string // The texture to show within the template
+	textureAlpha: number // The transparency of the chosen texture (0-1, default .5)
+	textureScale: number // The texture scale relative to the template size (default 1)
+	fillAlpha: number // The transparency of the template fill (0-1, default .5)
 	fillColor: string // Determines the color of the template fill
 	angle: number // The starting angle for the template
 	direction: number // The starting direction for the template

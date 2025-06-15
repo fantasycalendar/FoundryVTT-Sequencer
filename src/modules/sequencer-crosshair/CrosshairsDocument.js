@@ -13,6 +13,10 @@ import FoundryShim from "../../utils/foundry-shim.js";
 export default class CrosshairsDocument extends MeasuredTemplateDocument {
 
 	constructor(config = {}, context = {}, crosshair = {}, callbacks = {}) {
+		// rectangles start off as a horizontal/vertical unseen line without this initial rotation
+		if (config.t === CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE && !(config.direction % 90)) {
+			config.direction = 45;
+		}
 		super(config, context);
 		this.crosshair = foundry.utils.mergeObject(CrosshairsDocument.defaultConfig, crosshair);
 		this.callbacks = callbacks;
@@ -30,6 +34,10 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 
 	static get defaultConfig() {
 		return {
+			borderAlpha: 0.75,
+			fillAlpha: 0.25,
+			textureAlpha: 0.5,
+			textureScale: 1.0,
 			gridHighlight: true,
 			icon: {
 				texture: "",

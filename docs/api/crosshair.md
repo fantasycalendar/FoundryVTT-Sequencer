@@ -126,15 +126,34 @@ Also supports a second options object that accepts:
 
 ## Border Color
 
-`.borderColor(HEX | number)`
+`.borderColor(HEX | number, inOptions)`
 
 Sets the border color of the crosshair
 
+Also supports a second options object that accepts:
+
+- `alpha: number` - The transparency of the border (0-1, default `0.5`)
+
 ## Fill Color
 
-`.fillColor(HEX | number)`
+`.fillColor(HEX | number, inOptions)`
 
 Sets the fill color of the crosshair
+
+Also supports a second options object that accepts:
+
+- `alpha: number` - The transparency of the fill color (0-1, default `0.25`)
+
+## Texture
+
+`.texture(string, inOptions)`
+
+Configures the texture shown within the template
+
+Also supports a second options object that accepts:
+
+- `alpha: number` - The transparency of the texture (0-1, default `0.5`)
+- `scale: number` - The scale multiplier for the texture size (default `1`)
 
 ## Location
 
