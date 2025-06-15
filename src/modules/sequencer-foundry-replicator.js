@@ -17,63 +17,6 @@ export default class SequencerFoundryReplicator {
     });
   }
 
-  static _validateObject(inObject, sceneId) {
-    if (lib.is_UUID(inObject) || !canvaslib.is_object_canvas_data(inObject)) {
-      inObject = lib.get_object_from_scene(inObject, sceneId);
-    }
-    return inObject?._object ?? inObject;
-  }
-
-  static _getPositionFromData(data) {
-
-    const source = data.nameOffsetMap[data.source]
-	    ? data.nameOffsetMap[data.source].source
-	    : this._validateObject(data.source, data.sceneId);
-
-    const position =
-      source instanceof FoundryShim.PlaceableObject
-        ? canvaslib.get_object_position(source)
-        : source?.worldPosition || source?.center || source;
-
-    const multiplier = data.randomOffset;
-    const twister = lib.createMersenneTwister(data.seed);
-
-    if (source && multiplier) {
-      let randomOffset = canvaslib.get_random_offset(
-        source,
-        multiplier,
-        twister
-      );
-      position.x -= randomOffset.x;
-      position.y -= randomOffset.y;
-    }
-
-    let extraOffset = data.offset;
-    if (extraOffset) {
-      let newOffset = {
-        x: extraOffset.x,
-        y: extraOffset.y,
-      };
-      if (extraOffset.gridUnits) {
-        newOffset.x *= canvas.grid.size;
-        newOffset.y *= canvas.grid.size;
-      }
-      if (extraOffset.local) {
-        newOffset = canvaslib.rotateAroundPoint(
-          0,
-          0,
-          newOffset.x,
-          newOffset.y,
-          source?.rotation ?? 0
-        );
-      }
-      position.x -= newOffset.x;
-      position.y -= newOffset.y;
-    }
-
-    return position;
-  }
-
   static playScrollingText(data, push = true) {
     if (push) {
       sequencerSocket.executeForOthers(
@@ -89,7 +32,7 @@ export default class SequencerFoundryReplicator {
     if (data.users.length && !data.users.includes(game.userId)) return;
 
     canvas.interface.createScrollingText(
-      this._getPositionFromData(data),
+      canvaslib.getPositionFromData(data),
       data.content,
       data.options
     );
@@ -110,7 +53,7 @@ export default class SequencerFoundryReplicator {
     if (data.users.length && !data.users.includes(game.userId)) return;
 
     if (data.source) {
-      const position = this._getPositionFromData(data);
+      const position = canvaslib.getPositionFromData(data);
 
       canvas.animatePan({
         x: position.x,

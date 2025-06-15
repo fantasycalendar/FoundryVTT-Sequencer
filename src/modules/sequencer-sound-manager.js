@@ -5,6 +5,7 @@ import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
+import { getPositionFromData } from "../lib/canvas-lib.js";
 
 
 export default class SequencerSoundManager {
@@ -59,10 +60,8 @@ export default class SequencerSoundManager {
 
 		let sound;
 
-		if (data.location) {
-			let location =
-				(lib.is_UUID(data.location) ? fromUuidSync(data.location) : null)
-				?? { x: data.location?.x ?? 0, y: data.location?.x ?? 0 };
+		if (data.source) {
+			let location = canvaslib.getPositionFromData(data);
 			if (data.offset) {
 				location.x += (data.offset.source.x || 0) * (data.offset.gridUnits ? canvas.grid.size : 1);
 				location.y += (data.offset.source.y || 0) * (data.offset.gridUnits ? canvas.grid.size : 1);

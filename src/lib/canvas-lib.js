@@ -2,6 +2,7 @@ import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
 import FoundryShim from "../utils/foundry-shim.js";
+import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
@@ -357,18 +358,62 @@ export function distance_between(p1, p2) {
   return new Ray(p1, p2).distance;
 }
 
-/**
- * Whether the current video is playing or not
- *
- * @returns {boolean}
- */
-export function is_video_playing(video) {
-  return (
-    !!video &&
-    video.currentTime >= 0 &&
-    !video.paused &&
-    video.currentTime <= video.duration
-  );
+
+export function validateObject(inObject, sceneId) {
+  if (lib.is_UUID(inObject) || !is_object_canvas_data(inObject)) {
+    inObject = lib.get_object_from_scene(inObject, sceneId);
+  }
+  return inObject?._object ?? inObject;
+}
+
+export function getPositionFromData(data, type="source") {
+
+  const source = data.nameOffsetMap[data[type]]
+    ? data.nameOffsetMap[data[type]][type]
+    : validateObject(data[type], data.sceneId);
+
+  const position =
+    source instanceof FoundryShim.PlaceableObject
+      ? get_object_position(source)
+      : source?.worldPosition || source?.center || source;
+
+  const multiplier = data.randomOffset?.[type] ?? data.randomOffset;
+  const twister = lib.createMersenneTwister(data.seed);
+
+  if (source && multiplier) {
+    let randomOffset = get_random_offset(
+      source,
+      multiplier,
+      twister
+    );
+    position.x -= randomOffset.x;
+    position.y -= randomOffset.y;
+  }
+
+  let extraOffset = data.offset;
+  if (extraOffset) {
+    let newOffset = {
+      x: extraOffset.x,
+      y: extraOffset.y,
+    };
+    if (extraOffset.gridUnits) {
+      newOffset.x *= canvas.grid.size;
+      newOffset.y *= canvas.grid.size;
+    }
+    if (extraOffset.local) {
+      newOffset = rotateAroundPoint(
+        0,
+        0,
+        newOffset.x,
+        newOffset.y,
+        source?.rotation ?? 0
+      );
+    }
+    position.x -= newOffset.x;
+    position.y -= newOffset.y;
+  }
+
+  return position;
 }
 
 /**
@@ -418,30 +463,6 @@ export function get_closest_token(
     );
   });
   return tokens?.[0] ?? false;
-}
-
-export function getBezierControlPoints(factor, previous, point, next) {
-  // Calculate distance vectors
-  let vector = { x: next[0] - previous[0], y: next[1] - previous[1] },
-    preDistance = Math.hypot(previous[0] - point[0], previous[1] - point[1]),
-    postDistance = Math.hypot(next[0] - point[0], next[1] - point[1]),
-    distance = preDistance + postDistance;
-
-  // Compute control point locations
-  let cp0d = distance === 0 ? 0 : factor * (preDistance / distance),
-    cp1d = distance === 0 ? 0 : factor * (postDistance / distance);
-
-  // Return points
-  return {
-    cp1: {
-      x: point[0] - vector.x * cp0d,
-      y: point[1] - vector.y * cp0d,
-    },
-    next_cp0: {
-      x: point[0] + vector.x * cp1d,
-      y: point[1] + vector.y * cp1d,
-    },
-  };
 }
 
 export function rotateAroundPoint(cx, cy, x, y, radians) {

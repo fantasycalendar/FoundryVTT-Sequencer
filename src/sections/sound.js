@@ -4,6 +4,9 @@ import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { SequencerFileBase } from "../modules/sequencer-file.js";
 import CONSTANTS from "../constants.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
+import * as canvaslib from "../lib/canvas-lib.js";
 
 class SoundSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -221,6 +224,26 @@ class SoundSection extends Section {
 		);
 	}
 
+  _getSourceObject() {
+    if (!this._source || typeof this._source !== "object"){
+      return this._source;
+    }
+    if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
+      const doc = this._source?.document ?? this._source;
+      if(this._attachTo) {
+        return lib.get_object_identifier(doc.object);
+      }
+      return doc.getOrientation().source;
+    }
+    if (this._source?.cachedLocation || !this._attachTo) {
+      return canvaslib.get_object_canvas_data(this._source, { uuid: true });
+    }
+    return (
+      lib.get_object_identifier(this._source) ??
+      canvaslib.get_object_canvas_data(this._source, { uuid: true })
+    );
+  }
+
 	/**
 	 * @returns {Promise}
 	 * @private
@@ -285,10 +308,7 @@ class SoundSection extends Section {
 			id: foundry.utils.randomID(),
 			play: true,
 			src: file,
-			location: this._source?.uuid
-				|| (this._source?.x && this._source?.y
-					? { x: this._source?.x, y: this._source?.y }
-					: null),
+      source: this._getSourceObject(),
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
@@ -303,7 +323,8 @@ class SoundSection extends Section {
 			users: this._users ? Array.from(this._users) : null,
 			name: this._name,
 			origin: this._origin,
-			seed: `${this._name}-${foundry.utils.randomID()}-${this._currentRepetition}`
+			seed: `${this._name}-${foundry.utils.randomID()}-${this._currentRepetition}`,
+      nameOffsetMap: this.sequence.nameOffsetMap,
 		};
 
 		for (let override of this._overrides) {

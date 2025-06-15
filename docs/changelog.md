@@ -1,5 +1,10 @@
 ## Changelog
 
+# Version 3.6.2
+- *Crosshair* - Added `.texture()` (Thank you david aka claudekennilol on Discord!)
+- *Crosshair* - Added `alpha` as an option to `.border()` and `.fillColor()` (Thank you david aka claudekennilol on Discord!)
+- *Sounds* - Fixed sounds with `.atLocation()` not working together with crosshairs 
+
 # Version 3.6.1
 - *Sequencer* - Fixed some lingering issues in Foundry v13
 

@@ -133,39 +133,27 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 			switch (this.document.t) {
 				case 'circle':
-					{
-						xOffset = yOffset = textureSize;
-						xScale = yScale = textureSize * 2 / this.texture.width;
-					}
+          xOffset = yOffset = textureSize;
+          xScale = yScale = textureSize * 2 / this.texture.width;
 					break;
 				case 'cone':
-					{
-						textureSize /= 2;
-						yOffset = -textureSize;
-
-						xScale = yScale = textureSize * 2 / this.texture.width;
-					}
+          textureSize /= 2;
+          yOffset = -textureSize;
+          xScale = yScale = textureSize * 2 / this.texture.width;
 					break;
 				case 'rect':
-					{
-						// textureSize is basically the hypotenuse, multiple by cos/sin to get the width/height of the rect
-						xScale = textureSize * Math.cos(Math.toRadians(direction)) / this.texture.width;
-						yScale = textureSize * Math.sin(Math.toRadians(direction)) / this.texture.height;
-
-						textureSize /= 2;
-						// don't change angle of texture as the shape of the rect changes width/height
-						direction = 0;
-					}
+          // textureSize is basically the hypotenuse, multiple by cos/sin to get the width/height of the rect
+          xScale = textureSize * Math.cos(Math.toRadians(direction)) / this.texture.width;
+          yScale = textureSize * Math.sin(Math.toRadians(direction)) / this.texture.height;
+          textureSize /= 2;
+          // don't change angle of texture as the shape of the rect changes width/height
+          direction = 0;
 					break;
 				case 'ray':
-					{
-						yOffset = this.document.width / d.distance * d.size / 2;
-
-						xScale = textureSize / this.texture.width;
-						yScale = textureSize / this.texture.height;
-
-						yScale *= this.document.width / this.document.distance;
-					}
+          yOffset = this.document.width / d.distance * d.size / 2;
+          xScale = textureSize / this.texture.width;
+          yScale = textureSize / this.texture.height;
+          yScale *= this.document.width / this.document.distance;
 					break;
 			}
 			t.beginTextureFill({
