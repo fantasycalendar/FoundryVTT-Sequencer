@@ -10,7 +10,7 @@ export function createShape(shape) {
 	graphic.id = "sequencer-graphics-" + foundry.utils.randomID();
 
 	graphic.beginFill(
-		shape?.isMask || !shape?.fillColor ? 0xffffff : shape?.fillColor,
+		shape?.isMask || !lib.is_real_number(shape?.fillColor) ? 0xffffff : shape?.fillColor,
 		shape?.isMask ? 1 : (shape?.fillAlpha ?? 0)
 	);
 

@@ -1,5 +1,9 @@
 ## Changelog
 
+# Version 3.2.7
+- *Effects* - Fixed persistent effects not actually being persistent
+- *Effects* - Fixed `.shape()`'s `fillColor` not liking `#000000` and overriding it to white
+
 # Version 3.6.2
 - *Crosshair* - Added `.texture()` (Thank you david aka claudekennilol on Discord!)
 - *Crosshair* - Added `alpha` as an option to `.border()` and `.fillColor()` (Thank you david aka claudekennilol on Discord!)
