@@ -1,6 +1,6 @@
 ## Changelog
 
-# Version 3.2.7
+# Version 3.6.7
 - *Effects* - Fixed persistent effects not actually being persistent
 - *Effects* - Fixed `.shape()`'s `fillColor` not liking `#000000` and overriding it to white
 
