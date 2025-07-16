@@ -199,7 +199,7 @@ export default class CrosshairsPlaceable extends MeasuredTemplate {
 		const leftDown = (evt.buttons & 1) > 0;
 		const rightDown = (evt.buttons & 2) > 0;
 		this.#isDrag = !!(leftDown && canvas.mouseInteractionManager.isDragging);
-		this.#isPanning = !!(rightDown && canvas.mouseInteractionManager.isDragging);
+		this.#isPanning = this.#isPanning || !!(rightDown && canvas.mouseInteractionManager.isDragging);
 
 		if (this.#isPanning) return;
 
