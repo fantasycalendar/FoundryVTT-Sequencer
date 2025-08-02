@@ -424,47 +424,47 @@ declare global {
   };
 
   type CrosshairsData = {
-    borderAlpha: number;
-    textureAlpha: number;
-    textureScale: number;
-    gridHighlight: boolean;
-    icon: {
-      texture: string;
-      borderVisible: boolean;
+    borderAlpha?: number;
+    textureAlpha?: number;
+    textureScale?: number;
+    gridHighlight?: boolean;
+    icon?: {
+      texture?: string;
+      borderVisible?: boolean;
     };
-    snap: {
-      position: number;
-      resolution: number; // See https://github.com/foundryvtt/foundryvtt/issues/10014
-      size: number;
-      direction: number;
+    snap?: {
+      position?: number;
+      resolution?: number; // See https://github.com/foundryvtt/foundryvtt/issues/10014
+      size?: number;
+      direction?: number;
     };
-    lockDrag: boolean;
-    distanceMin: null | number;
-    distanceMax: null | number;
-    label: {
-      text: string;
-      dx: number;
-      dy: number;
+    lockDrag?: boolean;
+    distanceMin?: null | number;
+    distanceMax?: null | number;
+    label?: {
+      text?: string;
+      dx?: number;
+      dy?: number;
     };
-    location: {
-      obj: null | VisibleFoundryTypes;
-      limitMinRange: number | null;
-      limitMaxRange: number | null;
-      showRange: boolean;
-      lockToEdge: boolean;
-      lockToEdgeDirection: boolean;
-      displayRangePoly: boolean;
-      rangePolyFillColor: number | null;
-      rangePolyLineColor: number | null;
-      rangePolyFillAlpha: number | null;
-      rangePolyLineAlpha: number | null;
-      offset: {
-        x: number;
-        y: number;
+    location?: {
+      obj?: null | VisibleFoundryTypes;
+      limitMinRange?: number | null;
+      limitMaxRange?: number | null;
+      showRange?: boolean;
+      lockToEdge?: boolean;
+      lockToEdgeDirection?: boolean;
+      displayRangePoly?: boolean;
+      rangePolyFillColor?: number | null;
+      rangePolyLineColor?: number | null;
+      rangePolyFillAlpha?: number | null;
+      rangePolyLineAlpha?: number | null;
+      offset?: {
+        x?: number;
+        y?: number;
       };
-      wallBehavior: string;
+      wallBehavior?: string;
     };
-    lockManualRotation: boolean;
+    lockManualRotation?: boolean;
   };
 
   interface CrosshairData extends TemplateData, CrosshairsData {}

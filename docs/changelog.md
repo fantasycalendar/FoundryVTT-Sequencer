@@ -1,12 +1,17 @@
 ## Changelog
 
+# Version 3.6.8
+- *Crosshairs* - Fix right click drag, when mouse up happens after holding cursor still (Thanks dmrickey on Github!)
+- *Sequencer* - Updated all Sequencer types (Thanks LukeAbby on Github!)
+- *Sequencer* - Made crosshair data types optional (Thanks MrVauxs on Github!)
+
 # Version 3.6.7
 - *Effects* - Fixed persistent effects not actually being persistent
 - *Effects* - Fixed `.shape()`'s `fillColor` not liking `#000000` and overriding it to white
 
 # Version 3.6.2
-- *Crosshair* - Added `.texture()` (Thank you david aka claudekennilol on Discord!)
-- *Crosshair* - Added `alpha` as an option to `.border()` and `.fillColor()` (Thank you david aka claudekennilol on Discord!)
+- *Crosshairs* - Added `.texture()` (Thank you david aka claudekennilol on Discord!)
+- *Crosshairs* - Added `alpha` as an option to `.border()` and `.fillColor()` (Thank you david aka claudekennilol on Discord!)
 - *Sounds* - Fixed sounds with `.atLocation()` not working together with crosshairs 
 
 # Version 3.6.1
