@@ -3,7 +3,7 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import CONSTANTS from "../constants.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 class AnimationSection extends Section {
 	static niceName = "Animation";
@@ -257,11 +257,11 @@ class AnimationSection extends Section {
 	async _waitForTokenRefresh(obj) {
 		let token;
 
-		if (obj instanceof Token) {
+		if (obj instanceof FoundryShim.Token) {
 			token = obj;
 		}
 
-		if (obj instanceof TokenDocument) {
+		if (obj instanceof FoundryShim.TokenDocument) {
 			token = obj.object;
 		}
 
@@ -418,8 +418,7 @@ class AnimationSection extends Section {
 						{ rotation: angle },
 						this._rotateTowards.duration > 0,
 						{
-							duration: this._rotateTowards.duration,
-							easing: this._rotateTowards.ease,
+							duration: this._rotateTowards.duration
 						}
 					);
 				}, this._rotateTowards.delay ?? 0);
@@ -524,7 +523,6 @@ class AnimationSection extends Section {
 					}
 					await this._updateObject(this._originObject, { rotation: to }, true, {
 						duration: this._rotateIn.duration,
-						easing: this._rotateIn.ease,
 					});
 				}, this._rotateIn.delay ?? 0);
 			} else {
@@ -598,8 +596,7 @@ class AnimationSection extends Section {
 				setTimeout(async () => {
 					await this._updateObject(this._originObject, targetLocation, true, {
 						movementSpeed: this._moveSpeed,
-						duration,
-						easing: this._moveTowards.ease,
+						duration
 					});
 				}, this._moveTowards.delay ?? 0);
 			} else {
@@ -629,8 +626,7 @@ class AnimationSection extends Section {
 			if (this._originObject instanceof TokenDocument) {
 				setTimeout(async () => {
 					await this._updateObject(this._originObject, { alpha: 0 }, true, {
-						duration: this._fadeOut.duration,
-						easing: this._fadeOut.ease,
+						duration: this._fadeOut.duration
 					});
 				}, this._fadeOut.delay ?? 0);
 			} else {
@@ -703,8 +699,7 @@ class AnimationSection extends Section {
 						);
 					}
 					await this._updateObject(this._originObject, { rotation: to }, true, {
-						duration: this._rotateOut.duration,
-						easing: this._rotateOut.ease,
+						duration: this._rotateOut.duration
 					});
 				}, this._rotateOut.delay ?? 0);
 			} else {

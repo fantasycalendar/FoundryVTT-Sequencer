@@ -204,8 +204,9 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 			y: object?.center?.y ?? object?.position?.y ?? object?.y
 		};
 
+    const defaultSize = canvas.dimensions.distancePixels;
 		const { w, h } = object;
-		const distance = loc.limitMaxRange + ((Math.max(w, h) / 2) / canvas.dimensions.distancePixels);
+		const distance = loc.limitMaxRange + ((Math.max(w ?? defaultSize, h ?? defaultSize) / 2) / canvas.dimensions.distancePixels);
 
 		this.#rangeHighlight
 			.beginFill(loc.rangePolyFillColor ?? 0xFFFFFF, lib.clamp(loc.rangePolyFillAlpha ?? 0.25, 0.0, 1.0))

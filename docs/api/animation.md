@@ -83,7 +83,7 @@ Sets the opacity of the animation target. If used with `.fadeIn()` and/or `.fade
 
 `.fadeIn(duration, options)`
 
-`.fadeIn(500)` or `.fadeIn(250, {ease: "easeOutQuint"})` or `.fadeIn(400, {ease: "easeOutCirc", delay: 100})`
+`.fadeIn(500)` or `.fadeIn(250, { ease: "easeOutQuint" })` or `.fadeIn(400, { ease: "easeOutCirc", delay: 100 })`
 
 Causes the animation target to fade in its opacity/alpha when played.
 
@@ -91,19 +91,23 @@ A second options parameter can set the ease of the fade, and the delay before it
 
 Default parameters: `{ ease: "linear", delay: 0 }`
 
+**Note:** The `ease` parameters are _not_ supported for tokens due to Foundry removing support for it.
+
 Check out what easings are available here: https://easings.net/
 
 ## Fade out
 
 `.fadeOut(duration, options)`
 
-`.fadeOut(500)` or `.fadeOut(250, {ease: "easeOutQuint"})` or `.fadeOut(400, {ease: "easeOutCirc", delay: -100})`
+`.fadeOut(500)` or `.fadeOut(250, { ease: "easeOutQuint" })` or `.fadeOut(400, { ease: "easeOutCirc", delay: -100 })`
 
 Causes the animation target to fade out its opacity/alpha when it has finished playing.
 
 A second options parameter can set the ease of the fade, and a delay before it ends. E.g. a delay of -500 means the fade will finish 500ms before the end.
 
 Default parameters: `{ ease: "linear", delay: 0 }`
+
+**Note:** The `ease` parameters are _not_ supported for tokens due to Foundry removing support for it.
 
 Check out what easings are available here: https://easings.net/
 
@@ -112,6 +116,8 @@ Check out what easings are available here: https://easings.net/
 `.duration(500)`
 
 Sets the duration of the animation, which determines how long the animation will take to complete.
+
+**Note:** This method _not_ supported for tokens due to Foundry removing support for it.
 
 ## Volume
 
@@ -125,7 +131,7 @@ A normalized value between `0.0` and `1.0` which determines the volume of the so
 
 `.fadeInAudio(duration, options)`
 
-`.fadeInAudio(500)` or `.fadeInAudio(250, {ease: "easeOutQuint"})` or `.fadeInAudio(400, {ease: "easeOutCirc", delay: 100})`
+`.fadeInAudio(500)` or `.fadeInAudio(250, { ease: "easeOutQuint" })` or `.fadeInAudio(400, { ease: "easeOutCirc", delay: 100 })`
 
 Causes the audio on the given section fade in when played.
 
@@ -139,7 +145,7 @@ Check out what easings are available here: https://easings.net/
 
 `.fadeOutAudio(duration, options)`
 
-`.fadeOutAudio(500)` or `.fadeOutAudio(250, {ease: "easeOutQuint"})` or `.fadeOutAudio(400, {ease: "easeOutCirc", delay: -100})`
+`.fadeOutAudio(500)` or `.fadeOutAudio(250, { ease: "easeOutQuint" })` or `.fadeOutAudio(400, { ease: "easeOutCirc", delay: -100 })`
 
 Causes the section to fade out its audio as it finishes playing.
 
@@ -165,7 +171,9 @@ Sets the location to move the target object to over the course of the duration.
 
 If no duration has been set, the target object will move towards the location at the default foundry speed.
 
-A second options parameter can set the ease of the rotation, the delay before it starts, and whether the object should be centered on the given location.
+A second options parameter can set the ease of the movement, the delay before it starts, and whether the object should be centered on the given location.
+
+**Note:** The `ease` parameter _not_ supported for tokens due to Foundry removing support for it.
 
 Default parameters: `{ ease: "linear", delay: 0, relativeToCenter: false }`
 
@@ -198,6 +206,8 @@ Default parameters:
     cacheLocation: false,
 }
 ```
+
+**Note:** The `ease` parameters are _not_ supported for tokens due to Foundry removing support for it.
 
 Check out what easings are available here: https://easings.net/
 
@@ -241,7 +251,7 @@ Sets the rotation of the animation, which is added on top of the calculated rota
 
 `.rotateIn(degrees, duration, options)`
 
-`.rotateIn(90, 250)` or `.rotateIn(-90, 500, {ease: "easeOutCubic"})` or `.rotateIn(-90, 500, {ease: "easeOutCubic", delay: 100})`
+`.rotateIn(90, 250)` or `.rotateIn(-90, 500, {ease: "easeOutCubic"})` or `.rotateIn(-90, 500, { ease: "easeOutCubic", delay: 100 })`
 
 Causes the target object to rotate when it starts playing.
 
@@ -253,13 +263,15 @@ A third options parameter can set the ease of the rotation, and the delay before
 
 Default parameters: `{ ease: "linear", delay: 0 }`
 
+**Note:** The `ease` parameters are _not_ supported for tokens due to Foundry removing support for it.
+
 Check out what easings are available here: https://easings.net/
 
 ## Rotate Out
 
 `.rotateOut(degrees, duration, options)`
 
-`.rotateOut(90, 250)` or `.rotateOut(-90, 500, {ease: "easeOutCubic"})` or `.rotateOut(-90, 500, {ease: "easeOutCubic", delay: -100})`
+`.rotateOut(90, 250)` or `.rotateOut(-90, 500, { ease: "easeOutCubic" })` or `.rotateOut(-90, 500, { ease: "easeOutCubic", delay: -100 })`
 
 Causes the target object to rotate when it finishes playing.
 
@@ -270,6 +282,8 @@ The second parameter is how many milliseconds the rotation will take.
 A third options parameter can set the ease of the rotation, and a delay before it ends. E.g. a delay of -500 means the rotation will finish 500ms before the end.
 
 Default parameters: `{ ease: "linear", delay: 0 }`
+
+**Note:** The `ease` parameters are _not_ supported for tokens due to Foundry removing support for it.
 
 Check out what easings are available here: https://easings.net/
 

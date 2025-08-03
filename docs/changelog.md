@@ -2,8 +2,16 @@
 
 # Version 3.6.8
 - *Crosshairs* - Fix right click drag, when mouse up happens after holding cursor still (Thanks dmrickey on Github!)
+- *Crosshairs* - Fixed some issues with limit max range on gridless scenes
 - *Sequencer* - Updated all Sequencer types (Thanks LukeAbby on Github!)
 - *Sequencer* - Made crosshair data types optional (Thanks MrVauxs on Github!)
+- *Animations* - Removed token support for `ease` from the following methods due to Foundry removing support for custom easing of token movement:
+  - `.moveTowards()`
+  - `.rotateTowards()`
+  - `.rotateIn()`
+  - `.rotateOut()`
+  - `.fadeIn()`
+  - `.fadeOut()`
 
 # Version 3.6.7
 - *Effects* - Fixed persistent effects not actually being persistent
