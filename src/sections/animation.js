@@ -261,7 +261,7 @@ class AnimationSection extends Section {
 			token = obj;
 		}
 
-		if (obj instanceof FoundryShim.TokenDocument) {
+		if (obj instanceof TokenDocument) {
 			token = obj.object;
 		}
 

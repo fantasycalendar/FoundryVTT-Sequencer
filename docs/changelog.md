@@ -1,5 +1,8 @@
 ## Changelog
 
+# Version 3.6.9
+- *Animations* - Fixed animations not working at all
+
 # Version 3.6.8
 - *Crosshairs* - Fix right click drag, when mouse up happens after holding cursor still (Thanks dmrickey on Github!)
 - *Crosshairs* - Fixed some issues with limit max range on gridless scenes
