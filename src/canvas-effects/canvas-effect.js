@@ -1602,7 +1602,7 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		// rotateTowards
-		if (this.rotateTowards && this.data.rotateTowards?.attachTo) {
+		if (this.data.rotateTowards && this.data.rotateTowards?.attachTo) {
 			this._addToTicker(this._transformRotateTowardsAttachedSprite);
 		}
 
