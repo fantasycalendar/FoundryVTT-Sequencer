@@ -72,7 +72,7 @@ export default class ScrollingTextSection extends Section {
       );
     }
     if (
-      (typeof inAnchor === "string" && !CONST.TEXT_ANCHOR_POINTS[inAnchor]) ||
+      (typeof inAnchor === "string" && CONST.TEXT_ANCHOR_POINTS[inAnchor] === undefined) ||
       (lib.is_real_number(inAnchor) &&
         !Object.values(CONST.TEXT_ANCHOR_POINTS).includes(inAnchor))
     ) {

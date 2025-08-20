@@ -293,7 +293,8 @@ export default class EffectSection extends Section {
 			this.sequence._showWarning(
 				this,
 				"attachTo",
-				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead"
+				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead",
+        true
 			);
 		}
 		if (typeof inOptions.bindRotation !== "boolean")
@@ -613,7 +614,8 @@ export default class EffectSection extends Section {
 		this.sequence._showWarning(
 			this,
 			"from",
-			".from() is deprecated, please use .copySprite() instead"
+			".from() is deprecated, please use .copySprite() instead",
+      true
 		);
 		return this.copySprite(...args)
 	}
@@ -1586,7 +1588,8 @@ export default class EffectSection extends Section {
 		this.sequence._showWarning(
 			this,
 			"noLoop",
-			".noLoop() is deprecated, please use .loopOptions({ loops: 1 }) instead"
+			".noLoop() is deprecated, please use .loopOptions({ loops: 1 }) instead",
+      true
 		);
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -1964,7 +1967,8 @@ export default class EffectSection extends Section {
 			this.sequence._showWarning(
 				this,
 				"file",
-				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead"
+				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead",
+        true
 			);
 		}
 		if (typeof inOptions !== "object")

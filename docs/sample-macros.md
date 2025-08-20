@@ -34,7 +34,7 @@ let position = await Sequencer.Crosshair.show({
 
 	new Sequence()
 		.effect()
-			.from(token)
+			.copySprite(token)
 			.attachTo(crosshair)
 			.persist()
 			.opacity(0.5)
@@ -48,7 +48,7 @@ if(!position){
 
 new Sequence()
 	.effect()
-		.from(token)
+		.copySprite(token)
 		.fadeIn(50)
 		.duration(550)
 		.fadeOut(250)

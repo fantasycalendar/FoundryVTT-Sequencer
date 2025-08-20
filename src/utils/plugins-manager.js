@@ -82,7 +82,7 @@ class Plugin {
 class GrapeJuiceIsometrics extends Plugin {
 
 	isIsometricActive(effect) {
-		return foundry.utils.getProperty(
+		return !(effect.data.screenSpace || effect.data.screenSpaceAboveUI) && foundry.utils.getProperty(
 			game.scenes.get(effect.data.sceneId),
 			`flags.${this.name}.is_isometric`
 		)
@@ -183,7 +183,7 @@ class GrapeJuiceIsometrics extends Plugin {
 
 class IsometricPerspective extends GrapeJuiceIsometrics {
 	isIsometricActive(effect) {
-		return foundry.utils.getProperty(
+		return !(effect.data.screenSpace || effect.data.screenSpaceAboveUI) && foundry.utils.getProperty(
 			game.scenes.get(effect.data.sceneId),
 			`flags.${this.name}.isometricEnabled`
 		)

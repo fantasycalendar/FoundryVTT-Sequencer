@@ -1,5 +1,14 @@
 ## Changelog
 
+# Version 3.6.10
+- *Effects* - Fixed `.copySprite()` not copying dynamic token rings (thank you ChasarooniZ on github!)
+- *Effects* - Fixed `.rotateTowards()` with `attach: true` not working properly (thank you RobinCodesStuff on github!)
+- *Effects* - Upgraded `.from()` into a loud deprecation - please use `.copySprite()` instead 
+- *Effects* - Upgraded `.attachTo()` with `followRotation` into a loud deprecation - please use `bindRotation` instead 
+- *Effects* - Upgraded `.noLoop()` into a loud deprecation - please use `.loopOptions({ loops: 1 })` instead
+- *Scrolling Text* - Fixed inputting `"CENTER"` to `.anchor()` not working
+- *Effects* - Fixed `.screenSpace()` on isometric scenes 
+
 # Version 3.6.9
 - *Animations* - Fixed animations not working at all
 
