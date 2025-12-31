@@ -246,18 +246,17 @@ export function get_object_dimensions(inObj, half = false) {
 	inObj = inObj?.object ?? inObj?._object ?? inObj;
 
 	if (inObj instanceof FoundryShim.Token && inObj.document.ring.enabled) {
-		// TODO: continue here
-		let scale = { x: 1.0, y: 1.0 };
+
+		let scale = 1.0;
 		let subjectScale = inObj.document.ring.subject.scale;
 		if(subjectScale < 1.0){
 			let scaleAdjustment = get_token_scale_adjustment(inObj.document);
-			scale.x = scaleAdjustment.scaleAdjustmentX;
-			scale.y = scaleAdjustment.scaleAdjustmentY;
+			scale /= scaleAdjustment;
 		}
 
 		return {
-			width: (inObj.mesh.width * scale.x) / (half ? 2 : 1),
-			height: (inObj.mesh.height * scale.y) / (half ? 2 : 1),
+			width: (inObj.mesh.width * scale) / (half ? 2 : 1),
+			height: (inObj.mesh.height * scale) / (half ? 2 : 1),
 		};
 	}
 
@@ -303,50 +302,14 @@ export function get_token_scale_adjustment(tokenDocument) {
 		const scaleFactor = 1 - scaleCorrection;
 		const aspectRatioLengthAdjustment = (longSide - shortSide);
 		scalePadding = scaleFactor * maxSideLength + aspectRatioLengthAdjustment;
-
-		// Apply scale padding to scale correction
-		scaleCorrection *= (1 + ((scalePadding * 2) / longSide));
 	}
 
-	const { fit } = tokenDocument.texture;
+	// Calculate padding
+	const padding = (textureWidth < textureHeight) ? (longSide - shortSide) / 2 : 0;
 
-	// Calculate padding for X and Y sides
-	const padding = (longSide - shortSide) / 2;
-	const paddingX = (textureWidth < textureHeight) ? padding : 0;
-	const paddingY = (textureWidth > textureHeight) ? padding : 0;
-
-	const scaleAdjustment = longSide / (longSide + scalePadding * 2);
-	const aspectRatioAdjustment = (shortSide / longSide) * scaleAdjustment;
-	let scaleAdjustmentX = paddingX ? aspectRatioAdjustment : scaleAdjustment;
-	let scaleAdjustmentY = paddingY ? aspectRatioAdjustment : scaleAdjustment;
-
-	if ( fit === "fill" ) {
-		scaleCorrection *= (Math.max(textureWidth, textureHeight) / Math.min(textureWidth, textureHeight));
-	}else {
-		let meshScale;
-		switch (fit) {
-			case "cover":
-				meshScale = Math.max(tokenWidth / textureWidth, tokenHeight / textureHeight);
-				break;
-			case "contain":
-				meshScale = Math.min(tokenWidth / textureWidth, tokenHeight / textureHeight);
-				break;
-			case "width":
-				meshScale = tokenWidth / textureWidth;
-				break;
-			case "height":
-				meshScale = tokenHeight / textureHeight;
-				break;
-		}
-		const meshDiameter = Math.max(textureWidth, textureHeight) * meshScale;
-		const ringDiameter = Math.min(tokenWidth, tokenHeight);
-		scaleCorrection *= (meshDiameter / ringDiameter);
-	}
-
-	scaleAdjustmentX /= scaleCorrection;
-	scaleAdjustmentY /= scaleCorrection;
-
-	return { scaleAdjustmentX, scaleAdjustmentY };
+	const longScaleAdjustment = longSide / (longSide + scalePadding * 2);
+	const aspectRatioAdjustment = (shortSide / longSide) * longScaleAdjustment;
+	return padding ? aspectRatioAdjustment : longScaleAdjustment;
 }
 
 
