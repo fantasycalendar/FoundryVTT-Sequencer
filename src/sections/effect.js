@@ -3,7 +3,6 @@ import { is_real_number } from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import flagManager from "../utils/flag-manager.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
@@ -294,7 +293,7 @@ export default class EffectSection extends Section {
 				this,
 				"attachTo",
 				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead",
-        true
+				true
 			);
 		}
 		if (typeof inOptions.bindRotation !== "boolean")
@@ -615,7 +614,7 @@ export default class EffectSection extends Section {
 			this,
 			"from",
 			".from() is deprecated, please use .copySprite() instead",
-      true
+			true
 		);
 		return this.copySprite(...args)
 	}
@@ -1589,7 +1588,7 @@ export default class EffectSection extends Section {
 			this,
 			"noLoop",
 			".noLoop() is deprecated, please use .loopOptions({ loops: 1 }) instead",
-      true
+			true
 		);
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -1616,7 +1615,7 @@ export default class EffectSection extends Section {
 	 * @param {Object} inOptions
 	 * @returns {EffectSection}
 	 */
-	loopOptions(inOptions={}){
+	loopOptions(inOptions = {}) {
 		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,
@@ -1962,13 +1961,13 @@ export default class EffectSection extends Section {
 	 * @returns this
 	 */
 	file(inFile, inOptions = {}) {
-		if(typeof inOptions === "boolean"){
+		if (typeof inOptions === "boolean") {
 			inOptions = {};
 			this.sequence._showWarning(
 				this,
 				"file",
 				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead",
-        true
+				true
 			);
 		}
 		if (typeof inOptions !== "object")
@@ -1980,7 +1979,7 @@ export default class EffectSection extends Section {
 		inOptions = foundry.utils.mergeObject({
 			antialiasing: PIXI.SCALE_MODES.LINEAR
 		}, inOptions)
-		if(typeof inOptions.antialiasing !== "number" || !(inOptions.antialiasing >= 0 && inOptions.antialiasing <= 1)){
+		if (typeof inOptions.antialiasing !== "number" || !(inOptions.antialiasing >= 0 && inOptions.antialiasing <= 1)) {
 			throw this.sequence._customError(
 				this,
 				"file",
@@ -2099,16 +2098,16 @@ export default class EffectSection extends Section {
 
 		const oldSource = this._source;
 		const crosshairSource = this.sequence?.crosshairs?.[this._source];
-		if(typeof this._source === "string" && crosshairSource){
+		if (typeof this._source === "string" && crosshairSource) {
 			this._source = crosshairSource.uuid;
 		}
 		const oldTarget = this._target?.target;
 		const crosshairTarget = this.sequence?.crosshairs?.[this._target?.target];
-		if(typeof this._target?.target === "string" && crosshairTarget){
+		if (typeof this._target?.target === "string" && crosshairTarget) {
 			this._target.target = crosshairTarget.uuid;
 		}
 
-		if(this._attachTo && !this._attachTo.active && typeof this._source === "string" && crosshairSource){
+		if (this._attachTo && !this._attachTo.active && typeof this._source === "string" && crosshairSource) {
 			this._attachTo.active = !!crosshairSource;
 		}
 
@@ -2118,7 +2117,7 @@ export default class EffectSection extends Section {
 		}
 
 		const source = this._getSourceObject();
-		if(this._persistOptions?.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))){
+		if (this._persistOptions?.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))) {
 			this._persistOptions.persistTokenPrototype = false;
 		}
 	}
@@ -2182,11 +2181,6 @@ export default class EffectSection extends Section {
 		this._mirrorY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)
 
 		if (this._copySprite && !this._file) {
-      this._file = (
-        this._copySprite.object?.ring?.enabled
-          ? this._copySprite.object?.ring?.subject?.texture || this._copySprite.object?.texture?.src
-          : this._copySprite.object?.texture?.src
-      );
 
 			if (this._source === null) {
 				this._source = this._validateLocation(this._copySprite.object);
@@ -2199,6 +2193,13 @@ export default class EffectSection extends Section {
 					height: size?.height ?? canvas.grid.size,
 					gridUnits: false,
 				};
+
+				// Account for token size difference compared to final rendered texture dimensions
+				if (this._copySprite.object instanceof TokenDocument && this._copySprite.object.ring.enabled) {
+					const tokenSize = this._copySprite.object.getSize();
+					this._copySprite.options.offsetX = (tokenSize.width - this._size.width) / 2;
+					this._copySprite.options.offsetY = (tokenSize.height - this._size.height) / 2;
+				}
 			}
 
 			if (
@@ -2277,6 +2278,10 @@ export default class EffectSection extends Section {
 			return;
 		}
 
+		if (this._copySprite) {
+			return;
+		}
+
 		let fileData = this._file
 			? await this._determineFile(this._file)
 			: {
@@ -2312,12 +2317,12 @@ export default class EffectSection extends Section {
 	 * @private
 	 */
 	_getSourceObject() {
-		if (!this._source || typeof this._source !== "object"){
+		if (!this._source || typeof this._source !== "object") {
 			return this._source;
 		}
-		if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
+		if (this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument) {
 			const doc = this._source?.document ?? this._source;
-			if(this._attachTo) {
+			if (this._attachTo) {
 				return lib.get_object_identifier(doc.object);
 			}
 			return doc.getOrientation().source;
@@ -2336,12 +2341,12 @@ export default class EffectSection extends Section {
 	 */
 	_getTargetObject() {
 		if (!this._target) return this._target;
-		if (typeof this._target.target !== "object"){
+		if (typeof this._target.target !== "object") {
 			return this._target.target;
 		}
-		if(this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument){
+		if (this._target?.target instanceof CrosshairsPlaceable || this._target?.target instanceof CrosshairsDocument) {
 			const doc = this._target?.target?.document ?? this._target?.target;
-			if(this._stretchTo?.attachTo || this._rotateTowards?.attachTo){
+			if (this._stretchTo?.attachTo || this._rotateTowards?.attachTo) {
 				return lib.get_object_identifier(doc.object);
 			}
 			const orientation = doc.getOrientation();
@@ -2369,14 +2374,23 @@ export default class EffectSection extends Section {
 			return this._deserializedData;
 		}
 
-		const { file, forcedIndex, customRange } =
-			this._file && this._playEffect
-				? await this._determineFile(this._file)
-				: {
-					file: this._file,
-					forcedIndex: false,
-					customRange: false,
-				};
+		let file = "";
+		let forcedIndex = null;
+		let customRange = null;
+
+		if (!this._file?.copySprite) {
+			let fileData =
+				this._file && this._playEffect
+					? await this._determineFile(this._file)
+					: {
+						file: this._file,
+						forcedIndex: false,
+						customRange: false,
+					};
+			file = fileData.file;
+			forcedIndex = fileData.forcedIndex;
+			customRange = fileData.customRange;
+		}
 
 		let source = this._getSourceObject();
 		let target = this._getTargetObject();
@@ -2477,6 +2491,10 @@ export default class EffectSection extends Section {
 
 			attachTo: this._attachTo,
 			missed: this._missed,
+			copySprite: {
+				uuid: this._copySprite?.object?.uuid,
+				...this._copySprite?.options
+			},
 
 			/**
 			 * Sprite properties

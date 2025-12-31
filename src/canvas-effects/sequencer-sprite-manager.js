@@ -3,20 +3,24 @@ import AnimatedSpriteMesh from "../lib/meshes/AnimatedSpriteMesh.js";
 import TilingSpriteMesh from "../lib/meshes/TilingSpriteMesh.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import FoundryShim from "../utils/foundry-shim.js";
+
 class Asset {
 	destroy() {
 		// nothing to do in the general case
 	}
 }
+
 class TextureAsset extends Asset {
 	filepath;
 	texture;
+
 	constructor({ filepath, texture }) {
 		super();
 		this.filepath = filepath;
 		this.texture = texture;
 	}
 }
+
 class VideoAsset extends Asset {
 	/** @type {string} */
 	filepath;
@@ -40,6 +44,7 @@ class VideoAsset extends Asset {
 		this.texture = texture;
 		this.video = video;
 	}
+
 	destroy() {
 		try {
 			this.video.pause();
@@ -50,10 +55,12 @@ class VideoAsset extends Asset {
 			this.video.load();
 			// @ts-expect-error can only be null after destroy
 			this.video = null;
-		} catch (err) {}
+		} catch (err) {
+		}
 		this.texture.destroy(true);
 	}
 }
+
 class VideoSpritesheetAsset extends Asset {
 	/** @type {string} */
 	filepath;
@@ -85,13 +92,16 @@ class VideoSpritesheetAsset extends Asset {
 		}));
 		this.#register();
 	}
+
 	destroy() {
 		return SequencerFileCache.unloadSpritesheet(this.filepath);
 	}
+
 	#register() {
 		SequencerFileCache.registerSpritesheet(this.filepath, this.spritesheet);
 	}
 }
+
 class FlipbookAsset extends Asset {
 	/** @type {string[]} */
 	filepaths;
@@ -115,15 +125,19 @@ class FlipbookAsset extends Asset {
 		const frametime = (1 / framerate) * 1000;
 		this.frameObjects = textures.map((texture) => ({ texture, time: frametime }));
 	}
+
 	destroy() {
 		// TODO maybe add spritesheet-like ref counting for flipbooks too?
 	}
 }
+
 //#endregion
 //#region Playback controls
 class PlaybackControls {
-	destroy() {}
+	destroy() {
+	}
 }
+
 class VideoPlaybackControls extends PlaybackControls {
 	/** @type {HTMLVideoElement} */
 	#video;
@@ -140,46 +154,60 @@ class VideoPlaybackControls extends PlaybackControls {
 		this.#video = video;
 		this.#texture = texture;
 	}
+
 	async play() {
 		try {
 			await this.#video.play();
 			this.#texture.update();
-		} catch (error) {}
+		} catch (error) {
+		}
 	}
+
 	stop() {
 		this.#video.pause();
 	}
+
 	get duration() {
 		return this.#video.duration;
 	}
+
 	get isPlaying() {
 		return !this.#video.paused;
 	}
+
 	get loop() {
 		return this.#video.loop;
 	}
+
 	set loop(value) {
 		this.#video.loop = value;
 	}
+
 	get volume() {
 		return this.#video.volume;
 	}
+
 	set volume(value) {
 		this.#video.muted = !value;
 		this.#video.volume = value;
 	}
+
 	get currentTime() {
 		return this.#video.currentTime;
 	}
+
 	set currentTime(value) {
 		this.#video.currentTime = value;
 	}
+
 	get playbackRate() {
 		return this.#video.playbackRate;
 	}
+
 	set playbackRate(value) {
 		this.#video.playbackRate = value;
 	}
+
 	destroy() {
 		this.stop();
 		// @ts-expect-error should be null only when destroyed
@@ -210,28 +238,37 @@ class SpritePlaybackControls extends PlaybackControls {
 		this.#framerate = framerate;
 		this.#framecount = framecount;
 	}
+
 	async play() {
 		this.#sprite.play();
 	}
+
 	stop() {
 		this.#sprite.stop();
 	}
+
 	get duration() {
 		return this.#framecount / this.#framerate;
 	}
+
 	get isPlaying() {
 		return this.#sprite.playing;
 	}
+
 	get loop() {
 		return this.#sprite.loop;
 	}
+
 	set loop(value) {
 		this.#sprite.loop = value;
 	}
+
 	get volume() {
 		return 0;
 	}
-	set volume(_value) {}
+
+	set volume(_value) {
+	}
 
 	get currentTime() {
 		// return currentTime rounded with ms accuracy.
@@ -241,6 +278,7 @@ class SpritePlaybackControls extends PlaybackControls {
 		const accurateTime = (this.#sprite.currentFrame + 1) / this.#framerate;
 		return Math.round(accurateTime * 1000) / 1000;
 	}
+
 	set currentTime(value) {
 		const newFrame = Math.floor(value * this.#framerate);
 		const newFrameIndex = Math.clamp(newFrame, 0, this.#framecount - 1);
@@ -250,9 +288,11 @@ class SpritePlaybackControls extends PlaybackControls {
 			this.#sprite.gotoAndStop(newFrameIndex);
 		}
 	}
+
 	get playbackRate() {
 		return this.#sprite.animationSpeed;
 	}
+
 	set playbackRate(value) {
 		this.#sprite.animationSpeed = value;
 	}
@@ -271,7 +311,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 	/** @type {import("../modules/sequencer-file.js").SequencerFile} */
 	#file;
 
-	/** @type {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} */
+	/** @type {{ texture?: null, antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} */
 	#sharedSpriteConfig;
 
 	/** @type {string | undefined} */
@@ -309,11 +349,12 @@ export class SequencerSpriteManager extends PIXI.Container {
 
 	/**
 	 * @param {import("../modules/sequencer-file.js").SequencerFile} file
-	 * @param {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
+	 * @param {{ texture?: null, antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
 	 */
 	constructor(file, options) {
 		super();
 		this.#sharedSpriteConfig = options ?? {
+			texture: null,
 			antialiasing: PIXI.SCALE_MODES.LINEAR,
 			tiling: false,
 			xray: false,
@@ -321,6 +362,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		};
 		this.#file = file;
 	}
+
 	//#region public api
 	get activePath() {
 		return this.#activeAssetPath;
@@ -359,6 +401,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		// CHECKME lets see if this works without update texture.
 		this.#managedSprite?.texture?.update();
 	}
+
 	/**
 	 * @param {string | undefined} filePath
 	 */
@@ -405,6 +448,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			});
 		}
 	}
+
 	/**
 	 * @param {{ text: string | null; textStyle: Partial<PIXI.ITextStyle> | PIXI.TextStyle }} textData
 	 */
@@ -420,6 +464,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		this.#textSprite = textSprite;
 		return this.addChild(textSprite);
 	}
+
 	removeText() {
 		this.#textSprite?.destroy();
 		this.#textSprite = null;
@@ -432,12 +477,14 @@ export class SequencerSpriteManager extends PIXI.Container {
 		this.#relatedAssets[filepath]?.destroy();
 		delete this.#relatedAssets[filepath];
 	}
+
 	async preloadVariants() {
 		if (!this.#preloadingPromise) {
 			return (this.#preloadingPromise = this.#preloadVariants());
 		}
 		return this.#preloadingPromise;
 	}
+
 	destroy() {
 		this.#playbackControls?.destroy();
 		for (const asset of this.#relatedAssets.values()) {
@@ -448,73 +495,91 @@ export class SequencerSpriteManager extends PIXI.Container {
 		this.managedSprite?.destroy();
 		super.destroy({ children: true });
 	}
+
 	//#endregion
 	//#region Managed Sprite proxies
 	async play() {
 		this.#playbackControls?.play();
 	}
+
 	stop() {
 		this.#playbackControls?.stop();
 	}
+
 	get tileScale() {
 		return this.managedSprite?.tileScale;
 	}
+
 	set tileScale(point) {
 		if (point) {
 			this.managedSprite?.tileScale.copyFrom(point);
 		}
 	}
+
 	get tilePosition() {
 		return this.managedSprite?.tilePosition;
 	}
+
 	set tilePosition(point) {
 		if (point) {
 			this.managedSprite?.tilePosition.copyFrom(point);
 		}
 	}
+
 	get anchor() {
 		return this.managedSprite?.anchor;
 	}
+
 	set anchor(point) {
 		if (point) {
 			this.managedSprite?.anchor.copyFrom(point);
 		}
 	}
+
 	get tint() {
 		return this.managedSprite?.tint ?? 0xffffff;
 	}
+
 	set tint(value) {
 		if (this.managedSprite) {
 			this.managedSprite.tint = typeof value === "number" ? Math.floor(value) : value;
 		}
 	}
+
 	get scale() {
 		return this.managedSprite?.scale || super.scale;
 	}
+
 	set scale(point) {
 		this.managedSprite?.scale.copyFrom(point);
 	}
+
 	get width() {
 		return this.managedSprite?.width ?? 0;
 	}
+
 	set width(value) {
 		if (!this.managedSprite) {
 			return;
 		}
 		this.managedSprite.width = value;
 	}
+
 	get height() {
 		return this.managedSprite?.height ?? 0;
 	}
+
 	set height(value) {
 		if (!this.managedSprite) {
 			return;
 		}
 		this.managedSprite.height = value;
 	}
+
 	get resolution() {
 		return this.#textSprite?.resolution;
 	}
+
 	set resolution(value) {
 		if (!this.#textSprite) return;
 		this.#textSprite.resolution = value ?? 5;
@@ -528,44 +593,56 @@ export class SequencerSpriteManager extends PIXI.Container {
 			this.activeAsset instanceof FlipbookAsset
 		);
 	}
+
 	get playing() {
 		return this.#playbackControls?.isPlaying ?? false;
 	}
+
 	get duration() {
 		return this.#playbackControls?.duration ?? 0;
 	}
+
 	get volume() {
 		return this.#playbackControls?.volume ?? 0;
 	}
+
 	set volume(value) {
 		if (!this.#playbackControls) return;
 		this.#playbackControls.volume = value;
 	}
+
 	get loop() {
 		return this.#playbackControls?.loop ?? false;
 	}
+
 	set loop(value) {
 		if (!this.#playbackControls) return;
 		this.#playbackControls.loop = value;
 	}
+
 	get currentTime() {
 		return this.#playbackControls?.currentTime ?? 0;
 	}
+
 	set currentTime(value) {
 		if (!this.#playbackControls) return;
 		this.#playbackControls.currentTime = value;
 	}
+
 	get playbackRate() {
 		return this.#playbackControls?.playbackRate ?? 1;
 	}
+
 	set playbackRate(value) {
 		if (!this.#playbackControls) return;
 		this.#playbackControls.playbackRate = value;
 	}
+
 	/** @return {PIXI.ColorMatrixFilter | null} */
 	get colorMatrixFilter() {
 		return this.managedSprite?.colorMatrixFilter ?? null;
 	}
+
 	set colorMatrixFilter(value) {
 		if (!this.managedSprite) return;
 		this.managedSprite.colorMatrixFilter = value;
@@ -606,7 +683,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		if (this.#file && this.#file.isFlipbook) {
 			return this.#loadFlipbook(this.#file.getAllFiles(), this.#file.originalMetadata);
 		}
-		const texture = await SequencerFileCache.loadFile(filepath);
+		const texture = this.#sharedSpriteConfig.texture ?? await SequencerFileCache.loadFile(filepath);
 		// disable mipmaps if using compressed textures and no level information is given.
 		// for some reason, the integrated basis_universal transcoder does not set this
 		// correctly.
@@ -744,4 +821,5 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return Math.min(maxScale, 1);
 	}
 }
+
 //#endregion
