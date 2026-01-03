@@ -1,12 +1,13 @@
 <script>
-  import { localize } from '#runtime/util/i18n';
   import SequenceManager from "../../modules/sequence-manager.js";
-  import EffectEntry from "./components/EffectEntry.svelte";
-  import SoundEntry from "./components/SoundEntry.svelte";
+  import EffectEntry from "../components/EffectEntry.svelte";
+  import SoundEntry from "../components/SoundEntry.svelte";
   import SequencerSoundManager from "../../modules/sequencer-sound-manager.js";
 
   const VisibleEffects = SequenceManager.VisibleEffects;
   const RunningSounds = SequenceManager.RunningSounds;
+
+  let localize = game.i18n.localize.bind(game.i18n);
 
   $: effects = Object.values($VisibleEffects);
   $: sounds = Object.entries($RunningSounds).filter(e => e[1].sound_playing);

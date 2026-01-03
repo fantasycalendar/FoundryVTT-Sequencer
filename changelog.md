@@ -1,5 +1,10 @@
 ## Changelog
 
+# Version 3.7.0
+- *Sequencer* - Updated to support Foundry v14
+- *Sequencer* - Removed Socketlib requirement
+- *Sequencer* - Updated applications to support dark mode
+
 # Version 3.6.11
 - *Sequencer* - Fixed `remote` on `.play()` not forcing local on the executing user's machine
 - *Sequencer* - Added a one-time dialog promoting our patreon

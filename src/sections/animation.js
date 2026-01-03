@@ -320,7 +320,7 @@ class AnimationSection extends Section {
 			canvas.grid.size
 		);
 
-		let ray = new Ray(originLoc, targetLoc);
+		let ray = new foundry.canvas.geometry.Ray(originLoc, targetLoc);
 
 		let dx = ray.dx;
 		let dy = ray.dy;
@@ -410,7 +410,7 @@ class AnimationSection extends Section {
 					if (this._rotateTowards.towardsCenter) {
 						targetLocation = targetLocation?.center ?? targetLocation;
 					}
-					let ray = new Ray(startLocation, targetLocation);
+					let ray = new foundry.canvas.geometry.Ray(startLocation, targetLocation);
 					let angle = Math.normalizeDegrees((ray.angle * 180) / Math.PI - 90);
 					angle += offset;
 					await this._updateObject(
@@ -870,7 +870,7 @@ class AnimationSection extends Section {
 							let target = attribute.target;
 							if (this._rotateTowards.towardsCenter)
 								target = target?.center ?? target;
-							let ray = new Ray(attribute.originLocation, target);
+							let ray = new foundry.canvas.geometry.Ray(attribute.originLocation, target);
 							let angle = (ray.angle * 180) / Math.PI - 90;
 							angle += attribute.offset;
 							attribute.from = attribute.origin.rotation;

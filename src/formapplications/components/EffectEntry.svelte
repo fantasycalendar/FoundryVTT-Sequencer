@@ -1,8 +1,8 @@
 <script>
 
-  import { localize } from '#runtime/util/i18n';
-  import { SelectionManager } from "../../../modules/sequencer-interaction-manager.js";
-  import SequencerEffectManager from "../../../modules/sequencer-effect-manager.js";
+  let localize = game.i18n.localize.bind(game.i18n);
+  import { SelectionManager } from "../../modules/sequencer-interaction-manager.js";
+  import SequencerEffectManager from "../../modules/sequencer-effect-manager.js";
 
   export let effect;
 

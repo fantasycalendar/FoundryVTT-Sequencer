@@ -333,7 +333,7 @@ export function get_all_documents_from_scene(inSceneId = false) {
     ...Array.from(scene?.tokens ?? []),
     ...Array.from(scene?.lights ?? []),
     ...Array.from(scene?.sounds ?? []),
-    ...Array.from(scene?.templates ?? []),
+    ...Array.from(scene?.regions ?? []),
     ...Array.from(scene?.tiles ?? []),
     ...Array.from(scene?.walls ?? []),
     ...Array.from(scene?.drawings ?? []),

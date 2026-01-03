@@ -1,6 +1,6 @@
 <script>
 
-	import SequencerSoundManager from "../../../modules/sequencer-sound-manager.js";
+	import SequencerSoundManager from "../../modules/sequencer-sound-manager.js";
 
 	export let id;
 	export let sound;

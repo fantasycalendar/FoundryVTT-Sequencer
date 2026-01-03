@@ -64,7 +64,7 @@ export default class SequencerFoundryReplicator {
       });
 
       if (data.speed) {
-        let ray = new Ray(canvas.stage.pivot, {
+        let ray = new foundry.canvas.geometry.Ray(canvas.stage.pivot, {
           x: position.x,
           y: position.y,
         });

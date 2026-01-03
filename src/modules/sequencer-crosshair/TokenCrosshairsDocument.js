@@ -10,7 +10,7 @@ export default class TokenCrosshairsDocument extends CrosshairsDocument {
 		const tokenDoc = tokenPlaceable.document
 
 		const { distance, size } = context.parent.grid;
-		const rayBounds = new Ray(
+		const rayBounds = new foundry.canvas.geometry.Ray(
 			{ x: 0, y: 0 },
 			{ x: tokenDoc.width * distance, y: tokenDoc.height * distance });
 

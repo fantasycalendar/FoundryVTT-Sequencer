@@ -1,10 +1,10 @@
 <script>
 
-  import { localize } from '#runtime/util/i18n';
+  let localize = game.i18n.localize.bind(game.i18n);
   import SequenceSection from "./SequenceSection.svelte";
   import SequenceStatus from "./SequenceStatus.svelte";
-  import SequenceManager from "../../../modules/sequence-manager.js";
-  import CONSTANTS from "../../../constants.js";
+  import SequenceManager from "../../modules/sequence-manager.js";
+  import CONSTANTS from "../../constants.js";
 
   export let sequence;
   export let index;

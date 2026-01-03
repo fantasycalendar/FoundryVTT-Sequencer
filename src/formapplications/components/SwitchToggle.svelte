@@ -1,7 +1,7 @@
 <script>
 
-  import { localize } from '#runtime/util/i18n';
-  import { applyStyles } from '#runtime/svelte/action/dom/style';
+  let localize = game.i18n.localize.bind(game.i18n);
+  import { applyStyles } from "./actions.svelte.js"
 
 	export let setting;
   export let styles = {};

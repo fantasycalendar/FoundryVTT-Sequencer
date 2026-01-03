@@ -5,6 +5,7 @@ const CONSTANTS = {
 	EFFECTS_LAYER: "sequencerEffects",
 	INTERFACE_LAYER: "sequencerInterfaceLayer",
 	IS_V13: false,
+	IS_V14: false,
   COLOR: {
     PRIMARY: 0xee442f,
     SECONDARY: 0x601a4a,

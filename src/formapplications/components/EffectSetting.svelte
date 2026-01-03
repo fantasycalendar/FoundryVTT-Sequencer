@@ -1,6 +1,6 @@
 <script>
 
-  import { localize } from '#runtime/util/i18n';
+  let localize = game.i18n.localize.bind(game.i18n);
 
   export let data;
 

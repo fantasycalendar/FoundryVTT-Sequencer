@@ -918,7 +918,7 @@ export default class CanvasEffect extends PIXI.Container {
 				const endPos = this._cachedTargetData.position;
 
 				const angle = this.target
-					? new Ray(startPos, endPos).angle
+					? new foundry.canvas.geometry.Ray(startPos, endPos).angle
 					: Ray.fromAngle(
 						startPos.x,
 						startPos.y,
@@ -1662,7 +1662,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this._template =
 				foundry.utils.mergeObject(
 					{ gridSize: file.template[0], startPoint: file.template[1], endPoint: file.template[2] },
-					this.data.template
+					this.data.template ?? {}
 				)
 
 		}
@@ -1680,7 +1680,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this._currentFilePath = this._file.getFile();
 			return;
 		}
-		distance = distance || (new Ray(this.sourcePosition, this.targetPosition)).distance;
+		distance = distance || (new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition)).distance;
 		if (distance === 0 && showDistanceWarning) {
 			lib.custom_error(
 			      "effect",
@@ -2151,7 +2151,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	async _applyDistanceScaling() {
-		const ray = new Ray(this.sourcePosition, this.targetPosition);
+		const ray = new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition);
 
 		this._rotateTowards(ray);
 
@@ -2230,7 +2230,7 @@ export default class CanvasEffect extends PIXI.Container {
 		)
 			return true;
 
-		const ray = new Ray(this.sourcePosition, this.targetPosition);
+		const ray = new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition);
 
 		const blockingObjects = canvas.walls.checkCollision(ray, { type: "sight" });
 
@@ -2253,7 +2253,7 @@ export default class CanvasEffect extends PIXI.Container {
 				this.flipX === 1 ? this.sourcePosition : this.targetPosition;
 			const targetPosition =
 				this.flipX === 1 ? this.targetPosition : this.sourcePosition;
-			ray = new Ray(sourcePosition, targetPosition);
+			ray = new foundry.canvas.geometry.Ray(sourcePosition, targetPosition);
 		}
 
 		this.rotationContainer.rotation = Math.normalizeRadians(

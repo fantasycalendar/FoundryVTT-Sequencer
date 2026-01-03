@@ -107,7 +107,7 @@ export function calculate_missed_position(source, target, twister) {
   const targetDimensions = get_object_dimensions(target, true);
   const targetPosition = get_object_position(target);
 
-  const ray = new Ray(targetPosition, sourcePosition);
+  const ray = new foundry.canvas.geometry.Ray(targetPosition, sourcePosition);
 
   let startRadians = ray.angle + Math.PI / 2;
   let endRadians = ray.angle - Math.PI / 2;
@@ -355,7 +355,7 @@ export function get_mouse_position(snapToGrid = false) {
 }
 
 export function distance_between(p1, p2) {
-  return new Ray(p1, p2).distance;
+  return new foundry.canvas.geometry.Ray(p1, p2).distance;
 }
 
 

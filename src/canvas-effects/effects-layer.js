@@ -134,7 +134,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 
     if (!EffectPlayer.endPos) return;
 
-    const angle = new Ray(startPos, EffectPlayer.endPos).angle;
+    const angle = new foundry.canvas.geometry.Ray(startPos, EffectPlayer.endPos).angle;
 
     this.lineHead.beginFill(CONSTANTS.COLOR.PRIMARY);
     this.lineHead.moveTo(0, -5);

@@ -1,9 +1,10 @@
 <script>
 
   import { databaseStore } from "./DatabaseStore.js";
-  import { localize } from '#runtime/util/i18n';
 
   export let data;
+
+  let localize = game.i18n.localize.bind(game.i18n);
 
   const searchRegex = databaseStore.searchRegex;
 

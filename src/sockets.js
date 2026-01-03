@@ -29,64 +29,114 @@ export const SOCKET_HANDLERS = {
   RUN_SEQUENCE_LOCALLY: "runSequenceLocally",
 };
 
+
+export class SequencerSocket {
+
+	constructor() {
+		game.socket.on(`module.${CONSTANTS.MODULE_NAME}`, this.executeSocket.bind(this));
+	}
+
+	executeAsGM(type, ...args) {
+		let data = { senderId: game.user.id, sendType: "gm", type, payload: args };
+		if(game.user.isResponsibleGM){
+			return this.executeSocket(data);
+		}
+		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
+		return data;
+	}
+
+	executeForOthers(type, ...args) {
+		let data = { senderId: game.user.id, type, payload: args };
+		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
+		return data;
+	}
+
+	executeForEveryone(type, ...args) {
+		let data = { senderId: game.user.id, type, payload: args };
+		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
+		return this.executeSocket(data);
+	}
+
+	executeAsUser(type, receiverId, ...args) {
+		let data = { senderId: game.user.id, receiverId, sendType: "user", type, payload: args };
+		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
+		return data;
+	}
+
+	SOCKET_CALLBACKS = {
+		[SOCKET_HANDLERS.PLAY_EFFECT]: (data) => {
+			return SequencerEffectManager._playEffect(...data.payload);
+		},
+		[SOCKET_HANDLERS.END_EFFECTS]: (data) => {
+			return SequencerEffectManager._endManyEffects(...data.payload);
+		},
+		[SOCKET_HANDLERS.UPDATE_EFFECT]: (data) => {
+			return SequencerEffectManager._updateEffect(...data.payload)
+		},
+		[SOCKET_HANDLERS.ADD_EFFECT_ANIMATIONS]: (data) => {
+			return SequencerEffectManager._addEffectAnimations(...data.payload)
+		},
+		[SOCKET_HANDLERS.PLAY_SOUND]: (data) => {
+			return SequencerSoundManager._play(...data.payload)
+		},
+		[SOCKET_HANDLERS.END_SOUNDS]: (data) => {
+			return SequencerSoundManager._endSounds(...data.payload)
+		},
+		[SOCKET_HANDLERS.PRELOAD]: (data) => {
+			return SequencerPreloader.respond(...data.payload)
+		},
+		[SOCKET_HANDLERS.PRELOAD_RESPONSE]: (data) => {
+			return SequencerPreloader.handleResponse(...data.payload)
+		},
+		[SOCKET_HANDLERS.UPDATE_DOCUMENT]: (data) => {
+			return updateDocument(...data.payload)
+		},
+		[SOCKET_HANDLERS.ADD_EFFECT_FLAGS]: (data) => {
+			return FlagManager._addEffectFlags(...data.payload)
+		},
+		[SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS]: (data) => {
+			return FlagManager._removeEffectFlags(...data.payload)
+		},
+		[SOCKET_HANDLERS.UPDATE_EFFECT_POSITION]: (data) => {
+			return SequencerEffectManager._updatePosition(...data.payload)
+		},
+		[SOCKET_HANDLERS.ADD_SOUND_FLAGS]: (data) => {
+			return FlagManager._addSoundFlags(...data.payload)
+		},
+		[SOCKET_HANDLERS.REMOVE_SOUND_FLAGS]: (data) => {
+			return FlagManager._removeSoundFlags(...data.payload)
+		},
+		[SOCKET_HANDLERS.CREATE_SCROLLING_TEXT]: (data) => {
+			return SequencerFoundryReplicator._playScrollingText(data.payload)
+		},
+		[SOCKET_HANDLERS.PAN_CANVAS]: (data) => {
+			return SequencerFoundryReplicator._panCanvas(data.payload)
+		},
+		[SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY]: (data) => {
+			lib.debug("Playing remote Sequence");
+			new Sequence().fromJSON(data.payload).play();
+		},
+	}
+
+	executeSocket(data) {
+		if(data.sendType === "gm" && !game.user.isResponsibleGM){
+			return;
+		}
+		if(data.sendType === "user" && game.user.id !== data.receiverId){
+			return;
+		}
+		const handler = this.SOCKET_CALLBACKS[data.type];
+		if (handler) {
+			return handler(data);
+		}
+	}
+}
+
+
 export let sequencerSocket = false;
 
 export function registerSocket() {
-  if (sequencerSocket) return;
-	if (!socketlib?.registerModule) return;
-  sequencerSocket = socketlib.registerModule(CONSTANTS.MODULE_NAME);
-  sequencerSocket.register(SOCKET_HANDLERS.PLAY_EFFECT, (...args) =>
-    SequencerEffectManager._playEffect(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.END_EFFECTS, (...args) =>
-    SequencerEffectManager._endManyEffects(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.UPDATE_EFFECT, (...args) =>
-    SequencerEffectManager._updateEffect(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.ADD_EFFECT_ANIMATIONS, (...args) =>
-    SequencerEffectManager._addEffectAnimations(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.PLAY_SOUND, (...args) =>
-    SequencerSoundManager._play(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.END_SOUNDS, (...args) =>
-    SequencerSoundManager._endSounds(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.PRELOAD, (...args) =>
-    SequencerPreloader.respond(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.PRELOAD_RESPONSE, (...args) =>
-    SequencerPreloader.handleResponse(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.UPDATE_DOCUMENT, (...args) =>
-    updateDocument(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.ADD_EFFECT_FLAGS, (...args) =>
-    FlagManager._addEffectFlags(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS, (...args) =>
-    FlagManager._removeEffectFlags(...args)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.UPDATE_EFFECT_POSITION, (...args) =>
-    SequencerEffectManager._updatePosition(...args)
-  );
-	sequencerSocket.register(SOCKET_HANDLERS.ADD_SOUND_FLAGS, (...args) =>
-		FlagManager._addSoundFlags(...args)
-	);
-	sequencerSocket.register(SOCKET_HANDLERS.REMOVE_SOUND_FLAGS, (...args) =>
-		FlagManager._removeSoundFlags(...args)
-	);
-  sequencerSocket.register(SOCKET_HANDLERS.CREATE_SCROLLING_TEXT, (data) =>
-    SequencerFoundryReplicator._playScrollingText(data)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.PAN_CANVAS, (data) =>
-    SequencerFoundryReplicator._panCanvas(data)
-  );
-  sequencerSocket.register(SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY, (data) => {
-    lib.debug("Playing remote Sequence");
-    new Sequence().fromJSON(data).play();
-  });
+  sequencerSocket = new SequencerSocket();
 }
 
 async function updateDocument(documentUuid, updates, animate) {

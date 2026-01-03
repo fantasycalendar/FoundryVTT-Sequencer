@@ -333,7 +333,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		});
 
 		const centerPoint = placeable.getCenterPoint();
-		const ray = new Ray(centerPoint, mouseLocation);
+		const ray = new foundry.canvas.geometry.Ray(centerPoint, mouseLocation);
 
 		let intersection;
 		for (let i = 0; i < points.length; i += 2) {
@@ -387,7 +387,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 	#handleLimit(mouseLocation, targetLocation) {
 
-		const ray = new Ray(targetLocation, mouseLocation);
+		const ray = new foundry.canvas.geometry.Ray(targetLocation, mouseLocation);
 		const gridPath = canvas.grid.measurePath([targetLocation, mouseLocation]);
 
 		const limitMinRange = is_real_number(this.crosshair.location.limitMinRange) ? this.crosshair.location.limitMinRange : 0;
@@ -460,7 +460,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 	#getDraggedMatrix(source, target) {
 
-		const dragAngle = (new Ray(source, target)).angle;
+		const dragAngle = (new foundry.canvas.geometry.Ray(source, target)).angle;
 		const dragDistance = canvas.grid.measurePath([source, target]);
 
 		const direction = this.crosshair.snap.direction

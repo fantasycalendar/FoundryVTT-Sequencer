@@ -1,20 +1,16 @@
 <script>
 
-	import { ApplicationShell } from "#runtime/svelte/component/application";
-  import { localize } from '#runtime/util/i18n';
-  import { getContext, onDestroy } from "svelte";
+  import { onDestroy } from "svelte";
 
   import DatabaseEntry from "./DatabaseEntry.svelte";
-  import VirtualScroll from "svelte-virtual-scroll-list"
+  import VirtualScroll from "svelte-virtual-scroll-list";
 
   import SequencerDatabase from "../../modules/sequencer-database.js";
   import { databaseStore } from "./DatabaseStore.js";
   import * as lib from "../../lib/lib.js";
   import CONSTANTS from "../../constants.js";
 
-  const { application } = getContext("#external");
-
-  export let elementRoot;
+	let localize = game.i18n.localize.bind(game.i18n);
 
   let entries = [];
 
@@ -83,85 +79,79 @@
   onDestroy(() => databaseStore.cleanupSpritesheet());
 </script>
 
-<svelte:options accessors={true}/>
+<div class="sequencer-database-content">
 
-<ApplicationShell bind:elementRoot>
+	<div class="sequencer-database-header">
+		<select bind:value={$selectedPackStore} name="pack-select">
+			<option value="all">{localize("SEQUENCER.Database.AllPacks")}</option>
+			{#each $packStore as pack, index}
+				<option>{ pack }</option>
+			{/each}
+		</select>
+    <select name="file-select" disabled={!$allRanges} title={$allRanges ? "" : localize("SEQUENCER.Database.FileTypePredicate")} bind:value={$fileTypes}>
+			<option value="all">{localize("SEQUENCER.Database.All")}</option>
+			<option value="video">{localize("SEQUENCER.Database.Video")}</option>
+			<option value="sound">{localize("SEQUENCER.Database.Sound")}</option>
+		</select>
+		<input bind:value={$search} class="ml-2" placeholder='{localize("SEQUENCER.Database.Search")}' type="text">
+		<input bind:checked={$allRanges} class="ml-2" id="database-all-ranges" type="checkbox">
+		<label class="all-ranges-label" for="database-all-ranges">{localize("SEQUENCER.Database.ShowAllRanges")}</label>
+		<input bind:checked={$subLists} class="ml-2" id="include-sub-lists" type="checkbox">
+		<label class="all-ranges-label" for="include-sub-lists">{localize("SEQUENCER.Database.ShowSubLists")}</label>
+		<input bind:checked={$listView} class="ml-2" id="treeview" type="checkbox">
+		<label class="all-ranges-label" for="treeview">{localize("SEQUENCER.Database.ListView")}</label>
+	</div>
 
-	<div class="sequencer-database-content">
+	<div class="sequencer-database-entries-container">
 
-		<div class="sequencer-database-header">
-			<select bind:value={$selectedPackStore} name="pack-select">
-				<option value="all">{localize("SEQUENCER.Database.AllPacks")}</option>
-				{#each $packStore as pack, index}
-					<option>{ pack }</option>
-				{/each}
-			</select>
-      <select name="file-select" disabled={!$allRanges} title={$allRanges ? "" : localize("SEQUENCER.Database.FileTypePredicate")} bind:value={$fileTypes}>
-				<option value="all">{localize("SEQUENCER.Database.All")}</option>
-				<option value="video">{localize("SEQUENCER.Database.Video")}</option>
-				<option value="sound">{localize("SEQUENCER.Database.Sound")}</option>
-			</select>
-			<input bind:value={$search} class="ml-2" placeholder='{localize("SEQUENCER.Database.Search")}' type="text">
-			<input bind:checked={$allRanges} class="ml-2" id="database-all-ranges" type="checkbox">
-			<label class="all-ranges-label" for="database-all-ranges">{localize("SEQUENCER.Database.ShowAllRanges")}</label>
-			<input bind:checked={$subLists} class="ml-2" id="include-sub-lists" type="checkbox">
-			<label class="all-ranges-label" for="include-sub-lists">{localize("SEQUENCER.Database.ShowSubLists")}</label>
-			<input bind:checked={$listView} class="ml-2" id="treeview" type="checkbox">
-			<label class="all-ranges-label" for="treeview">{localize("SEQUENCER.Database.ListView")}</label>
-		</div>
-
-		<div class="sequencer-database-entries-container">
-
-			{#if $listView}
-        <div class="sequencer-database-entries">
-          <VirtualScroll
-            data={filteredEntries}
-            key="entry"
-            let:data
-          >
-            <DatabaseEntry entry={data.entry}/>
-          </VirtualScroll>
-        </div>
-			{:else}
-        <div class="sequencer-database-entries-tree">
-          <VirtualScroll
-            data={$visibleTreeStore}
-            key="fullPath"
-            let:data
-          >
-            <svelte:component this={data.class} {data}/>
-          </VirtualScroll>
-        </div>
-			{/if}
-
-			<div class="sequencer-database-player-container">
-        <div class="sequencer-database-player-content">
-				<video autoplay bind:this={databaseStore.elements.player} class="database-player" height="335" loop
-							 on:mouseenter={() => { databaseStore.elements.player.controls = true; }}
-							 on:mouseleave={() => { databaseStore.elements.player.controls = false; }}
-							 preload
-							 width="335"
-				>
-				</video>
-				<img bind:this={databaseStore.elements.image} class="database-image hidden">
-				<audio controls autoplay bind:this={databaseStore.elements.audio} class="database-audio hidden">
-					<source type="audio">
-				</audio>
+		{#if $listView}
+      <div class="sequencer-database-entries">
+        <VirtualScroll
+          data={filteredEntries}
+          key="entry"
+          let:data
+        >
+          <DatabaseEntry entry={data.entry}/>
+        </VirtualScroll>
       </div>
-				<div class="sequencer-database-metadata-footer">
-					{#if $metadata}
-						Type: {$metadata.type} | Duration: {$metadata.duration}
-					{:else}
-						No file loaded...
-					{/if}
-				</div>
-			</div>
+		{:else}
+      <div class="sequencer-database-entries-tree">
+        <VirtualScroll
+          data={$visibleTreeStore}
+          key="fullPath"
+          let:data
+        >
+          <svelte:component this={data.class} {data}/>
+        </VirtualScroll>
+      </div>
+		{/if}
 
+		<div class="sequencer-database-player-container">
+      <div class="sequencer-database-player-content">
+			<video autoplay bind:this={databaseStore.elements.player} class="database-player" height="335" loop
+						 on:mouseenter={() => { databaseStore.elements.player.controls = true; }}
+						 on:mouseleave={() => { databaseStore.elements.player.controls = false; }}
+						 preload
+						 width="335"
+			>
+			</video>
+			<img bind:this={databaseStore.elements.image} class="database-image hidden">
+			<audio controls autoplay bind:this={databaseStore.elements.audio} class="database-audio hidden">
+				<source type="audio">
+			</audio>
+    </div>
+			<div class="sequencer-database-metadata-footer">
+				{#if $metadata}
+					Type: {$metadata.type} | Duration: {$metadata.duration}
+				{:else}
+					No file loaded...
+				{/if}
+			</div>
 		</div>
 
 	</div>
 
-</ApplicationShell>
+</div>
 
 <style lang="scss">
 
@@ -179,17 +169,22 @@
       > select {
 				flex: 0 1 auto;
         border-radius: 5px 0 0 5px;
-        border-right: 0;
+        border-right: 1px solid #282828;
         height: 28px;
 
         & + select {
           border-radius: 0 0 0 0;
+        }
+
+	      &:not(:first-child) {
+		      border-left: 0;
         }
       }
 
       > input[type="text"] {
         border-radius: 0 5px 5px 0;
         padding-left: 0.5rem;
+	      border-left: 0;
         height: 28px;
       }
 
@@ -241,13 +236,12 @@
       flex-direction: column;
       align-items: center;
       width: 335px;
-      height: 335px;
+      height: 342.5px;
     }
 
     &-player-content {
       display: flex;
       flex: 1;
-      height: 100%;
       vertical-align: middle;
 
       width: 320px;
