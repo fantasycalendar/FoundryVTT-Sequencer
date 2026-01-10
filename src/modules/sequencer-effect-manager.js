@@ -213,9 +213,7 @@ export default class SequencerEffectManager {
     return effects.filter((effect) => {
       return (
         (!inFilter.effects || inFilter.effects.includes(effect.id)) &&
-        (!inFilter.name ||
-          (effect.data.name &&
-            effect.data.name.match(inFilter.name)?.length)) &&
+        (!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length)) &&
         (!inFilter.source || inFilter.source === effect.data.source) &&
         (!inFilter.target || inFilter.target === effect.data.target) &&
         (!inFilter.origin || inFilter.origin === effect.data.origin)
@@ -466,27 +464,30 @@ export default class SequencerEffectManager {
     await this.tearDownPersists();
     const allObjects = lib.get_all_documents_from_scene();
     allObjects.push(canvas.scene);
-    const docEffectsMap = allObjects.reduce((acc, doc) => {
-      let effects = flagManager.getEffectFlags(doc);
-      effects.forEach((e) => {
-        if (lib.is_UUID(e[1].source) && e[1].source !== doc.uuid) {
-          e[1].delete = true;
-        }
-      });
-      if (doc instanceof TokenDocument && doc?.actorLink) {
-        const actorEffects = flagManager.getEffectFlags(doc?.actor);
-        actorEffects.forEach((e) => {
-          e[1]._id = foundry.utils.randomID();
-          e[1].source = doc.uuid;
-          e[1].sceneId = doc.parent.id;
-        });
-        effects = effects.concat(actorEffects);
-      }
-      if (effects.length) {
-        acc[doc.uuid] = effects;
-      }
-      return acc;
-    }, {});
+		const databaseFlags = flagManager.getDatabaseFlags().effects
+    const docEffectsMap = allObjects
+	    .filter(doc => doc.uuid)
+	    .reduce((acc, doc) => {
+	      let effects = flagManager.getEffectFlags(doc, databaseFlags);
+	      effects.forEach((e) => {
+	        if (lib.is_UUID(e[1].source) && e[1].source !== doc.uuid) {
+	          e[1].delete = true;
+	        }
+	      });
+	      if (doc instanceof TokenDocument && doc?.actorLink) {
+	        const actorEffects = flagManager.getEffectFlags(doc?.actor, databaseFlags);
+	        actorEffects.forEach((e) => {
+	          e[1]._id = foundry.utils.randomID();
+	          e[1].source = doc.uuid;
+	          e[1].sceneId = doc.parent.id;
+	        });
+	        effects = effects.concat(actorEffects);
+	      }
+	      if (effects.length) {
+	        acc[doc.uuid] = effects;
+	      }
+	      return acc;
+	    }, {});
     const promises = Object.entries(docEffectsMap)
       .map(([uuid, effects]) => {
         return this._playEffectMap(effects, fromUuidSync(uuid));

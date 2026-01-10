@@ -1,5 +1,5 @@
 import CONSTANTS from "./constants.js";
-import { custom_warning, debug } from "./lib/lib.js";
+import { custom_warning, debug, forceDeletionKeyWrapper } from "./lib/lib.js";
 
 export default async function runMigrations() {
   const sortedMigrations = Object.entries(migrations).sort((a, b) => {
@@ -182,11 +182,12 @@ const migrations = {
 		const actorUpdateArray = actorsToUpdate.map((actor) => {
 			const actorEffects = foundry.utils.getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
 			const prototypeTokenEffects = foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
-			return {
-				"_id": actor.id,
-				["prototypeToken." +CONSTANTS.REMOVE_EFFECTS_FLAG]: null,
+			let update = {
+				_id: actor.id,
 				[CONSTANTS.EFFECTS_FLAG]: actorEffects.concat(prototypeTokenEffects)
 			}
+			forceDeletionKeyWrapper(update, (inject) => "prototypeToken." + inject + CONSTANTS.EFFECTS_FLAG);
+			return update;
 		})
 
 		if (actorUpdateArray.length) {
@@ -195,5 +196,49 @@ const migrations = {
 			);
 			await Actor.updateDocuments(actorUpdateArray);
 		}
+	},
+	"4.0.0": async (version) => {
+		let actorsToUpdate = getSequencerEffectActors(version);
+
+		let journalUpdate = {};
+		const actorUpdateArray = actorsToUpdate.map((actor) => {
+			journalUpdate[actor.uuid.replaceAll(".", "-")] = foundry.utils.getProperty(actor, CONSTANTS.EFFECTS_FLAG) ?? [];
+			let update = {
+				_id: actor.id,
+			}
+			forceDeletionKeyWrapper(update, CONSTANTS.EFFECTS_FLAG);
+			return update;
+		});
+
+		let tokensOnScenes = getSequencerEffectTokens(version);
+		for (const [scene, tokens] of tokensOnScenes) {
+			const updates = [];
+			for (const token of tokens) {
+				journalUpdate[token.uuid.replaceAll(".", "-")] = foundry.utils.getProperty(token, CONSTANTS.EFFECTS_FLAG);
+				let update = {
+					_id: token.id,
+				}
+				forceDeletionKeyWrapper(update, CONSTANTS.EFFECTS_FLAG);
+				updates.push(update);
+			}
+
+			if (updates.length) {
+				debug(
+					`Sequencer | Updated ${updates.length} tokens' effects on scene ${scene.id} to version ${version}`
+				);
+				await scene.updateEmbeddedDocuments("Token", updates);
+			}
+		}
+
+		if (actorUpdateArray.length) {
+			debug(
+				`Sequencer | Updated ${actorUpdateArray.length} actors' effects to version ${version}`
+			);
+			await Actor.updateDocuments(actorUpdateArray);
+		}
+
+		await game.journal.getName(CONSTANTS.DATABASE_NAME).update({
+			[CONSTANTS.EFFECTS_FLAG]: journalUpdate
+		});
 	}
 };

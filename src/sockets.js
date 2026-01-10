@@ -38,7 +38,7 @@ export class SequencerSocket {
 
 	executeAsGM(type, ...args) {
 		let data = { senderId: game.user.id, sendType: "gm", type, payload: args };
-		if(game.user.isResponsibleGM){
+		if(game.user.isActiveGM){
 			return this.executeSocket(data);
 		}
 		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
@@ -61,6 +61,12 @@ export class SequencerSocket {
 		let data = { senderId: game.user.id, receiverId, sendType: "user", type, payload: args };
 		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
 		return data;
+	}
+
+	executeAsMainUser(type, ...args) {
+		let data = { senderId: game.user.id, sendType: "superuser", type, payload: args };
+		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
+		return this.executeSocket(data);
 	}
 
 	SOCKET_CALLBACKS = {
@@ -119,7 +125,13 @@ export class SequencerSocket {
 	}
 
 	executeSocket(data) {
-		if(data.sendType === "gm" && !game.user.isResponsibleGM){
+		if(data.sendType === "superuser") {
+			let user = game.users.getDesignatedUser((user) => user.active);
+			if(user !== game.user){
+				return;
+			}
+		}
+		if(data.sendType === "gm" && !game.user.isActiveGM){
 			return;
 		}
 		if(data.sendType === "user" && game.user.id !== data.receiverId){

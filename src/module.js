@@ -34,6 +34,7 @@ import PluginsManager from "./utils/plugins-manager.js";
 import FoundryShim from "./utils/foundry-shim.js";
 import SvelteDialog from "./formapplications/dialog/SvelteDialog.js"
 import SupportDialog from "./formapplications/support-dialog.svelte";
+import flagManager from "./utils/flag-manager.js";
 
 let moduleValid = false;
 let moduleReady = false;
@@ -64,7 +65,10 @@ Hooks.once("ready", async function() {
     await runMigrations();
     await migrateSettings();
     await PlayerSettings.migrateOldPresets();
+	  await lib.createJournalDatabase();
   }
+
+	await flagManager.setup();
 
   SequencerFoundryReplicator.registerHooks();
   InteractionManager.initialize();

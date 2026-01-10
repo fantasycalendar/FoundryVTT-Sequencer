@@ -3,6 +3,7 @@ const CONSTANTS = {
   EFFECTS_FLAG_NAME: "effects",
   SOUNDS_FLAG_NAME: "sounds",
 	EFFECTS_LAYER: "sequencerEffects",
+	DATABASE_NAME: "sequencerDatabase",
 	INTERFACE_LAYER: "sequencerInterfaceLayer",
 	IS_V13: false,
 	IS_V14: false,

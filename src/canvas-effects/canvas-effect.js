@@ -1627,13 +1627,14 @@ export default class CanvasEffect extends PIXI.Container {
 	_checkSourceDestroyed() {
 		if (this.isSourceDestroyed) {
 			this._source = this.sourcePosition;
+			this._source.uuid = this.uuid;
 			SequencerEffectManager.endEffects({ effects: this });
 		}
 	}
 
 	_checkTargetDestroyed() {
 		if (this.isTargetDestroyed) {
-			this._source = this.targetPosition;
+			this._target = this.targetPosition;
 			SequencerEffectManager.endEffects({ effects: this });
 		}
 	}
@@ -1643,7 +1644,7 @@ export default class CanvasEffect extends PIXI.Container {
 			return;
 		}
 
-		let file
+		let file;
 		if (this.data.customRange) {
 			const template = this.template ? [this.template.gridSize, this.template.startPoint, this.template.endPoint] : [100, 0, 0]
 			file = SequencerFileBase.make(
@@ -2023,6 +2024,7 @@ export default class CanvasEffect extends PIXI.Container {
 				const uuid = doc.uuid;
 				if (doc !== this.sourceDocument) return;
 				this._source = this._cachedSourceData.position;
+				this._source.uuid = uuid;
 				SequencerEffectManager.objectDeleted(uuid);
 			});
 

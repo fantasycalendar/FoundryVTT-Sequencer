@@ -2,6 +2,7 @@ import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import CONSTANTS from "../constants.js";
+import { forceDeletionKeyWrapper } from "../lib/lib.js";
 
 const flagManager = {
 	flagEffectAddBuffer: new Map(),
@@ -9,6 +10,48 @@ const flagManager = {
 	flagSoundAddBuffer: new Map(),
 	flagSoundRemoveBuffer: new Map(),
 	_latestFlagVersion: false,
+
+	get database(){
+		return game.journal.getName(CONSTANTS.DATABASE_NAME);
+	},
+
+	setup() {
+		Hooks.on("activateJournalDirectory", async (app) => {
+			let database = this.database;
+			if(!database) return;
+			let element = app.element.querySelector(`[data-entry-id="${database.id}"]`);
+			if(element){
+				element.remove();
+			}
+		});
+		Hooks.on("preDeleteJournalEntry", (doc) => {
+			let database = this.database;
+			if(!database) return;
+			return doc !== database;
+		})
+	},
+
+	_getDatabaseData(flag) {
+		let database = this.database;
+		if(!database){
+			return {};
+		}
+		let flagData = {};
+		let flags = foundry.utils.getProperty(database, flag) ?? {};
+		for (let [uuid, data] of Object.entries(flags)) {
+			let newUuid = uuid.replaceAll("-", ".");
+			flagData[newUuid] ??= []
+			flagData[newUuid] = flagData[newUuid].concat(data);
+		}
+		return flagData;
+	},
+
+	getDatabaseFlags() {
+		return {
+			effects: this._getDatabaseData(CONSTANTS.EFFECTS_FLAG),
+			sounds: this._getDatabaseData(CONSTANTS.SOUNDS_FLAG)
+		};
+	},
 
 	get latestFlagVersion() {
 		if (!this._latestFlagVersion) {
@@ -25,10 +68,15 @@ const flagManager = {
 	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
 	 *
 	 * @param inDocument
+	 * @param databaseFlags
 	 * @returns {array}
 	 */
-	getEffectFlags(inDocument) {
-		let effects = foundry.utils.getProperty(inDocument, CONSTANTS.EFFECTS_FLAG);
+	getEffectFlags(inDocument, databaseFlags=null) {
+
+		if(!inDocument.uuid) return [];
+
+		let allEffects = databaseFlags ?? this.getDatabaseFlags().effects;
+		let effects = allEffects[inDocument.uuid] ?? []
 
 		if (!effects?.length) return [];
 
@@ -243,7 +291,7 @@ const flagManager = {
 	 */
 	addEffectFlags: (inObjectUUID, inEffects) => {
 		if (!Array.isArray(inEffects)) inEffects = [inEffects];
-		sequencerSocket.executeAsGM(
+		sequencerSocket.executeAsMainUser(
 			SOCKET_HANDLERS.ADD_EFFECT_FLAGS,
 			inObjectUUID,
 			inEffects,
@@ -258,7 +306,7 @@ const flagManager = {
 	 * @param removeAll
 	 */
 	removeEffectFlags: (inObjectUUID, inEffects, removeAll = false) => {
-		sequencerSocket.executeAsGM(
+		sequencerSocket.executeAsMainUser(
 			SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS,
 			inObjectUUID,
 			inEffects,
@@ -296,8 +344,13 @@ const flagManager = {
 	},
 
 	updateEffectFlags: foundry.utils.debounce(async () => {
+		let database = flagManager.database;
+		if(!database) return;
+
 		let flagsToAdd = Array.from(flagManager.flagEffectAddBuffer);
 		let flagsToRemove = Array.from(flagManager.flagEffectRemoveBuffer);
+
+		if(flagsToAdd.length === 0 && flagsToRemove.length === 0) return;
 
 		flagManager.flagEffectAddBuffer.clear();
 		flagManager.flagEffectRemoveBuffer.clear();
@@ -313,16 +366,17 @@ const flagManager = {
 		flagsToAdd = new Map(flagsToAdd);
 		flagsToRemove = new Map(flagsToRemove);
 
-		const actorUpdates = {};
-		const sceneObjectsToUpdate = {};
+		const update = {};
+
+		const allEffectFlags = flagManager.getDatabaseFlags().effects;
+
+		debugger;
 
 		for (let objectUUID of objects) {
 			let object = fromUuidSync(objectUUID);
 
 			if (!object) {
-				lib.debug(
-					`Failed to set flags on non-existent object with UUID: ${objectUUID}`,
-				);
+				lib.forceDeletionKeyWrapper(update, objectUUID.replaceAll(".", "-"))
 				continue;
 			}
 
@@ -335,10 +389,7 @@ const flagManager = {
 				removeAll: false,
 			};
 
-			let origExistingFlags = foundry.utils.getProperty(object, CONSTANTS.EFFECTS_FLAG) ?? [];
-			if (isLinkedToken) {
-				origExistingFlags = origExistingFlags.concat(foundry.utils.getProperty(object.actor, CONSTANTS.EFFECTS_FLAG) ?? []);
-			}
+			let origExistingFlags = allEffectFlags[object.uuid] ?? [];
 			const existingFlags = new Map(origExistingFlags);
 
 			if (toRemove?.removeAll) {
@@ -362,81 +413,42 @@ const flagManager = {
 			}
 
 			let flagsToSet = Array.from(existingFlags);
-			const options = {};
 
+			let actorFlags = [];
+			let actor = object?.actor ?? object;
 			if (
+				actor instanceof foundry.documents.Actor &&
 				(isLinkedToken || isLinkedActor) &&
 				(toAdd.original || toRemove.original)
 			) {
-				const actor = object?.actor ?? object;
-				actorUpdates[actor.id] = flagsToSet.filter(
+				actorFlags = flagsToSet.filter(
 					(effect) => lib.is_UUID(effect[1]?.source) && effect[1]?.attachTo?.active && effect[1]?.persistOptions?.persistTokenPrototype,
 				);
 				flagsToSet = flagsToSet.filter(
 					(effect) => !effect[1]?.persistOptions?.persistTokenPrototype || !lib.is_UUID(effect[1]?.source) || !effect[1]?.attachTo?.active,
 				);
-				if (
-					isLinkedToken &&
-					game.modules.get("multilevel-tokens")?.active &&
-					foundry.utils.getProperty(object, "flags.multilevel-tokens.stoken")
-				) {
-					options["mlt_bypass"] = true;
+			}
+
+			let objectSanitizedUuid = object.uuid.replaceAll(".", "-");
+			if(flagsToSet.length) {
+				update[objectSanitizedUuid] = flagsToSet;
+			}else{
+				lib.forceDeletionKeyWrapper(update, objectSanitizedUuid)
+			}
+
+			if(actor instanceof foundry.documents.Actor) {
+				let actorSanitizedUuid = actor.uuid.replaceAll(".", "-");
+				if (actorFlags.length) {
+					update[actorSanitizedUuid] = actorFlags;
+				} else {
+					lib.forceDeletionKeyWrapper(update, actorSanitizedUuid)
 				}
 			}
-
-			if (object?.documentName === "Scene") {
-				const sceneId = object.id;
-				sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? {
-					updates: {},
-					documents: {},
-				};
-				sceneObjectsToUpdate[sceneId].updates[CONSTANTS.EFFECTS_FLAG] = flagsToSet;
-			} else if (!(object instanceof Actor) && origExistingFlags.length !== flagsToSet.length) {
-				const sceneId = object.parent.id;
-				const docName = object.documentName;
-				sceneObjectsToUpdate[sceneId] = sceneObjectsToUpdate[sceneId] ?? {
-					updates: {},
-					documents: {},
-				};
-				sceneObjectsToUpdate[sceneId].documents[docName] = sceneObjectsToUpdate[
-					sceneId
-					].documents[docName] ?? {
-					options: {},
-					updates: [],
-				};
-				sceneObjectsToUpdate[sceneId].documents[docName].options = options;
-				sceneObjectsToUpdate[sceneId].documents[docName].updates.push({
-					_id: object.id,
-					[CONSTANTS.EFFECTS_FLAG]: flagsToSet,
-				});
-			}
 		}
 
-		for (const [sceneId, sceneData] of Object.entries(sceneObjectsToUpdate)) {
-			const scene = game.scenes.get(sceneId);
-			if (!foundry.utils.isEmpty(sceneData.updates)) {
-				await scene.update(sceneData.updates);
-			}
-			for (const [documentType, documentData] of Object.entries(
-				sceneData.documents,
-			)) {
-				await scene.updateEmbeddedDocuments(
-					documentType,
-					documentData.updates,
-					documentData.options,
-				);
-				lib.debug(
-					`Flags set for documents of type "${documentType}" in scene with ID "${sceneId}"`,
-				);
-			}
-		}
-
-		await Actor.updateDocuments(
-			Object.entries(actorUpdates).map(([actorId, effects]) => ({
-				_id: actorId,
-				[CONSTANTS.EFFECTS_FLAG]: effects,
-			})),
-		);
+		await database.update({
+			[CONSTANTS.EFFECTS_FLAG]: update
+		});
 	}, 250),
 
 	/**
@@ -490,7 +502,7 @@ const flagManager = {
 	 */
 	addSoundFlags: (inObjectUUID, inSounds) => {
 		if (!Array.isArray(inSounds)) inSounds = [inSounds];
-		sequencerSocket.executeAsGM(
+		sequencerSocket.executeAsMainUser(
 			SOCKET_HANDLERS.ADD_EFFECT_FLAGS,
 			inObjectUUID,
 			inSounds,
@@ -505,7 +517,7 @@ const flagManager = {
 	 * @param removeAll
 	 */
 	removeSoundFlags: (inObjectUUID, inSounds, removeAll = false) => {
-		sequencerSocket.executeAsGM(
+		sequencerSocket.executeAsMainUser(
 			SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS,
 			inObjectUUID,
 			inSounds,
