@@ -37,7 +37,8 @@ export default class Sequence {
 		this.crosshairs = {}
 		this.effectIndex = 0;
 		this.sectionToCreate = undefined;
-		this.localOnly = false;
+		this.remote = false;
+		this.local = false;
 		this._status = writable(CONSTANTS.STATUS.READY);
 		return lib.sequence_proxy_wrap(this);
 	}
@@ -48,7 +49,8 @@ export default class Sequence {
 	 * @returns {Promise}
 	 */
 	async play({ remote = false, preload = false, local = false } = {}) {
-		this.localOnly = local || remote;
+		this.remote = remote;
+		this.local = local;
 		if (remote) {
 			const data = await this.toJSON();
 			sequencerSocket.executeForOthers(
@@ -408,7 +410,7 @@ export default class Sequence {
 	fromJSON(data) {
 		this.moduleName = data.options.moduleName;
 		this.softFail = data.options.softFail;
-		this.localOnly = true;
+		this.local = true;
 		for (const section of data.sections) {
 			this[section.type]()._deserialize(section);
 		}

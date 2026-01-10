@@ -200,11 +200,12 @@ const SequencerPreloader = {
     let numFilesToLoad = inSrcs.length;
 
     lib.debug(`Preloading ${numFilesToLoad} files...`);
-    if (showProgressBar)
-      LoadingBar.init(
-        `Sequencer - Preloading ${numFilesToLoad} files`,
-        numFilesToLoad
-      );
+    if (showProgressBar) {
+	    LoadingBar.init(
+		    `Sequencer - Preloading ${numFilesToLoad} files`,
+		    numFilesToLoad
+	    );
+    }
 
     return new Promise(async (resolve) => {
       let numFilesFailedToLoad = 0;

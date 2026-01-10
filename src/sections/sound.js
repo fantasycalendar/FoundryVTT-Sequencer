@@ -215,7 +215,7 @@ class SoundSection extends Section {
 		let push =
 			!(
 				playData?.users?.length === 1 && playData?.users?.includes(game.userId)
-			) && !this.sequence.localOnly;
+			) && !this.sequence.local && !this.sequence.remote;
 
 		SequencerSoundManager.play(playData, push);
 

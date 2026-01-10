@@ -15,13 +15,13 @@ Other works by us:
 - [Item Piles](https://foundryvtt.com/packages/item-piles) - Drag & drop items into the scene to drop item piles that you can then easily pick up
 - [Tagger](https://foundryvtt.com/packages/tagger) - Tag objects in the scene and retrieve them with a powerful API
 
-Like what we've done? Buy us a coffee!
-
-<a href='https://ko-fi.com/H2H2LCCQ' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-
 ---
 
-## Powered by Typhon JS ❤️Svelte
+## Support Us On Patreon
+
+[<img src="docs/images/supportus.png" alt="Support us on patreon" style="width:250px;"/>](https://www.patreon.com/cw/fantasycomputerworks)
+
+We love creating stuff and improving what we've made, but our day jobs take a good chunk out of our energy and time each day. Maintaining Sequencer is definitely something that requires effort and dedication, and with your help, we can continue to do so!
 
 ---
 

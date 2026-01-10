@@ -1,9 +1,11 @@
 ## Changelog
 
-# Version 3.7.0
-- *Sequencer* - Updated to support Foundry v14
-- *Sequencer* - Removed Socketlib requirement
-- *Sequencer* - Updated applications to support dark mode
+# Version 4.0.0
+- *Sequencer* - Updated to support FoundryVTT v14
+- *Sequencer* - Removed support for FoundryVTT v12
+- *Sequencer* - Removed the socketlib dependency; Sequencer now manages its own data internally
+- *Sequencer* - Introduced a new internal UI foundation with proper dark mode support
+- *Effects* - Reworked internal effect storage to use a centralized hidden journal, reducing token and actor update overhead and improving performance in effect-heavy games
 
 # Version 3.6.11
 - *Sequencer* - Fixed `remote` on `.play()` not forcing local on the executing user's machine

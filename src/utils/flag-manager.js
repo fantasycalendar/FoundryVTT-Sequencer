@@ -2,7 +2,6 @@ import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import CONSTANTS from "../constants.js";
-import { forceDeletionKeyWrapper } from "../lib/lib.js";
 
 const flagManager = {
 	flagEffectAddBuffer: new Map(),
@@ -369,8 +368,6 @@ const flagManager = {
 		const update = {};
 
 		const allEffectFlags = flagManager.getDatabaseFlags().effects;
-
-		debugger;
 
 		for (let objectUUID of objects) {
 			let object = fromUuidSync(objectUUID);

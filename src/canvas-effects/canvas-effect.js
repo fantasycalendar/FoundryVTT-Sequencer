@@ -570,12 +570,11 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	get shouldPlay() {
 		return (
-			(game.user.viewedScene === this.data.sceneId ||
-				this.data.creatorUserId === game.userId) &&
-			(game.user.isGM ||
-				!this.data.users ||
-				this.data.users.length === 0 ||
-				this.data.users.includes(game.userId))
+			(game.user.viewedScene === this.data.sceneId || this.data.creatorUserId === game.userId)
+			&&
+			(game.user.isGM || !this.data.users || this.data.users.length === 0 || this.data.users.includes(game.userId))
+			&&
+			(!this.data.local || this.data.creatorUserId === game.user.id)
 		);
 	}
 
@@ -600,6 +599,10 @@ export default class CanvasEffect extends PIXI.Container {
 		return !inData.persist
 			? new CanvasEffect(inData)
 			: new PersistentCanvasEffect(inData);
+	}
+
+	static checkShouldPlay(effectData) {
+		return !effectData.local || effectData.creatorUserId === game.user.id;
 	}
 
 	static checkValid(effectData) {

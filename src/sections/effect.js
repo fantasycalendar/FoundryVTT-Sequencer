@@ -2141,7 +2141,7 @@ export default class EffectSection extends Section {
 		if (Hooks.call("preCreateSequencerEffect", data) === false) return;
 		let push =
 			!(data?.users?.length === 1 && data?.users?.includes(game.userId)) &&
-			!this.sequence.localOnly;
+			!this.sequence.local && !this.sequence.remote;
 		let canvasEffectData = await Sequencer.EffectManager.play(data, push);
 		let totalDuration = this._currentWaitTime;
 		if (this._persist) {
@@ -2453,6 +2453,8 @@ export default class EffectSection extends Section {
 			private: this._private,
 			temporary: this._temporaryEffect,
 			tiedDocuments: Array.from(new Set(this._tiedDocuments)),
+			local: this.sequence.local,
+			remote: this.sequence.remote,
 
 			/**
 			 * Source/target properties

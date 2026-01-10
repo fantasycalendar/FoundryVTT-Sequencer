@@ -194,7 +194,7 @@ export default class CanvasPanSection extends Section {
     if (Hooks.call("preCanvasPan", data) === false) return;
     const push =
       !(data?.users?.length === 1 && data?.users?.includes(game.userId)) &&
-      !this.sequence.localOnly;
+      !this.sequence.local && !this.sequence.remote;
     const duration = SequencerFoundryReplicator.panCanvas(data, push);
     await new Promise((resolve) =>
       setTimeout(resolve, this._currentWaitTime + duration)
@@ -234,6 +234,8 @@ export default class CanvasPanSection extends Section {
       lockView: this._lockView,
       shake: this._shake,
 	    nameOffsetMap: this.sequence.nameOffsetMap,
+	    local: this.sequence.local,
+	    remote: this.sequence.remote,
     };
   }
 

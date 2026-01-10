@@ -117,7 +117,7 @@ export default class ScrollingTextSection extends Section {
     if (Hooks.call("preCreateScrollingText", data) === false) return;
     const push =
       !(data?.users?.length === 1 && data?.users?.includes(game.userId)) &&
-      !this.sequence.localOnly;
+      !this.sequence.local && !this.sequence.remote;
     const duration = SequencerFoundryReplicator.playScrollingText(data, push);
     await new Promise((resolve) =>
       setTimeout(resolve, this._currentWaitTime + duration)
@@ -153,6 +153,8 @@ export default class ScrollingTextSection extends Section {
       randomOffset: this._randomOffset?.source ?? false,
       content: this._text?.text ?? "",
 	    nameOffsetMap: this.sequence.nameOffsetMap,
+	    local: this.sequence.local,
+	    remote: this.sequence.remote,
       options: {
         anchor: this._anchor,
         direction: this._direction,
