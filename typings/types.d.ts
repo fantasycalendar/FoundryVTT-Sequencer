@@ -1186,6 +1186,11 @@ declare global {
       inFunc: (sound: SoundSection, data: SoundData) => SoundData
     ): this;
 
+	  /**
+	   * Visualizes the sound as a sprite on the canvas.
+	   */
+		visualize(inBool?: boolean): this;
+
     /**
      * Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.
      */

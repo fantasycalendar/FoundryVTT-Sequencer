@@ -6,6 +6,8 @@ import {
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
 import FoundryShim from "../utils/foundry-shim.js";
+import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
+import SequenceManager from "../modules/sequence-manager.js";
 
 export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
   static get layerOptions() {
@@ -22,6 +24,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
   }
 
 	isActive = false;
+	visualizedSounds = {};
 
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
@@ -42,6 +45,9 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     this._clearChildren();
     this.isActive = false;
     InteractionManager.tearDown();
+		if(this.visualizeSoundSubscription){
+			this.visualizeSoundSubscription();
+		}
   }
 
   _setup() {
@@ -51,6 +57,28 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
       this.UIContainer.parentName = "sequencerUIContainer";
       this.UIContainer.zIndex = 10000000000000;
       this.addChild(this.UIContainer);
+
+	    this.visualizedSound = this.UIContainer.addChild(new PIXI.Graphics());
+
+	    this.visualizeSoundSubscription ??= SequenceManager.VisualizedSounds.subscribe((data) => {
+				for(let id of Object.keys(this.visualizedSounds)){
+					if(!data[id]) {
+						delete this.visualizedSounds[id];
+					}
+				}
+				for(let [id, soundData] of Object.entries(data)){
+					let radius = (soundData.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
+					if(!this.visualizedSounds[id]) {
+						this.visualizedSounds[id] = {
+							location: soundData.location,
+							radius: radius,
+							shape: foundry.canvas.geometry.ClockwiseSweepPolygon.create(soundData.location, {
+								radius: radius
+							})
+						};
+					}
+				}
+	    });
 
       this.linePoint = this.UIContainer.addChild(new PIXI.Graphics());
       this.line = this.UIContainer.addChild(new PIXI.Graphics());
@@ -92,12 +120,26 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     this._setup();
     this._clearChildren();
     this._drawHoveredEffectElements();
+	  this._drawVisualizedSounds();
     if (!this.isActive) return;
     this._drawLine();
     this._drawPoints();
     this._drawSelectedEffectElements();
     this._drawSuggestionPoint();
   }
+
+	_drawVisualizedSounds() {
+		for(let data of Object.values(this.visualizedSounds)){
+			this.visualizedSound.beginFill(CONSTANTS.COLOR.SECONDARY, 0.25);
+			this.visualizedSound.drawCircle(data.location.x, data.location.y, data.radius);
+			this.visualizedSound.endFill();
+
+			this.visualizedSound.beginFill(CONSTANTS.COLOR.PRIMARY, 0.25);
+			this.visualizedSound.lineStyle(2, CONSTANTS.COLOR.PRIMARY);
+			this.visualizedSound.drawPolygon(data.shape);
+			this.visualizedSound.endFill();
+		}
+	}
 
   _clearChildren() {
     if (!this.UIContainer) return;

@@ -253,8 +253,6 @@ You can also pass functions that will get evaluated during runtime by Mustache:
 
 ## At Location
 
-### Only supported in Foundry v12
-
 `.atLocation(object|string, object)`
 
 Examples:
@@ -274,6 +272,12 @@ Also supports a second options object that accepts:
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the sound's scene's grid size
+
+## Visualize
+
+`.visualize(bool)`
+
+This method enables visualization of sounds with `.atLocation()` and `.radius()`, showing a circle around the location where the sound is being played.
 
 
 ## Radius
@@ -369,7 +373,7 @@ Examples:
 An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
 
 The options object this method accept can have the following two parameters:
-- `type`: one of the effects in `CONFIG.soundEffects`, as of Foundry V12, this is:
+- `type`: one of the effects in `CONFIG.soundEffects`:
   - `lowpass`
   - `highpass`
   - `reverb`
@@ -391,7 +395,7 @@ Examples:
 An effect to be applied on the sound when it is heard through a wall.
 
 The options object this method accept can have the following two parameters:
-- `type`: one of the effects in `CONFIG.soundEffects`, as of Foundry V12, this is:
+- `type`: one of the effects in `CONFIG.soundEffects`:
   - `lowpass`
   - `highpass`
   - `reverb`

@@ -52,6 +52,7 @@ Hooks.once("init", async function() {
   }
   initializeModule();
   registerSocket();
+	flagManager.setup();
 });
 
 Hooks.once("ready", async function() {
@@ -67,8 +68,6 @@ Hooks.once("ready", async function() {
     await PlayerSettings.migrateOldPresets();
 	  await lib.createJournalDatabase();
   }
-
-	await flagManager.setup();
 
   SequencerFoundryReplicator.registerHooks();
   InteractionManager.initialize();

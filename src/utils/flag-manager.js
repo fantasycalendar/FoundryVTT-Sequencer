@@ -15,7 +15,7 @@ const flagManager = {
 	},
 
 	setup() {
-		Hooks.on("activateJournalDirectory", async (app) => {
+		Hooks.on("renderJournalDirectory", async (app) => {
 			let database = this.database;
 			if(!database) return;
 			let element = app.element.querySelector(`[data-entry-id="${database.id}"]`);
@@ -387,6 +387,10 @@ const flagManager = {
 			};
 
 			let origExistingFlags = allEffectFlags[object.uuid] ?? [];
+			if (isLinkedToken) {
+				origExistingFlags = origExistingFlags.concat(allEffectFlags[object?.actor?.uuid] ?? []);
+			}
+
 			const existingFlags = new Map(origExistingFlags);
 
 			if (toRemove?.removeAll) {

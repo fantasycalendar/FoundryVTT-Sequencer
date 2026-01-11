@@ -3,7 +3,6 @@ import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { SequencerFileBase } from "../modules/sequencer-file.js";
-import CONSTANTS from "../constants.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import * as canvaslib from "../lib/canvas-lib.js";
@@ -61,7 +60,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	constrainedByWalls(inBool) {
+	constrainedByWalls(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -72,7 +71,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	distanceEasing(inBool) {
+	distanceEasing(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -104,7 +103,7 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	alwaysForGMs(inBool) {
+	alwaysForGMs(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -112,6 +111,18 @@ class SoundSection extends Section {
 				`inBool must be of type boolean`
 			);
 		this._locationOptions['gmAlways'] = inBool;
+		return this;
+	}
+
+	visualize(inBool = true) {
+		if (typeof inBool !== "boolean") {
+			throw this.sequence._customError(
+				this,
+				"visualize",
+				`inBool must be of type boolean`
+			)
+		}
+		this._locationOptions['visualize'] = inBool;
 		return this;
 	}
 
@@ -224,25 +235,25 @@ class SoundSection extends Section {
 		);
 	}
 
-  _getSourceObject() {
-    if (!this._source || typeof this._source !== "object"){
-      return this._source;
-    }
-    if(this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument){
-      const doc = this._source?.document ?? this._source;
-      if(this._attachTo) {
-        return lib.get_object_identifier(doc.object);
-      }
-      return doc.getOrientation().source;
-    }
-    if (this._source?.cachedLocation || !this._attachTo) {
-      return canvaslib.get_object_canvas_data(this._source, { uuid: true });
-    }
-    return (
-      lib.get_object_identifier(this._source) ??
-      canvaslib.get_object_canvas_data(this._source, { uuid: true })
-    );
-  }
+	_getSourceObject() {
+		if (!this._source || typeof this._source !== "object") {
+			return this._source;
+		}
+		if (this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument) {
+			const doc = this._source?.document ?? this._source;
+			if (this._attachTo) {
+				return lib.get_object_identifier(doc.object);
+			}
+			return doc.getOrientation().source;
+		}
+		if (this._source?.cachedLocation || !this._attachTo) {
+			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
+		}
+		return (
+			lib.get_object_identifier(this._source) ??
+			canvaslib.get_object_canvas_data(this._source, { uuid: true })
+		);
+	}
 
 	/**
 	 * @returns {Promise}
@@ -308,7 +319,7 @@ class SoundSection extends Section {
 			id: foundry.utils.randomID(),
 			play: true,
 			src: file,
-      source: this._getSourceObject(),
+			source: this._getSourceObject(),
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
@@ -324,7 +335,7 @@ class SoundSection extends Section {
 			name: this._name,
 			origin: this._origin,
 			seed: `${this._name}-${foundry.utils.randomID()}-${this._currentRepetition}`,
-      nameOffsetMap: this.sequence.nameOffsetMap,
+			nameOffsetMap: this.sequence.nameOffsetMap,
 		};
 
 		for (let override of this._overrides) {

@@ -79,6 +79,12 @@ export default class SequencerSoundManager {
 				volume: data.volume,
 				channel: data.channel || "interface"
 			});
+			if(data.locationOptions.visualize && playSound) {
+				SequenceManager.VisualizedSounds.add(data.id, { ...data, location });
+				setTimeout(() => {
+					SequenceManager.VisualizedSounds.delete(data.id);
+				}, data.duration)
+			}
 		} else {
 			sound = await game.audio.play(data.src, {
 				...data.locationOptions,
@@ -89,7 +95,9 @@ export default class SequencerSoundManager {
 			});
 		}
 
-		if (!sound) return false;
+		if (!sound){
+			return false;
+		}
 
 		sound.sequencer_data = data;
 		sound.sound_id = data.id;
@@ -126,17 +134,18 @@ export default class SequencerSoundManager {
 			});
 		}
 
-		if (data.duration) {
-			setTimeout(() => {
-				sound.stop();
-			}, data.duration);
-		}
-
 		new Promise((resolve) => {
 			sound.addEventListener("stop", resolve);
 			sound.addEventListener("end", resolve);
+			if (data.duration) {
+				setTimeout(() => {
+					sound.stop();
+					resolve();
+				}, data.duration);
+			}
 		}).then(() => {
 			SequenceManager.RunningSounds.delete(data.id);
+			SequenceManager.VisualizedSounds.delete(data.id);
 			Hooks.callAll("endedSequencerSound", data);
 		});
 
