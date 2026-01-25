@@ -9,6 +9,7 @@
 - *Effects* - Due to the changes to the storage of effect data, setting `local: true` on the Sequence's `play()` method will no longer make the effect entirely local, and still store it in the DB without anyone else seeing it
 - *Sounds* - Added `.toLocation()`, which will evaluate the target location, but still play at the `.atLocation()` position - this is useful when the sound has multiple files for different ranges
 - *Sounds* - Added `.moveTowards()`, which will cause the sound to move towards the target location - best **not** used with `.toLocation()`
+- *Sounds* - Added support for the database range-finding implementation typically found in effects; sounds can be defined with 5ft, 15ft, 30ft, 60ft, and 90ft files, and using the above methods will select the correct sound file to play
 - *Sounds* - Added `.globalSound()`, which prevents any `.atLocation()` sound from only playing on the canvas, and instead always plays globally.
 - *Sounds* - Added `.visualize()` to show the area of effect of a `.sound()` with `.atLocation()`
 
