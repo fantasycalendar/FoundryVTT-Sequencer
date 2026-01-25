@@ -373,7 +373,7 @@ const flagManager = {
 			let object = fromUuidSync(objectUUID);
 
 			if (!object) {
-				lib.forceDeletionKeyWrapper(update, objectUUID.replaceAll(".", "-"))
+				lib.forceDeletionKeyWrapper(update, "-=" + objectUUID.replaceAll(".", "-"))
 				continue;
 			}
 
@@ -434,7 +434,7 @@ const flagManager = {
 			if(flagsToSet.length) {
 				update[objectSanitizedUuid] = flagsToSet;
 			}else{
-				lib.forceDeletionKeyWrapper(update, objectSanitizedUuid)
+				lib.forceDeletionKeyWrapper(update, "-=" + objectSanitizedUuid)
 			}
 
 			if(actor instanceof foundry.documents.Actor) {
@@ -442,7 +442,7 @@ const flagManager = {
 				if (actorFlags.length) {
 					update[actorSanitizedUuid] = actorFlags;
 				} else {
-					lib.forceDeletionKeyWrapper(update, actorSanitizedUuid)
+					lib.forceDeletionKeyWrapper(update, "-=" + actorSanitizedUuid)
 				}
 			}
 		}

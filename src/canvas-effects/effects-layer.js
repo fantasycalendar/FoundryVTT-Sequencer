@@ -70,12 +70,23 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 					let radius = (soundData.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
 					if(!this.visualizedSounds[id]) {
 						this.visualizedSounds[id] = {
-							location: soundData.location,
+							location: {
+								x: soundData.location.x,
+								y: soundData.location.y
+							},
 							radius: radius,
 							shape: foundry.canvas.geometry.ClockwiseSweepPolygon.create(soundData.location, {
+								type: "sound",
 								radius: radius
 							})
 						};
+					} else if (this.visualizedSounds[id].location.x !== soundData.location.x || this.visualizedSounds[id].location.y !== soundData.location.y) {
+						this.visualizedSounds[id].location.x = soundData.location.x;
+						this.visualizedSounds[id].location.y = soundData.location.y;
+						this.visualizedSounds[id].shape = foundry.canvas.geometry.ClockwiseSweepPolygon.create(soundData.location, {
+							type: "sound",
+							radius: radius
+						});
 					}
 				}
 	    });
@@ -130,14 +141,35 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 
 	_drawVisualizedSounds() {
 		for(let data of Object.values(this.visualizedSounds)){
-			this.visualizedSound.beginFill(CONSTANTS.COLOR.SECONDARY, 0.25);
-			this.visualizedSound.drawCircle(data.location.x, data.location.y, data.radius);
+			for (let constraint of data.shape.config.boundaryShapes) {
+				this.visualizedSound.lineStyle(2, 0xFF4444, 1.0);
+				this.visualizedSound.beginFill(0xFF4444, 0.10);
+				this.visualizedSound.drawShape(constraint);
+				this.visualizedSound.endFill();
+			}
+
+			this.visualizedSound.beginFill(CONSTANTS.COLOR.PRIMARY, 0.5);
+			this.visualizedSound.lineStyle(2, CONSTANTS.COLOR.PRIMARY, 1.0);
+			this.visualizedSound.drawCircle(data.location.x, data.location.y, canvas.grid.size/4);
 			this.visualizedSound.endFill();
 
-			this.visualizedSound.beginFill(CONSTANTS.COLOR.PRIMARY, 0.25);
-			this.visualizedSound.lineStyle(2, CONSTANTS.COLOR.PRIMARY);
-			this.visualizedSound.drawPolygon(data.shape);
+			this.visualizedSound.beginFill(0x00AAFF, 0.25);
+			this.visualizedSound.drawShape(data.shape);
 			this.visualizedSound.endFill();
+
+			for (let edge of data.shape.edges ) {
+				let color = {
+					[CONST.EDGE_SENSE_TYPES.NONE]: 0x77E7E8,
+					[CONST.EDGE_SENSE_TYPES.NORMAL]: 0xFFFFBB,
+					[CONST.EDGE_SENSE_TYPES.LIMITED]: 0x81B90C,
+					[CONST.EDGE_SENSE_TYPES.PROXIMITY]: 0xFFFFBB,
+					[CONST.EDGE_SENSE_TYPES.DISTANCE]: 0xFFFFBB
+				}[edge[data.shape.config.type]];
+				this.visualizedSound.lineStyle(4, color)
+				this.visualizedSound.moveTo(edge.a.x, edge.a.y)
+				this.visualizedSound.lineTo(edge.b.x, edge.b.y);
+				this.visualizedSound.endFill();
+			}
 		}
 	}
 

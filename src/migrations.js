@@ -186,7 +186,7 @@ const migrations = {
 				_id: actor.id,
 				[CONSTANTS.EFFECTS_FLAG]: actorEffects.concat(prototypeTokenEffects)
 			}
-			forceDeletionKeyWrapper(update, (inject) => "prototypeToken." + inject + CONSTANTS.EFFECTS_FLAG);
+			forceDeletionKeyWrapper(update, "prototypeToken." + CONSTANTS.REMOVE_EFFECTS_FLAG);
 			return update;
 		})
 
@@ -206,7 +206,7 @@ const migrations = {
 			let update = {
 				_id: actor.id,
 			}
-			forceDeletionKeyWrapper(update, CONSTANTS.EFFECTS_FLAG);
+			forceDeletionKeyWrapper(update, CONSTANTS.REMOVE_EFFECTS_FLAG);
 			return update;
 		});
 
@@ -218,7 +218,7 @@ const migrations = {
 				let update = {
 					_id: token.id,
 				}
-				forceDeletionKeyWrapper(update, CONSTANTS.EFFECTS_FLAG);
+				forceDeletionKeyWrapper(update, CONSTANTS.REMOVE_EFFECTS_FLAG);
 				updates.push(update);
 			}
 

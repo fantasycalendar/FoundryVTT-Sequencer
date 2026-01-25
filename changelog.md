@@ -7,6 +7,9 @@
 - *Sequencer* - Introduced a new internal UI foundation with proper dark mode support
 - *Effects* - Reworked internal effect storage to use a centralized hidden journal, reducing token and actor update overhead and improving performance in effect-heavy games
 - *Effects* - Due to the changes to the storage of effect data, setting `local: true` on the Sequence's `play()` method will no longer make the effect entirely local, and still store it in the DB without anyone else seeing it
+- *Sounds* - Added `.toLocation()`, which will evaluate the target location, but still play at the `.atLocation()` position - this is useful when the sound has multiple files for different ranges
+- *Sounds* - Added `.moveTowards()`, which will cause the sound to move towards the target location
+- *Sounds* - Added `.globalSound()`, which prevents any `.atLocation()` sound from only playing on the canvas, and instead always plays globally.
 - *Sounds* - Added `.visualize()` to show the area of effect of a `.sound()` with `.atLocation()`
 
 # Version 3.6.11

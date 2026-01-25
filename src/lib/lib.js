@@ -546,12 +546,9 @@ export async function createJournalDatabase(){
 }
 
 export function forceDeletionKeyWrapper(updateObj, key){
-	let key_function = typeof key === "string"
-		? (inject="") => inject + key
-		: key
 	if(CONSTANTS.IS_V14){
-		updateObj[key_function()] = new foundry.data.operators.ForcedDeletion();
+		updateObj[key.replaceAll("-=", "")] = new foundry.data.operators.ForcedDeletion();
 	}else {
-		updateObj[key_function("-=")] = null;
+		updateObj[key] = null;
 	}
 }

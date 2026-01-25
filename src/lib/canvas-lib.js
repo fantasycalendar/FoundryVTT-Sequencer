@@ -366,7 +366,7 @@ export function validateObject(inObject, sceneId) {
   return inObject?._object ?? inObject;
 }
 
-export function getPositionFromData(data, type="source") {
+export function getPositionFromData(data, type="source", twister = false) {
 
   const source = data.nameOffsetMap[data[type]]
     ? data.nameOffsetMap[data[type]][type]
@@ -378,7 +378,7 @@ export function getPositionFromData(data, type="source") {
       : source?.worldPosition || source?.center || source;
 
   const multiplier = data.randomOffset?.[type] ?? data.randomOffset;
-  const twister = lib.createMersenneTwister(data.seed);
+  twister = twister || lib.createMersenneTwister(data.seed);
 
   if (source && multiplier) {
     let randomOffset = get_random_offset(

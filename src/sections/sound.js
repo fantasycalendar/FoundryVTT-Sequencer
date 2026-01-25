@@ -2,7 +2,6 @@ import * as lib from "../lib/lib.js";
 import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
-import { SequencerFileBase } from "../modules/sequencer-file.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import * as canvaslib from "../lib/canvas-lib.js";
@@ -15,6 +14,13 @@ class SoundSection extends Section {
 		this._channel = "interface";
 		this._overrides = [];
 		this._locationOptions = {};
+		this._toLocation = false;
+		this._moveTowards = false;
+		this._global = false;
+	}
+
+	get _target() {
+		return this._toLocation || this._moveTowards || false;
 	}
 
 	static niceName = "Sound";
@@ -174,6 +180,91 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	toLocation(inLocation, inOptions = {}) {
+		if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
+			throw this.sequence._customError(
+				this,
+				"toLocation",
+				`inLocation is invalid, and must be of type of object, string, placeable object, or document`
+			);
+		}
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"toLocation",
+				`inOptions must be of type object`
+			);
+		inOptions = foundry.utils.mergeObject(
+			{
+				cacheLocation: false,
+				offset: false,
+				randomOffset: false,
+				gridUnits: false,
+				local: false,
+			},
+			inOptions
+		);
+		inLocation = this._validateLocation(inLocation);
+		if (inLocation === undefined)
+			throw this.sequence._customError(
+				this,
+				"toLocation",
+				"could not find position of given object"
+			);
+		if (typeof inOptions.cacheLocation !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"toLocation",
+				"inOptions.cacheLocation must be of type boolean"
+			);
+		if (
+			!(
+				typeof inOptions.randomOffset === "boolean" ||
+				lib.is_real_number(inOptions.randomOffset)
+			)
+		)
+			throw this.sequence._customError(
+				this,
+				"toLocation",
+				"inOptions.randomOffset must be of type boolean or number"
+			);
+
+		if (inOptions.offset) {
+			const offsetData = this._validateOffset(
+				"toLocation",
+				inOptions.offset,
+				inOptions
+			);
+			this._offset = {
+				source: this._offset?.source ?? false,
+				target: offsetData,
+			};
+		}
+
+		this._randomOffset = {
+			source: this._randomOffset?.source ?? false,
+			target: inOptions.randomOffset,
+		};
+
+		this._toLocation =
+			inOptions.cacheLocation && typeof inLocation !== "string"
+				? canvaslib.get_object_canvas_data(inLocation, { uuid: false })
+				: inLocation;
+
+		return this;
+	}
+
+	globalSound(inBool = true) {
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"globalSound",
+				`inBool must be of type boolean`
+			);
+		this._global = inBool;
+		return this;
+	}
+
 	/**
 	 * @private
 	 */
@@ -185,6 +276,7 @@ class SoundSection extends Section {
 		Object.assign(this.constructor.prototype, traits.name);
 		Object.assign(this.constructor.prototype, traits.location);
 		Object.assign(this.constructor.prototype, traits.offset);
+		Object.assign(this.constructor.prototype, traits.moves);
 	}
 
 	/**
@@ -228,10 +320,10 @@ class SoundSection extends Section {
 				playData?.users?.length === 1 && playData?.users?.includes(game.userId)
 			) && !this.sequence.local && !this.sequence.remote;
 
-		SequencerSoundManager.play(playData, push);
+		let duration = await SequencerSoundManager.play(playData, push);
 
 		await new Promise((resolve) =>
-			setTimeout(resolve, this._currentWaitTime + playData.duration),
+			setTimeout(resolve, this._currentWaitTime + duration),
 		);
 	}
 
@@ -241,17 +333,35 @@ class SoundSection extends Section {
 		}
 		if (this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument) {
 			const doc = this._source?.document ?? this._source;
-			if (this._attachTo) {
-				return lib.get_object_identifier(doc.object);
-			}
 			return doc.getOrientation().source;
 		}
-		if (this._source?.cachedLocation || !this._attachTo) {
+		if (this._source?.cachedLocation) {
 			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
 		}
 		return (
 			lib.get_object_identifier(this._source) ??
 			canvaslib.get_object_canvas_data(this._source, { uuid: true })
+		);
+	}
+
+	/**
+	 * @private
+	 */
+	_getTargetObject() {
+		let target = this._target.target ?? this._target;
+		if (!target || typeof target !== "object") {
+			return target;
+		}
+		if (target instanceof CrosshairsPlaceable || target instanceof CrosshairsDocument) {
+			const doc = target?.document ?? target;
+			return doc.getOrientation().source;
+		}
+		if (target?.cachedLocation) {
+			return canvaslib.get_object_canvas_data(target, { uuid: true });
+		}
+		return (
+			lib.get_object_identifier(target) ??
+			canvaslib.get_object_canvas_data(target, { uuid: true })
 		);
 	}
 
@@ -280,61 +390,51 @@ class SoundSection extends Section {
 			};
 		}
 
-		if (file instanceof SequencerFileBase) {
-			file.forcedIndex = forcedIndex;
-			if (file.timeRange) {
-				[this._startTime, this._endTime] = file.timeRange;
-				this._isRange = true;
-			}
-			file = file.getFile();
-		}
-
-		let soundFile = await foundry.audio.AudioHelper.preloadSound(file);
-		if (!soundFile || soundFile.failed) {
-			return {
-				play: false,
-				src: this._file,
-			};
-		}
-		let duration = soundFile.duration * 1000;
-
-		let startTime =
-			(this._startTime
-				? !this._startPerc
-					? this._startTime
-					: this._startTime * duration
-				: 0) / 1000;
-
-		if (this._endTime) {
-			duration = !this._endPerc
-				? Number(
-					this._isRange
-						? this._endTime - this._startTime
-						: duration - this._endTime,
-				)
-				: this._endTime * duration;
-		}
-
 		let data = {
 			id: foundry.utils.randomID(),
 			play: true,
-			src: file,
+			src: file.dbPath ?? file,
+			forcedIndex,
 			source: this._getSourceObject(),
+			target: this._getTargetObject(),
+			moveTowards: this._moveTowards
+				? {
+					ease: this._moveTowards.ease,
+					rotate: this._moveTowards.rotate,
+				}
+				: false,
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
-			loop: this._duration > duration,
 			volume: this._volume,
 			channel: this._channel,
+			global: this._global,
 			fadeIn: this._fadeInAudio,
 			fadeOut: this._fadeOutAudio,
-			startTime: startTime,
-			duration: this._duration || duration,
+			time:
+				this._startTime || this._endTime
+					? {
+						start: lib.is_real_number(this._startTime)
+							? {
+								value: this._startTime,
+								isPerc: this._startPerc,
+							}
+							: false,
+						end: lib.is_real_number(this._endTime)
+							? {
+								value: this._endTime,
+								isPerc: this._endPerc,
+							}
+							: false,
+						isRange: this._isRange,
+					}
+					: false,
+			duration: this._duration,
 			sceneId: this._source?.parent?.id || game.user.viewedScene,
 			users: this._users ? Array.from(this._users) : null,
 			name: this._name,
 			origin: this._origin,
-			seed: `${this._name}-${foundry.utils.randomID()}-${this._currentRepetition}`,
+			seed: `${this._name ?? "sequencer-sound"}-${foundry.utils.randomID()}-${this._currentRepetition}`,
 			nameOffsetMap: this.sequence.nameOffsetMap,
 		};
 
