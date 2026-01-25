@@ -1,0 +1,68 @@
+{
+  "id": "sequencer",
+  "title": "Sequencer",
+  "description": "This module allows you to play effects on the canvas, and create complex sequences of actions",
+  "version": "10.0.0",
+  "library": "false",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "authors": [
+    {
+      "name": "Wasp",
+      "discord": "Wasp#2005",
+      "website": "http://fantasycomputer.works/"
+    }
+  ],
+  "esmodules": ["dist/sequencer.js"],
+  "styles": ["dist/sequencer.css"],
+  "flags": {
+    "css": {
+      "shorthand": "sequencer"
+    },
+    "hotReload": {
+      "extensions": [
+        "css",
+        "json"
+      ],
+      "paths": [
+        "styles"
+      ]
+    }
+  },
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "languages/en-EN.json"
+    },
+    {
+      "lang": "it",
+      "name": "Italiano",
+      "path": "languages/it.json"
+    },
+    {
+      "lang": "ja",
+      "name": "日本語",
+      "path": "languages/ja.json"
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "languages/es-ES.json"
+    },
+    {
+      "lang": "pl",
+      "name": "Polski",
+      "path": "languages/pl.json"
+    }
+  ],
+  "socket": true,
+  "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
+  "manifest": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.json",
+  "download": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.zip",
+  "readme": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/blob/master/README.md",
+  "bugs": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/issues"
+}
