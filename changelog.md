@@ -13,6 +13,9 @@
 - *Sounds* - Added `.globalSound()`, which prevents any `.atLocation()` sound from only playing on the canvas, and instead always plays globally.
 - *Sounds* - Added `.visualize()` to show the area of effect of a `.sound()` with `.atLocation()`
 
+Sequencer now has a Patreon if you wish to support its development! Join us now at:
+https://www.patreon.com/cw/fantasycomputerworks
+
 # Version 3.6.11
 - *Sequencer* - Fixed `remote` on `.play()` not forcing local on the executing user's machine
 - *Sequencer* - Added a one-time dialog promoting our patreon
