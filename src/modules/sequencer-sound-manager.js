@@ -40,14 +40,14 @@ function updateSoundPosition(sound, data, position) {
 
 	let hasMuffledEffect = sound.effects.findIndex(e => e.type === muffledEffect.type);
 
-	if(hasMuffledEffect > -1 && !config.muffled){
+	if (hasMuffledEffect > -1 && !config.muffled) {
 		sound.effects[hasMuffledEffect].disconnect();
 		sound.effects.splice(hasMuffledEffect, 1);
 		sound.applyEffects(sound.effects);
-	}else if(hasMuffledEffect === -1 && config.muffled){
+	} else if (hasMuffledEffect === -1 && config.muffled) {
 		const sfx = CONFIG.soundEffects;
 		let effect;
-		if ( config.muffled && (muffledEffect?.type in sfx) ) {
+		if (config.muffled && (muffledEffect?.type in sfx)) {
 			const muffledCfg = sfx[muffledEffect.type];
 			effect = new muffledCfg.effectClass(sound.context, muffledEffect);
 			sound.effects.push(effect);
@@ -120,13 +120,15 @@ export default class SequencerSoundManager {
 			file = SequencerFileBase.make(data.src);
 		}
 
-		if(lib.is_real_number(data.forcedIndex)) {
+		if (lib.is_real_number(data.forcedIndex)) {
 			file.fileIndex = data.forcedIndex;
 		}
 
-		if (sourceLocation && targetLocation) {
+		if (sourceLocation && targetLocation && file.rangeFind) {
 			let distance = (new foundry.canvas.geometry.Ray(sourceLocation, targetLocation)).distance;
 			file = file.getFileForDistance(distance);
+		} else {
+			file = file.getFile();
 		}
 
 		let placedOnCanvas = data.source && !data.global;
@@ -214,38 +216,40 @@ export default class SequencerSoundManager {
 				absolute: true
 			});
 
-			if (data.fadeIn && playSound) {
-				sound.volume_multiplier = 0.0;
-				SequencerAnimationEngine.addAnimation(data.id, {
-					target: sound,
-					propertyName: "volume_multiplier",
-					from: 0.0,
-					to: 1.0,
-					duration: Math.min(data.fadeIn.duration, data.duration),
-					ease: data.fadeIn.ease,
-					delay: Math.min(data.fadeIn.delay, data.duration),
-					absolute: true
-				});
+			if (playSound) {
+				if (data.fadeIn) {
+					sound.volume_multiplier = 0.0;
+					SequencerAnimationEngine.addAnimation(data.id, {
+						target: sound,
+						propertyName: "volume_multiplier",
+						from: 0.0,
+						to: 1.0,
+						duration: Math.min(data.fadeIn.duration, data.duration),
+						ease: data.fadeIn.ease,
+						delay: Math.min(data.fadeIn.delay, data.duration),
+						absolute: true
+					});
+				}
+
+				if (data.fadeOut) {
+					SequencerAnimationEngine.addAnimation(data.id, {
+						target: sound,
+						propertyName: "volume_multiplier",
+						from: 1.0,
+						to: 0.0,
+						duration: Math.min(data.fadeOut.duration, data.duration),
+						ease: data.fadeOut.ease,
+						delay: Math.max(
+							data.duration - data.fadeOut.duration + data.fadeOut.delay,
+							0,
+						),
+						absolute: true
+					});
+				}
 			}
 
-			if (data.fadeOut && playSound) {
-				SequencerAnimationEngine.addAnimation(data.id, {
-					target: sound,
-					propertyName: "volume_multiplier",
-					from: 1.0,
-					to: 0.0,
-					duration: Math.min(data.fadeOut.duration, data.duration),
-					ease: data.fadeOut.ease,
-					delay: Math.max(
-						data.duration - data.fadeOut.duration + data.fadeOut.delay,
-						0,
-					),
-					absolute: true
-				});
-			}
-
-		} else {
-			if (data.fadeIn && playSound) {
+		} else if (playSound) {
+			if (data.fadeIn) {
 				SequencerAnimationEngine.addAnimation(data.id, {
 					target: sound,
 					propertyName: "volume",
@@ -258,7 +262,7 @@ export default class SequencerSoundManager {
 				});
 			}
 
-			if (data.fadeOut && playSound) {
+			if (data.fadeOut) {
 				SequencerAnimationEngine.addAnimation(data.id, {
 					target: sound,
 					propertyName: "volume",
