@@ -1909,7 +1909,33 @@ export default class CanvasEffect extends PIXI.Container {
 			let shape = obj?.mesh;
 			let shapeToAdd = shape;
 
-			if (obj instanceof FoundryShim.MeasuredTemplate || obj instanceof FoundryShim.Drawing) {
+			if (obj instanceof FoundryShim.Region) {
+
+				shape = new PIXI.LegacyGraphics()
+
+				for(let polygon of documentObj.polygons){
+					if(polygon.isPositive){
+						shape.beginFill();
+					}else{
+						shape.beginHole();
+					}
+					shape.drawShape(polygon);
+					if(polygon.isPositive){
+						shape.endFill();
+					}else{
+						shape.endHole();
+					}
+				}
+
+				shapeToAdd = shape;
+
+				shapeToAdd.cullable = true;
+				shapeToAdd.custom = true;
+				shapeToAdd.renderable = false;
+				shapeToAdd.uuid = uuid;
+				canvas.stage.addChild(shapeToAdd);
+
+			} else if (obj instanceof FoundryShim.MeasuredTemplate || obj instanceof FoundryShim.Drawing) {
 				shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
 
 				shape = PluginsManager.masking({
@@ -1951,7 +1977,21 @@ export default class CanvasEffect extends PIXI.Container {
 				if (!mask) return;
 				if (!mask.custom) return;
 				mask.clear();
-				if (obj instanceof FoundryShim.MeasuredTemplate) {
+				if (obj instanceof FoundryShim.Region) {
+					for(let polygon of documentObj.polygons){
+						if(polygon.isPositive){
+							mask.beginFill();
+						}else{
+							mask.beginHole();
+						}
+						mask.drawShape(polygon);
+						if(polygon.isPositive){
+							mask.endFill();
+						}else{
+							mask.endHole();
+						}
+					}
+				} else if (obj instanceof FoundryShim.MeasuredTemplate) {
 					mask.position.set(documentObj.x, documentObj.y);
 					let maskObj = documentObj.object;
 					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
@@ -1961,6 +2001,7 @@ export default class CanvasEffect extends PIXI.Container {
 						obj: maskObj,
 						shape
 					});
+					mask.beginFill().drawShape(shape).endFill();
 				} else {
 					const {
 						x,
@@ -1971,8 +2012,8 @@ export default class CanvasEffect extends PIXI.Container {
 					mask.pivot.set(width / 2, height / 2);
 					mask.position.set(x + width / 2, y + height / 2);
 					mask.angle = rotation;
+					mask.beginFill().drawShape(shape).endFill();
 				}
-				mask.beginFill().drawShape(shape).endFill();
 			};
 
 			PluginsManager.maskingHooks.forEach(hook => {

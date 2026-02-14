@@ -3,6 +3,7 @@ import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
 import FoundryShim from "../utils/foundry-shim.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import foundryShim from "../utils/foundry-shim.js";
 
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
@@ -154,32 +155,49 @@ export function get_object_position(
   obj = obj?._object ?? obj.object ?? obj;
 
   let pos = {};
-  if (obj instanceof FoundryShim.MeasuredTemplate) {
-    if (measure) {
-      if (obj.document.t === "cone" || obj.document.t === "ray") {
-        pos.x = obj.ray.B.x;
-        pos.y = obj.ray.B.y;
-      }
-    }
-    if (obj.document.t === "rect") {
-      pos.x = obj.x;
-      pos.y = obj.y;
+	if (obj instanceof FoundryShim.Region){
+		if(obj.document.shapes.length > 1){
+			pos.x = obj.bounds.x + obj.bounds.width/2;
+			pos.y = obj.bounds.y + obj.bounds.height/2;
+		}else{
+			let firstShape = obj.document.shapes[0];
+			switch(firstShape.type){
+				case "cone":
+				case "line":
+					if (!measure) {
+						pos.x = firstShape.measuredSegments[0].ray.A.x;
+						pos.y = firstShape.measuredSegments[0].ray.A.y;
+					} else {
+						pos.x = firstShape.measuredSegments[0].ray.B.x;
+						pos.y = firstShape.measuredSegments[0].ray.B.y;
+					}
+					break;
+				default:
+					pos.x = firstShape.center.x;
+					pos.y = firstShape.center.y;
+			}
+		}
+	} else if (obj instanceof FoundryShim.MeasuredTemplate) {
+		if (measure) {
+			if (obj.document.t === "cone" || obj.document.t === "ray") {
+				pos.x = obj.ray.B.x;
+				pos.y = obj.ray.B.y;
+			}
+		}
+		if (obj.document.t === "rect") {
+			pos.x = obj.x;
+			pos.y = obj.y;
 
-      if (!exact) {
-        pos.x += Math.abs(obj.shape.width / 2) + obj.shape.x;
-        pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
-      }
-    }
-  } else if (obj instanceof FoundryShim.Tile) {
+			if (!exact) {
+				pos.x += Math.abs(obj.shape.width / 2) + obj.shape.x;
+				pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
+			}
+		}
+	} else if (obj instanceof FoundryShim.Tile) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
     };
-
-    if (!exact) {
-      pos.x += Math.abs(obj.document.width / 2);
-      pos.y += Math.abs(obj.document.height / 2);
-    }
   } else if (obj instanceof FoundryShim.Token) {
     const halfSize = get_object_dimensions(obj, true);
     pos = {
@@ -245,6 +263,41 @@ export function get_random_offset(target, randomOffset, twister = false) {
 
 export function get_object_dimensions(inObj, half = false) {
   inObj = inObj?.object ?? inObj?._object ?? inObj;
+
+	if (inObj instanceof FoundryShim.Region){
+		if(inObj.document.shapes.length > 1){
+			return {
+				width: inObj.bounds.width / (half ? 2 : 1),
+				height: inObj.bounds.height / (half ? 2 : 1)
+			}
+		}else{
+			let firstShape = inObj.document.shapes[0];
+			switch(firstShape.type){
+				case "cone":
+				case "circle":
+					return {
+						width: firstShape.radius / (half ? 1 : 0.5),
+						height: firstShape.radius / (half ? 1 : 0.5)
+					}
+				case "ring":
+					return {
+						width: ((firstShape.radius + firstShape.outerWidth) - (firstShape.innerWidth / 2)) / (half ? 1 : 0.5),
+						height: ((firstShape.radius + firstShape.outerWidth) - (firstShape.innerWidth / 2)) / (half ? 1 : 0.5)
+					}
+				default:
+					return {
+						width: firstShape.width / (half ? 2 : 1),
+						height: firstShape.height / (half ? 2 : 1)
+					}
+			}
+		}
+	}else if(inObj instanceof foundryShim.Tile){
+		return {
+			width: inObj.document.width / (half ? 2 : 1),
+			height: inObj.document.height / (half ? 2 : 1)
+		}
+	}
+
 
   let width =
     inObj?.hitArea?.width ??

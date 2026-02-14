@@ -1,5 +1,5 @@
 import CONSTANTS from "./constants.js";
-import { custom_warning, debug, forceDeletionKeyWrapper } from "./lib/lib.js";
+import { createJournalDatabase, custom_warning, debug, forceDeletionKeyWrapper } from "./lib/lib.js";
 
 export default async function runMigrations() {
   const sortedMigrations = Object.entries(migrations).sort((a, b) => {
@@ -237,7 +237,9 @@ const migrations = {
 			await Actor.updateDocuments(actorUpdateArray);
 		}
 
-		await game.journal.getName(CONSTANTS.DATABASE_NAME).update({
+		let journal = await createJournalDatabase();
+
+		journal.update({
 			[CONSTANTS.EFFECTS_FLAG]: journalUpdate
 		});
 	}

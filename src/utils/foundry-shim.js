@@ -4,6 +4,7 @@ export default {
 	MeasuredTemplate: foundry?.canvas?.placeables?.MeasuredTemplate ?? MeasuredTemplate,
 	Drawing: foundry?.canvas?.placeables?.Drawing ?? Drawing,
 	Tile: foundry?.canvas?.placeables?.Tile ?? Tile,
+	Region: foundry?.canvas?.placeables?.Region,
 	SpriteMesh: foundry?.canvas?.containers?.SpriteMesh ?? SpriteMesh,
 	InteractionLayer: foundry?.canvas?.layers?.InteractionLayer ?? InteractionLayer,
 	srcExists: foundry?.canvas?.srcExists ?? srcExists,

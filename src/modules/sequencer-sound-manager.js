@@ -168,7 +168,7 @@ export default class SequencerSoundManager {
 		}
 
 		let soundDuration = sound.duration * 1000;
-		let duration = data.duration ?? soundDuration;
+		let duration = typeof data.duration === "boolean" && !data.duration ? soundDuration : data.duration;
 
 		sound.sequencer_data = data;
 		sound.sound_id = data.id;
@@ -190,6 +190,8 @@ export default class SequencerSoundManager {
 		if (placedOnCanvas && data?.locationOptions?.visualize && playSound) {
 			SequenceManager.VisualizedSounds.add(data.id, { ...data, location: sourceLocation });
 		}
+
+		sound.volume = data.volume * sound.volume_multiplier;
 
 		if (data.moveTowards && placedOnCanvas) {
 			canvas.app.ticker.add(updateSoundTickerFn, data.id)
@@ -224,9 +226,9 @@ export default class SequencerSoundManager {
 						propertyName: "volume_multiplier",
 						from: 0.0,
 						to: 1.0,
-						duration: Math.min(data.fadeIn.duration, data.duration),
+						duration: Math.min(data.fadeIn.duration, duration),
 						ease: data.fadeIn.ease,
-						delay: Math.min(data.fadeIn.delay, data.duration),
+						delay: Math.min(data.fadeIn.delay, duration),
 						absolute: true
 					});
 				}
@@ -237,10 +239,10 @@ export default class SequencerSoundManager {
 						propertyName: "volume_multiplier",
 						from: 1.0,
 						to: 0.0,
-						duration: Math.min(data.fadeOut.duration, data.duration),
+						duration: Math.min(data.fadeOut.duration, duration),
 						ease: data.fadeOut.ease,
 						delay: Math.max(
-							data.duration - data.fadeOut.duration + data.fadeOut.delay,
+							duration - data.fadeOut.duration + data.fadeOut.delay,
 							0,
 						),
 						absolute: true
@@ -250,14 +252,15 @@ export default class SequencerSoundManager {
 
 		} else if (playSound) {
 			if (data.fadeIn) {
+				sound.volume = 0.0;
 				SequencerAnimationEngine.addAnimation(data.id, {
 					target: sound,
 					propertyName: "volume",
 					from: 0.0,
 					to: 1.0,
-					duration: Math.min(data.fadeIn.duration, data.duration),
+					duration: Math.min(data.fadeIn.duration, duration),
 					ease: data.fadeIn.ease,
-					delay: Math.min(data.fadeIn.delay, data.duration),
+					delay: Math.min(data.fadeIn.delay, duration),
 					absolute: true
 				});
 			}
@@ -268,18 +271,16 @@ export default class SequencerSoundManager {
 					propertyName: "volume",
 					from: 1.0,
 					to: 0.0,
-					duration: Math.min(data.fadeOut.duration, data.duration),
+					duration: Math.min(data.fadeOut.duration, duration),
 					ease: data.fadeOut.ease,
 					delay: Math.max(
-						data.duration - data.fadeOut.duration + data.fadeOut.delay,
+						duration - data.fadeOut.duration + data.fadeOut.delay,
 						0,
 					),
 					absolute: true
 				});
 			}
 		}
-
-		sound.volume = data.volume * sound.volume_multiplier;
 
 		new Promise((resolve) => {
 			sound.addEventListener("stop", resolve);

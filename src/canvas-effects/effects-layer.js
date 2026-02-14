@@ -262,11 +262,12 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     graphic.lineStyle(3, selected ? CONSTANTS.COLOR.PRIMARY : 0xffffff, 0.9);
 
     let boundingBox = effect.sprite.getLocalBounds();
+
     let dimensions = {
-      x: effect.position.x + boundingBox.x * effect.sprite.scale.x,
-      y: effect.position.y + boundingBox.y * effect.sprite.scale.y,
-      width: boundingBox.width * effect.sprite.scale.x,
-      height: boundingBox.height * effect.sprite.scale.y,
+      x: effect.position.x + boundingBox.x,
+      y: effect.position.y + boundingBox.y,
+      width: boundingBox.width,
+      height: boundingBox.height,
     };
 
     if (effect.data.shapes.length) {

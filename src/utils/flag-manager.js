@@ -72,7 +72,7 @@ const flagManager = {
 	 */
 	getEffectFlags(inDocument, databaseFlags=null) {
 
-		if(!inDocument.uuid) return [];
+		if(!inDocument?.uuid) return [];
 
 		let allEffects = databaseFlags ?? this.getDatabaseFlags().effects;
 		let effects = allEffects[inDocument.uuid] ?? []
