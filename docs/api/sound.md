@@ -273,11 +273,28 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the sound's scene's grid size
 
-## Visualize
+## Attach To
 
-`.visualize(bool)`
+`.attachTo(object|string, object)`
 
-This method enables visualization of sounds with `.atLocation()` and `.radius()`, showing a circle around the location where the sound is being played.
+Examples:
+```js
+.attachTo(token)
+.attachTo(template)
+.attachTo("stored_name")
+.attachTo(token, { bindVisibility: false })
+```
+
+This method makes the sound attached to an object. If the object cannot have attached sounds, the sound will be created on the canvas.
+
+A smart method that can take:
+- Reference to a placeable object (tokens, templates, lights, etc)
+- String reference (see [`.name()`](#name))
+
+In addition, a secondary options parameter can be given to this method, which has the following options:
+
+- `bindVisibility: boolean` - (default `true`) - causes the sound to become hidden when the attached object is hidden
+- `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object 
 
 
 ## Radius

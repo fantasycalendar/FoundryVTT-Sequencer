@@ -6,6 +6,7 @@ import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlacea
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import flagManager from "../utils/flag-manager.js";
+import SequencerFileCache from "../modules/sequencer-file-cache.js";
 
 class SoundSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -392,10 +393,28 @@ class SoundSection extends Section {
 	}
 
 	/**
+	 * @private
+	 */
+	async _initialize() {
+		if (this._name) {
+			this.sequence.nameOffsetMap ||= {};
+			if (!this.sequence.nameOffsetMap[this._name]) {
+				const source = this._getSourceObject();
+				const target = this._getTargetObject();
+				this.sequence.nameOffsetMap[this._name] = {
+					seed: `${this._name}-${foundry.utils.randomID()}`,
+					source: source,
+					target: target,
+					twister: {},
+				};
+			}
+		}
+	}
+
+	/**
 	 * @OVERRIDE
 	 */
 	async preRun() {
-
 		const oldSource = this._source;
 		const crosshairSource = this.sequence?.crosshairs?.[this._source];
 		if(typeof this._source === "string" && crosshairSource){

@@ -1192,6 +1192,12 @@ declare global {
     ): this;
 
 	  /**
+	   * Causes the sound to persist indefinitely on the canvas until _ended via SequencerSoundManager.endAllSounds() or
+	   * name the sound with .name() and then end it through SequencerSoundManager.endSound()
+	   */
+	  persist(inBool?: boolean, inOptions?: PersistOptions): this;
+
+	  /**
 	   * A smart method that can take a reference to an object, or a direct on the canvas to attach a sound to,
 	   * or a string reference (see .name())
 	   */
