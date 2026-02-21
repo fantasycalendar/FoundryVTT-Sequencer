@@ -471,7 +471,7 @@ Causes the effect to not rotate should its container (see `spriteContainer` in [
 
 `.persist()` or `.persist(boolean)` or `.persist(true, { persistTokenPrototype: true })`
 
-Calling this method will cause the effect to become permanent on the canvas. You can end the effect with the [Effect Manager](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager).
+Calling this method will cause the effect to become permanent on the canvas. You can end the effect with the [Effect Manager](https://fantasycomputer.works/FoundryVTT-Sequencer/#/effect-manager).
 
 Also supports a second options object that accepts:
 - `persistTokenPrototype: boolean` (default `false`) - makes the effect persist on the token's prototype data, useful for active effect-linked VFX
@@ -505,7 +505,7 @@ Accepts an object that can contain
 
 Takes a UUID string, or a Foundry Document that contains an UUID.
 
-Used for adding extra information to an effect, like the origin of the effect in the form of the item's UUID to then be retrieved or ended with [`Sequencer.EffectManager.getEffects()`](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager#get-effects) and [`Sequencer.EffectManager.endEffects()`](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager#end-effects)
+Used for adding extra information to an effect, like the origin of the effect in the form of the item's UUID to then be retrieved or ended with [`Sequencer.EffectManager.getEffects()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/effect-manager?id=get-effects) and [`Sequencer.EffectManager.endEffects()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/effect-manager?id=end-effects)
 
 ## Name
 

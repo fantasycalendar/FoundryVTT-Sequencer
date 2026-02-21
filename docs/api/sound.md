@@ -294,7 +294,17 @@ A smart method that can take:
 In addition, a secondary options parameter can be given to this method, which has the following options:
 
 - `bindVisibility: boolean` - (default `true`) - causes the sound to become hidden when the attached object is hidden
-- `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object 
+- `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object
+
+
+## Persist
+
+`.persist()` or `.persist(boolean)` or `.persist(true, { persistTokenPrototype: true })`
+
+Calling this method will cause the sound to become permanent on the canvas. You can end the sound with the [Sound Manager](https://fantasycomputer.works/FoundryVTT-Sequencer/#/sound-manager).
+
+Also supports a second options object that accepts:
+- `persistTokenPrototype: boolean` (default `false`) - makes the sound persist on the token's prototype data, useful for active sound-linked VFX
 
 
 ## Radius
