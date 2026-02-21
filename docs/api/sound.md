@@ -297,6 +297,18 @@ In addition, a secondary options parameter can be given to this method, which ha
 - `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object
 
 
+## Loop Options
+
+`.loopOptions(inOptions)` or `.loopOptions({ maxLoops: 1 })` or `.loopOptions({ loopDelay: 1000, maxLoops: 5 })`
+
+Allows you to control the number of loops and the delays between each loop.
+
+Accepts an object that can contain
+- `loopDelay: number` (default `0`) - adds a delay in milliseconds between each loop of the sound
+- `maxLoops: number` (default `0`) - makes the sound only loop this many times before ending
+- `endOnLastLoop: boolean` (default `false`) - whether the sound should end when reaching the last loop (if persistent)
+
+
 ## Persist
 
 `.persist()` or `.persist(boolean)` or `.persist(true, { persistTokenPrototype: true })`
