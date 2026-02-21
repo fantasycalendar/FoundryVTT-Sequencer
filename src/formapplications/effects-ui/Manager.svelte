@@ -8,9 +8,10 @@
   const RunningSounds = SequenceManager.RunningSounds;
 
   let localize = game.i18n.localize.bind(game.i18n);
-
+	let sounds = [];
   $: effects = Object.values($VisibleEffects);
-  $: sounds = Object.entries($RunningSounds).filter(e => e[1].sound_playing);
+
+  $: sounds = Object.values($RunningSounds);
   $: persistentEffects = effects.filter(effect => effect.data.persist);
   $: temporaryEffects = effects.filter(effect => !effect.data.persist);
 
@@ -83,8 +84,8 @@
       <h2>{localize("SEQUENCER.Manager.Sounds")}</h2>
 
       <div>
-        {#each sounds as [id, sound] (id)}
-          <SoundEntry {id} {sound}/>
+        {#each sounds as sound (sound.id)}
+          <SoundEntry {sound}/>
         {/each}
       </div>
     </div>

@@ -45,14 +45,10 @@ Hooks.once("init", async function() {
   moduleValid = true;
 	CONSTANTS.IS_V13 = foundry.utils.isNewerVersion(game.version, "13");
 	CONSTANTS.IS_V14 = foundry.utils.isNewerVersion(game.version, "14");
-  // Enable basis transcoder for GPU compressible textures.
-  // Decoder is included in Foundry VTT 12 but not enabled by default
-  if (!CONSTANTS.IS_V13) {
-    CONFIG.Canvas.transcoders.basis = true
-  }
   initializeModule();
   registerSocket();
 	flagManager.setup();
+	// CONFIG.debug.hooks = true;
 });
 
 Hooks.once("ready", async function() {
@@ -75,7 +71,8 @@ Hooks.once("ready", async function() {
 
 Hooks.on("canvasTearDown", () => {
   canvasReady = false;
-  SequencerEffectManager.tearDownPersists();
+  SequencerEffectManager.tearDownPersistentEffects();
+	SequencerSoundManager.tearDownPersistentSounds();
 });
 
 const setupModule = foundry.utils.debounce(() => {
@@ -89,6 +86,7 @@ const setupModule = foundry.utils.debounce(() => {
   if (!canvasReady && game.canvas?.ready) {
     canvasReady = true;
     SequencerEffectManager.initializePersistentEffects();
+	  SequencerSoundManager.initializePersistentSounds();
   }
 }, 25);
 
@@ -143,6 +141,7 @@ function initializeModule() {
   registerBatchShader();
 
   SequencerEffectManager.setup();
+  SequencerSoundManager.setup();
   SequencerAboveUILayer.setup();
 
 	PluginsManager.initialize();

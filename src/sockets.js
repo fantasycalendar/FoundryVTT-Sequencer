@@ -25,8 +25,8 @@ export const SOCKET_HANDLERS = {
   PRELOAD_RESPONSE: "preloadResponse",
   PRELOAD_DONE: "preloadDone",
   UPDATE_DOCUMENT: "updateDocument",
-  ADD_EFFECT_FLAGS: "addEffectFlags",
-  REMOVE_EFFECT_FLAGS: "removeEffectFlags",
+  ADD_FLAGS: "addFlags",
+  REMOVE_FLAGS: "removeFlags",
   UPDATE_EFFECT_POSITION: "updateEffectPosition",
   ADD_SOUND_FLAGS: "addSoundFlags",
   REMOVE_SOUND_FLAGS: "removeSoundFlags",
@@ -51,7 +51,7 @@ const SOCKET_CALLBACKS = {
 		return SequencerEffectManager._addEffectAnimations(...data.payload)
 	},
 	[SOCKET_HANDLERS.PLAY_SOUND]: (data) => {
-		return SequencerSoundManager._play(...data.payload)
+		return SequencerSoundManager._playSound(...data.payload)
 	},
 	[SOCKET_HANDLERS.END_SOUNDS]: (data) => {
 		return SequencerSoundManager._endSounds(...data.payload)
@@ -70,20 +70,20 @@ const SOCKET_CALLBACKS = {
 		}
 		return document.update(updates, animate);
 	},
-	[SOCKET_HANDLERS.ADD_EFFECT_FLAGS]: (data) => {
-		return FlagManager._addEffectFlags(...data.payload)
+	[SOCKET_HANDLERS.ADD_FLAGS]: (data) => {
+		return FlagManager._addFlags(...data.payload)
 	},
-	[SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS]: (data) => {
-		return FlagManager._removeEffectFlags(...data.payload)
+	[SOCKET_HANDLERS.REMOVE_FLAGS]: (data) => {
+		return FlagManager._removeFlags(...data.payload)
 	},
 	[SOCKET_HANDLERS.UPDATE_EFFECT_POSITION]: (data) => {
 		return SequencerEffectManager._updatePosition(...data.payload)
 	},
 	[SOCKET_HANDLERS.ADD_SOUND_FLAGS]: (data) => {
-		return FlagManager._addSoundFlags(...data.payload)
+		return FlagManager._addFlags(...data.payload)
 	},
 	[SOCKET_HANDLERS.REMOVE_SOUND_FLAGS]: (data) => {
-		return FlagManager._removeSoundFlags(...data.payload)
+		return FlagManager._removeFlags(...data.payload)
 	},
 	[SOCKET_HANDLERS.CREATE_SCROLLING_TEXT]: (data) => {
 		return SequencerFoundryReplicator._playScrollingText(data.payload)

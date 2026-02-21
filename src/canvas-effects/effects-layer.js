@@ -24,7 +24,6 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
   }
 
 	isActive = false;
-	visualizedSounds = {};
 
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
@@ -45,9 +44,6 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     this._clearChildren();
     this.isActive = false;
     InteractionManager.tearDown();
-		if(this.visualizeSoundSubscription){
-			this.visualizeSoundSubscription();
-		}
   }
 
   _setup() {
@@ -59,37 +55,6 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
       this.addChild(this.UIContainer);
 
 	    this.visualizedSound = this.UIContainer.addChild(new PIXI.Graphics());
-
-	    this.visualizeSoundSubscription ??= SequenceManager.VisualizedSounds.subscribe((data) => {
-				for(let id of Object.keys(this.visualizedSounds)){
-					if(!data[id]) {
-						delete this.visualizedSounds[id];
-					}
-				}
-				for(let [id, soundData] of Object.entries(data)){
-					let radius = (soundData.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
-					if(!this.visualizedSounds[id]) {
-						this.visualizedSounds[id] = {
-							location: {
-								x: soundData.location.x,
-								y: soundData.location.y
-							},
-							radius: radius,
-							shape: foundry.canvas.geometry.ClockwiseSweepPolygon.create(soundData.location, {
-								type: "sound",
-								radius: radius
-							})
-						};
-					} else if (this.visualizedSounds[id].location.x !== soundData.location.x || this.visualizedSounds[id].location.y !== soundData.location.y) {
-						this.visualizedSounds[id].location.x = soundData.location.x;
-						this.visualizedSounds[id].location.y = soundData.location.y;
-						this.visualizedSounds[id].shape = foundry.canvas.geometry.ClockwiseSweepPolygon.create(soundData.location, {
-							type: "sound",
-							radius: radius
-						});
-					}
-				}
-	    });
 
       this.linePoint = this.UIContainer.addChild(new PIXI.Graphics());
       this.line = this.UIContainer.addChild(new PIXI.Graphics());
@@ -140,37 +105,37 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
   }
 
 	_drawVisualizedSounds() {
-		for(let data of Object.values(this.visualizedSounds)){
-			for (let constraint of data.shape.config.boundaryShapes) {
-				this.visualizedSound.lineStyle(2, 0xFF4444, 1.0);
-				this.visualizedSound.beginFill(0xFF4444, 0.10);
-				this.visualizedSound.drawShape(constraint);
-				this.visualizedSound.endFill();
-			}
+		let sound = SelectionManager.hoveredSoundUI;
+		if(!sound || sound.ended) return;
 
-			this.visualizedSound.beginFill(CONSTANTS.COLOR.PRIMARY, 0.5);
-			this.visualizedSound.lineStyle(2, CONSTANTS.COLOR.PRIMARY, 1.0);
-			this.visualizedSound.drawCircle(data.location.x, data.location.y, canvas.grid.size/4);
+		let radius = (sound.data.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
+		let data = {
+			position: {
+				x: sound.sourcePosition.x,
+				y: sound.sourcePosition.y
+			},
+			radius: radius,
+			shape: foundry.canvas.geometry.ClockwiseSweepPolygon.create(sound.sourcePosition, {
+				type: "sound",
+				radius: radius
+			})
+		};
+
+		for (let constraint of data.shape.config.boundaryShapes) {
+			this.visualizedSound.lineStyle(2, 0xFF4444, 1.0);
+			this.visualizedSound.beginFill(0xFF4444, 0.10);
+			this.visualizedSound.drawShape(constraint);
 			this.visualizedSound.endFill();
-
-			this.visualizedSound.beginFill(0x00AAFF, 0.25);
-			this.visualizedSound.drawShape(data.shape);
-			this.visualizedSound.endFill();
-
-			for (let edge of data.shape.edges ) {
-				let color = {
-					[CONST.EDGE_SENSE_TYPES.NONE]: 0x77E7E8,
-					[CONST.EDGE_SENSE_TYPES.NORMAL]: 0xFFFFBB,
-					[CONST.EDGE_SENSE_TYPES.LIMITED]: 0x81B90C,
-					[CONST.EDGE_SENSE_TYPES.PROXIMITY]: 0xFFFFBB,
-					[CONST.EDGE_SENSE_TYPES.DISTANCE]: 0xFFFFBB
-				}[edge[data.shape.config.type]];
-				this.visualizedSound.lineStyle(4, color)
-				this.visualizedSound.moveTo(edge.a.x, edge.a.y)
-				this.visualizedSound.lineTo(edge.b.x, edge.b.y);
-				this.visualizedSound.endFill();
-			}
 		}
+
+		this.visualizedSound.beginFill(CONSTANTS.COLOR.PRIMARY, 0.5);
+		this.visualizedSound.lineStyle(2, CONSTANTS.COLOR.PRIMARY, 1.0);
+		this.visualizedSound.drawCircle(data.position.x, data.position.y, canvas.grid.size / 4);
+		this.visualizedSound.endFill();
+
+		this.visualizedSound.beginFill(0x00AAFF, 0.25);
+		this.visualizedSound.drawShape(data.shape);
+		this.visualizedSound.endFill();
 	}
 
   _clearChildren() {
@@ -203,7 +168,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     this.linePoint.drawCircle(startPos.x, startPos.y, 5);
 
     if (EffectPlayer.sourceAttachFound) {
-      this._drawCrossAtLocation(this.linePoint, startPos);
+      this._drawCrossAtPosition(this.linePoint, startPos);
     }
 
     if (!EffectPlayer.endPos) return;
@@ -220,7 +185,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 
     if (EffectPlayer.targetAttachFound) {
       this.linePoint.beginFill(CONSTANTS.COLOR.SECONDARY);
-      this._drawCrossAtLocation(this.linePoint, EffectPlayer.endPos);
+      this._drawCrossAtPosition(this.linePoint, EffectPlayer.endPos);
     }
   }
 
@@ -390,7 +355,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     );
 
     if (typeof effect.data.source === "string") {
-      this._drawCrossAtLocation(
+      this._drawCrossAtPosition(
         this.effectSourcePosition,
         effect.sourcePosition
       );
@@ -405,7 +370,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     this.effectTargetPosition.alpha = 0.75;
 
     if (typeof effect.data.target === "string") {
-      this._drawCrossAtLocation(
+      this._drawCrossAtPosition(
         this.effectTargetPosition,
         effect.targetPosition
       );
@@ -433,7 +398,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
         canvas.grid.size * 0.25
       );
       if (suggestion.showCursor) {
-        this._drawCrossAtLocation(this.suggestionPoint, suggestion.position);
+        this._drawCrossAtPosition(this.suggestionPoint, suggestion.position);
       }
       return;
     }
@@ -462,7 +427,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 
     if (suggestion.showCursor) {
       this.suggestionPoint.beginFill(CONSTANTS.COLOR.SECONDARY);
-      this._drawCrossAtLocation(this.suggestionPoint);
+      this._drawCrossAtPosition(this.suggestionPoint);
     }
 
     if (suggestion.showPoint) {
@@ -470,7 +435,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
     }
   }
 
-  _drawCrossAtLocation(inElement, inPosition = { x: 0, y: 0 }) {
+  _drawCrossAtPosition(inElement, inPosition = { x: 0, y: 0 }) {
     inElement.drawRect(
       inPosition.x + canvas.grid.size * -0.05,
       inPosition.y + canvas.grid.size * -0.5,

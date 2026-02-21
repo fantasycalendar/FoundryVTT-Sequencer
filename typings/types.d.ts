@@ -713,11 +713,16 @@ declare global {
     bindAlpha?: boolean;
     bindScale?: boolean;
     bindElevation?: boolean;
-    followRotation?: boolean;
+    bindRotation?: boolean;
     offset?: Vector2;
     randomOffset?: number;
     gridUnits?: boolean;
     local?: boolean;
+  };
+
+  type SoundAttachToOptions = {
+    bindVisibility?: boolean;
+    bindElevation?: boolean;
   };
 
   type StretchToOptions = {
@@ -1187,9 +1192,13 @@ declare global {
     ): this;
 
 	  /**
-	   * Visualizes the sound as a sprite on the canvas.
+	   * A smart method that can take a reference to an object, or a direct on the canvas to attach a sound to,
+	   * or a string reference (see .name())
 	   */
-		visualize(inBool?: boolean): this;
+	  attachTo(
+		  inLocation: VisibleFoundryTypes | Vector2 | string,
+		  inOptions?: SoundAttachToOptions
+	  ): this;
 
     /**
      * Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.

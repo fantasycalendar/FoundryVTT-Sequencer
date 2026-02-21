@@ -5,6 +5,7 @@ import traits from "./traits/_traits.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import * as canvaslib from "../lib/canvas-lib.js";
+import flagManager from "../utils/flag-manager.js";
 
 class SoundSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -17,6 +18,8 @@ class SoundSection extends Section {
 		this._toLocation = false;
 		this._moveTowards = false;
 		this._global = false;
+		this._persist = false;
+		this._loopOptions = false;
 	}
 
 	get _target() {
@@ -120,15 +123,52 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	visualize(inBool = true) {
-		if (typeof inBool !== "boolean") {
+	/**
+	 * Allows you to control the number of loops and the delays between each loop
+	 *
+	 * @param {Object} inOptions
+	 * @returns {EffectSection}
+	 */
+	loopOptions(inOptions={}){
+		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,
-				"visualize",
-				`inBool must be of type boolean`
-			)
-		}
-		this._locationOptions['visualize'] = inBool;
+				"loopOptions",
+				`inOptions must be of type object`
+			);
+
+		inOptions = foundry.utils.mergeObject(
+			{
+				loopDelay: 0,
+				loops: 0,
+				endOnLastLoop: false
+			},
+			inOptions
+		);
+
+		if (typeof inOptions.endOnLastLoop !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				"inOptions.endOnLastLoop must be of type boolean"
+			);
+
+		if (typeof inOptions.loopDelay !== "number" || inOptions.loopDelay < 0)
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				"inOptions.loopDelay must be of type number that is not below 0"
+			);
+
+		if (typeof inOptions.loops !== "number" || inOptions.loops < 0)
+			throw this.sequence._customError(
+				this,
+				"loopOptions",
+				"inOptions.loops must be of type number that is not below 0"
+			);
+
+		this._loopOptions = inOptions;
+
 		return this;
 	}
 
@@ -265,6 +305,78 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	persist(inBool = true) {
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"persist",
+				`inBool must be of type boolean`
+			);
+		this._persist = inBool;
+		return this;
+	}
+
+	/**
+	 *  A smart method that can take a reference to an object, or a direct on the canvas to attach an sound to,
+	 *  or a string reference (see .name())
+	 *
+	 * @param {Object|String} inObject
+	 * @param {Object} inOptions
+	 * @returns {SoundSection}
+	 */
+	attachTo(inObject, inOptions = {}) {
+		if (!inObject || !(typeof inObject === "object" || typeof inObject === "string")) {
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				`inObject is invalid, and must be of type of object, string, placeable object, or document`
+			);
+		}
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				`inOptions must be of type object`
+			);
+		inOptions = foundry.utils.mergeObject(
+			{
+				bindVisibility: true,
+				bindElevation: true,
+			},
+			inOptions
+		);
+
+		const validatedObject = this._validateLocation(inObject);
+		if (validatedObject === undefined)
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				"could not find given object"
+			);
+
+		if (typeof inOptions.bindVisibility !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				`inOptions.bindVisibility must be of type boolean`
+			);
+		if (typeof inOptions.bindElevation !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				"inOptions.bindElevation must be of type boolean"
+			);
+
+		this._source = validatedObject;
+
+		this._attachTo = {
+			active: !!validatedObject,
+			bindVisibility: inOptions.bindVisibility,
+			bindElevation: inOptions.bindElevation,
+		};
+		return this;
+	}
+
 	/**
 	 * @private
 	 */
@@ -281,19 +393,50 @@ class SoundSection extends Section {
 
 	/**
 	 * @OVERRIDE
+	 */
+	async preRun() {
+
+		const oldSource = this._source;
+		const crosshairSource = this.sequence?.crosshairs?.[this._source];
+		if(typeof this._source === "string" && crosshairSource){
+			this._source = crosshairSource.uuid;
+		}
+		const oldTarget = this._target?.target;
+		const crosshairTarget = this.sequence?.crosshairs?.[this._target?.target];
+		if(typeof this._target?.target === "string" && crosshairTarget){
+			this._target.target = crosshairTarget.uuid;
+		}
+
+		if(this._attachTo && !this._attachTo.active && typeof this._source === "string" && crosshairSource){
+			this._attachTo.active = !!crosshairSource;
+		}
+
+		if (this._name && (oldSource !== this._source || oldTarget !== this._target?.target)) {
+			this.sequence.nameOffsetMap[this._name].source = this._getSourceObject();
+			this.sequence.nameOffsetMap[this._name].target = this._getTargetObject();
+		}
+
+		const source = this._getSourceObject();
+		if(this._persistOptions?.persistTokenPrototype && !(this._attachTo?.active || lib.is_UUID(source))){
+			this._persistOptions.persistTokenPrototype = false;
+		}
+	}
+
+	/**
+	 * @OVERRIDE
 	 * @returns {Promise}
 	 */
 	async run() {
 		const playData = await this._sanitizeSoundData();
 
-		if (typeof playData.src !== "string" || playData.src === "") {
+		if (typeof playData.file !== "string" || playData.file === "") {
 			if (this.sequence.softFail) {
 				playData.play = false;
 			} else {
 				throw this.sequence._customError(
 					this,
 					"file",
-					"a sound must have a src of type string!",
+					"a sound must have a file of type string!",
 				);
 			}
 		}
@@ -308,7 +451,7 @@ class SoundSection extends Section {
 			this.sequence._customError(
 				this,
 				"Play",
-				`File not found: ${playData.src}`,
+				`File not found: ${playData.file}`,
 			);
 			return new Promise((reject) => reject());
 		}
@@ -333,9 +476,12 @@ class SoundSection extends Section {
 		}
 		if (this._source instanceof CrosshairsPlaceable || this._source instanceof CrosshairsDocument) {
 			const doc = this._source?.document ?? this._source;
+			if(this._attachTo) {
+				return lib.get_object_identifier(doc.object);
+			}
 			return doc.getOrientation().source;
 		}
-		if (this._source?.cachedLocation) {
+		if (this._source?.cachedLocation || !this._attachTo) {
 			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
 		}
 		return (
@@ -377,7 +523,7 @@ class SoundSection extends Section {
 		if (!this._file) {
 			return {
 				play: false,
-				src: false,
+				file: false,
 			};
 		}
 
@@ -386,17 +532,21 @@ class SoundSection extends Section {
 		if (!file) {
 			return {
 				play: false,
-				src: false,
+				file: false,
 			};
 		}
 
 		let data = {
-			id: foundry.utils.randomID(),
+			_id: foundry.utils.randomID(),
+			flagVersion: flagManager.latestFlagVersion,
 			play: true,
-			src: file.dbPath ?? file,
+			file: file.dbPath ?? file,
 			forcedIndex,
+			creationTimestamp: Date.now(),
+			creatorUserId: game.user.id,
 			source: this._getSourceObject(),
 			target: this._getTargetObject(),
+			attachTo: this._attachTo,
 			moveTowards: this._moveTowards
 				? {
 					ease: this._moveTowards.ease,
@@ -406,6 +556,7 @@ class SoundSection extends Section {
 			offset: this._offset,
 			randomOffset: this._randomOffset,
 			locationOptions: this._locationOptions,
+			loopOptions: this._loopOptions,
 			volume: this._volume,
 			channel: this._channel,
 			global: this._global,
@@ -436,6 +587,7 @@ class SoundSection extends Section {
 			origin: this._origin,
 			seed: `${this._name ?? "sequencer-sound"}-${foundry.utils.randomID()}-${this._currentRepetition}`,
 			nameOffsetMap: this.sequence.nameOffsetMap,
+			persist: this._persist
 		};
 
 		for (let override of this._overrides) {

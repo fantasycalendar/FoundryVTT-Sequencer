@@ -370,7 +370,7 @@ export default class SequencerEffectManager {
 			!data.temporary &&
 			!data.remote
 		) {
-			flagManager.addEffectFlags(effect.context.uuid, effect.data);
+			flagManager.addFlags(effect.context.uuid, { effects: effect.data });
 		}
 
 		if (!effect.shouldPlay) return;
@@ -459,33 +459,13 @@ export default class SequencerEffectManager {
 	 * @returns {promise}
 	 */
 	static async initializePersistentEffects() {
-		await this.tearDownPersists();
-		const allObjects = lib.get_all_documents_from_scene();
-		allObjects.push(canvas.scene);
-		const databaseFlags = flagManager.getDatabaseFlags().effects
-		const docEffectsMap = allObjects
-			.filter(doc => doc.uuid)
-			.reduce((acc, doc) => {
-				let effects = flagManager.getEffectFlags(doc, databaseFlags);
-				effects.forEach((e) => {
-					if (lib.is_UUID(e[1].source) && e[1].source !== doc.uuid) {
-						e[1].delete = true;
-					}
-				});
-				if (doc instanceof TokenDocument && doc?.actorLink) {
-					const actorEffects = flagManager.getEffectFlags(doc?.actor, databaseFlags);
-					actorEffects.forEach((e) => {
-						e[1]._id = foundry.utils.randomID();
-						e[1].source = doc.uuid;
-						e[1].sceneId = doc.parent.id;
-					});
-					effects = effects.concat(actorEffects);
-				}
-				if (effects.length) {
-					acc[doc.uuid] = effects;
-				}
-				return acc;
-			}, {});
+		await this.tearDownPersistentEffects();
+		let docEffectsMap = {};
+		for (let [uuid, effects] of Object.entries(flagManager.getDatabaseFlags().effects)) {
+			let doc = fromUuidSync(uuid);
+			if (!doc) continue;
+			docEffectsMap[uuid] = effects;
+		}
 		const promises = Object.entries(docEffectsMap)
 			.map(([uuid, effects]) => {
 				return this._playEffectMap(effects, fromUuidSync(uuid));
@@ -499,7 +479,7 @@ export default class SequencerEffectManager {
 	/**
 	 * Tears down persisting effects when the scene is unloaded
 	 */
-	static tearDownPersists() {
+	static tearDownPersistentEffects() {
 		return Promise.allSettled(
 			this.effects.map((effect) => {
 				SequenceManager.VisibleEffects.delete(effect.id);
@@ -513,10 +493,12 @@ export default class SequencerEffectManager {
 		Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
 		Hooks.on("preCreateTile", this._patchCreationData.bind(this));
 		Hooks.on("preCreateMeasuredTemplate", this._patchCreationData.bind(this));
+		Hooks.on("preCreateRegion", this._patchCreationData.bind(this));
 		Hooks.on("createToken", this._documentCreated.bind(this));
 		Hooks.on("createDrawing", this._documentCreated.bind(this));
 		Hooks.on("createTile", this._documentCreated.bind(this));
 		Hooks.on("createMeasuredTemplate", this._documentCreated.bind(this));
+		Hooks.on("createRegion", this._documentCreated.bind(this));
 	}
 
 	/**
@@ -549,7 +531,7 @@ export default class SequencerEffectManager {
 			effects
 		);
 
-		return inDocument.updateSource(updates);
+		return flagManager.addFlags(documentUuid, updates);
 	}
 
 	static _patchEffectDataForDocument(inDocumentUuid, effects) {
@@ -610,7 +592,7 @@ export default class SequencerEffectManager {
 						`Sequencer`,
 						`Removed effect from ${inDocument.uuid} as it no longer had a valid source or target`
 					);
-					return flagManager.removeEffectFlags(inDocument.uuid, effect);
+					return flagManager.removeFlags(inDocument.uuid, { effects: effect });
 				}
 				return this._playEffect(effect[1], false)
 					.then((result) => {
@@ -636,6 +618,7 @@ export default class SequencerEffectManager {
 		const actorEffectsToEnd = this.effects.filter((effect) => {
 			return (
 				effect.context?.actorLink &&
+				effect.context?.actor &&
 				inEffectIds.includes(effect.data?.persistOptions?.id)
 			);
 		});
@@ -646,7 +629,7 @@ export default class SequencerEffectManager {
 		const regularEffectsToEnd = this.effects.filter((effect) => {
 			return (
 				inEffectIds.includes(effect.id) ||
-				(!effect.context?.actorLink &&
+				(!(effect.context?.actorLink && effect.context?.actor) &&
 					inEffectIds.includes(effect.data?.persistOptions?.id))
 			);
 		});
@@ -660,10 +643,9 @@ export default class SequencerEffectManager {
 			);
 			if (!effects.length) return;
 			const effectData = effects.map((effect) => effect.data);
-			flagManager.removeEffectFlags(
+			flagManager.removeFlags(
 				effects[0].context.uuid,
-				effectData,
-				!inEffectIds
+				{ effects: effectData, removeAllEffects: !inEffectIds }
 			);
 		});
 
@@ -680,7 +662,8 @@ export default class SequencerEffectManager {
 				!(
 					effectContext instanceof TokenDocument &&
 					effectContext.actorLink &&
-					effectContext.actor.prototypeToken.actorLink
+					effectContext.actor &&
+					effectContext.actor?.prototypeToken?.actorLink
 				)
 			) {
 				return;
@@ -706,10 +689,9 @@ export default class SequencerEffectManager {
 				})
 				.map((e) => e[0]);
 
-			flagManager.removeEffectFlags(
+			flagManager.removeFlags(
 				effectContext.actor.uuid,
-				applicableActorEffects,
-				!inEffectIds
+				{ effects: applicableActorEffects, removeAllEffects: !inEffectIds }
 			);
 		});
 
@@ -762,7 +744,7 @@ export default class SequencerEffectManager {
 		return Promise.allSettled([
 			this._endManyEffects(visibleEffectsToEnd),
 			...documentEffectsToEnd.map((obj) => {
-				return flagManager.removeEffectFlags(obj.document.uuid, obj.effects);
+				return flagManager.removeFlags(obj.document.uuid, { effects: obj.effects });
 			}),
 		]);
 	}

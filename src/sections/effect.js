@@ -288,15 +288,6 @@ export default class EffectSection extends Section {
 				"attachTo",
 				`inOptions.bindVisibility must be of type boolean`
 			);
-		if (inOptions.followRotation !== undefined) {
-			inOptions.bindRotation = inOptions.followRotation;
-			this.sequence._showWarning(
-				this,
-				"attachTo",
-				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead",
-        true
-			);
-		}
 		if (typeof inOptions.bindRotation !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -604,20 +595,6 @@ export default class EffectSection extends Section {
 		};
 
 		return this;
-	}
-
-	/**
-	 *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
-	 *  @deprecated
-	 */
-	from(...args) {
-		this.sequence._showWarning(
-			this,
-			"from",
-			".from() is deprecated, please use .copySprite() instead",
-      true
-		);
-		return this.copySprite(...args)
 	}
 
 	/**
@@ -1582,35 +1559,6 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 * @deprecated
-	 */
-	noLoop(inBool = true) {
-		this.sequence._showWarning(
-			this,
-			"noLoop",
-			".noLoop() is deprecated, please use .loopOptions({ loops: 1 }) instead",
-      true
-		);
-		if (typeof inBool !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"noLoop",
-				"inBool must be of type boolean"
-			);
-
-		this._loopOptions = foundry.utils.mergeObject(
-			this._loopOptions ?? {
-				loopDelay: 0,
-				loops: 0,
-			},
-			{
-				loops: 1
-			}
-		);
-		return this;
-	}
-
-	/**
 	 * Allows you to control the number of loops and the delays between each loop
 	 *
 	 * @param {Object} inOptions
@@ -1962,15 +1910,6 @@ export default class EffectSection extends Section {
 	 * @returns this
 	 */
 	file(inFile, inOptions = {}) {
-		if(typeof inOptions === "boolean"){
-			inOptions = {};
-			this.sequence._showWarning(
-				this,
-				"file",
-				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead",
-        true
-			);
-		}
 		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,
@@ -2441,7 +2380,7 @@ export default class EffectSection extends Section {
 			_id: foundry.utils.randomID(),
 			flagVersion: flagManager.latestFlagVersion,
 			sequenceId: this.sequence.id,
-			creationTimestamp: +new Date(),
+			creationTimestamp: Date.now(),
 			sceneId,
 			creatorUserId: game.userId,
 			moduleName: this.sequence.moduleName,

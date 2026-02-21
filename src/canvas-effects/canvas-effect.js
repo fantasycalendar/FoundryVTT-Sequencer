@@ -114,8 +114,6 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._cachedSourceData = {};
 		this._cachedTargetData = {};
-		this.sourceOffset = { x: 0, y: 0 };
-		this.targetOffset = { x: 0, y: 0 };
 
 		this.uuid = false;
 
@@ -310,8 +308,8 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		return {
-			x: (position.x - offset.x) + this.sourceOffset.x,
-			y: (position.y - offset.y) + this.sourceOffset.y,
+			x: (position.x - offset.x),
+			y: (position.y - offset.y),
 		};
 	}
 
@@ -357,8 +355,8 @@ export default class CanvasEffect extends PIXI.Container {
 		const offset = this._getOffset(this.data.target);
 
 		return {
-			x: (position.x - offset.x) + this.targetOffset.x,
-			y: (position.y - offset.y) + this.targetOffset.y,
+			x: (position.x - offset.x),
+			y: (position.y - offset.y),
 		};
 	}
 
@@ -1088,10 +1086,10 @@ export default class CanvasEffect extends PIXI.Container {
 					: "Scene." + newData.sceneId;
 
 			if (originalSourceUUID !== newSourceUUID) {
-				flagManager.removeEffectFlags(originalSourceUUID, newData);
+				flagManager.removeFlags(originalSourceUUID, { effects: newData });
 			}
 
-			flagManager.addEffectFlags(newSourceUUID, newData);
+			flagManager.addFlags(newSourceUUID, { effects: newData });
 		}
 
 		lib.debug(`Updated effect with ID ${this.id}`);
@@ -1155,7 +1153,7 @@ export default class CanvasEffect extends PIXI.Container {
 			newData.animations = (newData.animations ?? []).concat(
 				foundry.utils.deepClone(animationsToAdd)
 			);
-			flagManager.addEffectFlags(originalSourceUUID, newData);
+			flagManager.addFlags(originalSourceUUID, { effects: newData });
 		}
 
 		return sequencerSocket.executeForEveryone(

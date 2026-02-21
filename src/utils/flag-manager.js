@@ -4,10 +4,8 @@ import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import CONSTANTS from "../constants.js";
 
 const flagManager = {
-	flagEffectAddBuffer: new Map(),
-	flagEffectRemoveBuffer: new Map(),
-	flagSoundAddBuffer: new Map(),
-	flagSoundRemoveBuffer: new Map(),
+	flagAddBuffer: new Map(),
+	flagRemoveBuffer: new Map(),
 	_latestFlagVersion: false,
 
 	get database(){
@@ -115,7 +113,7 @@ const flagManager = {
 		}
 
 		if (changes.length) {
-			flagManager.addEffectFlags(inDocument.uuid, changes);
+			flagManager.addFlags(inDocument.uuid, { effects: changes });
 		}
 
 		return effects;
@@ -283,76 +281,89 @@ const flagManager = {
 	},
 
 	/**
-	 * Adds effects to a given document
+	 * Adds effects and/or sounds to a given document
 	 *
 	 * @param inObjectUUID
-	 * @param inEffects
+	 * @param effects
+	 * @param sounds
 	 */
-	addEffectFlags: (inObjectUUID, inEffects) => {
-		if (!Array.isArray(inEffects)) inEffects = [inEffects];
+	addFlags: (inObjectUUID, { effects = [], sounds = [] }={}) => {
+		if (!Array.isArray(effects)) effects = [effects];
+		if (!Array.isArray(sounds)) sounds = [sounds];
 		sequencerSocket.executeAsMainUser(
-			SOCKET_HANDLERS.ADD_EFFECT_FLAGS,
+			SOCKET_HANDLERS.ADD_FLAGS,
 			inObjectUUID,
-			inEffects,
+			effects,
+			sounds
 		);
 	},
 
 	/**
-	 * Removes effects from a given document
+	 * Removes effects and/or sounds from a given document
 	 *
 	 * @param inObjectUUID
-	 * @param inEffects
-	 * @param removeAll
+	 * @param effects
+	 * @param removeAllEffects
+	 * @param sounds
+	 * @param removeAllSounds
 	 */
-	removeEffectFlags: (inObjectUUID, inEffects, removeAll = false) => {
+	removeFlags: (inObjectUUID, { effects=[], removeAllEffects = false, sounds=[], removeAllSounds = false}=[]) => {
+		if (!Array.isArray(effects)) effects = [effects];
+		if (!Array.isArray(sounds)) sounds = [sounds];
 		sequencerSocket.executeAsMainUser(
-			SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS,
+			SOCKET_HANDLERS.REMOVE_FLAGS,
 			inObjectUUID,
-			inEffects,
-			removeAll,
+			{ effects, removeAllEffects, sounds, removeAllSounds }
 		);
 	},
 
-	_addEffectFlags: (inObjectUUID, inEffects) => {
-		if (!Array.isArray(inEffects)) inEffects = [inEffects];
+	_addFlags: (inObjectUUID, effects, sounds) => {
+		if (!Array.isArray(effects)) effects = [effects];
+		if (!Array.isArray(sounds)) sounds = [sounds];
 
-		let flagsToSet = flagManager.flagEffectAddBuffer.get(inObjectUUID) ?? {
+		let flagsToSet = flagManager.flagAddBuffer.get(inObjectUUID) ?? {
 			effects: [],
+			sounds: [],
 		};
 
-		flagsToSet.effects.push(...inEffects);
+		flagsToSet.effects.push(...effects);
+		flagsToSet.sounds.push(...sounds);
 
-		flagManager.flagEffectAddBuffer.set(inObjectUUID, flagsToSet);
+		flagManager.flagAddBuffer.set(inObjectUUID, flagsToSet);
 
-		flagManager.updateEffectFlags();
+		flagManager.updateFlags();
 	},
 
-	_removeEffectFlags: (inObjectUUID, inEffects, removeAll = false) => {
-		if (inEffects && !Array.isArray(inEffects)) inEffects = [inEffects];
+	_removeFlags: (inObjectUUID, { effects=[], removeAllEffects = false, sounds=[], removeAllSounds=false}) => {
+		if (effects && !Array.isArray(effects)) effects = [effects];
+		if (sounds && !Array.isArray(sounds)) sounds = [sounds];
 
-		let flagsToSet = flagManager.flagEffectRemoveBuffer.get(inObjectUUID) ?? {
+		let flagsToSet = flagManager.flagRemoveBuffer.get(inObjectUUID) ?? {
 			effects: [],
-			removeAll: removeAll,
+			sounds: [],
+			removeAllEffects: removeAllEffects,
+			removeAllSounds: removeAllSounds,
 		};
 
-		if (inEffects) flagsToSet.effects.push(...inEffects);
+		if (effects) flagsToSet.effects.push(...effects);
+		if (sounds) flagsToSet.sounds.push(...sounds);
 
-		flagManager.flagEffectRemoveBuffer.set(inObjectUUID, flagsToSet);
+		flagManager.flagRemoveBuffer.set(inObjectUUID, flagsToSet);
 
-		flagManager.updateEffectFlags();
+		flagManager.updateFlags();
 	},
 
-	updateEffectFlags: foundry.utils.debounce(async () => {
+	updateFlags: foundry.utils.debounce(async () => {
 		let database = flagManager.database;
 		if(!database) return;
 
-		let flagsToAdd = Array.from(flagManager.flagEffectAddBuffer);
-		let flagsToRemove = Array.from(flagManager.flagEffectRemoveBuffer);
+		let flagsToAdd = Array.from(flagManager.flagAddBuffer);
+		let flagsToRemove = Array.from(flagManager.flagRemoveBuffer);
 
 		if(flagsToAdd.length === 0 && flagsToRemove.length === 0) return;
 
-		flagManager.flagEffectAddBuffer.clear();
-		flagManager.flagEffectRemoveBuffer.clear();
+		flagManager.flagAddBuffer.clear();
+		flagManager.flagRemoveBuffer.clear();
 
 		flagsToAdd.forEach((entry) => (entry[1].original = true));
 		flagsToRemove.forEach((entry) => (entry[1].original = true));
@@ -365,101 +376,159 @@ const flagManager = {
 		flagsToAdd = new Map(flagsToAdd);
 		flagsToRemove = new Map(flagsToRemove);
 
-		const update = {};
+		const effectUpdate = {};
+		const soundUpdate = {};
 
 		const allEffectFlags = flagManager.getDatabaseFlags().effects;
+		const allSoundFlags = flagManager.getDatabaseFlags().sounds;
 
 		for (let objectUUID of objects) {
 			let object = fromUuidSync(objectUUID);
 
 			if (!object) {
-				lib.forceDeletionKeyWrapper(update, "-=" + objectUUID.replaceAll(".", "-"))
+				lib.forceDeletionKeyWrapper(effectUpdate, "-=" + objectUUID.replaceAll(".", "-"))
+				lib.forceDeletionKeyWrapper(soundUpdate, "-=" + objectUUID.replaceAll(".", "-"))
 				continue;
 			}
 
 			const isLinkedToken = object instanceof TokenDocument && object.actorLink;
 			const isLinkedActor = object instanceof Actor && object.prototypeToken.actorLink;
 
-			let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [] };
+			let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [], sounds: [] };
 			let toRemove = flagsToRemove.get(objectUUID) ?? {
 				effects: [],
-				removeAll: false,
+				removeAllEffects: false,
+				sounds: [],
+				removeAllSounds: false,
 			};
 
-			let origExistingFlags = allEffectFlags[object.uuid] ?? [];
+			let origExistingEffectFlags = allEffectFlags[object.uuid] ?? [];
 			if (isLinkedToken) {
-				origExistingFlags = origExistingFlags.concat(allEffectFlags[object?.actor?.uuid] ?? []);
+				origExistingEffectFlags = origExistingEffectFlags.concat(allEffectFlags[object?.actor?.uuid] ?? []);
+			}
+			const existingEffectFlags = new Map(origExistingEffectFlags);
+
+			let origExistingSoundFlags = allSoundFlags[object.uuid] ?? [];
+			if (isLinkedToken) {
+				origExistingSoundFlags = origExistingSoundFlags.concat(allSoundFlags[object?.actor?.uuid] ?? []);
+			}
+			const existingSoundFlags = new Map(origExistingSoundFlags);
+
+			if (toRemove?.removeAllEffects) {
+				toRemove.effects = Array.from(existingEffectFlags).map((entry) => entry[0]);
 			}
 
-			const existingFlags = new Map(origExistingFlags);
-
-			if (toRemove?.removeAll) {
-				toRemove.effects = Array.from(existingFlags).map((entry) => entry[0]);
+			if (toRemove?.removeAllSounds) {
+				toRemove.sounds = Array.from(existingSoundFlags).map((entry) => entry[0]);
 			}
 
 			for (let effect of toAdd.effects) {
 				if (typeof effect === "string") {
-					effect = existingFlags.get(effect);
+					effect = existingEffectFlags.get(effect);
 					if (!effect) continue;
 				}
-				existingFlags.set(effect._id, effect);
+				existingEffectFlags.set(effect._id, effect);
+			}
+
+			for (let sound of toAdd.sounds) {
+				if (typeof sound === "string") {
+					sound = existingSoundFlags.get(sound);
+					if (!sound) continue;
+				}
+				existingSoundFlags.set(sound._id, sound);
 			}
 
 			for (let effect of toRemove.effects) {
 				if (typeof effect === "string") {
-					effect = existingFlags.get(effect);
+					effect = existingEffectFlags.get(effect);
 					if (!effect) continue;
 				}
-				existingFlags.delete(effect._id);
+				existingEffectFlags.delete(effect._id);
 			}
 
-			let flagsToSet = Array.from(existingFlags);
+			for (let sound of toRemove.sounds) {
+				if (typeof sound === "string") {
+					sound = existingSoundFlags.get(sound);
+					if (!sound) continue;
+				}
+				existingSoundFlags.delete(sound._id);
+			}
 
-			let actorFlags = [];
+			let effectFlagsToSet = Array.from(existingEffectFlags);
+			let soundFlagsToSet = Array.from(existingSoundFlags);
+
+			let actorEffectFlags = [];
+			let actorSoundFlags = [];
 			let actor = object?.actor ?? object;
 			if (
 				actor instanceof foundry.documents.Actor &&
 				(isLinkedToken || isLinkedActor) &&
 				(toAdd.original || toRemove.original)
 			) {
-				actorFlags = flagsToSet.filter(
+				actorEffectFlags = effectFlagsToSet.filter(
 					(effect) => lib.is_UUID(effect[1]?.source) && effect[1]?.attachTo?.active && effect[1]?.persistOptions?.persistTokenPrototype,
 				);
-				flagsToSet = flagsToSet.filter(
+				effectFlagsToSet = effectFlagsToSet.filter(
 					(effect) => !effect[1]?.persistOptions?.persistTokenPrototype || !lib.is_UUID(effect[1]?.source) || !effect[1]?.attachTo?.active,
+				);
+				
+				actorSoundFlags = soundFlagsToSet.filter(
+					(sound) => lib.is_UUID(sound[1]?.source) && sound[1]?.attachTo?.active && sound[1]?.persistOptions?.persistTokenPrototype,
+				);
+				soundFlagsToSet = soundFlagsToSet.filter(
+					(sound) => !sound[1]?.persistOptions?.persistTokenPrototype || !lib.is_UUID(sound[1]?.source) || !sound[1]?.attachTo?.active,
 				);
 			}
 
 			let objectSanitizedUuid = object.uuid.replaceAll(".", "-");
-			if(flagsToSet.length) {
-				update[objectSanitizedUuid] = flagsToSet;
+			if(effectFlagsToSet.length) {
+				effectUpdate[objectSanitizedUuid] = effectFlagsToSet;
 			}else{
-				lib.forceDeletionKeyWrapper(update, "-=" + objectSanitizedUuid)
+				lib.forceDeletionKeyWrapper(effectUpdate, "-=" + objectSanitizedUuid)
+			}
+			
+			if(soundFlagsToSet.length) {
+				soundUpdate[objectSanitizedUuid] = soundFlagsToSet;
+			}else{
+				lib.forceDeletionKeyWrapper(soundUpdate, "-=" + objectSanitizedUuid)
 			}
 
 			if(actor instanceof foundry.documents.Actor) {
 				let actorSanitizedUuid = actor.uuid.replaceAll(".", "-");
-				if (actorFlags.length) {
-					update[actorSanitizedUuid] = actorFlags;
+				if (actorEffectFlags.length) {
+					effectUpdate[actorSanitizedUuid] = actorEffectFlags;
 				} else {
-					lib.forceDeletionKeyWrapper(update, "-=" + actorSanitizedUuid)
+					lib.forceDeletionKeyWrapper(effectUpdate, "-=" + actorSanitizedUuid)
+				}
+				if (actorSoundFlags.length) {
+					soundUpdate[actorSanitizedUuid] = actorSoundFlags;
+				} else {
+					lib.forceDeletionKeyWrapper(soundUpdate, "-=" + actorSanitizedUuid)
 				}
 			}
 		}
 
 		await database.update({
-			[CONSTANTS.EFFECTS_FLAG]: update
+			[CONSTANTS.EFFECTS_FLAG]: effectUpdate,
+			[CONSTANTS.SOUNDS_FLAG]: soundUpdate
 		});
 	}, 250),
+
+	soundMigrations: {},
 
 	/**
 	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
 	 *
 	 * @param inDocument
+	 * @param databaseFlags
 	 * @returns {array}
 	 */
-	getSoundFlags(inDocument) {
-		let sounds = foundry.utils.getProperty(inDocument, CONSTANTS.SOUNDS_FLAG);
+	getSoundFlags(inDocument, databaseFlags=null) {
+
+		if(!inDocument?.uuid) return [];
+
+		let allSounds = databaseFlags ?? this.getDatabaseFlags().sounds;
+		let sounds = allSounds[inDocument.uuid] ?? []
 
 		if (!sounds?.length) return [];
 
@@ -487,152 +556,11 @@ const flagManager = {
 		}
 
 		if (changes.length) {
-			flagManager.addSoundFlags(inDocument.uuid, changes);
+			flagManager.addFlags(inDocument.uuid, { effects: changes });
 		}
 
 		return sounds;
 	},
-
-	soundMigrations: {},
-
-	/**
-	 * Adds sounds to a given document
-	 *
-	 * @param inObjectUUID
-	 * @param inSounds
-	 */
-	addSoundFlags: (inObjectUUID, inSounds) => {
-		if (!Array.isArray(inSounds)) inSounds = [inSounds];
-		sequencerSocket.executeAsMainUser(
-			SOCKET_HANDLERS.ADD_EFFECT_FLAGS,
-			inObjectUUID,
-			inSounds,
-		);
-	},
-
-	/**
-	 * Removes sounds from a given document
-	 *
-	 * @param inObjectUUID
-	 * @param inSounds
-	 * @param removeAll
-	 */
-	removeSoundFlags: (inObjectUUID, inSounds, removeAll = false) => {
-		sequencerSocket.executeAsMainUser(
-			SOCKET_HANDLERS.REMOVE_EFFECT_FLAGS,
-			inObjectUUID,
-			inSounds,
-			removeAll,
-		);
-	},
-
-	_addSoundFlags: (sceneID, inSounds) => {
-		if (!Array.isArray(inSounds)) inSounds = [inSounds];
-
-		let flagsToSet = flagManager.flagAddBuffer.get(sceneID) ?? {
-			effects: [],
-		};
-
-		flagsToSet.effects.push(...inSounds);
-
-		flagManager.flagSoundAddBuffer.set(sceneID, flagsToSet);
-
-		flagManager.updateSoundFlags();
-	},
-
-	_removeSoundFlags: (sceneID, inSounds, removeAll = false) => {
-		if (inSounds && !Array.isArray(inSounds)) inSounds = [inSounds];
-
-		let flagsToSet = flagManager.flagRemoveBuffer.get(sceneID) ?? {
-			effects: [],
-			removeAll: removeAll,
-		};
-
-		if (inSounds) flagsToSet.effects.push(...inSounds);
-
-		flagManager.flagSoundRemoveBuffer.set(sceneID, flagsToSet);
-
-		flagManager.updateSoundFlags();
-	},
-
-	updateFlags: foundry.utils.debounce(async () => {
-
-		let soundFlagsToAdd = Array.from(flagManager.flagSoundAddBuffer);
-		let soundFlagsToRemove = Array.from(flagManager.flagSoundRemoveBuffer);
-
-		flagManager.flagSoundAddBuffer.clear();
-		flagManager.flagSoundRemoveBuffer.clear();
-
-		soundFlagsToAdd.forEach((entry) => (entry[1].original = true));
-		soundFlagsToRemove.forEach((entry) => (entry[1].original = true));
-
-		const scenes = new Set([
-			...soundFlagsToAdd.map((sound) => sound[0]).filter(Boolean),
-			...soundFlagsToRemove.map((sound) => sound[0]).filter(Boolean),
-		]);
-
-		soundFlagsToAdd = new Map(soundFlagsToAdd);
-		soundFlagsToRemove = new Map(soundFlagsToRemove);
-
-		const scenesToUpdate = {};
-
-		for (let sceneId of scenes) {
-			let scene = game.scenes.get(sceneId);
-
-			if (!scene) {
-				lib.debug(
-					`Failed to set flags on non-existent scene with ID: ${sceneId}`,
-				);
-				continue;
-			}
-
-			let soundsToAdd = soundFlagsToAdd.get(sceneId) ?? { sounds: [] };
-			let soundsToRemove = soundFlagsToRemove.get(sceneId) ?? {
-				sounds: [],
-				removeAll: false,
-			};
-
-			const existingFlags = new Map(
-				foundry.utils.getProperty(scene, CONSTANTS.SOUNDS_FLAG) ?? [],
-			);
-
-			if (soundsToRemove?.removeAll) {
-				soundsToRemove.sounds = Array.from(existingFlags).map((entry) => entry[0]);
-			}
-
-			for (let sound of soundsToAdd.sounds) {
-				if (typeof sound === "string") {
-					sound = existingFlags.get(sound);
-					if (!sound) continue;
-				}
-				existingFlags.set(sound.sound_id, sound);
-			}
-
-			for (let sound of soundsToRemove.sounds) {
-				if (typeof sound === "string") {
-					sound = existingFlags.get(sound);
-					if (!sound) continue;
-				}
-				existingFlags.delete(sound.sound_id);
-			}
-
-			let flagsToSet = Array.from(existingFlags);
-
-			scenesToUpdate[sceneId] = scenesToUpdate[sceneId] ?? {
-				updates: {},
-				documents: {},
-			};
-
-			scenesToUpdate[sceneId].updates[CONSTANTS.EFFECTS_FLAG] = flagsToSet;
-
-		}
-
-		for (const [sceneId, sceneData] of Object.entries(scenesToUpdate)) {
-			const scene = game.scenes.get(sceneId);
-			await scene.update(sceneData.updates);
-		}
-
-	}, 250),
 
 };
 

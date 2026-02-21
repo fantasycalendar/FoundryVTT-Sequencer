@@ -420,53 +420,68 @@ export function validateObject(inObject, sceneId) {
 }
 
 export function getPositionFromData(data, type="source", twister = false) {
-
   const source = data.nameOffsetMap[data[type]]
     ? data.nameOffsetMap[data[type]][type]
     : validateObject(data[type], data.sceneId);
 
-  const position =
-    source instanceof FoundryShim.PlaceableObject
+  const position = source instanceof FoundryShim.PlaceableObject
       ? get_object_position(source)
       : source?.worldPosition || source?.center || source;
 
-  const multiplier = data.randomOffset?.[type] ?? data.randomOffset;
-  twister = twister || lib.createMersenneTwister(data.seed);
+	let offset = getOffsetFromData(data, { source, type, twister });
 
-  if (source && multiplier) {
-    let randomOffset = get_random_offset(
-      source,
-      multiplier,
-      twister
-    );
-    position.x -= randomOffset.x;
-    position.y -= randomOffset.y;
-  }
+  return {
+		x: position.x - offset.x,
+	  y: position.y - offset.y,
+  };
+}
 
-  let extraOffset = data.offset;
-  if (extraOffset) {
-    let newOffset = {
-      x: extraOffset.x,
-      y: extraOffset.y,
-    };
-    if (extraOffset.gridUnits) {
-      newOffset.x *= canvas.grid.size;
-      newOffset.y *= canvas.grid.size;
-    }
-    if (extraOffset.local) {
-      newOffset = rotateAroundPoint(
-        0,
-        0,
-        newOffset.x,
-        newOffset.y,
-        source?.rotation ?? 0
-      );
-    }
-    position.x -= newOffset.x;
-    position.y -= newOffset.y;
-  }
+export function getOffsetFromData(data, { source = false, type = "source", twister = false }={}) {
+	if(!source){
+		source = data.nameOffsetMap[data[type]]
+			? data.nameOffsetMap[data[type]][type]
+			: validateObject(data[type], data.sceneId);
+	}
 
-  return position;
+	const multiplier = data.randomOffset?.[type];
+	twister = twister || lib.createMersenneTwister(data.seed);
+
+	let offset = { x: 0, y: 0 };
+
+	if (source && multiplier) {
+		let randomOffset = get_random_offset(
+			source,
+			multiplier,
+			twister
+		);
+		offset.x += randomOffset.x;
+		offset.y += randomOffset.y;
+	}
+
+	let extraOffset = data.offset;
+	if (extraOffset) {
+		let newOffset = {
+			x: extraOffset.x,
+			y: extraOffset.y,
+		};
+		if (extraOffset.gridUnits) {
+			newOffset.x *= canvas.grid.size;
+			newOffset.y *= canvas.grid.size;
+		}
+		if (extraOffset.local) {
+			newOffset = rotateAroundPoint(
+				0,
+				0,
+				newOffset.x,
+				newOffset.y,
+				source?.rotation ?? 0
+			);
+		}
+		offset.x += newOffset.x;
+		offset.y += newOffset.y;
+	}
+
+	return offset;
 }
 
 /**
