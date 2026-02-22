@@ -20,6 +20,7 @@ class SoundSection extends Section {
 		this._moveTowards = false;
 		this._global = false;
 		this._persist = false;
+		this._persistOptions = false;
 		this._loopOptions = false;
 	}
 
@@ -306,14 +307,34 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	persist(inBool = true) {
+	persist(inBool = true, inOptions = {}) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
 				"persist",
-				`inBool must be of type boolean`
+				"inBool must be of type boolean"
+			);
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"persist",
+				`inOptions must be of type object`
+			);
+		inOptions = foundry.utils.mergeObject(
+			{
+				id: foundry.utils.randomID(),
+				persistTokenPrototype: false
+			},
+			inOptions
+		);
+		if (typeof inOptions.persistTokenPrototype !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"persist",
+				"inOptions.persistTokenPrototype must be of type boolean"
 			);
 		this._persist = inBool;
+		this._persistOptions = inOptions;
 		return this;
 	}
 
@@ -606,7 +627,8 @@ class SoundSection extends Section {
 			origin: this._origin,
 			seed: `${this._name ?? "sequencer-sound"}-${foundry.utils.randomID()}-${this._currentRepetition}`,
 			nameOffsetMap: this.sequence.nameOffsetMap,
-			persist: this._persist
+			persist: this._persist,
+			persistOptions: this._persistOptions,
 		};
 
 		for (let override of this._overrides) {

@@ -461,16 +461,37 @@ export default class SequencerEffectManager {
 	static async initializePersistentEffects() {
 		await this.tearDownPersistentEffects();
 		let docEffectsMap = {};
-		for (let [uuid, effects] of Object.entries(flagManager.getDatabaseFlags().effects)) {
+		let databaseEffects = foundry.utils.deepClone(flagManager.getDatabaseFlags().effects);
+		let effectsToRemove = {}
+		for (let [uuid, effects] of Object.entries(databaseEffects)) {
 			let doc = fromUuidSync(uuid);
-			if (!doc) continue;
-			docEffectsMap[uuid] = effects;
+			if (doc instanceof FoundryShim.Actor && doc.prototypeToken.actorLink) {
+				for (let token of doc.getActiveTokens()) {
+					let tokenEffects = foundry.utils.deepClone(effects);
+					docEffectsMap[token.document.uuid] = tokenEffects.map(([id, effect]) => {
+						if (lib.is_UUID(effect.source)) {
+							effect.source = token.document.uuid;
+						}
+						effect.sceneId = canvas.scene.id;
+						return [id, effect];
+					})
+				}
+			} else if (doc) {
+				docEffectsMap[uuid] = effects;
+			} else {
+				effectsToRemove[uuid] = effects;
+			}
 		}
 		const promises = Object.entries(docEffectsMap)
 			.map(([uuid, effects]) => {
 				return this._playEffectMap(effects, fromUuidSync(uuid));
 			})
 			.flat();
+		for (let [uuid, effects] of Object.entries(effectsToRemove)) {
+			flagManager.removeFlags(uuid, {
+				effects, removeAllEffects: true
+			});
+		}
 		return Promise.all(promises).then(() => {
 			Hooks.callAll("sequencerEffectManagerReady");
 		});

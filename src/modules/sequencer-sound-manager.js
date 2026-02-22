@@ -7,6 +7,7 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import { SequencerFileBase } from "./sequencer-file.js";
 import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
+import FoundryShim from "../utils/foundry-shim.js";
 
 
 class SequencerSound {
@@ -44,12 +45,12 @@ class SequencerSound {
 		let source = inIdentifier;
 		let offsetMap = this._nameOffsetMap?.[inIdentifier];
 		if (offsetMap) {
-			if(specific){
+			if (specific) {
 				source = (returnSource
 						? offsetMap?.sourceObj || offsetMap?.targetObj
 						: offsetMap?.targetObj || offsetMap?.sourceObj
 				) || source;
-			}else {
+			} else {
 				source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
 			}
 		} else {
@@ -200,7 +201,7 @@ class SequencerSound {
 		this.sound.volume = this.data.volume * this.sound.volume_multiplier;
 	}
 
-	get volume_property(){
+	get volume_property() {
 		return "volume";
 	}
 
@@ -228,13 +229,12 @@ class SequencerSound {
 	}
 
 	static make(data) {
-		if(data.global) {
-			return new SequencerGlobalSound(data);
-		} else if (data.persist && data.source) {
+		if (data.persist && data.source && !data.global) {
 			return new SequencerPersistentSound(data);
-		} else if (data.source) {
+		} else if (data.source && !data.global) {
 			return new SequencerPlacedSound(data);
 		}
+		return new SequencerGlobalSound(data);
 	}
 
 	animate() {
@@ -246,7 +246,7 @@ class SequencerSound {
 	addFlags() {
 	}
 
-	fadeIn(){
+	fadeIn() {
 		this.sound.volume = 0.0;
 		SequencerAnimationEngine.addAnimation(this.data._id, {
 			target: this.sound,
@@ -332,13 +332,13 @@ class SequencerPlacedSound extends SequencerSound {
 		this._sourcePosition = null;
 		this._targetPosition = null;
 		this.position = this.sourcePosition;
-		if(this.isSourceDestroyed) {
+		if (this.isSourceDestroyed) {
 			this.stop();
 		}
 	}
 
 	get sourcePosition() {
-		if(this.data.attachTo?.active) {
+		if (this.data.attachTo?.active) {
 			if (!this.isSourceDestroyed) {
 				let position = canvaslib.get_object_position(this.source);
 				let offset = canvaslib.getOffsetFromData(this.data, { type: "source", twister: this.twister });
@@ -349,14 +349,14 @@ class SequencerPlacedSound extends SequencerSound {
 					elevation
 				};
 			}
-		} else if(!this._sourcePosition) {
+		} else if (!this._sourcePosition) {
 			this._sourcePosition = this.data.source ? canvaslib.getPositionFromData(this.data, "source", this.twister) : false;
 		}
 		return this._sourcePosition;
 	}
 
 	get targetPosition() {
-		if(!this._targetPosition) {
+		if (!this._targetPosition) {
 			this._targetPosition = this.data.target ? canvaslib.getPositionFromData(this.data, "target", this.twister) : false;
 		}
 		return this._targetPosition;
@@ -429,8 +429,8 @@ class SequencerPlacedSound extends SequencerSound {
 			this.sound.applyEffects(this.sound.effects);
 		}
 
-		if(this.data.attachTo?.active) {
-			if(this.sourceDocument.hidden){
+		if (this.data.attachTo?.active) {
+			if (this.sourceDocument.hidden) {
 				config.volume = 0;
 			}
 		}
@@ -440,8 +440,8 @@ class SequencerPlacedSound extends SequencerSound {
 
 	get playData() {
 		let volume = this.data.volume ?? 0.8;
-		if(this.data.attachTo?.active) {
-			if(this.sourceDocument.hidden){
+		if (this.data.attachTo?.active) {
+			if (this.sourceDocument.hidden) {
 				volume = 0;
 			}
 		}
@@ -458,7 +458,7 @@ class SequencerPlacedSound extends SequencerSound {
 	}
 
 	async play() {
-		if (!this.sound.loaded){
+		if (!this.sound.loaded) {
 			setTimeout(() => this.play(), 100);
 			return;
 		}
@@ -550,7 +550,7 @@ class SequencerPersistentSound extends SequencerPlacedSound {
 	}
 
 	get loopDuration() {
-		if(!this.started) {
+		if (!this.started) {
 			return this.duration - this.startOffset;
 		}
 		return this.duration;
@@ -559,11 +559,11 @@ class SequencerPersistentSound extends SequencerPlacedSound {
 	async play() {
 		if (this.ended) return;
 
-		if(this.currentLoop > this.loops && this.data.loopOptions?.endOnLastLoop) {
+		if (this.currentLoop > this.loops && this.data.loopOptions?.endOnLastLoop) {
 			return this.stop(true);
 		}
 
-		if ( game.audio.locked) {
+		if (game.audio.locked) {
 			setTimeout(() => this.play(), 100);
 			return;
 		}
@@ -572,7 +572,7 @@ class SequencerPersistentSound extends SequencerPlacedSound {
 
 		await this.sound.playAtPosition(this.sourcePosition, this.data.locationOptions?.radius || 1, this.playData);
 
-		if ( !this.sound.gain ) {
+		if (!this.sound.gain) {
 			setTimeout(() => this.play(), 100);
 			return;
 		}
@@ -583,23 +583,23 @@ class SequencerPersistentSound extends SequencerPlacedSound {
 
 		setTimeout(this.play.bind(this), this.loopDuration);
 
-		if(this.loops) {
+		if (this.loops) {
 			this.currentLoop += 1;
 		}
 
 		this.started = true;
 	}
 
-	fadeIn(){
+	fadeIn() {
 		let fadeInDuration = Math.min(this.data.fadeIn.duration, this.totalDuration)
 		if (this.creationTimeDelta <= fadeInDuration) {
 			super.fadeIn();
 		}
 	}
 
-	fadeOut(){
-		if(!this.ended) return;
-		if(this.data.fadeOut) {
+	fadeOut() {
+		if (!this.ended) return;
+		if (this.data.fadeOut) {
 			return super.fadeOut(0);
 		}
 		return 0;
@@ -614,7 +614,7 @@ class SequencerPersistentSound extends SequencerPlacedSound {
 	stop(removeFlags = false) {
 		this.ended = true;
 		let endDuration = this.fadeOut();
-		if(removeFlags) {
+		if (removeFlags) {
 			flagManager.removeFlags(this.context.uuid, { sounds: this.data });
 		}
 		setTimeout(() => {
@@ -707,16 +707,37 @@ export default class SequencerSoundManager {
 	static async initializePersistentSounds() {
 		await this.tearDownPersistentSounds();
 		let docSoundsMap = {};
-		for (let [uuid, sounds] of Object.entries(flagManager.getDatabaseFlags().sounds)) {
+		let soundsToRemove = {};
+		let databaseSounds = foundry.utils.deepClone(flagManager.getDatabaseFlags().sounds);
+		for (let [uuid, sounds] of Object.entries(databaseSounds)) {
 			let doc = fromUuidSync(uuid);
-			if (!doc) continue;
-			docSoundsMap[uuid] = sounds;
+			if (doc instanceof FoundryShim.Actor && doc.prototypeToken.actorLink) {
+				for (let token of doc.getActiveTokens()) {
+					let tokenSounds = foundry.utils.deepClone(sounds);
+					docSoundsMap[token.document.uuid] = tokenSounds.map(([id, sound]) => {
+						if (lib.is_UUID(sound.source)) {
+							sound.source = token.document.uuid;
+						}
+						sound.sceneId = canvas.scene.id;
+						return [id, sound];
+					})
+				}
+			} else if (doc) {
+				docSoundsMap[uuid] = sounds;
+			} else {
+				soundsToRemove[uuid] = sounds;
+			}
 		}
 		const promises = Object.entries(docSoundsMap)
 			.map(([uuid, sounds]) => {
 				return this._playSoundsMap(sounds, fromUuidSync(uuid));
 			})
 			.flat();
+		for (let [uuid, sounds] of Object.entries(soundsToRemove)) {
+			flagManager.removeFlags(uuid, {
+				sounds, removeAllSounds: true
+			});
+		}
 		return Promise.all(promises).then(() => {
 			Hooks.callAll("sequencerSoundManagerReady");
 		});

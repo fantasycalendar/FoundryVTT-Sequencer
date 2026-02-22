@@ -1,4 +1,5 @@
 export default {
+	Actor: foundry?.documents?.Actor ?? Actor,
 	PlaceableObject: foundry?.canvas?.placeables?.PlaceableObject ?? PlaceableObject,
 	Token: foundry?.canvas?.placeables?.Token ?? Token,
 	MeasuredTemplate: foundry?.canvas?.placeables?.MeasuredTemplate ?? MeasuredTemplate,
