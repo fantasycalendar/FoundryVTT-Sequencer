@@ -10,6 +10,7 @@
 - *Effects* - Due to the changes to the storage of effect data, setting `local: true` on the Sequence's `play()` method will no longer make the effect entirely local, and still store it in the DB without anyone else seeing it
 - *Sounds* - Added `.persist()`, which causes the sound to persist on the scene, very cool!
 - *Sounds* - Added `.attachTo()`, which attaches the sound to the target (only supports `bindVisibility` and `bindElevation` at this moment)
+- *Sounds* - Added `.panSound()` which causes the sound to pan left and right when the token you have selected moves to the right or left of the sound
 - *Sounds* - Added `.loopOptions()`, which controls the looping options of the sounds
 - *Sounds* - Added `.toLocation()`, which will evaluate the target location, but still play at the `.atLocation()` position - this is useful when the sound has multiple files for different ranges
 - *Sounds* - Added `.moveTowards()`, which will cause the sound to move towards the target location - best **not** used with `.toLocation()`

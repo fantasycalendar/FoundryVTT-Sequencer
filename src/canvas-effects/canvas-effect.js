@@ -1666,7 +1666,6 @@ export default class CanvasEffect extends PIXI.Container {
 					{ gridSize: file.template[0], startPoint: file.template[1], endPoint: file.template[2] },
 					this.data.template ?? {}
 				)
-
 		}
 		file.fileIndex = this.data.forcedIndex;
 		file.twister = this._twister;

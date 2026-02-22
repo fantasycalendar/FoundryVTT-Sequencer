@@ -1180,6 +1180,7 @@ declare global {
       HasAudio<SoundSection>,
       HasName<SoundSection>,
       HasTime<SoundSection>,
+      HasMovement<SoundSection>,
       HasLocation<SoundSection> {}
 
   abstract class SoundSection {
@@ -1198,12 +1199,26 @@ declare global {
 	  persist(inBool?: boolean, inOptions?: PersistOptions): this;
 
 	  /**
-	   * A smart method that can take a reference to an object, or a direct on the canvas to attach a sound to,
+	   * A smart method that can take a reference to an object on the canvas to attach a sound to,
 	   * or a string reference (see .name())
 	   */
 	  attachTo(
 		  inLocation: VisibleFoundryTypes | Vector2 | string,
 		  inOptions?: SoundAttachToOptions
+	  ): this;
+
+	  /**
+	   * A method that works much like stretchTo for effects, where this controls the file to be played if the sound is a database range finding one
+	   */
+	  toLocation(
+		  inLocation: VisibleFoundryTypes | Vector2 | string,
+		  inOptions?: {
+			  cacheLocation?: boolean;
+			  offset?: Vector2;
+			  randomOffset?: number;
+			  gridUnits?: boolean;
+			  local?: boolean;
+		  }
 	  ): this;
 
     /**
@@ -1230,6 +1245,16 @@ declare global {
      * Whether the sound will play for GMs as if they were hearing it at the origin of the sound.
      */
     alwaysForGMs(inBool: boolean): this;
+
+    /**
+     * Whether this sound will ignore all atLocation and attachTo methods and always play globally
+     */
+    globalSound(inBool: boolean): this;
+
+    /**
+     * Whether the sound will consider the position of the sound and the position of the listener to pan the audio right and left
+     */
+    panSound(inBool: boolean): this;
 
     /**
      * An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.

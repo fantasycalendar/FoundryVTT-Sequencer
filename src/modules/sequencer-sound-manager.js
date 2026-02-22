@@ -8,6 +8,7 @@ import { SequencerFileBase } from "./sequencer-file.js";
 import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
 import FoundryShim from "../utils/foundry-shim.js";
+import soucePosition from "../utils/plugins-manager.js";
 
 
 class SequencerSound {
@@ -27,10 +28,38 @@ class SequencerSound {
 		this.playSound = game.settings.get("sequencer", "soundsEnabled") &&
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
-
+		this.panner = null;
 		this.loops = this.data.loopOptions.loops ?? 0;
 		this.loopDelay = this.data.loopOptions.loopDelay ?? 0;
 		this.currentLoop = 0;
+		this._sourcePosition = null;
+		this._targetPosition = null;
+		this.position = this.sourcePosition;
+	}
+
+	get sourcePosition() {
+		if (this.data.attachTo?.active) {
+			if (!this.isSourceDestroyed) {
+				let position = canvaslib.get_object_position(this.source);
+				let offset = canvaslib.getOffsetFromData(this.data, { type: "source", twister: this.twister });
+				let elevation = this.data.attachTo.bindElevation ? position.elevation : 0;
+				this._sourcePosition = {
+					x: position.x - offset.x,
+					y: position.y - offset.y,
+					elevation
+				};
+			}
+		} else if (!this._sourcePosition) {
+			this._sourcePosition = this.data.source ? canvaslib.getPositionFromData(this.data, "source", this.twister) : false;
+		}
+		return this._sourcePosition;
+	}
+
+	get targetPosition() {
+		if (!this._targetPosition) {
+			this._targetPosition = this.data.target ? canvaslib.getPositionFromData(this.data, "target", this.twister) : false;
+		}
+		return this._targetPosition;
 	}
 
 	_validateObject(inObject) {
@@ -208,7 +237,17 @@ class SequencerSound {
 	get file() {
 		if (this._file) return this._file;
 		let file;
-		if (Sequencer.Database.entryExists(this.data.file)) {
+
+		if (this.data.customRange) {
+			const template = this.data.template
+				? [this.data.template.gridSize, this.data.template.startPoint, this.data.template.endPoint]
+				: [100, 0, 0];
+			file = SequencerFileBase.make(
+				this.data.file,
+				"temporary.range.file",
+				{ template },
+			);
+		} else if (Sequencer.Database.entryExists(this.data.file)) {
 			file = Sequencer.Database.getEntry(this.data.file).clone();
 		} else {
 			file = SequencerFileBase.make(this.data.file);
@@ -222,6 +261,10 @@ class SequencerSound {
 	}
 
 	getFile() {
+		if (this.file.rangeFind && this.source && this.target){
+			let distance = (new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition)).distance;
+			return this.file.getFileForDistance(distance);
+		}
 		return this.file.getFile();
 	}
 
@@ -329,37 +372,9 @@ class SequencerPlacedSound extends SequencerSound {
 
 	constructor(data) {
 		super(data);
-		this._sourcePosition = null;
-		this._targetPosition = null;
-		this.position = this.sourcePosition;
 		if (this.isSourceDestroyed) {
 			this.stop();
 		}
-	}
-
-	get sourcePosition() {
-		if (this.data.attachTo?.active) {
-			if (!this.isSourceDestroyed) {
-				let position = canvaslib.get_object_position(this.source);
-				let offset = canvaslib.getOffsetFromData(this.data, { type: "source", twister: this.twister });
-				let elevation = this.data.attachTo.bindElevation ? position.elevation : 0;
-				this._sourcePosition = {
-					x: position.x - offset.x,
-					y: position.y - offset.y,
-					elevation
-				};
-			}
-		} else if (!this._sourcePosition) {
-			this._sourcePosition = this.data.source ? canvaslib.getPositionFromData(this.data, "source", this.twister) : false;
-		}
-		return this._sourcePosition;
-	}
-
-	get targetPosition() {
-		if (!this._targetPosition) {
-			this._targetPosition = this.data.target ? canvaslib.getPositionFromData(this.data, "target", this.twister) : false;
-		}
-		return this._targetPosition;
 	}
 
 	get volume_property() {
@@ -371,11 +386,6 @@ class SequencerPlacedSound extends SequencerSound {
 			...super.playbackOptions,
 			delay: this.started ? (this.data?.loopOptions?.loopDelay / 1000) ?? 0 : 0
 		}
-	}
-
-	getFile() {
-		let distance = (new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition)).distance;
-		return this.file.getFileForDistance(distance);
 	}
 
 	update() {
@@ -392,32 +402,42 @@ class SequencerPlacedSound extends SequencerSound {
 			muffledEffect = { type: "lowpass", intensity: 5 }
 		} = this.data.locationOptions ?? {};
 
+		let sourcePosition = this.sourcePosition;
+
 		const source = new CONFIG.Canvas.soundSourceClass({ object: null });
 		source.initialize({
-			x: this.sourcePosition.x,
-			y: this.sourcePosition.y,
-			elevation: this.sourcePosition.elevation ?? 0,
+			x: sourcePosition.x,
+			y: sourcePosition.y,
+			elevation: sourcePosition.elevation ?? 0,
 			radius: canvas.dimensions.distancePixels * radius,
 			walls,
 			...sourceData
 		});
 
-		const config = { sound: this.sound, source, listener: undefined, volume: 0, walls, muffled: false };
+		const config = { sound: this.sound, source, listener: undefined, volume: 0, walls, muffled: false, pan: 0 };
 
 		// Configure playback volume using the closest listener position
-		const listeners = (gmAlways && game.user.isGM) ? [this.sourcePosition] : canvas.sounds.getListenerPositions();
+		const listeners = (gmAlways && game.user.isGM) ? [sourcePosition] : canvas.sounds.getListenerPositions();
 		for (const l of listeners) {
 			const v = volume * source.getVolumeMultiplier(l, { easing });
 			Object.assign(config, { listener: l, volume: v });
+			let ray = new foundry.canvas.geometry.Ray(l, sourcePosition)
+			if(this.data.panSound) {
+				const x = ray.dx / ray.distance;
+				const sign = Math.sign(x);
+				const a = Math.min(1, Math.abs(x));
+				config.pan = sign * Math.pow(a, 1.6)
+			}
 		}
 		canvas.sounds._configurePlayback(config);
 
+		let applyEffect = false;
 		let hasMuffledEffect = this.sound.effects.findIndex(e => e.type === muffledEffect.type);
 
 		if (hasMuffledEffect > -1 && !config.muffled) {
 			this.sound.effects[hasMuffledEffect].disconnect();
 			this.sound.effects.splice(hasMuffledEffect, 1);
-			this.sound.applyEffects(this.sound.effects);
+			applyEffect = true;
 		} else if (hasMuffledEffect === -1 && config.muffled) {
 			const sfx = CONFIG.soundEffects;
 			let effect;
@@ -426,6 +446,20 @@ class SequencerPlacedSound extends SequencerSound {
 				effect = new muffledCfg.effectClass(this.sound.context, muffledEffect);
 				this.sound.effects.push(effect);
 			}
+			applyEffect = true;
+		}
+
+		let hasPanner = this.sound.effects.findIndex(e => e.type === "panner");
+		if(this.data.panSound) {
+			this.panner ||= this.sound.context.createStereoPanner();
+			this.panner.type = "panner"
+			if (hasPanner === -1) {
+				this.sound.effects.push(this.panner);
+				applyEffect = true;
+			}
+		}
+
+		if(applyEffect) {
 			this.sound.applyEffects(this.sound.effects);
 		}
 
@@ -436,6 +470,13 @@ class SequencerPlacedSound extends SequencerSound {
 		}
 
 		this.sound.volume = config.volume * this.sound.volume_multiplier;
+
+		if(this.data.panSound) {
+			const t = this.sound.context.currentTime;
+			this.panner.pan.cancelScheduledValues(t);
+			this.panner.pan.setValueAtTime(this.panner.pan.value, t);
+			this.panner.pan.linearRampToValueAtTime(config.pan, t + 0.03);
+		}
 	}
 
 	get playData() {
@@ -528,6 +569,9 @@ class SequencerPlacedSound extends SequencerSound {
 
 	stop() {
 		canvas.app.ticker.remove(this.update, this);
+		if (this.panner) {
+			this.panner.disconnect();
+		}
 		this.sound.stop();
 		this.ended = true;
 	}

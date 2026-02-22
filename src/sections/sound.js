@@ -22,6 +22,7 @@ class SoundSection extends Section {
 		this._persist = false;
 		this._persistOptions = false;
 		this._loopOptions = false;
+		this._panSound = false;
 	}
 
 	get _target() {
@@ -307,6 +308,17 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	panSound(inBool = true) {
+		if (typeof inBool !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"panSound",
+				`inBool must be of type boolean`
+			);
+		this._panSound = inBool;
+		return this;
+	}
+
 	persist(inBool = true, inOptions = {}) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -469,18 +481,6 @@ class SoundSection extends Section {
 	async run() {
 		const playData = await this._sanitizeSoundData();
 
-		if (typeof playData.file !== "string" || playData.file === "") {
-			if (this.sequence.softFail) {
-				playData.play = false;
-			} else {
-				throw this.sequence._customError(
-					this,
-					"file",
-					"a sound must have a file of type string!",
-				);
-			}
-		}
-
 		if (!playData.play && this.sequence.softFail) {
 			return new Promise((reject) => {
 				reject();
@@ -567,12 +567,13 @@ class SoundSection extends Section {
 			};
 		}
 
-		let { file, forcedIndex } = await this._determineFile(this._file);
+		let { file, forcedIndex, customRange } = await this._determineFile(this._file);
 
 		if (!file) {
 			return {
 				play: false,
 				file: false,
+				customRange: false
 			};
 		}
 
@@ -582,6 +583,7 @@ class SoundSection extends Section {
 			play: true,
 			file: file.dbPath ?? file,
 			forcedIndex,
+			customRange,
 			creationTimestamp: Date.now(),
 			creatorUserId: game.user.id,
 			source: this._getSourceObject(),
@@ -629,6 +631,7 @@ class SoundSection extends Section {
 			nameOffsetMap: this.sequence.nameOffsetMap,
 			persist: this._persist,
 			persistOptions: this._persistOptions,
+			panSound: this._panSound
 		};
 
 		for (let override of this._overrides) {
