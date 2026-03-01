@@ -1254,7 +1254,7 @@ declare global {
     /**
      * Whether the sound will consider the position of the sound and the position of the listener to pan the audio right and left
      */
-    panSound(inBool: boolean): this;
+    panSound(inBool: boolean, inOptions: PanSoundOptions): this;
 
     /**
      * An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
@@ -1265,7 +1265,16 @@ declare global {
      * An effect to be applied on the sound when it is heard through a wall.
      */
     muffledEffect(options: SoundEffect): this;
+
+	  /**
+	   * This method only modifies .persist()-ed sounds and causes them to not immediately end, but stick around for the given duration passed to this method.
+	   */
+	  extraEndDuration(inExtraDuration: number): this;
   }
+
+	type PanSoundOptions = {
+		distanceToEase: number;
+	};
 
   type SoundEffect = {
     type: string;

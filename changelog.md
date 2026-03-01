@@ -11,6 +11,8 @@
 - *Sounds* - Added `.persist()`, which causes the sound to persist on the scene, very cool!
 - *Sounds* - Added `.attachTo()`, which attaches the sound to the target (only supports `bindVisibility` and `bindElevation` at this moment)
 - *Sounds* - Added `.panSound()` which causes the sound to pan left and right when the token you have selected moves to the right or left of the sound
+  - You can control the distance from which it starts panning with `innerEaseDistance`, which is how many grid units away from the source that the ease starts. Use `outerEaseDistance` to control where the sound will be fully panning - if `innerEaseDirstance` is set to 10, and `outerEaseDistance` is set to 30, within 10 grid units the sound will not be panning, between 10 and 30 it will slowly blend to a panning sound, and beyond 30 it will be fully panning
+- *Sounds* - Added `.extraEndDuration()`, which adds additional ending duration to persisted sounds
 - *Sounds* - Added `.loopOptions()`, which controls the looping options of the sounds
 - *Sounds* - Added `.toLocation()`, which will evaluate the target location, but still play at the `.atLocation()` position - this is useful when the sound has multiple files for different ranges
 - *Sounds* - Added `.moveTowards()`, which will cause the sound to move towards the target location - best **not** used with `.toLocation()`

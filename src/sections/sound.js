@@ -6,7 +6,6 @@ import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlacea
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import flagManager from "../utils/flag-manager.js";
-import SequencerFileCache from "../modules/sequencer-file-cache.js";
 
 class SoundSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -23,6 +22,7 @@ class SoundSection extends Section {
 		this._persistOptions = false;
 		this._loopOptions = false;
 		this._panSound = false;
+		this._extraEndDuration = false;
 	}
 
 	get _target() {
@@ -308,14 +308,60 @@ class SoundSection extends Section {
 		return this;
 	}
 
-	panSound(inBool = true) {
+	panSound(inBool = true, inOptions = {}) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
 				"panSound",
 				`inBool must be of type boolean`
 			);
-		this._panSound = inBool;
+		if (typeof inOptions !== "object")
+			throw this.sequence._customError(
+				this,
+				"panSound",
+				`inOptions must be of type object`
+			);
+		inOptions = foundry.utils.mergeObject(
+			{
+				innerEaseDistance: 0,
+				outerEaseDistance: 0,
+			},
+			inOptions
+		);
+		if (typeof inOptions.innerEaseDistance !== "number")
+			throw this.sequence._customError(
+				this,
+				"panSound",
+				"inOptions.innerEaseDistance must be of type number"
+			);
+		if (typeof inOptions.outerEaseDistance !== "number")
+			throw this.sequence._customError(
+				this,
+				"panSound",
+				"inOptions.outerEaseDistance must be of type number"
+			);
+		if(inOptions.innerEaseDistance > 0 && inOptions.outerEaseDistance > 0 && inOptions.innerEaseDistance >= inOptions.outerEaseDistance){
+			throw this.sequence._customError(
+				this,
+				"panSound",
+				"inOptions.innerEaseDistance must be less than inOptions.outerEaseDistance"
+			);
+		}
+		this._panSound = {
+			active: inBool,
+			...inOptions,
+		};
+		return this;
+	}
+
+	extraEndDuration(inExtraDuration){
+		if (typeof inExtraDuration !== "number")
+			throw this.sequence._customError(
+				this,
+				"extraEndDuration",
+					"inExtraDuration must be of type number"
+			);
+		this._extraEndDuration = inExtraDuration;
 		return this;
 	}
 
@@ -631,7 +677,8 @@ class SoundSection extends Section {
 			nameOffsetMap: this.sequence.nameOffsetMap,
 			persist: this._persist,
 			persistOptions: this._persistOptions,
-			panSound: this._panSound
+			panSound: this._panSound,
+			extraEndDuration: this._extraEndDuration
 		};
 
 		for (let override of this._overrides) {

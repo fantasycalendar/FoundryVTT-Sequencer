@@ -12,8 +12,12 @@
   $: effects = Object.values($VisibleEffects);
 
   $: sounds = Object.values($RunningSounds);
+
   $: persistentEffects = effects.filter(effect => effect.data.persist);
   $: temporaryEffects = effects.filter(effect => !effect.data.persist);
+
+  $: persistentSounds = sounds.filter(effect => effect.data.persist);
+  $: temporarySounds = sounds.filter(effect => !effect.data.persist);
 
   function endAllEffects() {
     Sequencer.EffectManager.endEffects({
@@ -24,7 +28,6 @@
   function endAllSounds() {
     SequencerSoundManager.endSounds({
       sounds: Object.entries($RunningSounds)
-        .filter(e => e[1].sound_playing)
         .map(e => e[0])
 		});
   }
@@ -80,14 +83,27 @@
     </button>
 
     <div>
+	    {#if persistentSounds.length}
+		    <h2>{localize("SEQUENCER.Manager.PersistentSounds")}</h2>
+		    <div>
+			    {#each persistentSounds as sound (sound.id)}
+				    <SoundEntry {sound} />
+			    {/each}
+		    </div>
+	    {/if}
 
-      <h2>{localize("SEQUENCER.Manager.Sounds")}</h2>
+	    {#if temporarySounds.length && persistentSounds.length}
+		    <hr />
+	    {/if}
 
-      <div>
-        {#each sounds as sound (sound.id)}
-          <SoundEntry {sound}/>
-        {/each}
-      </div>
+	    {#if temporarySounds.length}
+		    <h2>{localize("SEQUENCER.Manager.TemporarySounds")}</h2>
+		    <div>
+			    {#each temporarySounds as sound (sound.id)}
+				    <SoundEntry {sound} />
+			    {/each}
+		    </div>
+	    {/if}
     </div>
 
   {/if}
