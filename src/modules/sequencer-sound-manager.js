@@ -10,6 +10,14 @@ import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
 import FoundryShim from "../utils/foundry-shim.js";
 
+
+const SOUND_STATES = {
+	STARTING: 0,
+	PLAYING: 1,
+	ENDING: 2,
+	ENDED: 3
+}
+
 const global_sound_mixin = (base_class) =>
 	class extends base_class {
 		get playData() {
@@ -27,9 +35,11 @@ const global_sound_mixin = (base_class) =>
 
 const placed_sound_mixin = (base_class) =>
 	class extends base_class {
+
+		movementDuration = 0;
+
 		constructor(...args) {
 			super(...args);
-			this.movementDuration = 0;
 			if (this.isSourceDestroyed) {
 				this.stop();
 			}
@@ -50,7 +60,7 @@ const placed_sound_mixin = (base_class) =>
 					);
 					this.movementDuration = (distance / this.data.moveSpeed) * 1000;
 				}
-				if (this.movementDuration > this.creationTimeDelta) {
+				if (this.creationTimeDelta > this.movementDuration) {
 					this.position = this.targetPosition;
 				}
 			}
@@ -61,7 +71,7 @@ const placed_sound_mixin = (base_class) =>
 		}
 
 		update() {
-			if (!this.started) return;
+			if (this.state !== SOUND_STATES.PLAYING) return;
 
 			let volume = this.data.volume ?? 0.8;
 
@@ -247,47 +257,159 @@ const persistent_sound_mixin = (base_class) =>
 
 		get startOffset() {
 			let offset = (this.startTime ?? 0);
-			if (this.creationTimeDelta > this.soundDuration && !this.started) {
+			if (this.creationTimeDelta > this.soundDuration && this.state === SOUND_STATES.STARTING) {
 				offset += this.creationTimeDelta % this.duration;
 			}
 			return offset;
 		}
 
 		get loopDuration() {
-			if (!this.started) {
-				return this.duration - this.startOffset;
+			if (this.state === SOUND_STATES.STARTING) {
+				return super.loopDuration -  this.startOffset;
 			}
-			return this.duration;
+			return super.loopDuration;
 		}
 	}
 
-
 class SequencerSound {
+	
+	/**
+	 * @property {string} id - Unique identifier for the sound.
+	 */
+	id;
+
+	/**
+	 * @property {Object} data - The data associated with the sound.
+	 */
+	data;
+
+	/**
+	 * @property {Object} twister - Mersenne Twister instance for random number generation.
+	 */
+	twister;
+
+	/**
+	 * @property {number} actualCreationTime - The actual creation time of the sound.
+	 */
+	actualCreationTime;
+
+	/**
+	 * @property {number} creationTimeDelta - The difference in time since the sound was created and when it started playing.
+	 */
+	creationTimeDelta;
+
+	/**
+	 * @property {number} state - The current state of the sound.
+	 * Possible values are:
+	 * - 0: STARTING - The sound is in the process of starting.
+	 * - 1: PLAYING - The sound is currently playing.
+	 * - 2: ENDING - The sound is in the process of ending.
+	 * - 3: ENDED - The sound has finished playing.
+	 */
+	state;
+
+	/**
+	 * @property {Object|null} sound - The sound object instance.
+	 */
+	sound;
+
+	/**
+	 * @property {number|null} totalDuration - The total playback duration of the sound.
+	 */
+	totalDuration;
+
+	/**
+	 * @property {number|null} soundDuration - The duration of the actual sound file.
+	 */
+	soundDuration;
+
+	/**
+	 * @property {number|null} startTime - The start time of the sound in milliseconds.
+	 */
+	startTime;
+
+	/**
+	 * @property {number|null} endTime - The end time of the sound in milliseconds.
+	 */
+	endTime;
+
+	/**
+	 * @private
+	 * @property {Object|null} #file - The file metadata associated with the sound.
+	 */
+	#file;
+
+	/**
+	 * @property {boolean} shouldPlaySound - Whether the sound should play based on user settings.
+	 */
+	shouldPlaySound;
+
+	/**
+	 * @property {Object|null} panner - Stereo panner node for sound effects.
+	 */
+	panner;
+
+	/**
+	 * @property {number} loops - Number of loops the sound is configured to play.
+	 */
+	loops;
+
+	/**
+	 * @property {number} loopDelay - Delay between loops in milliseconds.
+	 */
+	loopDelay;
+
+	/**
+	 * @property {number} currentLoop - The current loop count.
+	 */
+	currentLoop = 0;
+
+	/**
+	 * @property {Object|null} _sourcePosition - The source position of the sound on canvas.
+	 */
+	_sourcePosition;
+
+	/**
+	 * @property {Object|null} _targetPosition - The target position of the sound on canvas.
+	 */
+	_targetPosition;
+
+	/**
+	 * @property {Object|null} loopTimes - Information about the loop's start and end times.
+	 */
+	loopTimes;
+
+	/**
+	 * @property {Object|null} position - The current playback position of the sound.
+	 */
+	position;
+	
+	
 	constructor(data) {
 		this.id = data._id
 		this.data = data;
 		this.twister = lib.createMersenneTwister(data.seed);
 		this.actualCreationTime = (+new Date());
 		this.creationTimeDelta = this.actualCreationTime - this.data.creationTimestamp;
-		this.started = false;
-		this.ended = false;
-		this.sound = null;
-		this.totalDuration = null;
-		this.soundDuration = null;
-		this.startTime = null;
-		this.endTime = null;
-		this._file = null;
+		this.state = SOUND_STATES.STARTING;
 		this.shouldPlaySound = game.settings.get("sequencer", "soundsEnabled") &&
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
 		this.panner = null;
 		this.loops = this.data.loopOptions.loops ?? 0;
 		this.loopDelay = this.data.loopOptions.loopDelay ?? 0;
-		this.currentLoop = 0;
-		this._sourcePosition = null;
-		this._targetPosition = null;
-		this.loopTimes = null;
 		this.position = this.sourcePosition;
+	}
+
+	static make(data) {
+		if (data.persist && data.source && !data.global) {
+			return new SequencerPersistentPlacedSound(data);
+		} else if (data.source && !data.global) {
+			return new SequencerPlacedSound(data);
+		} else if (data.persist) {
+			return new SequencerPersistentGlobalSound(data);
+		}
+		return new SequencerGlobalSound(data);
 	}
 
 	get sourcePosition() {
@@ -424,24 +546,35 @@ class SequencerSound {
 		return (this.startTime ?? 0)
 	}
 
+	get looping() {
+		return this.loopTimes && this.state === SOUND_STATES.PLAYING;
+	}
+
 	get playbackOptions() {
 		let loopStart = (this.startTime ?? 0);
 		let loopEnd = (this.endTime ?? 0);
+		let offset = this.startOffset / 1000;
 		if(this.loopTimes){
-			if(this.currentLoop > 0){
+			if(this.state === SOUND_STATES.PLAYING){
 				loopStart = this.loopTimes.loopStart;
+				offset = this.loopTimes.loopStart;
 			}
-			if(this.currentLoop < this.loops){
+			if(this.state === SOUND_STATES.STARTING || this.state === SOUND_STATES.PLAYING){
 				loopEnd = this.loopTimes.loopEnd;
 			}
+			if(this.state === SOUND_STATES.ENDING){
+				loopStart = this.loopTimes.forcedEnd || this.loopTimes.loopEnd;
+			}
 		}
+		let loop = this.looping;
 		return {
+			loop,
+			offset,
 			loopStart: loopStart / 1000,
 			loopEnd: loopEnd / 1000,
-			offset: !this.loopTimes ? this.startOffset / 1000 : 0,
 			channel: this.data.channel || "interface",
-			delay: this.started ? (this.data?.loopOptions?.loopDelay / 1000) ?? 0 : 0
-		}
+			delay: 0
+		};
 	}
 
 	async load() {
@@ -510,7 +643,9 @@ class SequencerSound {
 	}
 
 	get file() {
-		if (this._file) return this._file;
+		if (this.#file){
+			return this.#file;
+		}
 		let file;
 
 		if (this.data.customRange) {
@@ -531,7 +666,7 @@ class SequencerSound {
 		if (lib.is_real_number(this.data.forcedIndex)) {
 			file.fileIndex = this.data.forcedIndex;
 		}
-		this._file = file;
+		this.#file = file;
 		return file;
 	}
 
@@ -544,10 +679,13 @@ class SequencerSound {
 	}
 
 	async playSound(){
+		throw new Error("NotImplementedError: playSound() must be implemented by a subclass of SequencerSound.");
 	}
 
-	async play() {
-		if (this.ended) return;
+	async play(forcePlay=false) {
+		if (this.state === SOUND_STATES.ENDED){
+			return;
+		}
 
 		if (this.currentLoop > this.loops && this.data.loopOptions?.endOnLastLoop) {
 			return this.stop(true);
@@ -558,36 +696,41 @@ class SequencerSound {
 			return;
 		}
 
-		await this.sound.stop();
-		await this.playSound();
+		if(!this.sound.loop || forcePlay) {
+			await this.sound.stop();
+			await this.playSound();
+		}
 
 		if (!this.sound.gain) {
 			setTimeout(() => this.play(), 100);
 			return;
 		}
 
-		if (!this.started) {
+		if (this.state === SOUND_STATES.STARTING) {
 			this.animate();
 		}
-
-		setTimeout(this.play.bind(this), this.loopDuration);
 
 		if (this.loops) {
 			this.currentLoop += 1;
 		}
 
-		this.started = true;
+		if(!this.sound.loop) {
+			setTimeout(this.play.bind(this), this.loopDuration);
+		}
+
+		this.state = SOUND_STATES.PLAYING;
 	}
 
-	static make(data) {
-		if (data.persist && data.source && !data.global) {
-			return new SequencerPersistentPlacedSound(data);
-		} else if (data.source && !data.global) {
-			return new SequencerPlacedSound(data);
-		} else if (data.persist) {
-			return new SequencerPersistentGlobalSound(data);
+	get loopDuration() {
+		let duration = this.duration;
+		if (this.loopTimes){
+			if(this.state === SOUND_STATES.STARTING){
+				duration = this.loopTimes.loopEnd;
+			} else if (this.state === SOUND_STATES.PLAYING) {
+				duration = this.loopTimes.loopEnd - this.loopTimes.loopStart;
+			}
 		}
-		return new SequencerGlobalSound(data);
+		return duration;
 	}
 
 	animate() {
@@ -603,12 +746,34 @@ class SequencerSound {
 	}
 
 	stop() {
-		this.ended = true;
+		if(this.loopTimes){
+			this.state = SOUND_STATES.ENDING;
+			let currentTime = this.sound.currentTime * 1000;
+
+			let lastLoopWaitDuration = currentTime > this.loopTimes.loopStart
+				? this.loopTimes.loopEnd - currentTime
+				: this.loopTimes.loopStart - currentTime;
+
+			if(this.loopTimes.forcedEnd) {
+				this.play(true);
+			}else{
+				setTimeout(() => {
+					this.play(true);
+				}, lastLoopWaitDuration);
+			}
+			let stopWaitDuration = this.loopTimes.forcedEnd
+				? this.duration - this.loopTimes.forcedEnd
+				: lastLoopWaitDuration + (this.duration - this.loopTimes.loopEnd);
+			return setTimeout(() => {
+				this.state = SOUND_STATES.ENDED;
+				this.sound.stop();
+			}, stopWaitDuration);
+		}
+		this.state = SOUND_STATES.ENDED;
 		this.sound.stop();
 	}
 
 	fadeIn() {
-		if(!this.data.fadeIn) return;
 		this.sound.volume = 0.0;
 		SequencerAnimationEngine.addAnimation(this.data._id, {
 			target: this.sound,
@@ -624,8 +789,6 @@ class SequencerSound {
 
 	fadeOut(immediate = false) {
 		let fadeOut = this.data.fadeOut;
-		if (!fadeOut) return;
-
 		let duration = Math.min(fadeOut.duration, this.duration);
 		let delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
