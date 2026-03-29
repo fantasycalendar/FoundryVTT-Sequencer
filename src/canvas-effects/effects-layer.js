@@ -106,7 +106,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 
 	_drawVisualizedSounds() {
 		let sound = SelectionManager.hoveredSoundUI;
-		if(!sound || sound.ended || !sound.data.source) return;
+		if(!sound || sound.status === SequencerSoundManager.states.ENDED || !sound.data.source) return;
 
 		let radius = (sound.data.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
 		let data = {

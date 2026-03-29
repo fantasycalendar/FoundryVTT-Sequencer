@@ -44,6 +44,7 @@
 	}
 
 	function endSound() {
+		SelectionManager.hoveredSoundUI = false;
 		SequencerSoundManager.endSounds({ sounds: [sound.id] }, true);
 	}
 
