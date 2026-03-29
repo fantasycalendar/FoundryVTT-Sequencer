@@ -10,13 +10,12 @@ import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
 import FoundryShim from "../utils/foundry-shim.js";
 
-
 const SOUND_STATES = {
 	STARTING: 0,
 	PLAYING: 1,
 	ENDING: 2,
-	ENDED: 3
-}
+	ENDED: 3,
+};
 
 const global_sound_mixin = (base_class) =>
 	class extends base_class {
@@ -28,14 +27,13 @@ const global_sound_mixin = (base_class) =>
 			};
 		}
 
-		async playSound(){
+		async playSound() {
 			this.sound.play(this.playData);
 		}
-	}
+	};
 
 const placed_sound_mixin = (base_class) =>
 	class extends base_class {
-
 		movementDuration = 0;
 
 		constructor(...args) {
@@ -49,10 +47,10 @@ const placed_sound_mixin = (base_class) =>
 			return "volume_multiplier";
 		}
 
-		async load(){
+		async load() {
 			await super.load();
 			this.movementDuration = this.totalDuration;
-			if(this.moveTowards) {
+			if (this.moveTowards) {
 				if (this.data.moveSpeed) {
 					const distance = canvaslib.distance_between(
 						this.sourcePosition,
@@ -67,7 +65,11 @@ const placed_sound_mixin = (base_class) =>
 		}
 
 		async playSound() {
-			await this.sound.playAtPosition(this.position, this.data.locationOptions?.radius || 1, this.playData);
+			await this.sound.playAtPosition(
+				this.position,
+				this.data.locationOptions?.radius || 1,
+				this.playData
+			);
 		}
 
 		update() {
@@ -81,7 +83,7 @@ const placed_sound_mixin = (base_class) =>
 				gmAlways = false,
 				sourceData = {},
 				radius = 1,
-				muffledEffect = { type: "lowpass", intensity: 5 }
+				muffledEffect = { type: "lowpass", intensity: 5 },
 			} = this.data.locationOptions ?? {};
 
 			let sourcePosition = this.sourcePosition;
@@ -93,31 +95,52 @@ const placed_sound_mixin = (base_class) =>
 				elevation: sourcePosition.elevation ?? 0,
 				radius: canvas.dimensions.distancePixels * radius,
 				walls,
-				...sourceData
+				...sourceData,
 			});
 
-			const config = { sound: this.sound, source, listener: undefined, volume: 0, walls, muffled: false, pan: 0 };
+			const config = {
+				sound: this.sound,
+				source,
+				listener: undefined,
+				volume: 0,
+				walls,
+				muffled: false,
+				pan: 0,
+			};
 
 			// Configure playback volume using the closest listener position
-			const listeners = (gmAlways && game.user.isGM) ? [sourcePosition] : canvas.sounds.getListenerPositions();
+			const listeners =
+				gmAlways && game.user.isGM
+					? [sourcePosition]
+					: canvas.sounds.getListenerPositions();
 			for (const l of listeners) {
 				const v = volume * source.getVolumeMultiplier(l, { easing });
 				Object.assign(config, { listener: l, volume: v });
-				let ray = new foundry.canvas.geometry.Ray(l, sourcePosition)
-				if(this.data.panSound?.active && ray.distance > 0) {
+				let ray = new foundry.canvas.geometry.Ray(l, sourcePosition);
+				if (this.data.panSound?.active && ray.distance > 0) {
 					const normalized_x = ray.dx / ray.distance; // -1..1
 
 					const panned_value = soundlib.ease_pan_value(normalized_x, 1.6);
 					let pan_ease_factor = 1.0;
 
-					if(this.data.panSound?.innerEaseDistance > 0) {
-						const inner_ease_distance = this.data.panSound?.innerEaseDistance || 0;
-						const outer_ease_distance = (
-							this.data.panSound?.outerEaseDistance || Math.min(inner_ease_distance * 2, this.data.locationOptions?.radius ?? 1)
+					if (this.data.panSound?.innerEaseDistance > 0) {
+						const inner_ease_distance =
+							this.data.panSound?.innerEaseDistance || 0;
+						const outer_ease_distance =
+							this.data.panSound?.outerEaseDistance ||
+							Math.min(
+								inner_ease_distance * 2,
+								this.data.locationOptions?.radius ?? 1
+							);
+						const inner_ease_distance_pixels =
+							(inner_ease_distance / canvas.grid.distance) * canvas.grid.size;
+						const outer_ease_distance_pixels =
+							(outer_ease_distance / canvas.grid.distance) * canvas.grid.size;
+						pan_ease_factor = soundlib.calculate_pan_factor(
+							ray.distance,
+							inner_ease_distance_pixels,
+							outer_ease_distance_pixels
 						);
-						const inner_ease_distance_pixels = (inner_ease_distance / canvas.grid.distance) * canvas.grid.size;
-						const outer_ease_distance_pixels = (outer_ease_distance / canvas.grid.distance) * canvas.grid.size;
-						pan_ease_factor = soundlib.calculate_pan_factor(ray.distance, inner_ease_distance_pixels, outer_ease_distance_pixels);
 					}
 
 					// Within the ease distance => closer to 0, beyond it => full pan
@@ -128,7 +151,9 @@ const placed_sound_mixin = (base_class) =>
 			canvas.sounds._configurePlayback(config);
 
 			let applyEffect = false;
-			let hasMuffledEffect = this.sound.effects.findIndex(e => e.type === muffledEffect.type);
+			let hasMuffledEffect = this.sound.effects.findIndex(
+				(e) => e.type === muffledEffect.type
+			);
 
 			if (hasMuffledEffect > -1 && !config.muffled) {
 				this.sound.effects[hasMuffledEffect].disconnect();
@@ -137,25 +162,28 @@ const placed_sound_mixin = (base_class) =>
 			} else if (hasMuffledEffect === -1 && config.muffled) {
 				const sfx = CONFIG.soundEffects;
 				let effect;
-				if (config.muffled && (muffledEffect?.type in sfx)) {
+				if (config.muffled && muffledEffect?.type in sfx) {
 					const muffledCfg = sfx[muffledEffect.type];
-					effect = new muffledCfg.effectClass(this.sound.context, muffledEffect);
+					effect = new muffledCfg.effectClass(
+						this.sound.context,
+						muffledEffect
+					);
 					this.sound.effects.push(effect);
 				}
 				applyEffect = true;
 			}
 
-			let hasPanner = this.sound.effects.findIndex(e => e.type === "panner");
-			if(this.data.panSound) {
+			let hasPanner = this.sound.effects.findIndex((e) => e.type === "panner");
+			if (this.data.panSound) {
 				this.panner ||= this.sound.context.createStereoPanner();
-				this.panner.type = "panner"
+				this.panner.type = "panner";
 				if (hasPanner === -1) {
 					this.sound.effects.push(this.panner);
 					applyEffect = true;
 				}
 			}
 
-			if(applyEffect) {
+			if (applyEffect) {
 				this.sound.applyEffects(this.sound.effects);
 			}
 
@@ -167,7 +195,9 @@ const placed_sound_mixin = (base_class) =>
 
 			this.sound.volume = config.volume * this.sound.volume_multiplier;
 
-			if(this.data.panSound) {
+			console.log(this.sound.volume)
+
+			if (this.data.panSound) {
 				const t = this.sound.context.currentTime;
 				this.panner.pan.cancelScheduledValues(t);
 				this.panner.pan.setValueAtTime(this.panner.pan.value, t);
@@ -190,15 +220,18 @@ const placed_sound_mixin = (base_class) =>
 				muffledEffect: { type: "lowpass", intensity: 5 },
 				...this.data.locationOptions,
 				playbackOptions: this.playbackOptions,
-				volume
-			}
+				volume,
+			};
 		}
 
 		animate() {
 			super.animate();
 			canvas.app.ticker.add(this.update, this);
 
-			if (this.data.moveTowards && this.creationTimeDelta <= this.movementDuration) {
+			if (
+				this.data.moveTowards &&
+				this.creationTimeDelta <= this.movementDuration
+			) {
 				SequencerAnimationEngine.addAnimation(this.data._id, {
 					target: this,
 					propertyName: "position.x",
@@ -207,7 +240,7 @@ const placed_sound_mixin = (base_class) =>
 					duration: this.movementDuration,
 					ease: this.data.moveTowards.ease ?? "linear",
 					delay: 0,
-					absolute: true
+					absolute: true,
 				});
 
 				SequencerAnimationEngine.addAnimation(this.data._id, {
@@ -218,7 +251,7 @@ const placed_sound_mixin = (base_class) =>
 					duration: this.movementDuration,
 					ease: this.data.moveTowards.ease ?? "linear",
 					delay: 0,
-					absolute: true
+					absolute: true,
 				});
 			}
 		}
@@ -234,12 +267,10 @@ const placed_sound_mixin = (base_class) =>
 
 const persistent_sound_mixin = (base_class) =>
 	class extends base_class {
-		stop(removeFlags = false) {
-			if (removeFlags) {
-				flagManager.removeFlags(this.context.uuid, {
-					sounds: this.data
-				});
-			}
+		stop() {
+			flagManager.removeFlags(this.context.uuid, {
+				sounds: this.data,
+			});
 			let extraEndDuration = this.data.extraEndDuration ?? 0;
 			let endDuration = extraEndDuration + this.fadeOut();
 			setTimeout(() => {
@@ -249,15 +280,21 @@ const persistent_sound_mixin = (base_class) =>
 		}
 
 		fadeIn() {
-			let fadeInDuration = Math.min(this.data.fadeIn.duration, this.totalDuration)
+			let fadeInDuration = Math.min(
+				this.data.fadeIn.duration,
+				this.totalDuration
+			);
 			if (this.creationTimeDelta <= fadeInDuration) {
 				super.fadeIn();
 			}
 		}
 
 		get startOffset() {
-			let offset = (this.startTime ?? 0);
-			if (this.creationTimeDelta > this.soundDuration && this.state === SOUND_STATES.STARTING) {
+			let offset = this.startTime ?? 0;
+			if (
+				this.creationTimeDelta > this.soundDuration &&
+				this.state === SOUND_STATES.STARTING
+			) {
 				offset += this.creationTimeDelta % this.duration;
 			}
 			return offset;
@@ -265,14 +302,62 @@ const persistent_sound_mixin = (base_class) =>
 
 		get loopDuration() {
 			if (this.state === SOUND_STATES.STARTING) {
-				return super.loopDuration -  this.startOffset;
+				return super.loopDuration - this.startOffset;
 			}
 			return super.loopDuration;
 		}
-	}
+
+		async play(forcePlay = false) {
+			if (this.state === SOUND_STATES.ENDED) {
+				return;
+			}
+
+			if (
+				this.currentLoop > this.totalLoops &&
+				this.data.loopOptions?.endOnLastLoop
+			) {
+				return this.stop(true);
+			}
+
+			if (game.audio.locked) {
+				setTimeout(() => this.play(), 100);
+				return;
+			}
+
+			if (!this.sound.loop || forcePlay) {
+				await this.sound.stop();
+				await this.playSound();
+			}
+
+			if (!this.sound.gain) {
+				setTimeout(() => this.play(), 100);
+				return;
+			}
+
+			if (this.state === SOUND_STATES.STARTING) {
+				this.animate();
+			}
+
+			if (this.totalLoops) {
+				this.currentLoop += 1;
+			}
+
+			if (!this.sound.loop) {
+				setTimeout(
+					this.play.bind(this),
+					this.loopDuration + this.delayBetweenLoops
+				);
+			}
+
+			this.state = SOUND_STATES.PLAYING;
+		}
+
+		get isLoopingSound() {
+			return true;
+		}
+	};
 
 class SequencerSound {
-	
 	/**
 	 * @property {string} id - Unique identifier for the sound.
 	 */
@@ -383,21 +468,27 @@ class SequencerSound {
 	 * @property {Object|null} position - The current playback position of the sound.
 	 */
 	position;
-	
-	
+
+	/**
+	 * The resolve method for the promise of the sound finishing;
+	 */
+	#resolve;
+
 	constructor(data) {
-		this.id = data._id
+		this.id = data._id;
 		this.data = data;
 		this.twister = lib.createMersenneTwister(data.seed);
-		this.actualCreationTime = (+new Date());
-		this.creationTimeDelta = this.actualCreationTime - this.data.creationTimestamp;
+		this.actualCreationTime = +new Date();
+		this.creationTimeDelta =
+			this.actualCreationTime - this.data.creationTimestamp;
 		this.state = SOUND_STATES.STARTING;
-		this.shouldPlaySound = game.settings.get("sequencer", "soundsEnabled") &&
+		this.shouldPlaySound =
+			game.settings.get("sequencer", "soundsEnabled") &&
 			game.user.viewedScene === data.sceneId &&
 			(!data?.users?.length || data?.users?.includes(game.userId));
 		this.panner = null;
-		this.loops = this.data.loopOptions.loops ?? 0;
-		this.loopDelay = this.data.loopOptions.loopDelay ?? 0;
+		this.totalLoops = this.data.loopOptions.loops ?? 0;
+		this.delayBetweenLoops = this.data.loopOptions.loopDelay ?? 0;
 		this.position = this.sourcePosition;
 	}
 
@@ -416,23 +507,32 @@ class SequencerSound {
 		if (this.data.attachTo?.active) {
 			if (!this.isSourceDestroyed) {
 				let position = canvaslib.get_object_position(this.source);
-				let offset = canvaslib.getOffsetFromData(this.data, { type: "source", twister: this.twister });
-				let elevation = this.data.attachTo.bindElevation ? position.elevation : 0;
+				let offset = canvaslib.getOffsetFromData(this.data, {
+					type: "source",
+					twister: this.twister,
+				});
+				let elevation = this.data.attachTo.bindElevation
+					? position.elevation
+					: 0;
 				this._sourcePosition = {
 					x: position.x - offset.x,
 					y: position.y - offset.y,
-					elevation
+					elevation,
 				};
 			}
 		} else if (!this._sourcePosition) {
-			this._sourcePosition = this.data.source ? canvaslib.getPositionFromData(this.data, "source", this.twister) : false;
+			this._sourcePosition = this.data.source
+				? canvaslib.getPositionFromData(this.data, "source", this.twister)
+				: false;
 		}
 		return this._sourcePosition;
 	}
 
 	get targetPosition() {
 		if (!this._targetPosition) {
-			this._targetPosition = this.data.target ? canvaslib.getPositionFromData(this.data, "target", this.twister) : false;
+			this._targetPosition = this.data.target
+				? canvaslib.getPositionFromData(this.data, "target", this.twister)
+				: false;
 		}
 		return this._targetPosition;
 	}
@@ -450,10 +550,10 @@ class SequencerSound {
 		let offsetMap = this._nameOffsetMap?.[inIdentifier];
 		if (offsetMap) {
 			if (specific) {
-				source = (returnSource
+				source =
+					(returnSource
 						? offsetMap?.sourceObj || offsetMap?.targetObj
-						: offsetMap?.targetObj || offsetMap?.sourceObj
-				) || source;
+						: offsetMap?.targetObj || offsetMap?.sourceObj) || source;
 			} else {
 				source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
 			}
@@ -470,14 +570,23 @@ class SequencerSound {
 	 */
 	get isSourceDestroyed() {
 		return (
-			this.source && this.source?.destroyed && (!this.sourceDocument?.object || this.sourceDocument?.object?.destroyed || this.source.constructor.name === "Crosshairs")
+			this.source &&
+			this.source?.destroyed &&
+			(!this.sourceDocument?.object ||
+				this.sourceDocument?.object?.destroyed ||
+				this.source.constructor.name === "Crosshairs")
 		);
 	}
 
 	get source() {
 		if (!this._source && this.data.source) {
 			const getDifferentTarget = this.data.source === this.data.target;
-			this._source = this._getObjectByID(this.data.source?.uuid ?? this.data.source, getDifferentTarget, true) ?? this.data.source;
+			this._source =
+				this._getObjectByID(
+					this.data.source?.uuid ?? this.data.source,
+					getDifferentTarget,
+					true
+				) ?? this.data.source;
 			this._source = this._source?._object ?? this._source;
 		}
 		return this._source;
@@ -490,7 +599,12 @@ class SequencerSound {
 	get target() {
 		if (!this._target && this.data.target) {
 			const getDifferentTarget = this.data.source === this.data.target;
-			this._target = this._getObjectByID(this.data.target?.uuid ?? this.data.target, getDifferentTarget, false) ?? this.data.target;
+			this._target =
+				this._getObjectByID(
+					this.data.target?.uuid ?? this.data.target,
+					getDifferentTarget,
+					false
+				) ?? this.data.target;
 			this._target = this._target?._object ?? this._target;
 		}
 		return this._target;
@@ -543,45 +657,69 @@ class SequencerSound {
 	}
 
 	get startOffset() {
-		return (this.startTime ?? 0)
+		return this.startTime ?? 0;
+	}
+
+	get isLoopingSound() {
+		return this.loopTimes !== undefined && this.totalLoops && this.currentLoop < this.totalLoops;
 	}
 
 	get looping() {
-		return this.loopTimes && this.state === SOUND_STATES.PLAYING;
+		return this.isLoopingSound && this.state === SOUND_STATES.PLAYING;
 	}
 
 	get playbackOptions() {
-		let loopStart = (this.startTime ?? 0);
-		let loopEnd = (this.endTime ?? 0);
+		let loopStart = this.startTime ?? 0;
+		let loopEnd = this.endTime ?? 0;
 		let offset = this.startOffset / 1000;
-		if(this.loopTimes){
-			if(this.state === SOUND_STATES.PLAYING){
+		if (this.loopTimes) {
+			if (this.state === SOUND_STATES.PLAYING) {
 				loopStart = this.loopTimes.loopStart;
-				offset = this.loopTimes.loopStart;
+				offset = this.loopTimes.loopStart / 1000;
 			}
-			if(this.state === SOUND_STATES.STARTING || this.state === SOUND_STATES.PLAYING){
-				loopEnd = this.loopTimes.loopEnd;
+			if (
+				this.state === SOUND_STATES.STARTING ||
+				this.state === SOUND_STATES.PLAYING
+			) {
+				if(this.currentLoop === this.totalLoops){
+					loopEnd = this.soundDuration;
+				}else {
+					loopEnd = this.loopTimes.loopEnd;
+				}
 			}
-			if(this.state === SOUND_STATES.ENDING){
-				loopStart = this.loopTimes.forcedEnd || this.loopTimes.loopEnd;
+			if (this.state === SOUND_STATES.ENDING) {
+				loopStart = this.outroStart;
+				offset = this.outroStart / 1000;
 			}
 		}
-		let loop = this.looping;
-		return {
-			loop,
+
+		let data = {
 			offset,
+			loop: this.looping,
 			loopStart: loopStart / 1000,
 			loopEnd: loopEnd / 1000,
 			channel: this.data.channel || "interface",
-			delay: 0
+			delay: 0,
 		};
+
+		console.log(this.currentLoop, Object.keys(SOUND_STATES)[this.state], data)
+
+		return data;
+	}
+
+	get outroStart() {
+		return this.loopTimes?.forcedEnd ?? this.loopTimes?.loopEnd ?? this.endTime;
+	}
+
+	get outroDuration() {
+		return Math.max(0, (this.endTime ?? this.duration) - this.outroStart);
 	}
 
 	async load() {
 		if (!this.sound) {
 			let placedOnCanvas = this.data.source && !this.data.global;
 			let sound = new foundry.audio.Sound(this.getFile(), {
-				context: placedOnCanvas ? game.audio.environment : game.audio.interface
+				context: placedOnCanvas ? game.audio.environment : game.audio.interface,
 			});
 			await sound.load();
 			this.sound = sound;
@@ -600,7 +738,8 @@ class SequencerSound {
 		}
 		if (this.data.time?.end) {
 			if (this.data.time.end.isPerc) {
-				this.endTime = this.soundDuration - (this.soundDuration * this.data.time.end.value);
+				this.endTime =
+					this.soundDuration - this.soundDuration * this.data.time.end.value;
 			} else {
 				this.endTime = this.data.time.isRange
 					? this.data.time.end.value
@@ -608,15 +747,16 @@ class SequencerSound {
 			}
 		}
 
-		this.duration = this.data.duration === false
-			? this.endTime - this.startTime
-			: this.data.duration;
+		this.duration =
+			this.data.duration === false
+				? this.endTime - this.startTime
+				: this.data.duration;
 
 		this.totalDuration = this.duration;
 
-		if (this.loops && !this.data.duration) {
-			this.totalDuration += this.loopDelay;
-			this.totalDuration *= this.loops + 1;
+		if (this.totalLoops && !this.data.duration) {
+			this.totalDuration += this.delayBetweenLoops;
+			this.totalDuration *= this.totalLoops + 1;
 		}
 
 		if (
@@ -633,7 +773,9 @@ class SequencerSound {
 
 		this.sound.data = this.data;
 		this.sound.sound_id = this.data._id;
-		this.sound.loop = this.totalDuration > this.soundDuration && !(this.loops && this.loopDelay);
+		this.sound.loop =
+			this.totalDuration > this.soundDuration &&
+			!(this.totalLoops && this.delayBetweenLoops);
 		this.sound.volume_multiplier = 1.0;
 		this.sound.volume = this.data.volume * this.sound.volume_multiplier;
 	}
@@ -643,20 +785,22 @@ class SequencerSound {
 	}
 
 	get file() {
-		if (this.#file){
+		if (this.#file) {
 			return this.#file;
 		}
 		let file;
 
 		if (this.data.customRange) {
 			const template = this.data.template
-				? [this.data.template.gridSize, this.data.template.startPoint, this.data.template.endPoint]
+				? [
+					this.data.template.gridSize,
+					this.data.template.startPoint,
+					this.data.template.endPoint,
+				]
 				: [100, 0, 0];
-			file = SequencerFileBase.make(
-				this.data.file,
-				"temporary.range.file",
-				{ template },
-			);
+			file = SequencerFileBase.make(this.data.file, "temporary.range.file", {
+				template,
+			});
 		} else if (Sequencer.Database.entryExists(this.data.file)) {
 			file = Sequencer.Database.getEntry(this.data.file).clone();
 		} else {
@@ -671,24 +815,51 @@ class SequencerSound {
 	}
 
 	getFile() {
-		if (this.file.rangeFind && this.source && this.target){
-			let distance = (new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition)).distance;
+		if (this.file.rangeFind && this.source && this.target) {
+			let distance = new foundry.canvas.geometry.Ray(
+				this.sourcePosition,
+				this.targetPosition
+			).distance;
 			return this.file.getFileForDistance(distance);
 		}
 		return this.file.getFile();
 	}
 
-	async playSound(){
-		throw new Error("NotImplementedError: playSound() must be implemented by a subclass of SequencerSound.");
+	async playSound() {
+		throw new Error(
+			"NotImplementedError: playSound() must be implemented by a subclass of SequencerSound."
+		);
 	}
 
-	async play(forcePlay=false) {
-		if (this.state === SOUND_STATES.ENDED){
+	startPlay() {
+		let { promise, resolve } = Promise.withResolvers();
+		this.#resolve = resolve;
+		this.play();
+		return promise;
+	}
+
+	async play() {
+		if (this.state === SOUND_STATES.ENDED) {
 			return;
 		}
 
-		if (this.currentLoop > this.loops && this.data.loopOptions?.endOnLastLoop) {
-			return this.stop(true);
+		if (
+			this.state === SOUND_STATES.PLAYING &&
+			this.currentLoop === this.totalLoops &&
+			this.loopTimes
+		) {
+			this.state = SOUND_STATES.ENDING;
+		}
+
+		if (
+			this.state !== SOUND_STATES.ENDING &&
+			this.currentLoop === this.totalLoops
+		) {
+			return this.stop();
+		}
+
+		if (this.totalLoops && this.state !== SOUND_STATES.ENDING) {
+			this.currentLoop += 1;
 		}
 
 		if (game.audio.locked) {
@@ -696,10 +867,8 @@ class SequencerSound {
 			return;
 		}
 
-		if(!this.sound.loop || forcePlay) {
-			await this.sound.stop();
-			await this.playSound();
-		}
+		await this.sound.stop();
+		await this.playSound();
 
 		if (!this.sound.gain) {
 			setTimeout(() => this.play(), 100);
@@ -710,24 +879,35 @@ class SequencerSound {
 			this.animate();
 		}
 
-		if (this.loops) {
-			this.currentLoop += 1;
+		if (this.state === SOUND_STATES.ENDING) {
+			setTimeout(() => {
+				this.stop();
+			}, this.loopDuration);
+		} else if (this.isLoopingSound) {
+			setTimeout(
+				this.play.bind(this),
+				this.loopDuration + this.delayBetweenLoops
+			);
+		} else {
+			setTimeout(() => {
+				this.stop();
+			}, this.duration);
 		}
 
-		if(!this.sound.loop) {
-			setTimeout(this.play.bind(this), this.loopDuration);
+		if (this.state === SOUND_STATES.STARTING) {
+			this.state = SOUND_STATES.PLAYING;
 		}
-
-		this.state = SOUND_STATES.PLAYING;
 	}
 
 	get loopDuration() {
 		let duration = this.duration;
-		if (this.loopTimes){
-			if(this.state === SOUND_STATES.STARTING){
+		if (this.loopTimes) {
+			if (this.state === SOUND_STATES.STARTING) {
 				duration = this.loopTimes.loopEnd;
 			} else if (this.state === SOUND_STATES.PLAYING) {
 				duration = this.loopTimes.loopEnd - this.loopTimes.loopStart;
+			} else if (this.state === SOUND_STATES.ENDING) {
+				duration = this.outroDuration;
 			}
 		}
 		return duration;
@@ -746,31 +926,9 @@ class SequencerSound {
 	}
 
 	stop() {
-		if(this.loopTimes){
-			this.state = SOUND_STATES.ENDING;
-			let currentTime = this.sound.currentTime * 1000;
-
-			let lastLoopWaitDuration = currentTime > this.loopTimes.loopStart
-				? this.loopTimes.loopEnd - currentTime
-				: this.loopTimes.loopStart - currentTime;
-
-			if(this.loopTimes.forcedEnd) {
-				this.play(true);
-			}else{
-				setTimeout(() => {
-					this.play(true);
-				}, lastLoopWaitDuration);
-			}
-			let stopWaitDuration = this.loopTimes.forcedEnd
-				? this.duration - this.loopTimes.forcedEnd
-				: lastLoopWaitDuration + (this.duration - this.loopTimes.loopEnd);
-			return setTimeout(() => {
-				this.state = SOUND_STATES.ENDED;
-				this.sound.stop();
-			}, stopWaitDuration);
-		}
 		this.state = SOUND_STATES.ENDED;
 		this.sound.stop();
+		this.#resolve();
 	}
 
 	fadeIn() {
@@ -783,16 +941,25 @@ class SequencerSound {
 			duration: Math.min(this.data.fadeIn.duration, this.duration),
 			ease: this.data.fadeIn.ease,
 			delay: Math.min(this.data.fadeIn.delay, this.duration),
-			absolute: true
+			absolute: true,
 		});
 	}
 
 	fadeOut(immediate = false) {
-		let fadeOut = this.data.fadeOut;
-		let duration = Math.min(fadeOut.duration, this.duration);
+		if (!this.data.fadeOut) return 0;
+
+		let duration = Math.min(this.data.fadeOut.duration, this.duration);
 		let delay = lib.is_real_number(immediate)
-			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
-			: Math.max(this.totalDuration - fadeOut.duration + fadeOut.delay, 0);
+			? Math.max(
+				immediate - this.data.fadeOut.duration + this.data.fadeOut.delay,
+				0
+			)
+			: Math.max(
+				this.totalDuration -
+				this.data.fadeOut.duration +
+				this.data.fadeOut.delay,
+				0
+			);
 
 		SequencerAnimationEngine.addAnimation(this.data._id, {
 			target: this.sound,
@@ -800,9 +967,9 @@ class SequencerSound {
 			from: 1.0,
 			to: 0.0,
 			duration,
-			ease: fadeOut.ease,
+			ease: this.data.fadeOut.ease,
 			delay,
-			absolute: true
+			absolute: true,
 		});
 
 		return duration + delay;
@@ -816,13 +983,23 @@ class SequencerSound {
 	}
 }
 
-class SequencerGlobalSound extends global_sound_mixin(SequencerSound) {}
-class SequencerPersistentGlobalSound extends global_sound_mixin(persistent_sound_mixin(SequencerSound)) {}
-class SequencerPlacedSound extends placed_sound_mixin(SequencerSound) {}
-class SequencerPersistentPlacedSound extends placed_sound_mixin(persistent_sound_mixin(SequencerSound)) {}
+class SequencerGlobalSound extends global_sound_mixin(SequencerSound) {
+}
+
+class SequencerPersistentGlobalSound extends global_sound_mixin(
+	persistent_sound_mixin(SequencerSound)
+) {
+}
+
+class SequencerPlacedSound extends placed_sound_mixin(SequencerSound) {
+}
+
+class SequencerPersistentPlacedSound extends placed_sound_mixin(
+	persistent_sound_mixin(SequencerSound)
+) {
+}
 
 export default class SequencerSoundManager {
-
 	static setup() {
 		Hooks.on("preCreateToken", this._patchCreationData.bind(this));
 		Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
@@ -905,7 +1082,9 @@ export default class SequencerSoundManager {
 		await this.tearDownPersistentSounds();
 		let docSoundsMap = {};
 		let soundsToRemove = {};
-		let databaseSounds = foundry.utils.deepClone(flagManager.getDatabaseFlags().sounds);
+		let databaseSounds = foundry.utils.deepClone(
+			flagManager.getDatabaseFlags().sounds
+		);
 		for (let [uuid, sounds] of Object.entries(databaseSounds)) {
 			let doc = fromUuidSync(uuid);
 			if (doc instanceof FoundryShim.Actor && doc.prototypeToken.actorLink) {
@@ -917,7 +1096,7 @@ export default class SequencerSoundManager {
 						}
 						sound.sceneId = canvas.scene.id;
 						return [id, sound];
-					})
+					});
 				}
 			} else if (doc) {
 				docSoundsMap[uuid] = sounds;
@@ -932,7 +1111,8 @@ export default class SequencerSoundManager {
 			.flat();
 		for (let [uuid, sounds] of Object.entries(soundsToRemove)) {
 			flagManager.removeFlags(uuid, {
-				sounds, removeAllSounds: true
+				sounds,
+				removeAllSounds: true,
 			});
 		}
 		return Promise.all(promises).then(() => {
@@ -1022,7 +1202,6 @@ export default class SequencerSoundManager {
 	 * @private
 	 */
 	static async _playSound(data, setFlags = true) {
-
 		if (data.delete) return false;
 
 		Hooks.callAll("createSequencerSound", data);
@@ -1035,7 +1214,7 @@ export default class SequencerSoundManager {
 
 		SequenceManager.RunningSounds.add(sequencerSound.id, sequencerSound);
 
-		let promise = sequencerSound.play();
+		let promise = sequencerSound.startPlay();
 
 		if (data.persist) {
 			let responsibleUser = game.users.getDesignatedUser((user) => user.active);
@@ -1055,7 +1234,6 @@ export default class SequencerSoundManager {
 	}
 
 	static _validateFilters(inFilter) {
-
 		if (inFilter?.sounds) {
 			if (!Array.isArray(inFilter.sounds)) {
 				inFilter.sounds = [inFilter.sounds];
@@ -1064,7 +1242,7 @@ export default class SequencerSoundManager {
 				if (!(typeof sound === "string" || sound instanceof SequencerSound))
 					throw lib.custom_error(
 						"Sequencer",
-						"SoundManager | collections in inFilter.sounds must be of type string or SequencerSound",
+						"SoundManager | collections in inFilter.sounds must be of type string or SequencerSound"
 					);
 				if (sound instanceof SequencerSound) return sound.data._id;
 				return sound;
@@ -1074,19 +1252,19 @@ export default class SequencerSoundManager {
 		if (inFilter?.name && typeof inFilter?.name !== "string")
 			throw lib.custom_error(
 				"Sequencer",
-				"SoundManager | inFilter.name must be of type string",
+				"SoundManager | inFilter.name must be of type string"
 			);
 
 		if (inFilter?.sceneId) {
 			if (typeof inFilter.sceneId !== "string")
 				throw lib.custom_error(
 					"Sequencer",
-					"SoundManager | inFilter.sceneId must be of type string",
+					"SoundManager | inFilter.sceneId must be of type string"
 				);
 			if (!game.scenes.get(inFilter.sceneId))
 				throw lib.custom_error(
 					"Sequencer",
-					"SoundManager | inFilter.sceneId must be a valid scene id (could not find scene)",
+					"SoundManager | inFilter.sceneId must be a valid scene id (could not find scene)"
 				);
 		} else {
 			inFilter.sceneId = game.user.viewedScene;
@@ -1095,7 +1273,7 @@ export default class SequencerSoundManager {
 		if (inFilter?.origin && typeof inFilter?.origin !== "string")
 			throw lib.custom_error(
 				"Sequencer",
-				"SoundManager | inFilter.origin must be of type string",
+				"SoundManager | inFilter.origin must be of type string"
 			);
 
 		if (
@@ -1114,7 +1292,7 @@ export default class SequencerSoundManager {
 				sceneId: null,
 				origin: null,
 			},
-			inFilter,
+			inFilter
 		);
 	}
 
@@ -1122,16 +1300,21 @@ export default class SequencerSoundManager {
 		if (inFilter.name) {
 			inFilter.name = new RegExp(
 				"^" + lib.str_to_search_regex_str(lib.safe_str(inFilter.name)) + "$",
-				"gu",
+				"gu"
 			);
 		}
 		return this.sounds.filter((sound) => {
 			return (
-				(inFilter.sounds === null || inFilter.sounds.includes(sound.data._id)) &&
-				(inFilter.name === null || (sound.data.name && inFilter.name && sound.data.name.match(inFilter.name)?.length)) &&
-				(inFilter.sceneId === null || (sound.data.sceneId === inFilter.sceneId)) &&
+				(inFilter.sounds === null ||
+					inFilter.sounds.includes(sound.data._id)) &&
+				(inFilter.name === null ||
+					(sound.data.name &&
+						inFilter.name &&
+						sound.data.name.match(inFilter.name)?.length)) &&
+				(inFilter.sceneId === null ||
+					sound.data.sceneId === inFilter.sceneId) &&
 				(inFilter.origin === null || inFilter.origin === sound.data.origin)
-			)
+			);
 		});
 	}
 
@@ -1140,7 +1323,7 @@ export default class SequencerSoundManager {
 		if (!inFilter)
 			throw lib.custom_error(
 				"Sequencer",
-				"SoundManager | getSounds | Incorrect or incomplete parameters provided",
+				"SoundManager | getSounds | Incorrect or incomplete parameters provided"
 			);
 		return this._filterSounds(filters);
 	}
@@ -1149,7 +1332,7 @@ export default class SequencerSoundManager {
 		const filters = this._validateFilters(inFilter);
 		const sounds = this._filterSounds(filters);
 		if (!sounds?.length) return;
-		const ids = sounds.map(sound => sound.data._id);
+		const ids = sounds.map((sound) => sound.data._id);
 		if (push) {
 			sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_SOUNDS, ids);
 		}
@@ -1188,10 +1371,10 @@ export default class SequencerSoundManager {
 			);
 			if (!sounds.length) return;
 			const soundData = sounds.map((sound) => sound.data);
-			flagManager.removeFlags(
-				sounds[0].context.uuid,
-				{ sounds: soundData, removeAllSounds: !inSoundIds }
-			);
+			flagManager.removeFlags(sounds[0].context.uuid, {
+				sounds: soundData,
+				removeAllSounds: !inSoundIds,
+			});
 		});
 
 		soundsByActorUuid.forEach((sounds) => {
@@ -1214,7 +1397,9 @@ export default class SequencerSoundManager {
 			}
 
 			const persistentSoundData = soundData.filter(
-				(data) => lib.is_UUID(data?.source) && data?.persistOptions?.persistTokenPrototype
+				(data) =>
+					lib.is_UUID(data?.source) &&
+					data?.persistOptions?.persistTokenPrototype
 			);
 			if (!persistentSoundData.length) return;
 
@@ -1233,10 +1418,10 @@ export default class SequencerSoundManager {
 				})
 				.map((e) => e[0]);
 
-			flagManager.removeFlags(
-				soundContext.actor.uuid,
-				{ sounds: applicableActorSounds, removeAllSounds: !inSoundIds }
-			);
+			flagManager.removeFlags(soundContext.actor.uuid, {
+				sounds: applicableActorSounds,
+				removeAllSounds: !inSoundIds,
+			});
 		});
 
 		const soundsToEnd = soundsByContextUuid
