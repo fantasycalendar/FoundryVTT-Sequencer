@@ -86,10 +86,10 @@ const SOCKET_CALLBACKS = {
 		return FlagManager._removeFlags(...data.payload)
 	},
 	[SOCKET_HANDLERS.CREATE_SCROLLING_TEXT]: (data) => {
-		return SequencerFoundryReplicator._playScrollingText(data.payload)
+		return SequencerFoundryReplicator._playScrollingText(...data.payload)
 	},
 	[SOCKET_HANDLERS.PAN_CANVAS]: (data) => {
-		return SequencerFoundryReplicator._panCanvas(data.payload)
+		return SequencerFoundryReplicator._panCanvas(...data.payload)
 	},
 	[SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY]: (data) => {
 		lib.debug("Playing remote Sequence");

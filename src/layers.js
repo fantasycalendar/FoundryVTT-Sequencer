@@ -10,7 +10,7 @@ export default function registerLayers() {
   CONFIG.Canvas.layers = foundry.utils.mergeObject(FoundryShim.Canvas.layers, {
     sequencerEffects: {
       layerClass: BaseEffectsLayer,
-      group: "primary",
+      group: "interface",
     },
     sequencerInterfaceLayer: {
       layerClass: SequencerInterfaceLayer,

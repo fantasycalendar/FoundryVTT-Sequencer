@@ -1432,7 +1432,7 @@ export default class CanvasEffect extends PIXI.Container {
 		} else if (this.data.aboveLighting) {
 			layer = canvas.interface;
 		} else {
-			layer = canvas.primary;
+			layer = canvas.sequencerEffects;
 		}
 
 		layer.addChild(this);

@@ -13,6 +13,7 @@ export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
   static get layerOptions() {
     return foundry.utils.mergeObject(super.layerOptions, {
       elevation: 100000000,
+	    zIndex: 450,
       name: CONSTANTS.EFFECTS_LAYER,
     });
   }
