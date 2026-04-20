@@ -508,7 +508,7 @@ export default class CanvasEffect extends PIXI.Container {
 		return this.sprite.duration
 	}
 
-	get mediaDurationMs(){
+	get mediaDurationMs() {
 		return this.mediaDuration * 1000
 	}
 
@@ -546,7 +546,7 @@ export default class CanvasEffect extends PIXI.Container {
 	get flipX() {
 		const offsetMap = this._nameOffsetMap?.[this.data.source];
 		let flip = this.data.flipX ? -1 : 1
-		if(offsetMap && offsetMap.mirrorX !== undefined) {
+		if (offsetMap && offsetMap.mirrorX !== undefined) {
 			flip *= offsetMap.mirrorX ? -1 : 1;
 		}
 		return flip;
@@ -555,7 +555,7 @@ export default class CanvasEffect extends PIXI.Container {
 	get flipY() {
 		const offsetMap = this._nameOffsetMap?.[this.data.source];
 		let flip = this.data.flipY ? -1 : 1
-		if(offsetMap && offsetMap.mirrorY !== undefined) {
+		if (offsetMap && offsetMap.mirrorY !== undefined) {
 			flip *= offsetMap.mirrorY ? -1 : 1;
 		}
 		return flip;
@@ -708,7 +708,7 @@ export default class CanvasEffect extends PIXI.Container {
 			return SequencerEffectManager.getPositionForUUID(this.data.source);
 		}
 
-		if (this.source instanceof FoundryShim.PlaceableObject && this.isSourceDestroyed){
+		if (this.source instanceof FoundryShim.PlaceableObject && this.isSourceDestroyed) {
 			return {
 				...this._cachedSourceData,
 			};
@@ -788,7 +788,7 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 		}
 
-		if (this.target instanceof FoundryShim.PlaceableObject && this.isTargetDestroyed){
+		if (this.target instanceof FoundryShim.PlaceableObject && this.isTargetDestroyed) {
 			return {
 				...this._cachedTargetData,
 			};
@@ -1387,12 +1387,12 @@ export default class CanvasEffect extends PIXI.Container {
 		let source = inIdentifier;
 		let offsetMap = this._nameOffsetMap?.[inIdentifier];
 		if (offsetMap) {
-			if(specific){
+			if (specific) {
 				source = (returnSource
-					? offsetMap?.sourceObj || offsetMap?.targetObj
-					: offsetMap?.targetObj || offsetMap?.sourceObj
+						? offsetMap?.sourceObj || offsetMap?.targetObj
+						: offsetMap?.targetObj || offsetMap?.sourceObj
 				) || source;
-			}else {
+			} else {
 				source = offsetMap?.targetObj || offsetMap?.sourceObj || source;
 			}
 		} else {
@@ -1556,7 +1556,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._totalDuration /= playbackRate;
 
-		if(this.data.persist){
+		if (this.data.persist) {
 			this.mediaLooping = (
 				(!this.data.time || (this._startTime === 0 && this._endTime === this.mediaDuration)) &&
 				this._animationTimes.loopStart === undefined &&
@@ -1564,7 +1564,7 @@ export default class CanvasEffect extends PIXI.Container {
 				!this.loops &&
 				!this.loopDelay
 			);
-		}else{
+		} else {
 			this.mediaLooping = this._startTime === 0 && this._endTime > this.mediaDuration && !(this.loops && this.loopDelay);
 		}
 
@@ -1579,12 +1579,12 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_timeoutVisibility() {
-		if(!this.data.animations){
+		if (!this.data.animations) {
 			return this._setupHooks();
 		}
 		setTimeout(() => {
 			this._setupHooks();
-		},50);
+		}, 50);
 	}
 
 	/**
@@ -1651,7 +1651,7 @@ export default class CanvasEffect extends PIXI.Container {
 			file = SequencerFileBase.make(
 				this.data.file,
 				"temporary.range.file",
-				{template},
+				{ template },
 			);
 		} else if (Sequencer.Database.entryExists(this.data.file)) {
 			file = Sequencer.Database.getEntry(this.data.file).clone();
@@ -1684,8 +1684,8 @@ export default class CanvasEffect extends PIXI.Container {
 		distance = distance || (new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition)).distance;
 		if (distance === 0 && showDistanceWarning) {
 			lib.custom_error(
-			      "effect",
-			      `stretchTo - You are stretching over a distance of "0", you may be attempting to stretch between two of the same coordinates!`
+				"effect",
+				`stretchTo - You are stretching over a distance of "0", you may be attempting to stretch between two of the same coordinates!`
 			);
 		}
 		this._currentFilePath = this._file.getFileForDistance(distance);
@@ -1724,7 +1724,7 @@ export default class CanvasEffect extends PIXI.Container {
 			const text = this.data.text.text;
 			const fontSettings = foundry.utils.deepClone(this.data.text);
 			fontSettings.fontSize = (fontSettings?.fontSize ?? 26) * (150 / canvas.grid.size);
-			const textSprite = this.sprite.addText({text, textStyle: fontSettings})
+			const textSprite = this.sprite.addText({ text, textStyle: fontSettings })
 			textSprite.zIndex = 1;
 			const textAnchor = this.data.text.anchor
 			textSprite.anchor.set(textAnchor?.x ?? 0.5, textAnchor?.y ?? 0.5);
@@ -1778,10 +1778,10 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		const offsetMap = this._nameOffsetMap?.[this.data.source];
-		if(offsetMap?.angle !== undefined) {
+		if (offsetMap?.angle !== undefined) {
 			this._customAngle += offsetMap?.angle;
 		}
-		if(offsetMap?.randomRotation) {
+		if (offsetMap?.randomRotation) {
 			this._customAngle += lib.random_float_between(-360, 360, offsetMap.twister);
 		}
 
@@ -1797,7 +1797,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		// only set filter and fade effects when a faded version should actually be shown
 		if (this.shouldShowFadedVersion) {
-			this.alpha = game.settings.get(CONSTANTS.MODULE_NAME,"user-effect-opacity") / 100;
+			this.alpha = game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100;
 			this.filters = [
 				new PIXI.ColorMatrixFilter({
 					saturation: -1,
@@ -1823,9 +1823,9 @@ export default class CanvasEffect extends PIXI.Container {
 
 	updateElevation() {
 		let targetElevation = Math.max(
-				canvaslib.get_object_elevation(this.source ?? {}),
-				canvaslib.get_object_elevation(this.target ?? {})
-			);
+			canvaslib.get_object_elevation(this.source ?? {}),
+			canvaslib.get_object_elevation(this.target ?? {})
+		);
 
 		let effectElevation = this.data.elevation?.elevation ?? 0;
 		if (!this.data.elevation?.absolute) {
@@ -1850,7 +1850,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.data.screenSpace || this.data.screenSpaceAboveUI) {
 			const [screenWidth, screenHeight] = canvas.screenDimensions;
 
-			if(this._lastScreenDimensions?.screenWidth !== screenWidth && this._lastScreenDimensions?.screenHeight !== screenHeight){
+			if (this._lastScreenDimensions?.screenWidth !== screenWidth && this._lastScreenDimensions?.screenHeight !== screenHeight) {
 				this._lastScreenDimensions.screenWidth = screenWidth;
 				this._lastScreenDimensions.screenHeight = screenHeight;
 			}
@@ -1870,8 +1870,8 @@ export default class CanvasEffect extends PIXI.Container {
 				let scaleX = scaleData.x;
 				let scaleY = scaleData.y;
 
-				this._lastScreenDimensions.width = this.sprite.texture?.width || this._lastScreenDimensions.width || this.sprite.width || this.spriteContainer.children[this.spriteContainer.children.length-1].width;
-				this._lastScreenDimensions.height = this.sprite.texture?.height || this._lastScreenDimensions.height || this.sprite.height || this.spriteContainer.children[this.spriteContainer.children.length-1].height;
+				this._lastScreenDimensions.width = this.sprite.texture?.width || this._lastScreenDimensions.width || this.sprite.width || this.spriteContainer.children[this.spriteContainer.children.length - 1].width;
+				this._lastScreenDimensions.height = this.sprite.texture?.height || this._lastScreenDimensions.height || this.sprite.height || this.spriteContainer.children[this.spriteContainer.children.length - 1].height;
 
 				if (scaleData.fitX) {
 					scaleX = scaleX * (screenWidth / this._lastScreenDimensions.width);
@@ -1910,16 +1910,16 @@ export default class CanvasEffect extends PIXI.Container {
 
 				shape = new PIXI.LegacyGraphics()
 
-				for(let polygon of documentObj.polygons){
-					if(polygon.isPositive){
+				for (let polygon of documentObj.polygons) {
+					if (polygon.isPositive) {
 						shape.beginFill();
-					}else{
+					} else {
 						shape.beginHole();
 					}
 					shape.drawShape(polygon);
-					if(polygon.isPositive){
+					if (polygon.isPositive) {
 						shape.endFill();
-					}else{
+					} else {
 						shape.endHole();
 					}
 				}
@@ -1975,16 +1975,16 @@ export default class CanvasEffect extends PIXI.Container {
 				if (!mask.custom) return;
 				mask.clear();
 				if (obj instanceof FoundryShim.Region) {
-					for(let polygon of documentObj.polygons){
-						if(polygon.isPositive){
+					for (let polygon of documentObj.polygons) {
+						if (polygon.isPositive) {
 							mask.beginFill();
-						}else{
+						} else {
 							mask.beginHole();
 						}
 						mask.drawShape(polygon);
-						if(polygon.isPositive){
+						if (polygon.isPositive) {
 							mask.endFill();
-						}else{
+						} else {
 							mask.endHole();
 						}
 					}
@@ -2069,7 +2069,7 @@ export default class CanvasEffect extends PIXI.Container {
 				SequencerEffectManager.objectDeleted(uuid);
 			});
 
-			if(this.isSourceDestroyed){
+			if (this.isSourceDestroyed) {
 				SequencerEffectManager.objectDeleted(this.sourceDocument.uuid);
 			}
 
@@ -2121,7 +2121,7 @@ export default class CanvasEffect extends PIXI.Container {
 				const uuid = doc.uuid;
 				SequencerEffectManager.objectDeleted(uuid);
 			});
-			if(this.isTargetDestroyed){
+			if (this.isTargetDestroyed) {
 				SequencerEffectManager.objectDeleted(this.targetDocument.uuid);
 			}
 			hooksManager.addHook(this.uuid, this.getTargetHook("update"), (doc) => {
@@ -2204,7 +2204,7 @@ export default class CanvasEffect extends PIXI.Container {
 		await this.sprite.activate(this._currentFilePath)
 		const texture = this.sprite.texture
 
-		let {  scaleX, scaleY } = await this._getDistanceScaling(distance, texture.width);
+		let { scaleX, scaleY } = await this._getDistanceScaling(distance, texture.width);
 
 		if (this.data.attachTo?.active) {
 			this.position.set(
@@ -2233,7 +2233,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	_setAnchors() {
-		let anchor = {x: 0.5, y: 0.5, ...(this.data.spriteAnchor ?? null)}
+		let anchor = { x: 0.5, y: 0.5, ...(this.data.spriteAnchor ?? null) }
 
 		if (
 			(this.data.rotateTowards && this.data.rotateTowards.template) ||
@@ -2244,7 +2244,7 @@ export default class CanvasEffect extends PIXI.Container {
 			anchor = { x: templateAnchorX, y: 0.5 }
 		}
 		if (this.data.rotateTowards && !this.data.rotateTowards.template && !this.data.anchor) {
-			this.spriteContainer.pivot.set(this.sprite.width * -0.5,0);
+			this.spriteContainer.pivot.set(this.sprite.width * -0.5, 0);
 		} else {
 			this.spriteContainer.pivot.set(
 				lib.interpolate(
@@ -3143,7 +3143,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._currentLoops = Math.floor(creationTimeDifference / this._totalDuration) + 1;
 
 		if (this.loops && this._currentLoops > this.loops) {
-			if(this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
+			if (this.data.loopOptions?.endOnLastLoop || !this.data.persist) {
 				return this.endEffect();
 			}
 			await this.pauseMedia();
@@ -3218,8 +3218,8 @@ export default class CanvasEffect extends PIXI.Container {
 			return;
 		}
 
-		const restartTime = this._startTime === 0 && this._animationTimes.loopStart 
-		  ? this._animationTimes.loopStart 
+		const restartTime = this._startTime === 0 && this._animationTimes.loopStart
+			? this._animationTimes.loopStart
 			: this._startTime;
 		// no loop delay means just start again at the beginning!
 		if (!this.loopDelay) {
@@ -3262,7 +3262,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 	/** @OVERRIDE */
 	_setEndTimeout() {
 		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
-		if(this.loops && creationTimeDifference >= this._totalDuration && this.hasAnimatedMedia){
+		if (this.loops && creationTimeDifference >= this._totalDuration && this.hasAnimatedMedia) {
 			setTimeout(() => {
 				this.pauseMedia();
 			}, this._totalDuration);
