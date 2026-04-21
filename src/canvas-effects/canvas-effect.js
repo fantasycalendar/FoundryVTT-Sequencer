@@ -1615,7 +1615,8 @@ export default class CanvasEffect extends PIXI.Container {
 	_renderVoidAdvanced(renderer, displayObject) {
 		const filters = displayObject.filters;
 		const mask = displayObject._mask;
-		let enabled = [];
+		const enabled = this._voidEnabledFilters ??= [];
+		enabled.length = 0;
 		if (filters?.length) {
 			for (let i = 0; i < filters.length; i++) {
 				if (filters[i].enabled) enabled.push(filters[i]);
