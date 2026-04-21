@@ -30,11 +30,10 @@ import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.j
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
-import { TJSPosition } from "#runtime/svelte/store/position";
-import { SvelteApplication, TJSDialog } from "#runtime/svelte/application";
 import PluginsManager from "./utils/plugins-manager.js";
-import FoundryShim from "./utils/foundry-shim.js";
+import SvelteDialog from "./formapplications/dialog/SvelteDialog.js"
 import SupportDialog from "./formapplications/support-dialog.svelte";
+import flagManager from "./utils/flag-manager.js";
 
 let moduleValid = false;
 let moduleReady = false;
@@ -42,71 +41,18 @@ let canvasReady = false;
 
 Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
-  if (!game.modules.get("socketlib")?.active) return;
   moduleValid = true;
-	CONSTANTS.IS_V13 = foundry.utils.isNewerVersion(game.version, "13");
-  // Enable basis transcoder for GPU compressible textures.
-  // Decoder is included in Foundry VTT 12 but not enabled by default
-  if (!CONSTANTS.IS_V13) {
-    CONFIG.Canvas.transcoders.basis = true
-  }
+	CONSTANTS.IS_V14 = foundry.utils.isNewerVersion(game.version, "14");
   initializeModule();
   registerSocket();
-
-	// V12 -> 13 SHIM
-	if(CONSTANTS.IS_V13) {
-		Object.defineProperty(SvelteApplication, 'defaultOptions', {
-			get: () => {
-				return foundry.utils.mergeObject(Application.defaultOptions, {
-					// Copied directly from TRL except for minWidth and minHeight
-					defaultCloseAnimation: true,
-					draggable: true,
-					focusAuto: true,
-					focusKeep: false,
-					focusSource: void 0,
-					focusTrap: true,
-					headerButtonNoClose: false,
-					headerButtonNoLabel: false,
-					headerIcon: void 0,
-					headerNoTitleMinimized: false,
-					minHeight: 50, // MIN_WINDOW_HEIGHT
-					minWidth: 200, // MIN_WINDOW_WIDTH
-					positionable: true,
-					positionInitial: TJSPosition.Initial.browserCentered,
-					positionOrtho: true,
-					positionValidator: TJSPosition.Validators.transformWindow,
-					sessionStorage: void 0,
-					svelte: void 0,
-					transformOrigin: "top left"
-				}, { inPlace: false });
-			}
-		});
-	}
+	flagManager.setup();
+	// CONFIG.debug.hooks = true;
 });
 
-Hooks.once("socketlib.ready", registerSocket);
-
 Hooks.once("ready", async function() {
-  if (!game.modules.get("socketlib")?.active) {
-	  moduleValid = false;
-    ui.notifications.error(
-      "Sequencer - Sequencer requires the SocketLib module to be active and will not work without it!",
-      { console: true },
-    );
-    return;
-  }
-	if(!sequencerSocket){
-		moduleValid = false;
-		ui.notifications.error(
-			"Sequencer - Failed to set up network socket with socketlib, ensure it is installed correctly!",
-			{ console: true },
-		);
-		return;
-	}
-
   for (const [name, func] of Object.entries(easeFunctions)) {
-    if (!FoundryShim.CanvasAnimation[name]) {
-      FoundryShim.CanvasAnimation[name] = func;
+    if (!foundry.canvas.animation.CanvasAnimation[name]) {
+      foundry.canvas.animation.CanvasAnimation[name] = func;
     }
   }
 
@@ -114,6 +60,7 @@ Hooks.once("ready", async function() {
     await runMigrations();
     await migrateSettings();
     await PlayerSettings.migrateOldPresets();
+	  await lib.createJournalDatabase();
   }
 
   SequencerFoundryReplicator.registerHooks();
@@ -122,7 +69,8 @@ Hooks.once("ready", async function() {
 
 Hooks.on("canvasTearDown", () => {
   canvasReady = false;
-  SequencerEffectManager.tearDownPersists();
+  SequencerEffectManager.tearDownPersistentEffects();
+	SequencerSoundManager.tearDownPersistentSounds();
 });
 
 const setupModule = foundry.utils.debounce(() => {
@@ -136,6 +84,7 @@ const setupModule = foundry.utils.debounce(() => {
   if (!canvasReady && game.canvas?.ready) {
     canvasReady = true;
     SequencerEffectManager.initializePersistentEffects();
+	  SequencerSoundManager.initializePersistentSounds();
   }
 }, 25);
 
@@ -190,6 +139,7 @@ function initializeModule() {
   registerBatchShader();
 
   SequencerEffectManager.setup();
+  SequencerSoundManager.setup();
   SequencerAboveUILayer.setup();
 
 	PluginsManager.initialize();
@@ -202,28 +152,17 @@ Hooks.once("ready", async () => {
 });
 
 async function displaySupportDialog() {
-
   const shown = game.settings.get(CONSTANTS.MODULE_NAME, "support-dialog-shown")
   if (!game.user.isGM || shown) return;
   await game.settings.set(CONSTANTS.MODULE_NAME, "support-dialog-shown", true);
-
-  return TJSDialog.prompt({
-    title: "Sequencer",
-    label: 'Okay',
-    content: {
-      class: SupportDialog,
-    }
-  }, {
-    height: "auto",
-    width: 500
-  });
+	return SvelteDialog.show({ component: SupportDialog, window: { title: "Sequencer", icon: "fas fa-film" }});
 }
 
 async function displaySequencerWelcome() {
 
-  const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version")
+  const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version") ?? "0.0.0";
 
-  if(!game.user.isGM || !foundry.utils.isNewerVersion(version, game.version)) return;
+  if(!game.user.isGM || !foundry.utils.isNewerVersion(game.version, version)) return;
   await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown-version", game.version);
 
   const chatMessages = game.messages.filter(message => {
@@ -242,7 +181,7 @@ async function displaySequencerWelcome() {
 <p>Sequencer can only remain open, free, and regularly updated with the support of the Foundry community.</p>
 <p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
 <div class="sequencer-divider"></div>
-<p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://ko-fi.com/fantasycomputerworks">Donate</a></p>
+<p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://patreon.com/cw/fantasycomputerworks">Support Us</a></p>
 </div>`,
   });
 

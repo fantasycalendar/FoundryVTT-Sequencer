@@ -3,7 +3,6 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 class AnimationSection extends Section {
 	static niceName = "Animation";
@@ -257,7 +256,7 @@ class AnimationSection extends Section {
 	async _waitForTokenRefresh(obj) {
 		let token;
 
-		if (obj instanceof FoundryShim.Token) {
+		if (obj instanceof foundry.canvas.placeables.Token) {
 			token = obj;
 		}
 
@@ -320,7 +319,7 @@ class AnimationSection extends Section {
 			canvas.grid.size
 		);
 
-		let ray = new Ray(originLoc, targetLoc);
+		let ray = new foundry.canvas.geometry.Ray(originLoc, targetLoc);
 
 		let dx = ray.dx;
 		let dy = ray.dy;
@@ -410,7 +409,7 @@ class AnimationSection extends Section {
 					if (this._rotateTowards.towardsCenter) {
 						targetLocation = targetLocation?.center ?? targetLocation;
 					}
-					let ray = new Ray(startLocation, targetLocation);
+					let ray = new foundry.canvas.geometry.Ray(startLocation, targetLocation);
 					let angle = Math.normalizeDegrees((ray.angle * 180) / Math.PI - 90);
 					angle += offset;
 					await this._updateObject(
@@ -803,13 +802,19 @@ class AnimationSection extends Section {
 			await lib.wait(1);
 		}
 
-		return new Promise(async (resolve) => {
-			this._animate(animData, resolve);
-			setTimeout(
-				resolve,
-				Math.max(0, overallDuration + this._currentWaitTime + animData.maxFPS)
-			);
-		});
+	return new Promise((resolve) => {
+		let resolved = false;
+		const safeResolve = () => {
+			if (resolved) return;
+			resolved = true;
+			resolve();
+		};
+		this._animate(animData, safeResolve);
+		setTimeout(
+			safeResolve,
+			Math.max(0, overallDuration + this._currentWaitTime + animData.maxFPS)
+		);
+	});
 	}
 
 	/**
@@ -870,7 +875,7 @@ class AnimationSection extends Section {
 							let target = attribute.target;
 							if (this._rotateTowards.towardsCenter)
 								target = target?.center ?? target;
-							let ray = new Ray(attribute.originLocation, target);
+							let ray = new foundry.canvas.geometry.Ray(attribute.originLocation, target);
 							let angle = (ray.angle * 180) / Math.PI - 90;
 							angle += attribute.offset;
 							attribute.from = attribute.origin.rotation;
@@ -905,15 +910,18 @@ class AnimationSection extends Section {
 					}
 				}
 
-				if (Object.keys(animatedAttributes).length > 0) {
-					await this._updateObject(this._originObject, animatedAttributes);
-				}
+			if (Object.keys(animatedAttributes).length > 0) {
+				await this._updateObject(this._originObject, animatedAttributes);
+			}
 
-				animData.attributes = animData.attributes.filter((a) => !a.done);
+			animData.attributes = animData.attributes.filter((a) => !a.done);
 
-				if (animData.attributes.length === 0) return;
+			if (animData.attributes.length === 0) {
+				resolve();
+				return;
+			}
 
-				animData.lastTimespan = timespan;
+			animData.lastTimespan = timespan;
 			}
 		}
 

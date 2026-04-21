@@ -1,8 +1,8 @@
 <script>
 
-  import { localize } from '#runtime/util/i18n';
+  let localize = game.i18n.localize.bind(game.i18n);
   import SequenceStatus from "./SequenceStatus.svelte";
-  import CONSTANTS from "../../../constants.js";
+  import CONSTANTS from "../../constants.js";
 
   export let section;
 

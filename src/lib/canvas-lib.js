@@ -1,7 +1,6 @@
 import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
-import FoundryShim from "../utils/foundry-shim.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 
 export function createShape(shape) {
@@ -107,7 +106,7 @@ export function calculate_missed_position(source, target, twister) {
   const targetDimensions = get_object_dimensions(target, true);
   const targetPosition = get_object_position(target);
 
-  const ray = new Ray(targetPosition, sourcePosition);
+  const ray = new foundry.canvas.geometry.Ray(targetPosition, sourcePosition);
 
   let startRadians = ray.angle + Math.PI / 2;
   let endRadians = ray.angle - Math.PI / 2;
@@ -154,33 +153,50 @@ export function get_object_position(
   obj = obj?._object ?? obj.object ?? obj;
 
   let pos = {};
-  if (obj instanceof FoundryShim.MeasuredTemplate) {
-    if (measure) {
-      if (obj.document.t === "cone" || obj.document.t === "ray") {
-        pos.x = obj.ray.B.x;
-        pos.y = obj.ray.B.y;
-      }
-    }
-    if (obj.document.t === "rect") {
-      pos.x = obj.x;
-      pos.y = obj.y;
+	if (obj instanceof foundry.canvas.placeables.Region){
+		if(obj.document.shapes.length > 1){
+			pos.x = obj.bounds.x + obj.bounds.width/2;
+			pos.y = obj.bounds.y + obj.bounds.height/2;
+		}else{
+			let firstShape = obj.document.shapes[0];
+			switch(firstShape.type){
+				case "cone":
+				case "line":
+					if (!measure) {
+						pos.x = firstShape.measuredSegments[0].ray.A.x;
+						pos.y = firstShape.measuredSegments[0].ray.A.y;
+					} else {
+						pos.x = firstShape.measuredSegments[0].ray.B.x;
+						pos.y = firstShape.measuredSegments[0].ray.B.y;
+					}
+					break;
+				default:
+					pos.x = firstShape.center.x;
+					pos.y = firstShape.center.y;
+			}
+		}
+	} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
+		if (measure) {
+			if (obj.document.t === "cone" || obj.document.t === "ray") {
+				pos.x = obj.ray.B.x;
+				pos.y = obj.ray.B.y;
+			}
+		}
+		if (obj.document.t === "rect") {
+			pos.x = obj.x;
+			pos.y = obj.y;
 
-      if (!exact) {
-        pos.x += Math.abs(obj.shape.width / 2) + obj.shape.x;
-        pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
-      }
-    }
-  } else if (obj instanceof FoundryShim.Tile) {
+			if (!exact) {
+				pos.x += Math.abs(obj.shape.width / 2) + obj.shape.x;
+				pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
+			}
+		}
+	} else if (obj instanceof foundry.canvas.placeables.Tile) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
     };
-
-    if (!exact) {
-      pos.x += Math.abs(obj.document.width / 2);
-      pos.y += Math.abs(obj.document.height / 2);
-    }
-  } else if (obj instanceof FoundryShim.Token) {
+  } else if (obj instanceof foundry.canvas.placeables.Token) {
     const halfSize = get_object_dimensions(obj, true);
     pos = {
       x: obj.x + halfSize.width,
@@ -191,7 +207,7 @@ export function get_object_position(
       pos.x -= halfSize.width;
       pos.y -= halfSize.height;
     }
-  } else if (obj instanceof FoundryShim.Drawing) {
+  } else if (obj instanceof foundry.canvas.placeables.Drawing) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
@@ -245,6 +261,41 @@ export function get_random_offset(target, randomOffset, twister = false) {
 
 export function get_object_dimensions(inObj, half = false) {
   inObj = inObj?.object ?? inObj?._object ?? inObj;
+
+	if (inObj instanceof foundry.canvas.placeables.Region){
+		if(inObj.document.shapes.length > 1){
+			return {
+				width: inObj.bounds.width / (half ? 2 : 1),
+				height: inObj.bounds.height / (half ? 2 : 1)
+			}
+		}else{
+			let firstShape = inObj.document.shapes[0];
+			switch(firstShape.type){
+				case "cone":
+				case "circle":
+					return {
+						width: firstShape.radius / (half ? 1 : 0.5),
+						height: firstShape.radius / (half ? 1 : 0.5)
+					}
+				case "ring":
+					return {
+						width: ((firstShape.radius + firstShape.outerWidth) - (firstShape.innerWidth / 2)) / (half ? 1 : 0.5),
+						height: ((firstShape.radius + firstShape.outerWidth) - (firstShape.innerWidth / 2)) / (half ? 1 : 0.5)
+					}
+				default:
+					return {
+						width: firstShape.width / (half ? 2 : 1),
+						height: firstShape.height / (half ? 2 : 1)
+					}
+			}
+		}
+	}else if(inObj instanceof foundry.canvas.placeables.Tile){
+		return {
+			width: inObj.document.width / (half ? 2 : 1),
+			height: inObj.document.height / (half ? 2 : 1)
+		}
+	}
+
 
   let width =
     inObj?.hitArea?.width ??
@@ -355,7 +406,7 @@ export function get_mouse_position(snapToGrid = false) {
 }
 
 export function distance_between(p1, p2) {
-  return new Ray(p1, p2).distance;
+  return new foundry.canvas.geometry.Ray(p1, p2).distance;
 }
 
 
@@ -366,54 +417,69 @@ export function validateObject(inObject, sceneId) {
   return inObject?._object ?? inObject;
 }
 
-export function getPositionFromData(data, type="source") {
-
+export function getPositionFromData(data, type="source", twister = false) {
   const source = data.nameOffsetMap[data[type]]
     ? data.nameOffsetMap[data[type]][type]
     : validateObject(data[type], data.sceneId);
 
-  const position =
-    source instanceof FoundryShim.PlaceableObject
+  const position = source instanceof foundry.canvas.placeables.PlaceableObject
       ? get_object_position(source)
       : source?.worldPosition || source?.center || source;
 
-  const multiplier = data.randomOffset?.[type] ?? data.randomOffset;
-  const twister = lib.createMersenneTwister(data.seed);
+	let offset = getOffsetFromData(data, { source, type, twister });
 
-  if (source && multiplier) {
-    let randomOffset = get_random_offset(
-      source,
-      multiplier,
-      twister
-    );
-    position.x -= randomOffset.x;
-    position.y -= randomOffset.y;
-  }
+  return {
+		x: position.x - offset.x,
+	  y: position.y - offset.y,
+  };
+}
 
-  let extraOffset = data.offset;
-  if (extraOffset) {
-    let newOffset = {
-      x: extraOffset.x,
-      y: extraOffset.y,
-    };
-    if (extraOffset.gridUnits) {
-      newOffset.x *= canvas.grid.size;
-      newOffset.y *= canvas.grid.size;
-    }
-    if (extraOffset.local) {
-      newOffset = rotateAroundPoint(
-        0,
-        0,
-        newOffset.x,
-        newOffset.y,
-        source?.rotation ?? 0
-      );
-    }
-    position.x -= newOffset.x;
-    position.y -= newOffset.y;
-  }
+export function getOffsetFromData(data, { source = false, type = "source", twister = false }={}) {
+	if(!source){
+		source = data.nameOffsetMap[data[type]]
+			? data.nameOffsetMap[data[type]][type]
+			: validateObject(data[type], data.sceneId);
+	}
 
-  return position;
+	const multiplier = data.randomOffset?.[type];
+	twister = twister || lib.createMersenneTwister(data.seed);
+
+	let offset = { x: 0, y: 0 };
+
+	if (source && multiplier) {
+		let randomOffset = get_random_offset(
+			source,
+			multiplier,
+			twister
+		);
+		offset.x += randomOffset.x;
+		offset.y += randomOffset.y;
+	}
+
+	let extraOffset = data.offset;
+	if (extraOffset) {
+		let newOffset = {
+			x: extraOffset.x,
+			y: extraOffset.y,
+		};
+		if (extraOffset.gridUnits) {
+			newOffset.x *= canvas.grid.size;
+			newOffset.y *= canvas.grid.size;
+		}
+		if (extraOffset.local) {
+			newOffset = rotateAroundPoint(
+				0,
+				0,
+				newOffset.x,
+				newOffset.y,
+				source?.rotation ?? 0
+			);
+		}
+		offset.x += newOffset.x;
+		offset.y += newOffset.y;
+	}
+
+	return offset;
 }
 
 /**

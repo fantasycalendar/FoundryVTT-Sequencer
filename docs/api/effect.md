@@ -347,6 +347,7 @@ In addition, a secondary options parameter can be given to this method, which ha
 - `bindAlpha: boolean` (default `true`) - causes the effect to share the same alpha as the attached object (not the same as above, hidden is on/off, alpha is a sliding scale of visibility)
 - `bindScale: boolean` (default `true`) - causes the effect to bind its scale to the object if `.scaleToObject()` is used
 - `bindRotation: boolean` (default `true`) - causes the effect to also rotate with the attached object
+- `bindElevation: boolean` - (default `true`) - causes the effect to match the elevation of the attached object
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
@@ -470,7 +471,7 @@ Causes the effect to not rotate should its container (see `spriteContainer` in [
 
 `.persist()` or `.persist(boolean)` or `.persist(true, { persistTokenPrototype: true })`
 
-Calling this method will cause the effect to become permanent on the canvas. You can end the effect with the [Effect Manager](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager).
+Calling this method will cause the effect to become permanent on the canvas. You can end the effect with the [Effect Manager](https://fantasycomputer.works/FoundryVTT-Sequencer/#/effect-manager).
 
 Also supports a second options object that accepts:
 - `persistTokenPrototype: boolean` (default `false`) - makes the effect persist on the token's prototype data, useful for active effect-linked VFX
@@ -504,7 +505,7 @@ Accepts an object that can contain
 
 Takes a UUID string, or a Foundry Document that contains an UUID.
 
-Used for adding extra information to an effect, like the origin of the effect in the form of the item's UUID to then be retrieved or ended with [`Sequencer.EffectManager.getEffects()`](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager#get-effects) and [`Sequencer.EffectManager.endEffects()`](https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Sequencer-Effect-Manager#end-effects)
+Used for adding extra information to an effect, like the origin of the effect in the form of the item's UUID to then be retrieved or ended with [`Sequencer.EffectManager.getEffects()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/effect-manager?id=get-effects) and [`Sequencer.EffectManager.endEffects()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/effect-manager?id=end-effects)
 
 ## Name
 
@@ -823,7 +824,9 @@ Causes the effect to be played below tiles - you can pass a boolean whether it s
 
 `.aboveLighting()` or `.aboveLighting(bool)`
 
-Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects and the interface (like health bars).
+Causes the effect to be rendered above the lighting, darkness, and fog-of-war layers. The effect also renders above region highlights and the grid, but below overlay controls (HUD, health bars, crosshairs).
+
+Use this when an effect must be visible regardless of scene darkness or obscurement — for example, a bright spell visual that should cut through fog.
 
 Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden.
 
@@ -837,17 +840,27 @@ Causes the effect to be played above the interface layer, which makes the effect
 
 `.zIndex(1)`
 
-Sets the z-index of the effect, potentially displaying it on top of or below other effects on the same elevation and sortLayer (v12 only).
+Sets the z-index of the effect, breaking ties between effects that share the same elevation and sortLayer.
 
-**Note:** If you have called [`.belowTokens()`](#below-tokens) or [`.belowTiles()`](#below-tiles), the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer.
+**Note:** `.belowTokens()` and `.belowTiles()` change the effect's `sortLayer`, so the z-index ordering only applies within the new sort layer.
 
 ## Sort Layer
 
-### Only supported in Foundry v12
+`.sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
 
-`sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
+Sets the sort layer of the effect. This value determines where the effect sits among the primary canvas group's children when siblings share an elevation. Foundry's primary group sorts children first by elevation, then by `sortLayer`, then by `sort`, then by `zIndex`.
 
-Sets the sort layer of the effect. This value is used to determine layer ordering between entities of the same elevation. Foundry sorts canvas object first by elevation, second by their sortLayer and third by their z-index. Default is 800, which is above tokens and below weather effects.
+Default is `800`, which is above tokens (`700`) and below weather (`1000`). Sequencer reserves:
+- `300` — below tiles (used by `.belowTiles()`)
+- `600` — below tokens (used by `.belowTokens()`)
+- `800` — default effects layer (above tokens)
+
+For reference, Foundry's built-in sort layers are:
+- `0` scene background / level textures
+- `500` tiles
+- `600` drawings
+- `700` tokens
+- `1000` weather
 
 ## Animate Property
 

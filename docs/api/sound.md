@@ -253,8 +253,6 @@ You can also pass functions that will get evaluated during runtime by Mustache:
 
 ## At Location
 
-### Only supported in Foundry v12
-
 `.atLocation(object|string, object)`
 
 Examples:
@@ -274,6 +272,51 @@ Also supports a second options object that accepts:
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the sound's scene's grid size
+
+## Attach To
+
+`.attachTo(object|string, object)`
+
+Examples:
+```js
+.attachTo(token)
+.attachTo(template)
+.attachTo("stored_name")
+.attachTo(token, { bindVisibility: false })
+```
+
+This method makes the sound attached to an object. If the object cannot have attached sounds, the sound will be created on the canvas.
+
+A smart method that can take:
+- Reference to a placeable object (tokens, templates, lights, etc)
+- String reference (see [`.name()`](#name))
+
+In addition, a secondary options parameter can be given to this method, which has the following options:
+
+- `bindVisibility: boolean` - (default `true`) - causes the sound to become hidden when the attached object is hidden
+- `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object
+
+
+## Loop Options
+
+`.loopOptions(inOptions)` or `.loopOptions({ maxLoops: 1 })` or `.loopOptions({ loopDelay: 1000, maxLoops: 5 })`
+
+Allows you to control the number of loops and the delays between each loop.
+
+Accepts an object that can contain
+- `loopDelay: number` (default `0`) - adds a delay in milliseconds between each loop of the sound
+- `maxLoops: number` (default `0`) - makes the sound only loop this many times before ending
+- `endOnLastLoop: boolean` (default `false`) - whether the sound should end when reaching the last loop (if persistent)
+
+
+## Persist
+
+`.persist()` or `.persist(boolean)` or `.persist(true, { persistTokenPrototype: true })`
+
+Calling this method will cause the sound to become permanent on the canvas. You can end the sound with the [Sound Manager](https://fantasycomputer.works/FoundryVTT-Sequencer/#/sound-manager).
+
+Also supports a second options object that accepts:
+- `persistTokenPrototype: boolean` (default `false`) - makes the sound persist on the token's prototype data, useful for active sound-linked VFX
 
 
 ## Radius
@@ -369,7 +412,7 @@ Examples:
 An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
 
 The options object this method accept can have the following two parameters:
-- `type`: one of the effects in `CONFIG.soundEffects`, as of Foundry V12, this is:
+- `type`: one of the effects in `CONFIG.soundEffects`:
   - `lowpass`
   - `highpass`
   - `reverb`
@@ -391,7 +434,7 @@ Examples:
 An effect to be applied on the sound when it is heard through a wall.
 
 The options object this method accept can have the following two parameters:
-- `type`: one of the effects in `CONFIG.soundEffects`, as of Foundry V12, this is:
+- `type`: one of the effects in `CONFIG.soundEffects`:
   - `lowpass`
   - `highpass`
   - `reverb`

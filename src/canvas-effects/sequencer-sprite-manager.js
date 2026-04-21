@@ -2,7 +2,6 @@
 import AnimatedSpriteMesh from "../lib/meshes/AnimatedSpriteMesh.js";
 import TilingSpriteMesh from "../lib/meshes/TilingSpriteMesh.js";
 import SequencerFileCache from "../modules/sequencer-file-cache.js";
-import FoundryShim from "../utils/foundry-shim.js";
 class Asset {
 	destroy() {
 		// nothing to do in the general case
@@ -309,11 +308,12 @@ export class SequencerSpriteManager extends PIXI.Container {
 
 	/**
 	 * @param {import("../modules/sequencer-file.js").SequencerFile} file
-	 * @param {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
+	 * @param {{ texture?: null, antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
 	 */
 	constructor(file, options) {
 		super();
 		this.#sharedSpriteConfig = options ?? {
+			texture: null,
 			antialiasing: PIXI.SCALE_MODES.LINEAR,
 			tiling: false,
 			xray: false,
@@ -606,7 +606,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		if (this.#file && this.#file.isFlipbook) {
 			return this.#loadFlipbook(this.#file.getAllFiles(), this.#file.originalMetadata);
 		}
-		const texture = await SequencerFileCache.loadFile(filepath);
+		const texture = this.#sharedSpriteConfig.texture ?? await SequencerFileCache.loadFile(filepath);
 		// disable mipmaps if using compressed textures and no level information is given.
 		// for some reason, the integrated basis_universal transcoder does not set this
 		// correctly.
@@ -635,7 +635,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 * @param {{ fps: number; }} metadata
 	 */
 	async #loadFlipbook(filepaths, metadata) {
-		const textures = (await Promise.all(filepaths.map(async (filepath) => FoundryShim.loadTexture(filepath)))).filter(
+		const textures = (await Promise.all(filepaths.map(async (filepath) => foundry.canvas.loadTexture(filepath)))).filter(
 			(t) => t instanceof PIXI.Texture
 		);
 		return new FlipbookAsset({ filepaths, textures, framerate: metadata?.fps ?? 24 });

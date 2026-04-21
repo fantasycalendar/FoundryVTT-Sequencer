@@ -1,5 +1,4 @@
 import * as lib from "../lib/lib.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 const SequencerAnimationEngine = {
 	_animations: [],
@@ -85,7 +84,7 @@ const SequencerAnimationEngine = {
 	start() {
 		if (!this.ticker) {
 			lib.debug(`Animation Engine Started`);
-			this.ticker = FoundryShim.CanvasAnimation.ticker;
+			this.ticker = foundry.canvas.animation.CanvasAnimation.ticker;
 			this.ticker.add(this.nextFrame.bind(this));
 		}
 	},

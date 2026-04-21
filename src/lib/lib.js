@@ -9,27 +9,27 @@ import { easeFunctions } from "../canvas-effects/ease.js";
  * @return {array|boolean}              Interpolated value
  */
 export async function getFiles(
-  inFile,
-  { applyWildCard = false, softFail = false } = {}
+	inFile,
+	{ applyWildCard = false, softFail = false } = {}
 ) {
-  let source = "data";
-  const browseOptions = { wildcard: applyWildCard };
+	let source = "data";
+	const browseOptions = { wildcard: applyWildCard };
 
-  if (/\.s3\./.test(inFile)) {
-    source = "s3";
-    const { bucket, keyPrefix } = foundry.utils.parseS3URL(inFile);
-    if (bucket) {
-      browseOptions.bucket = bucket;
-      inFile = keyPrefix;
-    }
-  }
+	if (/\.s3\./.test(inFile)) {
+		source = "s3";
+		const { bucket, keyPrefix } = foundry.utils.parseS3URL(inFile);
+		if (bucket) {
+			browseOptions.bucket = bucket;
+			inFile = keyPrefix;
+		}
+	}
 
-  try {
-    return (await FilePicker.browse(source, inFile, browseOptions)).files;
-  } catch (err) {
-    if (softFail) return false;
-    throw custom_error("Sequencer", `getFiles | ${err}`);
-  }
+	try {
+		return (await FilePicker.browse(source, inFile, browseOptions)).files;
+	} catch (err) {
+		if (softFail) return false;
+		throw custom_error("Sequencer", `getFiles | ${err}`);
+	}
 }
 
 /**
@@ -42,8 +42,8 @@ export async function getFiles(
  * @return {number}                     Interpolated value
  */
 export function interpolate(p1, p2, t, ease = "linear") {
-  const easeFunction = is_function(ease) ? ease : easeFunctions[ease];
-  return p1 + (p2 - p1) * easeFunction(t);
+	const easeFunction = is_function(ease) ? ease : easeFunctions[ease];
+	return p1 + (p2 - p1) * easeFunction(t);
 }
 
 /**
@@ -55,10 +55,10 @@ export function interpolate(p1, p2, t, ease = "linear") {
  * @return {number}                             A random value between the range given
  */
 export function random_float_between(min, max, twister = false) {
-  const random = twister ? twister.random() : Math.random();
-  const _max = Math.max(max, min);
-  const _min = Math.min(max, min);
-  return random * (_max - _min) + _min;
+	const random = twister ? twister.random() : Math.random();
+	const _max = Math.max(max, min);
+	const _min = Math.min(max, min);
+	return random * (_max - _min) + _min;
 }
 
 /**
@@ -70,16 +70,16 @@ export function random_float_between(min, max, twister = false) {
  * @return {int}                                A random integer between the range given
  */
 export function random_int_between(min, max, twister = false) {
-  return Math.floor(random_float_between(min, max, twister));
+	return Math.floor(random_float_between(min, max, twister));
 }
 
 export function flip_negate(num_1, num_2) {
-  if (num_1 > 0) {
-    num_1 -= num_2;
-  } else {
-    num_1 += num_2;
-  }
-  return num_1;
+	if (num_1 > 0) {
+		num_1 -= num_2;
+	} else {
+		num_1 += num_2;
+	}
+	return num_1;
 }
 
 /**
@@ -90,15 +90,15 @@ export function flip_negate(num_1, num_2) {
  * @return {array}
  */
 export function shuffle_array(inArray, twister = false) {
-  let shuffled = [...inArray];
-  const randomMethod = twister?.random ?? Math.random;
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    let j = Math.floor(randomMethod() * (i + 1));
-    let temp = shuffled[i];
-    shuffled[i] = shuffled[j];
-    shuffled[j] = temp;
-  }
-  return shuffled;
+	let shuffled = [...inArray];
+	const randomMethod = twister?.random ?? Math.random;
+	for (let i = shuffled.length - 1; i > 0; i--) {
+		let j = Math.floor(randomMethod() * (i + 1));
+		let temp = shuffled[i];
+		shuffled[i] = shuffled[j];
+		shuffled[j] = temp;
+	}
+	return shuffled;
 }
 
 /**
@@ -108,11 +108,11 @@ export function shuffle_array(inArray, twister = false) {
  * @return {boolean}              A boolean whether the function is actually a function
  */
 export function is_function(inFunc) {
-  return (
-    inFunc &&
-    ({}.toString.call(inFunc) === "[object Function]" ||
-      {}.toString.call(inFunc) === "[object AsyncFunction]")
-  );
+	return (
+		inFunc &&
+		({}.toString.call(inFunc) === "[object Function]" ||
+			{}.toString.call(inFunc) === "[object AsyncFunction]")
+	);
 }
 
 /**
@@ -125,18 +125,18 @@ export function is_function(inFunc) {
  * @return {object}                             A random element from the array
  */
 export function random_array_element(
-  inArray,
-  { recurse = false, twister = false, index = false } = {}
+	inArray,
+	{ recurse = false, twister = false, index = false } = {}
 ) {
-  const chosenIndex = random_int_between(0, inArray.length, twister);
-  let choice = inArray[chosenIndex];
-  if (recurse && Array.isArray(choice)) {
-    return random_array_element(choice, { recurse, twister, index });
-  }
-  if (index) {
-    return chosenIndex;
-  }
-  return choice;
+	const chosenIndex = random_int_between(0, inArray.length, twister);
+	let choice = inArray[chosenIndex];
+	if (recurse && Array.isArray(choice)) {
+		return random_array_element(choice, { recurse, twister, index });
+	}
+	if (index) {
+		return chosenIndex;
+	}
+	return choice;
 }
 
 /**
@@ -148,15 +148,15 @@ export function random_array_element(
  * @return {object}                             A random element from the object
  */
 export function random_object_element(
-  inObject,
-  { recurse = false, twister = false } = {}
+	inObject,
+	{ recurse = false, twister = false } = {}
 ) {
-  let keys = Object.keys(inObject).filter((k) => !k.startsWith("_"));
-  let choice = inObject[random_array_element(keys, { twister })];
-  if (typeof choice === "object" && recurse) {
-    return random_object_element(choice, { recurse: true });
-  }
-  return choice;
+	let keys = Object.keys(inObject).filter((k) => !k.startsWith("_"));
+	let choice = inObject[random_array_element(keys, { twister })];
+	if (typeof choice === "object" && recurse) {
+		return random_object_element(choice, { recurse: true });
+	}
+	return choice;
 }
 
 /**
@@ -166,7 +166,7 @@ export function random_object_element(
  * @return {boolean}                Whether it is of type number, not infinite, and not NaN
  */
 export function is_real_number(inNumber) {
-  return !isNaN(inNumber) && typeof inNumber === "number" && isFinite(inNumber);
+	return !isNaN(inNumber) && typeof inNumber === "number" && isFinite(inNumber);
 }
 
 /**
@@ -176,11 +176,11 @@ export function is_real_number(inNumber) {
  * @return {number | undefined}     Number normalized between 0 and 1, or undefined if inNumber is NaN
  */
 export function normalize_alpha_number(inNumber) {
-  if (!is_real_number(inNumber)) return undefined;
+	if (!is_real_number(inNumber)) return undefined;
 
-  inNumber = Math.abs(inNumber);
-  while (inNumber > 1) inNumber /= 10;
-  return inNumber;
+	inNumber = Math.abs(inNumber);
+	while (inNumber > 1) inNumber /= 10;
+	return inNumber;
 }
 
 /**
@@ -191,14 +191,15 @@ export function normalize_alpha_number(inNumber) {
  * @returns {any}                      Property value, if found
  */
 export function deep_get(obj, path) {
-  if (!Array.isArray(path)) path = path.split(".");
-  try {
-    let i;
-    for (i = 0; i < path.length - 1; i++) {
-      obj = obj[path[i]];
-    }
-    return obj[path[i]];
-  } catch (err) {}
+	if (!Array.isArray(path)) path = path.split(".");
+	try {
+		let i;
+		for (i = 0; i < path.length - 1; i++) {
+			obj = obj[path[i]];
+		}
+		return obj[path[i]];
+	} catch (err) {
+	}
 }
 
 /**
@@ -212,18 +213,19 @@ export function deep_get(obj, path) {
  * @param  {any}            value     The value to set
  */
 export function deep_set(obj, path, value) {
-  if (!Array.isArray(path)) path = path.split(".");
-  try {
-    let i;
-    for (i = 0; i < path.length - 1; i++) {
-      obj = obj[path[i]];
-    }
-    if (is_function(obj[path[i]])) {
-      obj[path[i]](value);
-    } else {
-      obj[path[i]] = value;
-    }
-  } catch (err) {}
+	if (!Array.isArray(path)) path = path.split(".");
+	try {
+		let i;
+		for (i = 0; i < path.length - 1; i++) {
+			obj = obj[path[i]];
+		}
+		if (is_function(obj[path[i]])) {
+			obj[path[i]](value);
+		} else {
+			obj[path[i]] = value;
+		}
+	} catch (err) {
+	}
 }
 
 /**
@@ -236,21 +238,21 @@ export function deep_set(obj, path, value) {
  * @return {object}               The flattened object
  */
 export function flatten_object(obj) {
-  let toReturn = [];
-  for (let i in obj) {
-    if (i.startsWith("_")) continue;
-    if (!obj.hasOwnProperty(i)) continue;
-    if (typeof obj[i] == "object") {
-      let flatObject = flatten_object(obj[i]);
-      for (let x in flatObject) {
-        if (!flatObject.hasOwnProperty(x)) continue;
-        toReturn[i + "." + x] = flatObject[x];
-      }
-    } else {
-      toReturn[i] = obj[i];
-    }
-  }
-  return toReturn;
+	let toReturn = [];
+	for (let i in obj) {
+		if (i.startsWith("_")) continue;
+		if (!obj.hasOwnProperty(i)) continue;
+		if (typeof obj[i] == "object") {
+			let flatObject = flatten_object(obj[i]);
+			for (let x in flatObject) {
+				if (!flatObject.hasOwnProperty(x)) continue;
+				toReturn[i + "." + x] = flatObject[x];
+			}
+		} else {
+			toReturn[i] = obj[i];
+		}
+	}
+	return toReturn;
 }
 
 /**
@@ -260,7 +262,7 @@ export function flatten_object(obj) {
  * @return {Promise}            A promise that resolves after a given amount of milliseconds
  */
 export function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -272,9 +274,9 @@ export function wait(ms) {
  * @return {number}             The clamped number
  */
 export function clamp(num, min, max) {
-  const _max = Math.max(min, max);
-  const _min = Math.min(min, max);
-  return Math.max(_min, Math.min(_max, num));
+	const _max = Math.max(min, max);
+	const _min = Math.min(min, max);
+	return Math.max(_min, Math.min(_max, num));
 }
 
 /**
@@ -284,14 +286,14 @@ export function clamp(num, min, max) {
  * @returns {boolean}
  */
 export function is_UUID(inId) {
-  return (
-    typeof inId === "string" &&
-    (inId.startsWith("Scene") ||
-      inId.startsWith("Actor") ||
-      inId.startsWith("Item")) &&
-    (inId.match(/\./g) || []).length &&
-    !inId.endsWith(".")
-  );
+	return (
+		typeof inId === "string" &&
+		(inId.startsWith("Scene") ||
+			inId.startsWith("Actor") ||
+			inId.startsWith("Item")) &&
+		(inId.match(/\./g) || []).length &&
+		!inId.endsWith(".")
+	);
 }
 
 /**
@@ -302,19 +304,19 @@ export function is_UUID(inId) {
  * @return {any}                    Object if found, else undefined
  */
 export function get_object_from_scene(
-  inObjectId,
-  inSceneId = game.user.viewedScene
+	inObjectId,
+	inSceneId = game.user.viewedScene
 ) {
-  let tryUUID = is_UUID(inObjectId);
-  if (tryUUID) {
-    const obj = fromUuidSync(inObjectId);
-    if (obj) return obj;
-    tryUUID = false;
-  }
+	let tryUUID = is_UUID(inObjectId);
+	if (tryUUID) {
+		const obj = fromUuidSync(inObjectId);
+		if (obj) return obj;
+		tryUUID = false;
+	}
 	const allDocs = get_all_documents_from_scene(inSceneId);
-  return allDocs.find((obj) => {
-    return get_object_identifier(obj, tryUUID) === inObjectId;
-  });
+	return allDocs.find((obj) => {
+		return get_object_identifier(obj, tryUUID) === inObjectId;
+	});
 }
 
 /**
@@ -324,22 +326,22 @@ export function get_object_from_scene(
  * @returns {Array<Document>}
  */
 export function get_all_documents_from_scene(inSceneId = false) {
-  const scene = inSceneId
-    ? game.scenes.get(inSceneId)
-    : game.scenes.get(game.user?.viewedScene);
-  if (!scene) return [];
-  return [
-	  ...canvas.layers.map(layer => layer?.children ?? [].concat(layer?.preview?.children ?? [])),
-    ...Array.from(scene?.tokens ?? []),
-    ...Array.from(scene?.lights ?? []),
-    ...Array.from(scene?.sounds ?? []),
-    ...Array.from(scene?.templates ?? []),
-    ...Array.from(scene?.tiles ?? []),
-    ...Array.from(scene?.walls ?? []),
-    ...Array.from(scene?.drawings ?? []),
-  ]
-    .deepFlatten()
-    .filter(Boolean);
+	const scene = inSceneId
+		? game.scenes.get(inSceneId)
+		: game.scenes.get(game.user?.viewedScene);
+	if (!scene) return [];
+	return [
+		...canvas.layers.map(layer => layer?.children ?? [].concat(layer?.preview?.children ?? [])),
+		...Array.from(scene?.tokens ?? []),
+		...Array.from(scene?.lights ?? []),
+		...Array.from(scene?.sounds ?? []),
+		...Array.from(scene?.regions ?? []),
+		...Array.from(scene?.tiles ?? []),
+		...Array.from(scene?.walls ?? []),
+		...Array.from(scene?.drawings ?? []),
+	]
+		.deepFlatten()
+		.filter(Boolean);
 }
 
 /**
@@ -349,8 +351,8 @@ export function get_all_documents_from_scene(inSceneId = false) {
  * @returns {Document|{document}|*}
  */
 export function validate_document(inObject) {
-  const document = inObject?.document ?? inObject;
-  return is_UUID(document?.uuid) ? document : inObject;
+	const document = inObject?.document ?? inObject;
+	return is_UUID(document?.uuid) ? document : inObject;
 }
 
 /**
@@ -361,16 +363,16 @@ export function validate_document(inObject) {
  * @return {String}                 The identifier
  */
 export function get_object_identifier(inObject, tryUUID = true) {
-  const uuid = tryUUID && is_UUID(inObject?.uuid) ? inObject?.uuid : undefined;
-  return (
-    uuid ??
-    inObject?.id ??
-    inObject?.document?.name ??
-    inObject?.name ??
-    (inObject?.tag !== "" ? inObject?.tag : undefined) ??
-    (inObject?.label !== "" ? inObject?.label : undefined) ??
-    inObject?.sound_id
-  );
+	const uuid = tryUUID && is_UUID(inObject?.uuid) ? inObject?.uuid : undefined;
+	return (
+		uuid ??
+		inObject?.id ??
+		inObject?.document?.name ??
+		inObject?.name ??
+		(inObject?.tag !== "" ? inObject?.tag : undefined) ??
+		(inObject?.label !== "" ? inObject?.label : undefined) ??
+		inObject?.sound_id
+	);
 }
 
 /**
@@ -380,193 +382,173 @@ export function get_object_identifier(inObject, tryUUID = true) {
  * @return {Array}                 An array containing only unique objects
  */
 export function make_array_unique(inArray) {
-  return Array.from(new Set(inArray));
+	return Array.from(new Set(inArray));
 }
 
 export function debug(msg, args = "") {
-  if (game.settings.get(CONSTANTS.MODULE_NAME, "debug"))
-    console.log(`DEBUG | Sequencer | ${msg}`, args);
+	if (game.settings.get(CONSTANTS.MODULE_NAME, "debug"))
+		console.log(`DEBUG | Sequencer | ${msg}`, args);
 }
 
 export function debug_error(msg, args) {
-  if (game.settings.get(CONSTANTS.MODULE_NAME, "debug"))
-    console.error(`DEBUG | Sequencer | ${msg}`, args);
+	if (game.settings.get(CONSTANTS.MODULE_NAME, "debug"))
+		console.error(`DEBUG | Sequencer | ${msg}`, args);
 }
 
 export function custom_warning(inClassName, warning, notify = false) {
-  inClassName =
-    inClassName !== "Sequencer"
-      ? "Sequencer | Module: " + inClassName
-      : inClassName;
-  warning = `${inClassName} | ${warning}`;
-  if (notify) ui.notifications.warn(warning, { console: false });
-  console.warn(warning.replace("<br>", "\n"));
+	inClassName =
+		inClassName !== "Sequencer"
+			? "Sequencer | Module: " + inClassName
+			: inClassName;
+	warning = `${inClassName} | ${warning}`;
+	if (notify) ui.notifications.warn(warning, { console: false });
+	console.warn(warning.replace("<br>", "\n"));
 }
 
 const throttledWarnings = {};
+
 export function throttled_custom_warning(
-  inClassName,
-  warning,
-  delay = 10000,
-  notify = false
+	inClassName,
+	warning,
+	delay = 10000,
+	notify = false
 ) {
-  inClassName =
-    inClassName !== "Sequencer"
-      ? "Sequencer | Module: " + inClassName
-      : inClassName;
-  warning = `${inClassName} | ${warning}`;
-  if (throttledWarnings[warning]) return;
-  throttledWarnings[warning] = true;
-  if (notify) ui.notifications.warn(warning, { console: false });
-  console.warn(warning.replace("<br>", "\n"));
-  setTimeout(() => {
-    delete throttledWarnings[warning];
-  }, delay);
+	inClassName =
+		inClassName !== "Sequencer"
+			? "Sequencer | Module: " + inClassName
+			: inClassName;
+	warning = `${inClassName} | ${warning}`;
+	if (throttledWarnings[warning]) return;
+	throttledWarnings[warning] = true;
+	if (notify) ui.notifications.warn(warning, { console: false });
+	console.warn(warning.replace("<br>", "\n"));
+	setTimeout(() => {
+		delete throttledWarnings[warning];
+	}, delay);
 }
 
 export function custom_error(inClassName, error, notify = true) {
-  inClassName =
-    inClassName !== "Sequencer"
-      ? "Sequencer | Module: " + inClassName
-      : inClassName;
-  error = `${inClassName} | ${error}`;
-  if (notify) ui.notifications.error(error, { console: false });
-  return new Error(error.replace("<br>", "\n"));
+	inClassName =
+		inClassName !== "Sequencer"
+			? "Sequencer | Module: " + inClassName
+			: inClassName;
+	error = `${inClassName} | ${error}`;
+	if (notify) ui.notifications.error(error, { console: false });
+	return new Error(error.replace("<br>", "\n"));
 }
 
 export function user_can_do(inSetting) {
-  return game.user.role > game.settings.get(CONSTANTS.MODULE_NAME, inSetting);
+	return game.user.role > game.settings.get(CONSTANTS.MODULE_NAME, inSetting);
 }
 
 export function group_by(xs, key) {
-  return xs.reduce(function (acc, obj) {
-    let property = foundry.utils.getProperty(obj, key);
-    acc[property] = acc[property] || [];
-    acc[property].push(obj);
-    return acc;
-  }, {});
+	return xs.reduce(function (acc, obj) {
+		let property = foundry.utils.getProperty(obj, key);
+		acc[property] = acc[property] || [];
+		acc[property].push(obj);
+		return acc;
+	}, {});
 }
 
 function objHasProperty(obj, prop) {
-  return obj.constructor.prototype.hasOwnProperty(prop);
+	return obj.constructor.prototype.hasOwnProperty(prop);
 }
 
 export function sequence_proxy_wrap(inSequence) {
-  return new Proxy(inSequence, {
-    get: function (target, prop) {
-      if (!objHasProperty(target, prop)) {
-        if (Sequencer.SectionManager.externalSections[prop] === undefined) {
-          const section = target.sections[target.sections.length - 1];
-          if (section && objHasProperty(section, prop)) {
-            const targetProperty = Reflect.get(section, prop);
-            return is_function(targetProperty)
-              ? targetProperty.bind(section)
-              : targetProperty;
-          }
-          return Reflect.get(target, prop);
-        }
-        target.sectionToCreate =
-          Sequencer.SectionManager.externalSections[prop];
-        return Reflect.get(target, "_createCustomSection");
-      }
-      return Reflect.get(target, prop);
-    },
-  });
+	return new Proxy(inSequence, {
+		get: function (target, prop) {
+			if (!objHasProperty(target, prop)) {
+				if (Sequencer.SectionManager.externalSections[prop] === undefined) {
+					const section = target.sections[target.sections.length - 1];
+					if (section && objHasProperty(section, prop)) {
+						const targetProperty = Reflect.get(section, prop);
+						return is_function(targetProperty)
+							? targetProperty.bind(section)
+							: targetProperty;
+					}
+					return Reflect.get(target, prop);
+				}
+				target.sectionToCreate =
+					Sequencer.SectionManager.externalSections[prop];
+				return Reflect.get(target, "_createCustomSection");
+			}
+			return Reflect.get(target, prop);
+		},
+	});
 }
 
 export function section_proxy_wrap(inClass) {
-  return new Proxy(inClass, {
-    get: function (target, prop) {
-      if (
-        !objHasProperty(target, prop) &&
-        objHasProperty(target.sequence, prop)
-      ) {
-        const targetProperty = Reflect.get(target.sequence, prop);
-        return is_function(targetProperty)
-          ? targetProperty.bind(target.sequence)
-          : targetProperty;
-      }
-      return Reflect.get(target, prop);
-    },
-  });
+	return new Proxy(inClass, {
+		get: function (target, prop) {
+			if (
+				!objHasProperty(target, prop) &&
+				objHasProperty(target.sequence, prop)
+			) {
+				const targetProperty = Reflect.get(target.sequence, prop);
+				return is_function(targetProperty)
+					? targetProperty.bind(target.sequence)
+					: targetProperty;
+			}
+			return Reflect.get(target, prop);
+		},
+	});
 }
 
 export function str_to_search_regex_str(str) {
-  return str
-    .trim()
-    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-    .replace(/\*+/g, ".*?");
+	return str
+		.trim()
+		.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+		.replace(/\*+/g, ".*?");
 }
 
 export function safe_str(str) {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-export function scroll_to_element(
-  scrollElement,
-  scrollToElement,
-  duration = 500
-) {
-  if (!duration) {
-    scrollElement.scrollTop(
-      scrollElement.scrollTop() -
-        scrollElement.offset().top +
-        scrollToElement.offset().top
-    );
-    return;
-  }
-
-  scrollElement.animate(
-    {
-      scrollTop:
-        scrollElement.scrollTop() -
-        scrollElement.offset().top +
-        scrollToElement.offset().top,
-    },
-    duration
-  );
-
-  return wait(duration);
-}
-
-export async function highlight_element(
-  element,
-  { duration = false, color = "#FF0000", size = "3px" } = {}
-) {
-  element.prop(
-    "style",
-    `-webkit-box-shadow: inset 0px 0px ${size} ${size} ${color}; box-shadow: inset 0px 0px ${size} ${size} ${color};`
-  );
-  if (!duration) return;
-  await wait(duration);
-  element.prop("style", "");
+	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 export function get_hash(input) {
-  let hash = 0;
-  const len = input.length;
-  for (let i = 0; i < len; i++) {
-    hash = (hash << 5) - hash + input.charCodeAt(i);
-    hash |= 0; // to 32bit integer
-  }
-  return hash;
+	let hash = 0;
+	const len = input.length;
+	for (let i = 0; i < len; i++) {
+		hash = (hash << 5) - hash + input.charCodeAt(i);
+		hash |= 0; // to 32bit integer
+	}
+	return hash;
 }
 
 export function parseColor(inColor) {
-  return {
-    hexadecimal: is_real_number(inColor) ? inColor.toString(16) : inColor,
-    decimal:
-      typeof inColor === "string" && inColor.startsWith("#")
-        ? parseInt(inColor.slice(1), 16)
-        : inColor,
-  };
+	return {
+		hexadecimal: is_real_number(inColor) ? inColor.toString(16) : inColor,
+		decimal:
+			typeof inColor === "string" && inColor.startsWith("#")
+				? parseInt(inColor.slice(1), 16)
+				: inColor,
+	};
 }
 
 export function getCanvasMouse() {
-  return canvas?.app?.renderer?.events?.pointer ?? canvas?.app?.renderer?.plugins?.interaction?.pointer;
+	return canvas?.app?.renderer?.events?.pointer ?? canvas?.app?.renderer?.plugins?.interaction?.pointer;
 }
 
-export function createMersenneTwister(seed){
+export function createMersenneTwister(seed) {
 	const twister = foundry?.dice?.MersenneTwister ?? MersenneTwister;
 	return new twister(seed);
+}
+
+export async function createJournalDatabase(){
+	let database = game.journal.getName(CONSTANTS.DATABASE_NAME);
+	if(!database) {
+		database = await JournalEntry.create({
+			name: CONSTANTS.DATABASE_NAME,
+			"ownership.default": CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER
+		});
+	}
+	return database;
+}
+
+export function forceDeletionKeyWrapper(updateObj, key){
+	if(CONSTANTS.IS_V14){
+		updateObj[key.replaceAll("-=", "")] = new foundry.data.operators.ForcedDeletion();
+	}else {
+		updateObj[key] = null;
+	}
 }

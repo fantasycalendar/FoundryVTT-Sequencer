@@ -1,8 +1,8 @@
 <script>
-  import { localize } from '#runtime/util/i18n';
+  let localize = game.i18n.localize.bind(game.i18n);
   import { onMount, onDestroy } from "svelte";
   import SequenceManager from "../../modules/sequence-manager.js";
-  import Sequence from "./components/Sequence.svelte";
+  import Sequence from "../components/Sequence.svelte";
 
   const VisibleEffects = SequenceManager.VisibleEffects;
   const RunningSequences = SequenceManager.RunningSequences;

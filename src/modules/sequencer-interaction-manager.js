@@ -395,6 +395,7 @@ export const SelectionManager = {
   sourceOrTarget: false,
   dragOffset: false,
   hoveredEffectUI: false,
+  hoveredSoundUI: false,
 
   get snapToGrid() {
     return get(PlayerSettings.snapToGrid.store);

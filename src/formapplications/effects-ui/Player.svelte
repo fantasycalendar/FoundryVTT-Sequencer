@@ -1,12 +1,12 @@
 <script>
-  import { localize } from '#runtime/util/i18n';
+  let localize = game.i18n.localize.bind(game.i18n);
   import { PlayerSettings } from "./effect-player-store.js";
   import { get } from "svelte/store";
   import SequencerDatabase from "../../modules/sequencer-database.js";
-  import SliderInput from "./components/SliderInput.svelte";
-  import Checkbox from "./components/Checkbox.svelte";
-  import NumberInput from "./components/NumberInput.svelte";
-  import SwitchToggle from "./components/SwitchToggle.svelte";
+  import SliderInput from "../components/SliderInput.svelte";
+  import Checkbox from "../components/Checkbox.svelte";
+  import NumberInput from "../components/NumberInput.svelte";
+  import SwitchToggle from "../components/SwitchToggle.svelte";
   import CONSTANTS from "../../constants.js";
 
   const fileStore = PlayerSettings.file.store;
@@ -36,11 +36,7 @@
   $: searchDebounce($fileStore);
 
   async function activateLayer(){
-		if(CONSTANTS.IS_V13){
-			ui.controls.activate({ control: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
-		}else{
-			ui.controls.initialize({ layer: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
-		}
+		ui.controls.activate({ control: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
 	  canvas.sequencerInterfaceLayer.activate({ tool: CONSTANTS.TOOLS.PLAY });
   }
 

@@ -163,7 +163,9 @@ class Database {
     if (inString === "")
       return this._throwError("entryExists", "inString cannot be empty");
     inString = inString.replace(/\[[0-9]+]$/, "");
-    return this.flattenedEntries.find((entry) => entry.startsWith(inString));
+    return this.flattenedEntries.find(
+      (entry) => entry === inString || entry.startsWith(inString + ".")
+    );
   }
 
   /**

@@ -1,7 +1,6 @@
 import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 let lockedView = false;
 
@@ -64,7 +63,7 @@ export default class SequencerFoundryReplicator {
       });
 
       if (data.speed) {
-        let ray = new Ray(canvas.stage.pivot, {
+        let ray = new foundry.canvas.geometry.Ray(canvas.stage.pivot, {
           x: position.x,
           y: position.y,
         });

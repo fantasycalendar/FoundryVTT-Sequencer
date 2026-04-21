@@ -99,6 +99,8 @@ function copyPath(dbPath, getFilepath, quotes = false) {
   document.execCommand("copy");
   document.body.removeChild(tempInput);
   document.execCommand("copy");
+
+	ui.notifications.info(getFilepath ? "Copied filepath to clipboard!" : "Copied database path to clipboard!");
 }
 
 async function playFile(entry) {

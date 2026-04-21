@@ -427,7 +427,6 @@ export default class CrosshairSection extends Section {
 			}
 
 		}).catch((err) => {
-			console.log(err)
 			this.sequence._abort();
 		});
 	}

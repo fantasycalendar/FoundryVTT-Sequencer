@@ -5,9 +5,9 @@
   "version": "10.0.0",
   "library": "false",
   "compatibility": {
-    "minimum": "12",
-    "verified": "13",
-    "maximum": "13"
+    "minimum": "13",
+    "verified": "14",
+    "maximum": "14"
   },
   "authors": [
     {
@@ -18,6 +18,20 @@
   ],
   "esmodules": ["dist/sequencer.js"],
   "styles": ["dist/sequencer.css"],
+  "flags": {
+    "css": {
+      "shorthand": "sequencer"
+    },
+    "hotReload": {
+      "extensions": [
+        "css",
+        "json"
+      ],
+      "paths": [
+        "styles"
+      ]
+    }
+  },
   "languages": [
     {
       "lang": "en",
@@ -45,14 +59,6 @@
       "path": "languages/pl.json"
     }
   ],
-  "relationships": {
-    "requires": [
-      {
-        "id": "socketlib",
-        "type": "module"
-      }
-    ]
-  },
   "socket": true,
   "url": "https://github.com/fantasycalendar/FoundryVTT-Sequencer",
   "manifest": "https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.json",

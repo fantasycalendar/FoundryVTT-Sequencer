@@ -713,11 +713,16 @@ declare global {
     bindAlpha?: boolean;
     bindScale?: boolean;
     bindElevation?: boolean;
-    followRotation?: boolean;
+    bindRotation?: boolean;
     offset?: Vector2;
     randomOffset?: number;
     gridUnits?: boolean;
     local?: boolean;
+  };
+
+  type SoundAttachToOptions = {
+    bindVisibility?: boolean;
+    bindElevation?: boolean;
   };
 
   type StretchToOptions = {
@@ -1175,6 +1180,7 @@ declare global {
       HasAudio<SoundSection>,
       HasName<SoundSection>,
       HasTime<SoundSection>,
+      HasMovement<SoundSection>,
       HasLocation<SoundSection> {}
 
   abstract class SoundSection {
@@ -1185,6 +1191,35 @@ declare global {
     addOverride(
       inFunc: (sound: SoundSection, data: SoundData) => SoundData
     ): this;
+
+	  /**
+	   * Causes the sound to persist indefinitely on the canvas until _ended via SequencerSoundManager.endAllSounds() or
+	   * name the sound with .name() and then end it through SequencerSoundManager.endSound()
+	   */
+	  persist(inBool?: boolean, inOptions?: PersistOptions): this;
+
+	  /**
+	   * A smart method that can take a reference to an object on the canvas to attach a sound to,
+	   * or a string reference (see .name())
+	   */
+	  attachTo(
+		  inLocation: VisibleFoundryTypes | Vector2 | string,
+		  inOptions?: SoundAttachToOptions
+	  ): this;
+
+	  /**
+	   * A method that works much like stretchTo for effects, where this controls the file to be played if the sound is a database range finding one
+	   */
+	  toLocation(
+		  inLocation: VisibleFoundryTypes | Vector2 | string,
+		  inOptions?: {
+			  cacheLocation?: boolean;
+			  offset?: Vector2;
+			  randomOffset?: number;
+			  gridUnits?: boolean;
+			  local?: boolean;
+		  }
+	  ): this;
 
     /**
      * Radius in number of squares/hexes this sound will be played within. The distance is determined by the scene's grid size.
@@ -1212,6 +1247,16 @@ declare global {
     alwaysForGMs(inBool: boolean): this;
 
     /**
+     * Whether this sound will ignore all atLocation and attachTo methods and always play globally
+     */
+    globalSound(inBool: boolean): this;
+
+    /**
+     * Whether the sound will consider the position of the sound and the position of the listener to pan the audio right and left
+     */
+    panSound(inBool: boolean, inOptions: PanSoundOptions): this;
+
+    /**
      * An effect to be applied on the sound when it is heard as per normal, with no walls blocking the sound.
      */
     baseEffect(options: SoundEffect): this;
@@ -1220,7 +1265,16 @@ declare global {
      * An effect to be applied on the sound when it is heard through a wall.
      */
     muffledEffect(options: SoundEffect): this;
+
+	  /**
+	   * This method only modifies .persist()-ed sounds and causes them to not immediately end, but stick around for the given duration passed to this method.
+	   */
+	  extraEndDuration(inExtraDuration: number): this;
   }
+
+	type PanSoundOptions = {
+		distanceToEase: number;
+	};
 
   type SoundEffect = {
     type: string;

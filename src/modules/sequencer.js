@@ -16,7 +16,6 @@ import CrosshairSection from "../sections/crosshair.js";
 import { get_object_canvas_data } from "../lib/canvas-lib.js";
 import CrosshairsPlaceable from "./sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "./sequencer-crosshair/CrosshairsDocument.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 export default class Sequence {
 	constructor(
@@ -37,7 +36,8 @@ export default class Sequence {
 		this.crosshairs = {}
 		this.effectIndex = 0;
 		this.sectionToCreate = undefined;
-		this.localOnly = false;
+		this.remote = false;
+		this.local = false;
 		this._status = writable(CONSTANTS.STATUS.READY);
 		return lib.sequence_proxy_wrap(this);
 	}
@@ -48,7 +48,8 @@ export default class Sequence {
 	 * @returns {Promise}
 	 */
 	async play({ remote = false, preload = false, local = false } = {}) {
-		this.localOnly = local || remote;
+		this.remote = remote;
+		this.local = local;
 		if (remote) {
 			const data = await this.toJSON();
 			sequencerSocket.executeForOthers(
@@ -289,7 +290,7 @@ export default class Sequence {
 	addNamedLocation(inName, inLocation){
 		if (typeof inName !== "string")
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inName must be of type string`);
-		if (!(typeof inLocation === "object" || inLocation instanceof FoundryShim.PlaceableObject || inLocation instanceof foundry.abstract.Document))
+		if (!(typeof inLocation === "object" || inLocation instanceof foundry.canvas.placeables.PlaceableObject || inLocation instanceof foundry.abstract.Document))
 			throw lib.custom_error(this.moduleName, `addNamedLocation - inLocation must be of type object, PlaceableObject, or Document`);
 		if(inLocation instanceof CrosshairsPlaceable) inLocation = inLocation.document;
 		this.nameOffsetMap ||= {};
@@ -408,7 +409,7 @@ export default class Sequence {
 	fromJSON(data) {
 		this.moduleName = data.options.moduleName;
 		this.softFail = data.options.softFail;
-		this.localOnly = true;
+		this.local = true;
 		for (const section of data.sections) {
 			this[section.type]()._deserialize(section);
 		}

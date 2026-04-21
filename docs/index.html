@@ -42,6 +42,11 @@
       summary:hover {
         cursor: pointer;
       }
+
+      /* Enable browser scroll anchoring to reduce layout shift from loading images */
+      * {
+        overflow-anchor: auto;
+      }
     </style>
   </head>
 
@@ -70,6 +75,68 @@
         name: "Sequencer Wiki",
         logo: "./images/fantasycomputerworks.png",
       };
+    </script>
+
+    <!-- Re-scroll to anchor after images load to fix layout shift -->
+    <script>
+      window.$docsify.plugins = [].concat(function (hook, vm) {
+        var pendingScrollCleanup = null;
+
+        hook.doneEach(function () {
+          // Clean up any pending scroll from a previous page navigation
+          if (pendingScrollCleanup) {
+            pendingScrollCleanup();
+            pendingScrollCleanup = null;
+          }
+
+          var id = vm.route.query.id;
+          if (!id) return;
+
+          var images = document.querySelectorAll(".markdown-section img");
+          if (!images.length) return;
+
+          var aborted = false;
+          var pending = 0;
+
+          images.forEach(function (img) {
+            if (!img.complete) pending++;
+          });
+
+          // All images already loaded, no re-scroll needed
+          if (pending === 0) return;
+
+          function scrollToAnchor() {
+            if (aborted) return;
+            var el = document.getElementById(id);
+            if (el) {
+              var topMargin = window.$docsify.topMargin || 0;
+              window.scrollTo({
+                top: Math.round(
+                  el.getBoundingClientRect().top +
+                    window.pageYOffset -
+                    topMargin
+                ),
+                behavior: "smooth",
+              });
+            }
+          }
+
+          function onImageSettled() {
+            if (--pending <= 0) scrollToAnchor();
+          }
+
+          images.forEach(function (img) {
+            if (!img.complete) {
+              img.addEventListener("load", onImageSettled, { once: true });
+              img.addEventListener("error", onImageSettled, { once: true });
+            }
+          });
+
+          pendingScrollCleanup = function () {
+            aborted = true;
+          };
+        });
+      }, window.$docsify.plugins || []);
     </script>
 
     <!-- Required -->

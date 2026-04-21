@@ -3,7 +3,8 @@
 
   import { createEventDispatcher } from "svelte";
   import { databaseStore } from "./DatabaseStore.js";
-  import { localize } from '#runtime/util/i18n';
+
+	let localize = game.i18n.localize.bind(game.i18n);
 
   const dispatch = createEventDispatcher();
 
@@ -59,6 +60,7 @@
 
   .database-entry{
     display:flex;
+	  flex-direction: row;
     flex: 1 0 auto;
   }
 
@@ -69,8 +71,7 @@
   }
 
   .database-entry > button{
-    flex: 0;
-		padding: 0 0 0 3px;
+		padding-top: 3px;
     font-size: 0.7rem !important;
     min-height: 20px;
     max-height: 20px;

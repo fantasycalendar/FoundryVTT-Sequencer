@@ -9,6 +9,14 @@ Sequencer is a powerful module that lets you play visual effects in your scenes,
 * [Jack Kerouac's Animated Spell Effects](https://foundryvtt.com/packages/animated-spell-effects)
 * [Jack Kerouac's Animated Cartoon Spell Effets](https://foundryvtt.com/packages/animated-spell-effects-cartoon)
 
+
+## Support Us On Patreon
+
+[<img src="images/supportus.png" alt="Support us on patreon" style="width:250px;"/>](https://www.patreon.com/cw/fantasycomputerworks)
+
+We love creating stuff and improving what we've made, but our day jobs take a good chunk out of our energy and time each day. Maintaining Sequencer is definitely something that requires effort and dedication, and with your help, we can continue to do so!
+
+
 ## Installation
 
 You can install it through the Foundry module installer, or by copy-pasting this link into the module installer:
@@ -22,6 +30,7 @@ If you want to test the beta track, you can install it from this link - **NOT RE
 
 ## Credits
 ### Feedback and amazing help
+* Codas (apocynth on discord) for his incredible work on the live spritesheet generation for persistent effects
 * U-man over at [FXMaster](https://gitlab.com/mesfoliesludiques/foundryvtt-fxmaster) for his implementation of layers - Copyright © 2020 Emmanuel Ruaud
 * Otigon with his [Automated Animations](https://github.com/otigon/automated-jb2a-animations) for his work on handling standardized effects - Copyright © 2020 Otigon
 * ghost (ghost#2000 on discord) for his fixes to the audio sections

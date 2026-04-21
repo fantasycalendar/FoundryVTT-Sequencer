@@ -1,7 +1,6 @@
 import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
 import { get_object_canvas_data } from "../../lib/canvas-lib.js";
 import CONSTANTS from "../../constants.js";
-import FoundryShim from "../../utils/foundry-shim.js";
 
 /**
  *
@@ -116,13 +115,13 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 		const {t, distance, direction, angle, width} = this;
 		switch ( t ) {
 			case "circle":
-				return FoundryShim.MeasuredTemplate.getCircleShape(distance);
+				return foundry.canvas.placeables.MeasuredTemplate.getCircleShape(distance);
 			case "cone":
-				return FoundryShim.MeasuredTemplate.getConeShape(distance, direction, angle);
+				return foundry.canvas.placeables.MeasuredTemplate.getConeShape(distance, direction, angle);
 			case "rect":
-				return FoundryShim.MeasuredTemplate.getRectShape(distance, direction);
+				return foundry.canvas.placeables.MeasuredTemplate.getRectShape(distance, direction);
 			case "ray":
-				return FoundryShim.MeasuredTemplate.getRayShape(distance, direction, width);
+				return foundry.canvas.placeables.MeasuredTemplate.getRayShape(distance, direction, width);
 		}
 	}
 

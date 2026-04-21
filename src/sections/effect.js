@@ -9,7 +9,6 @@ import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 export default class EffectSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -288,15 +287,6 @@ export default class EffectSection extends Section {
 				"attachTo",
 				`inOptions.bindVisibility must be of type boolean`
 			);
-		if (inOptions.followRotation !== undefined) {
-			inOptions.bindRotation = inOptions.followRotation;
-			this.sequence._showWarning(
-				this,
-				"attachTo",
-				"inOptions.followRotation is deprecated, please use inOptions.bindRotation instead",
-        true
-			);
-		}
 		if (typeof inOptions.bindRotation !== "boolean")
 			throw this.sequence._customError(
 				this,
@@ -608,20 +598,6 @@ export default class EffectSection extends Section {
 
 	/**
 	 *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
-	 *  @deprecated
-	 */
-	from(...args) {
-		this.sequence._showWarning(
-			this,
-			"from",
-			".from() is deprecated, please use .copySprite() instead",
-      true
-		);
-		return this.copySprite(...args)
-	}
-
-	/**
-	 *  Create an effect based on the given object, effectively copying the object as an effect. Useful when you want to do some effect magic on tokens or tiles.
 	 *
 	 * @param {Object} inObject
 	 * @param {Object} inOptions
@@ -630,8 +606,8 @@ export default class EffectSection extends Section {
 	copySprite(inObject, inOptions = {}) {
 		if (
 			!(
-				inObject instanceof FoundryShim.Token ||
-				inObject instanceof FoundryShim.Tile ||
+				inObject instanceof foundry.canvas.placeables.Token ||
+				inObject instanceof foundry.canvas.placeables.Tile ||
 				inObject instanceof TokenDocument ||
 				inObject instanceof TileDocument
 			)
@@ -1367,12 +1343,7 @@ export default class EffectSection extends Section {
 				"belowTokens",
 				"inBool must be of type boolean"
 			);
-		if (game.release.generation >= 12) {
-			return this.sortLayer(inBool ? 600 : 800);
-		} else {
-			if (!inBool) return this;
-			return this.elevation(0, { absolute: true });
-		}
+		return this.sortLayer(inBool ? 600 : 800);
 	}
 
 	/**
@@ -1385,15 +1356,10 @@ export default class EffectSection extends Section {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
-				"belowTokens",
+				"belowTiles",
 				"inBool must be of type boolean"
 			);
-		if (game.release.generation >= 12) {
-			return this.sortLayer(inBool ? 300 : 500);
-		} else {
-			if (!inBool) return this;
-			return this.elevation(-1, { absolute: true });
-		}
+		return this.sortLayer(inBool ? 300 : 500);
 	}
 
 	/**
@@ -1410,11 +1376,6 @@ export default class EffectSection extends Section {
 				"inBool must be of type boolean"
 			);
 		this._aboveLighting = inBool;
-		if (game.release.generation >= 12) {
-			return this.sortLayer(inBool ? 1200 : 800);
-		} else {
-			if (!inBool) return this;
-		}
 		return this;
 	}
 
@@ -1578,35 +1539,6 @@ export default class EffectSection extends Section {
 				"inBool must be of type boolean"
 			);
 		this._zeroSpriteRotation = inBool;
-		return this;
-	}
-
-	/**
-	 * @deprecated
-	 */
-	noLoop(inBool = true) {
-		this.sequence._showWarning(
-			this,
-			"noLoop",
-			".noLoop() is deprecated, please use .loopOptions({ loops: 1 }) instead",
-      true
-		);
-		if (typeof inBool !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"noLoop",
-				"inBool must be of type boolean"
-			);
-
-		this._loopOptions = foundry.utils.mergeObject(
-			this._loopOptions ?? {
-				loopDelay: 0,
-				loops: 0,
-			},
-			{
-				loops: 1
-			}
-		);
 		return this;
 	}
 
@@ -1862,7 +1794,7 @@ export default class EffectSection extends Section {
 		for (let doc of inDocuments) {
 			if (
 				typeof doc !== "string" &&
-				!(doc instanceof FoundryShim.PlaceableObject) &&
+				!(doc instanceof foundry.canvas.placeables.PlaceableObject) &&
 				!(doc instanceof foundry.abstract.Document)
 			) {
 				throw this.sequence._customError(
@@ -1962,15 +1894,6 @@ export default class EffectSection extends Section {
 	 * @returns this
 	 */
 	file(inFile, inOptions = {}) {
-		if(typeof inOptions === "boolean"){
-			inOptions = {};
-			this.sequence._showWarning(
-				this,
-				"file",
-				"passing a boolean as a second argument to .file() is deprecated, please softFail: true on the sequence itself instead",
-        true
-			);
-		}
 		if (typeof inOptions !== "object")
 			throw this.sequence._customError(
 				this,
@@ -2141,7 +2064,7 @@ export default class EffectSection extends Section {
 		if (Hooks.call("preCreateSequencerEffect", data) === false) return;
 		let push =
 			!(data?.users?.length === 1 && data?.users?.includes(game.userId)) &&
-			!this.sequence.localOnly;
+			!this.sequence.local && !this.sequence.remote;
 		let canvasEffectData = await Sequencer.EffectManager.play(data, push);
 		let totalDuration = this._currentWaitTime;
 		if (this._persist) {
@@ -2181,25 +2104,27 @@ export default class EffectSection extends Section {
 		this._mirrorX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)
 		this._mirrorY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)
 
-		if (this._copySprite && !this._file) {
-      this._file = (
-        this._copySprite.object?.ring?.enabled
-          ? this._copySprite.object?.ring?.subject?.texture || this._copySprite.object?.texture?.src
-          : this._copySprite.object?.texture?.src
-      );
+	if (this._copySprite && !this._file) {
 
-			if (this._source === null) {
-				this._source = this._validateLocation(this._copySprite.object);
-			}
+		if (this._source === null) {
+			this._source = this._validateLocation(this._copySprite.object);
+		}
 
-			if (this._size === null) {
-				const size = canvaslib.get_object_dimensions(this._copySprite.object);
-				this._size = {
-					width: size?.width ?? canvas.grid.size,
-					height: size?.height ?? canvas.grid.size,
-					gridUnits: false,
-				};
+		if (this._size === null) {
+			const size = canvaslib.get_object_dimensions(this._copySprite.object);
+			this._size = {
+				width: size?.width ?? canvas.grid.size,
+				height: size?.height ?? canvas.grid.size,
+				gridUnits: false,
+			};
+
+			// Account for token size difference compared to final rendered texture dimensions
+			if (this._copySprite.object instanceof TokenDocument && this._copySprite.object.ring?.enabled) {
+				const tokenSize = this._copySprite.object.getSize();
+				this._copySprite.options.offsetX = (tokenSize.width - this._size.width) / 2;
+				this._copySprite.options.offsetY = (tokenSize.height - this._size.height) / 2;
 			}
+		}
 
 			if (
 				this._mirrorX === null &&
@@ -2266,24 +2191,28 @@ export default class EffectSection extends Section {
 			}
 		}
 
-		if (
-			!this._file &&
-			!this._copySprite &&
-			!this._text &&
-			!this._shapes.length &&
-			this.sequence.softFail
-		) {
-			this._playEffect = false;
-			return;
-		}
+	if (
+		!this._file &&
+		!this._copySprite &&
+		!this._text &&
+		!this._shapes.length &&
+		this.sequence.softFail
+	) {
+		this._playEffect = false;
+		return;
+	}
 
-		let fileData = this._file
-			? await this._determineFile(this._file)
-			: {
-				file: this._file,
-				forcedIndex: false,
-				customRange: false,
-			};
+	if (this._copySprite) {
+		return;
+	}
+
+	let fileData = this._file
+		? await this._determineFile(this._file)
+		: {
+			file: this._file,
+			forcedIndex: false,
+			customRange: false,
+		};
 
 		this._isRangedEffect = fileData?.file?.rangeFind;
 
@@ -2369,7 +2298,12 @@ export default class EffectSection extends Section {
 			return this._deserializedData;
 		}
 
-		const { file, forcedIndex, customRange } =
+	let file = "";
+	let forcedIndex = null;
+	let customRange = null;
+
+	if (!this._copySprite) {
+		const fileData =
 			this._file && this._playEffect
 				? await this._determineFile(this._file)
 				: {
@@ -2377,6 +2311,10 @@ export default class EffectSection extends Section {
 					forcedIndex: false,
 					customRange: false,
 				};
+		file = fileData.file;
+		forcedIndex = fileData.forcedIndex;
+		customRange = fileData.customRange;
+	}
 
 		let source = this._getSourceObject();
 		let target = this._getTargetObject();
@@ -2384,7 +2322,7 @@ export default class EffectSection extends Section {
 		this._temporaryEffect =
 			this._temporaryEffect ||
 			(source instanceof foundry.abstract.Document ||
-			source instanceof FoundryShim.MeasuredTemplate
+			source instanceof foundry.canvas.placeables.MeasuredTemplate
 				? !lib.is_UUID(source?.uuid)
 				: this._temporaryEffect || false);
 
@@ -2441,7 +2379,7 @@ export default class EffectSection extends Section {
 			_id: foundry.utils.randomID(),
 			flagVersion: flagManager.latestFlagVersion,
 			sequenceId: this.sequence.id,
-			creationTimestamp: +new Date(),
+			creationTimestamp: Date.now(),
 			sceneId,
 			creatorUserId: game.userId,
 			moduleName: this.sequence.moduleName,
@@ -2453,6 +2391,8 @@ export default class EffectSection extends Section {
 			private: this._private,
 			temporary: this._temporaryEffect,
 			tiedDocuments: Array.from(new Set(this._tiedDocuments)),
+			local: this.sequence.local,
+			remote: this.sequence.remote,
 
 			/**
 			 * Source/target properties
@@ -2475,11 +2415,15 @@ export default class EffectSection extends Section {
 				}
 				: false,
 
-			attachTo: this._attachTo,
-			missed: this._missed,
+		attachTo: this._attachTo,
+		missed: this._missed,
+		copySprite: this._copySprite ? {
+			uuid: this._copySprite.object?.uuid,
+			...this._copySprite.options
+		} : false,
 
-			/**
-			 * Sprite properties
+		/**
+		 * Sprite properties
 			 */
 			file: file?.dbPath ?? file,
 			customRange,

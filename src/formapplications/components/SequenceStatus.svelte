@@ -1,6 +1,6 @@
 <script>
 
-  import CONSTANTS from "../../../constants.js";
+  import CONSTANTS from "../../constants.js";
 
   export let status;
 

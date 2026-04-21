@@ -1,5 +1,33 @@
 ## Changelog
 
+# Version 4.0.0
+- *Sequencer* - Updated to support FoundryVTT v14
+- *Sequencer* - Removed support for FoundryVTT v12
+- *Sequencer* - Removed the socketlib dependency; Sequencer now manages its own data internally
+- *Sequencer* - Introduced a new internal UI foundation with proper dark mode support
+- *Sequencer* - Fixed `preloadForClients` blocking indefinitely when a client is tabbed away or disconnects mid-preload
+- *Effects* - Reworked internal effect storage to use a centralized hidden journal, reducing token and actor update overhead and improving performance in effect-heavy games
+- *Effects* - Removed deprecated methods, warnings are now errors
+- *Effects* - Due to the changes to the storage of effect data, setting `local: true` on the Sequence's `play()` method will no longer make the effect entirely local, and still store it in the DB without anyone else seeing it
+- *Effects* - Effects now visually "punch through" region highlights (matches how Foundry's own tokens behave with always displayed regions)
+- *Effects* - `.sortLayer()`, `.zIndex()`, `.belowTokens()`, and `.belowTiles()` now work as documented on Foundry v13 & v14
+- *Effects* - `.aboveLighting()` now actually anchors the effect above all lighting elements within the interface layer, but not its interface elements
+- *Effects* - Fixed `.copySprite()` only capturing the subject texture on dynamic-ring tokens; the ring is now included via render-to-texture
+- *Sounds* - Added `.persist()`, which causes the sound to persist on the scene, very cool!
+- *Sounds* - Added `.attachTo()`, which attaches the sound to the target (only supports `bindVisibility` and `bindElevation` at this moment)
+- *Sounds* - Added `.panSound()` which causes the sound to pan left and right when the token you have selected moves to the right or left of the sound
+  - You can control the distance from which it starts panning with `innerEaseDistance`, which is how many grid units away from the source that the ease starts. Use `outerEaseDistance` to control where the sound will be fully panning - if `innerEaseDirstance` is set to 10, and `outerEaseDistance` is set to 30, within 10 grid units the sound will not be panning, between 10 and 30 it will slowly blend to a panning sound, and beyond 30 it will be fully panning
+- *Sounds* - Added `.extraEndDuration()`, which adds additional ending duration to persisted sounds
+- *Sounds* - Added `.loopOptions()`, which controls the looping options of the sounds
+- *Sounds* - Added `.toLocation()`, which will evaluate the target location, but still play at the `.atLocation()` position - this is useful when the sound has multiple files for different ranges
+- *Sounds* - Added `.moveTowards()`, which will cause the sound to move towards the target location - best **not** used with `.toLocation()`
+- *Sounds* - Added `.globalSound()`, which prevents any `.atLocation()` sound from only playing on the canvas, and instead always plays globally.
+- *Sounds* - Added support for the database range-finding implementation typically found in effects; sounds can be defined with 5ft, 15ft, 30ft, 60ft, and 90ft files, and using the above methods will select the correct sound file to play
+- *Animations* - Fixed chained light animations reading the origin position before the previous animation's document update had committed, causing the second animation to start from the wrong location
+
+Sequencer now has a Patreon if you wish to support its development! Join us now at:
+https://www.patreon.com/cw/fantasycomputerworks
+
 # Version 3.6.11
 - *Sequencer* - Fixed `remote` on `.play()` not forcing local on the executing user's machine
 - *Sequencer* - Added a one-time dialog promoting our patreon

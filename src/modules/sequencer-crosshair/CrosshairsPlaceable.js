@@ -2,9 +2,8 @@ import { get_mouse_position, } from "../../lib/canvas-lib.js";
 import { is_real_number } from "../../lib/lib.js";
 import CONSTANTS from "../../constants.js";
 import * as lib from "../../lib/lib.js"
-import FoundryShim from "../../utils/foundry-shim.js";
 
-export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
+export default class CrosshairsPlaceable extends foundry.canvas.placeables.MeasuredTemplate {
 
 	constructor(...args) {
 		super(...args);
@@ -63,7 +62,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		this.controlIcon.renderable = !!this.crosshair.icon.texture;
 		if (this.crosshair.icon.texture) {
 			this.controlIcon.iconSrc = this.crosshair.icon.texture;
-			this.controlIcon.texture = await FoundryShim.loadTexture(this.controlIcon.iconSrc);
+			this.controlIcon.texture = await foundry.canvas.loadTexture(this.controlIcon.iconSrc);
 			this.controlIcon.icon.texture = this.controlIcon.texture;
 		}
 		if (!this.crosshair.icon.borderVisible) {
@@ -333,7 +332,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 		});
 
 		const centerPoint = placeable.getCenterPoint();
-		const ray = new Ray(centerPoint, mouseLocation);
+		const ray = new foundry.canvas.geometry.Ray(centerPoint, mouseLocation);
 
 		let intersection;
 		for (let i = 0; i < points.length; i += 2) {
@@ -387,7 +386,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 	#handleLimit(mouseLocation, targetLocation) {
 
-		const ray = new Ray(targetLocation, mouseLocation);
+		const ray = new foundry.canvas.geometry.Ray(targetLocation, mouseLocation);
 		const gridPath = canvas.grid.measurePath([targetLocation, mouseLocation]);
 
 		const limitMinRange = is_real_number(this.crosshair.location.limitMinRange) ? this.crosshair.location.limitMinRange : 0;
@@ -460,7 +459,7 @@ export default class CrosshairsPlaceable extends FoundryShim.MeasuredTemplate {
 
 	#getDraggedMatrix(source, target) {
 
-		const dragAngle = (new Ray(source, target)).angle;
+		const dragAngle = (new foundry.canvas.geometry.Ray(source, target)).angle;
 		const dragDistance = canvas.grid.measurePath([source, target]);
 
 		const direction = this.crosshair.snap.direction

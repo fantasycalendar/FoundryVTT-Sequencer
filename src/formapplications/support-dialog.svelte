@@ -1,6 +1,3 @@
-<script>
-</script>
-
 <div>
 
 	<p class="header"><strong>Sequencer is entering a new phase of development</strong></p>
@@ -18,11 +15,13 @@
 		<li>Cleanup of older UI and systems for better stability</li>
 	</ul>
 
-	<p>Sequencer will remain <strong>free and fully functional</strong>. Critical fixes and Foundry compatibility updates
+	<p>Sequencer will remain <strong>free and fully functional</strong>. Critical fixes and Foundry compatibility
+		updates
 		will always be
 		available to everyone.</p>
 
-	<p>However, if Sequencer is useful to you and you would like to support this next phase of development, you can do so
+	<p>However, if Sequencer is useful to you and you would like to support this next phase of development, you can do
+		so
 		here:</p>
 
 	<div class="sequencer-support">

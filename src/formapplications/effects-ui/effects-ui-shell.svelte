@@ -1,17 +1,13 @@
 <script>
 
-	import { ApplicationShell } from "#runtime/svelte/component/application";
-  import { localize } from '#runtime/util/i18n';
-  import { getContext } from "svelte";
+  let localize = game.i18n.localize.bind(game.i18n);
   import HowTo from "./HowTo.svelte";
   import Tabs from "./Tabs.svelte";
   import Manager from "./Manager.svelte";
   import Player from "./Player.svelte";
   import Sequences from "./Sequences.svelte";
 
-  const { application } = getContext("#external");
-
-  export let elementRoot;
+  let { tab } = $props();
 
   let tabs = [
     { value: "player", label: localize("SEQUENCER.Player.Title"), icon: "fas fa-play-circle", component: Player },
@@ -20,17 +16,20 @@
     { value: "howto", label: localize("SEQUENCER.HowTo.Title"), icon: "fas fa-chalkboard-teacher", component: HowTo },
   ];
 
-  let activeTab = application.options.tab ?? "manager";
-  $: component = tabs.find(tab => tab.value === activeTab).component;
+  let activeTab = $state(tab ?? "manager");
+  let component = $state(tabs[0].component);
+	$effect(() => {
+		component = tabs.find(t => t.value === activeTab)?.component;
+	})
 
 </script>
 
 <svelte:options accessors={true}/>
 
-<ApplicationShell bind:elementRoot>
+<div>
 
 	<Tabs bind:activeTab {tabs}/>
 
 	<svelte:component this={component}/>
 
-</ApplicationShell>
+</div>
