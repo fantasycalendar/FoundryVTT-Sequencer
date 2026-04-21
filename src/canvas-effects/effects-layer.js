@@ -113,14 +113,15 @@ export class SequencerInterfaceLayer extends foundry.canvas.layers.InteractionLa
 		let sound = SelectionManager.hoveredSoundUI;
 		if (!sound || sound.status === SequencerSoundManager.states.ENDED || !sound.data.source) return;
 
+		const sourcePos = sound.sourcePosition;
 		let radius = (sound.data.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
 		let data = {
 			position: {
-				x: sound.sourcePosition.x,
-				y: sound.sourcePosition.y
+				x: sourcePos.x,
+				y: sourcePos.y
 			},
 			radius: radius,
-			shape: foundry.canvas.geometry.ClockwiseSweepPolygon.create(sound.sourcePosition, {
+			shape: foundry.canvas.geometry.ClockwiseSweepPolygon.create(sourcePos, {
 				type: "sound",
 				radius: radius
 			})
