@@ -42,11 +42,17 @@ const hooksManager = {
 	},
 
 	_hookCalled(hookName, ...args) {
-		Array.from(this._hooks)
+		const callbacks = Array.from(this._hooks)
 			.filter((entry) => entry[0].startsWith(hookName + "-"))
 			.map((hooks) => hooks[1])
-			.deepFlatten()
-			.forEach((callback) => callback(...args));
+			.deepFlatten();
+		for (const callback of callbacks) {
+			try {
+				callback(...args);
+			} catch (err) {
+				console.error(`Sequencer | hook handler for "${hookName}" threw:`, err);
+			}
+		}
 	},
 
 	removeHooks(effectUuid) {
