@@ -399,7 +399,7 @@ export default class CanvasEffect extends PIXI.Container {
 			game.user.isGM ||
 			this.owner ||
 			(this.data.attachTo?.active &&
-				this.sourceDocument.canUserModify(game.user, "update"))
+				!!this.sourceDocument?.canUserModify?.(game.user, "update"))
 		);
 	}
 
@@ -459,7 +459,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	async playMedia() {
-		if (this.destroyed || this._ended || this._isEnding) {
+		if (this.destroyed || this._ended || this._isEnding || !this.sprite) {
 			return
 		}
 		await this.sprite.play()
@@ -467,44 +467,47 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateTexture() {
-		this.sprite.updateVideoTextures()
+		this.sprite?.updateVideoTextures()
 	}
 
 	async pauseMedia() {
-		this.sprite.stop()
+		this.sprite?.stop()
 	}
 
 	get mediaLooping() {
-		return this.sprite.loop
+		return !!this.sprite?.loop
 	}
 
 	set mediaLooping(looping) {
-		return this.sprite.loop = looping
+		if (!this.sprite) return;
+		this.sprite.loop = looping;
 	}
 
 	get mediaIsPlaying() {
-		return this.sprite.playing
+		return !!this.sprite?.playing
 	}
 
 	get mediaCurrentTime() {
-		return this.sprite.currentTime
+		return this.sprite?.currentTime ?? 0
 	}
 
 	get mediaPlaybackRate() {
-		return this.sprite.playbackRate
+		return this.sprite?.playbackRate ?? 1
 	}
 
 	set mediaPlaybackRate(inPlaybackRate) {
+		if (!this.sprite) return;
 		// Playbackrate for spritesheets is now handled by timing info in the animation sequence
 		this.sprite.playbackRate = inPlaybackRate;
 	}
 
 	set mediaCurrentTime(newTime) {
-		this.sprite.currentTime = newTime
+		if (!this.sprite) return;
+		this.sprite.currentTime = newTime;
 	}
 
 	get mediaDuration() {
-		return this.sprite.duration
+		return this.sprite?.duration ?? 0
 	}
 
 	get mediaDurationMs() {
@@ -512,7 +515,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	get hasAnimatedMedia() {
-		return this.sprite.hasAnimatedMedia
+		return !!this.sprite?.hasAnimatedMedia
 	}
 
 	/**
@@ -1479,8 +1482,10 @@ export default class CanvasEffect extends PIXI.Container {
 			registerVoidProxy = true;
 		}
 
+		if (!layer || typeof layer.addChild !== "function") return;
+
 		layer.addChild(this);
-		layer.sortChildren();
+		layer.sortChildren?.();
 
 		// For default-routed effects, register an ERASE-blend proxy in the
 		// interface group so the effect visually "punches through" any
@@ -2068,6 +2073,7 @@ export default class CanvasEffect extends PIXI.Container {
 	updateTransform() {
 		super.updateTransform();
 		if (this.data.screenSpace || this.data.screenSpaceAboveUI) {
+			if (!canvas?.screenDimensions) return;
 			const [screenWidth, screenHeight] = canvas.screenDimensions;
 
 			if (this._lastScreenDimensions?.screenWidth !== screenWidth && this._lastScreenDimensions?.screenHeight !== screenHeight) {
