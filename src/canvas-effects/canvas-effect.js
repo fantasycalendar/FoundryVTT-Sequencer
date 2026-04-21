@@ -1548,7 +1548,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this._destroyed || this._isEnding) return;
 		if (!this.renderable || !this.visible || this.worldAlpha <= 0) return;
 		try {
-			this._renderSubtreeAsVoid(renderer, this);
+			this._renderSubtreeAsVoid(renderer, this, { outerFilter: null });
 		} catch (err) {
 			if (CONFIG.debug?.sequencer) {
 				console.warn("Sequencer | voidProxy render error", err);
@@ -1556,92 +1556,80 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 	}
 
-	/**
-	 * Recursively walk an effect sub-tree, rendering every visible
-	 * mesh/graphic/text node with BLEND_MODES.ERASE. Containers with no
-	 * own draw just have their children walked.
-	 *
-	 * Matches the semantics of Foundry's PrimarySpriteMesh._renderVoid
-	 * but extended to cover Sequencer's richer tree (TilingSpriteMesh,
-	 * AnimatedSpriteMesh, LegacyGraphics shapes, Text labels).
-	 *
-	 * @param {PIXI.Renderer} renderer
-	 * @param {PIXI.DisplayObject} displayObject
-	 * @private
-	 */
-	_renderSubtreeAsVoid(renderer, displayObject) {
+	_renderSubtreeAsVoid(renderer, displayObject, state) {
 		if (!displayObject) return;
 		if (!displayObject.renderable || !displayObject.visible) return;
 		if ((displayObject.worldAlpha ?? 1) <= 0) return;
 
-		// A node is "mesh-like" if it has its own pixels to draw.
-		// Plain PIXI.Container subclasses (rotationContainer, spriteContainer,
-		// SequencerSpriteManager, etc.) fall through to recursion only.
+		const filters = displayObject.filters;
+		const mask = displayObject._mask;
+		const scratch = this._voidEnabledFilters ??= [];
+		scratch.length = 0;
+		if (filters?.length) {
+			for (let i = 0; i < filters.length; i++) {
+				if (filters[i].enabled) scratch.push(filters[i]);
+			}
+		}
+		const hasFilter = scratch.length > 0;
+		const hasMask = !!mask && (!mask.isMaskData
+			|| (mask.enabled && (mask.autoDetect || mask.type !== PIXI.MASK_TYPES.NONE)));
+		const flush = hasFilter || hasMask;
+
+		let pushedFilter = null;
+		let priorOuterFilter = state.outerFilter;
+		let priorFilterBlend;
+		if (flush) renderer.batch.flush();
+		if (hasFilter) {
+			const snapshot = scratch.slice();
+			renderer.filter.push(displayObject, snapshot);
+			pushedFilter = snapshot[snapshot.length - 1];
+			if (!priorOuterFilter) {
+				priorFilterBlend = pushedFilter.blendMode;
+				pushedFilter.blendMode = PIXI.BLEND_MODES.ERASE;
+				state.outerFilter = pushedFilter;
+			}
+		}
+		if (hasMask) renderer.mask.push(displayObject, mask);
+
 		const isMeshLike = typeof displayObject._render === "function"
 			&& (displayObject.isSprite === true
 				|| displayObject instanceof PIXI.Mesh
 				|| displayObject instanceof PIXI.Graphics
 				|| displayObject instanceof PIXI.Text);
 
-		if (isMeshLike) {
-			const originalBlend = displayObject.blendMode;
+		const shouldBlendLeaf = isMeshLike && !state.outerFilter;
+		let originalLeafBlend;
+		if (shouldBlendLeaf) {
+			originalLeafBlend = displayObject.blendMode;
 			displayObject.blendMode = PIXI.BLEND_MODES.ERASE;
-			try {
-				const hasFilters = (displayObject.filters?.length ?? 0) > 0;
-				const hasMask = !!displayObject._mask;
-				if (hasFilters || hasMask) {
-					this._renderVoidAdvanced(renderer, displayObject);
-				} else if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
-					displayObject._renderWithCulling(renderer);
-				} else {
-					displayObject._render(renderer);
-				}
-			} finally {
-				displayObject.blendMode = originalBlend;
+		}
+
+		if (isMeshLike) {
+			if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
+				displayObject._renderWithCulling(renderer);
+			} else {
+				displayObject._render(renderer);
 			}
 		}
 
 		const children = displayObject.children;
-		if (!children?.length) return;
-		for (let i = 0, n = children.length; i < n; i++) {
-			this._renderSubtreeAsVoid(renderer, children[i]);
-		}
-	}
-
-	/**
-	 * Render a mesh-like node that has filters or a mask, mirroring
-	 * PIXI.Container#renderAdvanced but substituting ERASE blend.
-	 * Based on Foundry's PrimarySpriteMesh#renderVoidAdvanced.
-	 *
-	 * @param {PIXI.Renderer} renderer
-	 * @param {PIXI.DisplayObject} displayObject
-	 * @private
-	 */
-	_renderVoidAdvanced(renderer, displayObject) {
-		const filters = displayObject.filters;
-		const mask = displayObject._mask;
-		const enabled = this._voidEnabledFilters ??= [];
-		enabled.length = 0;
-		if (filters?.length) {
-			for (let i = 0; i < filters.length; i++) {
-				if (filters[i].enabled) enabled.push(filters[i]);
+		if (children?.length) {
+			for (let i = 0, n = children.length; i < n; i++) {
+				this._renderSubtreeAsVoid(renderer, children[i], state);
 			}
 		}
-		const flush = (enabled.length > 0) || (mask && (!mask.isMaskData
-			|| (mask.enabled && (mask.autoDetect || mask.type !== PIXI.MASK_TYPES.NONE))));
-		if (flush) renderer.batch.flush();
-		if (enabled.length) renderer.filter.push(displayObject, enabled);
-		if (mask) renderer.mask.push(displayObject, mask);
 
-		if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
-			displayObject._renderWithCulling(renderer);
-		} else {
-			displayObject._render(renderer);
+		if (shouldBlendLeaf) displayObject.blendMode = originalLeafBlend;
+
+		if (flush) renderer.batch.flush();
+		if (hasMask) renderer.mask.pop(displayObject);
+		if (hasFilter) {
+			renderer.filter.pop();
+			if (pushedFilter && state.outerFilter === pushedFilter) {
+				pushedFilter.blendMode = priorFilterBlend;
+				state.outerFilter = priorOuterFilter;
+			}
 		}
-
-		if (flush) renderer.batch.flush();
-		if (mask) renderer.mask.pop(displayObject);
-		if (enabled.length) renderer.filter.pop();
 	}
 
 	/**
