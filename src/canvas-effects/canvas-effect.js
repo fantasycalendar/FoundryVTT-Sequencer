@@ -1262,6 +1262,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._maskContainer = null;
 		this._maskSprite = null;
 		this._stageMasks = [];
+		this._timeouts = new Set();
 		this._file = null;
 		this._loopOffset = 0;
 		this.effectFilters = {};
@@ -1309,6 +1310,15 @@ export default class CanvasEffect extends PIXI.Container {
 		this._ticker.add(func, this);
 	}
 
+	_setTimeout(fn, ms) {
+		const id = setTimeout(() => {
+			this._timeouts?.delete(id);
+			fn();
+		}, ms);
+		this._timeouts.add(id);
+		return id;
+	}
+
 	/**
 	 * Destroys all dependencies to this element, such as tickers, animations, textures, and child elements
 	 *
@@ -1323,6 +1333,12 @@ export default class CanvasEffect extends PIXI.Container {
 		// Tear down the region punch-through proxy first so it cannot
 		// dereference this.sprite / children while we destroy them.
 		this._teardownVoidProxy();
+
+		if (this._timeouts?.size) {
+			for (const id of this._timeouts) clearTimeout(id);
+			this._timeouts.clear();
+		}
+		this.restartLoopHandler = null;
 
 		hooksManager.removeHooks(this.uuid);
 
@@ -1773,7 +1789,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (!this.data.animations) {
 			return this._setupHooks();
 		}
-		setTimeout(() => {
+		this._setTimeout(() => {
 			this._setupHooks();
 		}, 50);
 	}
@@ -2350,9 +2366,10 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 		}
 
-		setTimeout(() => {
+		this._setTimeout(() => {
+			if (this._ended) return;
 			this.renderable = renderable;
-			this.spriteContainer.alpha = alpha ?? 1.0;
+			if (this.spriteContainer) this.spriteContainer.alpha = alpha ?? 1.0;
 		}, 25);
 	}
 
@@ -3301,7 +3318,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_setEndTimeout() {
-		setTimeout(() => {
+		this._setTimeout(() => {
 			this._resolve(this.data);
 			this.endEffect();
 		}, this._totalDuration);
@@ -3319,7 +3336,7 @@ export default class CanvasEffect extends PIXI.Container {
 			if (realTimestamp < 0) {
 				realTimestamp += this._endTime;
 			}
-			setTimeout(() => {
+			this._setTimeout(() => {
 				if (this._ended) return;
 				Hooks.callAll("sequencerEffectTimestamp", this, this._file);
 				if (this.mediaLooping) {
@@ -3357,9 +3374,9 @@ export default class CanvasEffect extends PIXI.Container {
 			if (this.sprite.texture) {
 				const oldRenderable = this.renderable;
 				this.renderable = false;
-				setTimeout(() => {
+				this._setTimeout(() => {
 					this.updateTexture();
-					setTimeout(() => {
+					this._setTimeout(() => {
 						this.renderable ||= oldRenderable;
 					}, 150)
 				}, 150);
@@ -3437,7 +3454,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._currentLoops++;
 		// register restart handler to trigger after loop delay
-		this.restartLoopHandler = setTimeout(() => {
+		this.restartLoopHandler = this._setTimeout(() => {
 			this.restartLoopHandler = null;
 			this.mediaCurrentTime = restartTime;
 			this.playMedia();
@@ -3460,7 +3477,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
 		let timeout =
 			creationTimeDifference === 0 && !this.data.animations ? 0 : 50;
-		setTimeout(() => {
+		this._setTimeout(() => {
 			this._setupHooks();
 		}, timeout);
 	}
@@ -3469,7 +3486,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 	_setEndTimeout() {
 		let creationTimeDifference = this.actualCreationTime - this.creationTimestamp;
 		if (this.loops && creationTimeDifference >= this._totalDuration && this.hasAnimatedMedia) {
-			setTimeout(() => {
+			this._setTimeout(() => {
 				this.pauseMedia();
 			}, this._totalDuration);
 		}
@@ -3502,7 +3519,7 @@ class PersistentCanvasEffect extends CanvasEffect {
 		const waitDuration = Math.max(...durations, 0);
 		this._resolve(waitDuration);
 		return new Promise((resolve) =>
-			setTimeout(() => {
+			this._setTimeout(() => {
 				super.endEffect();
 				resolve(this.data);
 			}, waitDuration)
