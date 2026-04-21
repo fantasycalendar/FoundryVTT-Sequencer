@@ -300,8 +300,12 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {{x: number, y: number}}
 	 */
 	get sourcePosition() {
-		let position = this.getSourceData().position;
-		let offset = this._getOffset(this.data.source, true);
+		return this._resolveSourcePosition(this.getSourceData());
+	}
+
+	_resolveSourcePosition(sourceData) {
+		const position = sourceData.position;
+		const offset = this._getOffset(this.data.source, true);
 
 		if (this.data.attachTo?.active && this.data.attachTo?.align && this.data.attachTo?.align !== "center") {
 			const additionalOffset = canvaslib.align({
@@ -2767,7 +2771,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		PluginsManager.rotation({ effect: this });
 
-		const { x, y } = this.sourcePosition;
+		const { x, y } = this._resolveSourcePosition(sourceData);
 		this.position.set(x, y);
 	}
 
