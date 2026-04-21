@@ -1547,8 +1547,9 @@ export default class CanvasEffect extends PIXI.Container {
 	_renderAsVoid(renderer) {
 		if (this._destroyed || this._isEnding) return;
 		if (!this.renderable || !this.visible || this.worldAlpha <= 0) return;
+		if (!CanvasEffect._sceneHasActiveRegionHighlights()) return;
 		try {
-			this._renderSubtreeAsVoid(renderer, this, { outerFilter: null });
+			this._renderSubtreeAsVoid(renderer, this, null);
 		} catch (err) {
 			if (CONFIG.debug?.sequencer) {
 				console.warn("Sequencer | voidProxy render error", err);
@@ -1556,37 +1557,65 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 	}
 
-	_renderSubtreeAsVoid(renderer, displayObject, state) {
+	static _sceneHasActiveRegionHighlights() {
+		const layer = canvas?.regions;
+		if (!layer) return false;
+		const placeables = layer.placeables;
+		if (!placeables?.length) return false;
+		for (let i = 0; i < placeables.length; i++) {
+			const region = placeables[i];
+			if (region?.visible && region?.renderable) return true;
+		}
+		return false;
+	}
+
+	_renderSubtreeAsVoid(renderer, displayObject, outerFilter) {
 		if (!displayObject) return;
 		if (!displayObject.renderable || !displayObject.visible) return;
 		if ((displayObject.worldAlpha ?? 1) <= 0) return;
 
 		const filters = displayObject.filters;
 		const mask = displayObject._mask;
-		const scratch = this._voidEnabledFilters ??= [];
-		scratch.length = 0;
+
+		let enabledFilters = null;
 		if (filters?.length) {
+			let anyDisabled = false;
 			for (let i = 0; i < filters.length; i++) {
-				if (filters[i].enabled) scratch.push(filters[i]);
+				if (!filters[i].enabled) { anyDisabled = true; break; }
+			}
+			if (anyDisabled) {
+				const scratch = this._voidEnabledFilters ??= [];
+				scratch.length = 0;
+				for (let i = 0; i < filters.length; i++) {
+					if (filters[i].enabled) scratch.push(filters[i]);
+				}
+				if (scratch.length) enabledFilters = scratch.slice();
+			} else {
+				enabledFilters = filters;
 			}
 		}
-		const hasFilter = scratch.length > 0;
+
+		const hasFilter = !!enabledFilters && enabledFilters.length > 0;
 		const hasMask = !!mask && (!mask.isMaskData
 			|| (mask.enabled && (mask.autoDetect || mask.type !== PIXI.MASK_TYPES.NONE)));
 		const flush = hasFilter || hasMask;
 
 		let pushedFilter = null;
-		let priorOuterFilter = state.outerFilter;
 		let priorFilterBlend;
+		let promoted = false;
+		let nextOuterFilter = outerFilter;
+
 		if (flush) renderer.batch.flush();
 		if (hasFilter) {
-			const snapshot = scratch.slice();
-			renderer.filter.push(displayObject, snapshot);
-			pushedFilter = snapshot[snapshot.length - 1];
-			if (!priorOuterFilter) {
+			renderer.filter.push(displayObject, enabledFilters);
+			const installed = renderer.filter.defaultFilterStack?.at?.(-1);
+			const installedFilters = installed?.filters ?? enabledFilters;
+			pushedFilter = installedFilters[installedFilters.length - 1];
+			if (!outerFilter && pushedFilter) {
 				priorFilterBlend = pushedFilter.blendMode;
 				pushedFilter.blendMode = PIXI.BLEND_MODES.ERASE;
-				state.outerFilter = pushedFilter;
+				promoted = true;
+				nextOuterFilter = pushedFilter;
 			}
 		}
 		if (hasMask) renderer.mask.push(displayObject, mask);
@@ -1597,37 +1626,39 @@ export default class CanvasEffect extends PIXI.Container {
 				|| displayObject instanceof PIXI.Graphics
 				|| displayObject instanceof PIXI.Text);
 
-		const shouldBlendLeaf = isMeshLike && !state.outerFilter;
+		const shouldBlendLeaf = isMeshLike && !nextOuterFilter;
 		let originalLeafBlend;
 		if (shouldBlendLeaf) {
 			originalLeafBlend = displayObject.blendMode;
 			displayObject.blendMode = PIXI.BLEND_MODES.ERASE;
 		}
 
-		if (isMeshLike) {
-			if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
-				displayObject._renderWithCulling(renderer);
-			} else {
-				displayObject._render(renderer);
+		try {
+			if (isMeshLike) {
+				if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
+					displayObject._renderWithCulling(renderer);
+				} else {
+					displayObject._render(renderer);
+				}
 			}
-		}
 
-		const children = displayObject.children;
-		if (children?.length) {
-			for (let i = 0, n = children.length; i < n; i++) {
-				this._renderSubtreeAsVoid(renderer, children[i], state);
+			const children = displayObject.children;
+			if (children?.length) {
+				for (let i = 0, n = children.length; i < n; i++) {
+					this._renderSubtreeAsVoid(renderer, children[i], nextOuterFilter);
+				}
 			}
-		}
-
-		if (shouldBlendLeaf) displayObject.blendMode = originalLeafBlend;
-
-		if (flush) renderer.batch.flush();
-		if (hasMask) renderer.mask.pop(displayObject);
-		if (hasFilter) {
-			renderer.filter.pop();
-			if (pushedFilter && state.outerFilter === pushedFilter) {
-				pushedFilter.blendMode = priorFilterBlend;
-				state.outerFilter = priorOuterFilter;
+		} finally {
+			if (shouldBlendLeaf) displayObject.blendMode = originalLeafBlend;
+			if (promoted && pushedFilter) pushedFilter.blendMode = priorFilterBlend;
+			if (flush) {
+				try { renderer.batch.flush(); } catch (_) { /* best-effort */ }
+			}
+			if (hasMask) {
+				try { renderer.mask.pop(displayObject); } catch (_) { /* best-effort */ }
+			}
+			if (hasFilter) {
+				try { renderer.filter.pop(); } catch (_) { /* best-effort */ }
 			}
 		}
 	}
