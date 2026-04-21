@@ -1353,6 +1353,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._tickerMethods.forEach(func => this._ticker.remove(func, this));
 		this._ticker = null;
+		this._perEffectTickHandlers = null;
 
 		SequencerAnimationEngine.endAnimations(this.id);
 
@@ -1812,35 +1813,52 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_registerTickers() {
+		const handlers = [];
+
 		//stretchTo && attached to stretchTo
 		if (this.data.stretchTo && this.data.stretchTo?.attachTo) {
-			this._addToTicker(this._transformStretchToAttachedSprite);
+			handlers.push(this._transformStretchToAttachedSprite);
 		}
 		// attachTo, not attached to stretchTo
 		if (this.data.attachTo?.active && !this.data.stretchTo?.attachTo) {
-			this._addToTicker(this._transformAttachedNoStretchSprite);
+			handlers.push(this._transformAttachedNoStretchSprite);
 		}
 
 		// rotateTowards
 		if (this.data.rotateTowards && this.data.rotateTowards?.attachTo) {
-			this._addToTicker(this._transformRotateTowardsAttachedSprite);
+			handlers.push(this._transformRotateTowardsAttachedSprite);
 		}
 
 		// scaleTo
 		if (this.data.scaleToObject && this.data?.attachTo?.active && this.data?.attachTo?.bindScale) {
-			const { heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY } = this._getBaseScale()
-			this._addToTicker(() => {
+			const { heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY } = this._getBaseScale();
+			handlers.push(function scaleTick() {
 				this._applyScaleToObject(heightWidthRatio, widthHeightRatio, baseScaleX, baseScaleY);
-				this._setAnchors()
+				this._setAnchors();
 			});
 		}
 
 		// source or target destroy safeguards
-		if (this.isSourceTemporary) {
-			this._addToTicker(this._checkSourceDestroyed);
-		}
-		if (this.isTargetTemporary) {
-			this._addToTicker(this._checkTargetDestroyed);
+		if (this.isSourceTemporary) handlers.push(this._checkSourceDestroyed);
+		if (this.isTargetTemporary) handlers.push(this._checkTargetDestroyed);
+
+		if (!handlers.length) return;
+
+		this._perEffectTickHandlers = handlers;
+		this._addToTicker(this._perEffectTick);
+	}
+
+	_perEffectTick() {
+		const handlers = this._perEffectTickHandlers;
+		if (!handlers) return;
+		for (let i = 0; i < handlers.length; i++) {
+			try {
+				handlers[i].call(this);
+			} catch (err) {
+				if (CONFIG.debug?.sequencer) {
+					console.warn("Sequencer | per-effect ticker handler threw", err);
+				}
+			}
 		}
 	}
 
