@@ -802,13 +802,19 @@ class AnimationSection extends Section {
 			await lib.wait(1);
 		}
 
-		return new Promise(async (resolve) => {
-			this._animate(animData, resolve);
-			setTimeout(
-				resolve,
-				Math.max(0, overallDuration + this._currentWaitTime + animData.maxFPS)
-			);
-		});
+	return new Promise((resolve) => {
+		let resolved = false;
+		const safeResolve = () => {
+			if (resolved) return;
+			resolved = true;
+			resolve();
+		};
+		this._animate(animData, safeResolve);
+		setTimeout(
+			safeResolve,
+			Math.max(0, overallDuration + this._currentWaitTime + animData.maxFPS)
+		);
+	});
 	}
 
 	/**
@@ -904,15 +910,18 @@ class AnimationSection extends Section {
 					}
 				}
 
-				if (Object.keys(animatedAttributes).length > 0) {
-					await this._updateObject(this._originObject, animatedAttributes);
-				}
+			if (Object.keys(animatedAttributes).length > 0) {
+				await this._updateObject(this._originObject, animatedAttributes);
+			}
 
-				animData.attributes = animData.attributes.filter((a) => !a.done);
+			animData.attributes = animData.attributes.filter((a) => !a.done);
 
-				if (animData.attributes.length === 0) return;
+			if (animData.attributes.length === 0) {
+				resolve();
+				return;
+			}
 
-				animData.lastTimespan = timespan;
+			animData.lastTimespan = timespan;
 			}
 		}
 
