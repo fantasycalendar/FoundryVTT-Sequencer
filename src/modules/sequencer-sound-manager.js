@@ -198,11 +198,14 @@ const placed_sound_mixin = (base_class) =>
 			canvas.app.ticker.add(this.update, this);
 
 			if (this.data.moveTowards && this.creationTimeDelta <= this.movementDuration) {
+				const sourcePos = this.sourcePosition;
+				const targetPos = this.targetPosition;
+
 				SequencerAnimationEngine.addAnimation(this.data._id, {
 					target: this,
 					propertyName: "position.x",
-					from: this.sourcePosition.x,
-					to: this.targetPosition.x,
+					from: sourcePos.x,
+					to: targetPos.x,
 					duration: this.movementDuration,
 					ease: this.data.moveTowards.ease ?? "linear",
 					delay: 0,
@@ -212,8 +215,8 @@ const placed_sound_mixin = (base_class) =>
 				SequencerAnimationEngine.addAnimation(this.data._id, {
 					target: this,
 					propertyName: "position.y",
-					from: this.sourcePosition.y,
-					to: this.targetPosition.y,
+					from: sourcePos.y,
+					to: targetPos.y,
 					duration: this.movementDuration,
 					ease: this.data.moveTowards.ease ?? "linear",
 					delay: 0,
