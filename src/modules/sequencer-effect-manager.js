@@ -378,7 +378,7 @@ export default class SequencerEffectManager {
 
 		SequenceManager.VisibleEffects.add(effect.id, effect);
 		if (effect.data.name) {
-			effect._ticker.add(() => {
+			effect._addToTicker(() => {
 				if (effect.isDestroyed) return;
 				PositionContainer.set(effect.data.name, {
 					start: effect.sourcePosition,
