@@ -2073,7 +2073,7 @@ export default class CanvasEffect extends PIXI.Container {
 			this.zIndex = sort + (lib.is_real_number(this.data.zIndex) ? this.data.zIndex : 0);
 		}
 		if (this.parent) {
-			this.parent.sortChildren();
+			this.parent.sortDirty = true;
 		}
 	}
 
