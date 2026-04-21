@@ -344,32 +344,30 @@ export class SequencerInterfaceLayer extends foundry.canvas.layers.InteractionLa
 	 */
 	_drawEffectStartEndPoints(effect) {
 		if (!effect || effect._destroyed || !effect.spriteContainer) return;
+		if (!effect.data.stretchTo) return;
 
-		if (
-			!effect.data.stretchTo ||
-			!effect.sourcePosition ||
-			!effect.targetPosition
-		)
-			return;
+		const sourcePos = effect.sourcePosition;
+		const targetPos = effect.targetPosition;
+		if (!sourcePos || !targetPos) return;
 
 		this.effectSourcePosition.beginFill(CONSTANTS.COLOR.PRIMARY);
 		this.effectSourcePosition.drawCircle(
-			effect.sourcePosition.x,
-			effect.sourcePosition.y,
+			sourcePos.x,
+			sourcePos.y,
 			canvas.grid.size * 0.25
 		);
 
 		if (typeof effect.data.source === "string") {
 			this._drawCrossAtPosition(
 				this.effectSourcePosition,
-				effect.sourcePosition
+				sourcePos
 			);
 		}
 
 		this.effectTargetPosition.beginFill(CONSTANTS.COLOR.SECONDARY);
 		this.effectTargetPosition.drawCircle(
-			effect.targetPosition.x,
-			effect.targetPosition.y,
+			targetPos.x,
+			targetPos.y,
 			canvas.grid.size * 0.25
 		);
 		this.effectTargetPosition.alpha = 0.75;
@@ -377,7 +375,7 @@ export class SequencerInterfaceLayer extends foundry.canvas.layers.InteractionLa
 		if (typeof effect.data.target === "string") {
 			this._drawCrossAtPosition(
 				this.effectTargetPosition,
-				effect.targetPosition
+				targetPos
 			);
 		}
 	}
