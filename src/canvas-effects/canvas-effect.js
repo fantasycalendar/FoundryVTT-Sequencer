@@ -2745,7 +2745,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 	}
 
-	async _transformAttachedNoStretchSprite() {
+	_transformAttachedNoStretchSprite() {
 
 		if (this.isDestroyed) return;
 
@@ -2771,7 +2771,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.position.set(x, y);
 	}
 
-	async _transformRotateTowardsAttachedSprite() {
+	_transformRotateTowardsAttachedSprite() {
 		if (this.isDestroyed) return;
 		try {
 			this._rotateTowards();
