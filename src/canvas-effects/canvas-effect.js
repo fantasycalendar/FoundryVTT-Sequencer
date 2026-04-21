@@ -1261,6 +1261,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._ended = null;
 		this._maskContainer = null;
 		this._maskSprite = null;
+		this._stageMasks = [];
 		this._file = null;
 		this._loopOffset = 0;
 		this.effectFilters = {};
@@ -1339,6 +1340,17 @@ export default class CanvasEffect extends PIXI.Container {
 			} catch (err) {
 			}
 			this._maskSprite = null;
+		}
+
+		if (this._stageMasks?.length) {
+			for (const shape of this._stageMasks) {
+				try {
+					if (shape?.parent) shape.parent.removeChild(shape);
+					shape?.destroy?.({ children: true });
+				} catch (err) {
+				}
+			}
+			this._stageMasks.length = 0;
 		}
 
 		this.sprite?.destroy();
@@ -2123,6 +2135,7 @@ export default class CanvasEffect extends PIXI.Container {
 				shapeToAdd.renderable = false;
 				shapeToAdd.uuid = uuid;
 				canvas.stage.addChild(shapeToAdd);
+				this._stageMasks.push(shapeToAdd);
 
 			} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate || obj instanceof foundry.canvas.placeables.Drawing) {
 				shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
@@ -2157,6 +2170,7 @@ export default class CanvasEffect extends PIXI.Container {
 				shapeToAdd.renderable = false;
 				shapeToAdd.uuid = uuid;
 				canvas.stage.addChild(shapeToAdd);
+				this._stageMasks.push(shapeToAdd);
 			}
 			shapeToAdd.obj = obj;
 
