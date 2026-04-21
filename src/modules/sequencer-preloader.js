@@ -3,10 +3,12 @@ import SequencerFileCache from "./sequencer-file-cache.js";
 import LoadingBar from "../utils/loadingBar.js";
 import * as lib from "../lib/lib.js";
 
+const PING_INTERVAL_MS = 5000;
+const PING_TIMEOUT_MS = 3000;
+
 const SequencerPreloader = {
-  _usersToRespond: new Set(),
-  _clientsDone: [],
-  _resolve: () => {},
+  _activeRequests: new Map(),
+  _disconnectHookId: null,
 
   /**
    *  Caches provided file(s) locally, vastly improving loading speed of those files.
@@ -90,25 +92,145 @@ const SequencerPreloader = {
       return this._preloadLocal(srcs, showProgressBar);
     }
 
+    const requestId = foundry.utils.randomID();
+
+    const request = {
+      id: requestId,
+      resolve: null,
+      usersToRespond: new Set(
+        game.users.filter((user) => user.active).map((user) => user.id)
+      ),
+      clientsDone: [],
+      pingInterval: null,
+    };
+
     const promise = new Promise((resolve) => {
-      this._resolve = resolve;
+      request.resolve = resolve;
     });
 
-    this._usersToRespond = new Set(
-      game.users.filter((user) => user.active).map((user) => user.id)
-    );
+    this._activeRequests.set(requestId, request);
+    this._ensureDisconnectHook();
 
     sequencerSocket.executeForEveryone(
       SOCKET_HANDLERS.PRELOAD,
+      requestId,
       game.user.id,
       srcs,
       showProgressBar
     );
 
+    request.pingInterval = setInterval(() => {
+      this._pingUnresponsiveClients(requestId);
+    }, PING_INTERVAL_MS);
+
     return promise;
   },
 
-  async respond(inSenderId, inSrcs, showProgressBar) {
+  /**
+   * Pings clients that haven't responded yet. If they don't respond to the
+   * ping within PING_TIMEOUT_MS, assume they are unreachable and remove them.
+   *
+   * @private
+   */
+  _pingUnresponsiveClients(requestId) {
+    const request = this._activeRequests.get(requestId);
+    if (!request || request.usersToRespond.size === 0) return;
+
+    for (const userId of request.usersToRespond) {
+      if (userId === game.user.id) continue;
+
+      const user = game.users.get(userId);
+      if (!user?.active) {
+        this._removeUserFromRequest(requestId, userId, "disconnected");
+        continue;
+      }
+
+      const pingId = foundry.utils.randomID();
+
+      if (!request.pendingPings) request.pendingPings = new Map();
+
+      const pingTimeout = setTimeout(() => {
+        request.pendingPings?.delete(pingId);
+        if (request.usersToRespond.has(userId)) {
+          this._removeUserFromRequest(requestId, userId, "unresponsive to ping");
+        }
+      }, PING_TIMEOUT_MS);
+
+      request.pendingPings.set(pingId, { userId, timeout: pingTimeout });
+
+      sequencerSocket.executeAsUser(
+        SOCKET_HANDLERS.PING,
+        userId,
+        requestId,
+        pingId,
+        game.user.id
+      );
+    }
+  },
+
+  /**
+   * Handles an incoming ping request by immediately responding with a pong.
+   */
+  respondToPing(requestId, pingId, senderId) {
+    sequencerSocket.executeAsUser(
+      SOCKET_HANDLERS.PONG,
+      senderId,
+      requestId,
+      pingId
+    );
+  },
+
+  /**
+   * Handles a pong response, confirming the client is still alive.
+   */
+  handlePong(requestId, pingId) {
+    const request = this._activeRequests.get(requestId);
+    if (!request?.pendingPings) return;
+
+    const pingData = request.pendingPings.get(pingId);
+    if (pingData) {
+      clearTimeout(pingData.timeout);
+      request.pendingPings.delete(pingId);
+    }
+  },
+
+  /**
+   * Removes a user from a request's wait set and checks if the request is complete.
+   *
+   * @private
+   */
+  _removeUserFromRequest(requestId, userId, reason) {
+    const request = this._activeRequests.get(requestId);
+    if (!request) return;
+
+    if (!request.usersToRespond.has(userId)) return;
+
+    request.usersToRespond.delete(userId);
+
+    const userName = game.users.get(userId)?.name ?? userId;
+    lib.debug(`Client "${userName}" removed from preload request (${reason})`);
+
+    if (request.usersToRespond.size === 0) {
+      this._resolveRequest(requestId);
+    }
+  },
+
+  /**
+   * Ensures the disconnect hook is registered.
+   *
+   * @private
+   */
+  _ensureDisconnectHook() {
+    if (this._disconnectHookId !== null) return;
+    this._disconnectHookId = Hooks.on("userConnected", (user, connected) => {
+      if (connected) return;
+      for (const [requestId] of this._activeRequests) {
+        this._removeUserFromRequest(requestId, user.id, "disconnected");
+      }
+    });
+  },
+
+  async respond(requestId, inSenderId, inSrcs, showProgressBar) {
     const numFilesFailedToLoad = await this._preloadLocal(
       inSrcs,
       showProgressBar
@@ -116,20 +238,48 @@ const SequencerPreloader = {
     return sequencerSocket.executeAsUser(
       SOCKET_HANDLERS.PRELOAD_RESPONSE,
       inSenderId,
+      requestId,
       game.user.id,
       numFilesFailedToLoad
     );
   },
 
-  handleResponse(inUserId, numFilesFailedToLoad) {
-    this._usersToRespond.delete(inUserId);
-    this._clientsDone.push({
+  handleResponse(requestId, inUserId, numFilesFailedToLoad) {
+    const request = this._activeRequests.get(requestId);
+    if (!request) return;
+
+    request.usersToRespond.delete(inUserId);
+    request.clientsDone.push({
       userId: inUserId,
       numFilesFailedToLoad: numFilesFailedToLoad,
     });
-    if (this._usersToRespond.size > 0) return;
 
-    this._clientsDone.forEach((user) => {
+    if (request.usersToRespond.size > 0) return;
+
+    this._resolveRequest(requestId);
+  },
+
+  /**
+   * Resolves a preload request, cleans up state, and logs results.
+   *
+   * @private
+   */
+  _resolveRequest(requestId) {
+    const request = this._activeRequests.get(requestId);
+    if (!request) return;
+
+    if (request.pingInterval) {
+      clearInterval(request.pingInterval);
+    }
+
+    if (request.pendingPings) {
+      for (const [, pingData] of request.pendingPings) {
+        clearTimeout(pingData.timeout);
+      }
+      request.pendingPings.clear();
+    }
+
+    request.clientsDone.forEach((user) => {
       if (user.numFilesFailedToLoad > 0) {
         lib.debug(
           `${
@@ -146,11 +296,13 @@ const SequencerPreloader = {
     });
     lib.debug(`All clients responded to file preloads`);
 
-    this._resolve();
+    request.resolve();
+    this._activeRequests.delete(requestId);
 
-    this._usersToRespond = new Set();
-    this._clientsDone = [];
-    this._resolve = () => {};
+    if (this._activeRequests.size === 0 && this._disconnectHookId !== null) {
+      Hooks.off("userConnected", this._disconnectHookId);
+      this._disconnectHookId = null;
+    }
   },
 
   /**

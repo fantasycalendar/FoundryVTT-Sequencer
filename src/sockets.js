@@ -23,7 +23,8 @@ export const SOCKET_HANDLERS = {
   END_SOUNDS: "endSounds",
   PRELOAD: "preload",
   PRELOAD_RESPONSE: "preloadResponse",
-  PRELOAD_DONE: "preloadDone",
+  PING: "ping",
+  PONG: "pong",
   UPDATE_DOCUMENT: "updateDocument",
   ADD_FLAGS: "addFlags",
   REMOVE_FLAGS: "removeFlags",
@@ -61,6 +62,12 @@ const SOCKET_CALLBACKS = {
 	},
 	[SOCKET_HANDLERS.PRELOAD_RESPONSE]: (data) => {
 		return SequencerPreloader.handleResponse(...data.payload)
+	},
+	[SOCKET_HANDLERS.PING]: (data) => {
+		return SequencerPreloader.respondToPing(...data.payload)
+	},
+	[SOCKET_HANDLERS.PONG]: (data) => {
+		return SequencerPreloader.handlePong(...data.payload)
 	},
 	[SOCKET_HANDLERS.UPDATE_DOCUMENT]: async (data) => {
 		let [documentUuid, updates, animate] = data.payload;
