@@ -4,11 +4,20 @@ import CONSTANTS from "../constants.js";
 import FoundryShim from "../utils/foundry-shim.js";
 import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 
+/**
+ * Inert compatibility layer.
+ *
+ * Prior to Foundry v14 this layer was the default render target for
+ * Sequencer effects via `canvas.sequencerEffects`. Default effects now
+ * render inside `canvas.primary` so that they participate in elevation /
+ * sortLayer ordering with tokens, tiles, drawings, and weather (see
+ * CanvasEffect._addToContainer). The layer remains registered solely for
+ * backward compatibility with external modules or macros that reference
+ * `canvas.sequencerEffects` directly.
+ */
 export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
 	static get layerOptions() {
 		return foundry.utils.mergeObject(super.layerOptions, {
-			elevation: 100000000,
-			zIndex: 450,
 			name: CONSTANTS.EFFECTS_LAYER,
 		});
 	}

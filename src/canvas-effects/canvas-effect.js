@@ -1320,6 +1320,10 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.mask = null;
 
+		// Tear down the region punch-through proxy first so it cannot
+		// dereference this.sprite / children while we destroy them.
+		this._teardownVoidProxy();
+
 		hooksManager.removeHooks(this.uuid);
 
 		this._tickerMethods.forEach(func => this._ticker.remove(func, this));
@@ -1423,6 +1427,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	_addToContainer() {
 		let layer;
+		let registerVoidProxy = false;
 		if (this.data.screenSpaceAboveUI) {
 			layer = SequencerAboveUILayer;
 		} else if (this.data.screenSpace) {
@@ -1432,11 +1437,180 @@ export default class CanvasEffect extends PIXI.Container {
 		} else if (this.data.aboveLighting) {
 			layer = canvas.interface;
 		} else {
-			layer = canvas.sequencerEffects;
+			// Default route: render inside the primary canvas group so that
+			// effects participate in elevation/sortLayer/sort ordering with
+			// tokens, tiles, drawings, and weather. This restores the
+			// pre-v13 documented behavior (sortLayer 800 sits above tokens
+			// at 700 and below weather at 1000).
+			layer = canvas.primary;
+			registerVoidProxy = true;
 		}
 
 		layer.addChild(this);
 		layer.sortChildren();
+
+		// For default-routed effects, register an ERASE-blend proxy in the
+		// interface group so the effect visually "punches through" any
+		// region highlights drawn above the primary group. Matches Foundry's
+		// Token#voidMesh mechanism (isolated by InterfaceCanvasGroup's
+		// VoidFilter so the erase does not leak into non-interface pixels).
+		if (registerVoidProxy) this._registerVoidProxy();
+	}
+
+	/* -------------------------------------------------------------- */
+	/*  Region "punch-through" (voidMesh proxy)                       */
+	/* -------------------------------------------------------------- */
+
+	/**
+	 * Register an ERASE-blend proxy container in the interface group so
+	 * this effect visually punches through region highlights that draw
+	 * above the primary canvas group.
+	 *
+	 * The proxy itself has no geometry. Its `render` callback reaches back
+	 * into this effect's sub-tree and re-renders every visible mesh/graphic/
+	 * text element with BLEND_MODES.ERASE. InterfaceCanvasGroup has a
+	 * VoidFilter that isolates its framebuffer, so the erase is constrained
+	 * to interface-group pixels only.
+	 *
+	 * @private
+	 */
+	_registerVoidProxy() {
+		if (this._voidProxy || !canvas?.interface) return;
+		const proxy = new PIXI.Container();
+		// No local geometry; skip transform work.
+		proxy.updateTransform = () => {};
+		// Render last within the interface group, above RegionLayer.
+		proxy.zIndex = 1000;
+		proxy.__sequencerOwner = this;
+		proxy.render = (renderer) => this._renderAsVoid(renderer);
+		canvas.interface.addChild(proxy);
+		this._voidProxy = proxy;
+	}
+
+	/**
+	 * Root render hook for the voidMesh proxy. Guards and dispatches
+	 * to the subtree-walking renderer. Silent failure on error (the
+	 * effect still renders in its primary layer).
+	 *
+	 * @param {PIXI.Renderer} renderer
+	 * @private
+	 */
+	_renderAsVoid(renderer) {
+		if (this._destroyed || this._isEnding) return;
+		if (!this.renderable || !this.visible || this.worldAlpha <= 0) return;
+		try {
+			this._renderSubtreeAsVoid(renderer, this);
+		} catch (err) {
+			if (CONFIG.debug?.sequencer) {
+				console.warn("Sequencer | voidProxy render error", err);
+			}
+		}
+	}
+
+	/**
+	 * Recursively walk an effect sub-tree, rendering every visible
+	 * mesh/graphic/text node with BLEND_MODES.ERASE. Containers with no
+	 * own draw just have their children walked.
+	 *
+	 * Matches the semantics of Foundry's PrimarySpriteMesh._renderVoid
+	 * but extended to cover Sequencer's richer tree (TilingSpriteMesh,
+	 * AnimatedSpriteMesh, LegacyGraphics shapes, Text labels).
+	 *
+	 * @param {PIXI.Renderer} renderer
+	 * @param {PIXI.DisplayObject} displayObject
+	 * @private
+	 */
+	_renderSubtreeAsVoid(renderer, displayObject) {
+		if (!displayObject) return;
+		if (!displayObject.renderable || !displayObject.visible) return;
+		if ((displayObject.worldAlpha ?? 1) <= 0) return;
+
+		// A node is "mesh-like" if it has its own pixels to draw.
+		// Plain PIXI.Container subclasses (rotationContainer, spriteContainer,
+		// SequencerSpriteManager, etc.) fall through to recursion only.
+		const isMeshLike = typeof displayObject._render === "function"
+			&& (displayObject.isSprite === true
+				|| displayObject instanceof PIXI.Mesh
+				|| displayObject instanceof PIXI.Graphics
+				|| displayObject instanceof PIXI.Text);
+
+		if (isMeshLike) {
+			const originalBlend = displayObject.blendMode;
+			displayObject.blendMode = PIXI.BLEND_MODES.ERASE;
+			try {
+				const hasFilters = (displayObject.filters?.length ?? 0) > 0;
+				const hasMask = !!displayObject._mask;
+				if (hasFilters || hasMask) {
+					this._renderVoidAdvanced(renderer, displayObject);
+				} else if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
+					displayObject._renderWithCulling(renderer);
+				} else {
+					displayObject._render(renderer);
+				}
+			} finally {
+				displayObject.blendMode = originalBlend;
+			}
+		}
+
+		const children = displayObject.children;
+		if (!children?.length) return;
+		for (let i = 0, n = children.length; i < n; i++) {
+			this._renderSubtreeAsVoid(renderer, children[i]);
+		}
+	}
+
+	/**
+	 * Render a mesh-like node that has filters or a mask, mirroring
+	 * PIXI.Container#renderAdvanced but substituting ERASE blend.
+	 * Based on Foundry's PrimarySpriteMesh#renderVoidAdvanced.
+	 *
+	 * @param {PIXI.Renderer} renderer
+	 * @param {PIXI.DisplayObject} displayObject
+	 * @private
+	 */
+	_renderVoidAdvanced(renderer, displayObject) {
+		const filters = displayObject.filters;
+		const mask = displayObject._mask;
+		let enabled = [];
+		if (filters?.length) {
+			for (let i = 0; i < filters.length; i++) {
+				if (filters[i].enabled) enabled.push(filters[i]);
+			}
+		}
+		const flush = (enabled.length > 0) || (mask && (!mask.isMaskData
+			|| (mask.enabled && (mask.autoDetect || mask.type !== PIXI.MASK_TYPES.NONE))));
+		if (flush) renderer.batch.flush();
+		if (enabled.length) renderer.filter.push(displayObject, enabled);
+		if (mask) renderer.mask.push(displayObject, mask);
+
+		if (displayObject.cullable && typeof displayObject._renderWithCulling === "function") {
+			displayObject._renderWithCulling(renderer);
+		} else {
+			displayObject._render(renderer);
+		}
+
+		if (flush) renderer.batch.flush();
+		if (mask) renderer.mask.pop(displayObject);
+		if (enabled.length) renderer.filter.pop();
+	}
+
+	/**
+	 * Remove and destroy the voidMesh proxy if one was registered.
+	 *
+	 * @private
+	 */
+	_teardownVoidProxy() {
+		const proxy = this._voidProxy;
+		if (!proxy) return;
+		this._voidProxy = null;
+		try {
+			if (proxy.parent) proxy.parent.removeChild(proxy);
+			proxy.destroy({ children: false });
+		} catch (err) {
+			if (CONFIG.debug?.sequencer) {
+				console.warn("Sequencer | voidProxy teardown error", err);
+			}
+		}
 	}
 
 	get startTimeMs() {
@@ -1836,10 +2010,23 @@ export default class CanvasEffect extends PIXI.Container {
 			? (this?.parent?.children?.length ?? 0)
 			: 100000;
 		sort = PluginsManager.elevation({ effect: this, sort })
-		sort += 100 + (this.data.aboveLighting ? 300 : 0);
-		this.zIndex = sort + (lib.is_real_number(this.data.zIndex) ? this.data.zIndex : 0);
+		sort += 100;
 		this.sort = sort;
-		this.sortLayer = this.data.sortLayer
+		// sortLayer defaults to the CanvasEffect class default (800), which
+		// sits between PrimaryCanvasGroup.SORT_LAYERS.TOKENS (700) and
+		// WEATHER (1000). Fall back explicitly when data.sortLayer is
+		// unset so we never pass undefined to the primary group sort
+		// (which would treat it as 0 and place effects below tiles).
+		this.sortLayer = this.data.sortLayer ?? 800;
+		// When routed to the interface group (.aboveLighting()), anchor
+		// the effect above RegionLayer (zIndex ~100/600) and below the
+		// controls layer (zIndex ~1000). The interface group sorts
+		// children by zIndex, not sortLayer, so we bake it in here.
+		if (this.data.aboveLighting) {
+			this.zIndex = 750 + (lib.is_real_number(this.data.zIndex) ? this.data.zIndex : 0);
+		} else {
+			this.zIndex = sort + (lib.is_real_number(this.data.zIndex) ? this.data.zIndex : 0);
+		}
 		if (this.parent) {
 			this.parent.sortChildren();
 		}

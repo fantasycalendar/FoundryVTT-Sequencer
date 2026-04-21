@@ -824,7 +824,9 @@ Causes the effect to be played below tiles - you can pass a boolean whether it s
 
 `.aboveLighting()` or `.aboveLighting(bool)`
 
-Causes the effect to be played above the lighting layer, which makes the effect be visible over almost everything except weather effects and the interface (like health bars).
+Causes the effect to be rendered above the lighting, darkness, and fog-of-war layers. The effect also renders above region highlights and the grid, but below overlay controls (HUD, health bars, crosshairs).
+
+Use this when an effect must be visible regardless of scene darkness or obscurement — for example, a bright spell visual that should cut through fog.
 
 Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden.
 
@@ -838,17 +840,27 @@ Causes the effect to be played above the interface layer, which makes the effect
 
 `.zIndex(1)`
 
-Sets the z-index of the effect, potentially displaying it on top of or below other effects on the same elevation and sortLayer (v12 only).
+Sets the z-index of the effect, breaking ties between effects that share the same elevation and sortLayer.
 
-**Note:** If you have called [`.belowTokens()`](#below-tokens) or [`.belowTiles()`](#below-tiles), the effect is placed on an entirely different layer, with its own z-index and will be sorted within that layer.
+**Note:** `.belowTokens()` and `.belowTiles()` change the effect's `sortLayer`, so the z-index ordering only applies within the new sort layer.
 
 ## Sort Layer
 
-### Only supported in Foundry v12
+`.sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
 
-`sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
+Sets the sort layer of the effect. This value determines where the effect sits among the primary canvas group's children when siblings share an elevation. Foundry's primary group sorts children first by elevation, then by `sortLayer`, then by `sort`, then by `zIndex`.
 
-Sets the sort layer of the effect. This value is used to determine layer ordering between entities of the same elevation. Foundry sorts canvas object first by elevation, second by their sortLayer and third by their z-index. Default is 800, which is above tokens and below weather effects.
+Default is `800`, which is above tokens (`700`) and below weather (`1000`). Sequencer reserves:
+- `300` — below tiles (used by `.belowTiles()`)
+- `600` — below tokens (used by `.belowTokens()`)
+- `800` — default effects layer (above tokens)
+
+For reference, Foundry's built-in sort layers are:
+- `0` scene background / level textures
+- `500` tiles
+- `600` drawings
+- `700` tokens
+- `1000` weather
 
 ## Animate Property
 

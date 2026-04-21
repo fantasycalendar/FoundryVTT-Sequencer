@@ -5,6 +5,10 @@
 - *Sequencer* - Removed support for FoundryVTT v12
 - *Sequencer* - Removed the socketlib dependency; Sequencer now manages its own data internally
 - *Sequencer* - Introduced a new internal UI foundation with proper dark mode support
+- *Effects* - Effects now visually "punch through" region highlights (matches how Foundry's own tokens behave with Always-Displayed regions)
+- *Effects* - `.sortLayer()`, `.zIndex()`, `.belowTokens()`, and `.belowTiles()` now work as documented on Foundry v13/v14
+- *Effects* - `.aboveLighting()` now anchors the effect above region highlights within the interface layer
+- *Effects* - `canvas.sequencerEffects` is now an inert compatibility layer; modules should use Sequencer's public API instead of adding children to it directly
 - *Effects* - Removed deprecated methods, warnings are now errors
 - *Effects* - Reworked internal effect storage to use a centralized hidden journal, reducing token and actor update overhead and improving performance in effect-heavy games
 - *Effects* - Due to the changes to the storage of effect data, setting `local: true` on the Sequence's `play()` method will no longer make the effect entirely local, and still store it in the DB without anyone else seeing it
