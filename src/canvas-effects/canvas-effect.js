@@ -1331,15 +1331,17 @@ export default class CanvasEffect extends PIXI.Container {
 		SequencerAnimationEngine.endAnimations(this.id);
 
 		if (this._maskContainer) this._maskContainer.destroy({ children: true });
+		this._maskContainer = null;
 		if (this._maskSprite) {
 			try {
 				this._maskSprite.texture.destroy(true);
 				this._maskSprite.destroy();
 			} catch (err) {
 			}
+			this._maskSprite = null;
 		}
 
-		this.sprite.destroy();
+		this.sprite?.destroy();
 		this.sprite = null;
 
 		try {
@@ -1353,6 +1355,10 @@ export default class CanvasEffect extends PIXI.Container {
 			SyncGroups.remove(this);
 		}
 		this.removeChildren().forEach((child) => child.destroy({ children: true }));
+
+		this.rotationContainer = null;
+		this.pluginContainer = null;
+		this.spriteContainer = null;
 	}
 
 	/**
