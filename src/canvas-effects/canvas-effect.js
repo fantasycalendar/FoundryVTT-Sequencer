@@ -3322,11 +3322,13 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let moves = this.data.moves;
 
+		const targetPos = this.targetPosition;
+
 		let movementDuration = this._totalDuration;
 		if (this.data.moveSpeed) {
 			const distance = canvaslib.distance_between(
 				this.sourcePosition,
-				this.targetPosition
+				targetPos
 			);
 			movementDuration = (distance / this.data.moveSpeed) * 1000;
 		}
@@ -3346,7 +3348,7 @@ export default class CanvasEffect extends PIXI.Container {
 			{
 				target: this,
 				propertyName: "position.x",
-				to: this.targetPosition.x,
+				to: targetPos.x,
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
@@ -3355,7 +3357,7 @@ export default class CanvasEffect extends PIXI.Container {
 			{
 				target: this,
 				propertyName: "position.y",
-				to: this.targetPosition.y,
+				to: targetPos.y,
 				duration: duration,
 				ease: moves.ease,
 				delay: moves.delay,
