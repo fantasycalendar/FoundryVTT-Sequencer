@@ -1222,7 +1222,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this.ready = false;
 		this._initializeVariables();
 		this._addToContainer();
-		this._createFile()
+		await this._createFile()
 		this._updateCurrentFilePath(false, true)
 		await this._createSprite();
 		this._calculateDuration();
@@ -1292,6 +1292,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._hooks = [];
 		this._lastDimensions = {};
 		this._lastScreenDimensions = {};
+		this._renderTexture = null;
 
 		if (this._resetTimeout) {
 			clearTimeout(this._resetTimeout);
@@ -1903,7 +1904,23 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 	}
 
-	_createFile() {
+	async _createFile() {
+		if (this.data.copySprite) {
+			let targetDocument = fromUuidSync(this.data.copySprite.uuid);
+			let clonedObject = targetDocument.object.clone();
+			await clonedObject.draw();
+			let clonedMesh = clonedObject.mesh;
+			clonedMesh.position.set(0, 0);
+			if (targetDocument?.ring?.enabled) {
+				clonedMesh.setShaderClass(CONFIG.Token.ring.shaderClass);
+			}
+			this._renderTexture = canvas.app.renderer.generateTexture(clonedMesh, {
+				resolution: clonedMesh.texture.resolution
+			});
+			clonedObject.destroy();
+			return;
+		}
+
 		if (this.data.file === "") {
 			return;
 		}
@@ -1937,6 +1954,10 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	_updateCurrentFilePath(distance, showDistanceWarning = false) {
+		if (this.data.copySprite) {
+			this._currentFilePath = this.data.copySprite.uuid;
+			return;
+		}
 		if (!this._file) {
 			return;
 		}
@@ -1960,8 +1981,13 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	async _createSprite() {
+		if (this.data.copySprite?.offsetX !== undefined && this.data.copySprite?.offsetY !== undefined) {
+			this.rotationContainer.position.set(this.data.copySprite.offsetX, this.data.copySprite.offsetY);
+		}
+
 		this.renderable = false;
 		const spriteData = {
+			texture: this._renderTexture,
 			antialiasing: this.data?.fileOptions?.antialiasing,
 			tiling: this.data.tilingTexture,
 			xray: this.data.xray || this.data.screenSpace || this.data.screenSpaceAboveUI,

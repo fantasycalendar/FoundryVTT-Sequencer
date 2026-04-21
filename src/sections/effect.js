@@ -2104,25 +2104,27 @@ export default class EffectSection extends Section {
 		this._mirrorX = this._mirrorX || (this._randomMirrorX && Math.random() < 0.5)
 		this._mirrorY = this._mirrorY || (this._randomMirrorY && Math.random() < 0.5)
 
-		if (this._copySprite && !this._file) {
-      this._file = (
-        this._copySprite.object?.ring?.enabled
-          ? this._copySprite.object?.ring?.subject?.texture || this._copySprite.object?.texture?.src
-          : this._copySprite.object?.texture?.src
-      );
+	if (this._copySprite && !this._file) {
 
-			if (this._source === null) {
-				this._source = this._validateLocation(this._copySprite.object);
-			}
+		if (this._source === null) {
+			this._source = this._validateLocation(this._copySprite.object);
+		}
 
-			if (this._size === null) {
-				const size = canvaslib.get_object_dimensions(this._copySprite.object);
-				this._size = {
-					width: size?.width ?? canvas.grid.size,
-					height: size?.height ?? canvas.grid.size,
-					gridUnits: false,
-				};
+		if (this._size === null) {
+			const size = canvaslib.get_object_dimensions(this._copySprite.object);
+			this._size = {
+				width: size?.width ?? canvas.grid.size,
+				height: size?.height ?? canvas.grid.size,
+				gridUnits: false,
+			};
+
+			// Account for token size difference compared to final rendered texture dimensions
+			if (this._copySprite.object instanceof TokenDocument && this._copySprite.object.ring?.enabled) {
+				const tokenSize = this._copySprite.object.getSize();
+				this._copySprite.options.offsetX = (tokenSize.width - this._size.width) / 2;
+				this._copySprite.options.offsetY = (tokenSize.height - this._size.height) / 2;
 			}
+		}
 
 			if (
 				this._mirrorX === null &&
@@ -2189,24 +2191,28 @@ export default class EffectSection extends Section {
 			}
 		}
 
-		if (
-			!this._file &&
-			!this._copySprite &&
-			!this._text &&
-			!this._shapes.length &&
-			this.sequence.softFail
-		) {
-			this._playEffect = false;
-			return;
-		}
+	if (
+		!this._file &&
+		!this._copySprite &&
+		!this._text &&
+		!this._shapes.length &&
+		this.sequence.softFail
+	) {
+		this._playEffect = false;
+		return;
+	}
 
-		let fileData = this._file
-			? await this._determineFile(this._file)
-			: {
-				file: this._file,
-				forcedIndex: false,
-				customRange: false,
-			};
+	if (this._copySprite) {
+		return;
+	}
+
+	let fileData = this._file
+		? await this._determineFile(this._file)
+		: {
+			file: this._file,
+			forcedIndex: false,
+			customRange: false,
+		};
 
 		this._isRangedEffect = fileData?.file?.rangeFind;
 
@@ -2292,7 +2298,12 @@ export default class EffectSection extends Section {
 			return this._deserializedData;
 		}
 
-		const { file, forcedIndex, customRange } =
+	let file = "";
+	let forcedIndex = null;
+	let customRange = null;
+
+	if (!this._copySprite) {
+		const fileData =
 			this._file && this._playEffect
 				? await this._determineFile(this._file)
 				: {
@@ -2300,6 +2311,10 @@ export default class EffectSection extends Section {
 					forcedIndex: false,
 					customRange: false,
 				};
+		file = fileData.file;
+		forcedIndex = fileData.forcedIndex;
+		customRange = fileData.customRange;
+	}
 
 		let source = this._getSourceObject();
 		let target = this._getTargetObject();
@@ -2400,11 +2415,15 @@ export default class EffectSection extends Section {
 				}
 				: false,
 
-			attachTo: this._attachTo,
-			missed: this._missed,
+		attachTo: this._attachTo,
+		missed: this._missed,
+		copySprite: this._copySprite ? {
+			uuid: this._copySprite.object?.uuid,
+			...this._copySprite.options
+		} : false,
 
-			/**
-			 * Sprite properties
+		/**
+		 * Sprite properties
 			 */
 			file: file?.dbPath ?? file,
 			customRange,

@@ -308,11 +308,12 @@ export class SequencerSpriteManager extends PIXI.Container {
 
 	/**
 	 * @param {import("../modules/sequencer-file.js").SequencerFile} file
-	 * @param {{ antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
+	 * @param {{ texture?: null, antialiasing: PIXI.SCALE_MODES; tiling?: boolean; xray?: boolean; isPersisted: boolean }} options
 	 */
 	constructor(file, options) {
 		super();
 		this.#sharedSpriteConfig = options ?? {
+			texture: null,
 			antialiasing: PIXI.SCALE_MODES.LINEAR,
 			tiling: false,
 			xray: false,
@@ -605,7 +606,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		if (this.#file && this.#file.isFlipbook) {
 			return this.#loadFlipbook(this.#file.getAllFiles(), this.#file.originalMetadata);
 		}
-		const texture = await SequencerFileCache.loadFile(filepath);
+		const texture = this.#sharedSpriteConfig.texture ?? await SequencerFileCache.loadFile(filepath);
 		// disable mipmaps if using compressed textures and no level information is given.
 		// for some reason, the integrated basis_universal transcoder does not set this
 		// correctly.
