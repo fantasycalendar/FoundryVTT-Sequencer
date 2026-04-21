@@ -1,8 +1,3 @@
-# Prevent Prettier from reformatting existing source files.
-# The project's historical style uses tab indentation which Prettier
-# cannot round-trip cleanly without touching every file.
-# Remove individual entries if/when you want Prettier to manage them.
-
 src/
 docs/
 changelog.md
