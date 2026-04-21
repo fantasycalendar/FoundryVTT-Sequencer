@@ -2083,7 +2083,8 @@ export default class CanvasEffect extends PIXI.Container {
 			if (!canvas?.screenDimensions) return;
 			const [screenWidth, screenHeight] = canvas.screenDimensions;
 
-			if (this._lastScreenDimensions?.screenWidth !== screenWidth && this._lastScreenDimensions?.screenHeight !== screenHeight) {
+			if (this._lastScreenDimensions?.screenWidth !== screenWidth
+				|| this._lastScreenDimensions?.screenHeight !== screenHeight) {
 				this._lastScreenDimensions.screenWidth = screenWidth;
 				this._lastScreenDimensions.screenHeight = screenHeight;
 			}
