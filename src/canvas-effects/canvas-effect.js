@@ -14,7 +14,7 @@ import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlacea
 import PluginsManager from "../utils/plugins-manager.js";
 
 const hooksManager = {
-	_hooks: new Map(),
+	_byHook: new Map(),
 	_hooksRegistered: new Set(),
 
 	addHook(effectUuid, hookName, callable, callNow = false) {
@@ -26,13 +26,17 @@ const hooksManager = {
 			});
 		}
 
-		const key = hookName + "-" + effectUuid;
-
-		if (!this._hooks.has(key)) {
-			this._hooks.set(key, []);
+		let perHook = this._byHook.get(hookName);
+		if (!perHook) {
+			perHook = new Map();
+			this._byHook.set(hookName, perHook);
 		}
-
-		this._hooks.get(key).push(callable);
+		let callbacks = perHook.get(effectUuid);
+		if (!callbacks) {
+			callbacks = [];
+			perHook.set(effectUuid, callbacks);
+		}
+		callbacks.push(callable);
 
 		if (callNow) {
 			setTimeout(() => {
@@ -42,23 +46,23 @@ const hooksManager = {
 	},
 
 	_hookCalled(hookName, ...args) {
-		const callbacks = Array.from(this._hooks)
-			.filter((entry) => entry[0].startsWith(hookName + "-"))
-			.map((hooks) => hooks[1])
-			.deepFlatten();
-		for (const callback of callbacks) {
-			try {
-				callback(...args);
-			} catch (err) {
-				console.error(`Sequencer | hook handler for "${hookName}" threw:`, err);
+		const perHook = this._byHook.get(hookName);
+		if (!perHook) return;
+		for (const callbacks of perHook.values()) {
+			for (let i = 0; i < callbacks.length; i++) {
+				try {
+					callbacks[i](...args);
+				} catch (err) {
+					console.error(`Sequencer | hook handler for "${hookName}" threw:`, err);
+				}
 			}
 		}
 	},
 
 	removeHooks(effectUuid) {
-		Array.from(this._hooks)
-			.filter((entry) => entry[0].endsWith("-" + effectUuid))
-			.forEach((entry) => this._hooks.delete(entry[0]));
+		for (const perHook of this._byHook.values()) {
+			perHook.delete(effectUuid);
+		}
 	},
 };
 
