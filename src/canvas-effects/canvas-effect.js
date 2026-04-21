@@ -3016,9 +3016,8 @@ export default class CanvasEffect extends PIXI.Container {
 	_fadeOut(immediate = false) {
 		if (!this.data.fadeOut || !this.sprite) return 0;
 
-		let fadeOut = this.data.fadeOut;
-
-		fadeOut.delay = lib.is_real_number(immediate)
+		const fadeOut = this.data.fadeOut;
+		const delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOut.duration + fadeOut.delay, 0)
 			: Math.max(this._totalDuration - fadeOut.duration + fadeOut.delay, 0);
 
@@ -3028,11 +3027,11 @@ export default class CanvasEffect extends PIXI.Container {
 			to: 0.0,
 			duration: fadeOut.duration,
 			ease: fadeOut.ease,
-			delay: fadeOut.delay,
+			delay,
 			absolute: true,
 		});
 
-		return fadeOut.duration + fadeOut.delay;
+		return fadeOut.duration + delay;
 	}
 
 	/**
@@ -3044,9 +3043,8 @@ export default class CanvasEffect extends PIXI.Container {
 	_fadeOutAudio(immediate = false) {
 		if (!this.data.fadeOutAudio || !this.sprite || !this.sprite.hasAnimatedMedia) return 0;
 
-		let fadeOutAudio = this.data.fadeOutAudio;
-
-		fadeOutAudio.delay = lib.is_real_number(immediate)
+		const fadeOutAudio = this.data.fadeOutAudio;
+		const delay = lib.is_real_number(immediate)
 			? Math.max(immediate - fadeOutAudio.duration + fadeOutAudio.delay, 0)
 			: Math.max(
 				this._totalDuration - fadeOutAudio.duration + fadeOutAudio.delay,
@@ -3060,12 +3058,12 @@ export default class CanvasEffect extends PIXI.Container {
 				to: 0.0,
 				duration: fadeOutAudio.duration,
 				ease: fadeOutAudio.ease,
-				delay: fadeOutAudio.delay,
+				delay,
 				absolute: true,
 			});
 		});
 
-		return fadeOutAudio.duration + fadeOutAudio.delay;
+		return fadeOutAudio.duration + delay;
 	}
 
 	/**
@@ -3152,10 +3150,10 @@ export default class CanvasEffect extends PIXI.Container {
 	_scaleOut(immediate = false) {
 		if (!this.data.scaleOut || !this.sprite) return 0;
 
-		let scaleOut = this.data.scaleOut;
-		let scale = this._determineScale(scaleOut);
+		const scaleOut = this.data.scaleOut;
+		const scale = this._determineScale(scaleOut);
 
-		scaleOut.delay = lib.is_real_number(immediate)
+		const delay = lib.is_real_number(immediate)
 			? Math.max(immediate - scaleOut.duration + scaleOut.delay, 0)
 			: Math.max(
 				this._totalDuration - scaleOut.duration + scaleOut.delay,
@@ -3169,7 +3167,7 @@ export default class CanvasEffect extends PIXI.Container {
 				to: scale.x,
 				duration: scaleOut.duration,
 				ease: scaleOut.ease,
-				delay: scaleOut.delay,
+				delay,
 				absolute: true,
 			},
 			{
@@ -3178,12 +3176,12 @@ export default class CanvasEffect extends PIXI.Container {
 				to: scale.y,
 				duration: scaleOut.duration,
 				ease: scaleOut.ease,
-				delay: scaleOut.delay,
+				delay,
 				absolute: true,
 			},
 		]);
 
-		return scaleOut.duration + scaleOut.delay;
+		return scaleOut.duration + delay;
 	}
 
 	/**
@@ -3232,9 +3230,9 @@ export default class CanvasEffect extends PIXI.Container {
 	_rotateOut(immediate = false) {
 		if (!this.data.rotateOut || !this.sprite) return 0;
 
-		let rotateOut = this.data.rotateOut;
+		const rotateOut = this.data.rotateOut;
 
-		rotateOut.delay = lib.is_real_number(immediate)
+		const delay = lib.is_real_number(immediate)
 			? Math.max(immediate - rotateOut.duration + rotateOut.delay, 0)
 			: Math.max(
 				this._totalDuration - rotateOut.duration + rotateOut.delay,
@@ -3249,12 +3247,12 @@ export default class CanvasEffect extends PIXI.Container {
 				to: rotateOut.value * (Math.PI / 180),
 				duration: rotateOut.duration,
 				ease: rotateOut.ease,
-				delay: rotateOut.delay,
+				delay,
 				absolute: true,
 			})
 		);
 
-		return rotateOut.duration + rotateOut.delay;
+		return rotateOut.duration + delay;
 	}
 
 	/**
