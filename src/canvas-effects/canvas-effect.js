@@ -17,7 +17,7 @@ const hooksManager = {
 	_byHook: new Map(),
 	_hooksRegistered: new Set(),
 
-	addHook(effectUuid, hookName, callable, callNow = false) {
+	addHook(effectUuid, hookName, callable, { effect = null, callNow = false } = {}) {
 		if (!this._hooksRegistered.has(hookName)) {
 			lib.debug("registering hook for: " + hookName);
 			this._hooksRegistered.add(hookName);
@@ -39,9 +39,8 @@ const hooksManager = {
 		callbacks.push(callable);
 
 		if (callNow) {
-			setTimeout(() => {
-				callable();
-			}, 20);
+			if (effect?._setTimeout) effect._setTimeout(callable, 20);
+			else setTimeout(callable, 20);
 		}
 	},
 
@@ -2374,7 +2373,7 @@ export default class CanvasEffect extends PIXI.Container {
 						this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
 						renderable = baseRenderable && this.renderable;
 					},
-					true
+					{ effect: this, callNow: true }
 				);
 			}
 
