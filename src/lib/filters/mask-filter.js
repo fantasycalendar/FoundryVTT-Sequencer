@@ -1,4 +1,3 @@
-import FoundryShim from "../../utils/foundry-shim.js";
 
 let fragmentShader = `\
         varying vec2 vTextureCoord;
@@ -11,7 +10,7 @@ let fragmentShader = `\
                 * texture2D(uMaskSampler, vTextureCoord).a;
         }`;
 
-export default class MaskFilter extends FoundryShim.AbstractBaseFilter {
+export default class MaskFilter extends foundry.canvas.rendering.filters.AbstractBaseFilter {
 
   /** @override */
   static defaultUniforms = { uMaskSampler: null };

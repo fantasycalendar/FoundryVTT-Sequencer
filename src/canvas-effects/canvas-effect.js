@@ -12,7 +12,6 @@ import { SequencerAboveUILayer } from "./effects-layer.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import PluginsManager from "../utils/plugins-manager.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 const hooksManager = {
 	_hooks: new Map(),
@@ -708,7 +707,7 @@ export default class CanvasEffect extends PIXI.Container {
 			return SequencerEffectManager.getPositionForUUID(this.data.source);
 		}
 
-		if (this.source instanceof FoundryShim.PlaceableObject && this.isSourceDestroyed) {
+		if (this.source instanceof foundry.canvas.placeables.PlaceableObject && this.isSourceDestroyed) {
 			return {
 				...this._cachedSourceData,
 			};
@@ -718,7 +717,7 @@ export default class CanvasEffect extends PIXI.Container {
 		crosshairPos = crosshairPos?.source;
 
 		let position =
-			this.source instanceof FoundryShim.PlaceableObject && !this.isSourceTemporary
+			this.source instanceof foundry.canvas.placeables.PlaceableObject && !this.isSourceTemporary
 				? canvaslib.get_object_position(this.source)
 				: crosshairPos || this.source?.worldPosition || this.source?.center || this.source;
 
@@ -736,11 +735,11 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		let rotation = 0;
-		if (this.source instanceof FoundryShim.MeasuredTemplate && this.sourceDocument?.t !== "rect") {
+		if (this.source instanceof foundry.canvas.placeables.MeasuredTemplate && this.sourceDocument?.t !== "rect") {
 			rotation = Math.normalizeRadians(
 				Math.toRadians(this.sourceDocument?.direction)
 			);
-		} else if (!(this.source instanceof FoundryShim.MeasuredTemplate)) {
+		} else if (!(this.source instanceof foundry.canvas.placeables.MeasuredTemplate)) {
 			rotation = this.sourceDocument?.rotation
 				? Math.normalizeRadians(Math.toRadians(this.sourceDocument?.rotation))
 				: 0;
@@ -788,7 +787,7 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 		}
 
-		if (this.target instanceof FoundryShim.PlaceableObject && this.isTargetDestroyed) {
+		if (this.target instanceof foundry.canvas.placeables.PlaceableObject && this.isTargetDestroyed) {
 			return {
 				...this._cachedTargetData,
 			};
@@ -798,7 +797,7 @@ export default class CanvasEffect extends PIXI.Container {
 		crosshairPos = crosshairPos?.target ?? crosshairPos?.source;
 
 		let position =
-			this.target instanceof FoundryShim.PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
+			this.target instanceof foundry.canvas.placeables.PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
 				? canvaslib.get_object_position(this.target, { measure: true })
 				: crosshairPos || this.target?.worldPosition || this.target?.center || this.target;
 
@@ -817,13 +816,13 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let rotation = 0;
 		if (
-			this.target instanceof FoundryShim.MeasuredTemplate &&
+			this.target instanceof foundry.canvas.placeables.MeasuredTemplate &&
 			this.targetDocument?.t !== "rect"
 		) {
 			rotation = Math.normalizeRadians(
 				Math.toRadians(this.targetDocument?.direction)
 			);
-		} else if (!(this.target instanceof FoundryShim.MeasuredTemplate)) {
+		} else if (!(this.target instanceof foundry.canvas.placeables.MeasuredTemplate)) {
 			rotation = this.targetDocument?.rotation
 				? Math.normalizeRadians(Math.toRadians(this.targetDocument?.rotation))
 				: 0;
@@ -1300,7 +1299,7 @@ export default class CanvasEffect extends PIXI.Container {
 			? this.id
 			: this.context.uuid + ".data.flags.sequencer.effects." + this.id;
 
-		this._ticker = FoundryShim.CanvasAnimation.ticker;
+		this._ticker = foundry.canvas.animation.CanvasAnimation.ticker;
 		this._tickerMethods = [];
 	}
 
@@ -2093,7 +2092,7 @@ export default class CanvasEffect extends PIXI.Container {
 			let shape = obj?.mesh;
 			let shapeToAdd = shape;
 
-			if (obj instanceof FoundryShim.Region) {
+			if (obj instanceof foundry.canvas.placeables.Region) {
 
 				shape = new PIXI.LegacyGraphics()
 
@@ -2119,7 +2118,7 @@ export default class CanvasEffect extends PIXI.Container {
 				shapeToAdd.uuid = uuid;
 				canvas.stage.addChild(shapeToAdd);
 
-			} else if (obj instanceof FoundryShim.MeasuredTemplate || obj instanceof FoundryShim.Drawing) {
+			} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate || obj instanceof foundry.canvas.placeables.Drawing) {
 				shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
 
 				shape = PluginsManager.masking({
@@ -2134,7 +2133,7 @@ export default class CanvasEffect extends PIXI.Container {
 					.drawShape(shape)
 					.endFill();
 
-				if (obj instanceof FoundryShim.MeasuredTemplate) {
+				if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
 					shapeToAdd.position.set(documentObj.x, documentObj.y);
 				} else {
 					const {
@@ -2161,7 +2160,7 @@ export default class CanvasEffect extends PIXI.Container {
 				if (!mask) return;
 				if (!mask.custom) return;
 				mask.clear();
-				if (obj instanceof FoundryShim.Region) {
+				if (obj instanceof foundry.canvas.placeables.Region) {
 					for (let polygon of documentObj.polygons) {
 						if (polygon.isPositive) {
 							mask.beginFill();
@@ -2175,7 +2174,7 @@ export default class CanvasEffect extends PIXI.Container {
 							mask.endHole();
 						}
 					}
-				} else if (obj instanceof FoundryShim.MeasuredTemplate) {
+				} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
 					mask.position.set(documentObj.x, documentObj.y);
 					let maskObj = documentObj.object;
 					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;

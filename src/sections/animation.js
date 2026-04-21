@@ -3,7 +3,6 @@ import * as canvaslib from "../lib/canvas-lib.js";
 import Section from "./section.js";
 import traits from "./traits/_traits.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 class AnimationSection extends Section {
 	static niceName = "Animation";
@@ -257,7 +256,7 @@ class AnimationSection extends Section {
 	async _waitForTokenRefresh(obj) {
 		let token;
 
-		if (obj instanceof FoundryShim.Token) {
+		if (obj instanceof foundry.canvas.placeables.Token) {
 			token = obj;
 		}
 

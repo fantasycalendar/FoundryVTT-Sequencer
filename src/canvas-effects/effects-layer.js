@@ -1,7 +1,6 @@
 import { EffectPlayer, InteractionManager, SelectionManager, } from "../modules/sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import CONSTANTS from "../constants.js";
-import FoundryShim from "../utils/foundry-shim.js";
 import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 
 /**
@@ -15,7 +14,7 @@ import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
  * backward compatibility with external modules or macros that reference
  * `canvas.sequencerEffects` directly.
  */
-export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
+export class BaseEffectsLayer extends foundry.canvas.layers.InteractionLayer {
 	static get layerOptions() {
 		return foundry.utils.mergeObject(super.layerOptions, {
 			name: CONSTANTS.EFFECTS_LAYER,
@@ -23,7 +22,7 @@ export class BaseEffectsLayer extends FoundryShim.InteractionLayer {
 	}
 }
 
-export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
+export class SequencerInterfaceLayer extends foundry.canvas.layers.InteractionLayer {
 	constructor(...args) {
 		super(...args);
 	}
@@ -457,7 +456,7 @@ export class SequencerInterfaceLayer extends FoundryShim.InteractionLayer {
 	}
 }
 
-export class UIEffectsLayer extends FoundryShim.InteractionLayer {
+export class UIEffectsLayer extends foundry.canvas.layers.InteractionLayer {
 	static get layerOptions() {
 		return foundry.utils.mergeObject(super.layerOptions, {
 			zIndex: 999999999999999,

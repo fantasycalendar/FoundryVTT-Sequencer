@@ -8,7 +8,6 @@ import * as soundlib from "../lib/sound-lib.js";
 import { SequencerFileBase } from "./sequencer-file.js";
 import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 
 const SOUND_STATES = {
@@ -941,7 +940,7 @@ export default class SequencerSoundManager {
 		let databaseSounds = foundry.utils.deepClone(flagManager.getDatabaseFlags().sounds);
 		for (let [uuid, sounds] of Object.entries(databaseSounds)) {
 			let doc = fromUuidSync(uuid);
-			if (doc instanceof FoundryShim.Actor && doc.prototypeToken.actorLink) {
+			if (doc instanceof foundry.documents.Actor && doc.prototypeToken.actorLink) {
 				for (let token of doc.getActiveTokens()) {
 					let tokenSounds = foundry.utils.deepClone(sounds);
 					docSoundsMap[token.document.uuid] = tokenSounds.map(([id, sound]) => {

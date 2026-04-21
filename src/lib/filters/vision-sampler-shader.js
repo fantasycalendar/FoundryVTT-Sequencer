@@ -1,9 +1,8 @@
-import FoundryShim from "../../utils/foundry-shim.js";
 
 const tempMat = new PIXI.Matrix();
 const uvPoint = new PIXI.Point();
 
-class VisionSamplerShaderGenerator extends FoundryShim.BatchShaderGenerator {
+class VisionSamplerShaderGenerator extends foundry.canvas.rendering.batching.BatchShaderGenerator {
 	generateSampleSrc(maxTextures) {
 		let src = "\n\n";
 		for (let i = 0; i < maxTextures; i++) {
@@ -28,7 +27,7 @@ class VisionSamplerShaderGenerator extends FoundryShim.BatchShaderGenerator {
 
 const emptyColorMatrix = new Uint8Array(20);
 
-export default class VisionSamplerShader extends FoundryShim.BaseSamplerShader {
+export default class VisionSamplerShader extends foundry.canvas.rendering.shaders.BaseSamplerShader {
 	static classPluginName = "sequencerVisionBatch";
 	static batchShaderGeneratorClass = VisionSamplerShaderGenerator;
 

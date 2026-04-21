@@ -36,11 +36,7 @@
   $: searchDebounce($fileStore);
 
   async function activateLayer(){
-		if(CONSTANTS.IS_V13){
-			ui.controls.activate({ control: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
-		}else{
-			ui.controls.initialize({ layer: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
-		}
+		ui.controls.activate({ control: "sequencer", tool: CONSTANTS.TOOLS.PLAY });
 	  canvas.sequencerInterfaceLayer.activate({ tool: CONSTANTS.TOOLS.PLAY });
   }
 

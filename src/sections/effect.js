@@ -9,7 +9,6 @@ import SequencerFileCache from "../modules/sequencer-file-cache.js";
 import CONSTANTS from "../constants.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 export default class EffectSection extends Section {
 	constructor(inSequence, inFile = "") {
@@ -607,8 +606,8 @@ export default class EffectSection extends Section {
 	copySprite(inObject, inOptions = {}) {
 		if (
 			!(
-				inObject instanceof FoundryShim.Token ||
-				inObject instanceof FoundryShim.Tile ||
+				inObject instanceof foundry.canvas.placeables.Token ||
+				inObject instanceof foundry.canvas.placeables.Tile ||
 				inObject instanceof TokenDocument ||
 				inObject instanceof TileDocument
 			)
@@ -1344,12 +1343,7 @@ export default class EffectSection extends Section {
 				"belowTokens",
 				"inBool must be of type boolean"
 			);
-		if (game.release.generation >= 12) {
-			return this.sortLayer(inBool ? 600 : 800);
-		} else {
-			if (!inBool) return this;
-			return this.elevation(0, { absolute: true });
-		}
+		return this.sortLayer(inBool ? 600 : 800);
 	}
 
 	/**
@@ -1362,15 +1356,10 @@ export default class EffectSection extends Section {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
 				this,
-				"belowTokens",
+				"belowTiles",
 				"inBool must be of type boolean"
 			);
-		if (game.release.generation >= 12) {
-			return this.sortLayer(inBool ? 300 : 500);
-		} else {
-			if (!inBool) return this;
-			return this.elevation(-1, { absolute: true });
-		}
+		return this.sortLayer(inBool ? 300 : 500);
 	}
 
 	/**
@@ -1387,11 +1376,6 @@ export default class EffectSection extends Section {
 				"inBool must be of type boolean"
 			);
 		this._aboveLighting = inBool;
-		if (game.release.generation >= 12) {
-			return this.sortLayer(inBool ? 1200 : 800);
-		} else {
-			if (!inBool) return this;
-		}
 		return this;
 	}
 
@@ -1810,7 +1794,7 @@ export default class EffectSection extends Section {
 		for (let doc of inDocuments) {
 			if (
 				typeof doc !== "string" &&
-				!(doc instanceof FoundryShim.PlaceableObject) &&
+				!(doc instanceof foundry.canvas.placeables.PlaceableObject) &&
 				!(doc instanceof foundry.abstract.Document)
 			) {
 				throw this.sequence._customError(
@@ -2323,7 +2307,7 @@ export default class EffectSection extends Section {
 		this._temporaryEffect =
 			this._temporaryEffect ||
 			(source instanceof foundry.abstract.Document ||
-			source instanceof FoundryShim.MeasuredTemplate
+			source instanceof foundry.canvas.placeables.MeasuredTemplate
 				? !lib.is_UUID(source?.uuid)
 				: this._temporaryEffect || false);
 

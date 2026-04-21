@@ -2,7 +2,6 @@ import CrosshairsDocument from "./CrosshairsDocument.js";
 import TokenCrosshairsDocument from "./TokenCrosshairsDocument.js";
 import CONSTANTS from "../../constants.js";
 import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
-import FoundryShim from "../../utils/foundry-shim.js";
 
 export default class Crosshair {
 
@@ -45,7 +44,7 @@ export default class Crosshair {
 	 */
 	static showToken(obj, config = {}, callbacks = {}) {
 
-		const placeable = obj instanceof FoundryShim.PlaceableObject ? obj : obj.object;
+		const placeable = obj instanceof foundry.canvas.placeables.PlaceableObject ? obj : obj.object;
 
 		const controlled = placeable.controlled;
 		placeable.release();

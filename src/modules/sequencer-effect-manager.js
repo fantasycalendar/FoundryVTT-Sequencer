@@ -5,7 +5,6 @@ import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
 import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
-import FoundryShim from "../utils/foundry-shim.js";
 
 const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
@@ -233,7 +232,7 @@ export default class SequencerEffectManager {
 		if (
 			!(
 				object instanceof foundry.abstract.Document ||
-				object instanceof FoundryShim.PlaceableObject ||
+				object instanceof foundry.canvas.placeables.PlaceableObject ||
 				typeof object === "string"
 			)
 		) {
@@ -242,7 +241,7 @@ export default class SequencerEffectManager {
 				"EffectManager | object must be instance of PlaceableObject or of type string"
 			);
 		} else if (
-			object instanceof FoundryShim.PlaceableObject ||
+			object instanceof foundry.canvas.placeables.PlaceableObject ||
 			object instanceof foundry.abstract.Document
 		) {
 			object = lib.get_object_identifier(object?.document ?? object);
@@ -465,7 +464,7 @@ export default class SequencerEffectManager {
 		let effectsToRemove = {}
 		for (let [uuid, effects] of Object.entries(databaseEffects)) {
 			let doc = fromUuidSync(uuid);
-			if (doc instanceof FoundryShim.Actor && doc.prototypeToken.actorLink) {
+			if (doc instanceof foundry.documents.Actor && doc.prototypeToken.actorLink) {
 				for (let token of doc.getActiveTokens()) {
 					let tokenEffects = foundry.utils.deepClone(effects);
 					docEffectsMap[token.document.uuid] = tokenEffects.map(([id, effect]) => {

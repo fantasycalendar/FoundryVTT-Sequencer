@@ -1,9 +1,7 @@
 import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
-import FoundryShim from "../utils/foundry-shim.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
-import foundryShim from "../utils/foundry-shim.js";
 
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
@@ -155,7 +153,7 @@ export function get_object_position(
   obj = obj?._object ?? obj.object ?? obj;
 
   let pos = {};
-	if (obj instanceof FoundryShim.Region){
+	if (obj instanceof foundry.canvas.placeables.Region){
 		if(obj.document.shapes.length > 1){
 			pos.x = obj.bounds.x + obj.bounds.width/2;
 			pos.y = obj.bounds.y + obj.bounds.height/2;
@@ -177,7 +175,7 @@ export function get_object_position(
 					pos.y = firstShape.center.y;
 			}
 		}
-	} else if (obj instanceof FoundryShim.MeasuredTemplate) {
+	} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
 		if (measure) {
 			if (obj.document.t === "cone" || obj.document.t === "ray") {
 				pos.x = obj.ray.B.x;
@@ -193,12 +191,12 @@ export function get_object_position(
 				pos.y += Math.abs(obj.shape.height / 2) + obj.shape.y;
 			}
 		}
-	} else if (obj instanceof FoundryShim.Tile) {
+	} else if (obj instanceof foundry.canvas.placeables.Tile) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
     };
-  } else if (obj instanceof FoundryShim.Token) {
+  } else if (obj instanceof foundry.canvas.placeables.Token) {
     const halfSize = get_object_dimensions(obj, true);
     pos = {
       x: obj.x + halfSize.width,
@@ -209,7 +207,7 @@ export function get_object_position(
       pos.x -= halfSize.width;
       pos.y -= halfSize.height;
     }
-  } else if (obj instanceof FoundryShim.Drawing) {
+  } else if (obj instanceof foundry.canvas.placeables.Drawing) {
     pos = {
       x: obj.document.x,
       y: obj.document.y,
@@ -264,7 +262,7 @@ export function get_random_offset(target, randomOffset, twister = false) {
 export function get_object_dimensions(inObj, half = false) {
   inObj = inObj?.object ?? inObj?._object ?? inObj;
 
-	if (inObj instanceof FoundryShim.Region){
+	if (inObj instanceof foundry.canvas.placeables.Region){
 		if(inObj.document.shapes.length > 1){
 			return {
 				width: inObj.bounds.width / (half ? 2 : 1),
@@ -291,7 +289,7 @@ export function get_object_dimensions(inObj, half = false) {
 					}
 			}
 		}
-	}else if(inObj instanceof foundryShim.Tile){
+	}else if(inObj instanceof foundry.canvas.placeables.Tile){
 		return {
 			width: inObj.document.width / (half ? 2 : 1),
 			height: inObj.document.height / (half ? 2 : 1)
@@ -424,7 +422,7 @@ export function getPositionFromData(data, type="source", twister = false) {
     ? data.nameOffsetMap[data[type]][type]
     : validateObject(data[type], data.sceneId);
 
-  const position = source instanceof FoundryShim.PlaceableObject
+  const position = source instanceof foundry.canvas.placeables.PlaceableObject
       ? get_object_position(source)
       : source?.worldPosition || source?.center || source;
 

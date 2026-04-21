@@ -208,7 +208,7 @@ export function registerSettings() {
 				  user_can_do("permissions-effect-create") &&
 				  user_can_do("permissions-sidebar-tools"),
 			  onChange: (event, active) => {
-				  if(active || !CONSTANTS.IS_V13){
+				  if (active) {
 						EffectsUIApp.show({ inFocus: true, tab: "player" });
 				  }
 			  },
@@ -222,7 +222,7 @@ export function registerSettings() {
 				  user_can_do("permissions-effect-create") &&
 				  user_can_do("permissions-sidebar-tools"),
 			  onChange: (event, active) => {
-				  if(active || !CONSTANTS.IS_V13) {
+				  if (active) {
 					  EffectsUIApp.show({ inFocus: true, tab: "manager" });
 				  }
 			  },
@@ -234,29 +234,21 @@ export function registerSettings() {
 			  button: true,
 			  visible: user_can_do("permissions-sidebar-tools"),
 			  onChange: (event, active) => {
-				  if(active || !CONSTANTS.IS_V13) {
+				  if (active) {
 					  DatabaseViewerApp.show();
 				  }
 			  },
 		  }
 	  }
 
-		if(CONSTANTS.IS_V13){
-			return setupSidebarToolsV13(controls, sidebarTools);
-		}
-
-		Object.values(sidebarTools).forEach(button => {
-			button.onClick = button.onChange;
-		})
-
-		return setupSidebarToolsV12(controls, sidebarTools);
+		return setupSidebarTools(controls, sidebarTools);
 
   });
 
   debug("Sequencer | Registered settings");
 }
 
-function setupSidebarToolsV13(controls, sidebarTools){
+function setupSidebarTools(controls, sidebarTools){
 
 	controls[CONSTANTS.MODULE_NAME] = {
 		name: CONSTANTS.MODULE_NAME,
@@ -279,30 +271,6 @@ function setupSidebarToolsV13(controls, sidebarTools){
 
 	controls["tokens"].tools[CONSTANTS.TOOLS.DATABASE] = sidebarTools[CONSTANTS.TOOLS.DATABASE];
 	controls["tokens"].tools[CONSTANTS.TOOLS.VIEWER] = sidebarTools[CONSTANTS.TOOLS.VIEWER];
-}
-
-function setupSidebarToolsV12(controls, sidebarTools){
-
-	controls.push({
-		name: CONSTANTS.MODULE_NAME,
-		title: "Sequencer Layer",
-		icon: "fas fa-list-ol",
-		layer: CONSTANTS.INTERFACE_LAYER,
-		visible:
-			user_can_do("permissions-effect-create") &&
-			user_can_do("permissions-sidebar-tools"),
-		activeTool: CONSTANTS.TOOLS.SELECT,
-		tools: Object.values(sidebarTools)
-	});
-
-	if (!game.settings.get(CONSTANTS.MODULE_NAME, "showTokenSidebarTools")) {
-		return;
-	}
-
-	const bar = controls.find((c) => c.name === "token");
-	bar.tools.push(sidebarTools[CONSTANTS.TOOLS.DATABASE]);
-	bar.tools.push(sidebarTools[CONSTANTS.TOOLS.VIEWER]);
-
 }
 
 export async function migrateSettings() {

@@ -31,7 +31,6 @@ import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.j
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
 import PluginsManager from "./utils/plugins-manager.js";
-import FoundryShim from "./utils/foundry-shim.js";
 import SvelteDialog from "./formapplications/dialog/SvelteDialog.js"
 import SupportDialog from "./formapplications/support-dialog.svelte";
 import flagManager from "./utils/flag-manager.js";
@@ -43,7 +42,6 @@ let canvasReady = false;
 Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
   moduleValid = true;
-	CONSTANTS.IS_V13 = foundry.utils.isNewerVersion(game.version, "13");
 	CONSTANTS.IS_V14 = foundry.utils.isNewerVersion(game.version, "14");
   initializeModule();
   registerSocket();
@@ -53,8 +51,8 @@ Hooks.once("init", async function() {
 
 Hooks.once("ready", async function() {
   for (const [name, func] of Object.entries(easeFunctions)) {
-    if (!FoundryShim.CanvasAnimation[name]) {
-      FoundryShim.CanvasAnimation[name] = func;
+    if (!foundry.canvas.animation.CanvasAnimation[name]) {
+      foundry.canvas.animation.CanvasAnimation[name] = func;
     }
   }
 
