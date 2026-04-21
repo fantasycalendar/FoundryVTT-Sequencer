@@ -2442,10 +2442,8 @@ export default class CanvasEffect extends PIXI.Container {
 		let { scaleX, scaleY } = await this._getDistanceScaling(distance, texture.width);
 
 		if (this.data.attachTo?.active) {
-			this.position.set(
-				this.sourcePosition.x,
-				this.sourcePosition.y
-			);
+			const { x, y } = this.sourcePosition;
+			this.position.set(x, y);
 		}
 
 		if (this.data.tilingTexture) {
@@ -2556,7 +2554,8 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		if (!this.data.screenSpace && (!this.data.attachTo?.active || this.data.stretchTo?.attachTo)) {
-			this.position.set(this.sourcePosition.x, this.sourcePosition.y);
+			const { x, y } = this.sourcePosition;
+			this.position.set(x, y);
 		}
 
 		if (this.data.rotateTowards) {
@@ -2718,16 +2717,15 @@ export default class CanvasEffect extends PIXI.Container {
 			!this.data.rotateTowards &&
 			!this.data.stretchTo;
 
+		const sourceData = this.getSourceData();
 		if (applyRotation) {
-			this.rotationContainer.rotation = this.getSourceData().rotation;
+			this.rotationContainer.rotation = sourceData.rotation;
 		}
 
 		PluginsManager.rotation({ effect: this });
 
-		this.position.set(
-			this.sourcePosition.x,
-			this.sourcePosition.y
-		);
+		const { x, y } = this.sourcePosition;
+		this.position.set(x, y);
 	}
 
 	async _transformRotateTowardsAttachedSprite() {
