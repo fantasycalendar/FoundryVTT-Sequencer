@@ -2,7 +2,7 @@ name: Release Creation
 
 on:
   release:
-    types: [ published ]
+    types: [published]
 
 env:
   package_name: Sequencer
@@ -12,36 +12,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       # Substitute the Manifest and Download URLs in the module.json
       # for a FULL RELEASE
       - name: Substitute Manifest and Download Links For Versioned Ones
         if: "!github.event.release.prerelease"
-        id: sub_release_manifest_version
-        uses: microsoft/variable-substitution@v1
-        with:
-          files: 'module.json'
-        env:
-          version: ${{github.event.release.tag_name}}
-          url: https://github.com/${{github.repository}}
-          manifest: https://github.com/${{github.repository}}/releases/latest/download/module.json
-          download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
+        run: |
+          jq \
+            --arg version "${{ github.event.release.tag_name }}" \
+            --arg url "https://github.com/${{ github.repository }}" \
+            --arg manifest "https://github.com/${{ github.repository }}/releases/latest/download/module.json" \
+            --arg download "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.zip" \
+            '.version=$version | .url=$url | .manifest=$manifest | .download=$download' \
+            module.json > module.tmp.json && mv module.tmp.json module.json
 
       # Substitute the Manifest and Download URLs in the module.json
       # for a PRE RELEASE. Manifest pointing to live module.json on branch,
       # which is updated after tag.
       - name: Substitute Manifest and Download Links For Versioned Ones
         if: "github.event.release.prerelease"
-        id: sub_prerelease_manifest_version
-        uses: microsoft/variable-substitution@v1
-        with:
-          files: 'module.json'
-        env:
-          version: ${{github.event.release.tag_name}}
-          url: https://github.com/${{github.repository}}
-          manifest: https://raw.githubusercontent.com/${{github.repository}}/next/module.json
-          download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
+        run: |
+          jq \
+            --arg version "${{ github.event.release.tag_name }}" \
+            --arg url "https://github.com/${{ github.repository }}" \
+            --arg manifest "https://raw.githubusercontent.com/${{ github.repository }}/next/module.json" \
+            --arg download "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.zip" \
+            '.version=$version | .url=$url | .manifest=$manifest | .download=$download' \
+            module.json > module.tmp.json && mv module.tmp.json module.json
 
       # Install packages.
       - run: npm install
@@ -63,7 +61,7 @@ jobs:
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './module.json, ./module.zip'
+          artifacts: "./module.json, ./module.zip"
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
 
@@ -90,39 +88,21 @@ jobs:
                   "compatibility": ${{ env.COMPATIBILITY }}
               }
           }')
-          
+
           # extract the body
           HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
-          
+
           # extract the status
           HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
-          
+
           # print the body
           echo "$HTTP_BODY"
-          
+
           # example using the status
           if [ ! $HTTP_STATUS -eq 200  ]; then
             echo "Error [HTTP status: $HTTP_STATUS]"
             exit 1
           fi
-
-      - name: FC Discord notification
-        if: "!github.event.release.prerelease"
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: "${{github.event.release.body}}"
-
-      - name: JB2A Discord notification
-        if: "!github.event.release.prerelease"
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.JB2A_WEBHOOK_URL }}
-          DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: "${{github.event.release.body}}"
 
       #  OR create a pre-release for this specific version
       - name: Update Release with Files
@@ -135,7 +115,7 @@ jobs:
           draft: false
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './module.json, ./module.zip'
+          artifacts: "./module.json, ./module.zip"
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
 
@@ -154,3 +134,23 @@ jobs:
           git checkout stash module.json
           git commit -m "${{github.event.release.tag_name}} manifest"
           git push -f
+
+      # Discord notifications run last so a failure here does not block
+      # the release upload, Foundry package submission, or prerelease branch update.
+      - name: FC Discord notification
+        if: "!github.event.release.prerelease"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "${{github.event.release.body}}"
+
+      - name: JB2A Discord notification
+        if: "!github.event.release.prerelease"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.JB2A_WEBHOOK_URL }}
+          DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "${{github.event.release.body}}"
