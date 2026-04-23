@@ -15,6 +15,9 @@ export default class MaskFilter extends foundry.canvas.rendering.filters.Abstrac
   /** @override */
   static defaultUniforms = { uMaskSampler: null };
 
+  /** @override */
+  static fragmentShader = fragmentShader;
+
   /** @type {DisplayObject[]|null} */
   masks = [];
 
