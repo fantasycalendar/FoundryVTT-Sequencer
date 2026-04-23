@@ -1,0 +1,77 @@
+name: Create Draft Release
+
+on:
+  push:
+    branches:
+      - Foundry_V14
+      - master
+
+jobs:
+  create-release:
+    if: contains(github.event.head_commit.message, '--RELEASE')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version and body from changelog
+        id: changelog
+        run: |
+          VERSION=$(awk '/^# Version / { sub(/^# Version /, ""); print; exit }' changelog.md)
+
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not find a '# Version X.Y.Z' header in changelog.md"
+            exit 1
+          fi
+
+          BODY=$(awk '
+            /^# Version / {
+              if (seen) exit
+              seen = 1
+              next
+            }
+            seen { print }
+          ' changelog.md)
+
+          BODY=$(echo "$BODY" | sed -e '/./,$!d' | sed -e :a -e '/^$/{$d;N;ba' -e '}')
+
+          if [ -z "$BODY" ]; then
+            echo "::error::Extracted changelog body is empty for version $VERSION"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          {
+            echo 'body<<CHANGELOG_EOF'
+            echo "$BODY"
+            echo 'CHANGELOG_EOF'
+          } >> $GITHUB_OUTPUT
+
+          echo "Version: $VERSION"
+          echo "Body length: $(echo -n "$BODY" | wc -c) characters"
+
+      - name: Check tag does not already exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.changelog.outputs.version }}"
+          if gh release view "$VERSION" --json tagName >/dev/null 2>&1; then
+            echo "::error::Release $VERSION already exists. Bump the version in changelog.md or delete the existing release."
+            exit 1
+          fi
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.changelog.outputs.version }}" \
+            --draft \
+            --target "${{ github.sha }}" \
+            --title "Version ${{ steps.changelog.outputs.version }}" \
+            --notes "${{ steps.changelog.outputs.body }}"
+
+          echo "Draft release created for version ${{ steps.changelog.outputs.version }}"
+          echo "Review and publish at: https://github.com/${{ github.repository }}/releases"
