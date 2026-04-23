@@ -3,7 +3,6 @@ name: Create Draft Release
 on:
   push:
     branches:
-      - Foundry_V14
       - master
 
 jobs:
@@ -66,12 +65,17 @@ jobs:
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.changelog.outputs.version }}
+          RELEASE_BODY: ${{ steps.changelog.outputs.body }}
+          RELEASE_SHA: ${{ github.sha }}
         run: |
-          gh release create "${{ steps.changelog.outputs.version }}" \
-            --draft \
-            --target "${{ github.sha }}" \
-            --title "Version ${{ steps.changelog.outputs.version }}" \
-            --notes "${{ steps.changelog.outputs.body }}"
+          printf '%s' "$RELEASE_BODY" > release-notes.md
 
-          echo "Draft release created for version ${{ steps.changelog.outputs.version }}"
+          gh release create "$RELEASE_VERSION" \
+            --draft \
+            --target "$RELEASE_SHA" \
+            --title "Version $RELEASE_VERSION" \
+            --notes-file release-notes.md
+
+          echo "Draft release created for version $RELEASE_VERSION"
           echo "Review and publish at: https://github.com/${{ github.repository }}/releases"
