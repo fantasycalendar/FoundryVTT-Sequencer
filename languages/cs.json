@@ -1,0 +1,203 @@
+{
+  "SEQUENCER": {
+    "OK": "OK",
+    "Cancel": "Zrušit",
+    "PlayerPermissionsWarning": "Ahoj! Protože jsi GM, můžeš vytvářet efekty, ale ve výchozím nastavení <strong>to mohou i hráči</strong>. Pokud si to nepřeješ, můžeš kliknutím na toto tlačítko nastavit oprávnění:",
+    "Error": {
+      "CouldNotPlay": "Nelze přehrát"
+    },
+    "Player": {
+      "Title": "Přehrávač",
+      "SwitchToLayer": "Přepnout na vrstvu",
+      "PathInput": "Zadej cestu k databázi či souboru",
+      "AllUsers": "Všichni uživatelé",
+      "Presets": "Předvolby:",
+      "PresetsDefault": "Výchozí",
+      "ApplyPresetTitle": "Použít předvolbu",
+      "ApplyPresetContent": "Opravdu chceš použít předvolbu \"{preset_name}\"? Neuložené změny budou ztraceny.",
+      "CreateNewPresetTitle": "Vytvořit novou předvolbu Sekvenceru",
+      "CreateNewPresetInputLabel": "Zadej název nové předvolby",
+      "CopyPresetTitle": "Kopírovat předvolbu Sekvenceru",
+      "CopyPresetInputLabel": "Zadej název nové předvolby",
+      "DefaultErrorTitle": "Chyba",
+      "DefaultErrorContent": "Promiň, předvolbu nemůžeš pojmenovat jako \"default\". to si Sekvencer vyhrazuje pro sebe.",
+      "OverwritePresetTitle": "Přepsat předvolbu?",
+      "OverwritePresetContent": "Opravdu chceš přepsat předvolbu \"{preset_name}\"?",
+      "DeletePresetTitle": "Odstranit předvolbu?",
+      "DeletePresetContent": "Opravdu chceš odstranit předvolbu \"{preset_name}\"?",
+      "Option": {
+        "Scale": "Škála",
+        "BelowTokens": "Pod tokeny",
+        "SnapToGrid": "Přichytit k mřížce",
+        "Rotation": "Rotace",
+        "Randomize": "Náhodně",
+        "FadeIn": "Zesílení",
+        "FadeOut": "Vymizení",
+        "ScaleIn": "Zvětšit škálu",
+        "ScaleOut": "Zmenšit škálu",
+        "MirrorX": "Zrcadlit X",
+        "MirrorY": "Zrcadlit Y",
+        "OffsetX": "Posun X",
+        "OffsetY": "Posun Y",
+        "RandomOffset": "Rozsah",
+        "GridUnits": "Jednotky mřížky",
+        "Repeat": "Opakovat",
+        "Repetitions": "Opakování",
+        "DelayMin": "(ms)",
+        "DelayMax": "",
+        "DragBehavior": "Chování při tažení",
+        "DragStretch": "Roztáhnout",
+        "DragMove": "Přesunout",
+        "MoveSpeed": "Rychl. poh.",
+        "Preload": "Přednačíst",
+        "AttachTo": "Připojit k výchozímu bodu",
+        "StretchToAttach": "Připojit k cílovému bodu",
+        "Persist": "Trvalý"
+      }
+    },
+    "SidebarButtons": {
+      "Select": "Vybrat efekt",
+      "Play": "Přehrát efekt",
+      "Manager": "Zobrazit Správce Sekvenceru",
+      "Database": "Zobrazit databázi Sekvenceru"
+    },
+    "Hotkeys": {
+      "PlayTool": {
+        "Shift": "Přehrávač – Přehrát více efektů zároveň",
+        "Control": "Přehrávač – Přehrát více efektů postupně",
+        "Alt": "Přehrávač – Připojit k objektu na plátně"
+      },
+      "SelectTool": {
+        "Control": "Výběr – Přichytit k mřížce",
+        "Alt": "Výběr – Připojit k objektu na plátně",
+        "Delete": "Výběr – Odstranit vybraný efekt"
+      }
+    },
+    "Manager": {
+      "Title": "Správce",
+      "NothingPlaying": "Aktuálně se nic nepřehrává",
+      "PersistentEffects": "Trvalé efekty:",
+      "TemporaryEffects": "Dočasné efekty:",
+      "Sounds": "Zvuky:",
+      "PlayersEffect": "Efekt uživatele {user_name}",
+      "UnknownEffect": "Efekt neznámého uživatele",
+      "EndAllEffects": "Ukončit všechny efekty",
+      "EndAllSounds": "Ukončit všechny zvuky"
+    },
+    "Sequences": {
+      "Title": "Sekvence",
+      "NoSequences": "Aktuálně žádné sekvence neběží",
+      "AbortSequence": "Přerušit sekvenci",
+      "AbortSection": "Přerušit část",
+      "ClearFinished": "Vyčistit dokončené",
+      "Clear": "Vyčistit",
+      "StopAll": "Zastavit vše"
+    },
+    "HowTo": {
+      "Title": "Návod",
+      "Welcome": "Vítej v Sekvenceru!",
+      "Explanation": "Pomocí Přehrávače <i class=\"fas fa-play-circle\"></i> můžeš rychle přehrávat efekty na plátně a pomocí Správce <i class=\"fas fa-film\"></i> můžeš kdykoli ukončit trvající efekty.",
+      "PermissionsExplanation": "Jako GM můžeš vytvářet efekty a ve výchozím nastavení to mohou i hráči. Nastavení můžeš změnit kliknutím na toto tlačítko:",
+      "PlayerExplanation": "Při používání Přehrávače <i class=\"fas fa-play-circle\"></i> musíš nastavit, jaký efekt se má přehrát. Klikni na <strong>vstupní pole</strong>, aby byly vidět dostupné cesty k databázi, nebo začni psát pro vyhledávání. Tlačítkem <i class=\"fas fa-file-import\"></i> vedle něj můžeš soubor přímo vyhledat.",
+      "LayerExplanation": "Jakmile vybereš soubor, můžeš provést některou z následujících akcí ve <i class=\"fas fa-list-ol\"></i> vrstvě Sekvenceru.",
+      "OpenModuleSettings": "Otevřít nastavení modulu",
+      "Click": "Kliknutí",
+      "ClickLabel": "Přehrát efekt na místě",
+      "ClickDrag": "Držet kliknutí + táhnout",
+      "ClickDragLabel": "Přehrát efekt směrem k cílové lokaci",
+      "Shift": "Shift",
+      "ShiftLabel": "Přehrát po uvolnění shiftu více efektů zároveň",
+      "ShiftControl": "Control",
+      "ShiftControlLabel": "Přehrát více efektů postupně s čekáním mezi nimi",
+      "MoreToCome": "...a další funkce přijdou v budoucích aktualizacích!"
+    },
+    "ManagerUI": "Správce Sekvenceru",
+    "Database": {
+      "Title": "Prohlížeč databáze Sekvenceru",
+      "AllPacks": "Všechny balíčky",
+      "Search": "Hledat...",
+      "ButtonFilepath": "Cesta k souboru",
+      "ButtonDatabasePath": "Databáze",
+      "ShowAllRanges": "Zobrazit všechny rozsahy",
+      "ShowSubLists": "Zobrazit podseznamy",
+      "ListView": "Zobrazení seznamu",
+      "Video": "Video",
+      "Sound": "Zvuk",
+      "All": "Vše",
+      "FileTypePredicate": "Pro zapnutí filtrování podle typu musí být povoleno „Zobrazit všechny rozsahy“.",
+      "PlayPreview": "Přehrát náhled",
+      "CopyFilePath": "Zkopírovat jako přímou cestu k souboru",
+      "CopyDatabasePath": "Zkopírovat jako cestu v databázi Sekvenceru"
+    },
+    "Setting": {
+      "DatabaseViewer": {
+        "Title": "Otevřít prohlížeč databáze Sekvenceru",
+        "Label": "Otevřít prohlížeč databáze"
+      },
+      "EnablePixiFix": {
+        "Title": "Povolit opravu PIXI?",
+        "Label": "Zaškrtnutí opravuje problémy s průhledností u efektů Sekvenceru ve Foundry. Některá prostředí (prohlížeče, hardware, software apod.) tuto opravu nepotřebují."
+      },
+      "EnableGlobalPixiFix": {
+        "Title": "Povolit globální opravu PIXI?",
+        "Label": "Zaškrtnutí opravuje průhlednost všech animovaných .webm souborů ve Foundry. Používej raději opatrně."
+      },
+      "EnableAboveUIScreenspace": {
+        "Title": "Povolit vrstvu nad UI?",
+        "Label": "Zaškrtnutí umožňuje přehrávat efekty nad všemi UI prvky ve Foundry. Někteří uživatelé hlásí, že tato vrstva může způsobovat pokles výkonu, proto ji v případě potíží vypni."
+      },
+      "Debug": {
+        "Title": "Povolit ladění?",
+        "Label": "Po zaškrtnutí bude Sekvencer zapisovat do konzole, co právě dělá."
+      },
+      "ShowTools": {
+        "Title": "Sekvencer v postranním panelu?",
+        "Label": "Zaškrtnutí zobrazí nástroje Sekvenceru v postranním panelu."
+      },
+      "ShowTokenTools": {
+        "Title": "Sekvencer v ovládání tokenů?",
+        "Label": "Zaškrtnutí zobrazí nástroje Sekvenceru v panelu ovládání tokenů."
+      },
+      "EnableEffects": {
+        "Title": "Povolit efekty?",
+        "Label": "Zaškrtnutí povolí přehrávání efektů na tomto klientovi."
+      },
+      "EnableSounds": {
+        "Title": "Povolit zvuky?",
+        "Label": "Zaškrtnutí povolí přehrávání zvuků na tomto klientovi."
+      },
+      "ExternalEffectOpacity": {
+        "Title": "Neprůhlednost externích efektů",
+        "Label": "Pokud vytváříš efekty určené k přehrání pro ostatní hráče, ale ne pro sebe, pak nastavení na hodnotu jinou než 0 způsobí, že se efekt zobrazí i tobě, ale ztlumeně. Všichni GM efekty vždy vidí."
+      },
+      "Permission": {
+        "EffectCreate": {
+          "Title": "Přehrávání efektů",
+          "Label": "Povolí hráčům s vybranou a vyšší rolí přehrávat efekty pomocí maker a Přehrávače Sekvenceru."
+        },
+        "EffectDelete": {
+          "Title": "Odebrání všech efektů",
+          "Label": "Povolí hráčům s vybranou a vyšší rolí odebírat jakékoli efekty pomocí Správce Sekvenceru."
+        },
+        "SoundCreate": {
+          "Title": "Přehrávání zvuků",
+          "Label": "Povolí hráčům s vybranou a vyšší rolí přehrávat zvuky pomocí Přehrávače Sekvenceru."
+        },
+        "PreloadClients": {
+          "Title": "Přednačítání pro ostatní",
+          "Label": "Povolí hráčům s vybranou a vyšší rolí přednačítat efekty a zvuky pro ostatní hráče."
+        },
+        "UseSidebarTools": {
+          "Title": "Nástroje v postranním panelu",
+          "Label": "Povolí hráčům s vybranou a vyšší rolí používat nástroje v postranním panelu (také musí mít možnost přehrávat efekty)."
+        }
+      }
+    },
+    "Permission": {
+      "Player": "Hráči a vyšší",
+      "Trusted": "Důvěryhodní hráči a vyšší",
+      "Assistant": "Asistenti GM a vyšší",
+      "GM": "Pouze GM"
+    }
+  }
+}
