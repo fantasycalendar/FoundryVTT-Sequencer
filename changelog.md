@@ -2,6 +2,7 @@
 
 # Version 4.0.1
 - *Sequencer* - Reverted `Sequencer.Database.entryExists` to accept partial segment matches (e.g. `"attack"` matching `"attack1"`), which was unintentionally broken in 4.0.0. A console warning is now logged when a partial segment match occurs; this behavior will be tightened in a future version
+- *Sequencer* - Added Portuguese localization (Thank you Kharmans on GitHub!)
 - *Effects* - Fixed `.mask()` not working on Foundry v13 due to the mask filter's fragment shader not being passed to the PIXI filter constructor
 - *Effects* - Fixed non-persistent effects not disappearing from the Sequencer Manager after finishing playback
 
