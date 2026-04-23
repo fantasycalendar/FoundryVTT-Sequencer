@@ -12,6 +12,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate release body length
+        run: |
+          BODY_LENGTH=$(echo -n "${{ github.event.release.body }}" | wc -c)
+          echo "Release body is ${BODY_LENGTH} characters"
+          if [ "$BODY_LENGTH" -gt 2000 ]; then
+            echo "::error::Release body is ${BODY_LENGTH} characters, which exceeds Discord's 2000 character limit. Shorten the release notes before publishing."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       # Substitute the Manifest and Download URLs in the module.json
@@ -74,6 +83,7 @@ jobs:
 
       - name: Send package to foundry
         if: "!github.event.release.prerelease"
+        continue-on-error: true
         run: |
           HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}" -X POST 'https://foundryvtt.com/_api/packages/release_version/' \
           --header 'Authorization: ${{ secrets.PACKAGE_TOKEN }}' \
@@ -139,6 +149,7 @@ jobs:
       # the release upload, Foundry package submission, or prerelease branch update.
       - name: FC Discord notification
         if: "!github.event.release.prerelease"
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}
@@ -148,6 +159,7 @@ jobs:
 
       - name: JB2A Discord notification
         if: "!github.event.release.prerelease"
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.JB2A_WEBHOOK_URL }}
           DISCORD_USERNAME: ${{env.package_name}} Version ${{github.event.release.tag_name}}

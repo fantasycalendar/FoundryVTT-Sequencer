@@ -1051,6 +1051,7 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	endEffect() {
 		if (this._ended) return;
+		this._resolve?.(this.data);
 		Hooks.callAll("endedSequencerEffect", this);
 		this.destroy();
 	}

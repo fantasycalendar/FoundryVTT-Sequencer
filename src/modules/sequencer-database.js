@@ -163,9 +163,14 @@ class Database {
     if (inString === "")
       return this._throwError("entryExists", "inString cannot be empty");
     inString = inString.replace(/\[[0-9]+]$/, "");
-    return this.flattenedEntries.find(
-      (entry) => entry === inString || entry.startsWith(inString + ".")
-    );
+    const match = this.flattenedEntries.find((entry) => entry.startsWith(inString));
+    if (match && match !== inString && !match.startsWith(inString + ".")) {
+      lib.custom_warning(
+        "Sequencer",
+        `entryExists | "${inString}" matched via partial segment prefix ("${match}"). This behavior will be removed in a future version. Use the full entry path or a dot-delimited prefix instead.`
+      );
+    }
+    return match;
   }
 
   /**
