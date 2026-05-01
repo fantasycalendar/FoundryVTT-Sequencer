@@ -1,5 +1,6 @@
 import { EffectPlayer, InteractionManager, SelectionManager, } from "../modules/sequencer-interaction-manager.js";
 import * as canvaslib from "../lib/canvas-lib.js";
+import * as lib from "../lib/lib.js";
 import CONSTANTS from "../constants.js";
 import SequencerSoundManager from "../modules/sequencer-sound-manager.js";
 
@@ -113,8 +114,11 @@ export class SequencerInterfaceLayer extends foundry.canvas.layers.InteractionLa
 		let sound = SelectionManager.hoveredSoundUI;
 		if (!sound || sound.status === SequencerSoundManager.states.ENDED || !sound.data.source) return;
 
+		const baseRadius = sound.data.locationOptions?.radius;
+		if (!lib.is_real_number(baseRadius)) return;
+
 		const sourcePos = sound.sourcePosition;
-		let radius = (sound.data.locationOptions.radius / canvas.grid.distance) * canvas.grid.size;
+		let radius = (baseRadius / canvas.grid.distance) * canvas.grid.size;
 		let data = {
 			position: {
 				x: sourcePos.x,
