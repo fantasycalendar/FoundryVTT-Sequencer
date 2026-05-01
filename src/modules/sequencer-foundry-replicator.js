@@ -28,7 +28,7 @@ export default class SequencerFoundryReplicator {
 
   static _playScrollingText(data) {
     if (game.user.viewedScene !== data.sceneId) return;
-    if (data.users.length && !data.users.includes(game.userId)) return;
+    if (Array.isArray(data.users) && data.users.length && !data.users.includes(game.userId)) return;
 
     canvas.interface.createScrollingText(
       canvaslib.getPositionFromData(data),
@@ -49,7 +49,7 @@ export default class SequencerFoundryReplicator {
 
   static _panCanvas(data) {
     if (game.user.viewedScene !== data.sceneId) return;
-    if (data.users.length && !data.users.includes(game.userId)) return;
+    if (Array.isArray(data.users) && data.users.length && !data.users.includes(game.userId)) return;
 
     if (data.source) {
       const position = canvaslib.getPositionFromData(data);
