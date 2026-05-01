@@ -99,7 +99,7 @@ class Database {
       if (isPrivate) { 
         this.privateModules.push(inModuleName); 
       } else {
-        this.privateModules = this.privateModules.filter(mod => module !== inModuleName);
+        this.privateModules = this.privateModules.filter(mod => mod !== inModuleName);
       }
       this.entries[inModuleName] = processedEntries;
     } else {
