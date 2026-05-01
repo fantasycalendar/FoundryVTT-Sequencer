@@ -3,7 +3,9 @@ import { createJournalDatabase, custom_warning, debug, forceDeletionKeyWrapper }
 
 export default async function runMigrations() {
   const sortedMigrations = Object.entries(migrations).sort((a, b) => {
-    return foundry.utils.isNewerVersion(b[0], a[0]) ? -1 : 1;
+    if (foundry.utils.isNewerVersion(b[0], a[0])) return -1;
+    if (foundry.utils.isNewerVersion(a[0], b[0])) return 1;
+    return 0;
   });
 
   for (const [version, migration] of sortedMigrations) {
