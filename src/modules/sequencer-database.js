@@ -170,7 +170,7 @@ class Database {
         `entryExists | "${inString}" matched via partial segment prefix ("${match}"). This behavior will be removed in a future version. Use the full entry path or a dot-delimited prefix instead.`
       );
     }
-    return match;
+    return !!match;
   }
 
   /**
