@@ -536,7 +536,7 @@ export class SequencerAboveUILayer {
 	}
 
 	static sortChildren() {
-		return this.getLayer().sortChildren();
+		this.getLayer().sortDirty = true;
 	}
 
 	static removeContainerByEffect(inEffect) {
