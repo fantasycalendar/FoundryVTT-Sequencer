@@ -243,7 +243,7 @@ export default class AnimatedSpriteMesh extends TilingSpriteMesh {
 				PIXI.Ticker.shared.remove(this.update, this);
 				this._isConnectedToTicker = false;
 			} else if (this._autoUpdate && !this._isConnectedToTicker && this._playing) {
-				PIXI.Ticker.shared.add(this.update, this);
+				PIXI.Ticker.shared.add(this.update, this, PIXI.UPDATE_PRIORITY.HIGH);
 				this._isConnectedToTicker = true;
 			}
 		}
