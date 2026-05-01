@@ -85,9 +85,9 @@ export async function cleanupSpritesheet(destroy = false) {
 		animatedSprite.file = null;
 	}
 
-	oldImageSrcs.values().forEach((objectUrl) => {
+	for (const objectUrl of oldImageSrcs.values()) {
 		URL.revokeObjectURL(objectUrl);
-	});
+	}
 	oldImageSrcs.clear();
 	if (destroy) {
 		animatedSprite.destroy();
