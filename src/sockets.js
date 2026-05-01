@@ -115,6 +115,10 @@ export class SequencerSocket {
 		if(game.user.isGM){
 			return this._executeSocket(data);
 		}
+		if(!game.users.activeGM){
+			lib.custom_warning("Sequencer", "executeAsGM | No active GM is connected to handle this request");
+			return data;
+		}
 		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
 		return data;
 	}
@@ -143,11 +147,15 @@ export class SequencerSocket {
 	executeAsMainUser(type, ...args) {
 		let data = { senderId: game.user.id, sendType: RECIPIENT_TYPES.SUPERUSER, type, payload: args };
 		let targetUser = game.users.getDesignatedUser((user) => user.active);
+		if(!targetUser){
+			lib.custom_warning("Sequencer", "executeAsMainUser | No active user is eligible to handle this request");
+			return data;
+		}
 		if(game.user.id === targetUser.id){
 			return this._executeSocket(data);
 		}
 		game.socket.emit(`module.${CONSTANTS.MODULE_NAME}`, data);
-		return this._executeSocket(data);
+		return data;
 	}
 
 	_executeSocket(data) {
