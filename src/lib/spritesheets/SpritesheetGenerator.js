@@ -86,7 +86,6 @@ export class SpritesheetGenerator {
 				this.#workerFreeCallbacks.push(workerFreeCallback);
 			});
 		}
-		this.#freeWorkers = this.#freeWorkers.filter((id) => id !== workerId);
 		return this.#workers[workerId];
 	}
 	/**
