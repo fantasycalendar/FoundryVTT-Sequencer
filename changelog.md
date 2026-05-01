@@ -12,6 +12,7 @@
 - *Effects* - Fixed `.moveTowards()` with `cacheLocation: true` throwing instead of caching the target's position
 - *Sounds* - Fixed `.forUsers()` being ignored, causing sounds to play for every connected user instead of only the listed users
 - *Sounds* - Fixed persistent sound data being saved into the wrong storage on world load, causing sounds to not migrate correctly between Sequencer versions
+- *Crosshairs* - Fixed `.borderColor()` always throwing when called without an `alpha` option
 
 # Version 4.0.1
 - *Sequencer* - Reverted `Sequencer.Database.entryExists` to accept partial segment matches (e.g. `"attack"` matching `"attack1"`), which was unintentionally broken in 4.0.0. A console warning is now logged when a partial segment match occurs; this behavior will be tightened in a future version

@@ -210,7 +210,7 @@ export default class CrosshairSection extends Section {
 		if (typeof inOptions !== "object"){
 			throw this.sequence._customError(this, "borderColor", "inOptions must be of type object");
 		}
-		inOptions = foundry.utils.mergeObject({ borderVisible: CrosshairsDocument.defaultConfig.borderAlpha }, inOptions,);
+		inOptions = foundry.utils.mergeObject({ alpha: CrosshairsDocument.defaultConfig.borderAlpha }, inOptions,);
 		const { alpha } = inOptions;
 		if (!lib.is_real_number(alpha)) {
 			throw this.sequence._customError(this, "borderAlpha", "inOptions.alpha must be of type number");
