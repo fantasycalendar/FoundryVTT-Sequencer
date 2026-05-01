@@ -239,9 +239,10 @@ const migrations = {
 			await Actor.updateDocuments(actorUpdateArray);
 		}
 
-		let journal = await createJournalDatabase();
+		if (Object.keys(journalUpdate).length === 0) return;
 
-		journal.update({
+		const journal = await createJournalDatabase();
+		await journal.update({
 			[CONSTANTS.EFFECTS_FLAG]: journalUpdate
 		});
 	}
