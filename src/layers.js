@@ -18,10 +18,10 @@ export default function registerLayers() {
 	});
 
 	if (!Object.is(foundry.canvas.Canvas.layers, CONFIG.Canvas.layers)) {
-		const layers = foundry.canvas.Canvas.layers;
+		const merged = foundry.utils.mergeObject(foundry.canvas.Canvas.layers, CONFIG.Canvas.layers);
 		Object.defineProperty(foundry.canvas.Canvas, "layers", {
 			get: function () {
-				return foundry.utils.mergeObject(layers, CONFIG.Canvas.layers);
+				return merged;
 			},
 		});
 	}
