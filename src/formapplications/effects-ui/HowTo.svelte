@@ -1,6 +1,6 @@
 <script>
 	let localize = game.i18n.localize.bind(game.i18n);
-	import * as lib from "/lib/lib.js"
+	import * as lib from "../../lib/lib.js"
 
 	async function openSettings() {
 
