@@ -6,6 +6,7 @@
 - *Sequencer* - Fixed `Sequencer.Presets.get()` freezing Foundry when given a dotted preset name whose fallbacks were not registered
 - *Sequencer* - Fixed `.thenDo()` silently accepting non-function input and failing later mid-sequence with an unhelpful error
 - *Sequencer* - Fixed `Sequencer.Database.registerEntries` with `override: true` not unmarking a module's previous private state
+- *Sequencer* - Fixed declining the overwrite prompt while saving an Effect Player preset throwing a `ReferenceError`
 - *Effects* - Fixed forced-index database keys ending in two or more digits (e.g. `effect.12`) playing the wrong frame
 - *Effects* - Fixed deprecation warning by using `foundry.canvas.geometry.Ray` instead
 - *Effects* - Fixed `.zIndex()` having no effect on `.screenSpaceAboveUI()` effects

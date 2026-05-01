@@ -313,7 +313,7 @@ async function promptNewPresetName(inName, copy = false) {
       });
 
       if (!overwrite) {
-        presetName = await promptPresetName(presetName);
+        presetName = await promptNewPresetName(presetName);
       }
     }
   }
