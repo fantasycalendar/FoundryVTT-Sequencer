@@ -1,6 +1,7 @@
 ## Changelog
 
 # Version 4.0.2
+- *Sequencer* - Fixed the Effect Player's Alt hotkey leaving attach mode and stretch-to-attach stuck on after release
 - *Sequencer* - Fixed `TypeError: Failed to fetch` (CORS) when previewing a remote asset (e.g. S3) in the Sequencer Database before playing it on the canvas
 - *Sequencer* - Fixed `Sequencer.Presets.get()` freezing Foundry when given a dotted preset name whose fallbacks were not registered
 - *Effects* - Fixed deprecation warning by using `foundry.canvas.geometry.Ray` instead

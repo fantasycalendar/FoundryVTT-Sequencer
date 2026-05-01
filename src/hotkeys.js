@@ -89,7 +89,7 @@ export default function registerHotkeys() {
     name: "SEQUENCER.Hotkeys.PlayTool.Alt",
     editable: [{ key: "AltLeft" }],
     onDown: hotkeys.playTool.attachToDown,
-    onUp: hotkeys.playTool.attachToDown,
+    onUp: hotkeys.playTool.attachToUp,
   });
 
   game.keybindings.register(
