@@ -96,8 +96,8 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 			if (this.#customText.text !== this.crosshair.label.text) this.#customText.text = this.crosshair.label.text;
 			this.#customText.anchor.set(0.5);
 			this.#customText.position.set(
-				(shapeWidth / 2) + this.crosshair.label.dx ?? 0,
-				(shapeHeight / 2) + this.crosshair.label.dy ?? 0
+				(shapeWidth / 2) + (this.crosshair.label.dx ?? 0),
+				(shapeHeight / 2) + (this.crosshair.label.dy ?? 0)
 			);
 		} else {
 			if (this.#customText) {
