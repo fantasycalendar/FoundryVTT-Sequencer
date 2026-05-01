@@ -1247,7 +1247,7 @@ export default class SequencerSoundManager {
 				!(
 					soundContext instanceof TokenDocument &&
 					soundContext.actorLink &&
-					soundContext.actor.prototypeToken.actorLink
+					soundContext.actor?.prototypeToken?.actorLink
 				)
 			) {
 				return;
