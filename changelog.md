@@ -1,5 +1,15 @@
 ## Changelog
 
+# Version 4.0.2
+- *Sequencer* - Fixed `TypeError: Failed to fetch` (CORS) when previewing a remote asset (e.g. S3) in the Sequencer Database before playing it on the canvas
+- *Sequencer* - Fixed `Sequencer.Presets.get()` freezing Foundry when given a dotted preset name whose fallbacks were not registered
+- *Effects* - Fixed deprecation warning by using `foundry.canvas.geometry.Ray` instead
+- *Effects* - Fixed `.zIndex()` having no effect on `.screenSpaceAboveUI()` effects
+- *Effects* - Fixed sequences erroring out for users that did not have permission to play effects, or were excluded by `.forUsers()`
+- *Effects* - Fixed sequences getting stuck waiting forever when an effect failed to load or was ended before it had finished setting up
+- *Sounds* - Fixed `.forUsers()` being ignored, causing sounds to play for every connected user instead of only the listed users
+- *Sounds* - Fixed persistent sound data being saved into the wrong storage on world load, causing sounds to not migrate correctly between Sequencer versions
+
 # Version 4.0.1
 - *Sequencer* - Reverted `Sequencer.Database.entryExists` to accept partial segment matches (e.g. `"attack"` matching `"attack1"`), which was unintentionally broken in 4.0.0. A console warning is now logged when a partial segment match occurs; this behavior will be tightened in a future version
 - *Sequencer* - Added Portuguese localization (Thank you Kharmans on GitHub!)

@@ -370,7 +370,7 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 		}
 
 		if (lockToEdgeDirection) {
-			const lockedRay = Ray.towardsPoint(snappedIntersection, snappedMouseLocation, 2)
+			const lockedRay = foundry.canvas.geometry.Ray.towardsPoint(snappedIntersection, snappedMouseLocation, 2)
 			const snappedDirection = this.#getSnappedPoint(lockedRay.B, CONST.GRID_SNAPPING_MODES.CENTER)
 			snappedMouseLocation.x = snappedDirection.x;
 			snappedMouseLocation.y = snappedDirection.y;

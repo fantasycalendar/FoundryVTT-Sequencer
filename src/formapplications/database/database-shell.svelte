@@ -128,7 +128,7 @@
 
 		<div class="sequencer-database-player-container">
       <div class="sequencer-database-player-content">
-			<video autoplay bind:this={databaseStore.elements.player} class="database-player" height="335" loop
+			<video autoplay bind:this={databaseStore.elements.player} class="database-player" crossorigin="anonymous" height="335" loop
 						 on:mouseenter={() => { databaseStore.elements.player.controls = true; }}
 						 on:mouseleave={() => { databaseStore.elements.player.controls = false; }}
 						 preload

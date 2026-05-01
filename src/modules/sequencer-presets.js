@@ -65,6 +65,7 @@ export default class SequencerPresets {
 		  if(presetMap.has(newName)) {
 			  return presetMap.get(newName);
 		  }
+		  parts.pop();
 	  }
 		return false;
   }

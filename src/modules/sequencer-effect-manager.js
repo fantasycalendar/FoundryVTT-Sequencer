@@ -47,7 +47,7 @@ export default class SequencerEffectManager {
 				"Sequencer",
 				"EffectManager | play | Players do not have permissions to play effects. This can be configured in Sequencer's module settings."
 			);
-			return;
+			return { duration: Promise.resolve(0), promise: Promise.resolve() };
 		}
 		if (push) sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, data);
 		return this._playEffect(data);
@@ -372,7 +372,9 @@ export default class SequencerEffectManager {
 			flagManager.addFlags(effect.context.uuid, { effects: effect.data });
 		}
 
-		if (!effect.shouldPlay) return;
+		if (!effect.shouldPlay) {
+			return { duration: Promise.resolve(0), promise: Promise.resolve() };
+		}
 
 		const playData = effect.play();
 

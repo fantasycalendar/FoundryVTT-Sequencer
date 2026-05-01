@@ -707,6 +707,12 @@ class SequencerSound {
 			return;
 		}
 
+		if (!this.shouldPlaySound) {
+			this.state = SOUND_STATES.ENDED;
+			this.#resolve();
+			return;
+		}
+
 		if (this.totalLoops && this.currentLoop > this.totalLoops) {
 			return this.stop();
 		}

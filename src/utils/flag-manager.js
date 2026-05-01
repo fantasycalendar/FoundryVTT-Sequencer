@@ -556,7 +556,7 @@ const flagManager = {
 		}
 
 		if (changes.length) {
-			flagManager.addFlags(inDocument.uuid, { effects: changes });
+			flagManager.addFlags(inDocument.uuid, { sounds: changes });
 		}
 
 		return sounds;

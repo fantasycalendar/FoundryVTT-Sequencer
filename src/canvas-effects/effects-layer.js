@@ -512,6 +512,7 @@ export class SequencerAboveUILayer {
 
 		this.app.resizeTo = window;
 		this.app.stage.renderable = false;
+		this.app.stage.sortableChildren = true;
 	}
 
 	static setup() {

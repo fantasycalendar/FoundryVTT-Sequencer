@@ -935,7 +935,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 				const angle = this.target
 					? new foundry.canvas.geometry.Ray(startPos, endPos).angle
-					: Ray.fromAngle(
+					: foundry.canvas.geometry.Ray.fromAngle(
 						startPos.x,
 						startPos.y,
 						this._cachedSourceData.rotation,
@@ -1051,6 +1051,8 @@ export default class CanvasEffect extends PIXI.Container {
 	 */
 	endEffect() {
 		if (this._ended) return;
+		this._durationResolve?.(0);
+		this._durationResolve = null;
 		this._resolve?.(this.data);
 		Hooks.callAll("endedSequencerEffect", this);
 		this.destroy();
@@ -1220,23 +1222,31 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	async _initialize() {
-		this.ready = false;
-		this._initializeVariables();
-		this._addToContainer();
-		await this._createFile()
-		this._updateCurrentFilePath(false, true)
-		await this._createSprite();
-		this._calculateDuration();
-		this._createShapes();
-		await this._setupMasks();
-		await this._transformSprite();
-		this._playPresetAnimations();
-		this._playCustomAnimations();
-		this._setEndTimeout();
-		this._registerTickers()
-		this._timeoutVisibility();
-		await this._startEffect();
-		this.ready = true;
+		try {
+			this.ready = false;
+			this._initializeVariables();
+			this._addToContainer();
+			await this._createFile()
+			this._updateCurrentFilePath(false, true)
+			await this._createSprite();
+			this._calculateDuration();
+			this._createShapes();
+			await this._setupMasks();
+			await this._transformSprite();
+			this._playPresetAnimations();
+			this._playCustomAnimations();
+			this._setEndTimeout();
+			this._registerTickers()
+			this._timeoutVisibility();
+			await this._startEffect();
+			this.ready = true;
+		} catch (err) {
+			this._durationResolve?.(0);
+			this._durationResolve = null;
+			this._resolve?.(this.data);
+			this._resolve = null;
+			throw err;
+		}
 	}
 
 	/**
@@ -1345,6 +1355,9 @@ export default class CanvasEffect extends PIXI.Container {
 	_destroyDependencies() {
 		if (this._ended) return;
 		this._ended = true;
+
+		this._durationResolve?.(0);
+		this._durationResolve = null;
 
 		this.mask = null;
 
@@ -1817,7 +1830,8 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		// Resolve duration promise so that owner of effect may know when it is finished
-		this._durationResolve(this._totalDuration);
+		this._durationResolve?.(this._totalDuration);
+		this._durationResolve = null;
 	}
 
 	/**
