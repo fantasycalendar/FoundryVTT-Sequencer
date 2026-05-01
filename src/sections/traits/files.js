@@ -97,7 +97,7 @@ export default {
     const entry = Array.isArray(entries)
       ? lib.random_array_element(entries)
       : entries;
-    const match = inFile.match(/(\d)+$/);
+    const match = inFile.match(/(\d+)$/);
     return {
       file: entry,
       forcedIndex: match ? Number(match[1]) : false,
