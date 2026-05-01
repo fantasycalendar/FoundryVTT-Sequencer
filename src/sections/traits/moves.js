@@ -57,7 +57,7 @@ export default {
         "could not find position of given object"
       );
     options.target = options.cacheLocation
-      ? canvaslib.get_object_position(options.cacheLocation, { measure: true })
+      ? canvaslib.get_object_position(options.target, { measure: true })
       : options.target;
     this._moveTowards = options;
     return this;

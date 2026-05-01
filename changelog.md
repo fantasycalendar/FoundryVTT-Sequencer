@@ -9,6 +9,7 @@
 - *Effects* - Fixed `.zIndex()` having no effect on `.screenSpaceAboveUI()` effects
 - *Effects* - Fixed sequences erroring out for users that did not have permission to play effects, or were excluded by `.forUsers()`
 - *Effects* - Fixed sequences getting stuck waiting forever when an effect failed to load or was ended before it had finished setting up
+- *Effects* - Fixed `.moveTowards()` with `cacheLocation: true` throwing instead of caching the target's position
 - *Sounds* - Fixed `.forUsers()` being ignored, causing sounds to play for every connected user instead of only the listed users
 - *Sounds* - Fixed persistent sound data being saved into the wrong storage on world load, causing sounds to not migrate correctly between Sequencer versions
 
