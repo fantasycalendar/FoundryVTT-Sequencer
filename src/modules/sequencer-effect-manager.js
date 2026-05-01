@@ -197,7 +197,7 @@ export default class SequencerEffectManager {
 			);
 		}
 		let effects = this.effects;
-		if (inFilter.sceneId && inFilter.sceneId !== canvas.scene.id) {
+		if (inFilter.sceneId && inFilter.sceneId !== canvas.scene?.id) {
 			effects = lib
 				.get_all_documents_from_scene(inFilter.sceneId)
 				.map((doc) => {
