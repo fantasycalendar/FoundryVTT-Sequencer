@@ -5,7 +5,8 @@ export default class FunctionSection extends Section {
   constructor(inSequence, inFunc) {
     super(inSequence);
     if (!lib.is_function(inFunc))
-      this._customError(
+      throw this.sequence._customError(
+        this,
         "create",
         "The given function needs to be an actual function"
       );
