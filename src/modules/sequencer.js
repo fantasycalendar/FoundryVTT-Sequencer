@@ -263,8 +263,9 @@ export default class Sequence {
 	 */
 	canvasPan(inTarget = false, inDuration = null, inSpeed = null) {
 		const panning = lib.section_proxy_wrap(
-			new CanvasPanSection(this, inTarget)
+			new CanvasPanSection(this, inTarget, inDuration ?? undefined)
 		);
+		if (inSpeed !== null) panning.speed(inSpeed);
 		this.sections.push(panning);
 		return panning;
 	}

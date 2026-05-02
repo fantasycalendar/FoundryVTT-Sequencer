@@ -20,6 +20,7 @@
 - *Animations* - Fixed `.repeats()` on animation sections only running once and `_abort()` not interrupting a mid-flight animation
 - *Crosshairs* - Fixed `.borderColor()` always throwing when called without an `alpha` option
 - *Crosshairs* - Fixed `.repeats()` on crosshair sections only running once and `_abort()` not interrupting a pending placement
+- *Canvas Pan* - Fixed `.canvasPan()` ignoring its `duration` and `speed` arguments when called positionally
 
 # Version 4.0.1
 - *Sequencer* - Reverted `Sequencer.Database.entryExists` to accept partial segment matches (e.g. `"attack"` matching `"attack1"`), which was unintentionally broken in 4.0.0. A console warning is now logged when a partial segment match occurs; this behavior will be tightened in a future version
