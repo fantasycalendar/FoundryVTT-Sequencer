@@ -5,14 +5,17 @@ class loading_bar {
     this.total = 0;
     this.current = 0;
     this.lastPct = 0;
+    this.bar = null;
   }
 
   init(context, total) {
+    this.bar?.remove();
     this.context = context;
     this.total = total;
     this.current = 0;
     this.lastPct = 0;
-    SceneNavigation.displayProgressBar({ label: this.context, pct: 1 });
+    this.bar = ui.notifications.info(this.context, { progress: true });
+    this.bar.update({ pct: 0.01 });
   }
 
   incrementProgress() {
@@ -20,9 +23,13 @@ class loading_bar {
     const pct = Math.round((this.current / this.total) * 100);
     if (pct !== this.lastPct) {
       debug(`${pct}% loaded...`);
-      SceneNavigation.displayProgressBar({ label: this.context, pct: pct });
+      this.bar?.update({ message: this.context, pct: pct / 100 });
     }
     this.lastPct = pct;
+    if (this.current >= this.total) {
+      this.bar?.remove();
+      this.bar = null;
+    }
   }
 }
 
