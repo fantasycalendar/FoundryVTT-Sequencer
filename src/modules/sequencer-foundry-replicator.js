@@ -54,21 +54,20 @@ export default class SequencerFoundryReplicator {
     if (data.source) {
       const position = canvaslib.getPositionFromData(data);
 
-      canvas.animatePan({
-        x: position.x,
-        y: position.y,
-        scale: data.scale,
-        duration: data.duration,
-        speed: data.speed,
-      });
-
       if (data.speed) {
-        let ray = new foundry.canvas.geometry.Ray(canvas.stage.pivot, {
+        const ray = new foundry.canvas.geometry.Ray(canvas.stage.pivot, {
           x: position.x,
           y: position.y,
         });
         data.duration = Math.round((ray.distance * 1000) / data.speed);
       }
+
+      canvas.animatePan({
+        x: position.x,
+        y: position.y,
+        scale: data.scale,
+        duration: data.duration,
+      });
 
       if (data.lockView > 0) {
         setTimeout(() => {
