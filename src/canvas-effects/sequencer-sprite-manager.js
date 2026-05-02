@@ -338,7 +338,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		return this.#managedSprite;
 	}
 
-	/** @return {PreciseText | null} */
+	/** @return {foundry.canvas.containers.PreciseText | null} */
 	get textSprite() {
 		return this.#textSprite
 	}
