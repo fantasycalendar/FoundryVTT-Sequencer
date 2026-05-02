@@ -18,6 +18,7 @@
 - *Effects* - Fixed clicking overlapping effects in the Sequencer Manager not consistently selecting the visually top-most one
 - *Effects* - Fixed effect assets being loaded twice and leaking the duplicate when the same file was spawned in rapid succession
 - *Effects* - Fixed memory leak in spritesheet generation
+- *Effects* - Fixed effect file cache where the most recently used files were evicted first instead of the least recently used
 - *Sounds* - Fixed `.forUsers()` being ignored, causing sounds to play for every connected user instead of only the listed users
 - *Sounds* - Fixed persistent sound data being saved into the wrong storage on world load, causing sounds to not migrate correctly between Sequencer versions
 - *Sounds* - Fixed the `endedSequencerSound` hook never firing for persistent sounds when they end

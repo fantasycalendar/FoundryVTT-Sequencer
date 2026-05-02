@@ -2,7 +2,8 @@ import CONSTANTS from "../constants.js"
 import { debug } from "../lib/lib.js"
 
 const SequencerFileCache = {
-  _videos: {},
+  /** @type {Map<string, { blob: Blob }>} */
+  _videos: new Map(),
   _preloadedFiles: new Set(),
   _totalCacheSize: 0,
   _validTypes: ["video/webm", "video/x-webm", "application/octet-stream", "binary/octet-stream"],
@@ -20,7 +21,8 @@ const SequencerFileCache = {
    * @returns {Promise<Blob>} the video blob
    */
   async loadVideo(inSrc) {
-    if (!this._videos[inSrc]) {
+    let entry = this._videos.get(inSrc)
+    if (!entry) {
       const blob = await fetch(inSrc, {
         mode: "cors",
         credentials: "same-origin",
@@ -32,30 +34,23 @@ const SequencerFileCache = {
 
       if (this._validTypes.indexOf(blob?.type) === -1) return false
 
-      while (this._totalCacheSize + blob.size > 524288000) {
-        const entries = Object.entries(this._videos)
-
-        entries.sort((a, b) => {
-          return b[1].lastUsed - a[1].lastUsed
-        })
-
-        const [oldSrc] = entries[0]
-
+      while (this._totalCacheSize + blob.size > 524288000 && this._videos.size > 0) {
+        const oldSrc = this._videos.keys().next().value
+        this._totalCacheSize -= this._videos.get(oldSrc).blob.size
         this._preloadedFiles.delete(oldSrc)
-        this._totalCacheSize -= this._videos[oldSrc].blob.size
-        delete this._videos[oldSrc]
+        this._videos.delete(oldSrc)
       }
 
       this._totalCacheSize += blob.size
       this._preloadedFiles.add(inSrc)
-      this._videos[inSrc] = {
-        blob,
-        lastUsed: +new Date(),
-      }
+      entry = { blob }
+      this._videos.set(inSrc, entry)
+    } else {
+      this._videos.delete(inSrc)
+      this._videos.set(inSrc, entry)
     }
 
-    this._videos[inSrc].lastUsed = +new Date()
-    return this._videos[inSrc].blob
+    return entry.blob
   },
 
   srcExists(inSrc) {
