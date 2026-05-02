@@ -34,7 +34,7 @@ function SvelteApplicationMixin(Base) {
 		}
 
 		_replaceHTML(result, content, options) {
-			Object.assign(this.$state, result.state);
+			this.$state.update((s) => ({ ...s, ...(result.state ?? {}) }));
 			if (options.isFirstRender) {
 				this.#mount = mount(this.root, { target: content, props: { ...result, ...options, state: this.$state } });
 			}
