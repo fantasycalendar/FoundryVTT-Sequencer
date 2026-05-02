@@ -17,6 +17,7 @@
 - *Effects* - Fixed `.moveTowards()` with `cacheLocation: true` throwing instead of caching the target's position
 - *Sounds* - Fixed `.forUsers()` being ignored, causing sounds to play for every connected user instead of only the listed users
 - *Sounds* - Fixed persistent sound data being saved into the wrong storage on world load, causing sounds to not migrate correctly between Sequencer versions
+- *Sounds* - Fixed the `endedSequencerSound` hook never firing for persistent sounds when they end
 - *Animations* - Fixed `.repeats()` on animation sections only running once and `_abort()` not interrupting a mid-flight animation
 - *Crosshairs* - Fixed `.borderColor()` always throwing when called without an `alpha` option
 - *Crosshairs* - Fixed `.repeats()` on crosshair sections only running once and `_abort()` not interrupting a pending placement

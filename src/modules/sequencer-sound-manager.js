@@ -1078,18 +1078,17 @@ export default class SequencerSoundManager {
 
 		let promise = sequencerSound.startPlay();
 
+		promise.then(() => {
+			SequenceManager.RunningSounds.delete(sequencerSound.id);
+			Hooks.callAll("endedSequencerSound", data);
+		});
+
 		if (data.persist) {
 			let responsibleUser = game.users.getDesignatedUser((user) => user.active);
 			if (responsibleUser === game.user && setFlags) {
 				sequencerSound.addFlags();
 			}
-			return sequencerSound.duration;
 		}
-
-		promise.then(() => {
-			SequenceManager.RunningSounds.delete(sequencerSound.id);
-			Hooks.callAll("endedSequencerSound", data);
-		});
 
 		return sequencerSound.duration;
 	}
