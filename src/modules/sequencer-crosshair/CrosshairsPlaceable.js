@@ -77,7 +77,7 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 			if (!this.#distanceText && this.crosshair.location.obj) {
 				const style = CONFIG.canvasTextStyle.clone();
 				style.align = "center";
-				this.#distanceText = this.template.addChild(new PreciseText("", style));
+				this.#distanceText = this.template.addChild(new foundry.canvas.containers.PreciseText("", style));
 			}
 			const actualHeight = (this.shapeHeight || this.shape.radius) + (canvas.grid.size / 2);
 			this.#distanceText.anchor.set(0.5, 0.5);
@@ -91,7 +91,7 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 			if (!this.#customText) {
 				const style = CONFIG.canvasTextStyle.clone();
 				style.align = "center";
-				this.#customText = this.template.addChild(new PreciseText("", style));
+				this.#customText = this.template.addChild(new foundry.canvas.containers.PreciseText("", style));
 			}
 			if (this.#customText.text !== this.crosshair.label.text) this.#customText.text = this.crosshair.label.text;
 			this.#customText.anchor.set(0.5);

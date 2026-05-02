@@ -413,7 +413,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 			this.#textSprite.text = textData.text ?? "";
 			return this.#textSprite;
 		}
-		const textSprite = new PreciseText(textData.text ?? "", textData.textStyle);
+		const textSprite = new foundry.canvas.containers.PreciseText(textData.text ?? "", textData.textStyle);
 		textSprite.resolution = 5;
 		textSprite.zIndex = 1;
 		textSprite.anchor.set(0.5, 0.5);
