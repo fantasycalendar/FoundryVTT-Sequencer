@@ -252,60 +252,39 @@ async function promptNewPresetName(inName, copy = false) {
     ? game.i18n.localize("SEQUENCER.Player.CopyPresetTitle")
     : game.i18n.localize("SEQUENCER.Player.CreateNewPresetTitle");
 
-  let presetName = await new Promise((resolve) => {
-    let rejected = false;
-    new Dialog({
-      title: title,
-      content: `<p><input type="text" placeholder="${game.i18n.localize(
-        "SEQUENCER.Player.CreateNewPresetInputLabel"
-      )}" id="newPresetName" style="width:100%;"></p>`,
-      buttons: {
-        okay: {
-          icon: '<i class="fas fa-check"></i>',
-          label: game.i18n.localize("SEQUENCER.OK"),
-          callback: async (html) => {
-            let name = html.find("#newPresetName").val();
-
-            if (name === "" || !name) {
-              name = false;
-              rejected = true;
-            }
-
-            resolve(name);
-          },
-        },
-        cancel: {
-          icon: '<i class="fas fa-times"></i>',
-          label: game.i18n.localize("SEQUENCER.Cancel"),
-          callback: () => {
-            rejected = true;
-            resolve(false);
-          },
-        },
-      },
-      close: () => {},
-      render: (html) => {
-        html.find("#newPresetName").val(inName).focus();
-      },
-    }).render(true);
+  const placeholder = game.i18n.localize(
+    "SEQUENCER.Player.CreateNewPresetInputLabel"
+  );
+  const result = await foundry.applications.api.DialogV2.input({
+    window: { title },
+    content: `<p><input type="text" name="presetName" placeholder="${placeholder}" value="${foundry.utils.escapeHTML(inName ?? "")}" style="width:100%;" autofocus></p>`,
+    ok: {
+      icon: "fas fa-check",
+      label: game.i18n.localize("SEQUENCER.OK"),
+    },
+    rejectClose: false,
   });
+  let presetName = result?.presetName || false;
 
   if (presetName) {
     if (presetName.toLowerCase() === "default") {
-      Dialog.prompt({
-        title: game.i18n.localize("SEQUENCER.Player.DefaultErrorTitle"),
+      foundry.applications.api.DialogV2.prompt({
+        window: {
+          title: game.i18n.localize("SEQUENCER.Player.DefaultErrorTitle"),
+        },
         content: `<p>${game.i18n.localize(
           "SEQUENCER.Player.DefaultErrorContent"
         )}</p>`,
-        label: game.i18n.localize("SEQUENCER.OK"),
-        callback: () => {},
+        ok: { label: game.i18n.localize("SEQUENCER.OK") },
       });
       return false;
     }
 
     if (effectPresets[presetName]) {
-      const overwrite = await Dialog.confirm({
-        title: game.i18n.localize("SEQUENCER.Player.OverwritePresetTitle"),
+      const overwrite = await foundry.applications.api.DialogV2.confirm({
+        window: {
+          title: game.i18n.localize("SEQUENCER.Player.OverwritePresetTitle"),
+        },
         content: `<p>${game.i18n.format(
           "SEQUENCER.Player.OverwritePresetContent",
           { preset_name: presetName }
