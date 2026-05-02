@@ -374,7 +374,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 
 		if (!nextAsset) {
-			this.#relatedAssets[filePath] = undefined;
+			this.#relatedAssets.set(filePath, null);
 			nextAsset = await this.#loadAsset(filePath);
 			if (this.destroyed) {
 				return;
@@ -429,8 +429,8 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 * @param {string | number} filepath
 	 */
 	removeSprite(filepath) {
-		this.#relatedAssets[filepath]?.destroy();
-		delete this.#relatedAssets[filepath];
+		this.#relatedAssets.get(filepath)?.destroy();
+		this.#relatedAssets.delete(filepath);
 	}
 	async preloadVariants() {
 		if (!this.#preloadingPromise) {
@@ -591,7 +591,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		const allFiles = this.#file.getAllFiles();
 
 		for (const filePath of allFiles) {
-			if (this.#relatedAssets[filePath]) {
+			if (this.#relatedAssets.has(filePath)) {
 				continue;
 			}
 			const asset = await this.#loadAsset(filePath);
