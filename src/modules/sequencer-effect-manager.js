@@ -390,29 +390,65 @@ export default class SequencerEffectManager {
 		}
 
 		if (data.temporary && effect.owner) {
-			let lastSourcePosition = {};
-			let lastTargetPosition = {};
+			let lastSource = null;
+			let lastTarget = null;
 			effect._addToTicker(() => {
 				if (effect.source && !effect.isSourceDestroyed) {
 					const sourceData = effect.getSourceData();
-					if (JSON.stringify(sourceData) !== lastSourcePosition) {
+					const pos = sourceData.position;
+					if (
+						!lastSource
+						|| lastSource.x !== pos?.x
+						|| lastSource.y !== pos?.y
+						|| lastSource.elevation !== pos?.elevation
+						|| lastSource.width !== sourceData.width
+						|| lastSource.height !== sourceData.height
+						|| lastSource.rotation !== sourceData.rotation
+						|| lastSource.alpha !== sourceData.alpha
+					) {
 						sequencerSocket.executeForOthers(
 							SOCKET_HANDLERS.UPDATE_EFFECT_POSITION,
 							data.source,
 							sourceData
 						);
-						lastSourcePosition = JSON.stringify(sourceData);
+						lastSource = {
+							x: pos?.x,
+							y: pos?.y,
+							elevation: pos?.elevation,
+							width: sourceData.width,
+							height: sourceData.height,
+							rotation: sourceData.rotation,
+							alpha: sourceData.alpha,
+						};
 					}
 				}
 				if (effect.target && !effect.isTargetDestroyed) {
 					const targetData = effect.getTargetData();
-					if (JSON.stringify(targetData) !== lastTargetPosition) {
+					const pos = targetData.position;
+					if (
+						!lastTarget
+						|| lastTarget.x !== pos?.x
+						|| lastTarget.y !== pos?.y
+						|| lastTarget.elevation !== pos?.elevation
+						|| lastTarget.width !== targetData.width
+						|| lastTarget.height !== targetData.height
+						|| lastTarget.rotation !== targetData.rotation
+						|| lastTarget.alpha !== targetData.alpha
+					) {
 						sequencerSocket.executeForOthers(
 							SOCKET_HANDLERS.UPDATE_EFFECT_POSITION,
 							data.target,
 							targetData
 						);
-						lastTargetPosition = JSON.stringify(targetData);
+						lastTarget = {
+							x: pos?.x,
+							y: pos?.y,
+							elevation: pos?.elevation,
+							width: targetData.width,
+							height: targetData.height,
+							rotation: targetData.rotation,
+							alpha: targetData.alpha,
+						};
 					}
 				}
 			});
