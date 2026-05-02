@@ -234,7 +234,7 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 			// Canvas.stage.removeAllListeners();
 			canvas.stage.on("mousemove", this.#handlers.move);
 			canvas.stage.on("pointerup", this.#handlers.mouseup);
-			canvas.app.view.onwheel = this.#handlers.wheel;
+			canvas.app.view.addEventListener("wheel", this.#handlers.wheel, { passive: true });
 		});
 	}
 
@@ -517,7 +517,7 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 		this.layer.interactiveChildren = this.oldInteractiveChildren;
 		canvas.stage.off("mousemove", this.#handlers.move);
 		canvas.stage.off("pointerup", this.#handlers.mouseup);
-		canvas.app.view.onwheel = null;
+		canvas.app.view.removeEventListener("wheel", this.#handlers.wheel);
 	}
 
 	#onWheel(evt) {

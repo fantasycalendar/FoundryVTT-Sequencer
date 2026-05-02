@@ -21,6 +21,7 @@
 - *Animations* - Fixed `.repeats()` on animation sections only running once and `_abort()` not interrupting a mid-flight animation
 - *Crosshairs* - Fixed `.borderColor()` always throwing when called without an `alpha` option
 - *Crosshairs* - Fixed `.repeats()` on crosshair sections only running once and `_abort()` not interrupting a pending placement
+- *Crosshairs* - Fixed the crosshair clobbering other modules' canvas wheel handlers on activation and teardown
 - *Canvas Pan* - Fixed `.canvasPan()` ignoring its `duration` and `speed` arguments when called positionally
 - *Canvas Pan* - Fixed `.canvasPan().speed()` being ignored by the pan animation and mistiming any `.lockView()` or `.shake()` set on the same section
 
