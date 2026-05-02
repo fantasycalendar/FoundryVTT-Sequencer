@@ -26,22 +26,28 @@ export async function decodeWebmFrames({ metadata, frameData, codec }) {
 			renderedFrames.push(frame);
 		},
 		error: (error) => {
-			decoder.close();
 			throw error.message;
 		},
 	});
-	decoder.configure(config);
-	for (let i = 0; i < frameData.length; i++) {
-		const frame = frameData[i];
-		const chunk = new EncodedVideoChunk({
-			data: frame.data,
-			timestamp: frame.dts,
-			type: frame.frameType === "P" && i > 0 ? "delta" : "key",
-		});
-		decoder.decode(chunk);
+	try {
+		decoder.configure(config);
+		for (let i = 0; i < frameData.length; i++) {
+			const frame = frameData[i];
+			const chunk = new EncodedVideoChunk({
+				data: frame.data,
+				timestamp: frame.dts,
+				type: frame.frameType === "P" && i > 0 ? "delta" : "key",
+			});
+			decoder.decode(chunk);
+		}
+		await decoder.flush();
+		return renderedFrames;
+	} catch (err) {
+		for (const frame of renderedFrames) frame.close();
+		throw err;
+	} finally {
+		if (decoder.state !== "closed") decoder.close();
 	}
-	await decoder.flush();
-	return renderedFrames;
 }
 /**
  * @typedef {Object} WebmMetadata
