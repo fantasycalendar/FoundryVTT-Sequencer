@@ -3,11 +3,12 @@ export default {
 
   _addUser(inUser) {
     if (!this._users) this._users = [];
+    if (inUser instanceof User) inUser = inUser.id;
     if (typeof inUser !== "string")
       throw this.sequence._customError(
         this,
         "_addUser",
-        "inUser must be of type string"
+        "inUser must be a User, a user ID, or a user name"
       );
     if (!game.users.has(inUser)) {
       if (game.users.getName(inUser)) {
@@ -51,15 +52,7 @@ export default {
    * @returns this
    */
   forUsers(inUsers) {
-    if (!Array.isArray(inUsers)) {
-      if (typeof inUsers !== "string")
-        throw this.sequence._customError(
-          this,
-          "forUsers",
-          "inUser must be of type string"
-        );
-      inUsers = [inUsers];
-    }
+    if (!Array.isArray(inUsers)) inUsers = [inUsers];
     inUsers.forEach((u) => this._addUser(u));
     return this;
   },
