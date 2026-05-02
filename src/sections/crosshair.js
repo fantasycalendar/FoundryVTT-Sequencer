@@ -431,10 +431,6 @@ export default class CrosshairSection extends Section {
 		});
 	}
 
-	async _execute() {
-		await this.run();
-	}
-
 	/**
 	 * @private
 	 */
