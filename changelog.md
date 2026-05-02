@@ -8,9 +8,8 @@
 - *Sequencer* - Fixed `Sequencer.Database.registerEntries` with `override: true` not unmarking a module's previous private state
 - *Sequencer* - Fixed declining the overwrite prompt while saving an Effect Player preset throwing a `ReferenceError`
 - *Sequencer* - Fixed the Sequencer Database spritesheet preview leaking object URLs and failing to release frames when switching entries
-- *Sequencer* - Fixed deprecation warnings by using `foundry.applications.apps.FilePicker`, `foundry.applications.api.DialogV2`, `foundry.canvas.containers.PreciseText`, and `ui.notifications` progress bars instead of their deprecated globals
+- *Sequencer* - Fixed deprecation warnings by using `foundry.applications.apps.FilePicker`, `foundry.applications.api.DialogV2`, `foundry.canvas.containers.PreciseText`, `foundry.canvas.geometry.Ray`, and `ui.notifications` progress bars instead of their deprecated globals
 - *Effects* - Fixed forced-index database keys ending in two or more digits (e.g. `effect.12`) playing the wrong frame
-- *Effects* - Fixed deprecation warning by using `foundry.canvas.geometry.Ray` instead
 - *Effects* - Fixed `.zIndex()` having no effect on `.screenSpaceAboveUI()` effects
 - *Effects* - Fixed sequences erroring out for users that did not have permission to play effects, or were excluded by `.forUsers()`
 - *Effects* - Fixed sequences getting stuck waiting forever when an effect failed to load or was ended before it had finished setting up
