@@ -407,7 +407,9 @@ export default class CrosshairSection extends Section {
 			parent: canvas.scene
 		}, this._config, this._callbacks);
 
-		return reticle.show().then(async () => {
+		return reticle.show().then(async (result) => {
+
+			if (!result) return;
 
 			if (this._persist) {
 				const [template] = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [
