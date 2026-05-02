@@ -48,7 +48,7 @@
       const current = SequencerDatabase.getEntry(file, { softFail: true })
         ? file
         : "";
-      filePicker = new FilePicker({
+      filePicker = new foundry.applications.apps.FilePicker.implementation({
         type: "imageVideo",
         current,
         callback: path => {

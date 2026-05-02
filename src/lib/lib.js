@@ -25,7 +25,7 @@ export async function getFiles(
 	}
 
 	try {
-		return (await FilePicker.browse(source, inFile, browseOptions)).files;
+		return (await foundry.applications.apps.FilePicker.implementation.browse(source, inFile, browseOptions)).files;
 	} catch (err) {
 		if (softFail) return false;
 		throw custom_error("Sequencer", `getFiles | ${err}`);
