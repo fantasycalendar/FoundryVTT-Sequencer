@@ -17,14 +17,5 @@ export default function registerLayers() {
 		},
 	});
 
-	if (!Object.is(foundry.canvas.Canvas.layers, CONFIG.Canvas.layers)) {
-		const merged = foundry.utils.mergeObject(foundry.canvas.Canvas.layers, CONFIG.Canvas.layers);
-		Object.defineProperty(foundry.canvas.Canvas, "layers", {
-			get: function () {
-				return merged;
-			},
-		});
-	}
-
 	debug("Registered Layers");
 }
