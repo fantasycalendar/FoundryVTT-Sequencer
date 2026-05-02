@@ -520,9 +520,9 @@ export const SelectionManager = {
       effect.isPositionWithinBounds(position)
     );
     this.hoveredEffects.sort((a, b) => {
-      return a.data.layer !== b.data.zIndex
-        ? a.data.zIndex - b.data.zIndex
-        : a.data.layer - b.data.zIndex;
+      const layerDiff = (b.data.sortLayer ?? 800) - (a.data.sortLayer ?? 800);
+      if (layerDiff !== 0) return layerDiff;
+      return (b.data.zIndex ?? 0) - (a.data.zIndex ?? 0);
     });
     this.hoveredEffects = new Set(this.hoveredEffects);
   },
