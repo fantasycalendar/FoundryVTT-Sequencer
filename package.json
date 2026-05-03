@@ -18,6 +18,7 @@
     "eslint": "^8",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.1",
+    "marked": "^14.1.4",
     "postcss-preset-env": "^10.2.4",
     "potpack": "^2.1.0",
     "prettier": "^2.8.7",

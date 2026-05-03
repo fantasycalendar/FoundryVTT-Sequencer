@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
 			port: devPort,
 			proxy: {
 				// Serves static files from main Foundry server.
-				[`^(/${modulePath}/(languages))`]: `http://localhost:${port}`,
+				[`^(/${modulePath}/(languages|images|samples|typings))`]: `http://localhost:${port}`,
 
 				// All other paths besides package ID path are served from main Foundry server.
 				[`^(?!/${modulePath}/)`]: `http://localhost:${port}`,

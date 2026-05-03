@@ -32,8 +32,20 @@ import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
 import PluginsManager from "./utils/plugins-manager.js";
 import SvelteDialog from "./formapplications/dialog/SvelteDialog.js"
-import SupportDialog from "./formapplications/support-dialog.svelte";
+import ChangelogDialog from "./formapplications/dialog/changelog-dialog.svelte";
 import flagManager from "./utils/flag-manager.js";
+
+const PATREON_URL = "https://patreon.com/cw/fantasycomputerworks";
+const DISCORD_URL = "https://discord.gg/qFHQUwBZAz";
+
+function showChangelog() {
+	return SvelteDialog.show({
+		component: ChangelogDialog,
+		classes: ["sequencer-changelog-dialog"],
+		window: { title: "Sequencer Changelog", icon: "fas fa-clipboard-list", resizable: true },
+		position: { width: 720, height: 600 },
+	});
+}
 
 let moduleValid = false;
 let moduleReady = false;
@@ -129,7 +141,8 @@ function initializeModule() {
       random_object_element: lib.random_object_element,
       make_array_unique: lib.make_array_unique,
     },
-	  Crosshair: Crosshair
+	  Crosshair: Crosshair,
+    showChangelog: showChangelog,
   };
 
   registerSettings();
@@ -143,45 +156,86 @@ function initializeModule() {
   SequencerAboveUILayer.setup();
 
 	PluginsManager.initialize();
+
+	Hooks.on("renderChatMessageHTML", (_message, html) => {
+		const links = html.querySelectorAll('[data-action="sequencer-show-changelog"]');
+		links.forEach((el) => {
+			if (el.dataset.sequencerWired === "1") return;
+			el.dataset.sequencerWired = "1";
+			el.addEventListener("click", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				showChangelog();
+			});
+			el.addEventListener("keydown", (event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					event.stopPropagation();
+					showChangelog();
+				}
+			});
+		});
+	});
 }
 
 
 Hooks.once("ready", async () => {
-  displaySupportDialog();
-  displaySequencerWelcome();
+  displaySequencerUpdateNotice();
 });
 
-async function displaySupportDialog() {
-  const shown = game.settings.get(CONSTANTS.MODULE_NAME, "support-dialog-shown")
-  if (!game.user.isGM || shown) return;
-  await game.settings.set(CONSTANTS.MODULE_NAME, "support-dialog-shown", true);
-	return SvelteDialog.show({ component: SupportDialog, window: { title: "Sequencer", icon: "fas fa-film" }});
+function getMajorMinor(version) {
+	if (typeof version !== "string") return null;
+	const match = version.match(/^(\d+)\.(\d+)/);
+	if (!match) return null;
+	return `${match[1]}.${match[2]}`;
 }
 
-async function displaySequencerWelcome() {
+async function displaySequencerUpdateNotice() {
 
-  const version = game.settings.get(CONSTANTS.MODULE_NAME, "welcome-shown-version") ?? "0.0.0";
+  if (!game.user.isGM) return;
 
-  if(!game.user.isGM || !foundry.utils.isNewerVersion(game.version, version)) return;
-  await game.settings.set(CONSTANTS.MODULE_NAME, "welcome-shown-version", game.version);
+  const currentVersion = game.modules.get(CONSTANTS.MODULE_NAME)?.version;
+  if (!currentVersion) return;
 
-  const chatMessages = game.messages.filter(message => {
-    return message.content.includes("sequencer-welcome")
-  }).map(message => message.id);
+  const lastShown = game.settings.get(CONSTANTS.MODULE_NAME, "update-notice-shown-version") ?? "0.0.0";
 
-  if(chatMessages.length){
-    await ChatMessage.deleteDocuments(chatMessages.slice(0, -1))
+  const currentMM = getMajorMinor(currentVersion);
+  const lastMM = getMajorMinor(lastShown);
+
+  if (!currentMM) return;
+  if (lastMM && !foundry.utils.isNewerVersion(currentMM, lastMM)) {
+    if (lastShown !== currentVersion) {
+      await game.settings.set(CONSTANTS.MODULE_NAME, "update-notice-shown-version", currentVersion);
+    }
+    return;
   }
 
+  await game.settings.set(CONSTANTS.MODULE_NAME, "update-notice-shown-version", currentVersion);
+
+  // Clean up older Sequencer update cards (keep only this newest one)
+  const oldMessageIds = game.messages.filter(message => {
+    return message.content.includes("sequencer-welcome");
+  }).map(message => message.id);
+
+  if (oldMessageIds.length) {
+    await ChatMessage.deleteDocuments(oldMessageIds);
+  }
+
+  const gmIds = game.users.filter(u => u.isGM).map(u => u.id);
+
   await ChatMessage.create({
+    whisper: gmIds,
     content: `
 <div class="sequencer-welcome">
-<img src="modules/sequencer/images/sequencer.png"/>
-<div class="sequencer-divider"></div>
-<p>Sequencer can only remain open, free, and regularly updated with the support of the Foundry community.</p>
-<p>Please consider supporting us if you enjoy Foundry & visual effects!</p>
-<div class="sequencer-divider"></div>
-<p><a target="_blank" href="https://fantasycomputer.works/">Website</a> | <a target="_blank" href="https://fantasycomputer.works/FoundryVTT-Sequencer/#/">Docs</a> | <a target="_blank" href="https://discord.gg/qFHQUwBZAz">Discord</a> | <a target="_blank" href="https://patreon.com/cw/fantasycomputerworks">Support Us</a></p>
+<img class="sequencer-welcome-image" src="modules/sequencer/images/sequencer.png"/>
+<div class="sequencer-welcome-divider"></div>
+<p class="sequencer-welcome-title">Sequencer updated to v${currentVersion}</p>
+<div class="sequencer-welcome-divider"></div>
+<div class="sequencer-welcome-links">
+<span class="sequencer-welcome-link" role="button" tabindex="0" data-action="sequencer-show-changelog"><i class="fas fa-clipboard-list"></i> View changelog</span>
+<a target="_blank" rel="noopener noreferrer" href="${DISCORD_URL}"><i class="fab fa-discord"></i> Discord</a>
+<a target="_blank" rel="noopener noreferrer" href="${PATREON_URL}"><i class="fab fa-patreon"></i> Support on Patreon</a>
+</div>
 </div>`,
   });
 
