@@ -2090,6 +2090,7 @@ export default class EffectSection extends Section {
 		Object.assign(this.constructor.prototype, traits.animation);
 		Object.assign(this.constructor.prototype, traits.filter);
 		Object.assign(this.constructor.prototype, traits.tint);
+		Object.assign(this.constructor.prototype, traits.blendMode);
 		Object.assign(this.constructor.prototype, traits.location);
 		Object.assign(this.constructor.prototype, traits.offset);
 		Object.assign(this.constructor.prototype, traits.text);
@@ -2465,6 +2466,7 @@ export default class EffectSection extends Section {
 			spriteRotation: this._spriteRotation,
 			randomSpriteRotation: this._randomSpriteRotation,
 			tint: this._tint?.decimal,
+			blendMode: this._blendMode,
 			flipX: this._mirrorX,
 			flipY: this._mirrorY,
 

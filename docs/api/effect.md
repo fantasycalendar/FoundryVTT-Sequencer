@@ -1003,6 +1003,40 @@ Examples:
 
 This method tints the effect with the given color. Supplying no parameter will apply no tint.
 
+## Blend Mode
+
+`.blendMode(name)` or `.blendMode(PIXI.BLEND_MODES.<MODE>)`
+
+Examples:
+- `.blendMode("multiply")` - Darkens the underlying canvas with the effect's colors (great for shadows or smoke)
+- `.blendMode("screen")` - Brightens the canvas with the effect (great for fire, magic, light flares)
+- `.blendMode("add")` - Additively blends the effect onto the canvas (classic glow / bloom feel)
+- `.blendMode("soft-light")` - Subtle photo-like overlay
+- `.blendMode("overlay")` - Pronounced photo-like overlay
+- `.blendMode(PIXI.BLEND_MODES.SCREEN)` - Same as `"screen"`, using the PIXI numeric constant
+
+Sets the blend mode used when compositing this effect onto the canvas. Accepts either a string name (case-insensitive; spaces, hyphens, and underscores are interchangeable, so `"soft-light"`, `"soft_light"`, and `"Soft Light"` are equivalent) or a numeric `PIXI.BLEND_MODES` constant.
+
+The full list of supported blend modes:
+
+| Standard | Advanced |
+|---|---|
+| `normal` | `overlay` |
+| `add` | `darken` |
+| `multiply` | `lighten` |
+| `screen` | `color-dodge` |
+| `subtract` | `color-burn` |
+| `erase` | `hard-light` |
+| `none` | `soft-light` |
+| `normal-npm` | `difference` |
+| `add-npm` | `exclusion` |
+| `screen-npm` | `hue` |
+| | `saturation` |
+| | `color` |
+| | `luminosity` |
+
+Standard modes render natively. Advanced modes need the effect to be rendered into its own framebuffer; this is handled automatically by attaching a no-op color matrix filter when needed, so you don't have to do anything special. If you have already added a `.filter()` to the effect, no extra filter is added.
+
 ## Screen Space
 
 `.screenSpace()` or `.screenSpace(boolean)`

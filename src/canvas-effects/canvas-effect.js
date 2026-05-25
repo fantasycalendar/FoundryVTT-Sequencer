@@ -2099,6 +2099,24 @@ export default class CanvasEffect extends PIXI.Container {
 			this.sprite.tint = this.data.tint;
 		}
 
+		if (this.data.blendMode != null) {
+			this.sprite.blendMode = this.data.blendMode;
+			// Advanced blend modes (overlay, soft-light, etc.) sample the destination
+			// pixel and only render correctly when the displayed object is rendered
+			// into its own framebuffer. Effects render through PIXI.Mesh, so we force
+			// isolation by ensuring at least one filter is present. An identity
+			// ColorMatrixFilter is essentially free and makes advanced modes work.
+			if (CONSTANTS.ADVANCED_BLEND_MODES.has(this.data.blendMode)) {
+				const hasFilter = (this.sprite.filters?.length ?? 0) > 0
+					|| this.sprite.colorMatrixFilter != null;
+				if (!hasFilter) {
+					const isolation = new PIXI.ColorMatrixFilter();
+					isolation.id = this.id + "-blendMode-isolation";
+					this.sprite.colorMatrixFilter = isolation;
+				}
+			}
+		}
+
 		// only set filter and fade effects when a faded version should actually be shown
 		if (this.shouldShowFadedVersion) {
 			this.alpha = game.settings.get(CONSTANTS.MODULE_NAME, "user-effect-opacity") / 100;

@@ -43,7 +43,62 @@ const CONSTANTS = {
 		INVALID_PLACEMENT: "invalidPlacement",
 		PLACED: "placed",
 		CANCEL: "cancel"
-	}
+	},
+
+	/**
+	 * Map of user-friendly blend mode names to PIXI.BLEND_MODES numeric values.
+	 * Keys are lowercase, alphanumeric, and underscore-tolerant. Multiple aliases
+	 * (e.g. "soft_light", "soft-light", "softlight") are all accepted via the
+	 * normalization in the blendMode trait.
+	 */
+	BLEND_MODES: {
+		normal: 0,
+		add: 1,
+		multiply: 2,
+		screen: 3,
+		overlay: 4,
+		darken: 5,
+		lighten: 6,
+		color_dodge: 7,
+		color_burn: 8,
+		hard_light: 9,
+		soft_light: 10,
+		difference: 11,
+		exclusion: 12,
+		hue: 13,
+		saturation: 14,
+		color: 15,
+		luminosity: 16,
+		normal_npm: 17,
+		add_npm: 18,
+		screen_npm: 19,
+		none: 20,
+		subtract: 28,
+		erase: 29
+	},
+
+	/**
+	 * Set of blend mode numeric values that PIXI implements as "advanced" blends
+	 * (require sampling the destination/backdrop). On a Mesh-based renderer
+	 * these only render correctly when the object is rendered into its own
+	 * isolated framebuffer. We force isolation by injecting a no-op
+	 * ColorMatrixFilter when one of these is requested.
+	 */
+	ADVANCED_BLEND_MODES: new Set([
+		4,  // overlay
+		5,  // darken
+		6,  // lighten
+		7,  // color_dodge
+		8,  // color_burn
+		9,  // hard_light
+		10, // soft_light
+		11, // difference
+		12, // exclusion
+		13, // hue
+		14, // saturation
+		15, // color
+		16  // luminosity
+	])
 };
 
 CONSTANTS.TOOLS = {

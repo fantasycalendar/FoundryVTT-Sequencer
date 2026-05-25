@@ -488,6 +488,14 @@ export class SequencerSpriteManager extends PIXI.Container {
 			this.managedSprite.tint = typeof value === "number" ? Math.floor(value) : value;
 		}
 	}
+	get blendMode() {
+		return this.managedSprite?.blendMode ?? PIXI.BLEND_MODES.NORMAL;
+	}
+	set blendMode(value) {
+		if (this.managedSprite) {
+			this.managedSprite.blendMode = value;
+		}
+	}
 	get scale() {
 		return this.managedSprite?.scale || super.scale;
 	}

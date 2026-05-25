@@ -242,7 +242,10 @@ export function get_object_position(
       obj?.document?.y ??
       obj?.document?.position?.y ??
       null,
-    elevation: obj?.elevation ?? obj?.document?.elevation ?? null,
+    elevation:
+      (obj?.elevation ?? obj?.document?.elevation) != null
+        ? get_object_elevation(obj)
+        : null,
   };
 
   if (pos.x === null) delete pos["x"];
@@ -395,7 +398,12 @@ export function get_object_canvas_data(inObject, { measure = false, uuid = true 
 }
 
 export function get_object_elevation(inObject) {
-  return inObject?.document?.elevation ?? inObject?.elevation ?? 0;
+  const e = inObject?.document?.elevation ?? inObject?.elevation ?? 0;
+  // RegionDocument.elevation is { top, bottom } (either may be null for
+  // unbounded); every other placeable's elevation is a scalar number.
+  // Collapse the object to its floor so downstream Math.max / arithmetic
+  // and PIXI sort comparisons receive a real number.
+  return typeof e === "object" ? (e?.bottom ?? e?.top ?? 0) : e;
 }
 
 export function get_mouse_position(snapToGrid = false) {

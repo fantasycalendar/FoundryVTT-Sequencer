@@ -247,6 +247,15 @@ interface HasTint<T> {
   tint(inColor: number | HEX): T;
 }
 
+interface HasBlendMode<T> {
+  /**
+   * Sets the blend mode used when compositing this effect onto the canvas.
+   * Accepts either a string name (e.g. "multiply", "screen", "soft-light")
+   * or a numeric PIXI.BLEND_MODES constant.
+   */
+  blendMode(mode: number | string): T;
+}
+
 interface HasUsers<T> {
   /**
    * Causes section to be executed only locally, and not push to other connected clients.
@@ -805,6 +814,7 @@ declare global {
       HasAnimations<EffectSection>,
       HasFilters<EffectSection>,
       HasTint<EffectSection>,
+      HasBlendMode<EffectSection>,
       HasLocation<EffectSection>,
       HasText<EffectSection>,
       HasName<EffectSection> {}

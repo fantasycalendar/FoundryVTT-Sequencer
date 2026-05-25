@@ -1,5 +1,9 @@
 ## Changelog
 
+# Version 4.1.0
+- *Effects* - Added `.blendMode()` to effect sections, accepting either a string name (e.g. `"multiply"`, `"screen"`, `"soft-light"`) or the `PIXI.BLEND_MODES` const
+- *Effects* - Fixed effects attached to or targeting a Region rendering below tiles that should sit beneath them
+
 # Version 4.0.2
 - *Sequencer* - Fixed the Effect Player's Alt hotkey leaving attach mode and stretch-to-attach stuck on after release
 - *Sequencer* - Fixed `TypeError: Failed to fetch` (CORS) when previewing a remote asset (e.g. S3) in the Sequencer Database before playing it on the canvas

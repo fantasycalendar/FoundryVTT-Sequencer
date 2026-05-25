@@ -9,6 +9,7 @@ import time from "./time.js";
 import users from "./users.js";
 import filter from "./filter.js";
 import tint from "./tint.js";
+import blendMode from "./blendMode.js";
 import location from "./location.js";
 import offset from "./offset.js";
 import text from "./text.js";
@@ -26,6 +27,7 @@ export default {
   users,
   filter,
   tint,
+  blendMode,
   location,
   offset,
   text,
