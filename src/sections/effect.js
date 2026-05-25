@@ -1832,7 +1832,7 @@ export default class EffectSection extends Section {
 	 *  Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source
 	 *  of the effect.
 	 *
-	 * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Array} inObject
+	 * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Region/RegionDocument/Array} inObject
 	 * @returns {Section}
 	 */
 	mask(inObject) {
@@ -1854,12 +1854,13 @@ export default class EffectSection extends Section {
 			validatedObject instanceof TokenDocument ||
 			validatedObject instanceof TileDocument ||
 			validatedObject instanceof DrawingDocument ||
-			validatedObject instanceof MeasuredTemplateDocument;
+			validatedObject instanceof MeasuredTemplateDocument ||
+			validatedObject instanceof RegionDocument;
 		if (!isValidObject) {
 			throw this.sequence._customError(
 				this,
 				"mask",
-				"A foundry object was provided, but only Tokens, Tiles, Drawings, and MeasuredTemplates may be used to create effect masks"
+				"A foundry object was provided, but only Tokens, Tiles, Drawings, MeasuredTemplates, and Regions may be used to create effect masks"
 			);
 		}
 

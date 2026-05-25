@@ -1070,7 +1070,17 @@ declare global {
     /**
      * Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
      */
-    mask(inObject?: VisibleFoundryTypes | Array<VisibleFoundryTypes>): this;
+    mask(
+      inObject?:
+        | VisibleFoundryTypes
+        | Region.Implementation
+        | RegionDocument.Implementation
+        | Array<
+            | VisibleFoundryTypes
+            | Region.Implementation
+            | RegionDocument.Implementation
+          >
+    ): this;
 
     /**
      * Causes the effect to be visible through walls
