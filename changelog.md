@@ -1,11 +1,11 @@
 ## Changelog
 
 # Version 4.1.0
+- *Sequencer* - Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)
 - *Effects* - Added `.blendMode()` to effect sections, accepting either a string name (e.g. `"multiply"`, `"screen"`, `"soft-light"`) or the `PIXI.BLEND_MODES` const
 - *Effects* - Fixed effects attached to or targeting a Region rendering below tiles that should sit beneath them
 - *Effects* - Fixed `.mask()` rejecting Regions even though Regions were already supported by the effect mask renderer
-- Fixed .atLocation(tile) placing effects at the tile's top-left instead of centering them on the tile (thanks aljames-arctic on GitHub)
-- Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)
+- *Effects* - Fixed .atLocation(tile) placing effects at the tile's top-left instead of centering them on the tile (thanks aljames-arctic on GitHub)
 
 # Version 4.0.2
 - *Sequencer* - Fixed the Effect Player's Alt hotkey leaving attach mode and stretch-to-attach stuck on after release
