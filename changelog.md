@@ -5,6 +5,7 @@
 - *Effects* - Fixed effects attached to or targeting a Region rendering below tiles that should sit beneath them
 - *Effects* - Fixed `.mask()` rejecting Regions even though Regions were already supported by the effect mask renderer
 - Fixed .atLocation(tile) placing effects at the tile's top-left instead of centering them on the tile (thanks aljames-arctic on GitHub)
+- Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)
 
 # Version 4.0.2
 - *Sequencer* - Fixed the Effect Player's Alt hotkey leaving attach mode and stretch-to-attach stuck on after release
