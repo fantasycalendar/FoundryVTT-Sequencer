@@ -565,13 +565,16 @@ export class SequencerAboveUILayer {
 		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
 			targetLayer.renderable = targetLayer.children.length > 0;
 			if (!targetLayer.renderable && ABOVE_UI_LAYER._renderTickerActive) {
-				// Clear the framebuffer one last time before we stop ticking.
-				ABOVE_UI_LAYER.app.render();
-				PIXI.Ticker.shared.remove(
-					ABOVE_UI_LAYER.app.render,
-					ABOVE_UI_LAYER.app
-				);
-				ABOVE_UI_LAYER._renderTickerActive = false;
+				try {
+					// Clear the framebuffer one last time before we stop ticking.
+					ABOVE_UI_LAYER.app.render();
+				} finally {
+					PIXI.Ticker.shared.remove(
+						ABOVE_UI_LAYER.app.render,
+						ABOVE_UI_LAYER.app
+					);
+					ABOVE_UI_LAYER._renderTickerActive = false;
+				}
 			}
 		}
 	}

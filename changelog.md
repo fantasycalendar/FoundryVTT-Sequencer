@@ -2,7 +2,13 @@
 
 # Version 4.1.1
 - *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
+- *Effects* - Added `.onLevels()` to limit an effect to specific scene levels on Foundry v14
+- *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
 - *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
+- *Effects* - Fixed effects showing across every scene level on Foundry v14
+- *Sounds* - Added `.elevation()` to override or offset a positional sound's Z, used by the level-distance attenuation
+- *Sounds* - Added `.onLevels()` to limit a sound to specific scene levels on Foundry v14
+- *Sounds* - Fixed sounds played at a position not attenuating across scene levels on Foundry v14
 
 # Version 4.1.0
 - *Sequencer* - Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)

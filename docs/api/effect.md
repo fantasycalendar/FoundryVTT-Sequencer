@@ -844,6 +844,27 @@ Sets the z-index of the effect, breaking ties between effects that share the sam
 
 **Note:** `.belowTokens()` and `.belowTiles()` change the effect's `sortLayer`, so the z-index ordering only applies within the new sort layer.
 
+## Elevation
+
+`.elevation(N)` or `.elevation([bottom, top])` or `.elevation(N, options)`
+
+Sets the effect's elevation. Pass a single number for a point, or a `[bottom, top]` array for an elevation range.
+
+The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels renders on each of them. When you switch the viewed level, a range effect re-anchors its rendered position to that level's floor so it stays above the level's background texture instead of being obscured.
+
+A range whose top sits exactly on a level's floor (e.g. `[0, 30]` against a level starting at `30`) is treated as just below that level rather than touching its interior, matching how Foundry handles tall tokens.
+
+Options:
+- `absolute: boolean` — when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
+
+Examples:
+```js
+.elevation(5)                              // point at elevation 5, offset from source
+.elevation(5, { absolute: true })          // point at exactly elevation 5
+.elevation([10, 20], { absolute: true })   // range from 10 to 20
+.elevation([0, 5])                         // range spanning 5 units above the source
+```
+
 ## Sort Layer
 
 `.sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
@@ -863,6 +884,27 @@ For reference, Foundry's built-in sort layers are:
 - `1000` weather
 
 **Note:** `.sortLayer()` only orders effects played in world space (where tokens, tiles, and weather are). It does nothing on `.screenSpace()` or `.screenSpaceAboveUI()` effects. Use `.zIndex()` to layer those against each other.
+
+## On Levels
+
+`.onLevels("levelIdOrName")` or `.onLevels([id1, "Name 2", level])` (a level id, level name, or Level document)
+
+Restricts this effect to one or more scene levels on Foundry v14+. On older Foundry versions this is a no-op.
+
+**Automatic level behavior (no `.onLevels()` call required):** an effect's visible levels are derived automatically from its vertical extent against the scene's level elevation ranges.
+
+- An effect placed at a fixed `{x, y}` location is a point at its elevation and belongs to whichever level's elevation range contains it.
+- An effect placed on or stretched to a token inherits the token's vertical extent (`[elevation, elevation + depth × grid.distance]`), so a tall token whose vertical extent crosses two floors keeps its effects visible on both.
+- An effect placed on or stretched to a region inherits the region's elevation range (`{bottom, top}`), so an effect on a region that spans two floors stays visible on both floors. This works for `.atLocation(region)` and `.stretchTo(region)` without needing `.attachTo()`.
+- An explicit `.elevation([bottom, top], {absolute: true})` call pins the effect to that elevation range, so the effect renders on every level the range reaches.
+
+If the viewed level is configured to see into other levels (the `visibility.levels` set on a Level document), effects on those other levels render alongside the viewed level's effects.
+
+**When to call `.onLevels()`:** only when the automatic derivation isn't what you want. The most common case is an effect that should appear on multiple non-adjacent levels (e.g. levels A and C but not B), which elevation can't express because a single elevation only falls in one level's range.
+
+Pass `null` to clear a previously set override.
+
+Screen-space effects (`.screenSpace()`, `.screenSpaceAboveUI()`, `.aboveInterface()`) are HUD overlays and always render regardless of level.
 
 ## Animate Property
 

@@ -52,6 +52,7 @@ export default class EffectSection extends Section {
 		this._screenSpaceScale = null;
 		this._elevation = null;
 		this._sortLayer = 800;
+		this._levels = null;
 		this._masks = [];
 		this._tiedDocuments = [];
 		this._selfMask = false;
@@ -1397,48 +1398,6 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 * Changes the effect's elevation
-	 *
-	 * @param {Number} inElevation
-	 * @param {Object} inOptions
-	 * @returns {EffectSection}
-	 */
-	elevation(inElevation, inOptions = {}) {
-		if (typeof inElevation !== "number")
-			throw this.sequence._customError(
-				this,
-				"elevation",
-				"inElevation must be of type number"
-			);
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"elevation",
-				`inOptions must be of type object`
-			);
-
-		inOptions = foundry.utils.mergeObject(
-			{
-				elevation: 1,
-				absolute: false,
-			},
-			inOptions
-		);
-
-		if (typeof inOptions.absolute !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"elevation",
-				"inOptions.absolute must be of type boolean"
-			);
-		this._elevation = {
-			elevation: inElevation,
-			absolute: inOptions.absolute,
-		};
-		return this;
-	}
-
-	/**
 	 * Changes the effect's sortLayer, potentially displaying effects below tiles, above tokens or even weather effects
 	 * in case of identical elevations
 	 *
@@ -2082,6 +2041,8 @@ export default class EffectSection extends Section {
 	_applyTraits() {
 		Object.assign(this.constructor.prototype, traits.files);
 		Object.assign(this.constructor.prototype, traits.audio);
+		Object.assign(this.constructor.prototype, traits.elevation);
+		Object.assign(this.constructor.prototype, traits.levels);
 		Object.assign(this.constructor.prototype, traits.moves);
 		Object.assign(this.constructor.prototype, traits.opacity);
 		Object.assign(this.constructor.prototype, traits.rotation);
@@ -2455,6 +2416,7 @@ export default class EffectSection extends Section {
 			scaleToObject: this._scaleToObject,
 			elevation: this._elevation,
 			sortLayer: this._sortLayer,
+			levels: this._levels,
 			aboveLighting: this._aboveLighting,
 			aboveInterface: this._aboveInterface,
 			xray: this._xray,

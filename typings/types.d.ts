@@ -256,6 +256,27 @@ interface HasBlendMode<T> {
   blendMode(mode: number | string): T;
 }
 
+interface HasElevation<T> {
+  /**
+   * Sets the section's elevation, either as a single Z value or as an
+   * elevation range `[bottom, top]`. The range form makes the section
+   * visible on every scene level it reaches on Foundry v14+.
+   */
+  elevation(
+    inElevation: number | [number, number],
+    inOptions?: ElevationOptions
+  ): T;
+}
+
+interface HasLevels<T> {
+  /**
+   * Restricts this section to one or more scene levels on Foundry v14+.
+   * Accepts a level id, level name, Level document, or an array mixing
+   * any of those. Pass null to clear. No-op on older Foundry versions.
+   */
+  onLevels(inLevels: LevelReference | LevelReference[] | null): T;
+}
+
 interface HasUsers<T> {
   /**
    * Causes section to be executed only locally, and not push to other connected clients.
@@ -776,8 +797,14 @@ declare global {
   };
 
   type ElevationOptions = {
-    absolute: boolean;
+    absolute?: boolean;
   };
+
+  /**
+   * Anything `.onLevels()` accepts: a level id string, a level name string,
+   * or a Level document (any object with an `id` field).
+   */
+  type LevelReference = string | { id: string };
 
   type LoopOptions = {
     loopDelay: number;
@@ -805,6 +832,8 @@ declare global {
       Section<EffectSection>,
       HasFiles<EffectSection>,
       HasAudio<EffectSection>,
+      HasElevation<EffectSection>,
+      HasLevels<EffectSection>,
       HasMovement<EffectSection>,
       HasOpacity<EffectSection>,
       HasRotation<EffectSection>,
@@ -988,11 +1017,6 @@ declare global {
      * Causes the effect to play on top of the vision mask
      */
     aboveLighting(inBool?: boolean): this;
-
-    /**
-     * Changes the effect's elevation
-     */
-    elevation(inElevation?: number, inOptions?: ElevationOptions): this;
 
     /**
      * Changes the effect's sortLayer, potentially displaying effects below tiles, above tokens or even weather effects
@@ -1198,6 +1222,8 @@ declare global {
       Section<SoundSection>,
       HasFiles<SoundSection>,
       HasAudio<SoundSection>,
+      HasElevation<SoundSection>,
+      HasLevels<SoundSection>,
       HasName<SoundSection>,
       HasTime<SoundSection>,
       HasMovement<SoundSection>,

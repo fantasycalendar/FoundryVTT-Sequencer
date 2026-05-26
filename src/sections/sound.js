@@ -23,6 +23,8 @@ class SoundSection extends Section {
 		this._loopOptions = false;
 		this._panSound = false;
 		this._extraEndDuration = false;
+		this._levels = null;
+		this._elevation = null;
 	}
 
 	get _target() {
@@ -560,6 +562,8 @@ class SoundSection extends Section {
 	_applyTraits() {
 		Object.assign(this.constructor.prototype, traits.files);
 		Object.assign(this.constructor.prototype, traits.audio);
+		Object.assign(this.constructor.prototype, traits.elevation);
+		Object.assign(this.constructor.prototype, traits.levels);
 		Object.assign(this.constructor.prototype, traits.time);
 		Object.assign(this.constructor.prototype, traits.users);
 		Object.assign(this.constructor.prototype, traits.name);
@@ -775,7 +779,9 @@ class SoundSection extends Section {
 			persist: this._persist,
 			persistOptions: this._persistOptions,
 			panSound: this._panSound,
-			extraEndDuration: this._extraEndDuration
+			extraEndDuration: this._extraEndDuration,
+			levels: this._levels,
+			elevation: this._elevation,
 		};
 
 		for (let override of this._overrides) {

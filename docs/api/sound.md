@@ -398,6 +398,31 @@ Radius in number of feet (or other units) this sound will be played within. The 
 **Note:** Requires `.atLocation()` to be called as well, or the sound will still be global.
 
 
+## On Levels
+
+`.onLevels("levelIdOrName")` or `.onLevels([id1, "Name 2", level])` (a level id, level name, or Level document)
+
+Restricts this sound to one or more scene levels on Foundry v14+. On older Foundry versions this is a no-op.
+
+Without calling this method, the sound's level is inferred automatically from its position against the scene's level elevation ranges, and Foundry's surface-collision check attenuates listeners on other levels (matching how Foundry's own ambient sounds behave). Use this method to override that inference, for example to pin a sound to a specific level regardless of where the source token is.
+
+Pass `null` to clear a previously set override.
+
+See the matching [On Levels](./effect.md#on-levels) section in the effect API for the shared level scoping semantic.
+
+
+## Elevation
+
+`.elevation(N)` or `.elevation(N, { absolute: true })`
+
+Overrides or offsets the sound's Z, which Foundry's positional sound source uses to compute distance attenuation across scene levels.
+
+Options:
+- `absolute: boolean` — when `true`, the value is used as-is. When `false` (the default), it's added to the attached source's or location's elevation.
+
+Without this call, the sound's Z comes from the attached placeable (via `bindElevation`) or the location's elevation. Set explicitly when you need the sound to live at a different Z than its visual source — e.g. a sound attached to a token but logically belonging to a different floor.
+
+
 ## Constrained By Walls
 
 `.constrainedByWalls(inBool)`

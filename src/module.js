@@ -153,7 +153,6 @@ function initializeModule() {
 
   SequencerEffectManager.setup();
   SequencerSoundManager.setup();
-  SequencerAboveUILayer.setup();
 
 	PluginsManager.initialize();
 
