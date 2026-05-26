@@ -554,21 +554,4 @@ export class SequencerAboveUILayer {
 			targetLayer.renderable = targetLayer.children.length > 0;
 		}
 	}
-
-	updateTransform() {
-		if (this.app.stage.sortableChildren && this.app.stage.sortDirty) {
-			this.app.stage.sortChildren();
-		}
-
-		this.app.stage._boundsID++;
-
-		this.app.stage.transform.updateTransform(PIXI.Transform.IDENTITY);
-		this.app.stage.worldAlpha = this.app.stage.alpha;
-
-		for (let child of this.app.stage.children) {
-			if (child.visible) {
-				child.updateTransform();
-			}
-		}
-	}
 }
