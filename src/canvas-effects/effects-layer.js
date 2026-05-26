@@ -490,7 +490,7 @@ export class UIEffectsLayer extends foundry.canvas.layers.InteractionLayer {
 	}
 }
 
-let layer = false;
+let ABOVE_UI_LAYER = false;
 
 export class SequencerAboveUILayer {
 	constructor(name, zIndex = 0.1) {
@@ -526,17 +526,19 @@ export class SequencerAboveUILayer {
 
 	static setup() {
 		if (!game.settings.get("sequencer", "enable-above-ui-screenspace")) return;
-		layer = new this("sequencerUILayerAbove", 10000);
+		ABOVE_UI_LAYER = new this("sequencerUILayerAbove", 10000);
 	}
 
 	static getLayer() {
-		return layer ? layer.app.stage : canvas.sequencerEffectsUILayer;
+		return ABOVE_UI_LAYER ? ABOVE_UI_LAYER.app.stage : canvas.sequencerEffectsUILayer;
 	}
 
 	static addChild(...args) {
-		const layer = this.getLayer();
-		const result = layer.addChild(...args);
-		layer.renderable = layer.children.length > 0;
+		const targetLayer = this.getLayer();
+		const result = targetLayer.addChild(...args);
+		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
+			targetLayer.renderable = targetLayer.children.length > 0;
+		}
 		return result;
 	}
 
@@ -545,14 +547,12 @@ export class SequencerAboveUILayer {
 	}
 
 	static removeContainerByEffect(inEffect) {
-		const layer = this.getLayer();
-		if (!(layer instanceof SequencerAboveUILayer)) return;
-
-		const child = layer.children.find((child) => child === inEffect);
-		if (!child) return;
-		layer.removeChild(child);
-
-		layer.renderable = layer.children.length > 0;
+		const targetLayer = this.getLayer();
+		if (!targetLayer) return;
+		targetLayer.removeChild(inEffect);
+		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
+			targetLayer.renderable = targetLayer.children.length > 0;
+		}
 	}
 
 	updateTransform() {
