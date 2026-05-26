@@ -522,11 +522,12 @@ export class SequencerAboveUILayer {
 		this.app.resizeTo = window;
 		this.app.stage.renderable = false;
 		this.app.stage.sortableChildren = true;
-	}
-
-	static setup() {
-		if (!game.settings.get("sequencer", "enable-above-ui-screenspace")) return;
-		ABOVE_UI_LAYER = new this("sequencerUILayerAbove", 10000);
+		// PIXI's TickerPlugin auto-registers app.render on the shared ticker
+		// when the app is constructed. Undo that so the secondary renderer
+		// only ticks while there are children to draw; addChild / remove
+		// re-register and de-register the callback at the right transitions.
+		PIXI.Ticker.shared.remove(this.app.render, this.app);
+		this._renderTickerActive = false;
 	}
 
 	static getLayer() {
@@ -534,10 +535,21 @@ export class SequencerAboveUILayer {
 	}
 
 	static addChild(...args) {
+		if (!ABOVE_UI_LAYER && game.settings.get("sequencer", "enable-above-ui-screenspace")) {
+			ABOVE_UI_LAYER = new this("sequencerUILayerAbove", 10000);
+		}
 		const targetLayer = this.getLayer();
 		const result = targetLayer.addChild(...args);
 		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
 			targetLayer.renderable = targetLayer.children.length > 0;
+			if (targetLayer.renderable && !ABOVE_UI_LAYER._renderTickerActive) {
+				PIXI.Ticker.shared.add(
+					ABOVE_UI_LAYER.app.render,
+					ABOVE_UI_LAYER.app,
+					PIXI.UPDATE_PRIORITY.LOW
+				);
+				ABOVE_UI_LAYER._renderTickerActive = true;
+			}
 		}
 		return result;
 	}
@@ -552,6 +564,15 @@ export class SequencerAboveUILayer {
 		targetLayer.removeChild(inEffect);
 		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
 			targetLayer.renderable = targetLayer.children.length > 0;
+			if (!targetLayer.renderable && ABOVE_UI_LAYER._renderTickerActive) {
+				// Clear the framebuffer one last time before we stop ticking.
+				ABOVE_UI_LAYER.app.render();
+				PIXI.Ticker.shared.remove(
+					ABOVE_UI_LAYER.app.render,
+					ABOVE_UI_LAYER.app
+				);
+				ABOVE_UI_LAYER._renderTickerActive = false;
+			}
 		}
 	}
 }
