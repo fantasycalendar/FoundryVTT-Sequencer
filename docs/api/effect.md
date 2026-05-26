@@ -862,6 +862,8 @@ For reference, Foundry's built-in sort layers are:
 - `700` tokens
 - `1000` weather
 
+**Note:** `.sortLayer()` only orders effects played in world space (where tokens, tiles, and weather are). It does nothing on `.screenSpace()` or `.screenSpaceAboveUI()` effects. Use `.zIndex()` to layer those against each other.
+
 ## Animate Property
 
 `.animateProperty(target, propertyName, options)`

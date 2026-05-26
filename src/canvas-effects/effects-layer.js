@@ -467,6 +467,11 @@ export class UIEffectsLayer extends foundry.canvas.layers.InteractionLayer {
 		});
 	}
 
+	async _draw(options) {
+		await super._draw(options);
+		this.sortableChildren = true;
+	}
+
 	updateTransform() {
 		if (this.sortableChildren && this.sortDirty) {
 			this.sortChildren();

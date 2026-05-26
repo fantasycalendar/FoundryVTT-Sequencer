@@ -1,5 +1,9 @@
 ## Changelog
 
+# Version 4.1.1
+- *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
+- *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
+
 # Version 4.1.0
 - *Sequencer* - Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)
 - *Effects* - Added `.blendMode()` to effect sections, accepting either a string name (e.g. `"multiply"`, `"screen"`, `"soft-light"`) or the `PIXI.BLEND_MODES` const
