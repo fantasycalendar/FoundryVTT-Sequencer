@@ -69,6 +69,7 @@ export default class EffectSection extends Section {
 		this._isometric = null;
 		this._shapes = [];
 		this._xray = null;
+		this._constrainedByWalls = null;
 		this._playEffect = true;
 	}
 
@@ -1788,10 +1789,11 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 *  Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source
-	 *  of the effect.
+	 *  Masks the effect to the given object, objects, or raw PIXI shape. If no object is given, the effect will be
+	 *  masked to the source of the effect. Raw shapes (PIXI.Polygon, PIXI.Circle, PIXI.Rectangle) are masked in
+	 *  scene coordinates; combine with `Sequencer.Helpers.computeWallPolygon` for wall-aware clipping.
 	 *
-	 * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Region/RegionDocument/Array} inObject
+	 * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Region/RegionDocument/PIXI.Polygon/PIXI.Circle/PIXI.Rectangle/Array} inObject
 	 * @returns {Section}
 	 */
 	mask(inObject) {
@@ -1807,6 +1809,13 @@ export default class EffectSection extends Section {
 			return this;
 		}
 
+		if (inObject instanceof PIXI.Polygon
+			|| inObject instanceof PIXI.Circle
+			|| inObject instanceof PIXI.Rectangle) {
+			this._masks.push({ __shape: canvaslib.serializeShape(inObject) });
+			return this;
+		}
+
 		const validatedObject = this._validateLocation(inObject);
 
 		const isValidObject =
@@ -1819,7 +1828,7 @@ export default class EffectSection extends Section {
 			throw this.sequence._customError(
 				this,
 				"mask",
-				"A foundry object was provided, but only Tokens, Tiles, Drawings, MeasuredTemplates, and Regions may be used to create effect masks"
+				"A foundry object was provided, but only Tokens, Tiles, Drawings, MeasuredTemplates, Regions, or raw PIXI shapes may be used to create effect masks"
 			);
 		}
 
@@ -1842,6 +1851,85 @@ export default class EffectSection extends Section {
 				"inBool must be of type boolean"
 			);
 		this._xray = inBool;
+		return this;
+	}
+
+	/**
+	 * Clips the effect to a wall-bounded sweep from its source position, independent of the
+	 * Walled Templates module. The sweep is a full 360° polygon; pass `radius` to bound it.
+	 * Pass `false` to clear.
+	 *
+	 * @param {boolean|object} [inOptions=true]
+	 * @param {"sight"|"sound"|"move"|"light"} [inOptions.type="sight"]   Collision type
+	 * @param {number|null} [inOptions.radius=null]                      Bounding circle radius in pixels
+	 * @param {{x: number, y: number}|null} [inOptions.origin=null]      Override origin; defaults to source position
+	 * @param {string|foundry.documents.Level|null} [inOptions.level=null]
+	 *        Foundry v14+. The scene level whose walls the sweep should consult. Accepts a
+	 *        level id, level name, or Level document. When omitted, the level is inferred
+	 *        from the attached source, then from `.onLevels()`, then from the effect's
+	 *        elevation extent. Ignored on Foundry v13.
+	 * @returns {EffectSection}
+	 */
+	constrainedByWalls(inOptions = true) {
+		if (inOptions === false || inOptions === null) {
+			this._constrainedByWalls = null;
+			return this;
+		}
+		if (inOptions === true) inOptions = {};
+		if (typeof inOptions !== "object") {
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				"inOptions must be of type object or boolean"
+			);
+		}
+
+		inOptions = foundry.utils.mergeObject({
+			type: "sight",
+			radius: null,
+			origin: null,
+			level: null,
+		}, inOptions);
+
+		const validTypes = ["sight", "sound", "move", "light"];
+		if (!validTypes.includes(inOptions.type)) {
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				`inOptions.type must be one of ${validTypes.join(", ")}`
+			);
+		}
+		if (inOptions.radius !== null && !lib.is_real_number(inOptions.radius)) {
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				"inOptions.radius must be a number or null"
+			);
+		}
+		if (inOptions.origin !== null) {
+			if (typeof inOptions.origin !== "object"
+				|| !lib.is_real_number(inOptions.origin.x)
+				|| !lib.is_real_number(inOptions.origin.y)) {
+				throw this.sequence._customError(
+					this,
+					"constrainedByWalls",
+					"inOptions.origin must be null or { x: number, y: number }"
+				);
+			}
+		}
+		if (inOptions.level !== null) {
+			if (typeof inOptions.level === "object" && typeof inOptions.level?.id === "string") {
+				inOptions.level = inOptions.level.id;
+			} else if (typeof inOptions.level !== "string") {
+				throw this.sequence._customError(
+					this,
+					"constrainedByWalls",
+					"inOptions.level must be null, a level id/name, or a Level document"
+				);
+			}
+		}
+
+		this._constrainedByWalls = inOptions;
 		return this;
 	}
 
@@ -2420,6 +2508,7 @@ export default class EffectSection extends Section {
 			aboveLighting: this._aboveLighting,
 			aboveInterface: this._aboveInterface,
 			xray: this._xray,
+			constrainedByWalls: this._constrainedByWalls,
 
 			// Appearance
 			zIndex: this._zIndex,

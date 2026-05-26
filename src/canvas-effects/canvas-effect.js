@@ -1319,6 +1319,7 @@ export default class CanvasEffect extends PIXI.Container {
 		this._maskContainer = null;
 		this._maskSprite = null;
 		this._stageMasks = [];
+		this._wallMaskGraphics = null;
 		this._timeouts = new Set();
 		this._file = null;
 		this._loopOffset = 0;
@@ -1430,6 +1431,7 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 			this._stageMasks.length = 0;
 		}
+		this._wallMaskGraphics = null;
 
 		this.sprite?.destroy();
 		this.sprite = null;
@@ -2384,11 +2386,30 @@ export default class CanvasEffect extends PIXI.Container {
 	async _setupMasks() {
 		const maskShapes = this.data.shapes.filter((shape) => shape.isMask);
 
-		if (!this.data?.masks?.length && !maskShapes.length) return;
+		if (!this.data?.masks?.length && !maskShapes.length && !this.data?.constrainedByWalls) return;
 
 		const maskFilter = MaskFilter.create();
 
-		for (const uuid of this.data.masks) {
+		if (this.data.constrainedByWalls) {
+			this._setupWallMask(maskFilter);
+		}
+
+		for (const entry of this.data.masks) {
+			if (entry && typeof entry === "object" && entry.__shape) {
+				const rawShape = canvaslib.deserializeShape(entry.__shape);
+				if (!rawShape) continue;
+				const graphics = new PIXI.LegacyGraphics().beginFill().drawShape(rawShape).endFill();
+				graphics.cullable = true;
+				graphics.custom = true;
+				graphics.renderable = false;
+				graphics.uuid = "__rawShape-" + foundry.utils.randomID();
+				canvas.stage.addChild(graphics);
+				this._stageMasks.push(graphics);
+				maskFilter.masks.push(graphics);
+				continue;
+			}
+
+			const uuid = entry;
 			const documentObj = fromUuidSync(uuid);
 
 			if (!documentObj || documentObj.parent.id !== this.data.sceneId) continue;
@@ -2556,6 +2577,131 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		this.sprite.filters.push(maskFilter);
+	}
+
+	/**
+	 * Builds the initial wall-constrained mask graphic and wires hooks that recompute
+	 * the sweep when walls change or when the attached source moves.
+	 *
+	 * @param {MaskFilter} maskFilter
+	 * @private
+	 */
+	_setupWallMask(maskFilter) {
+		const shape = this._computeWallPolygon();
+		if (!shape) return;
+
+		const graphics = new PIXI.LegacyGraphics().beginFill().drawShape(shape).endFill();
+		graphics.cullable = true;
+		graphics.custom = true;
+		graphics.renderable = false;
+		graphics.uuid = "__constrainedByWalls";
+		canvas.stage.addChild(graphics);
+		this._stageMasks.push(graphics);
+		maskFilter.masks.push(graphics);
+		this._wallMaskGraphics = graphics;
+
+		const recompute = () => {
+			if (!this._wallMaskGraphics || this._ended) return;
+			const next = this._computeWallPolygon();
+			if (!next) return;
+			this._wallMaskGraphics.clear().beginFill().drawShape(next).endFill();
+		};
+
+		for (const hook of ["createWall", "updateWall", "deleteWall"]) {
+			hooksManager.addHook(this.uuid, hook, () => {
+				this._setTimeout(recompute, 100);
+			});
+		}
+
+		// Level documents own the edge set the sweep walks, and a Level
+		// edit can move walls between levels or change a level's elevation
+		// (which shifts source-to-level affinity). Recompute on any Level
+		// mutation in this scene.
+		if (CONSTANTS.IS_V14) {
+			for (const hook of ["createLevel", "updateLevel", "deleteLevel"]) {
+				hooksManager.addHook(this.uuid, hook, (level) => {
+					if (level?.parent?.id !== this.data.sceneId) return;
+					this._setTimeout(recompute, 100);
+				});
+			}
+		}
+
+		const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
+		if (attachedToSource) {
+			hooksManager.addHook(this.uuid, "refreshToken", (token) => {
+				if (token?.document?.uuid !== this.data.source) return;
+				recompute();
+			});
+		}
+	}
+
+	/**
+	 * Computes the wall-constrained polygon for this effect from the source position.
+	 *
+	 * @returns {PIXI.Polygon|null}
+	 * @private
+	 */
+	_computeWallPolygon() {
+		const cfg = this.data.constrainedByWalls;
+		if (!cfg) return null;
+
+		const origin = cfg.origin ?? this.sourcePosition;
+		if (!origin || !lib.is_real_number(origin.x) || !lib.is_real_number(origin.y)) return null;
+
+		const elevation = lib.is_real_number(origin.elevation)
+			? origin.elevation
+			: canvaslib.get_object_elevation(this.source ?? this.sourceDocument ?? {});
+
+		return canvaslib.computeWallPolygon({ ...origin, elevation }, {
+			type: cfg.type,
+			radius: cfg.radius,
+			level: cfg.level ?? this._resolveWallSweepLevel(),
+		});
+	}
+
+	/**
+	 * Resolves which scene Level the wall sweep should consult on Foundry v14.
+	 * Returns null on v13 (where Levels do not exist) and when no clear
+	 * affinity is available, in which case the polygon backend falls back to
+	 * `canvas.level` (the currently viewed level).
+	 *
+	 * Priority: an attached source's `document.level`, then a single-entry
+	 * `.onLevels()` selection, then the lowest-elevation Level whose vertical
+	 * range overlaps the effect.
+	 *
+	 * @returns {foundry.documents.Level|null}
+	 * @private
+	 */
+	_resolveWallSweepLevel() {
+		if (!CONSTANTS.IS_V14) return null;
+		const sceneLevels = canvas.scene?.levels;
+		if (!sceneLevels?.size) return null;
+
+		const sourceDoc = this.sourceDocument;
+		const attachedLevelId = this.data.attachTo?.active ? sourceDoc?.level : null;
+		if (attachedLevelId) {
+			const fromSource = sceneLevels.get(attachedLevelId);
+			if (fromSource) return fromSource;
+		}
+
+		if (this.data.levels?.length === 1) {
+			const entry = this.data.levels[0];
+			const fromSection = sceneLevels.get(entry) ?? sceneLevels.getName?.(entry);
+			if (fromSection) return fromSection;
+		}
+
+		const [zMin, zMax] = this._getEffectiveVerticalExtent();
+		let best = null;
+		for (const level of sceneLevels) {
+			const ext = level.elevation;
+			if (!ext) continue;
+			if (intervalsOverlap(zMin, zMax, ext.bottom, ext.top)) {
+				if (!best || (ext.bottom ?? -Infinity) < (best.elevation.bottom ?? -Infinity)) {
+					best = level;
+				}
+			}
+		}
+		return best;
 	}
 
 	/**

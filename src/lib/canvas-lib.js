@@ -88,6 +88,111 @@ export function createShape(shape) {
   return graphic;
 }
 
+/**
+ * Serialize a raw PIXI shape into a plain-object envelope that survives JSON cloning.
+ *
+ * @param {PIXI.Polygon|PIXI.Circle|PIXI.Rectangle} shape
+ * @returns {{type: string, [key: string]: any}}
+ */
+export function serializeShape(shape) {
+	if (shape instanceof PIXI.Polygon) {
+		return { type: "Polygon", points: Array.from(shape.points) };
+	}
+	if (shape instanceof PIXI.Circle) {
+		return { type: "Circle", x: shape.x, y: shape.y, radius: shape.radius };
+	}
+	if (shape instanceof PIXI.Rectangle) {
+		return { type: "Rectangle", x: shape.x, y: shape.y, width: shape.width, height: shape.height };
+	}
+	throw new Error("serializeShape: unsupported shape type");
+}
+
+/**
+ * Rebuild a PIXI shape from a serialized envelope produced by `serializeShape`.
+ *
+ * @param {{type: string, [key: string]: any}} data
+ * @returns {PIXI.Polygon|PIXI.Circle|PIXI.Rectangle|null}
+ */
+export function deserializeShape(data) {
+	if (!data || typeof data !== "object") return null;
+	switch (data.type) {
+		case "Polygon":
+			return new PIXI.Polygon(data.points ?? []);
+		case "Circle":
+			return new PIXI.Circle(data.x ?? 0, data.y ?? 0, data.radius ?? 0);
+		case "Rectangle":
+			return new PIXI.Rectangle(data.x ?? 0, data.y ?? 0, data.width ?? 0, data.height ?? 0);
+	}
+	return null;
+}
+
+/**
+ * Computes a wall-constrained polygon sweep from an origin point, using Foundry's
+ * native ClockwiseSweepPolygon. Useful for masking effects to line of sight, sound,
+ * or movement reachability, independent of any third-party module.
+ *
+ * @param {{x: number, y: number, elevation?: number}} origin
+ * @param {object} [options]
+ * @param {"sight"|"sound"|"move"|"light"} [options.type="sight"]   Collision type
+ * @param {number|null} [options.radius=null]                       Bounding circle radius in pixels
+ * @param {{angle: number, rotation: number, radius?: number}} [options.cone=null]
+ *        Optional limited-angle cone. `angle` and `rotation` are in degrees; `radius` defaults
+ *        to the outer `radius` option, or the scene's maxR if neither is set. When `cone` is
+ *        provided, the sweep itself is configured with the matching angle/rotation/radius so
+ *        the underlying ClockwiseSweepPolygon builds a single, well-formed limited-angle sweep.
+ * @param {foundry.documents.Level|string|null} [options.level=null]
+ *        On Foundry v14+, the scene Level whose edge set the sweep should consult. Accepts
+ *        a Level document or its id (resolved against the current scene). When omitted,
+ *        Foundry defaults to `canvas.level`, the currently viewed level, which is wrong for
+ *        sources on a different floor than the viewer. Ignored on Foundry v13.
+ * @returns {PIXI.Polygon|null}
+ */
+export function computeWallPolygon(origin, options = {}) {
+	if (!origin || typeof origin.x !== "number" || typeof origin.y !== "number") {
+		throw new Error("computeWallPolygon: origin must be { x: number, y: number }");
+	}
+	const {
+		type = "sight",
+		radius = null,
+		cone = null,
+		level = null,
+	} = options;
+
+	const validTypes = ["sight", "sound", "move", "light"];
+	if (!validTypes.includes(type)) {
+		throw new Error(`computeWallPolygon: type must be one of ${validTypes.join(", ")}`);
+	}
+
+	const config = { type };
+
+	if (cone) {
+		config.angle = cone.angle;
+		config.rotation = cone.rotation;
+		config.radius = cone.radius ?? radius ?? canvas.dimensions.maxR;
+	} else if (typeof radius === "number") {
+		config.radius = radius;
+	}
+
+	if (level) {
+		let resolved = level;
+		if (typeof level === "string") {
+			const sceneLevels = canvas.scene?.levels;
+			resolved = sceneLevels?.get(level) ?? sceneLevels?.getName?.(level) ?? null;
+		}
+		if (resolved) config.level = resolved;
+	}
+
+	const PolygonBackend = CONFIG.Canvas.polygonBackends[type];
+	if (!PolygonBackend) {
+		throw new Error(`computeWallPolygon: no polygon backend registered for type "${type}"`);
+	}
+
+	return PolygonBackend.create(
+		{ x: origin.x, y: origin.y, elevation: origin.elevation ?? 0 },
+		config
+	);
+}
+
 export function calculate_missed_position(source, target, twister) {
   const sourcePosition = get_object_position(source);
   const sourceDimensions = get_object_dimensions(source, true);

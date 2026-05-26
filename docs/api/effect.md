@@ -1205,10 +1205,36 @@ Causes the effect to ignore vision-based masking.
 
 ## Mask
 
-`.mask()` or `.mask(token)` or `.mask([list, of, objects])`
+`.mask()` or `.mask(token)` or `.mask([list, of, objects])` or `.mask(pixiShape)`
 
 Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
 
+A raw `PIXI.Polygon`, `PIXI.Circle`, or `PIXI.Rectangle` may also be passed, in scene coordinates. Combine with `Sequencer.Helpers.computeWallPolygon()` to clip an effect to a wall-bounded line of sight without attaching it to a placeable.
+
+## Constrained By Walls
+
+`.constrainedByWalls()` or `.constrainedByWalls(false)` or `.constrainedByWalls({ type, radius, origin, level })`
+
+Clips the effect to a wall-bounded sweep from its source position, using Foundry's native polygon sweep. Independent of the Walled Templates module - works on any scene that has walls. The sweep is a full 360°, suitable for explosions, auras, and beams alike; walls in front of the source cut the visible effect, walls behind don't affect anything since nothing renders there anyway.
+
+Options:
+
+- `type` - one of `"sight"`, `"sound"`, `"move"`, `"light"`. Defaults to `"sight"`.
+- `radius` - optional bounding circle in pixels. Defaults to no bound (sweeps to the scene edge).
+- `origin` - optional `{ x, y }` override. Defaults to the effect's source position.
+- `level` - Foundry v14+ only. A level id, level name, or Level document whose walls the sweep should consult. Defaults to the source's own level (resolved from an attached placeable, then from `.onLevels()`, then from the effect's elevation extent), so an effect on a token in the basement still clips against the basement's walls even while you're viewing the rooftop. Ignored on Foundry v13.
+
+When the effect is attached to a token, the sweep is recomputed each refresh tick as the token moves. When walls or levels are created, updated, or deleted, the sweep is recomputed on a short debounce.
+
+For one-off custom shapes outside the section API, use the standalone helper:
+
+```js
+const polygon = Sequencer.Helpers.computeWallPolygon(
+  { x: token.center.x, y: token.center.y },
+  { type: "sight", radius: 600 }
+);
+new Sequence().effect().file("...").atLocation(token).mask(polygon).play();
+```
 
 ## Tie To Documents
 

@@ -2,6 +2,7 @@
 
 # Version 4.2.0
 - *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
+- *Sequencer* - Fixed persistent effects and sounds waiting the full scene-load delay before reappearing after a level switch on Foundry v14
 - *Effects* - Added `.onLevels()` to limit an effect to specific scene levels on Foundry v14
 - *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
 - *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
@@ -13,6 +14,8 @@
 # Version 4.1.0
 - *Sequencer* - Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)
 - *Effects* - Added `.blendMode()` to effect sections, accepting either a string name (e.g. `"multiply"`, `"screen"`, `"soft-light"`) or the `PIXI.BLEND_MODES` const
+- *Effects* - Added `.constrainedByWalls()` for clipping effects to wall-bounded line of sight, independent of the Walled Templates module
+- *Effects* - Added `Sequencer.Helpers.computeWallPolygon()` and extended `.mask()` to accept raw `PIXI.Polygon`, `PIXI.Circle`, or `PIXI.Rectangle` shapes
 - *Effects* - Fixed effects attached to or targeting a Region rendering below tiles that should sit beneath them
 - *Effects* - Fixed `.mask()` rejecting Regions even though Regions were already supported by the effect mask renderer
 - *Effects* - Fixed .atLocation(tile) placing effects at the tile's top-left instead of centering them on the tile (thanks aljames-arctic on GitHub)

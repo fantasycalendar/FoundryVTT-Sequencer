@@ -19,6 +19,7 @@ import {
 } from "./modules/sequencer-interaction-manager.js";
 import Section from "./sections/section.js";
 import * as lib from "./lib/lib.js";
+import * as canvaslib from "./lib/canvas-lib.js";
 import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
@@ -50,6 +51,7 @@ function showChangelog() {
 let moduleValid = false;
 let moduleReady = false;
 let canvasReady = false;
+let lastSceneId = null;
 
 Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
@@ -101,9 +103,13 @@ const setupModule = foundry.utils.debounce(() => {
 }, 25);
 
 Hooks.on("canvasReady", () => {
-  setTimeout(() => {
-    setupModule();
-  }, 450);
+  // Level switches within the same scene re-fire canvasReady with all
+  // assets already cached, so the long delay is only needed for actual
+  // scene loads.
+  const currentSceneId = canvas.scene?.id ?? null;
+  const isSceneSwitch = currentSceneId !== lastSceneId;
+  lastSceneId = currentSceneId;
+  setTimeout(setupModule, isSceneSwitch ? 450 : 100);
 });
 
 Hooks.on("refreshToken", setupModule);
@@ -140,6 +146,7 @@ function initializeModule() {
       random_array_element: lib.random_array_element,
       random_object_element: lib.random_object_element,
       make_array_unique: lib.make_array_unique,
+      computeWallPolygon: canvaslib.computeWallPolygon,
     },
 	  Crosshair: Crosshair,
     showChangelog: showChangelog,
