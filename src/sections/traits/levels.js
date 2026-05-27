@@ -6,7 +6,8 @@ export default {
 	/**
 	 * Restricts this section to one or more scene levels on Foundry v14+.
 	 * Accepts a level id, level name, Level document, or an array mixing
-	 * any of those. Pass null to clear. No-op on older Foundry versions.
+	 * any of those. Pass null to clear. Doesn't do anything on older
+	 * Foundry versions.
 	 *
 	 * Strings (ids or names) are resolved against the scene the section
 	 * is playing in, not the scene that was viewed when the section was

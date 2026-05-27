@@ -7,6 +7,7 @@
 - *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
 - *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
 - *Effects* - Fixed effects showing across every scene level on Foundry v14
+- *Effects* - Tweaked `.blendMode()` to create a warning when using `"overlay"`, `"soft-light"`, `"hard-light"`, `"color-dodge"`, `"color-burn"`, `"darken"`, `"lighten"`, `"difference"`, `"exclusion"`, `"hue"`, `"saturation"`, `"color"`, or `"luminosity"`; as these modes are not available in Foundry's renderer
 - *Sounds* - Added `.elevation()` to override or offset a positional sound's Z, used by the level-distance attenuation
 - *Sounds* - Added `.onLevels()` to limit a sound to specific scene levels on Foundry v14
 - *Sounds* - Fixed sounds played at a position not attenuating across scene levels on Foundry v14

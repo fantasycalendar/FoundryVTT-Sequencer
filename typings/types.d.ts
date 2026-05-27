@@ -272,7 +272,8 @@ interface HasLevels<T> {
   /**
    * Restricts this section to one or more scene levels on Foundry v14+.
    * Accepts a level id, level name, Level document, or an array mixing
-   * any of those. Pass null to clear. No-op on older Foundry versions.
+   * any of those. Pass null to clear. Doesn't do anything on older
+   * Foundry versions.
    */
   onLevels(inLevels: LevelReference | LevelReference[] | null): T;
 }

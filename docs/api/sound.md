@@ -402,7 +402,7 @@ Radius in number of feet (or other units) this sound will be played within. The 
 
 `.onLevels("levelIdOrName")` or `.onLevels([id1, "Name 2", level])` (a level id, level name, or Level document)
 
-Restricts this sound to one or more scene levels on Foundry v14+. On older Foundry versions this is a no-op.
+Restricts this sound to one or more scene levels on Foundry v14+. On older Foundry versions this doesn't do anything.
 
 Without calling this method, the sound's level is inferred automatically from its position against the scene's level elevation ranges, and Foundry's surface-collision check attenuates listeners on other levels (matching how Foundry's own ambient sounds behave). Use this method to override that inference, for example to pin a sound to a specific level regardless of where the source token is.
 

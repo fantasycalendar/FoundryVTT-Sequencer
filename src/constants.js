@@ -78,13 +78,13 @@ const CONSTANTS = {
 	},
 
 	/**
-	 * Set of blend mode numeric values that PIXI implements as "advanced" blends
-	 * (require sampling the destination/backdrop). On a Mesh-based renderer
-	 * these only render correctly when the object is rendered into its own
-	 * isolated framebuffer. We force isolation by injecting a no-op
-	 * ColorMatrixFilter when one of these is requested.
+	 * Blend modes that PIXI v7 exposes by name but does not actually implement.
+	 * Their entries in PIXI's WebGL state table (mapWebGLBlendModesToPixi) are
+	 * aliased to the same [gl.ONE, gl.ONE_MINUS_SRC_ALPHA] pair as NORMAL, so
+	 * the GPU composites them as normal blending. Listed here so the blendMode
+	 * trait can warn the user when one is requested.
 	 */
-	ADVANCED_BLEND_MODES: new Set([
+	UNSUPPORTED_BLEND_MODES: new Set([
 		4,  // overlay
 		5,  // darken
 		6,  // lighten

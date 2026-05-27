@@ -1,5 +1,15 @@
-import { is_real_number } from "../../lib/lib.js";
+import { is_real_number, throttled_custom_warning } from "../../lib/lib.js";
 import CONSTANTS from "../../constants.js";
+
+/**
+ * Reverse lookup from numeric blend mode value to the canonical name used in
+ * CONSTANTS.BLEND_MODES. Built once on module load.
+ *
+ * @type {Map<number, string>}
+ */
+const BLEND_MODE_NAMES = new Map(
+	Object.entries(CONSTANTS.BLEND_MODES).map(([name, value]) => [value, name])
+);
 
 /**
  * Normalize a given blend mode name into the PIXI lookup key.
@@ -66,16 +76,16 @@ export default {
 	 * Accepts either a string name (case-insensitive, hyphens/underscores/spaces
 	 * tolerated) or a numeric PIXI.BLEND_MODES constant.
 	 *
-	 * Standard modes such as "normal", "add", "multiply", "screen", "subtract",
-	 * and "erase" render natively. "Advanced" modes (overlay, soft-light,
-	 * hard-light, color-dodge, color-burn, darken, lighten, difference,
-	 * exclusion, hue, saturation, color, luminosity) require the effect to be
-	 * rendered into an isolated framebuffer; this is handled automatically by
-	 * injecting a no-op filter at render time when needed.
+	 * "normal", "add", "multiply", "screen", "subtract", and "erase" render
+	 * correctly on the GPU's blend unit. The "advanced" modes (overlay,
+	 * soft-light, hard-light, color-dodge, color-burn, darken, lighten,
+	 * difference, exclusion, hue, saturation, color, luminosity) are exposed
+	 * by name in PIXI v7 but are not implemented by the renderer; requesting
+	 * them logs a one-time warning and falls back to normal blending.
 	 *
 	 * @example
 	 *   .blendMode("multiply")
-	 *   .blendMode("soft-light")
+	 *   .blendMode("add")
 	 *   .blendMode(PIXI.BLEND_MODES.SCREEN)
 	 *
 	 * @param {number|string} mode
@@ -96,6 +106,13 @@ export default {
 				this,
 				"blendMode",
 				`unknown blend mode "${mode}". Valid modes are: ${valid}`
+			);
+		}
+		if (CONSTANTS.UNSUPPORTED_BLEND_MODES.has(resolved)) {
+			const name = BLEND_MODE_NAMES.get(resolved) ?? String(mode);
+			throttled_custom_warning(
+				"Sequencer",
+				`Effect | .blendMode("${name}") is not supported by PIXI v7 and will render as normal blending. Supported modes: normal, add, multiply, screen, subtract, erase.`
 			);
 		}
 		this._blendMode = resolved;

@@ -889,7 +889,7 @@ For reference, Foundry's built-in sort layers are:
 
 `.onLevels("levelIdOrName")` or `.onLevels([id1, "Name 2", level])` (a level id, level name, or Level document)
 
-Restricts this effect to one or more scene levels on Foundry v14+. On older Foundry versions this is a no-op.
+Restricts this effect to one or more scene levels on Foundry v14+. On older Foundry versions this doesn't do anything.
 
 **Automatic level behavior (no `.onLevels()` call required):** an effect's visible levels are derived automatically from its vertical extent against the scene's level elevation ranges.
 
