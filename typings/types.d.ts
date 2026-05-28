@@ -276,6 +276,15 @@ interface HasLevels<T> {
    * Foundry versions.
    */
   onLevels(inLevels: LevelReference | LevelReference[] | null): T;
+
+  /**
+   * Opts the section out of Foundry's culling-based visibility on
+   * Foundry v14+. By default an effect whose source token is hidden by
+   * a culling Region surface, or whose location sits above or below
+   * such a surface, is hidden from the viewer too. Calling this method
+   * keeps the effect visible regardless.
+   */
+  ignoreLevelCulling(inBool?: boolean): T;
 }
 
 interface HasUsers<T> {
@@ -799,6 +808,7 @@ declare global {
 
   type ElevationOptions = {
     absolute?: boolean;
+    topInclusive?: boolean;
   };
 
   /**

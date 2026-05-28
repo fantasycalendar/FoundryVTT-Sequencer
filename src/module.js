@@ -103,9 +103,6 @@ const setupModule = foundry.utils.debounce(() => {
 }, 25);
 
 Hooks.on("canvasReady", () => {
-  // Level switches within the same scene re-fire canvasReady with all
-  // assets already cached, so the long delay is only needed for actual
-  // scene loads.
   const currentSceneId = canvas.scene?.id ?? null;
   const isSceneSwitch = currentSceneId !== lastSceneId;
   lastSceneId = currentSceneId;

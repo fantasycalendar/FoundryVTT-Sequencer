@@ -53,6 +53,7 @@ export default class EffectSection extends Section {
 		this._elevation = null;
 		this._sortLayer = 800;
 		this._levels = null;
+		this._ignoreLevelCulling = false;
 		this._masks = [];
 		this._tiedDocuments = [];
 		this._selfMask = false;
@@ -2157,20 +2158,32 @@ export default class EffectSection extends Section {
 
 	if (this._copySprite && !this._file) {
 
+		const ringEnabled = this._copySprite.object instanceof TokenDocument
+			&& this._copySprite.object.ring?.enabled;
+
+		if (!ringEnabled) {
+			this._file = this._copySprite.object?.texture?.src ?? "";
+		}
+
 		if (this._source === null) {
 			this._source = this._validateLocation(this._copySprite.object);
 		}
 
 		if (this._size === null) {
-			const size = canvaslib.get_object_dimensions(this._copySprite.object);
+			const placeable = this._copySprite.object.object ?? null;
+			const meshWidth = placeable?.mesh?.width;
+			const meshHeight = placeable?.mesh?.height;
+			const hasMeshSize = Number.isFinite(meshWidth) && meshWidth > 0
+				&& Number.isFinite(meshHeight) && meshHeight > 0;
+
+			const fallback = canvaslib.get_object_dimensions(this._copySprite.object);
 			this._size = {
-				width: size?.width ?? canvas.grid.size,
-				height: size?.height ?? canvas.grid.size,
+				width: hasMeshSize ? meshWidth : (fallback?.width ?? canvas.grid.size),
+				height: hasMeshSize ? meshHeight : (fallback?.height ?? canvas.grid.size),
 				gridUnits: false,
 			};
 
-			// Account for token size difference compared to final rendered texture dimensions
-			if (this._copySprite.object instanceof TokenDocument && this._copySprite.object.ring?.enabled) {
+			if (ringEnabled) {
 				const tokenSize = this._copySprite.object.getSize();
 				this._copySprite.options.offsetX = (tokenSize.width - this._size.width) / 2;
 				this._copySprite.options.offsetY = (tokenSize.height - this._size.height) / 2;
@@ -2253,7 +2266,7 @@ export default class EffectSection extends Section {
 		return;
 	}
 
-	if (this._copySprite) {
+	if (this._copySprite && !this._file) {
 		return;
 	}
 
@@ -2353,7 +2366,7 @@ export default class EffectSection extends Section {
 	let forcedIndex = null;
 	let customRange = null;
 
-	if (!this._copySprite) {
+	if (!this._copySprite || this._file) {
 		const fileData =
 			this._file && this._playEffect
 				? await this._determineFile(this._file)
@@ -2505,6 +2518,7 @@ export default class EffectSection extends Section {
 			elevation: this._elevation,
 			sortLayer: this._sortLayer,
 			levels: this._levels,
+			ignoreLevelCulling: this._ignoreLevelCulling,
 			aboveLighting: this._aboveLighting,
 			aboveInterface: this._aboveInterface,
 			xray: this._xray,

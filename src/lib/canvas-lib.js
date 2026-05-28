@@ -135,11 +135,6 @@ export function deserializeShape(data) {
  * @param {object} [options]
  * @param {"sight"|"sound"|"move"|"light"} [options.type="sight"]   Collision type
  * @param {number|null} [options.radius=null]                       Bounding circle radius in pixels
- * @param {{angle: number, rotation: number, radius?: number}} [options.cone=null]
- *        Optional limited-angle cone. `angle` and `rotation` are in degrees; `radius` defaults
- *        to the outer `radius` option, or the scene's maxR if neither is set. When `cone` is
- *        provided, the sweep itself is configured with the matching angle/rotation/radius so
- *        the underlying ClockwiseSweepPolygon builds a single, well-formed limited-angle sweep.
  * @param {foundry.documents.Level|string|null} [options.level=null]
  *        On Foundry v14+, the scene Level whose edge set the sweep should consult. Accepts
  *        a Level document or its id (resolved against the current scene). When omitted,
@@ -154,7 +149,6 @@ export function computeWallPolygon(origin, options = {}) {
 	const {
 		type = "sight",
 		radius = null,
-		cone = null,
 		level = null,
 	} = options;
 
@@ -165,11 +159,7 @@ export function computeWallPolygon(origin, options = {}) {
 
 	const config = { type };
 
-	if (cone) {
-		config.angle = cone.angle;
-		config.rotation = cone.rotation;
-		config.radius = cone.radius ?? radius ?? canvas.dimensions.maxR;
-	} else if (typeof radius === "number") {
+	if (typeof radius === "number") {
 		config.radius = radius;
 	}
 
@@ -911,12 +901,13 @@ export function get_object_elevation(inObject) {
 }
 
 /**
- * Vertical [zMin, zMax] of a placeable in scene elevation units. Tokens
- * contribute depth, Regions their elevation range, points a zero-width
- * interval; null when there's no elevation field.
+ * Vertical extent of a placeable as `[bottom, top, topInclusive]` in
+ * scene elevation units. Regions contribute their elevation range and
+ * `topInclusive` flag, Tokens their depth, anything else returns top
+ * equal to bottom. Returns null when there's no elevation field.
  *
  * @param {PlaceableObject|foundry.abstract.Document|null|undefined} inObject
- * @returns {[number, number]|null}
+ * @returns {[number, number, boolean]|null}
  */
 export function get_object_vertical_extent(inObject) {
   const doc = inObject?.document ?? inObject;
@@ -927,17 +918,17 @@ export function get_object_vertical_extent(inObject) {
   if (elevation && typeof elevation === "object") {
     const bottom = elevation.bottom ?? -Infinity;
     const top = elevation.top ?? Infinity;
-    return [bottom, top];
+    return [bottom, top, !!elevation.topInclusive];
   }
 
   // Token: feet + (depth × grid.distance). Matches v14 token.mjs.
   if (typeof elevation === "number" && typeof doc.depth === "number") {
     const gridDistance = doc.parent?.grid?.distance ?? canvas?.scene?.grid?.distance ?? 1;
-    return [elevation, elevation + (doc.depth * gridDistance)];
+    return [elevation, elevation + (doc.depth * gridDistance), false];
   }
 
   if (typeof elevation === "number") {
-    return [elevation, elevation];
+    return [elevation, elevation, false];
   }
 
   return null;

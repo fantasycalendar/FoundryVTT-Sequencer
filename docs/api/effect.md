@@ -850,12 +850,13 @@ Sets the z-index of the effect, breaking ties between effects that share the sam
 
 Sets the effect's elevation. Pass a single number for a point, or a `[bottom, top]` array for an elevation range.
 
-The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels renders on each of them. When you switch the viewed level, a range effect re-anchors its rendered position to that level's floor so it stays above the level's background texture instead of being obscured.
+The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels renders on each of them. The effect's render position is intrinsic to the range and the scene's level geometry — it sorts above the floor texture of every level its top reaches into, and the sort doesn't shift when you switch the viewed level.
 
-A range whose top sits exactly on a level's floor (e.g. `[0, 30]` against a level starting at `30`) is treated as just below that level rather than touching its interior, matching how Foundry handles tall tokens.
+A range whose top sits exactly on a level's floor (e.g. `[0, 30]` against a level starting at `30`) is treated as just below that level rather than touching its interior, matching how Foundry handles tall tokens. Pass `topInclusive: true` to switch this, applying the same flag on Foundry Regions: the top elevation is then part of the range and the effect counts as part of the level above.
 
 Options:
 - `absolute: boolean` — when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
+- `topInclusive: boolean` — range form only. When `true`, the top value is part of the range, matching Foundry Region `elevation.topInclusive`. By default an effect whose top equals the next level's bottom sits just below that level rather than reaching into it.
 
 Examples:
 ```js
@@ -863,6 +864,24 @@ Examples:
 .elevation(5, { absolute: true })          // point at exactly elevation 5
 .elevation([10, 20], { absolute: true })   // range from 10 to 20
 .elevation([0, 5])                         // range spanning 5 units above the source
+.elevation([0, 20], { topInclusive: true }) // range whose top includes the level starting at 20
+```
+
+## Ignore Level Culling
+
+`.ignoreLevelCulling()` or `.ignoreLevelCulling(false)`
+
+Opts the effect out of Foundry's culling-based visibility on Foundry v14+.
+
+By default an effect attached to a token follows the token: when Foundry hides the token because a culling Region surface stands between the viewer and the token's level, the effect hides too. An unattached effect whose location sits above or below a culling Region surface gets the same treatment. This is the right call for things like fireballs on roofs that shouldn't bleed through floors, and the wrong call for things like waypoints or labels that should stay readable from anywhere.
+
+Calling `.ignoreLevelCulling()` keeps the effect visible regardless of culling, so long as it would otherwise pass the level membership and cross-visibility checks. Pass `false` to undo a previous opt-out.
+
+Examples:
+```js
+.ignoreLevelCulling()                     // ignore culling surfaces
+.ignoreLevelCulling(true)                 // same as above
+.ignoreLevelCulling(false)                // restore the default
 ```
 
 ## Sort Layer

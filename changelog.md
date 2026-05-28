@@ -2,11 +2,14 @@
 
 # Version 4.2.0
 - *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
-- *Sequencer* - Fixed persistent effects and sounds waiting the full scene-load delay before reappearing after a level switch on Foundry v14
 - *Effects* - Added `.onLevels()` to limit an effect to specific scene levels on Foundry v14
 - *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
+- *Effects* - Added a `topInclusive` option to `.elevation([bottom, top])` that mirrors the same property on Foundry Regions, including the top boundary in the range so the effect counts as part of the level above
+- *Effects* - Added `.ignoreLevelCulling()` to opt an effect out of being hidden by culling surfaces on Foundry v14, such as higher elevation level backgrounds
 - *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
 - *Effects* - Fixed effects showing across every scene level on Foundry v14
+- *Effects* - Fixed `.copySprite()` no longer animating when used on animated webm tokens, and ignoring the token's Scale setting and copying at the grid footprint size instead of the visible size
+- *Effects* - Fixed `.filter("ColorMatrix", ...)` breaking when any of `hue`, `brightness`, `contrast`, or `saturate` was given `null` or `undefined`
 - *Effects* - Tweaked `.blendMode()` to create a warning when using `"overlay"`, `"soft-light"`, `"hard-light"`, `"color-dodge"`, `"color-burn"`, `"darken"`, `"lighten"`, `"difference"`, `"exclusion"`, `"hue"`, `"saturation"`, `"color"`, or `"luminosity"`; as these modes are not available in Foundry's renderer
 - *Sounds* - Added `.elevation()` to override or offset a positional sound's Z, used by the level-distance attenuation
 - *Sounds* - Added `.onLevels()` to limit a sound to specific scene levels on Foundry v14

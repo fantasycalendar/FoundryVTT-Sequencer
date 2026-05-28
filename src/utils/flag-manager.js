@@ -65,15 +65,13 @@ const flagManager = {
 	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
 	 *
 	 * @param inDocument
-	 * @param databaseFlags
 	 * @returns {array}
 	 */
-	getEffectFlags(inDocument, databaseFlags=null) {
+	getEffectFlags(inDocument) {
 
 		if(!inDocument?.uuid) return [];
 
-		let allEffects = databaseFlags ?? this.getDatabaseFlags().effects;
-		let effects = allEffects[inDocument.uuid] ?? []
+		let effects = this.getDatabaseFlags().effects[inDocument.uuid] ?? []
 
 		if (!effects?.length) return [];
 
@@ -276,6 +274,15 @@ const flagManager = {
 				}
 				delete effectData.noLoop;
 			}
+			return effectData;
+		},
+
+		"4.2.0": (inDocument, effectData) => {
+			// Effects saved before 4.2.0 predate the culling-surface check
+			// added in `_isOnViewedLevel` and the `sightRefresh` handler.
+			// Stamp them so they keep their pre-upgrade rendering and don't
+			// suddenly disappear on a level the viewer can see across.
+			effectData.ignoreLevelCulling = true;
 			return effectData;
 		}
 	},
@@ -517,18 +524,16 @@ const flagManager = {
 	soundMigrations: {},
 
 	/**
-	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
+	 * Sanitizes the sound data, accounting for changes to the structure in previous versions
 	 *
 	 * @param inDocument
-	 * @param databaseFlags
 	 * @returns {array}
 	 */
-	getSoundFlags(inDocument, databaseFlags=null) {
+	getSoundFlags(inDocument) {
 
 		if(!inDocument?.uuid) return [];
 
-		let allSounds = databaseFlags ?? this.getDatabaseFlags().sounds;
-		let sounds = allSounds[inDocument.uuid] ?? []
+		let sounds = this.getDatabaseFlags().sounds[inDocument.uuid] ?? []
 
 		if (!sounds?.length) return [];
 

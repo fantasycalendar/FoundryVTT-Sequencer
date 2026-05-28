@@ -99,16 +99,86 @@ const SyncGroups = {
 };
 
 /**
- * Overlap test for two vertical intervals. Half-open at the tops when both
- * have width, inclusive when either side is a point.
+ * Whether the document shows on the viewed level, including via
+ * cross-visibility. Foundry's `Token.includedInLevel` already follows
+ * cross-visibility, but the generic `CanvasDocument.includedInLevel`
+ * used by Region, Tile, Drawing, etc. does not, so we walk the viewed
+ * level's `visibility.levels` against the document's level set ourselves.
+ *
+ * @param {foundry.abstract.Document|null|undefined} doc
+ * @param {foundry.documents.Level|null|undefined} viewedLevel
+ * @returns {boolean}
+ */
+function isDocOnViewedLevel(doc, viewedLevel) {
+	if (!doc || !viewedLevel) return false;
+	if (doc.includedInLevel?.(viewedLevel.id) === true) return true;
+	const cross = viewedLevel.visibility?.levels;
+	if (!cross?.size) return false;
+	if (doc.levels?.size) {
+		for (const id of doc.levels) {
+			if (cross.has(id)) return true;
+		}
+	} else if (typeof doc.level === "string") {
+		if (cross.has(doc.level)) return true;
+	}
+	return false;
+}
+
+/**
+ * Whether the given scene position is hidden from the viewed level by a
+ * `defineSurface` Region with `culling: true`. Mirrors what Foundry's
+ * `Token#testCulled` does, generalised to an arbitrary `(x, y)` and
+ * elevation range.
+ *
+ * @param {foundry.documents.Scene} scene
+ * @param {foundry.documents.Level} viewedLevel
+ * @param {number} x
+ * @param {number} y
+ * @param {number} zMin
+ * @param {number} zMax
+ * @returns {boolean}
+ */
+function isPositionCulled(scene, viewedLevel, x, y, zMin, zMax) {
+	const { bottom, top } = viewedLevel.elevation;
+	let lo, hi;
+	if (zMax < bottom) {
+		lo = Math.nextUp(zMax);
+		hi = bottom;
+	} else if (zMin >= top) {
+		lo = top;
+		hi = zMin;
+	} else {
+		return false;
+	}
+	const probe = { x, y };
+	for (const surface of scene.getSurfaces({ culling: true, level: viewedLevel })) {
+		if (surface.elevation > hi) break;
+		if (surface.elevation < lo) continue;
+		if (surface.region.polygonTree.testPoint(probe)) return true;
+	}
+	return false;
+}
+
+/**
+ * Does an effect's vertical extent `[a0, a1]` overlap a Level's
+ * elevation range `[b0, b1]`? Bottoms always count as part of their
+ * interval. The effect's top counts when `aTopInclusive` is set,
+ * matching Foundry Region `elevation.topInclusive`. The level's top is
+ * never inclusive: adjacent levels share that boundary, and it belongs
+ * to the upper level.
  *
  * @returns {boolean}
  */
-function intervalsOverlap(a0, a1, b0, b1) {
-	const bothRanges = (a0 < a1) && (b0 < b1);
+function intervalsOverlap(a0, a1, b0, b1, aTopInclusive = false) {
+	const aIsRange = a0 < a1;
+	const bIsRange = b0 < b1;
 	const lo = Math.max(a0, b0);
 	const hi = Math.min(a1, b1);
-	return bothRanges ? (lo < hi) : (lo <= hi);
+	if (lo > hi) return false;
+	if (lo < hi) return true;
+	if (bIsRange && (hi === b1)) return false;
+	if (aIsRange && (hi === a1)) return aTopInclusive;
+	return true;
 }
 
 export default class CanvasEffect extends PIXI.Container {
@@ -1531,11 +1601,9 @@ export default class CanvasEffect extends PIXI.Container {
 		} else if (this.data.aboveLighting) {
 			layer = canvas.interface;
 		} else {
-			// Default route: render inside the primary canvas group so that
-			// effects participate in elevation/sortLayer/sort ordering with
-			// tokens, tiles, drawings, and weather. This restores the
-			// pre-v13 documented behavior (sortLayer 800 sits above tokens
-			// at 700 and below weather at 1000).
+			// Render inside the primary canvas group so that effects
+			// participate in elevation/sortLayer/sort ordering with tokens,
+			// tiles, drawings, and weather.
 			layer = canvas.primary;
 			registerVoidProxy = true;
 		}
@@ -1951,18 +2019,18 @@ export default class CanvasEffect extends PIXI.Container {
 	async _createFile() {
 		if (this.data.copySprite) {
 			let targetDocument = fromUuidSync(this.data.copySprite.uuid);
-			let clonedObject = targetDocument.object.clone();
-			await clonedObject.draw();
-			let clonedMesh = clonedObject.mesh;
-			clonedMesh.position.set(0, 0);
 			if (targetDocument?.ring?.enabled) {
+				let clonedObject = targetDocument.object.clone();
+				await clonedObject.draw();
+				let clonedMesh = clonedObject.mesh;
+				clonedMesh.position.set(0, 0);
 				clonedMesh.setShaderClass(CONFIG.Token.ring.shaderClass);
+				this._renderTexture = canvas.app.renderer.generateTexture(clonedMesh, {
+					resolution: clonedMesh.texture.resolution
+				});
+				clonedObject.destroy();
+				return;
 			}
-			this._renderTexture = canvas.app.renderer.generateTexture(clonedMesh, {
-				resolution: clonedMesh.texture.resolution
-			});
-			clonedObject.destroy();
-			return;
 		}
 
 		if (this.data.file === "") {
@@ -1998,7 +2066,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	_updateCurrentFilePath(distance, showDistanceWarning = false) {
-		if (this.data.copySprite) {
+		if (this.data.copySprite && this._renderTexture) {
 			this._currentFilePath = this.data.copySprite.uuid;
 			return;
 		}
@@ -2047,6 +2115,14 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite.loop = this.loops
 
 		await this.sprite.activate(this._currentFilePath)
+
+		if (this.data.copySprite && !this._renderTexture && !this.data.time?.start) {
+			const sourcePlaceable = fromUuidSync(this.data.copySprite.uuid)?.object ?? null;
+			const sourceTime = sourcePlaceable?.sourceElement?.currentTime;
+			if (Number.isFinite(sourceTime) && sourceTime > 0) {
+				this.sprite.currentTime = sourceTime;
+			}
+		}
 
 		this.sprite.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
 
@@ -2206,64 +2282,78 @@ export default class CanvasEffect extends PIXI.Container {
 			return false;
 		}
 
-		// Attached effects defer to Foundry's `viewed` on the source/target,
-		// so they follow the placeable's `document.level` rather than its
-		// world Z. e.g. a token whose elevation puts it spatially in level 2
-		// but whose `document.level` is level 1 still shows the effect on
-		// level 1.
-		const sourceAttached = this.data.attachTo?.active;
-		const targetAttached = this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo;
-		const sourceHasViewed = sourceAttached && typeof this.sourceDocument?.viewed === "boolean";
-		const targetHasViewed = targetAttached && typeof this.targetDocument?.viewed === "boolean";
-		if (sourceHasViewed || targetHasViewed) {
-			if (sourceHasViewed && this.sourceDocument.viewed) return true;
-			return !!(targetHasViewed && this.targetDocument.viewed);
+		// An explicit `.elevation()` range or `absolute` wins over
+		// the source's level membership.
+		const hasExplicitSpatial = !!this.data.elevation
+			&& (typeof this.data.elevation.top === "number" || this.data.elevation.absolute === true);
+		const sourceAttached = !hasExplicitSpatial && this.data.attachTo?.active
+			&& typeof this.sourceDocument?.viewed === "boolean";
+		const targetAttached = !hasExplicitSpatial
+			&& (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo)
+			&& typeof this.targetDocument?.viewed === "boolean";
+		if (sourceAttached || targetAttached) {
+			if (sourceAttached && isDocOnViewedLevel(this.sourceDocument, currentLevel)) return true;
+			if (targetAttached && isDocOnViewedLevel(this.targetDocument, currentLevel)) return true;
+			return false;
 		}
 
-		const [zMin, zMax] = this._getEffectiveVerticalExtent();
+		const [zMin, zMax, topInclusive] = this._getEffectiveVerticalExtent();
 		const viewed = currentLevel.elevation;
-		if (intervalsOverlap(zMin, zMax, viewed.bottom, viewed.top)) return true;
-
-		if (crossLevels?.size) {
+		let levelMatch = intervalsOverlap(zMin, zMax, viewed.bottom, viewed.top, topInclusive);
+		if (!levelMatch && crossLevels?.size) {
 			const allLevels = canvas.scene?.levels;
 			for (const otherId of crossLevels) {
 				const other = allLevels?.get(otherId)?.elevation;
 				if (!other) continue;
-				if (intervalsOverlap(zMin, zMax, other.bottom, other.top)) return true;
+				if (intervalsOverlap(zMin, zMax, other.bottom, other.top, topInclusive)) {
+					levelMatch = true;
+					break;
+				}
 			}
 		}
+		if (!levelMatch) return false;
 
-		return false;
+		// Hide an unattached effect the same way Foundry hides a token at
+		// that location: through a culling Region surface between the
+		// viewer's level and the effect's elevation. Only reachable when
+		// the effect's extent doesn't overlap the viewed level directly
+		// (i.e. it was admitted via the cross-vis branch above), so
+		// `isPositionCulled`'s same-level early-out is the common path.
+		if (this.data.ignoreLevelCulling) return true;
+		const pos = this.sourcePosition;
+		if (!pos || !canvas.scene) return true;
+		return !isPositionCulled(canvas.scene, currentLevel, pos.x, pos.y, zMin, zMax);
 	}
 
 	/**
-	 * The effect's vertical [zMin, zMax] in scene elevation units. Pinned
-	 * by an explicit `.elevation()`; otherwise inherits the source/target's
-	 * extent (Token depth, Region elevation range).
+	 * The effect's vertical `[zMin, zMax, topInclusive]` in scene elevation
+	 * units. Pinned by an explicit `.elevation()`; otherwise inherits the
+	 * source/target's extent (Token depth, Region elevation range and its
+	 * `topInclusive` flag).
 	 *
-	 * @returns {[number, number]}
+	 * @returns {[number, number, boolean]}
 	 * @private
 	 */
 	_getEffectiveVerticalExtent() {
-		if (this.data.elevation && !this.data.attachTo?.bindElevation) {
-			// this.elevation may be anchored for ranges; use the bottom elevation.
+		if (this.data.elevation) {
 			const bottom = (typeof this.elevationBottom === "number") ? this.elevationBottom : this.elevation;
 			const top = (typeof this.elevationTop === "number") ? this.elevationTop : bottom;
-			return [bottom, top];
+			return [bottom, top, !!this.data.elevation.topInclusive];
 		}
 
 		const sourceExtent = canvaslib.get_object_vertical_extent(this.sourceDocument);
 		const targetExtent = canvaslib.get_object_vertical_extent(this.targetDocument);
 
 		if (sourceExtent && targetExtent) {
-			return [
-				Math.min(sourceExtent[0], targetExtent[0]),
-				Math.max(sourceExtent[1], targetExtent[1])
-			];
+			// The `topInclusive` flag follows whichever side contributes the top.
+			const top = Math.max(sourceExtent[1], targetExtent[1]);
+			const topInclusive = (sourceExtent[1] >= targetExtent[1] ? sourceExtent[2] : false)
+				|| (targetExtent[1] >= sourceExtent[1] ? targetExtent[2] : false);
+			return [Math.min(sourceExtent[0], targetExtent[0]), top, !!topInclusive];
 		}
 		if (sourceExtent) return sourceExtent;
 		if (targetExtent) return targetExtent;
-		return [this.elevation, this.elevation];
+		return [this.elevation, this.elevation, false];
 	}
 
 	updateElevation() {
@@ -2280,16 +2370,26 @@ export default class CanvasEffect extends PIXI.Container {
 		this.elevationBottom = bottom;
 		this.elevationTop = top;
 
-		// Anchor to the viewed floor when the range enters it, so the effect
-		// sorts above the floor texture. Otherwise leave it at the bottom,
-		// so the floor sorts above and the effect reads as below this level.
+		// Anchor above the highest level floor the effect's top reaches
+		// into, so a multi-level effect keeps its sort position when the
+		// viewed level changes.
 		let renderElevation = bottom;
 		const onDefaultRoute = !this.data.aboveLighting && !this.data.aboveInterface
 			&& !this.data.screenSpace && !this.data.screenSpaceAboveUI;
-		if (top !== null && onDefaultRoute) {
-			const viewed = canvas?.level?.elevation;
-			if (viewed && top > viewed.bottom) {
-				renderElevation = Math.max(bottom, viewed.base);
+		const topInclusive = !!this.data.elevation?.topInclusive;
+		this.elevationTopInclusive = topInclusive;
+		if (onDefaultRoute) {
+			const effectiveTop = (typeof top === "number") ? top : bottom;
+			const sceneLevels = canvas?.scene?.levels;
+			if (sceneLevels) {
+				for (const level of sceneLevels) {
+					const lvlBottom = level.elevation?.bottom;
+					if (!Number.isFinite(lvlBottom)) continue;
+					const crosses = topInclusive
+						? (effectiveTop >= lvlBottom)
+						: (effectiveTop > lvlBottom);
+					if (crosses && lvlBottom > renderElevation) renderElevation = lvlBottom;
+				}
 			}
 		}
 		this.elevation = renderElevation;
@@ -2676,12 +2776,12 @@ export default class CanvasEffect extends PIXI.Container {
 			if (fromSection) return fromSection;
 		}
 
-		const [zMin, zMax] = this._getEffectiveVerticalExtent();
+		const [zMin, zMax, topInclusive] = this._getEffectiveVerticalExtent();
 		let best = null;
 		for (const level of sceneLevels) {
 			const ext = level.elevation;
 			if (!ext) continue;
-			if (intervalsOverlap(zMin, zMax, ext.bottom, ext.top)) {
+			if (intervalsOverlap(zMin, zMax, ext.bottom, ext.top, topInclusive)) {
 				if (!best || (ext.bottom ?? -Infinity) < (best.elevation.bottom ?? -Infinity)) {
 					best = level;
 				}
@@ -2724,13 +2824,20 @@ export default class CanvasEffect extends PIXI.Container {
 					this.uuid,
 					"sightRefresh",
 					() => {
+						if (this._ended) return;
+						const ignoreCulling = !!this.data.ignoreLevelCulling;
+						// We have to compare with !== false, because it could
+						// be undefined, which is falsy but not false
 						const sourceVisible =
-							this.source && (!this.sourceMesh?.occluded);
+							this.source
+							&& (ignoreCulling || this.source.isVisible !== false)
+							&& !this.sourceMesh?.occluded;
 						const sourceHidden =
 							this.sourceDocument && (this.sourceDocument?.hidden ?? false);
 						const targetVisible =
-							this.target &&
-							(!attachedToTarget || (this.targetMesh?.occluded ?? true));
+							this.target
+							&& (ignoreCulling || this.target.isVisible !== false)
+							&& (!attachedToTarget || (this.targetMesh?.occluded ?? true));
 						this._baseRenderable =
 							baseRenderable &&
 							(!sourceHidden || game.user.isGM) &&
