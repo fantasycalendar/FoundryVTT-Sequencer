@@ -30,6 +30,7 @@ import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
+import PasteManager from "./modules/sequencer-paste-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
 import PluginsManager from "./utils/plugins-manager.js";
 import SvelteDialog from "./formapplications/dialog/SvelteDialog.js"
@@ -157,6 +158,7 @@ function initializeModule() {
 
   SequencerEffectManager.setup();
   SequencerSoundManager.setup();
+	PasteManager.setup();
 
 	PluginsManager.initialize();
 

@@ -8,6 +8,7 @@ import * as soundlib from "../lib/sound-lib.js";
 import { SequencerFileBase } from "./sequencer-file.js";
 import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
+import PasteManager from "./sequencer-paste-manager.js";
 
 
 const SOUND_STATES = {
@@ -1017,6 +1018,19 @@ export default class SequencerSoundManager {
 				);
 			}
 			sounds = sounds.concat(actorSounds);
+		}
+		const sourceUuid = PasteManager.consume(inDocument);
+		if (sourceUuid) {
+			const sourceSounds = flagManager.getSoundFlags({ uuid: sourceUuid });
+			if (sourceSounds.length) {
+				const rekeyed = this._patchSoundDataForDocument(inDocument.uuid, sourceSounds);
+				const soundDatas = rekeyed.map(([, data]) => data);
+				flagManager.addFlags(inDocument.uuid, { sounds: soundDatas });
+				for (const soundData of soundDatas) {
+					sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, soundData, false);
+				}
+				sounds = sounds.concat(rekeyed);
+			}
 		}
 		if (!sounds?.length) return;
 		return this._playSoundsMap(sounds, inDocument);

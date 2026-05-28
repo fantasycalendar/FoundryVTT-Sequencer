@@ -5,6 +5,7 @@ import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
 import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
+import PasteManager from "./sequencer-paste-manager.js";
 
 const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
@@ -626,6 +627,19 @@ export default class SequencerEffectManager {
 				);
 			}
 			effects = effects.concat(actorEffects);
+		}
+		const sourceUuid = PasteManager.consume(inDocument);
+		if (sourceUuid) {
+			const sourceEffects = flagManager.getEffectFlags({ uuid: sourceUuid });
+			if (sourceEffects.length) {
+				const rekeyed = this._patchEffectDataForDocument(inDocument.uuid, sourceEffects);
+				const effectDatas = rekeyed.map(([, data]) => data);
+				flagManager.addFlags(inDocument.uuid, { effects: effectDatas });
+				for (const effectData of effectDatas) {
+					sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, effectData, false);
+				}
+				effects = effects.concat(rekeyed);
+			}
 		}
 		if (!effects?.length) return;
 		return this._playEffectMap(effects, inDocument);
