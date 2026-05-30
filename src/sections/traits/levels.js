@@ -2,7 +2,6 @@ import CONSTANTS from "../../constants.js";
 
 export default {
 	_levels: null,
-	_ignoreLevelCulling: false,
 
 	/**
 	 * Restricts this section to one or more scene levels on Foundry v14+.
@@ -34,29 +33,6 @@ export default {
 			);
 		});
 		this._levels = entries.length ? entries : null;
-		return this;
-	},
-
-	/**
-	 * Opts the section out of Foundry's culling-based visibility on
-	 * Foundry v14+. By default an effect whose source token is hidden by
-	 * a culling Region surface, or whose location sits above or below
-	 * such a surface, is hidden from the viewer too. Calling this method
-	 * keeps the effect visible regardless, so long as it would otherwise
-	 * pass the level membership and cross-visibility checks.
-	 *
-	 * @param {boolean} [inBool=true]
-	 * @returns {this}
-	 */
-	ignoreLevelCulling(inBool = true) {
-		if (typeof inBool !== "boolean") {
-			throw this.sequence._customError(
-				this,
-				"ignoreLevelCulling",
-				"inBool must be of type boolean"
-			);
-		}
-		this._ignoreLevelCulling = inBool;
 		return this;
 	},
 };

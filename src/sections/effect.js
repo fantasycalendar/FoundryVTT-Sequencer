@@ -53,7 +53,6 @@ export default class EffectSection extends Section {
 		this._elevation = null;
 		this._sortLayer = 800;
 		this._levels = null;
-		this._ignoreLevelCulling = false;
 		this._masks = [];
 		this._tiedDocuments = [];
 		this._selfMask = false;
@@ -2518,7 +2517,6 @@ export default class EffectSection extends Section {
 			elevation: this._elevation,
 			sortLayer: this._sortLayer,
 			levels: this._levels,
-			ignoreLevelCulling: this._ignoreLevelCulling,
 			aboveLighting: this._aboveLighting,
 			aboveInterface: this._aboveInterface,
 			xray: this._xray,

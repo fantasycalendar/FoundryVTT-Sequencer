@@ -125,6 +125,24 @@ function isDocOnViewedLevel(doc, viewedLevel) {
 }
 
 /**
+ * Whether an attached effect's source/target placeable should let the
+ * effect render. Only Tokens are gated on visibility, since their
+ * `isVisible` reflects per-perception culling and line of sight; other
+ * placeables (Region, Tile, Drawing, Note) have `isVisible` getters
+ * that return false for permission and layer-state reasons unrelated
+ * to whether the placeable is rendered.
+ *
+ * @param {foundry.canvas.placeables.PlaceableObject|null|undefined} placeable
+ * @returns {boolean}
+ */
+function isAttachedPlaceableVisible(placeable) {
+	if (!placeable) return false;
+	const Token = foundry.canvas.placeables.Token;
+	if (!(placeable instanceof Token)) return true;
+	return placeable.isVisible !== false;
+}
+
+/**
  * Whether the given scene position is hidden from the viewed level by a
  * `defineSurface` Region with `culling: true`. Mirrors what Foundry's
  * `Token#testCulled` does, generalised to an arbitrary `(x, y)` and
@@ -2313,13 +2331,7 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 		if (!levelMatch) return false;
 
-		// Hide an unattached effect the same way Foundry hides a token at
-		// that location: through a culling Region surface between the
-		// viewer's level and the effect's elevation. Only reachable when
-		// the effect's extent doesn't overlap the viewed level directly
-		// (i.e. it was admitted via the cross-vis branch above), so
-		// `isPositionCulled`'s same-level early-out is the common path.
-		if (this.data.ignoreLevelCulling) return true;
+		// Hide an unattached effect the same way Foundry hides tokens through its culling system
 		const pos = this.sourcePosition;
 		if (!pos || !canvas.scene) return true;
 		return !isPositionCulled(canvas.scene, currentLevel, pos.x, pos.y, zMin, zMax);
@@ -2376,16 +2388,15 @@ export default class CanvasEffect extends PIXI.Container {
 		let renderElevation = bottom;
 		const onDefaultRoute = !this.data.aboveLighting && !this.data.aboveInterface
 			&& !this.data.screenSpace && !this.data.screenSpaceAboveUI;
-		const topInclusive = !!this.data.elevation?.topInclusive;
-		this.elevationTopInclusive = topInclusive;
 		if (onDefaultRoute) {
-			const effectiveTop = (typeof top === "number") ? top : bottom;
+			const [, extentTop, extentTopInclusive] = this._getEffectiveVerticalExtent();
+			const effectiveTop = (typeof extentTop === "number") ? extentTop : bottom;
 			const sceneLevels = canvas?.scene?.levels;
 			if (sceneLevels) {
 				for (const level of sceneLevels) {
 					const lvlBottom = level.elevation?.bottom;
 					if (!Number.isFinite(lvlBottom)) continue;
-					const crosses = topInclusive
+					const crosses = extentTopInclusive
 						? (effectiveTop >= lvlBottom)
 						: (effectiveTop > lvlBottom);
 					if (crosses && lvlBottom > renderElevation) renderElevation = lvlBottom;
@@ -2825,18 +2836,15 @@ export default class CanvasEffect extends PIXI.Container {
 					"sightRefresh",
 					() => {
 						if (this._ended) return;
-						const ignoreCulling = !!this.data.ignoreLevelCulling;
-						// We have to compare with !== false, because it could
-						// be undefined, which is falsy but not false
 						const sourceVisible =
 							this.source
-							&& (ignoreCulling || this.source.isVisible !== false)
+							&& isAttachedPlaceableVisible(this.source)
 							&& !this.sourceMesh?.occluded;
 						const sourceHidden =
 							this.sourceDocument && (this.sourceDocument?.hidden ?? false);
 						const targetVisible =
 							this.target
-							&& (ignoreCulling || this.target.isVisible !== false)
+							&& isAttachedPlaceableVisible(this.target)
 							&& (!attachedToTarget || (this.targetMesh?.occluded ?? true));
 						this._baseRenderable =
 							baseRenderable &&

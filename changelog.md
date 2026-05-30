@@ -5,7 +5,6 @@
 - *Effects* - Added `.onLevels()` to limit an effect to specific scene levels on Foundry v14
 - *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
 - *Effects* - Added a `topInclusive` option to `.elevation([bottom, top])` that mirrors the same property on Foundry Regions, including the top boundary in the range so the effect counts as part of the level above
-- *Effects* - Added `.ignoreLevelCulling()` to opt an effect out of being hidden by culling surfaces on Foundry v14, such as higher elevation level backgrounds
 - *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
 - *Effects* - Fixed effects showing across every scene level on Foundry v14
 - *Effects* - Fixed `.copySprite()` no longer animating when used on animated webm tokens, and ignoring the token's Scale setting and copying at the grid footprint size instead of the visible size

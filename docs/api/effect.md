@@ -850,13 +850,13 @@ Sets the z-index of the effect, breaking ties between effects that share the sam
 
 Sets the effect's elevation. Pass a single number for a point, or a `[bottom, top]` array for an elevation range.
 
-The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels renders on each of them. The effect's render position is intrinsic to the range and the scene's level geometry — it sorts above the floor texture of every level its top reaches into, and the sort doesn't shift when you switch the viewed level.
+The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels appears on each of them, drawing above each level's floor that its top reaches. The effect stays in the same visual layer whether the player is currently viewing the basement or the rooftop.
 
-A range whose top sits exactly on a level's floor (e.g. `[0, 30]` against a level starting at `30`) is treated as just below that level rather than touching its interior, matching how Foundry handles tall tokens. Pass `topInclusive: true` to switch this, applying the same flag on Foundry Regions: the top elevation is then part of the range and the effect counts as part of the level above.
+A range whose top exactly meets the next level's floor — like `[0, 30]` against a level that starts at `30` — stays under that floor by default. Pass `topInclusive: true` to make the effect reach into the level above instead. This matches the Top Inclusive checkbox on Foundry's Region elevation settings.
 
 Options:
 - `absolute: boolean` — when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
-- `topInclusive: boolean` — range form only. When `true`, the top value is part of the range, matching Foundry Region `elevation.topInclusive`. By default an effect whose top equals the next level's bottom sits just below that level rather than reaching into it.
+- `topInclusive: boolean` — range form only. When `true`, the top value is part of the range, matching the Top Inclusive checkbox on a Foundry Region. By default an effect whose top equals the next level's floor stays just below that level.
 
 Examples:
 ```js
@@ -865,23 +865,6 @@ Examples:
 .elevation([10, 20], { absolute: true })   // range from 10 to 20
 .elevation([0, 5])                         // range spanning 5 units above the source
 .elevation([0, 20], { topInclusive: true }) // range whose top includes the level starting at 20
-```
-
-## Ignore Level Culling
-
-`.ignoreLevelCulling()` or `.ignoreLevelCulling(false)`
-
-Opts the effect out of Foundry's culling-based visibility on Foundry v14+.
-
-By default an effect attached to a token follows the token: when Foundry hides the token because a culling Region surface stands between the viewer and the token's level, the effect hides too. An unattached effect whose location sits above or below a culling Region surface gets the same treatment. This is the right call for things like fireballs on roofs that shouldn't bleed through floors, and the wrong call for things like waypoints or labels that should stay readable from anywhere.
-
-Calling `.ignoreLevelCulling()` keeps the effect visible regardless of culling, so long as it would otherwise pass the level membership and cross-visibility checks. Pass `false` to undo a previous opt-out.
-
-Examples:
-```js
-.ignoreLevelCulling()                     // ignore culling surfaces
-.ignoreLevelCulling(true)                 // same as above
-.ignoreLevelCulling(false)                // restore the default
 ```
 
 ## Sort Layer
@@ -910,16 +893,16 @@ For reference, Foundry's built-in sort layers are:
 
 Restricts this effect to one or more scene levels on Foundry v14+. On older Foundry versions this doesn't do anything.
 
-**Automatic level behavior (no `.onLevels()` call required):** an effect's visible levels are derived automatically from its vertical extent against the scene's level elevation ranges.
+**Automatic level behavior (no `.onLevels()` call required):** Sequencer picks the levels an effect appears on by comparing its elevation against the scene's levels.
 
-- An effect placed at a fixed `{x, y}` location is a point at its elevation and belongs to whichever level's elevation range contains it.
-- An effect placed on or stretched to a token inherits the token's vertical extent (`[elevation, elevation + depth × grid.distance]`), so a tall token whose vertical extent crosses two floors keeps its effects visible on both.
-- An effect placed on or stretched to a region inherits the region's elevation range (`{bottom, top}`), so an effect on a region that spans two floors stays visible on both floors. This works for `.atLocation(region)` and `.stretchTo(region)` without needing `.attachTo()`.
-- An explicit `.elevation([bottom, top], {absolute: true})` call pins the effect to that elevation range, so the effect renders on every level the range reaches.
+- An effect placed at a fixed `{x, y}` location appears on whichever level contains its elevation.
+- An effect placed at or stretched to a token covers the token's full height, so a tall token spanning two floors keeps its effects visible on both. This works for `.atLocation(token)` and `.stretchTo(token)` without needing `.attachTo()`. An attached effect follows the token's level setting in the token configuration instead.
+- An effect placed on or stretched to a region matches the region's elevation range, so an effect on a region that spans two floors stays visible on both. This works for `.atLocation(region)` and `.stretchTo(region)` without needing `.attachTo()`.
+- An explicit `.elevation([bottom, top], {absolute: true})` call pins the effect to that elevation range, so the effect appears on every level the range reaches.
 
-If the viewed level is configured to see into other levels (the `visibility.levels` set on a Level document), effects on those other levels render alongside the viewed level's effects.
+If you've set up a level to see into other levels in its configuration, effects on those other levels also render when you're viewing it.
 
-**When to call `.onLevels()`:** only when the automatic derivation isn't what you want. The most common case is an effect that should appear on multiple non-adjacent levels (e.g. levels A and C but not B), which elevation can't express because a single elevation only falls in one level's range.
+**When to call `.onLevels()`:** only when the automatic choice isn't what you want. The most common case is an effect that should appear on multiple non-adjacent levels (e.g. levels A and C but not B), which elevation alone can't express because a single elevation only falls in one level's range.
 
 Pass `null` to clear a previously set override.
 

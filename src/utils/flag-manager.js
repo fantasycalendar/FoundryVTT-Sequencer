@@ -275,15 +275,6 @@ const flagManager = {
 				delete effectData.noLoop;
 			}
 			return effectData;
-		},
-
-		"4.2.0": (inDocument, effectData) => {
-			// Effects saved before 4.2.0 predate the culling-surface check
-			// added in `_isOnViewedLevel` and the `sightRefresh` handler.
-			// Stamp them so they keep their pre-upgrade rendering and don't
-			// suddenly disappear on a level the viewer can see across.
-			effectData.ignoreLevelCulling = true;
-			return effectData;
 		}
 	},
 
