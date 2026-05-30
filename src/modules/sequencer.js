@@ -8,6 +8,7 @@ import SequencerPresets from "./sequencer-presets.js";
 import ScrollingTextSection from "../sections/scrollingText.js";
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import CanvasPanSection from "../sections/canvasPan.js";
+import MotionSection from "../sections/motion.js";
 import SequenceManager from "./sequence-manager.js";
 import { get, writable } from "svelte/store";
 import CONSTANTS from "../constants.js";
@@ -268,6 +269,20 @@ export default class Sequence {
 		if (inSpeed !== null) panning.speed(inSpeed);
 		this.sections.push(panning);
 		return panning;
+	}
+
+	/**
+	 * Animates a token, tile, or drawing's sprite without mutating the
+	 * underlying document. Until you call any other sections you'll be
+	 * working on the Motion section.
+	 *
+	 * @param {Object|String} [inTarget] inTarget
+	 * @returns {MotionSection}
+	 */
+	motion(inTarget = undefined) {
+		const motion = lib.section_proxy_wrap(new MotionSection(this, inTarget));
+		this.sections.push(motion);
+		return motion;
 	}
 
 	/**

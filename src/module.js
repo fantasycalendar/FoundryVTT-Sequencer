@@ -20,7 +20,6 @@ import {
 import Section from "./sections/section.js";
 import * as lib from "./lib/lib.js";
 import * as canvaslib from "./lib/canvas-lib.js";
-import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
 import { DatabaseViewerApp } from "./formapplications/database/database-viewer-app.js";
@@ -28,6 +27,7 @@ import CONSTANTS from "./constants.js";
 import { PlayerSettings } from "./formapplications/effects-ui/effect-player-store.js";
 import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
+import SequencerMotionManager from "./modules/sequencer-motion-manager.js";
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import PasteManager from "./modules/sequencer-paste-manager.js";
@@ -79,6 +79,7 @@ Hooks.once("ready", async function() {
   }
 
   SequencerFoundryReplicator.registerHooks();
+  SequencerMotionManager.registerHooks();
   InteractionManager.initialize();
 });
 
@@ -129,6 +130,7 @@ function initializeModule() {
     EffectManager: SequencerEffectManager,
     SoundManager: SequencerSoundManager,
     SectionManager: SequencerSectionManager,
+    MotionManager: SequencerMotionManager,
     registerEase: registerEase,
     BaseSection: Section,
     CONSTANTS: {

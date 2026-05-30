@@ -1,7 +1,7 @@
 import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import SequencerMotionManager from "../modules/sequencer-motion-manager.js";
 
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
@@ -239,7 +239,7 @@ export function calculate_missed_position(source, target, twister) {
 
 export function get_object_position(
   obj,
-  { measure = false, exact = false } = {}
+  { measure = false, exact = false, ignoreMotion = false } = {}
 ) {
   if (obj instanceof CanvasEffect) {
     return obj.worldPosition;
@@ -367,6 +367,16 @@ export function get_object_position(
   if (pos.x === null) delete pos["x"];
   if (pos.y === null) delete pos["y"];
   if (pos.elevation === null) delete pos["elevation"];
+
+  // Add any active motion movement so that callers get the visible
+	// sprite position, so use ignoreMotion to ignore the motion
+  if (!ignoreMotion && pos.x !== undefined && pos.y !== undefined) {
+    const displacement = SequencerMotionManager.getDisplacement(obj);
+    if (displacement) {
+      pos.x += displacement.deltaX;
+      pos.y += displacement.deltaY;
+    }
+  }
 
   return pos;
 }
@@ -1244,4 +1254,148 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
     gridUnits: inOptions?.gridUnits ?? false,
 	  screenSpace: inOptions?.screenSpace ?? false,
   };
+}
+
+/**
+ * Gets the actual sprite from placeables, as each has a separate implementation
+ * Returns `null` for unsupported types
+ *
+ * @param {object} placeable
+ * @returns {object|null}
+ */
+export function getMotionTarget(placeable) {
+	if (!placeable) return null;
+	if (placeable instanceof foundry.canvas.placeables.Token) return placeable.mesh ?? null;
+	if (placeable instanceof foundry.canvas.placeables.Tile) return placeable.mesh ?? placeable.bg ?? null;
+	if (placeable instanceof foundry.canvas.placeables.Drawing) return placeable.shape ?? null;
+	return null;
+}
+
+/**
+ * Gets a placeable's position and rotation at a given time, for caching purposes
+ * and comparing against any updated values as a part of the document's update
+ * cycle
+ *
+ * @param {object} placeable
+ * @returns {{x: number, y: number, rotation: number}|null}
+ */
+export function getDocumentRestState(placeable) {
+	if (!placeable?.document) return null;
+	if (placeable instanceof foundry.canvas.placeables.Token || placeable instanceof foundry.canvas.placeables.Drawing) {
+		return {
+			x: placeable.document.x,
+			y: placeable.document.y,
+			rotation: placeable.document.rotation ?? 0,
+		};
+	}
+	if (placeable instanceof foundry.canvas.placeables.Tile) {
+		const shape = placeable.document.shape;
+		return {
+			x: shape.x,
+			y: shape.y,
+			rotation: shape.rotation ?? 0,
+		};
+	}
+	return null;
+}
+
+/**
+ * Built-in waveform functions for `.motion().oscillate()`. Each maps a cycle
+ * position in `[0, 1)` to a value in `[-1, 1]`.
+ *
+ *   sine     - smooth, continuous; peaks at 0.25, zero at 0/0.5, trough at 0.75
+ *   triangle - piecewise linear with the same peak/zero/trough timing
+ *   square   - binary +1 (first half) / -1 (second half)
+ */
+const OSCILLATE_WAVEFORMS = {
+	sine: (cyclePosition) => Math.sin(2 * Math.PI * cyclePosition),
+	triangle: (cyclePosition) => {
+		if (cyclePosition < 0.25) return 4 * cyclePosition;
+		if (cyclePosition < 0.75) return 2 - 4 * cyclePosition;
+		return 4 * (cyclePosition - 1);
+	},
+	square: (cyclePosition) => (cyclePosition < 0.5 ? 1 : -1),
+};
+
+export const OSCILLATE_WAVEFORM_NAMES = Object.keys(OSCILLATE_WAVEFORMS);
+
+/**
+ * Per-frame oscillate calculation math for a single motion - pass the config,
+ * motion object, and the time, and it will calculate exactly where the occiliation
+ * should be
+ *
+ * @param {object} config     The oscillate config stored on the motion.
+ * @param {object} motion     The Motion that owns this config (reads `startTime`,
+*                             `persist`, `persistUntilUpdate`, `returnTriggeredAt`).
+ * @param {number} now        time snapshot (`performance.now()`) from caller to
+ *                            calculate timing for motion
+ *
+ * @returns {{deltaX: number, deltaY: number, deltaAngle: number,
+ *            scaleMultiplier: number, alphaMultiplier: number}|null}
+ *          `null` once the layer is done (fade-out complete, or past
+ *          duration on a non-persistent motion).
+ */
+export function sampleOscillation(config, motion, now) {
+	const elapsed = now - motion.startTime - (config.delay ?? 0);
+	if (elapsed < 0) return null;
+
+	const persistent = motion.persist || motion.persistUntilUpdate;
+	const fadeInDuration = config.fadeInDuration ?? 0;
+	const fadeOutDuration = config.fadeOutDuration ?? 0;
+
+	let fade;
+	if (motion.returnTriggeredAt !== undefined) {
+		const returnElapsed = now - motion.returnTriggeredAt;
+		if (returnElapsed >= fadeOutDuration) return null;
+		fade = fadeOutDuration > 0 ? 1 - returnElapsed / fadeOutDuration : 0;
+	} else if (persistent) {
+		fade = fadeInDuration > 0 ? Math.min(1, elapsed / fadeInDuration) : 1;
+	} else {
+		const duration = config.duration;
+		if (elapsed >= duration) return null;
+		let fadeIn = 1;
+		if (fadeInDuration > 0 && elapsed < fadeInDuration) {
+			fadeIn = elapsed / fadeInDuration;
+		}
+		let fadeOut = 1;
+		if (fadeOutDuration > 0 && elapsed > duration - fadeOutDuration) {
+			fadeOut = (duration - elapsed) / fadeOutDuration;
+		}
+		fade = fadeIn * fadeOut;
+	}
+
+	const waveformFn = OSCILLATE_WAVEFORMS[config.waveform];
+	const period = config.period;
+
+	let deltaX = 0;
+	let deltaY = 0;
+	let deltaAngle = 0;
+	let scaleMultiplier = 1;
+	let alphaMultiplier = 1;
+
+	const sampleAxis = (axisConfig) => {
+		const phase = axisConfig.phase ?? 0;
+		const cyclePosition = ((elapsed / period) + phase / (2 * Math.PI)) % 1;
+		return waveformFn(cyclePosition);
+	};
+
+	if (config.x) {
+		deltaX = config.x.amplitude * sampleAxis(config.x) * fade;
+	}
+	if (config.y) {
+		deltaY = config.y.amplitude * sampleAxis(config.y) * fade;
+	}
+	if (config.rotation) {
+		deltaAngle = config.rotation.amplitude * sampleAxis(config.rotation) * fade;
+	}
+	if (config.scale) {
+		const baseline = config.scale.baseline ?? 1.0;
+		scaleMultiplier = baseline + config.scale.amplitude * sampleAxis(config.scale) * fade;
+	}
+	if (config.alpha) {
+		const baseline = config.alpha.baseline ?? 1.0;
+		alphaMultiplier = baseline + config.alpha.amplitude * sampleAxis(config.alpha) * fade;
+	}
+
+	return { deltaX, deltaY, deltaAngle, scaleMultiplier, alphaMultiplier };
 }
