@@ -7,9 +7,10 @@ const flagManager = {
 	flagAddBuffer: new Map(),
 	flagRemoveBuffer: new Map(),
 	_latestFlagVersion: false,
+	_database: null,
 
 	get database(){
-		return game.journal.getName(CONSTANTS.DATABASE_NAME);
+		return this._database ??= game.journal.getName(CONSTANTS.DATABASE_NAME);
 	},
 
 	setup() {
