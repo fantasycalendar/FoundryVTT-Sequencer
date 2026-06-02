@@ -21,8 +21,8 @@ export default class MotionSection extends Section {
 			rotation: [],
 			alpha: [],
 		};
-		this._noise = null;
-		this._oscillate = null;
+		this._noise = [];
+		this._oscillate = [];
 		if (inTarget) this.on(inTarget);
 	}
 
@@ -73,7 +73,7 @@ export default class MotionSection extends Section {
 	/**
 	 * Plays the motion forward, then holds the displaced position until the
 	 * placeable's document is updated (position or rotation). The document
-	 * update ends the motion without playing a return animation — useful
+	 * update ends the motion without playing a return animation. Useful
 	 * when the document will be moved to the displaced position so the
 	 * sprite stays put with no visible snap.
 	 *
@@ -93,6 +93,151 @@ export default class MotionSection extends Section {
 	}
 
 	/**
+	 * Layers random shake / jitter onto the motion. Position samples are
+	 * pulled from a random direction inside the cone `[directionMin,
+	 * directionMax]` (degrees, full circle by default). Rotation jitter
+	 * runs on an independent random stream.
+	 *
+	 * Required: `duration` (ms), `frequency` (ms between samples), and
+	 * one of `strength` (pixels; number or `{x, y}`) /
+	 * `strengthScaledToObject` (multiplier of the placeable's dimensions;
+	 * number or `{x, y}`).
+	 *
+	 * Optional: `rotationStrength` (degrees, default 0), `directionMin`
+	 * and `directionMax` (degrees in `[0, 720]`, default `0` and `360`),
+	 * `delay`, `fadeInDuration`, `fadeOutDuration`.
+	 *
+	 * Under `.persist()` the shake loops until the motion ends, then fades
+	 * over `fadeOutDuration`.
+	 *
+	 * Multiple `.noise()` calls on the same motion compose additively,
+	 * useful for stacking layers like a fast jitter on top of a slow
+	 * tremor, each with its own timing and strength.
+	 *
+	 * @param {object} inOptions
+	 * @returns {MotionSection}
+	 */
+	noise(inOptions = {}) {
+		if (typeof inOptions !== "object" || inOptions === null) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"inOptions must be of type object"
+			);
+		}
+
+		const options = foundry.utils.mergeObject(
+			{
+				strength: undefined,
+				strengthScaledToObject: undefined,
+				rotationStrength: 0,
+				frequency: undefined,
+				duration: undefined,
+				delay: 0,
+				fadeInDuration: 0,
+				fadeOutDuration: 0,
+				directionMin: 0,
+				directionMax: 360,
+			},
+			inOptions
+		);
+
+		if (!lib.is_real_number(options.duration) || options.duration <= 0) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.duration must be a positive real number"
+			);
+		}
+		if (!lib.is_real_number(options.frequency) || options.frequency <= 0) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.frequency must be a positive real number"
+			);
+		}
+		if (!lib.is_real_number(options.delay) || options.delay < 0) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.delay must be a non-negative real number"
+			);
+		}
+		if (!lib.is_real_number(options.fadeInDuration) || options.fadeInDuration < 0) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.fadeInDuration must be a non-negative real number"
+			);
+		}
+		if (!lib.is_real_number(options.fadeOutDuration) || options.fadeOutDuration < 0) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.fadeOutDuration must be a non-negative real number"
+			);
+		}
+		if (!lib.is_real_number(options.rotationStrength) || options.rotationStrength < 0) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.rotationStrength must be a non-negative real number"
+			);
+		}
+
+		const hasStrength = options.strength !== undefined;
+		const hasScaledStrength = options.strengthScaledToObject !== undefined;
+		if (hasStrength === hasScaledStrength) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"exactly one of `strength` or `strengthScaledToObject` is required"
+			);
+		}
+		this._validateNoiseStrength(
+			hasStrength ? "strength" : "strengthScaledToObject",
+			hasStrength ? options.strength : options.strengthScaledToObject
+		);
+
+		for (const key of ["directionMin", "directionMax"]) {
+			if (!lib.is_real_number(options[key]) || options[key] < 0 || options[key] > 720) {
+				throw this.sequence._customError(
+					this,
+					"noise",
+					`options.${key} must be a real number in [0, 720]`
+				);
+			}
+		}
+		if (options.directionMin > options.directionMax) {
+			throw this.sequence._customError(
+				this,
+				"noise",
+				"options.directionMin must be <= options.directionMax"
+			);
+		}
+
+		this._noise.push(options);
+		return this;
+	}
+
+	/**
+	 * @private
+	 */
+	_validateNoiseStrength(fieldName, value) {
+		if (lib.is_real_number(value)) return;
+		if (
+			typeof value === "object" && value !== null
+			&& lib.is_real_number(value.x)
+			&& lib.is_real_number(value.y)
+		) return;
+		throw this.sequence._customError(
+			this,
+			"noise",
+			`options.${fieldName} must be a real number or a {x, y} object of real numbers`
+		);
+	}
+
+	/**
 	 * Layers a periodic oscillation onto the motion. Position and rotation
 	 * axes oscillate by `amplitude` units around their starting value;
 	 * scale and alpha oscillate around `baseline` (default 1.0).
@@ -105,19 +250,14 @@ export default class MotionSection extends Section {
 	 * Under `.persist()` the oscillation loops until the motion ends, then
 	 * fades over `fadeOutDuration`.
 	 *
-	 * At most one `.oscillate()` per motion.
+	 * Multiple `.oscillate()` calls on the same motion compose additively,
+	 * useful for stacking layers like a slow sway with a fast bob, each
+	 * with its own period, waveform, and per-axis amplitudes.
 	 *
 	 * @param {object} inOptions
 	 * @returns {MotionSection}
 	 */
 	oscillate(inOptions = {}) {
-		if (this._oscillate) {
-			throw this.sequence._customError(
-				this,
-				"oscillate",
-				"only one `.oscillate()` is allowed per motion section"
-			);
-		}
 		if (typeof inOptions !== "object" || inOptions === null) {
 			throw this.sequence._customError(
 				this,
@@ -205,7 +345,7 @@ export default class MotionSection extends Section {
 			this._validateOscillateAxis(axis, options[axis]);
 		}
 
-		this._oscillate = options;
+		this._oscillate.push(options);
 		return this;
 	}
 
@@ -746,6 +886,7 @@ export default class MotionSection extends Section {
 		}
 
 		const overallDuration = this._computeOverallDuration();
+		const resolvedNoise = this._resolveNoiseForRun(placeable);
 
 		const data = {
 			sceneId: game.user.viewedScene,
@@ -758,6 +899,7 @@ export default class MotionSection extends Section {
 			persist: this._persist,
 			persistUntilUpdate: this._persistUntilUpdate,
 			tracks: this._tracks,
+			noise: resolvedNoise,
 			oscillate: this._oscillate,
 			overallDuration,
 		};
@@ -804,13 +946,52 @@ export default class MotionSection extends Section {
 				if (trackEnd > longest) longest = trackEnd;
 			}
 		}
-		if (this._oscillate) {
-			const delay = this._oscillate.delay ?? 0;
+		for (const oscillate of this._oscillate) {
+			const delay = oscillate.delay ?? 0;
 			const oscillateEnd = persistent
-				? delay + (this._oscillate.fadeInDuration ?? 0)
-				: delay + (this._oscillate.duration ?? 0);
+				? delay + (oscillate.fadeInDuration ?? 0)
+				: delay + (oscillate.duration ?? 0);
 			if (oscillateEnd > longest) longest = oscillateEnd;
 		}
+		for (const noise of this._noise) {
+			const delay = noise.delay ?? 0;
+			const noiseEnd = persistent
+				? delay + (noise.fadeInDuration ?? 0)
+				: delay + (noise.duration ?? 0);
+			if (noiseEnd > longest) longest = noiseEnd;
+		}
 		return longest;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Resolves each noise entry's `strengthScaledToObject` against the
+	 * placeable's dimensions and rewrites it into a plain `strength` so
+	 * the manager only ever sees one concrete shape.
+	 */
+	_resolveNoiseForRun(placeable) {
+		if (this._noise.length === 0) return [];
+
+		const dimensions = canvaslib.get_object_dimensions(placeable);
+		return this._noise.map((noise) => {
+			if (noise.strength !== undefined) return noise;
+			const scaled = noise.strengthScaledToObject;
+			let strength;
+			if (typeof scaled === "object") {
+				strength = {
+					x: scaled.x * dimensions.width,
+					y: scaled.y * dimensions.height,
+				};
+			} else {
+				strength = {
+					x: scaled * dimensions.width,
+					y: scaled * dimensions.height,
+				};
+			}
+			// Clone so the section's stored config stays intact across
+			// repeat .play() calls.
+			return { ...noise, strength, strengthScaledToObject: undefined };
+		});
 	}
 }

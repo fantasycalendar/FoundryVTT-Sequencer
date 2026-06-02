@@ -1399,3 +1399,129 @@ export function sampleOscillation(config, motion, now) {
 
 	return { deltaX, deltaY, deltaAngle, scaleMultiplier, alphaMultiplier };
 }
+
+/**
+ * Calculates the noise waveform for a motion section's `.noise()`. Returns
+ * `{samples, frequency, duration}` where `samples` is an array of
+ * `{x, y, rot}` entries each in `[-1, +1]`.
+ *
+ * @param {object} config  Noise options.
+ * @returns {{samples: Array<{x: number, y: number, rot: number}>,
+ *            frequency: number, duration: number}}
+ */
+export function buildNoiseWaveform(config) {
+	const frequency = config.frequency;
+	const duration = config.duration;
+	const sampleCount = Math.max(2, Math.floor(duration / frequency) + 1);
+	const hasRotation = (config.rotationStrength ?? 0) > 0;
+
+	const magnitudes = [lib.random_float_between(-1, 1)];
+	const rotations = [hasRotation ? lib.random_float_between(-1, 1) : 0];
+	for (let index = 1; index < sampleCount; index++) {
+		magnitudes.push(lib.flip_negate(magnitudes[index - 1], Math.random()));
+		rotations.push(
+			hasRotation
+				? lib.flip_negate(rotations[index - 1], Math.random())
+				: 0
+		);
+	}
+
+	// Wrap the last value for consistency
+	magnitudes[0] = lib.flip_negate(magnitudes[sampleCount - 1], Math.random());
+	if (hasRotation) {
+		rotations[0] = lib.flip_negate(rotations[sampleCount - 1], Math.random());
+	}
+
+	const directionMinRadians = (config.directionMin ?? 0) * (Math.PI / 180);
+	const directionMaxRadians = (config.directionMax ?? 360) * (Math.PI / 180);
+
+	const samples = [];
+	for (let index = 0; index < sampleCount; index++) {
+		const angle = lib.random_float_between(directionMinRadians, directionMaxRadians);
+		samples.push({
+			x: magnitudes[index] * Math.cos(angle),
+			y: magnitudes[index] * Math.sin(angle),
+			rot: rotations[index],
+		});
+	}
+
+	return { samples, frequency, duration };
+}
+
+/**
+ * Noise calculation for each frame of a single motion. Linearly interpolates
+ * between samples, multiplies by strength and the current fade duration,
+ * and returns the total for the final displacement.
+ *
+ * Returns `null` when the noise is done:
+ *  - non-persistent motion past `noise.delay + noise.duration` (plus the
+ *    fade-out end bit);
+ *  - persistent motion whose return phase has been triggered and the
+ *    `fadeOutDuration` has elapsed since `returnTriggeredAt`.
+ *
+ * @param {object} noise   The noise state stored on the motion (includes
+ *                         the precomputed waveform and the motion's config).
+ * @param {object} motion  Owning Motion for some property reads
+ * @param {number} now     `performance.now()` - start time for this random
+ *                         noise.
+ * @returns {{deltaX: number, deltaY: number, deltaAngle: number,
+ *            scaleMultiplier: number, alphaMultiplier: number}|null}
+ */
+export function sampleNoise(noise, motion, now) {
+	const elapsed = now - motion.startTime - (noise.delay ?? 0);
+	if (elapsed < 0) return null;
+
+	const persistent = motion.persist || motion.persistUntilUpdate;
+	const fadeInDuration = noise.fadeInDuration ?? 0;
+	const fadeOutDuration = noise.fadeOutDuration ?? 0;
+	const duration = noise.duration;
+
+	let fade;
+	if (motion.returnTriggeredAt !== undefined) {
+		const returnElapsed = now - motion.returnTriggeredAt;
+		if (returnElapsed >= fadeOutDuration) return null;
+		fade = fadeOutDuration > 0 ? 1 - returnElapsed / fadeOutDuration : 0;
+	} else if (persistent) {
+		fade = fadeInDuration > 0 ? Math.min(1, elapsed / fadeInDuration) : 1;
+	} else {
+		if (elapsed >= duration) return null;
+		let fadeIn = 1;
+		if (fadeInDuration > 0 && elapsed < fadeInDuration) {
+			fadeIn = elapsed / fadeInDuration;
+		}
+		let fadeOut = 1;
+		if (fadeOutDuration > 0 && elapsed > duration - fadeOutDuration) {
+			fadeOut = (duration - elapsed) / fadeOutDuration;
+		}
+		fade = fadeIn * fadeOut;
+	}
+
+	const { samples, frequency } = noise.waveform;
+	const sampleCount = samples.length;
+
+	const cyclePosition = persistent
+		? (elapsed % duration) / frequency
+		: elapsed / frequency;
+	const lowerIndex = Math.floor(cyclePosition) % sampleCount;
+	const upperIndex = (lowerIndex + 1) % sampleCount;
+	const blend = cyclePosition - Math.floor(cyclePosition);
+
+	const lower = samples[lowerIndex];
+	const upper = samples[upperIndex];
+	const rawX = lower.x + (upper.x - lower.x) * blend;
+	const rawY = lower.y + (upper.y - lower.y) * blend;
+	const rawRotation = lower.rot + (upper.rot - lower.rot) * blend;
+
+	const strength = noise.strength;
+	const strengthX = typeof strength === "object" ? strength.x : strength;
+	const strengthY = typeof strength === "object" ? strength.y : strength;
+	const rotationStrength = noise.rotationStrength ?? 0;
+
+	return {
+		deltaX: rawX * strengthX * fade,
+		deltaY: rawY * strengthY * fade,
+		deltaAngle: rawRotation * rotationStrength * fade,
+		scaleMultiplier: 1,
+		alphaMultiplier: 1,
+	};
+}

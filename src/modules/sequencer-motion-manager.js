@@ -143,7 +143,11 @@ class Motion {
 		this.returnTriggeredAt = undefined;
 		this.settleOverride = undefined;
 		this.startTime = performance.now();
-		this.oscillate = config.oscillate ?? null;
+		this.oscillate = config.oscillate ?? [];
+		this.noise = (config.noise ?? []).map((noise) => ({
+			...noise,
+			waveform: canvaslib.buildNoiseWaveform(noise),
+		}));
 
 		this.tracks = {
 			x: [],
@@ -245,16 +249,24 @@ class Motion {
 			}
 		}
 
-		if (this.oscillate) {
-			const oscillateSample = canvaslib.sampleOscillation(this.oscillate, this, now);
-			if (oscillateSample !== null) {
-				anyAlive = true;
-				deltaX += oscillateSample.deltaX;
-				deltaY += oscillateSample.deltaY;
-				deltaAngle += oscillateSample.deltaAngle;
-				scaleMultiplier *= oscillateSample.scaleMultiplier;
-				alphaMultiplier *= oscillateSample.alphaMultiplier;
-			}
+		for (const oscillate of this.oscillate) {
+			const oscillateSample = canvaslib.sampleOscillation(oscillate, this, now);
+			if (oscillateSample === null) continue;
+			anyAlive = true;
+			deltaX += oscillateSample.deltaX;
+			deltaY += oscillateSample.deltaY;
+			deltaAngle += oscillateSample.deltaAngle;
+			scaleMultiplier *= oscillateSample.scaleMultiplier;
+			alphaMultiplier *= oscillateSample.alphaMultiplier;
+		}
+
+		for (const noise of this.noise) {
+			const noiseSample = canvaslib.sampleNoise(noise, this, now);
+			if (noiseSample === null) continue;
+			anyAlive = true;
+			deltaX += noiseSample.deltaX;
+			deltaY += noiseSample.deltaY;
+			deltaAngle += noiseSample.deltaAngle;
 		}
 
 		if (!anyAlive) return null;
@@ -576,7 +588,7 @@ export default class SequencerMotionManager {
 		return SequencerMotionManager._endMotion(data);
 	}
 
-	/** Shorthand for `endMotion(null, options, push)` — matches every uuid. */
+	/** Shorthand for `endMotion(null, options, push)`. Matches every uuid. */
 	static endAllMotions(options = {}, push = true) {
 		return SequencerMotionManager.endMotion(null, options, push);
 	}
