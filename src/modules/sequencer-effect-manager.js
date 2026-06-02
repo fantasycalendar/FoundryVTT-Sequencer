@@ -197,20 +197,7 @@ export default class SequencerEffectManager {
 				"gu"
 			);
 		}
-		let effects = this.effects;
-		if (inFilter.sceneId && inFilter.sceneId !== canvas.scene?.id) {
-			effects = lib
-				.get_all_documents_from_scene(inFilter.sceneId)
-				.map((doc) => {
-					return foundry.utils.getProperty(doc, CONSTANTS.EFFECTS_FLAG);
-				})
-				.filter((flags) => !!flags)
-				.map((flags) => {
-					return flags.map((flag) => CanvasEffect.make(flag[1]));
-				})
-				.deepFlatten();
-		}
-		return effects.filter((effect) => {
+		return this.effects.filter((effect) => {
 			return (
 				(!inFilter.effects || inFilter.effects.includes(effect.id)) &&
 				(!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length)) &&
@@ -791,23 +778,16 @@ export default class SequencerEffectManager {
 	 * @returns {Promise}
 	 */
 	static objectDeleted(inUUID) {
-		const documentsToCheck = game.scenes
-			.filter((scene) => scene.id !== game.user.viewedScene)
-			.map((scene) => [scene, ...lib.get_all_documents_from_scene(scene.id)])
-			.deepFlatten();
-
-		const documentEffectsToEnd = documentsToCheck
-			.map((obj) => {
-				const objEffects = flagManager.getEffectFlags(obj);
-				const effectsToEnd = objEffects.filter(([effectId, effectData]) =>
-					this._effectContextFilter(inUUID, effectData)
-				);
-				return {
-					document: obj,
-					effects: effectsToEnd.map((effect) => effect[0]),
-				};
-			})
-			.filter((obj) => obj.effects.length);
+		const databaseEffects = flagManager.getDatabaseFlags().effects;
+		const flagRemovals = [];
+		for (const [ownerUuid, effects] of Object.entries(databaseEffects)) {
+			const idsToEnd = effects
+				.filter(([, effectData]) => this._effectContextFilter(inUUID, effectData))
+				.map(([effectId]) => effectId);
+			if (idsToEnd.length) {
+				flagRemovals.push(flagManager.removeFlags(ownerUuid, { effects: idsToEnd }));
+			}
+		}
 
 		const visibleEffectsToEnd = this.effects
 			.filter((effect) => this._effectContextFilter(inUUID, effect.data))
@@ -815,9 +795,7 @@ export default class SequencerEffectManager {
 
 		return Promise.allSettled([
 			this._endManyEffects(visibleEffectsToEnd),
-			...documentEffectsToEnd.map((obj) => {
-				return flagManager.removeFlags(obj.document.uuid, { effects: obj.effects });
-			}),
+			...flagRemovals,
 		]);
 	}
 

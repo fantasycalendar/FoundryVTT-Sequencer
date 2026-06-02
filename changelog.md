@@ -2,6 +2,7 @@
 
 # Version 4.2.0
 - *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
+- *Effects* - Greatly improved lookup speed of effects that needed to be deleted across scenes
 - *Effects* - Added `.onLevels()` to limit an effect to specific scene levels on Foundry v14
 - *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
 - *Effects* - Added a `topInclusive` option to `.elevation([bottom, top])` that mirrors the same property on Foundry Regions, including the top boundary in the range so the effect counts as part of the level above
