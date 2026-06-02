@@ -535,49 +535,11 @@ export default class SequencerEffectManager {
 	}
 
 	static setup() {
-		Hooks.on("preCreateToken", this._patchCreationData.bind(this));
-		Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
-		Hooks.on("preCreateTile", this._patchCreationData.bind(this));
-		Hooks.on("preCreateMeasuredTemplate", this._patchCreationData.bind(this));
-		Hooks.on("preCreateRegion", this._patchCreationData.bind(this));
 		Hooks.on("createToken", this._documentCreated.bind(this));
 		Hooks.on("createDrawing", this._documentCreated.bind(this));
 		Hooks.on("createTile", this._documentCreated.bind(this));
 		Hooks.on("createMeasuredTemplate", this._documentCreated.bind(this));
 		Hooks.on("createRegion", this._documentCreated.bind(this));
-	}
-
-	/**
-	 * Patches an object's creation data before it's created so that the effect plays on it correctly
-	 *
-	 * @param inDocument
-	 * @param data
-	 * @param options
-	 * @returns {*}
-	 */
-	static async _patchCreationData(inDocument, data, options) {
-		const effects = flagManager.getEffectFlags(inDocument);
-
-		if (!effects?.length) return;
-
-		const updates = {};
-
-		let documentUuid;
-		if (!inDocument._id) {
-			const documentId = foundry.utils.randomID();
-			documentUuid = inDocument.uuid + documentId;
-			updates["_id"] = documentId;
-			options.keepId = true;
-		} else {
-			documentUuid = inDocument.uuid;
-		}
-
-		updates[CONSTANTS.EFFECTS_FLAG] = this._patchEffectDataForDocument(
-			documentUuid,
-			effects
-		);
-
-		return flagManager.addFlags(documentUuid, updates);
 	}
 
 	static _patchEffectDataForDocument(inDocumentUuid, effects) {

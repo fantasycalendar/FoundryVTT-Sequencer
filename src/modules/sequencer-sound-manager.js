@@ -951,41 +951,11 @@ export default class SequencerSoundManager {
 	static states = SOUND_STATES;
 
 	static setup() {
-		Hooks.on("preCreateToken", this._patchCreationData.bind(this));
-		Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
-		Hooks.on("preCreateTile", this._patchCreationData.bind(this));
-		Hooks.on("preCreateMeasuredTemplate", this._patchCreationData.bind(this));
-		Hooks.on("preCreateRegion", this._patchCreationData.bind(this));
 		Hooks.on("createToken", this._documentCreated.bind(this));
 		Hooks.on("createDrawing", this._documentCreated.bind(this));
 		Hooks.on("createTile", this._documentCreated.bind(this));
 		Hooks.on("createMeasuredTemplate", this._documentCreated.bind(this));
 		Hooks.on("createRegion", this._documentCreated.bind(this));
-	}
-
-	static async _patchCreationData(inDocument, data, options) {
-		const sounds = flagManager.getSoundFlags(inDocument);
-
-		if (!sounds?.length) return;
-
-		const updates = {};
-
-		let documentUuid;
-		if (!inDocument._id) {
-			const documentId = foundry.utils.randomID();
-			documentUuid = inDocument.uuid + documentId;
-			updates["_id"] = documentId;
-			options.keepId = true;
-		} else {
-			documentUuid = inDocument.uuid;
-		}
-
-		updates[CONSTANTS.SOUNDS_FLAG] = this._patchSoundDataForDocument(
-			documentUuid,
-			sounds
-		);
-
-		return flagManager.updateFlags(inDocument, updates);
 	}
 
 	static _patchSoundDataForDocument(inDocumentUuid, sounds) {
