@@ -1,8 +1,27 @@
 ## Changelog
 
+# Version 4.2.0
+- *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
+- *Effects* - Greatly improved lookup speed of effects that needed to be deleted across scenes
+- *Effects* - Added `.onLevels()` to limit an effect to specific scene levels on Foundry v14
+- *Effects* - Added support for `.elevation([bottom, top])` to give an effect a vertical elevation range that stays visible on every scene level it reaches on Foundry v14
+- *Effects* - Added a `topInclusive` option to `.elevation([bottom, top])` that mirrors the same property on Foundry Regions, including the top boundary in the range so the effect counts as part of the level above
+- *Effects* - Fixed `.zIndex()` not working with `.screenSpace()` effects
+- *Effects* - Fixed effects showing across every scene level on Foundry v14
+- *Effects* - Fixed `.copySprite()` no longer animating when used on animated webm tokens, and ignoring the token's Scale setting and copying at the grid footprint size instead of the visible size
+- *Effects* - Fixed `.filter("ColorMatrix", ...)` breaking when any of `hue`, `brightness`, `contrast`, or `saturate` was given `null` or `undefined`
+- *Effects* - Fixed attached persistent effects not coming along when copy/pasting a token, drawing, tile, template, or region
+- *Effects* - Tweaked `.blendMode()` to create a warning when using `"overlay"`, `"soft-light"`, `"hard-light"`, `"color-dodge"`, `"color-burn"`, `"darken"`, `"lighten"`, `"difference"`, `"exclusion"`, `"hue"`, `"saturation"`, `"color"`, or `"luminosity"`; as these modes are not available in Foundry's renderer
+- *Sounds* - Added `.elevation()` to override or offset a positional sound's Z, used by the level-distance attenuation
+- *Sounds* - Added `.onLevels()` to limit a sound to specific scene levels on Foundry v14
+- *Sounds* - Fixed sounds played at a position not attenuating across scene levels on Foundry v14
+- *Sounds* - Fixed attached persistent sounds not coming along when copy/pasting a token, drawing, tile, template, or region
+
 # Version 4.1.0
 - *Sequencer* - Added Czech localization, and updated Polish localization (thank you, Lethrendis and Lioheart on github!)
 - *Effects* - Added `.blendMode()` to effect sections, accepting either a string name (e.g. `"multiply"`, `"screen"`, `"soft-light"`) or the `PIXI.BLEND_MODES` const
+- *Effects* - Added `.constrainedByWalls()` for clipping effects to wall-bounded line of sight, independent of the Walled Templates module
+- *Effects* - Added `Sequencer.Helpers.computeWallPolygon()` and extended `.mask()` to accept raw `PIXI.Polygon`, `PIXI.Circle`, or `PIXI.Rectangle` shapes
 - *Effects* - Fixed effects attached to or targeting a Region rendering below tiles that should sit beneath them
 - *Effects* - Fixed `.mask()` rejecting Regions even though Regions were already supported by the effect mask renderer
 - *Effects* - Fixed .atLocation(tile) placing effects at the tile's top-left instead of centering them on the tile (thanks aljames-arctic on GitHub)

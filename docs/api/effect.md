@@ -844,6 +844,29 @@ Sets the z-index of the effect, breaking ties between effects that share the sam
 
 **Note:** `.belowTokens()` and `.belowTiles()` change the effect's `sortLayer`, so the z-index ordering only applies within the new sort layer.
 
+## Elevation
+
+`.elevation(N)` or `.elevation([bottom, top])` or `.elevation(N, options)`
+
+Sets the effect's elevation. Pass a single number for a point, or a `[bottom, top]` array for an elevation range.
+
+The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels appears on each of them, drawing above each level's floor that its top reaches. The effect stays in the same visual layer whether the player is currently viewing the basement or the rooftop.
+
+A range whose top exactly meets the next level's floor — like `[0, 30]` against a level that starts at `30` — stays under that floor by default. Pass `topInclusive: true` to make the effect reach into the level above instead. This matches the Top Inclusive checkbox on Foundry's Region elevation settings.
+
+Options:
+- `absolute: boolean` — when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
+- `topInclusive: boolean` — range form only. When `true`, the top value is part of the range, matching the Top Inclusive checkbox on a Foundry Region. By default an effect whose top equals the next level's floor stays just below that level.
+
+Examples:
+```js
+.elevation(5)                              // point at elevation 5, offset from source
+.elevation(5, { absolute: true })          // point at exactly elevation 5
+.elevation([10, 20], { absolute: true })   // range from 10 to 20
+.elevation([0, 5])                         // range spanning 5 units above the source
+.elevation([0, 20], { topInclusive: true }) // range whose top includes the level starting at 20
+```
+
 ## Sort Layer
 
 `.sortLayer(PrimaryCanvasGroup.SORT_LAYERS.WEATHER + 100)`
@@ -861,6 +884,29 @@ For reference, Foundry's built-in sort layers are:
 - `600` drawings
 - `700` tokens
 - `1000` weather
+
+**Note:** `.sortLayer()` only orders effects played in world space (where tokens, tiles, and weather are). It does nothing on `.screenSpace()` or `.screenSpaceAboveUI()` effects. Use `.zIndex()` to layer those against each other.
+
+## On Levels
+
+`.onLevels("levelIdOrName")` or `.onLevels([id1, "Name 2", level])` (a level id, level name, or Level document)
+
+Restricts this effect to one or more scene levels on Foundry v14+. On older Foundry versions this doesn't do anything.
+
+**Automatic level behavior (no `.onLevels()` call required):** Sequencer picks the levels an effect appears on by comparing its elevation against the scene's levels.
+
+- An effect placed at a fixed `{x, y}` location appears on whichever level contains its elevation.
+- An effect placed at or stretched to a token covers the token's full height, so a tall token spanning two floors keeps its effects visible on both. This works for `.atLocation(token)` and `.stretchTo(token)` without needing `.attachTo()`. An attached effect follows the token's level setting in the token configuration instead.
+- An effect placed on or stretched to a region matches the region's elevation range, so an effect on a region that spans two floors stays visible on both. This works for `.atLocation(region)` and `.stretchTo(region)` without needing `.attachTo()`.
+- An explicit `.elevation([bottom, top], {absolute: true})` call pins the effect to that elevation range, so the effect appears on every level the range reaches.
+
+If you've set up a level to see into other levels in its configuration, effects on those other levels also render when you're viewing it.
+
+**When to call `.onLevels()`:** only when the automatic choice isn't what you want. The most common case is an effect that should appear on multiple non-adjacent levels (e.g. levels A and C but not B), which elevation alone can't express because a single elevation only falls in one level's range.
+
+Pass `null` to clear a previously set override.
+
+Screen-space effects (`.screenSpace()`, `.screenSpaceAboveUI()`, `.aboveInterface()`) are HUD overlays and always render regardless of level.
 
 ## Animate Property
 
@@ -1011,31 +1057,13 @@ Examples:
 - `.blendMode("multiply")` - Darkens the underlying canvas with the effect's colors (great for shadows or smoke)
 - `.blendMode("screen")` - Brightens the canvas with the effect (great for fire, magic, light flares)
 - `.blendMode("add")` - Additively blends the effect onto the canvas (classic glow / bloom feel)
-- `.blendMode("soft-light")` - Subtle photo-like overlay
-- `.blendMode("overlay")` - Pronounced photo-like overlay
 - `.blendMode(PIXI.BLEND_MODES.SCREEN)` - Same as `"screen"`, using the PIXI numeric constant
 
 Sets the blend mode used when compositing this effect onto the canvas. Accepts either a string name (case-insensitive; spaces, hyphens, and underscores are interchangeable, so `"soft-light"`, `"soft_light"`, and `"Soft Light"` are equivalent) or a numeric `PIXI.BLEND_MODES` constant.
 
-The full list of supported blend modes:
+Supported blend modes: `normal`, `add`, `multiply`, `screen`, `subtract`, `erase`, `none`, `normal-npm`, `add-npm`, `screen-npm`.
 
-| Standard | Advanced |
-|---|---|
-| `normal` | `overlay` |
-| `add` | `darken` |
-| `multiply` | `lighten` |
-| `screen` | `color-dodge` |
-| `subtract` | `color-burn` |
-| `erase` | `hard-light` |
-| `none` | `soft-light` |
-| `normal-npm` | `difference` |
-| `add-npm` | `exclusion` |
-| `screen-npm` | `hue` |
-| | `saturation` |
-| | `color` |
-| | `luminosity` |
-
-Standard modes render natively. Advanced modes need the effect to be rendered into its own framebuffer; this is handled automatically by attaching a no-op color matrix filter when needed, so you don't have to do anything special. If you have already added a `.filter()` to the effect, no extra filter is added.
+The advanced modes exposed by PIXI v7 (`overlay`, `darken`, `lighten`, `color-dodge`, `color-burn`, `hard-light`, `soft-light`, `difference`, `exclusion`, `hue`, `saturation`, `color`, `luminosity`) are not implemented by the renderer and will fall back to normal blending. A one-time warning is logged when one is requested.
 
 ## Screen Space
 
@@ -1161,10 +1189,36 @@ Causes the effect to ignore vision-based masking.
 
 ## Mask
 
-`.mask()` or `.mask(token)` or `.mask([list, of, objects])`
+`.mask()` or `.mask(token)` or `.mask([list, of, objects])` or `.mask(pixiShape)`
 
 Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source of the effect.
 
+A raw `PIXI.Polygon`, `PIXI.Circle`, or `PIXI.Rectangle` may also be passed, in scene coordinates. Combine with `Sequencer.Helpers.computeWallPolygon()` to clip an effect to a wall-bounded line of sight without attaching it to a placeable.
+
+## Constrained By Walls
+
+`.constrainedByWalls()` or `.constrainedByWalls(false)` or `.constrainedByWalls({ type, radius, origin, level })`
+
+Clips the effect to a wall-bounded sweep from its source position, using Foundry's native polygon sweep. Independent of the Walled Templates module - works on any scene that has walls. The sweep is a full 360°, suitable for explosions, auras, and beams alike; walls in front of the source cut the visible effect, walls behind don't affect anything since nothing renders there anyway.
+
+Options:
+
+- `type` - one of `"sight"`, `"sound"`, `"move"`, `"light"`. Defaults to `"sight"`.
+- `radius` - optional bounding circle in pixels. Defaults to no bound (sweeps to the scene edge).
+- `origin` - optional `{ x, y }` override. Defaults to the effect's source position.
+- `level` - Foundry v14+ only. A level id, level name, or Level document whose walls the sweep should consult. Defaults to the source's own level (resolved from an attached placeable, then from `.onLevels()`, then from the effect's elevation extent), so an effect on a token in the basement still clips against the basement's walls even while you're viewing the rooftop. Ignored on Foundry v13.
+
+When the effect is attached to a token, the sweep is recomputed each refresh tick as the token moves. When walls or levels are created, updated, or deleted, the sweep is recomputed on a short debounce.
+
+For one-off custom shapes outside the section API, use the standalone helper:
+
+```js
+const polygon = Sequencer.Helpers.computeWallPolygon(
+  { x: token.center.x, y: token.center.y },
+  { type: "sight", radius: 600 }
+);
+new Sequence().effect().file("...").atLocation(token).mask(polygon).play();
+```
 
 ## Tie To Documents
 

@@ -5,6 +5,7 @@ import flagManager from "../utils/flag-manager.js";
 import CONSTANTS from "../constants.js";
 import SequenceManager from "./sequence-manager.js";
 import { EffectsUIApp } from "../formapplications/effects-ui/effects-ui-app.js";
+import PasteManager from "./sequencer-paste-manager.js";
 
 const PositionContainer = new Map();
 const TemporaryPositionsContainer = new Map();
@@ -196,20 +197,7 @@ export default class SequencerEffectManager {
 				"gu"
 			);
 		}
-		let effects = this.effects;
-		if (inFilter.sceneId && inFilter.sceneId !== canvas.scene?.id) {
-			effects = lib
-				.get_all_documents_from_scene(inFilter.sceneId)
-				.map((doc) => {
-					return foundry.utils.getProperty(doc, CONSTANTS.EFFECTS_FLAG);
-				})
-				.filter((flags) => !!flags)
-				.map((flags) => {
-					return flags.map((flag) => CanvasEffect.make(flag[1]));
-				})
-				.deepFlatten();
-		}
-		return effects.filter((effect) => {
+		return this.effects.filter((effect) => {
 			return (
 				(!inFilter.effects || inFilter.effects.includes(effect.id)) &&
 				(!inFilter.name || (effect.data.name && effect.data.name.match(inFilter.name)?.length)) &&
@@ -547,49 +535,11 @@ export default class SequencerEffectManager {
 	}
 
 	static setup() {
-		Hooks.on("preCreateToken", this._patchCreationData.bind(this));
-		Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
-		Hooks.on("preCreateTile", this._patchCreationData.bind(this));
-		Hooks.on("preCreateMeasuredTemplate", this._patchCreationData.bind(this));
-		Hooks.on("preCreateRegion", this._patchCreationData.bind(this));
 		Hooks.on("createToken", this._documentCreated.bind(this));
 		Hooks.on("createDrawing", this._documentCreated.bind(this));
 		Hooks.on("createTile", this._documentCreated.bind(this));
 		Hooks.on("createMeasuredTemplate", this._documentCreated.bind(this));
 		Hooks.on("createRegion", this._documentCreated.bind(this));
-	}
-
-	/**
-	 * Patches an object's creation data before it's created so that the effect plays on it correctly
-	 *
-	 * @param inDocument
-	 * @param data
-	 * @param options
-	 * @returns {*}
-	 */
-	static async _patchCreationData(inDocument, data, options) {
-		const effects = flagManager.getEffectFlags(inDocument);
-
-		if (!effects?.length) return;
-
-		const updates = {};
-
-		let documentUuid;
-		if (!inDocument._id) {
-			const documentId = foundry.utils.randomID();
-			documentUuid = inDocument.uuid + documentId;
-			updates["_id"] = documentId;
-			options.keepId = true;
-		} else {
-			documentUuid = inDocument.uuid;
-		}
-
-		updates[CONSTANTS.EFFECTS_FLAG] = this._patchEffectDataForDocument(
-			documentUuid,
-			effects
-		);
-
-		return flagManager.addFlags(documentUuid, updates);
 	}
 
 	static _patchEffectDataForDocument(inDocumentUuid, effects) {
@@ -626,6 +576,19 @@ export default class SequencerEffectManager {
 				);
 			}
 			effects = effects.concat(actorEffects);
+		}
+		const sourceUuid = PasteManager.consume(inDocument);
+		if (sourceUuid) {
+			const sourceEffects = flagManager.getEffectFlags({ uuid: sourceUuid });
+			if (sourceEffects.length) {
+				const rekeyed = this._patchEffectDataForDocument(inDocument.uuid, sourceEffects);
+				const effectDatas = rekeyed.map(([, data]) => data);
+				flagManager.addFlags(inDocument.uuid, { effects: effectDatas });
+				for (const effectData of effectDatas) {
+					sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_EFFECT, effectData, false);
+				}
+				effects = effects.concat(rekeyed);
+			}
 		}
 		if (!effects?.length) return;
 		return this._playEffectMap(effects, inDocument);
@@ -777,23 +740,16 @@ export default class SequencerEffectManager {
 	 * @returns {Promise}
 	 */
 	static objectDeleted(inUUID) {
-		const documentsToCheck = game.scenes
-			.filter((scene) => scene.id !== game.user.viewedScene)
-			.map((scene) => [scene, ...lib.get_all_documents_from_scene(scene.id)])
-			.deepFlatten();
-
-		const documentEffectsToEnd = documentsToCheck
-			.map((obj) => {
-				const objEffects = flagManager.getEffectFlags(obj);
-				const effectsToEnd = objEffects.filter(([effectId, effectData]) =>
-					this._effectContextFilter(inUUID, effectData)
-				);
-				return {
-					document: obj,
-					effects: effectsToEnd.map((effect) => effect[0]),
-				};
-			})
-			.filter((obj) => obj.effects.length);
+		const databaseEffects = flagManager.getDatabaseFlags().effects;
+		const flagRemovals = [];
+		for (const [ownerUuid, effects] of Object.entries(databaseEffects)) {
+			const idsToEnd = effects
+				.filter(([, effectData]) => this._effectContextFilter(inUUID, effectData))
+				.map(([effectId]) => effectId);
+			if (idsToEnd.length) {
+				flagRemovals.push(flagManager.removeFlags(ownerUuid, { effects: idsToEnd }));
+			}
+		}
 
 		const visibleEffectsToEnd = this.effects
 			.filter((effect) => this._effectContextFilter(inUUID, effect.data))
@@ -801,9 +757,7 @@ export default class SequencerEffectManager {
 
 		return Promise.allSettled([
 			this._endManyEffects(visibleEffectsToEnd),
-			...documentEffectsToEnd.map((obj) => {
-				return flagManager.removeFlags(obj.document.uuid, { effects: obj.effects });
-			}),
+			...flagRemovals,
 		]);
 	}
 

@@ -98,6 +98,107 @@ const SyncGroups = {
 	}
 };
 
+/**
+ * Whether the document shows on the viewed level, including via
+ * cross-visibility. Foundry's `Token.includedInLevel` already follows
+ * cross-visibility, but the generic `CanvasDocument.includedInLevel`
+ * used by Region, Tile, Drawing, etc. does not, so we walk the viewed
+ * level's `visibility.levels` against the document's level set ourselves.
+ *
+ * @param {foundry.abstract.Document|null|undefined} doc
+ * @param {foundry.documents.Level|null|undefined} viewedLevel
+ * @returns {boolean}
+ */
+function isDocOnViewedLevel(doc, viewedLevel) {
+	if (!doc || !viewedLevel) return false;
+	if (doc.includedInLevel?.(viewedLevel.id) === true) return true;
+	const cross = viewedLevel.visibility?.levels;
+	if (!cross?.size) return false;
+	if (doc.levels?.size) {
+		for (const id of doc.levels) {
+			if (cross.has(id)) return true;
+		}
+	} else if (typeof doc.level === "string") {
+		if (cross.has(doc.level)) return true;
+	}
+	return false;
+}
+
+/**
+ * Whether an attached effect's source/target placeable should let the
+ * effect render. Only Tokens are gated on visibility, since their
+ * `isVisible` reflects per-perception culling and line of sight; other
+ * placeables (Region, Tile, Drawing, Note) have `isVisible` getters
+ * that return false for permission and layer-state reasons unrelated
+ * to whether the placeable is rendered.
+ *
+ * @param {foundry.canvas.placeables.PlaceableObject|null|undefined} placeable
+ * @returns {boolean}
+ */
+function isAttachedPlaceableVisible(placeable) {
+	if (!placeable) return false;
+	const Token = foundry.canvas.placeables.Token;
+	if (!(placeable instanceof Token)) return true;
+	return placeable.isVisible !== false;
+}
+
+/**
+ * Whether the given scene position is hidden from the viewed level by a
+ * `defineSurface` Region with `culling: true`. Mirrors what Foundry's
+ * `Token#testCulled` does, generalised to an arbitrary `(x, y)` and
+ * elevation range.
+ *
+ * @param {foundry.documents.Scene} scene
+ * @param {foundry.documents.Level} viewedLevel
+ * @param {number} x
+ * @param {number} y
+ * @param {number} zMin
+ * @param {number} zMax
+ * @returns {boolean}
+ */
+function isPositionCulled(scene, viewedLevel, x, y, zMin, zMax) {
+	const { bottom, top } = viewedLevel.elevation;
+	let lo, hi;
+	if (zMax < bottom) {
+		lo = Math.nextUp(zMax);
+		hi = bottom;
+	} else if (zMin >= top) {
+		lo = top;
+		hi = zMin;
+	} else {
+		return false;
+	}
+	const probe = { x, y };
+	for (const surface of scene.getSurfaces({ culling: true, level: viewedLevel })) {
+		if (surface.elevation > hi) break;
+		if (surface.elevation < lo) continue;
+		if (surface.region.polygonTree.testPoint(probe)) return true;
+	}
+	return false;
+}
+
+/**
+ * Does an effect's vertical extent `[a0, a1]` overlap a Level's
+ * elevation range `[b0, b1]`? Bottoms always count as part of their
+ * interval. The effect's top counts when `aTopInclusive` is set,
+ * matching Foundry Region `elevation.topInclusive`. The level's top is
+ * never inclusive: adjacent levels share that boundary, and it belongs
+ * to the upper level.
+ *
+ * @returns {boolean}
+ */
+function intervalsOverlap(a0, a1, b0, b1, aTopInclusive = false) {
+	const aIsRange = a0 < a1;
+	const bIsRange = b0 < b1;
+	const lo = Math.max(a0, b0);
+	const hi = Math.min(a1, b1);
+	if (lo > hi) return false;
+	if (lo < hi) return true;
+	if (bIsRange && (hi === b1)) return false;
+	if (aIsRange && (hi === a1)) return aTopInclusive;
+	return true;
+}
+
 export default class CanvasEffect extends PIXI.Container {
 	#elevation = 0;
 	#sort = 0;
@@ -732,12 +833,20 @@ export default class CanvasEffect extends PIXI.Container {
 		let crosshairPos = this.source instanceof CrosshairsPlaceable ? this.sourceDocument.getOrientation() : false;
 		crosshairPos = crosshairPos?.source;
 
-		let position =
+		// Fall back to the document when the placeable isn't on this canvas.
+		const positionSource =
 			this.source instanceof foundry.canvas.placeables.PlaceableObject && !this.isSourceTemporary
-				? canvaslib.get_object_position(this.source)
-				: crosshairPos || this.source?.worldPosition || this.source?.center || this.source;
+				? this.source
+				: (this.sourceDocument ?? this.source);
 
-		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.source);
+		let position =
+			crosshairPos
+			|| (positionSource ? canvaslib.get_object_position(positionSource) : null)
+			|| this.source?.worldPosition
+			|| this.source?.center
+			|| this.source;
+
+		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(positionSource);
 
 		position = PluginsManager.sourcePosition({ effect: this, position, height });
 
@@ -812,12 +921,20 @@ export default class CanvasEffect extends PIXI.Container {
 		let crosshairPos = this.target instanceof CrosshairsPlaceable ? this.targetDocument.getOrientation() : false;
 		crosshairPos = crosshairPos?.target ?? crosshairPos?.source;
 
-		let position =
+		// Fall back to the document when the placeable isn't on this canvas.
+		const positionTarget =
 			this.target instanceof foundry.canvas.placeables.PlaceableObject && !this.isTargetTemporary && !this.isTargetDestroyed
-				? canvaslib.get_object_position(this.target, { measure: true })
-				: crosshairPos || this.target?.worldPosition || this.target?.center || this.target;
+				? this.target
+				: (this.targetDocument ?? this.target);
 
-		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(this.target);
+		let position =
+			crosshairPos
+			|| (positionTarget ? canvaslib.get_object_position(positionTarget, { measure: true }) : null)
+			|| this.target?.worldPosition
+			|| this.target?.center
+			|| this.target;
+
+		const { width, height } = crosshairPos || canvaslib.get_object_dimensions(positionTarget);
 
 		position = PluginsManager.targetPosition({ effect: this, position, height });
 
@@ -1257,7 +1374,8 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	async _reinitialize() {
-		this.renderable = false;
+		this._initializing = true;
+		this._recomputeRenderable();
 		if (!this.shouldPlay) {
 			return Sequencer.EffectManager._removeEffect(this);
 		}
@@ -1289,6 +1407,9 @@ export default class CanvasEffect extends PIXI.Container {
 		this._maskContainer = null;
 		this._maskSprite = null;
 		this._stageMasks = [];
+		this._wallMaskGraphics = null;
+		this._wallMaskDirty = false;
+		this._verticalExtent = [0, 0, false];
 		this._timeouts = new Set();
 		this._file = null;
 		this._loopOffset = 0;
@@ -1400,15 +1521,13 @@ export default class CanvasEffect extends PIXI.Container {
 			}
 			this._stageMasks.length = 0;
 		}
+		this._wallMaskGraphics = null;
 
 		this.sprite?.destroy();
 		this.sprite = null;
 
-		try {
-			if (this.data.screenSpace) {
-				SequencerAboveUILayer.removeContainerByEffect(this);
-			}
-		} catch (err) {
+		if (this.data.screenSpaceAboveUI) {
+			SequencerAboveUILayer.removeContainerByEffect(this);
 		}
 
 		if (this.data.syncGroup) {
@@ -1502,11 +1621,9 @@ export default class CanvasEffect extends PIXI.Container {
 		} else if (this.data.aboveLighting) {
 			layer = canvas.interface;
 		} else {
-			// Default route: render inside the primary canvas group so that
-			// effects participate in elevation/sortLayer/sort ordering with
-			// tokens, tiles, drawings, and weather. This restores the
-			// pre-v13 documented behavior (sortLayer 800 sits above tokens
-			// at 700 and below weather at 1000).
+			// Render inside the primary canvas group so that effects
+			// participate in elevation/sortLayer/sort ordering with tokens,
+			// tiles, drawings, and weather.
 			layer = canvas.primary;
 			registerVoidProxy = true;
 		}
@@ -1922,18 +2039,18 @@ export default class CanvasEffect extends PIXI.Container {
 	async _createFile() {
 		if (this.data.copySprite) {
 			let targetDocument = fromUuidSync(this.data.copySprite.uuid);
-			let clonedObject = targetDocument.object.clone();
-			await clonedObject.draw();
-			let clonedMesh = clonedObject.mesh;
-			clonedMesh.position.set(0, 0);
-			if (targetDocument?.ring?.enabled) {
+			if (targetDocument?.ring?.enabled && targetDocument.object) {
+				let clonedObject = targetDocument.object.clone();
+				await clonedObject.draw();
+				let clonedMesh = clonedObject.mesh;
+				clonedMesh.position.set(0, 0);
 				clonedMesh.setShaderClass(CONFIG.Token.ring.shaderClass);
+				this._renderTexture = canvas.app.renderer.generateTexture(clonedMesh, {
+					resolution: clonedMesh.texture.resolution
+				});
+				clonedObject.destroy();
+				return;
 			}
-			this._renderTexture = canvas.app.renderer.generateTexture(clonedMesh, {
-				resolution: clonedMesh.texture.resolution
-			});
-			clonedObject.destroy();
-			return;
 		}
 
 		if (this.data.file === "") {
@@ -1969,7 +2086,7 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	_updateCurrentFilePath(distance, showDistanceWarning = false) {
-		if (this.data.copySprite) {
+		if (this.data.copySprite && this._renderTexture) {
 			this._currentFilePath = this.data.copySprite.uuid;
 			return;
 		}
@@ -2000,7 +2117,8 @@ export default class CanvasEffect extends PIXI.Container {
 			this.rotationContainer.position.set(this.data.copySprite.offsetX, this.data.copySprite.offsetY);
 		}
 
-		this.renderable = false;
+		this._initializing = true;
+		this._recomputeRenderable();
 		const spriteData = {
 			texture: this._renderTexture,
 			antialiasing: this.data?.fileOptions?.antialiasing,
@@ -2017,6 +2135,14 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite.loop = this.loops
 
 		await this.sprite.activate(this._currentFilePath)
+
+		if (this.data.copySprite && !this._renderTexture && !this.data.time?.start) {
+			const sourcePlaceable = fromUuidSync(this.data.copySprite.uuid)?.object ?? null;
+			const sourceTime = sourcePlaceable?.sourceElement?.currentTime;
+			if (Number.isFinite(sourceTime) && sourceTime > 0) {
+				this.sprite.currentTime = sourceTime;
+			}
+		}
 
 		this.sprite.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
 
@@ -2101,20 +2227,6 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (this.data.blendMode != null) {
 			this.sprite.blendMode = this.data.blendMode;
-			// Advanced blend modes (overlay, soft-light, etc.) sample the destination
-			// pixel and only render correctly when the displayed object is rendered
-			// into its own framebuffer. Effects render through PIXI.Mesh, so we force
-			// isolation by ensuring at least one filter is present. An identity
-			// ColorMatrixFilter is essentially free and makes advanced modes work.
-			if (CONSTANTS.ADVANCED_BLEND_MODES.has(this.data.blendMode)) {
-				const hasFilter = (this.sprite.filters?.length ?? 0) > 0
-					|| this.sprite.colorMatrixFilter != null;
-				if (!hasFilter) {
-					const isolation = new PIXI.ColorMatrixFilter();
-					isolation.id = this.id + "-blendMode-isolation";
-					this.sprite.colorMatrixFilter = isolation;
-				}
-			}
 		}
 
 		// only set filter and fade effects when a faded version should actually be shown
@@ -2143,17 +2255,160 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 	}
 
+	/**
+	 * Single place to write to this.renderable. Other code paths set their
+	 * gate slot (e.g. _baseRenderable) and call this; don't bypass.
+	 *
+	 * @private
+	 */
+	_recomputeRenderable() {
+		if (this._initializing) {
+			this.renderable = false;
+			return;
+		}
+		const base = this._baseRenderable ?? this.shouldPlayVisible;
+		const paused = this._pauseRenderable !== false;
+		this.renderable = base && paused && this._isOnViewedLevel();
+	}
+
+	/**
+	 * Whether this effect is visible on the currently viewed scene level.
+	 * Always true on Foundry v13, and on `.screenSpace()`,
+	 * `.screenSpaceAboveUI()`, and `.aboveInterface()` effects.
+	 *
+	 * @returns {boolean}
+	 * @private
+	 */
+	_isOnViewedLevel() {
+		if (!CONSTANTS.IS_V14) return true;
+		const currentLevel = canvas?.level;
+		if (!currentLevel) return true;
+		if (this.data.screenSpace || this.data.screenSpaceAboveUI || this.data.aboveInterface) {
+			return true;
+		}
+
+		const crossLevels = currentLevel.visibility?.levels;
+		const sceneLevels = canvas.scene?.levels;
+
+		if (this.data.levels?.length) {
+			for (const entry of this.data.levels) {
+				let id = entry;
+				if (sceneLevels && !sceneLevels.get(id)) {
+					id = sceneLevels.getName?.(entry)?.id ?? entry;
+				}
+				if (id === currentLevel.id) return true;
+				if (crossLevels?.has(id)) return true;
+			}
+			return false;
+		}
+
+		// An explicit `.elevation()` range or `absolute` wins over
+		// the source's level membership.
+		const hasExplicitSpatial = !!this.data.elevation
+			&& (typeof this.data.elevation.top === "number" || this.data.elevation.absolute === true);
+		const sourceAttached = !hasExplicitSpatial && this.data.attachTo?.active
+			&& typeof this.sourceDocument?.viewed === "boolean";
+		const targetAttached = !hasExplicitSpatial
+			&& (this.data.stretchTo?.attachTo || this.data.rotateTowards?.attachTo)
+			&& typeof this.targetDocument?.viewed === "boolean";
+		if (sourceAttached || targetAttached) {
+			if (sourceAttached && isDocOnViewedLevel(this.sourceDocument, currentLevel)) return true;
+			if (targetAttached && isDocOnViewedLevel(this.targetDocument, currentLevel)) return true;
+			return false;
+		}
+
+		const [zMin, zMax, topInclusive] = this._getEffectiveVerticalExtent();
+		const viewed = currentLevel.elevation;
+		let levelMatch = intervalsOverlap(zMin, zMax, viewed.bottom, viewed.top, topInclusive);
+		if (!levelMatch && crossLevels?.size) {
+			const allLevels = canvas.scene?.levels;
+			for (const otherId of crossLevels) {
+				const other = allLevels?.get(otherId)?.elevation;
+				if (!other) continue;
+				if (intervalsOverlap(zMin, zMax, other.bottom, other.top, topInclusive)) {
+					levelMatch = true;
+					break;
+				}
+			}
+		}
+		if (!levelMatch) return false;
+
+		// Hide an unattached effect the same way Foundry hides tokens through its culling system
+		const pos = this.sourcePosition;
+		if (!pos || !canvas.scene) return true;
+		return !isPositionCulled(canvas.scene, currentLevel, pos.x, pos.y, zMin, zMax);
+	}
+
+	/**
+	 * The effect's vertical `[zMin, zMax, topInclusive]` in scene elevation
+	 * units. Pinned by an explicit `.elevation()`; otherwise inherits the
+	 * source/target's extent (Token depth, Region elevation range and its
+	 * `topInclusive` flag).
+	 *
+	 * @returns {[number, number, boolean]}
+	 * @private
+	 */
+	_getEffectiveVerticalExtent() {
+		const out = this._verticalExtent;
+		if (this.data.elevation) {
+			out[0] = (typeof this.elevationBottom === "number") ? this.elevationBottom : this.elevation;
+			out[1] = (typeof this.elevationTop === "number") ? this.elevationTop : out[0];
+			out[2] = !!this.data.elevation.topInclusive;
+			return out;
+		}
+
+		const sourceExtent = canvaslib.get_object_vertical_extent(this.sourceDocument);
+		const targetExtent = canvaslib.get_object_vertical_extent(this.targetDocument);
+
+		if (sourceExtent && targetExtent) {
+			out[0] = Math.min(sourceExtent[0], targetExtent[0]);
+			out[1] = Math.max(sourceExtent[1], targetExtent[1]);
+			out[2] = !!(sourceExtent[1] >= targetExtent[1] ? sourceExtent[2] : false)
+				|| !!(targetExtent[1] >= sourceExtent[1] ? targetExtent[2] : false);
+			return out;
+		}
+		if (sourceExtent) { out[0] = sourceExtent[0]; out[1] = sourceExtent[1]; out[2] = !!sourceExtent[2]; return out; }
+		if (targetExtent) { out[0] = targetExtent[0]; out[1] = targetExtent[1]; out[2] = !!targetExtent[2]; return out; }
+		out[0] = this.elevation; out[1] = this.elevation; out[2] = false;
+		return out;
+	}
+
 	updateElevation() {
 		let targetElevation = Math.max(
 			canvaslib.get_object_elevation(this.source ?? {}),
 			canvaslib.get_object_elevation(this.target ?? {})
 		);
 
-		let effectElevation = this.data.elevation?.elevation ?? 0;
-		if (!this.data.elevation?.absolute) {
-			effectElevation += targetElevation;
+		const offset = this.data.elevation?.absolute ? 0 : targetElevation;
+		const bottom = (this.data.elevation?.elevation ?? 0) + offset;
+		const top = (typeof this.data.elevation?.top === "number")
+			? this.data.elevation.top + offset
+			: null;
+		this.elevationBottom = bottom;
+		this.elevationTop = top;
+
+		// Anchor above the highest level floor the effect's top reaches
+		// into, so a multi-level effect keeps its sort position when the
+		// viewed level changes.
+		let renderElevation = bottom;
+		const onDefaultRoute = !this.data.aboveLighting && !this.data.aboveInterface
+			&& !this.data.screenSpace && !this.data.screenSpaceAboveUI;
+		if (onDefaultRoute) {
+			const [, extentTop, extentTopInclusive] = this._getEffectiveVerticalExtent();
+			const effectiveTop = (typeof extentTop === "number") ? extentTop : bottom;
+			const sceneLevels = canvas?.scene?.levels;
+			if (sceneLevels) {
+				for (const level of sceneLevels) {
+					const lvlBottom = level.elevation?.bottom;
+					if (!Number.isFinite(lvlBottom)) continue;
+					const crosses = extentTopInclusive
+						? (effectiveTop >= lvlBottom)
+						: (effectiveTop > lvlBottom);
+					if (crosses && lvlBottom > renderElevation) renderElevation = lvlBottom;
+				}
+			}
 		}
-		this.elevation = effectElevation;
+		this.elevation = renderElevation;
 		let sort = !lib.is_real_number(this.data.zIndex)
 			? (this?.parent?.children?.length ?? 0)
 			: 100000;
@@ -2178,6 +2433,10 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.parent) {
 			this.parent.sortDirty = true;
 		}
+		// Elevation changes can flip level membership. e.g. an effect at
+		// elevation 15 sits in level 2 [10, 20]; raise it to elevation 25
+		// and it's on level 3 [20, 30], so visibility must re-evaluate.
+		this._recomputeRenderable();
 	}
 
 	updateTransform() {
@@ -2229,22 +2488,44 @@ export default class CanvasEffect extends PIXI.Container {
 	async _setupMasks() {
 		const maskShapes = this.data.shapes.filter((shape) => shape.isMask);
 
-		if (!this.data?.masks?.length && !maskShapes.length) return;
+		if (!this.data?.masks?.length && !maskShapes.length && !this.data?.constrainedByWalls) return;
 
 		const maskFilter = MaskFilter.create();
 
-		for (const uuid of this.data.masks) {
+		if (this.data.constrainedByWalls) {
+			this._setupWallMask(maskFilter);
+		}
+
+		for (const entry of this.data.masks) {
+			if (entry && typeof entry === "object" && entry.__shape) {
+				const rawShape = canvaslib.deserializeShape(entry.__shape);
+				if (!rawShape) continue;
+				const graphics = new PIXI.LegacyGraphics().beginFill().drawShape(rawShape).endFill();
+				graphics.cullable = true;
+				graphics.custom = true;
+				graphics.renderable = false;
+				graphics.uuid = "__rawShape-" + foundry.utils.randomID();
+				canvas.stage.addChild(graphics);
+				this._stageMasks.push(graphics);
+				maskFilter.masks.push(graphics);
+				continue;
+			}
+
+			const uuid = entry;
 			const documentObj = fromUuidSync(uuid);
 
 			if (!documentObj || documentObj.parent.id !== this.data.sceneId) continue;
 
 			const obj = documentObj.object;
+			const docName = documentObj.documentName;
 
 			let shape = obj?.mesh;
 			let shapeToAdd = shape;
 
-			if (obj instanceof foundry.canvas.placeables.Region) {
+			if (docName === "Region") {
 
+				// documentObj.polygons works without the placeable; negative
+				// polygons (ring inner disc, etc.) become holes.
 				shape = new PIXI.LegacyGraphics()
 
 				for (let polygon of documentObj.polygons) {
@@ -2270,8 +2551,17 @@ export default class CanvasEffect extends PIXI.Container {
 				canvas.stage.addChild(shapeToAdd);
 				this._stageMasks.push(shapeToAdd);
 
-			} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate || obj instanceof foundry.canvas.placeables.Drawing) {
-				shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
+			} else if (docName === "MeasuredTemplate" || docName === "Drawing") {
+				// MeasuredTemplates are always instantiated; off-level
+				// Drawings fall back to doc-shape construction.
+				if (obj) {
+					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
+				} else if (docName === "Drawing") {
+					shape = canvaslib.create_drawing_mask_shape(documentObj);
+				} else {
+					continue;
+				}
+				if (!shape) continue;
 
 				shape = PluginsManager.masking({
 					effect: this,
@@ -2285,7 +2575,7 @@ export default class CanvasEffect extends PIXI.Container {
 					.drawShape(shape)
 					.endFill();
 
-				if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
+				if (docName === "MeasuredTemplate") {
 					shapeToAdd.position.set(documentObj.x, documentObj.y);
 				} else {
 					const {
@@ -2304,6 +2594,8 @@ export default class CanvasEffect extends PIXI.Container {
 				shapeToAdd.uuid = uuid;
 				canvas.stage.addChild(shapeToAdd);
 				this._stageMasks.push(shapeToAdd);
+			} else {
+				continue;
 			}
 			shapeToAdd.obj = obj;
 
@@ -2313,7 +2605,7 @@ export default class CanvasEffect extends PIXI.Container {
 				if (!mask) return;
 				if (!mask.custom) return;
 				mask.clear();
-				if (obj instanceof foundry.canvas.placeables.Region) {
+				if (docName === "Region") {
 					for (let polygon of documentObj.polygons) {
 						if (polygon.isPositive) {
 							mask.beginFill();
@@ -2327,10 +2619,10 @@ export default class CanvasEffect extends PIXI.Container {
 							mask.endHole();
 						}
 					}
-				} else if (obj instanceof foundry.canvas.placeables.MeasuredTemplate) {
+				} else if (docName === "MeasuredTemplate") {
 					mask.position.set(documentObj.x, documentObj.y);
 					let maskObj = documentObj.object;
-					shape = obj?.shape?.geometry?.graphicsData?.[0]?.shape ?? obj?.shape;
+					shape = maskObj?.shape?.geometry?.graphicsData?.[0]?.shape ?? maskObj?.shape;
 					shape = PluginsManager.masking({
 						effect: this,
 						doc: documentObj,
@@ -2338,7 +2630,7 @@ export default class CanvasEffect extends PIXI.Container {
 						shape
 					});
 					mask.beginFill().drawShape(shape).endFill();
-				} else {
+				} else if (docName === "Drawing") {
 					const {
 						x,
 						y,
@@ -2348,7 +2640,14 @@ export default class CanvasEffect extends PIXI.Container {
 					mask.pivot.set(width / 2, height / 2);
 					mask.position.set(x + width / 2, y + height / 2);
 					mask.angle = rotation;
-					mask.beginFill().drawShape(shape).endFill();
+					let updatedShape;
+					if (documentObj.object) {
+						updatedShape = documentObj.object?.shape?.geometry?.graphicsData?.[0]?.shape
+							?? documentObj.object?.shape;
+					} else {
+						updatedShape = canvaslib.create_drawing_mask_shape(documentObj);
+					}
+					if (updatedShape) mask.beginFill().drawShape(updatedShape).endFill();
 				}
 			};
 
@@ -2383,6 +2682,135 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	/**
+	 * Builds the initial wall-constrained mask graphic and wires hooks that recompute
+	 * the sweep when walls change or when the attached source moves.
+	 *
+	 * @param {MaskFilter} maskFilter
+	 * @private
+	 */
+	_setupWallMask(maskFilter) {
+		const shape = this._computeWallPolygon();
+		if (!shape) return;
+
+		const graphics = new PIXI.LegacyGraphics().beginFill().drawShape(shape).endFill();
+		graphics.cullable = true;
+		graphics.custom = true;
+		graphics.renderable = false;
+		graphics.uuid = "__constrainedByWalls";
+		canvas.stage.addChild(graphics);
+		this._stageMasks.push(graphics);
+		maskFilter.masks.push(graphics);
+		this._wallMaskGraphics = graphics;
+
+		const recompute = () => {
+			if (!this._wallMaskGraphics || this._ended) return;
+			const next = this._computeWallPolygon();
+			if (!next) return;
+			this._wallMaskGraphics.clear().beginFill().drawShape(next).endFill();
+		};
+
+		const debouncedRecompute = () => {
+			if (this._wallMaskDirty) return;
+			this._wallMaskDirty = true;
+			this._setTimeout(() => {
+				this._wallMaskDirty = false;
+				recompute();
+			}, 100);
+		};
+
+		for (const hook of ["createWall", "updateWall", "deleteWall"]) {
+			hooksManager.addHook(this.uuid, hook, debouncedRecompute);
+		}
+
+		if (CONSTANTS.IS_V14) {
+			for (const hook of ["createLevel", "updateLevel", "deleteLevel"]) {
+				hooksManager.addHook(this.uuid, hook, (level) => {
+					if (level?.parent?.id !== this.data.sceneId) return;
+					debouncedRecompute();
+				});
+			}
+		}
+
+		const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
+		const sourceRefreshHook = attachedToSource && this.getSourceHook("refresh");
+		if (sourceRefreshHook) {
+			hooksManager.addHook(this.uuid, sourceRefreshHook, (placeable) => {
+				if (placeable?.document?.uuid !== this.data.source) return;
+				recompute();
+			});
+		}
+	}
+
+	/**
+	 * Computes the wall-constrained polygon for this effect from the source position.
+	 *
+	 * @returns {PIXI.Polygon|null}
+	 * @private
+	 */
+	_computeWallPolygon() {
+		const cfg = this.data.constrainedByWalls;
+		if (!cfg) return null;
+
+		const origin = cfg.origin ?? this.sourcePosition;
+		if (!origin || !lib.is_real_number(origin.x) || !lib.is_real_number(origin.y)) return null;
+
+		const elevation = lib.is_real_number(origin.elevation)
+			? origin.elevation
+			: canvaslib.get_object_elevation(this.source ?? this.sourceDocument ?? {});
+
+		return canvaslib.computeWallPolygon({ ...origin, elevation }, {
+			type: cfg.type,
+			radius: cfg.radius,
+			level: cfg.level ?? this._resolveWallSweepLevel(),
+		});
+	}
+
+	/**
+	 * Resolves which scene Level the wall sweep should consult on Foundry v14.
+	 * Returns null on v13 (where Levels do not exist) and when no clear
+	 * affinity is available, in which case the polygon backend falls back to
+	 * `canvas.level` (the currently viewed level).
+	 *
+	 * Priority: an attached source's `document.level`, then a single-entry
+	 * `.onLevels()` selection, then the lowest-elevation Level whose vertical
+	 * range overlaps the effect.
+	 *
+	 * @returns {foundry.documents.Level|null}
+	 * @private
+	 */
+	_resolveWallSweepLevel() {
+		if (!CONSTANTS.IS_V14) return null;
+		const sceneLevels = canvas.scene?.levels;
+		if (!sceneLevels?.size) return null;
+
+		const sourceDoc = this.sourceDocument;
+		const attachedLevelId = this.data.attachTo?.active ? sourceDoc?.level : null;
+		if (attachedLevelId) {
+			const fromSource = sceneLevels.get(attachedLevelId);
+			if (fromSource) return fromSource;
+		}
+
+		if (this.data.levels?.length === 1) {
+			const entry = this.data.levels[0];
+			const fromSection = sceneLevels.get(entry) ?? sceneLevels.getName?.(entry);
+			if (fromSection) return fromSection;
+		}
+
+		const [zMin, zMax, topInclusive] = this._getEffectiveVerticalExtent();
+		let best = null;
+		for (const level of sceneLevels) {
+			const ext = level.elevation;
+			if (!ext) continue;
+			if (intervalsOverlap(zMin, zMax, ext.bottom, ext.top, topInclusive)) {
+				if (!best || (ext.bottom ?? -Infinity) < (best.elevation.bottom ?? -Infinity)) {
+					best = level;
+				}
+			}
+		}
+		return best;
+	}
+
+	/**
 	 * Sets up the hooks relating to this effect's source and target
 	 *
 	 * @private
@@ -2396,7 +2824,6 @@ export default class CanvasEffect extends PIXI.Container {
 			lib.is_UUID(this.data.target);
 
 		const baseRenderable = this.shouldPlayVisible;
-		let renderable = baseRenderable;
 		let alpha = null;
 
 		if (attachedToSource) {
@@ -2417,20 +2844,24 @@ export default class CanvasEffect extends PIXI.Container {
 					this.uuid,
 					"sightRefresh",
 					() => {
+						if (this._ended) return;
 						const sourceVisible =
-							this.source && (!this.sourceMesh?.occluded);
+							this.source
+							&& isAttachedPlaceableVisible(this.source)
+							&& !this.sourceMesh?.occluded;
 						const sourceHidden =
 							this.sourceDocument && (this.sourceDocument?.hidden ?? false);
 						const targetVisible =
-							this.target &&
-							(!attachedToTarget || (this.targetMesh?.occluded ?? true));
-						this.renderable =
+							this.target
+							&& isAttachedPlaceableVisible(this.target)
+							&& (!attachedToTarget || (this.targetMesh?.occluded ?? true));
+						this._baseRenderable =
 							baseRenderable &&
 							(!sourceHidden || game.user.isGM) &&
 							(sourceVisible || targetVisible) &&
 							this._checkWallCollisions();
 						this.alpha = sourceVisible && sourceHidden ? 0.5 : 1.0;
-						renderable = baseRenderable && this.renderable;
+						this._recomputeRenderable();
 					},
 					{ effect: this, callNow: true }
 				);
@@ -2445,6 +2876,14 @@ export default class CanvasEffect extends PIXI.Container {
 					if (this.data.attachTo?.bindElevation) {
 						this.updateElevation();
 					}
+				});
+			}
+
+			if (CONSTANTS.IS_V14) {
+				hooksManager.addHook(this.uuid, this.getSourceHook("update"), (doc, changed) => {
+					if (doc !== this.sourceDocument) return;
+					if (changed?.level === undefined) return;
+					this._recomputeRenderable();
 				});
 			}
 
@@ -2467,6 +2906,24 @@ export default class CanvasEffect extends PIXI.Container {
 				if (doc !== this.target) return;
 				this.updateElevation();
 			});
+
+			if (CONSTANTS.IS_V14) {
+				hooksManager.addHook(this.uuid, this.getTargetHook("update"), (doc, changed) => {
+					if (doc !== this.targetDocument) return;
+					if (changed?.level === undefined) return;
+					this._recomputeRenderable();
+				});
+			}
+		}
+
+		// Level documents can mutate independently of the viewed-level
+		// switch (which redraws the whole canvas). Edits to elevation,
+		// `visibility.levels`, etc. need to re-evaluate every effect.
+		if (CONSTANTS.IS_V14) {
+			hooksManager.addHook(this.uuid, "updateLevel", (level) => {
+				if (level.parent?.id !== this.data.sceneId) return;
+				this._recomputeRenderable();
+			});
 		}
 
 		for (let uuid of this.data?.tiedDocuments ?? []) {
@@ -2485,7 +2942,18 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._setTimeout(() => {
 			if (this._ended) return;
-			this.renderable = renderable;
+			// Seed _baseRenderable when no sightRefresh listener registered.
+			if (this._baseRenderable === undefined) {
+				this._baseRenderable = baseRenderable;
+			}
+			// Normalize the pause gate before clearing _initializing.
+			// A loop-end pause that fired during init would otherwise
+			// leave _pauseRenderable === false, which the post-init
+			// recompute reads as paused and hides the effect until the
+			// pause cascade lands.
+			this._pauseRenderable = true;
+			this._initializing = false;
+			this._recomputeRenderable();
 			if (this.spriteContainer) this.spriteContainer.alpha = alpha ?? 1.0;
 		}, 25);
 	}
@@ -3487,12 +3955,13 @@ export default class CanvasEffect extends PIXI.Container {
 			await this.pauseMedia();
 			this.mediaCurrentTime = this._endTime;
 			if (this.sprite.texture) {
-				const oldRenderable = this.renderable;
-				this.renderable = false;
+				this._pauseRenderable = false;
+				this._recomputeRenderable();
 				this._setTimeout(() => {
 					this.updateTexture();
 					this._setTimeout(() => {
-						this.renderable ||= oldRenderable;
+						this._pauseRenderable = true;
+						this._recomputeRenderable();
 					}, 150)
 				}, 150);
 			}

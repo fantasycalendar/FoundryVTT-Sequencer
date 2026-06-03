@@ -467,6 +467,11 @@ export class UIEffectsLayer extends foundry.canvas.layers.InteractionLayer {
 		});
 	}
 
+	async _draw(options) {
+		await super._draw(options);
+		this.sortableChildren = true;
+	}
+
 	updateTransform() {
 		if (this.sortableChildren && this.sortDirty) {
 			this.sortChildren();
@@ -485,7 +490,7 @@ export class UIEffectsLayer extends foundry.canvas.layers.InteractionLayer {
 	}
 }
 
-let layer = false;
+let ABOVE_UI_LAYER = false;
 
 export class SequencerAboveUILayer {
 	constructor(name, zIndex = 0.1) {
@@ -517,21 +522,35 @@ export class SequencerAboveUILayer {
 		this.app.resizeTo = window;
 		this.app.stage.renderable = false;
 		this.app.stage.sortableChildren = true;
-	}
-
-	static setup() {
-		if (!game.settings.get("sequencer", "enable-above-ui-screenspace")) return;
-		layer = new this("sequencerUILayerAbove", 10000);
+		// PIXI's TickerPlugin auto-registers app.render on the shared ticker
+		// when the app is constructed. Undo that so the secondary renderer
+		// only ticks while there are children to draw; addChild / remove
+		// re-register and de-register the callback at the right transitions.
+		PIXI.Ticker.shared.remove(this.app.render, this.app);
+		this._renderTickerActive = false;
 	}
 
 	static getLayer() {
-		return layer ? layer.app.stage : canvas.sequencerEffectsUILayer;
+		return ABOVE_UI_LAYER ? ABOVE_UI_LAYER.app.stage : canvas.sequencerEffectsUILayer;
 	}
 
 	static addChild(...args) {
-		const layer = this.getLayer();
-		const result = layer.addChild(...args);
-		layer.renderable = layer.children.length > 0;
+		if (!ABOVE_UI_LAYER && game.settings.get("sequencer", "enable-above-ui-screenspace")) {
+			ABOVE_UI_LAYER = new this("sequencerUILayerAbove", 10000);
+		}
+		const targetLayer = this.getLayer();
+		const result = targetLayer.addChild(...args);
+		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
+			targetLayer.renderable = targetLayer.children.length > 0;
+			if (targetLayer.renderable && !ABOVE_UI_LAYER._renderTickerActive) {
+				PIXI.Ticker.shared.add(
+					ABOVE_UI_LAYER.app.render,
+					ABOVE_UI_LAYER.app,
+					PIXI.UPDATE_PRIORITY.LOW
+				);
+				ABOVE_UI_LAYER._renderTickerActive = true;
+			}
+		}
 		return result;
 	}
 
@@ -540,29 +559,22 @@ export class SequencerAboveUILayer {
 	}
 
 	static removeContainerByEffect(inEffect) {
-		const layer = this.getLayer();
-		if (!(layer instanceof SequencerAboveUILayer)) return;
-
-		const child = layer.children.find((child) => child === inEffect);
-		if (!child) return;
-		layer.removeChild(child);
-
-		layer.renderable = layer.children.length > 0;
-	}
-
-	updateTransform() {
-		if (this.app.stage.sortableChildren && this.app.stage.sortDirty) {
-			this.app.stage.sortChildren();
-		}
-
-		this.app.stage._boundsID++;
-
-		this.app.stage.transform.updateTransform(PIXI.Transform.IDENTITY);
-		this.app.stage.worldAlpha = this.app.stage.alpha;
-
-		for (let child of this.app.stage.children) {
-			if (child.visible) {
-				child.updateTransform();
+		const targetLayer = this.getLayer();
+		if (!targetLayer) return;
+		targetLayer.removeChild(inEffect);
+		if (ABOVE_UI_LAYER && targetLayer === ABOVE_UI_LAYER.app.stage) {
+			targetLayer.renderable = targetLayer.children.length > 0;
+			if (!targetLayer.renderable && ABOVE_UI_LAYER._renderTickerActive) {
+				try {
+					// Clear the framebuffer one last time before we stop ticking.
+					ABOVE_UI_LAYER.app.render();
+				} finally {
+					PIXI.Ticker.shared.remove(
+						ABOVE_UI_LAYER.app.render,
+						ABOVE_UI_LAYER.app
+					);
+					ABOVE_UI_LAYER._renderTickerActive = false;
+				}
 			}
 		}
 	}

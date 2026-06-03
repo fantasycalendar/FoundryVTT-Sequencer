@@ -11,6 +11,7 @@ export default class ColorMatrixFilter extends globalThis.PIXI.ColorMatrixFilter
     this.isValid = true;
     this.values = new Map();
     for (let [key, value] of Object.entries(inData)) {
+      if (value === undefined || value === null) continue;
       this.setValue(key, value);
       if (!this.isValid) break;
     }

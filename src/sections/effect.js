@@ -52,6 +52,7 @@ export default class EffectSection extends Section {
 		this._screenSpaceScale = null;
 		this._elevation = null;
 		this._sortLayer = 800;
+		this._levels = null;
 		this._masks = [];
 		this._tiedDocuments = [];
 		this._selfMask = false;
@@ -68,6 +69,7 @@ export default class EffectSection extends Section {
 		this._isometric = null;
 		this._shapes = [];
 		this._xray = null;
+		this._constrainedByWalls = null;
 		this._playEffect = true;
 	}
 
@@ -1397,48 +1399,6 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 * Changes the effect's elevation
-	 *
-	 * @param {Number} inElevation
-	 * @param {Object} inOptions
-	 * @returns {EffectSection}
-	 */
-	elevation(inElevation, inOptions = {}) {
-		if (typeof inElevation !== "number")
-			throw this.sequence._customError(
-				this,
-				"elevation",
-				"inElevation must be of type number"
-			);
-		if (typeof inOptions !== "object")
-			throw this.sequence._customError(
-				this,
-				"elevation",
-				`inOptions must be of type object`
-			);
-
-		inOptions = foundry.utils.mergeObject(
-			{
-				elevation: 1,
-				absolute: false,
-			},
-			inOptions
-		);
-
-		if (typeof inOptions.absolute !== "boolean")
-			throw this.sequence._customError(
-				this,
-				"elevation",
-				"inOptions.absolute must be of type boolean"
-			);
-		this._elevation = {
-			elevation: inElevation,
-			absolute: inOptions.absolute,
-		};
-		return this;
-	}
-
-	/**
 	 * Changes the effect's sortLayer, potentially displaying effects below tiles, above tokens or even weather effects
 	 * in case of identical elevations
 	 *
@@ -1829,10 +1789,11 @@ export default class EffectSection extends Section {
 	}
 
 	/**
-	 *  Masks the effect to the given object or objects. If no object is given, the effect will be masked to the source
-	 *  of the effect.
+	 *  Masks the effect to the given object, objects, or raw PIXI shape. If no object is given, the effect will be
+	 *  masked to the source of the effect. Raw shapes (PIXI.Polygon, PIXI.Circle, PIXI.Rectangle) are masked in
+	 *  scene coordinates; combine with `Sequencer.Helpers.computeWallPolygon` for wall-aware clipping.
 	 *
-	 * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Region/RegionDocument/Array} inObject
+	 * @param {Token/TokenDocument/Tile/TileDocument/Drawing/DrawingDocument/MeasuredTemplate/MeasuredTemplateDocument/Region/RegionDocument/PIXI.Polygon/PIXI.Circle/PIXI.Rectangle/Array} inObject
 	 * @returns {Section}
 	 */
 	mask(inObject) {
@@ -1848,6 +1809,13 @@ export default class EffectSection extends Section {
 			return this;
 		}
 
+		if (inObject instanceof PIXI.Polygon
+			|| inObject instanceof PIXI.Circle
+			|| inObject instanceof PIXI.Rectangle) {
+			this._masks.push({ __shape: canvaslib.serializeShape(inObject) });
+			return this;
+		}
+
 		const validatedObject = this._validateLocation(inObject);
 
 		const isValidObject =
@@ -1860,7 +1828,7 @@ export default class EffectSection extends Section {
 			throw this.sequence._customError(
 				this,
 				"mask",
-				"A foundry object was provided, but only Tokens, Tiles, Drawings, MeasuredTemplates, and Regions may be used to create effect masks"
+				"A foundry object was provided, but only Tokens, Tiles, Drawings, MeasuredTemplates, Regions, or raw PIXI shapes may be used to create effect masks"
 			);
 		}
 
@@ -1883,6 +1851,85 @@ export default class EffectSection extends Section {
 				"inBool must be of type boolean"
 			);
 		this._xray = inBool;
+		return this;
+	}
+
+	/**
+	 * Clips the effect to a wall-bounded sweep from its source position, independent of the
+	 * Walled Templates module. The sweep is a full 360° polygon; pass `radius` to bound it.
+	 * Pass `false` to clear.
+	 *
+	 * @param {boolean|object} [inOptions=true]
+	 * @param {"sight"|"sound"|"move"|"light"} [inOptions.type="sight"]   Collision type
+	 * @param {number|null} [inOptions.radius=null]                      Bounding circle radius in pixels
+	 * @param {{x: number, y: number}|null} [inOptions.origin=null]      Override origin; defaults to source position
+	 * @param {string|foundry.documents.Level|null} [inOptions.level=null]
+	 *        Foundry v14+. The scene level whose walls the sweep should consult. Accepts a
+	 *        level id, level name, or Level document. When omitted, the level is inferred
+	 *        from the attached source, then from `.onLevels()`, then from the effect's
+	 *        elevation extent. Ignored on Foundry v13.
+	 * @returns {EffectSection}
+	 */
+	constrainedByWalls(inOptions = true) {
+		if (inOptions === false || inOptions === null) {
+			this._constrainedByWalls = null;
+			return this;
+		}
+		if (inOptions === true) inOptions = {};
+		if (typeof inOptions !== "object") {
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				"inOptions must be of type object or boolean"
+			);
+		}
+
+		inOptions = foundry.utils.mergeObject({
+			type: "sight",
+			radius: null,
+			origin: null,
+			level: null,
+		}, inOptions);
+
+		const validTypes = ["sight", "sound", "move", "light"];
+		if (!validTypes.includes(inOptions.type)) {
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				`inOptions.type must be one of ${validTypes.join(", ")}`
+			);
+		}
+		if (inOptions.radius !== null && !lib.is_real_number(inOptions.radius)) {
+			throw this.sequence._customError(
+				this,
+				"constrainedByWalls",
+				"inOptions.radius must be a number or null"
+			);
+		}
+		if (inOptions.origin !== null) {
+			if (typeof inOptions.origin !== "object"
+				|| !lib.is_real_number(inOptions.origin.x)
+				|| !lib.is_real_number(inOptions.origin.y)) {
+				throw this.sequence._customError(
+					this,
+					"constrainedByWalls",
+					"inOptions.origin must be null or { x: number, y: number }"
+				);
+			}
+		}
+		if (inOptions.level !== null) {
+			if (typeof inOptions.level === "object" && typeof inOptions.level?.id === "string") {
+				inOptions.level = inOptions.level.id;
+			} else if (typeof inOptions.level !== "string") {
+				throw this.sequence._customError(
+					this,
+					"constrainedByWalls",
+					"inOptions.level must be null, a level id/name, or a Level document"
+				);
+			}
+		}
+
+		this._constrainedByWalls = inOptions;
 		return this;
 	}
 
@@ -2082,6 +2129,8 @@ export default class EffectSection extends Section {
 	_applyTraits() {
 		Object.assign(this.constructor.prototype, traits.files);
 		Object.assign(this.constructor.prototype, traits.audio);
+		Object.assign(this.constructor.prototype, traits.elevation);
+		Object.assign(this.constructor.prototype, traits.levels);
 		Object.assign(this.constructor.prototype, traits.moves);
 		Object.assign(this.constructor.prototype, traits.opacity);
 		Object.assign(this.constructor.prototype, traits.rotation);
@@ -2108,20 +2157,32 @@ export default class EffectSection extends Section {
 
 	if (this._copySprite && !this._file) {
 
+		const ringEnabled = this._copySprite.object instanceof TokenDocument
+			&& this._copySprite.object.ring?.enabled;
+
+		if (!ringEnabled) {
+			this._file = this._copySprite.object?.texture?.src ?? "";
+		}
+
 		if (this._source === null) {
 			this._source = this._validateLocation(this._copySprite.object);
 		}
 
 		if (this._size === null) {
-			const size = canvaslib.get_object_dimensions(this._copySprite.object);
+			const placeable = this._copySprite.object.object ?? null;
+			const meshWidth = placeable?.mesh?.width;
+			const meshHeight = placeable?.mesh?.height;
+			const hasMeshSize = Number.isFinite(meshWidth) && meshWidth > 0
+				&& Number.isFinite(meshHeight) && meshHeight > 0;
+
+			const fallback = canvaslib.get_object_dimensions(this._copySprite.object);
 			this._size = {
-				width: size?.width ?? canvas.grid.size,
-				height: size?.height ?? canvas.grid.size,
+				width: hasMeshSize ? meshWidth : (fallback?.width ?? canvas.grid.size),
+				height: hasMeshSize ? meshHeight : (fallback?.height ?? canvas.grid.size),
 				gridUnits: false,
 			};
 
-			// Account for token size difference compared to final rendered texture dimensions
-			if (this._copySprite.object instanceof TokenDocument && this._copySprite.object.ring?.enabled) {
+			if (ringEnabled) {
 				const tokenSize = this._copySprite.object.getSize();
 				this._copySprite.options.offsetX = (tokenSize.width - this._size.width) / 2;
 				this._copySprite.options.offsetY = (tokenSize.height - this._size.height) / 2;
@@ -2204,7 +2265,7 @@ export default class EffectSection extends Section {
 		return;
 	}
 
-	if (this._copySprite) {
+	if (this._copySprite && !this._file) {
 		return;
 	}
 
@@ -2304,7 +2365,7 @@ export default class EffectSection extends Section {
 	let forcedIndex = null;
 	let customRange = null;
 
-	if (!this._copySprite) {
+	if (!this._copySprite || this._file) {
 		const fileData =
 			this._file && this._playEffect
 				? await this._determineFile(this._file)
@@ -2455,9 +2516,11 @@ export default class EffectSection extends Section {
 			scaleToObject: this._scaleToObject,
 			elevation: this._elevation,
 			sortLayer: this._sortLayer,
+			levels: this._levels,
 			aboveLighting: this._aboveLighting,
 			aboveInterface: this._aboveInterface,
 			xray: this._xray,
+			constrainedByWalls: this._constrainedByWalls,
 
 			// Appearance
 			zIndex: this._zIndex,

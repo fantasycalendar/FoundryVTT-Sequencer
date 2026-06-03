@@ -7,9 +7,19 @@ const flagManager = {
 	flagAddBuffer: new Map(),
 	flagRemoveBuffer: new Map(),
 	_latestFlagVersion: false,
+	_databaseId: null,
 
 	get database(){
-		return game.journal.getName(CONSTANTS.DATABASE_NAME);
+		if (this._databaseId) {
+			const cached = game.journal.get(this._databaseId);
+			if (cached) return cached;
+			this._databaseId = null;
+		}
+		const database = game.journal.getName(CONSTANTS.DATABASE_NAME);
+		if (database) {
+			this._databaseId = database.id;
+		}
+		return database;
 	},
 
 	setup() {
@@ -65,15 +75,13 @@ const flagManager = {
 	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
 	 *
 	 * @param inDocument
-	 * @param databaseFlags
 	 * @returns {array}
 	 */
-	getEffectFlags(inDocument, databaseFlags=null) {
+	getEffectFlags(inDocument) {
 
 		if(!inDocument?.uuid) return [];
 
-		let allEffects = databaseFlags ?? this.getDatabaseFlags().effects;
-		let effects = allEffects[inDocument.uuid] ?? []
+		let effects = this.getDatabaseFlags().effects[inDocument.uuid] ?? []
 
 		if (!effects?.length) return [];
 
@@ -517,18 +525,16 @@ const flagManager = {
 	soundMigrations: {},
 
 	/**
-	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
+	 * Sanitizes the sound data, accounting for changes to the structure in previous versions
 	 *
 	 * @param inDocument
-	 * @param databaseFlags
 	 * @returns {array}
 	 */
-	getSoundFlags(inDocument, databaseFlags=null) {
+	getSoundFlags(inDocument) {
 
 		if(!inDocument?.uuid) return [];
 
-		let allSounds = databaseFlags ?? this.getDatabaseFlags().sounds;
-		let sounds = allSounds[inDocument.uuid] ?? []
+		let sounds = this.getDatabaseFlags().sounds[inDocument.uuid] ?? []
 
 		if (!sounds?.length) return [];
 

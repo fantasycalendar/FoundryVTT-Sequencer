@@ -123,6 +123,7 @@
     max-height: 563px;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
   }
 
   .effects {

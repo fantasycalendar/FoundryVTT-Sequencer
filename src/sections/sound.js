@@ -23,6 +23,8 @@ class SoundSection extends Section {
 		this._loopOptions = false;
 		this._panSound = false;
 		this._extraEndDuration = false;
+		this._levels = null;
+		this._elevation = null;
 	}
 
 	get _target() {
@@ -61,6 +63,13 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Sets the radius (in scene units) within which the sound is audible. Requires `.atLocation()` to be set,
+	 * otherwise the sound remains global.
+	 *
+	 * @param {number} inNumber
+	 * @returns {SoundSection}
+	 */
 	radius(inNumber) {
 		if (!lib.is_real_number(inNumber))
 			throw this.sequence._customError(
@@ -72,6 +81,13 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Whether the sound is completely blocked by walls. Requires `.atLocation()` to be set. If `true`, the
+	 * `.muffledEffect()` will have no effect.
+	 *
+	 * @param {boolean} [inBool=true]
+	 * @returns {SoundSection}
+	 */
 	constrainedByWalls(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -83,6 +99,12 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Whether the sound's volume is eased by the distance from its origin. Requires `.atLocation()` to be set.
+	 *
+	 * @param {boolean} [inBool=true]
+	 * @returns {SoundSection}
+	 */
 	distanceEasing(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -94,6 +116,13 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Sets the audio channel the sound is played through. Accepts any channel name available on `game.audio` that
+	 * is an `AudioContext` (eg. `"music"`, `"environment"`, `"interface"`).
+	 *
+	 * @param {string} inString
+	 * @returns {SoundSection}
+	 */
 	audioChannel(inString) {
 		if (typeof inString !== "string")
 			throw this.sequence._customError(
@@ -115,6 +144,13 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Whether GMs always hear the sound as if standing at its origin, regardless of token position. Requires
+	 * `.atLocation()` to be set.
+	 *
+	 * @param {boolean} [inBool=true]
+	 * @returns {SoundSection}
+	 */
 	alwaysForGMs(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -127,10 +163,13 @@ class SoundSection extends Section {
 	}
 
 	/**
-	 * Allows you to control the number of loops and the delays between each loop
+	 * Allows you to control the number of loops and the delays between each loop.
 	 *
-	 * @param {Object} inOptions
-	 * @returns {EffectSection}
+	 * @param {object} [inOptions]
+	 * @param {number} [inOptions.loopDelay=0] - delay (in ms) between each loop
+	 * @param {number} [inOptions.loops=0] - number of loops before ending, 0 for indefinite
+	 * @param {boolean} [inOptions.endOnLastLoop=false] - whether the sound should end when reaching the last loop
+	 * @returns {SoundSection}
 	 */
 	loopOptions(inOptions={}){
 		if (typeof inOptions !== "object")
@@ -175,6 +214,15 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Sets an audio effect to be applied while the sound is heard normally (no walls between source and listener).
+	 * Requires `.atLocation()` to be set.
+	 *
+	 * @param {object} [options]
+	 * @param {string} [options.type] - one of the keys in `CONFIG.soundEffects` (eg. `"lowpass"`, `"highpass"`, `"reverb"`)
+	 * @param {number} [options.intensity=0] - intensity of the effect
+	 * @returns {SoundSection}
+	 */
 	baseEffect(options = {}) {
 		options = foundry.utils.mergeObject({
 			type: "",
@@ -199,6 +247,15 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Sets an audio effect to be applied while the sound is heard through a wall. Requires `.atLocation()` to be
+	 * set and `.constrainedByWalls()` to be `false` (the default).
+	 *
+	 * @param {object} [options]
+	 * @param {string} [options.type] - one of the keys in `CONFIG.soundEffects` (eg. `"lowpass"`, `"highpass"`, `"reverb"`)
+	 * @param {number} [options.intensity=0] - intensity of the effect
+	 * @returns {SoundSection}
+	 */
 	muffledEffect(options = {}) {
 		options = foundry.utils.mergeObject({
 			type: "",
@@ -223,6 +280,19 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Sets the target location of the sound, used together with `.atLocation()` so the sound has a direction (for
+	 * `.panSound()`, distance falloff, etc).
+	 *
+	 * @param {object|string} inLocation - reference to a placeable, document, canvas coordinate, or a string name (see `.name()`)
+	 * @param {object} [inOptions]
+	 * @param {boolean} [inOptions.cacheLocation=false] - cache the target's location at sequence build time instead of resolving it at runtime
+	 * @param {object|boolean} [inOptions.offset=false] - offset the target by `{ x, y }`
+	 * @param {number|boolean} [inOptions.randomOffset=false] - offset the target by a random amount; if a number, used as a multiplier on the object size
+	 * @param {boolean} [inOptions.gridUnits=false] - treat the offset's `x` and `y` as grid units
+	 * @param {boolean} [inOptions.local=false] - offset relative to the sound's rotation rather than world axes
+	 * @returns {SoundSection}
+	 */
 	toLocation(inLocation, inOptions = {}) {
 		if (!inLocation || !(typeof inLocation === "object" || typeof inLocation === "string")) {
 			throw this.sequence._customError(
@@ -297,6 +367,12 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Forces the sound to be heard globally, ignoring `.atLocation()`, `.radius()`, walls, and distance easing.
+	 *
+	 * @param {boolean} [inBool=true]
+	 * @returns {SoundSection}
+	 */
 	globalSound(inBool = true) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -308,6 +384,15 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Causes the sound to pan stereo (left/right) based on the position of the sound relative to the listener.
+	 *
+	 * @param {boolean} [inBool=true]
+	 * @param {object} [inOptions]
+	 * @param {number} [inOptions.innerEaseDistance=0] - distance within which the pan is at full strength
+	 * @param {number} [inOptions.outerEaseDistance=0] - distance beyond which the pan stops easing; must be greater than `innerEaseDistance` when both are non-zero
+	 * @returns {SoundSection}
+	 */
 	panSound(inBool = true, inOptions = {}) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -354,6 +439,12 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Adds extra time (in ms) before a persisted sound is considered ended. Only meaningful on `.persist()`ed sounds.
+	 *
+	 * @param {number} inExtraDuration
+	 * @returns {SoundSection}
+	 */
 	extraEndDuration(inExtraDuration){
 		if (typeof inExtraDuration !== "number")
 			throw this.sequence._customError(
@@ -365,6 +456,14 @@ class SoundSection extends Section {
 		return this;
 	}
 
+	/**
+	 * Causes the sound to persist on the canvas. The sound can be ended later via the Sound Manager.
+	 *
+	 * @param {boolean} [inBool=true]
+	 * @param {object} [inOptions]
+	 * @param {boolean} [inOptions.persistTokenPrototype=false] - when attached to a token, persist the sound on the token's prototype data
+	 * @returns {SoundSection}
+	 */
 	persist(inBool = true, inOptions = {}) {
 		if (typeof inBool !== "boolean")
 			throw this.sequence._customError(
@@ -463,6 +562,8 @@ class SoundSection extends Section {
 	_applyTraits() {
 		Object.assign(this.constructor.prototype, traits.files);
 		Object.assign(this.constructor.prototype, traits.audio);
+		Object.assign(this.constructor.prototype, traits.elevation);
+		Object.assign(this.constructor.prototype, traits.levels);
 		Object.assign(this.constructor.prototype, traits.time);
 		Object.assign(this.constructor.prototype, traits.users);
 		Object.assign(this.constructor.prototype, traits.name);
@@ -678,7 +779,9 @@ class SoundSection extends Section {
 			persist: this._persist,
 			persistOptions: this._persistOptions,
 			panSound: this._panSound,
-			extraEndDuration: this._extraEndDuration
+			extraEndDuration: this._extraEndDuration,
+			levels: this._levels,
+			elevation: this._elevation,
 		};
 
 		for (let override of this._overrides) {

@@ -297,15 +297,73 @@ In addition, a secondary options parameter can be given to this method, which ha
 - `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object
 
 
+## To Location
+
+`.toLocation(object|string, object)`
+
+Examples:
+```js
+.toLocation(token)
+.toLocation("stored_name")
+.toLocation({ x: 0, y: 0 })
+.toLocation(token, { cacheLocation: true })
+```
+
+Sets the target location of the sound. Used together with [`.atLocation()`](#at-location) to give the sound a direction, which is consumed by [`.panSound()`](#pan-sound) and distance-based volume/effects.
+
+A smart method that can take:
+- Reference to a token
+- Reference to a template
+- Direct coordinate on the canvas
+- String reference (see [`.name()`](#name))
+
+Also supports a second options object that accepts:
+- `cacheLocation: boolean` (default `false`) - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
+- `randomOffset: number|boolean` (default `false`) - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
+- `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
+- `local: boolean` - Used with `offset` to cause the location to be offset locally to the sound's rotation
+- `gridUnits: boolean` - Used with `offset` to make each whole number in `x` and `y` represent the sound's scene's grid size
+
+
+## Move Towards
+
+`.moveTowards(object|string, object)`
+
+Examples:
+```js
+.moveTowards(token)
+.moveTowards("stored_name")
+.moveTowards({ x: 0, y: 0 })
+.moveTowards(token, { rotate: false })
+```
+
+Causes the sound to move towards the given token, template, coordinates, or string reference (see [`.name()`](#name)). When combined with [`.panSound()`](#pan-sound), the sound's stereo position tracks the moving origin.
+
+Also supports a second options object that accepts:
+- `ease: string` (default `"linear"`) - sets the ease of the movement
+- `delay: number` (default `0`) - delay in milliseconds before the movement begins
+- `cacheLocation: boolean` (default `false`) - causes the given object's location to be cached immediately rather than retrieved during the Sequence's runtime
+- `rotate: boolean` (default `true`) - causes the sound to rotate towards the target
+
+Check out what easings are available here: https://easings.net/
+
+
+## Move Speed
+
+`.moveSpeed(500)`
+
+Sets the speed (in pixels per frame) at which the sound moves when [`.moveTowards()`](#move-towards) has been called.
+
+
 ## Loop Options
 
-`.loopOptions(inOptions)` or `.loopOptions({ maxLoops: 1 })` or `.loopOptions({ loopDelay: 1000, maxLoops: 5 })`
+`.loopOptions(inOptions)` or `.loopOptions({ loops: 1 })` or `.loopOptions({ loopDelay: 1000, loops: 5 })`
 
 Allows you to control the number of loops and the delays between each loop.
 
 Accepts an object that can contain
 - `loopDelay: number` (default `0`) - adds a delay in milliseconds between each loop of the sound
-- `maxLoops: number` (default `0`) - makes the sound only loop this many times before ending
+- `loops: number` (default `0`) - makes the sound only loop this many times before ending
 - `endOnLastLoop: boolean` (default `false`) - whether the sound should end when reaching the last loop (if persistent)
 
 
@@ -317,6 +375,13 @@ Calling this method will cause the sound to become permanent on the canvas. You 
 
 Also supports a second options object that accepts:
 - `persistTokenPrototype: boolean` (default `false`) - makes the sound persist on the token's prototype data, useful for active sound-linked VFX
+
+
+## Extra End Duration
+
+`.extraEndDuration(inNumber)` or `.extraEndDuration(500)`
+
+Only modifies [`.persist()`](#persist)ed sounds. Adds extra time (in milliseconds) before a persisted sound is considered ended after the Sound Manager ends it, so the sound's tail can finish playing instead of being cut off.
 
 
 ## Radius
@@ -331,6 +396,31 @@ Examples:
 Radius in number of feet (or other units) this sound will be played within. The distance is determined by the scene's Grid Scale.
 
 **Note:** Requires `.atLocation()` to be called as well, or the sound will still be global.
+
+
+## On Levels
+
+`.onLevels("levelIdOrName")` or `.onLevels([id1, "Name 2", level])` (a level id, level name, or Level document)
+
+Restricts this sound to one or more scene levels on Foundry v14+. On older Foundry versions this doesn't do anything.
+
+Without calling this method, the sound's level is inferred automatically from its position against the scene's level elevation ranges, and Foundry's surface-collision check attenuates listeners on other levels (matching how Foundry's own ambient sounds behave). Use this method to override that inference, for example to pin a sound to a specific level regardless of where the source token is.
+
+Pass `null` to clear a previously set override.
+
+See the matching [On Levels](./effect.md#on-levels) section in the effect API for the shared level scoping semantic.
+
+
+## Elevation
+
+`.elevation(N)` or `.elevation(N, { absolute: true })`
+
+Overrides or offsets the sound's Z, which Foundry's positional sound source uses to compute distance attenuation across scene levels.
+
+Options:
+- `absolute: boolean` — when `true`, the value is used as-is. When `false` (the default), it's added to the attached source's or location's elevation.
+
+Without this call, the sound's Z comes from the attached placeable (via `bindElevation`) or the location's elevation. Set explicitly when you need the sound to live at a different Z than its visual source — e.g. a sound attached to a token but logically belonging to a different floor.
 
 
 ## Constrained By Walls
@@ -400,6 +490,41 @@ Whether the sound will play for GMs as if they were hearing it at the origin of 
 - Requires `.atLocation()` to be called as well, or the sound will still be global.
 
 
+## Global Sound
+
+`.globalSound()` or `.globalSound(inBool)`
+
+Examples:
+```js
+.globalSound()
+.globalSound(true)
+.globalSound(false)
+```
+
+Forces the sound to be heard globally, bypassing `.atLocation()`, `.radius()`, walls, and distance easing. Useful when a sound was set up positionally but you want a specific repetition or override to play globally instead.
+
+**Notes:**
+- Defaults to `false`
+
+
+## Pan Sound
+
+`.panSound()` or `.panSound(inBool, options)`
+
+Examples:
+```js
+.panSound()
+.panSound(true)
+.panSound(true, { innerEaseDistance: 200, outerEaseDistance: 1000 })
+```
+
+Causes the sound to pan stereo (left/right) based on the position of the sound relative to the listener. Combine with [`.atLocation()`](#at-location) and [`.toLocation()`](#to-location) (or [`.moveTowards()`](#move-towards)) to give the sound a meaningful direction.
+
+The options object accepts:
+- `innerEaseDistance: number` (default `0`) - distance (in pixels) within which the pan is at full strength
+- `outerEaseDistance: number` (default `0`) - distance (in pixels) beyond which the pan stops easing; must be greater than `innerEaseDistance` when both are non-zero
+
+
 ## Base Effect
 
 `.baseEffect(options)`
@@ -443,3 +568,19 @@ The options object this method accept can have the following two parameters:
 **Notes:**
 - Requires `.atLocation()` to be called as well, as this is an effect only applicable to position-based sounds.
 - Requires `.constrainedByWalls()` to be set to `false` (which is the default behavior).
+
+
+## Name
+
+`.name(inString)`
+
+Causes the sound's position to be stored under the given name, which can then be referenced by later sections (effects or sounds) via [`.atLocation()`](#at-location), [`.toLocation()`](#to-location), [`.attachTo()`](#attach-to), or [`.moveTowards()`](#move-towards) by passing the name as a string.
+
+
+## Origin
+
+`.origin(inString)` or `.origin(document)`
+
+Takes a UUID string, or a Foundry Document that contains a UUID.
+
+Used for adding extra information to a sound, such as the originating item's UUID. Persistent sounds can later be looked up or ended by their origin via the [Sound Manager](https://fantasycomputer.works/FoundryVTT-Sequencer/#/sound-manager).

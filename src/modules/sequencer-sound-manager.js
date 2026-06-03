@@ -8,6 +8,7 @@ import * as soundlib from "../lib/sound-lib.js";
 import { SequencerFileBase } from "./sequencer-file.js";
 import CONSTANTS from "../constants.js";
 import flagManager from "../utils/flag-manager.js";
+import PasteManager from "./sequencer-paste-manager.js";
 
 
 const SOUND_STATES = {
@@ -78,12 +79,17 @@ const placed_sound_mixin = (base_class) =>
 				easing = true,
 				walls = false,
 				gmAlways = false,
-				sourceData = {},
+				sourceData,
 				radius = 1,
 				muffledEffect = { type: "lowpass", intensity: 5 }
 			} = this.data.locationOptions ?? {};
 
 			let sourcePosition = this.sourcePosition;
+
+			// Reuse a single empty fallback so the per-frame cache in
+			// _resolveLevelForSourceData stays hot.
+			sourceData ??= (this._emptySourceData ??= {});
+			const resolvedSourceData = this._resolveLevelForSourceData(sourceData, sourcePosition);
 
 			const source = new CONFIG.Canvas.soundSourceClass({ object: null });
 			source.initialize({
@@ -92,7 +98,7 @@ const placed_sound_mixin = (base_class) =>
 				elevation: sourcePosition.elevation ?? 0,
 				radius: canvas.dimensions.distancePixels * radius,
 				walls,
-				...sourceData
+				...resolvedSourceData
 			});
 
 			const config = { sound: this.sound, source, listener: undefined, volume: 0, walls, muffled: false, pan: 0 };
@@ -181,6 +187,12 @@ const placed_sound_mixin = (base_class) =>
 					volume = 0;
 				}
 			}
+			// `sourceData ??= {}` would alloc a fresh empty object every
+			// call and defeat the per-frame memoization in
+			// _resolveLevelForSourceData. Reuse a single empty fallback.
+			const baseSourceData = this.data.locationOptions?.sourceData
+				?? (this._emptySourceData ??= {});
+			const sourceData = this._resolveLevelForSourceData(baseSourceData, this.sourcePosition);
 			return {
 				easing: true,
 				walls: false,
@@ -188,9 +200,72 @@ const placed_sound_mixin = (base_class) =>
 				radius: 1,
 				muffledEffect: { type: "lowpass", intensity: 5 },
 				...this.data.locationOptions,
+				sourceData,
 				playbackOptions: this.playbackOptions,
 				volume
 			}
+		}
+
+		/**
+		 * Merge a scene level id into the PointSoundSource init payload
+		 * so Foundry's cross-level attenuation works. Honors `.onLevels()`.
+		 *
+		 * Called per frame for moving sounds via the update ticker, so
+		 * the result is memoized on `(baseSourceData ref, elevation)`.
+		 * The `.onLevels()` restriction Set is built once and resolves
+		 * names against the scene the sound is playing in.
+		 *
+		 * @param {object} baseSourceData
+		 * @param {{elevation?: number}|undefined} position
+		 * @returns {object}
+		 * @private
+		 */
+		_resolveLevelForSourceData(baseSourceData, position) {
+			if (!CONSTANTS.IS_V14) return baseSourceData;
+			if (baseSourceData?.level !== undefined) return baseSourceData;
+			if (typeof canvas?.inferLevelFromElevation !== "function") return baseSourceData;
+			const elevation = position?.elevation ?? 0;
+			if (this._levelResolvedSourceData
+				&& this._levelResolvedBase === baseSourceData
+				&& this._levelResolvedElevation === elevation) {
+				return this._levelResolvedSourceData;
+			}
+			if (this._levelRestrictionSet === undefined) {
+				this._levelRestrictionSet = this._buildLevelRestrictionSet();
+			}
+			const level = canvas.inferLevelFromElevation(elevation, {
+				levels: this._levelRestrictionSet || undefined
+			});
+			const resolved = level ? { ...baseSourceData, level: level.id } : baseSourceData;
+			this._levelResolvedBase = baseSourceData;
+			this._levelResolvedElevation = elevation;
+			this._levelResolvedSourceData = resolved;
+			return resolved;
+		}
+
+		/**
+		 * Resolve `.onLevels()` entries (ids or names) to a Set of ids
+		 * against the scene the sound is playing in. Returns null when
+		 * no restriction is set, an empty Set when entries were given
+		 * but none resolved (so Foundry sees no allowed levels).
+		 *
+		 * @returns {Set<string>|null}
+		 * @private
+		 */
+		_buildLevelRestrictionSet() {
+			const entries = this.data.levels;
+			if (!entries?.length) return null;
+			const sceneLevels = canvas?.scene?.levels;
+			const ids = new Set();
+			for (const entry of entries) {
+				if (sceneLevels?.get(entry)) {
+					ids.add(entry);
+					continue;
+				}
+				const byName = sceneLevels?.getName?.(entry);
+				if (byName) ids.add(byName.id);
+			}
+			return ids;
 		}
 
 		animate() {
@@ -425,17 +500,28 @@ class SequencerSound {
 			if (!this.isSourceDestroyed) {
 				let position = canvaslib.get_object_position(this.source);
 				let offset = canvaslib.getOffsetFromData(this.data, { type: "source", twister: this.twister });
-				let elevation = this.data.attachTo.bindElevation ? position.elevation : 0;
+				let elevation = this.data.attachTo.bindElevation ? (position.elevation ?? 0) : 0;
 				this._sourcePosition = {
 					x: position.x - offset.x,
 					y: position.y - offset.y,
-					elevation
+					elevation: this._applyElevationOverride(elevation),
 				};
 			}
 		} else if (!this._sourcePosition) {
-			this._sourcePosition = this.data.source ? canvaslib.getPositionFromData(this.data, "source", this.twister) : false;
+			const fromData = this.data.source ? canvaslib.getPositionFromData(this.data, "source", this.twister) : false;
+			if (fromData) {
+				fromData.elevation = this._applyElevationOverride(fromData.elevation ?? 0);
+			}
+			this._sourcePosition = fromData;
 		}
 		return this._sourcePosition;
+	}
+
+	_applyElevationOverride(baseElevation) {
+		const override = this.data.elevation;
+		if (!override) return baseElevation;
+		if (override.absolute) return override.elevation ?? 0;
+		return baseElevation + (override.elevation ?? 0);
 	}
 
 	get targetPosition() {
@@ -865,41 +951,11 @@ export default class SequencerSoundManager {
 	static states = SOUND_STATES;
 
 	static setup() {
-		Hooks.on("preCreateToken", this._patchCreationData.bind(this));
-		Hooks.on("preCreateDrawing", this._patchCreationData.bind(this));
-		Hooks.on("preCreateTile", this._patchCreationData.bind(this));
-		Hooks.on("preCreateMeasuredTemplate", this._patchCreationData.bind(this));
-		Hooks.on("preCreateRegion", this._patchCreationData.bind(this));
 		Hooks.on("createToken", this._documentCreated.bind(this));
 		Hooks.on("createDrawing", this._documentCreated.bind(this));
 		Hooks.on("createTile", this._documentCreated.bind(this));
 		Hooks.on("createMeasuredTemplate", this._documentCreated.bind(this));
 		Hooks.on("createRegion", this._documentCreated.bind(this));
-	}
-
-	static async _patchCreationData(inDocument, data, options) {
-		const sounds = flagManager.getSoundFlags(inDocument);
-
-		if (!sounds?.length) return;
-
-		const updates = {};
-
-		let documentUuid;
-		if (!inDocument._id) {
-			const documentId = foundry.utils.randomID();
-			documentUuid = inDocument.uuid + documentId;
-			updates["_id"] = documentId;
-			options.keepId = true;
-		} else {
-			documentUuid = inDocument.uuid;
-		}
-
-		updates[CONSTANTS.SOUNDS_FLAG] = this._patchSoundDataForDocument(
-			documentUuid,
-			sounds
-		);
-
-		return flagManager.updateFlags(inDocument, updates);
 	}
 
 	static _patchSoundDataForDocument(inDocumentUuid, sounds) {
@@ -932,6 +988,19 @@ export default class SequencerSoundManager {
 				);
 			}
 			sounds = sounds.concat(actorSounds);
+		}
+		const sourceUuid = PasteManager.consume(inDocument);
+		if (sourceUuid) {
+			const sourceSounds = flagManager.getSoundFlags({ uuid: sourceUuid });
+			if (sourceSounds.length) {
+				const rekeyed = this._patchSoundDataForDocument(inDocument.uuid, sourceSounds);
+				const soundDatas = rekeyed.map(([, data]) => data);
+				flagManager.addFlags(inDocument.uuid, { sounds: soundDatas });
+				for (const soundData of soundDatas) {
+					sequencerSocket.executeForOthers(SOCKET_HANDLERS.PLAY_SOUND, soundData, false);
+				}
+				sounds = sounds.concat(rekeyed);
+			}
 		}
 		if (!sounds?.length) return;
 		return this._playSoundsMap(sounds, inDocument);

@@ -19,6 +19,7 @@ import {
 } from "./modules/sequencer-interaction-manager.js";
 import Section from "./sections/section.js";
 import * as lib from "./lib/lib.js";
+import * as canvaslib from "./lib/canvas-lib.js";
 import { SequencerAboveUILayer } from "./canvas-effects/effects-layer.js";
 import SequencerPresets from "./modules/sequencer-presets.js";
 import registerLibwrappers from "./libwrapper.js";
@@ -29,6 +30,7 @@ import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
+import PasteManager from "./modules/sequencer-paste-manager.js";
 import Crosshair from "./modules/sequencer-crosshair/sequencer-crosshair.js";
 import PluginsManager from "./utils/plugins-manager.js";
 import SvelteDialog from "./formapplications/dialog/SvelteDialog.js"
@@ -50,6 +52,7 @@ function showChangelog() {
 let moduleValid = false;
 let moduleReady = false;
 let canvasReady = false;
+let lastSceneId = null;
 
 Hooks.once("init", async function() {
   // CONFIG.debug.hooks = true;
@@ -72,7 +75,8 @@ Hooks.once("ready", async function() {
     await runMigrations();
     await migrateSettings();
     await PlayerSettings.migrateOldPresets();
-	  await lib.createJournalDatabase();
+	  const database = await lib.createJournalDatabase();
+	  flagManager._databaseId = database?.id ?? null;
   }
 
   SequencerFoundryReplicator.registerHooks();
@@ -101,9 +105,10 @@ const setupModule = foundry.utils.debounce(() => {
 }, 25);
 
 Hooks.on("canvasReady", () => {
-  setTimeout(() => {
-    setupModule();
-  }, 450);
+  const currentSceneId = canvas.scene?.id ?? null;
+  const isSceneSwitch = currentSceneId !== lastSceneId;
+  lastSceneId = currentSceneId;
+  setTimeout(setupModule, isSceneSwitch ? 450 : 100);
 });
 
 Hooks.on("refreshToken", setupModule);
@@ -140,6 +145,7 @@ function initializeModule() {
       random_array_element: lib.random_array_element,
       random_object_element: lib.random_object_element,
       make_array_unique: lib.make_array_unique,
+      computeWallPolygon: canvaslib.computeWallPolygon,
     },
 	  Crosshair: Crosshair,
     showChangelog: showChangelog,
@@ -153,7 +159,7 @@ function initializeModule() {
 
   SequencerEffectManager.setup();
   SequencerSoundManager.setup();
-  SequencerAboveUILayer.setup();
+	PasteManager.setup();
 
 	PluginsManager.initialize();
 
