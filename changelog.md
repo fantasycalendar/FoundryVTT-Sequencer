@@ -1,5 +1,8 @@
 ## Changelog
 
+# Version 4.2.1
+- *Effects* - Fixed effects not appearing on scenes that only have the default scene level on Foundry v14
+
 # Version 4.2.0
 - *Sequencer* - Fixed the Sequencer Manager not scrolling when the list of running effects and sounds was taller than the window
 - *Effects* - Greatly improved lookup speed of effects that needed to be deleted across scenes

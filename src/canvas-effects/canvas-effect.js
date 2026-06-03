@@ -2317,6 +2317,10 @@ export default class CanvasEffect extends PIXI.Container {
 			return false;
 		}
 
+		if (sceneLevels?.size === 1 && sceneLevels.has(foundry.documents.BaseScene.metadata.defaultLevelId)) {
+			return true;
+		}
+
 		const [zMin, zMax, topInclusive] = this._getEffectiveVerticalExtent();
 		const viewed = currentLevel.elevation;
 		let levelMatch = intervalsOverlap(zMin, zMax, viewed.bottom, viewed.top, topInclusive);
