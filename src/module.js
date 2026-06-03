@@ -75,7 +75,8 @@ Hooks.once("ready", async function() {
     await runMigrations();
     await migrateSettings();
     await PlayerSettings.migrateOldPresets();
-	  await lib.createJournalDatabase();
+	  const database = await lib.createJournalDatabase();
+	  flagManager._databaseId = database?.id ?? null;
   }
 
   SequencerFoundryReplicator.registerHooks();
