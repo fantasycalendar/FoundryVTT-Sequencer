@@ -1057,31 +1057,13 @@ Examples:
 - `.blendMode("multiply")` - Darkens the underlying canvas with the effect's colors (great for shadows or smoke)
 - `.blendMode("screen")` - Brightens the canvas with the effect (great for fire, magic, light flares)
 - `.blendMode("add")` - Additively blends the effect onto the canvas (classic glow / bloom feel)
-- `.blendMode("soft-light")` - Subtle photo-like overlay
-- `.blendMode("overlay")` - Pronounced photo-like overlay
 - `.blendMode(PIXI.BLEND_MODES.SCREEN)` - Same as `"screen"`, using the PIXI numeric constant
 
 Sets the blend mode used when compositing this effect onto the canvas. Accepts either a string name (case-insensitive; spaces, hyphens, and underscores are interchangeable, so `"soft-light"`, `"soft_light"`, and `"Soft Light"` are equivalent) or a numeric `PIXI.BLEND_MODES` constant.
 
-The full list of supported blend modes:
+Supported blend modes: `normal`, `add`, `multiply`, `screen`, `subtract`, `erase`, `none`, `normal-npm`, `add-npm`, `screen-npm`.
 
-| Standard | Advanced |
-|---|---|
-| `normal` | `overlay` |
-| `add` | `darken` |
-| `multiply` | `lighten` |
-| `screen` | `color-dodge` |
-| `subtract` | `color-burn` |
-| `erase` | `hard-light` |
-| `none` | `soft-light` |
-| `normal-npm` | `difference` |
-| `add-npm` | `exclusion` |
-| `screen-npm` | `hue` |
-| | `saturation` |
-| | `color` |
-| | `luminosity` |
-
-Standard modes render natively. Advanced modes need the effect to be rendered into its own framebuffer; this is handled automatically by attaching a no-op color matrix filter when needed, so you don't have to do anything special. If you have already added a `.filter()` to the effect, no extra filter is added.
+The advanced modes exposed by PIXI v7 (`overlay`, `darken`, `lighten`, `color-dodge`, `color-burn`, `hard-light`, `soft-light`, `difference`, `exclusion`, `hue`, `saturation`, `color`, `luminosity`) are not implemented by the renderer and will fall back to normal blending. A one-time warning is logged when one is requested.
 
 ## Screen Space
 
