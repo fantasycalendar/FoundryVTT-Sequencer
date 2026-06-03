@@ -42,7 +42,6 @@ export default {
 
 		inOptions = foundry.utils.mergeObject(
 			{
-				elevation: 1,
 				absolute: false,
 				topInclusive: false,
 			},
