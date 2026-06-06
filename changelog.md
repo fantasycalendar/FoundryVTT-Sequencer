@@ -2,7 +2,6 @@
 
 # Version 4.2.2
 - *Effects* - Fixed `.copySprite()` not copying the sprites of tokens with scale on them
-- *Effects* - Fixed `.mask()` not masking against tokens or tiles, even though the effect played and the manager hover border appeared correctly
 - *Effects* - Fixed `.mask()` not working on Tokens or Tiles
 
 # Version 4.2.1
