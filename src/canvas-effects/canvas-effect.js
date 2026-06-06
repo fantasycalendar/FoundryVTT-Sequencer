@@ -2555,6 +2555,10 @@ export default class CanvasEffect extends PIXI.Container {
 				canvas.stage.addChild(shapeToAdd);
 				this._stageMasks.push(shapeToAdd);
 
+			} else if (docName === "Token" || docName === "Tile") {
+				if (!obj?.mesh) continue;
+				maskFilter.masks.push(obj.mesh);
+				continue;
 			} else if (docName === "MeasuredTemplate" || docName === "Drawing") {
 				// MeasuredTemplates are always instantiated; off-level
 				// Drawings fall back to doc-shape construction.
