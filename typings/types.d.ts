@@ -87,12 +87,12 @@ interface CoreMethods {
   /**
    * Turns the sequence into an array of objects to be reconstructed later
    */
-  toJSON(): Array<object>;
+  toJSON(): object;
 
   /**
    * Takes the serialized sequence array and returns a sequence ready to be played
    */
-  fromJSON(inJSON: Array<object>): Sequence;
+  fromJSON(inJSON: object): Sequence;
 }
 
 interface HasAudio<T> {
