@@ -2181,12 +2181,6 @@ export default class EffectSection extends Section {
 				height: hasMeshSize ? meshHeight : (fallback?.height ?? canvas.grid.size),
 				gridUnits: false,
 			};
-
-			if (ringEnabled) {
-				const tokenSize = this._copySprite.object.getSize();
-				this._copySprite.options.offsetX = (tokenSize.width - this._size.width) / 2;
-				this._copySprite.options.offsetY = (tokenSize.height - this._size.height) / 2;
-			}
 		}
 
 			if (

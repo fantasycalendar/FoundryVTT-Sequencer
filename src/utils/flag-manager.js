@@ -7,9 +7,19 @@ const flagManager = {
 	flagAddBuffer: new Map(),
 	flagRemoveBuffer: new Map(),
 	_latestFlagVersion: false,
+	_databaseId: null,
 
 	get database(){
-		return game.journal.getName(CONSTANTS.DATABASE_NAME);
+		if (this._databaseId) {
+			const cached = game.journal.get(this._databaseId);
+			if (cached) return cached;
+			this._databaseId = null;
+		}
+		const database = game.journal.getName(CONSTANTS.DATABASE_NAME);
+		if (database) {
+			this._databaseId = database.id;
+		}
+		return database;
 	},
 
 	setup() {

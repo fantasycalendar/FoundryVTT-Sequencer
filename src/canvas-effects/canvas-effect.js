@@ -1408,6 +1408,8 @@ export default class CanvasEffect extends PIXI.Container {
 		this._maskSprite = null;
 		this._stageMasks = [];
 		this._wallMaskGraphics = null;
+		this._wallMaskDirty = false;
+		this._verticalExtent = [0, 0, false];
 		this._timeouts = new Set();
 		this._file = null;
 		this._loopOffset = 0;
@@ -2037,7 +2039,7 @@ export default class CanvasEffect extends PIXI.Container {
 	async _createFile() {
 		if (this.data.copySprite) {
 			let targetDocument = fromUuidSync(this.data.copySprite.uuid);
-			if (targetDocument?.ring?.enabled) {
+			if (targetDocument?.ring?.enabled && targetDocument.object) {
 				let clonedObject = targetDocument.object.clone();
 				await clonedObject.draw();
 				let clonedMesh = clonedObject.mesh;
@@ -2315,6 +2317,10 @@ export default class CanvasEffect extends PIXI.Container {
 			return false;
 		}
 
+		if (sceneLevels?.size === 1 && sceneLevels.has(foundry.documents.BaseScene.metadata.defaultLevelId)) {
+			return true;
+		}
+
 		const [zMin, zMax, topInclusive] = this._getEffectiveVerticalExtent();
 		const viewed = currentLevel.elevation;
 		let levelMatch = intervalsOverlap(zMin, zMax, viewed.bottom, viewed.top, topInclusive);
@@ -2347,25 +2353,28 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @private
 	 */
 	_getEffectiveVerticalExtent() {
+		const out = this._verticalExtent;
 		if (this.data.elevation) {
-			const bottom = (typeof this.elevationBottom === "number") ? this.elevationBottom : this.elevation;
-			const top = (typeof this.elevationTop === "number") ? this.elevationTop : bottom;
-			return [bottom, top, !!this.data.elevation.topInclusive];
+			out[0] = (typeof this.elevationBottom === "number") ? this.elevationBottom : this.elevation;
+			out[1] = (typeof this.elevationTop === "number") ? this.elevationTop : out[0];
+			out[2] = !!this.data.elevation.topInclusive;
+			return out;
 		}
 
 		const sourceExtent = canvaslib.get_object_vertical_extent(this.sourceDocument);
 		const targetExtent = canvaslib.get_object_vertical_extent(this.targetDocument);
 
 		if (sourceExtent && targetExtent) {
-			// The `topInclusive` flag follows whichever side contributes the top.
-			const top = Math.max(sourceExtent[1], targetExtent[1]);
-			const topInclusive = (sourceExtent[1] >= targetExtent[1] ? sourceExtent[2] : false)
-				|| (targetExtent[1] >= sourceExtent[1] ? targetExtent[2] : false);
-			return [Math.min(sourceExtent[0], targetExtent[0]), top, !!topInclusive];
+			out[0] = Math.min(sourceExtent[0], targetExtent[0]);
+			out[1] = Math.max(sourceExtent[1], targetExtent[1]);
+			out[2] = !!(sourceExtent[1] >= targetExtent[1] ? sourceExtent[2] : false)
+				|| !!(targetExtent[1] >= sourceExtent[1] ? targetExtent[2] : false);
+			return out;
 		}
-		if (sourceExtent) return sourceExtent;
-		if (targetExtent) return targetExtent;
-		return [this.elevation, this.elevation, false];
+		if (sourceExtent) { out[0] = sourceExtent[0]; out[1] = sourceExtent[1]; out[2] = !!sourceExtent[2]; return out; }
+		if (targetExtent) { out[0] = targetExtent[0]; out[1] = targetExtent[1]; out[2] = !!targetExtent[2]; return out; }
+		out[0] = this.elevation; out[1] = this.elevation; out[2] = false;
+		return out;
 	}
 
 	updateElevation() {
@@ -2546,6 +2555,10 @@ export default class CanvasEffect extends PIXI.Container {
 				canvas.stage.addChild(shapeToAdd);
 				this._stageMasks.push(shapeToAdd);
 
+			} else if (docName === "Token" || docName === "Tile") {
+				if (!obj?.mesh) continue;
+				maskFilter.masks.push(obj.mesh);
+				continue;
 			} else if (docName === "MeasuredTemplate" || docName === "Drawing") {
 				// MeasuredTemplates are always instantiated; off-level
 				// Drawings fall back to doc-shape construction.
@@ -2704,29 +2717,33 @@ export default class CanvasEffect extends PIXI.Container {
 			this._wallMaskGraphics.clear().beginFill().drawShape(next).endFill();
 		};
 
+		const debouncedRecompute = () => {
+			if (this._wallMaskDirty) return;
+			this._wallMaskDirty = true;
+			this._setTimeout(() => {
+				this._wallMaskDirty = false;
+				recompute();
+			}, 100);
+		};
+
 		for (const hook of ["createWall", "updateWall", "deleteWall"]) {
-			hooksManager.addHook(this.uuid, hook, () => {
-				this._setTimeout(recompute, 100);
-			});
+			hooksManager.addHook(this.uuid, hook, debouncedRecompute);
 		}
 
-		// Level documents own the edge set the sweep walks, and a Level
-		// edit can move walls between levels or change a level's elevation
-		// (which shifts source-to-level affinity). Recompute on any Level
-		// mutation in this scene.
 		if (CONSTANTS.IS_V14) {
 			for (const hook of ["createLevel", "updateLevel", "deleteLevel"]) {
 				hooksManager.addHook(this.uuid, hook, (level) => {
 					if (level?.parent?.id !== this.data.sceneId) return;
-					this._setTimeout(recompute, 100);
+					debouncedRecompute();
 				});
 			}
 		}
 
 		const attachedToSource = this.data.attachTo?.active && lib.is_UUID(this.data.source);
-		if (attachedToSource) {
-			hooksManager.addHook(this.uuid, "refreshToken", (token) => {
-				if (token?.document?.uuid !== this.data.source) return;
+		const sourceRefreshHook = attachedToSource && this.getSourceHook("refresh");
+		if (sourceRefreshHook) {
+			hooksManager.addHook(this.uuid, sourceRefreshHook, (placeable) => {
+				if (placeable?.document?.uuid !== this.data.source) return;
 				recompute();
 			});
 		}
