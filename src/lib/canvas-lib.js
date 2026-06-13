@@ -1320,6 +1320,14 @@ const OSCILLATE_WAVEFORMS = {
 export const OSCILLATE_WAVEFORM_NAMES = Object.keys(OSCILLATE_WAVEFORMS);
 
 /**
+ * Fallback duration in milliseconds for non-persistent `.noise()` and
+ * `.oscillate()` blocks when the user did not specify one. Persistent
+ * motions use the explicit per-block `duration` as the loop length and
+ * have no comparable fallback.
+ */
+export const MOTION_DEFAULT_DURATION = 1000;
+
+/**
  * Per-frame oscillate calculation math for a single motion - pass the config,
  * motion object, and the time, and it will calculate exactly where the occiliation
  * should be
@@ -1351,7 +1359,7 @@ export function sampleOscillation(config, motion, now) {
 	} else if (persistent) {
 		fade = fadeInDuration > 0 ? Math.min(1, elapsed / fadeInDuration) : 1;
 	} else {
-		const duration = config.duration;
+		const duration = config.duration ?? MOTION_DEFAULT_DURATION;
 		if (elapsed >= duration) return null;
 		let fadeIn = 1;
 		if (fadeInDuration > 0 && elapsed < fadeInDuration) {
@@ -1474,7 +1482,7 @@ export function sampleNoise(noise, motion, now) {
 	const persistent = motion.persist || motion.persistUntilUpdate;
 	const fadeInDuration = noise.fadeInDuration ?? 0;
 	const fadeOutDuration = noise.fadeOutDuration ?? 0;
-	const duration = noise.duration;
+	const duration = noise.duration ?? MOTION_DEFAULT_DURATION;
 
 	let fade;
 	if (motion.returnTriggeredAt !== undefined) {

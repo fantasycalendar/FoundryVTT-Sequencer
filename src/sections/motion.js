@@ -98,17 +98,18 @@ export default class MotionSection extends Section {
 	 * directionMax]` (degrees, full circle by default). Rotation jitter
 	 * runs on an independent random stream.
 	 *
-	 * Required: `duration` (ms), `frequency` (ms between samples), and
-	 * one of `strength` (pixels; number or `{x, y}`) /
-	 * `strengthScaledToObject` (multiplier of the placeable's dimensions;
-	 * number or `{x, y}`).
+	 * Required: `frequency` (ms between samples) and one of `strength`
+	 * (pixels; number, or `{x, y}` where either axis may be omitted and
+	 * defaults to `0`) / `strengthScaledToObject` (multiplier of the
+	 * placeable's dimensions; same shape).
 	 *
-	 * Optional: `rotationStrength` (degrees, default 0), `directionMin`
-	 * and `directionMax` (degrees in `[0, 720]`, default `0` and `360`),
-	 * `delay`, `fadeInDuration`, `fadeOutDuration`.
+	 * Optional: `duration` (ms, default `1000`), `rotationStrength`
+	 * (degrees, default 0), `directionMin` and `directionMax` (degrees
+	 * in `[0, 720]`, default `0` and `360`), `delay`, `fadeInDuration`,
+	 * `fadeOutDuration`.
 	 *
 	 * Under `.persist()` the shake loops until the motion ends, then fades
-	 * over `fadeOutDuration`.
+	 * over `fadeOutDuration`; `duration` is the length of one loop cycle.
 	 *
 	 * Multiple `.noise()` calls on the same motion compose additively,
 	 * useful for stacking layers like a fast jitter on top of a slow
@@ -142,11 +143,14 @@ export default class MotionSection extends Section {
 			inOptions
 		);
 
-		if (!lib.is_real_number(options.duration) || options.duration <= 0) {
+		if (
+			options.duration !== undefined &&
+			(!lib.is_real_number(options.duration) || options.duration <= 0)
+		) {
 			throw this.sequence._customError(
 				this,
 				"noise",
-				"options.duration must be a positive real number"
+				"options.duration must be a positive real number when specified"
 			);
 		}
 		if (!lib.is_real_number(options.frequency) || options.frequency <= 0) {
@@ -225,15 +229,33 @@ export default class MotionSection extends Section {
 	 */
 	_validateNoiseStrength(fieldName, value) {
 		if (lib.is_real_number(value)) return;
-		if (
-			typeof value === "object" && value !== null
-			&& lib.is_real_number(value.x)
-			&& lib.is_real_number(value.y)
-		) return;
+		if (typeof value === "object" && value !== null) {
+			const hasX = value.x !== undefined;
+			const hasY = value.y !== undefined;
+			if (hasX && !lib.is_real_number(value.x)) {
+				throw this.sequence._customError(
+					this,
+					"noise",
+					`options.${fieldName}.x must be a real number when specified`
+				);
+			}
+			if (hasY && !lib.is_real_number(value.y)) {
+				throw this.sequence._customError(
+					this,
+					"noise",
+					`options.${fieldName}.y must be a real number when specified`
+				);
+			}
+			if (hasX || hasY) {
+				value.x ??= 0;
+				value.y ??= 0;
+				return;
+			}
+		}
 		throw this.sequence._customError(
 			this,
 			"noise",
-			`options.${fieldName} must be a real number or a {x, y} object of real numbers`
+			`options.${fieldName} must be a real number or a {x, y} object with at least one real-number axis`
 		);
 	}
 
@@ -244,9 +266,15 @@ export default class MotionSection extends Section {
 	 *
 	 * Required: `period` (ms), `waveform` ("sine" | "triangle" | "square"),
 	 * and at least one of `x`, `y`, `rotation`, `scale`, `alpha`. Each axis
-	 * takes `{amplitude, phase}`, plus `baseline` for scale and alpha.
+	 * takes `{amplitude, phase}`, plus `baseline` for scale and alpha. On
+	 * the `x` and `y` axes, `strengthScaledToObject` (a number) can stand
+	 * in for `amplitude` to express the swing as a multiplier of the
+	 * placeable's width or height; the two are mutually exclusive on the
+	 * same axis.
 	 *
-	 * Optional: `duration`, `delay`, `fadeInDuration`, `fadeOutDuration`.
+	 * Optional: `duration` (ms, default `1000`), `delay`, `fadeInDuration`,
+	 * `fadeOutDuration`.
+	 *
 	 * Under `.persist()` the oscillation loops until the motion ends, then
 	 * fades over `fadeOutDuration`.
 	 *
@@ -360,13 +388,50 @@ export default class MotionSection extends Section {
 				`options.${axisName} must be of type object`
 			);
 		}
-		if (!lib.is_real_number(axisConfig.amplitude)) {
-			throw this.sequence._customError(
-				this,
-				"oscillate",
-				`options.${axisName}.amplitude must be a real number`
-			);
+
+		const scaledAllowed = axisName === "x" || axisName === "y";
+		const hasAmplitude = axisConfig.amplitude !== undefined;
+		const hasScaled = axisConfig.strengthScaledToObject !== undefined;
+
+		if (scaledAllowed) {
+			if (hasAmplitude === hasScaled) {
+				throw this.sequence._customError(
+					this,
+					"oscillate",
+					`options.${axisName} requires exactly one of \`amplitude\` or \`strengthScaledToObject\``
+				);
+			}
+			if (hasAmplitude && !lib.is_real_number(axisConfig.amplitude)) {
+				throw this.sequence._customError(
+					this,
+					"oscillate",
+					`options.${axisName}.amplitude must be a real number`
+				);
+			}
+			if (hasScaled && !lib.is_real_number(axisConfig.strengthScaledToObject)) {
+				throw this.sequence._customError(
+					this,
+					"oscillate",
+					`options.${axisName}.strengthScaledToObject must be a real number`
+				);
+			}
+		} else {
+			if (hasScaled) {
+				throw this.sequence._customError(
+					this,
+					"oscillate",
+					`options.${axisName}.strengthScaledToObject is only supported on the x and y axes`
+				);
+			}
+			if (!lib.is_real_number(axisConfig.amplitude)) {
+				throw this.sequence._customError(
+					this,
+					"oscillate",
+					`options.${axisName}.amplitude must be a real number`
+				);
+			}
 		}
+
 		if (axisConfig.phase !== undefined && !lib.is_real_number(axisConfig.phase)) {
 			throw this.sequence._customError(
 				this,
@@ -887,6 +952,7 @@ export default class MotionSection extends Section {
 
 		const overallDuration = this._computeOverallDuration();
 		const resolvedNoise = this._resolveNoiseForRun(placeable);
+		const resolvedOscillate = this._resolveOscillateForRun(placeable);
 
 		const data = {
 			sceneId: game.user.viewedScene,
@@ -900,7 +966,7 @@ export default class MotionSection extends Section {
 			persistUntilUpdate: this._persistUntilUpdate,
 			tracks: this._tracks,
 			noise: resolvedNoise,
-			oscillate: this._oscillate,
+			oscillate: resolvedOscillate,
 			overallDuration,
 		};
 
@@ -950,14 +1016,14 @@ export default class MotionSection extends Section {
 			const delay = oscillate.delay ?? 0;
 			const oscillateEnd = persistent
 				? delay + (oscillate.fadeInDuration ?? 0)
-				: delay + (oscillate.duration ?? 0);
+				: delay + (oscillate.duration ?? canvaslib.MOTION_DEFAULT_DURATION);
 			if (oscillateEnd > longest) longest = oscillateEnd;
 		}
 		for (const noise of this._noise) {
 			const delay = noise.delay ?? 0;
 			const noiseEnd = persistent
 				? delay + (noise.fadeInDuration ?? 0)
-				: delay + (noise.duration ?? 0);
+				: delay + (noise.duration ?? canvaslib.MOTION_DEFAULT_DURATION);
 			if (noiseEnd > longest) longest = noiseEnd;
 		}
 		return longest;
@@ -989,9 +1055,43 @@ export default class MotionSection extends Section {
 					y: scaled * dimensions.height,
 				};
 			}
-			// Clone so the section's stored config stays intact across
-			// repeat .play() calls.
 			return { ...noise, strength, strengthScaledToObject: undefined };
+		});
+	}
+
+	/**
+	 * @private
+	 *
+	 * Resolves each oscillate entry's per-axis `strengthScaledToObject`
+	 * against the placeable's dimensions and rewrites it into a plain
+	 * `amplitude` so the manager only ever sees one concrete shape. Only
+	 * the `x` and `y` axes carry the scaled form.
+	 */
+	_resolveOscillateForRun(placeable) {
+		if (this._oscillate.length === 0) return [];
+
+		const dimensions = canvaslib.get_object_dimensions(placeable);
+		return this._oscillate.map((oscillate) => {
+			const xNeedsResolve = oscillate.x?.strengthScaledToObject !== undefined;
+			const yNeedsResolve = oscillate.y?.strengthScaledToObject !== undefined;
+			if (!xNeedsResolve && !yNeedsResolve) return oscillate;
+
+			const resolved = { ...oscillate };
+			if (xNeedsResolve) {
+				resolved.x = {
+					...oscillate.x,
+					amplitude: oscillate.x.strengthScaledToObject * dimensions.width,
+					strengthScaledToObject: undefined,
+				};
+			}
+			if (yNeedsResolve) {
+				resolved.y = {
+					...oscillate.y,
+					amplitude: oscillate.y.strengthScaledToObject * dimensions.height,
+					strengthScaledToObject: undefined,
+				};
+			}
+			return resolved;
 		});
 	}
 }
