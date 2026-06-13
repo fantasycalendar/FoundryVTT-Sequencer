@@ -20,6 +20,7 @@ export default class MotionSection extends Section {
 			scale: [],
 			rotation: [],
 			alpha: [],
+			tint: [],
 		};
 		this._noise = [];
 		this._oscillate = [];
@@ -489,16 +490,12 @@ export default class MotionSection extends Section {
 
 		let options;
 		if (isKeyframe) {
-			// Check against the input so the error names the key the user
-			// actually passed.
-			for (const key of ["return", "easeOut"]) {
-				if (key in inOptions) {
-					throw this.sequence._customError(
-						this,
-						"moveTo",
-						`\`${key}\` is not compatible with keyframe tracks; use \`returnValues\` to specify an explicit return animation/time.`
-					);
-				}
+			if ("easeOut" in inOptions) {
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
 			}
 
 			options = foundry.utils.mergeObject(
@@ -508,6 +505,7 @@ export default class MotionSection extends Section {
 					returnDuration: undefined,
 					ease: "linear",
 					delay: 0,
+					return: true,
 				},
 				inOptions
 			);
@@ -554,6 +552,163 @@ export default class MotionSection extends Section {
 	}
 
 	/**
+	 * Tints the sprite toward a target color, then (by default) tints back
+	 * to the sprite's original color. Pass a single color for a single-tween
+	 * animation, or an array of colors for a keyframed color path.
+	 *
+	 * Colors accept a hex string (`"#ff0000"`) or a 24-bit integer
+	 * (`0xff0000`).
+	 *
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults to mirroring the forward
+	 * leg unless overridden.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `returnValues`,
+	 * `returnDuration`. Each waypoint is a color value, or a per-key object
+	 * `{v: color, duration?, inEase?, outEase?}` for fine-grained control.
+	 * The return leg sweeps back through the keyframes in reverse over
+	 * `returnDuration`.
+	 *
+	 * Multiple `.tintTo()` calls on the same motion compose by RGB
+	 * component-wise multiplication, the same rule PIXI itself uses when
+	 * combining tints. A red tint at half strength layered under a green
+	 * tint at half strength produces a darker yellow, not pure red or pure
+	 * green.
+	 *
+	 * @param {number|string|array} inColor
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	tintTo(inColor, inOptions = {}) {
+		if (inColor === undefined || inColor === null)
+			throw this.sequence._customError(
+				this,
+				"tintTo",
+				"inColor is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"tintTo",
+				"inOptions must be of type object"
+			);
+
+		const isKeyframe = Array.isArray(inColor);
+
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions) {
+				throw this.sequence._customError(
+					this,
+					"tintTo",
+					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			}
+
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					colorSpace: "rgb",
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+					colorSpace: "rgb",
+				},
+				inOptions
+			);
+
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined)
+				options.returnDuration = options.duration;
+		}
+
+		if (options.colorSpace !== "rgb" && options.colorSpace !== "hsv") {
+			throw this.sequence._customError(
+				this,
+				"tintTo",
+				`options.colorSpace must be "rgb" or "hsv"; got ${JSON.stringify(options.colorSpace)}`
+			);
+		}
+
+		let trackConfig;
+		if (isKeyframe) {
+			trackConfig = this._buildKeyframeTrack(
+				"tintTo",
+				inColor.map((entry) => {
+					if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
+						return { ...entry, v: this._normalizeColor("tintTo", entry.v) };
+					}
+					return this._normalizeColor("tintTo", entry);
+				}),
+				options,
+				"tint"
+			);
+		} else {
+			const decimal = this._normalizeColor("tintTo", inColor);
+			trackConfig = this._buildSingleTrack(
+				"tintTo",
+				{ tint: decimal },
+				options,
+				"tint"
+			);
+		}
+
+		trackConfig.colorSpace = options.colorSpace;
+		this._tracks.tint.push(trackConfig);
+		return this;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Accepts a hex string (`"#ff0000"`) or a 24-bit integer (`0xff0000`)
+	 * and returns the integer. Throws if neither form is valid.
+	 */
+	_normalizeColor(methodName, inColor) {
+		if (lib.is_real_number(inColor)) {
+			if (inColor < 0 || inColor > 0xffffff) {
+				throw this.sequence._customError(
+					this,
+					methodName,
+					`color must be a 24-bit integer in [0, 0xffffff]; got ${inColor}`
+				);
+			}
+			return Math.round(inColor);
+		}
+		if (typeof inColor === "string") {
+			const trimmed = inColor.startsWith("#") ? inColor.slice(1) : inColor;
+			if (!/^[0-9a-fA-F]{6}$/.test(trimmed)) {
+				throw this.sequence._customError(
+					this,
+					methodName,
+					`color must be a 6-digit hex string like "#ff0000" or "ff0000"; got "${inColor}"`
+				);
+			}
+			return parseInt(trimmed, 16);
+		}
+		throw this.sequence._customError(
+			this,
+			methodName,
+			"color must be a hex string or a 24-bit integer"
+		);
+	}
+
+	/**
 	 * Validates a normalized single-track options object (defaults already
 	 * merged by the caller) and builds the per-axis TrackConfig for `moveTo`.
 	 * `target` is `{x, y}` (or a placeable resolved to one); `axis` is "x" or
@@ -587,13 +742,6 @@ export default class MotionSection extends Section {
 				methodName,
 				"options.return must be of type boolean"
 			);
-		if (this._persistUntilUpdate && options.return) {
-			throw this.sequence._customError(
-				this,
-				methodName,
-				"`.persistUntilUpdate()` is incompatible with `return: true` tracks; the document update is the return."
-			);
-		}
 		if (
 			typeof options.easeOut !== "string" ||
 			!(options.easeOut in easeFunctions)
@@ -652,23 +800,33 @@ export default class MotionSection extends Section {
 				methodName,
 				"options.delay must be a non-negative real number"
 			);
+		if (typeof options.return !== "boolean")
+			throw this.sequence._customError(
+				this,
+				methodName,
+				"options.return must be of type boolean"
+			);
+		if (options.return === false && options.returnValues !== undefined)
+			throw this.sequence._customError(
+				this,
+				methodName,
+				"`return: false` and `returnValues` are contradictory; pick one."
+			);
+		if (options.return === false && options.returnDuration !== undefined)
+			throw this.sequence._customError(
+				this,
+				methodName,
+				"`return: false` and `returnDuration` are contradictory; pick one."
+			);
 		if (
 			options.returnDuration !== undefined &&
-			options.returnValues === undefined
-		) {
+			(!lib.is_real_number(options.returnDuration) || options.returnDuration <= 0)
+		)
 			throw this.sequence._customError(
 				this,
 				methodName,
-				"`returnDuration` requires `returnValues` on a keyframe track."
+				"options.returnDuration must be a positive real number when specified"
 			);
-		}
-		if (this._persistUntilUpdate && options.returnValues !== undefined) {
-			throw this.sequence._customError(
-				this,
-				methodName,
-				"`.persistUntilUpdate()` is incompatible with `returnValues` on a keyframe track; the document update is the return."
-			);
-		}
 
 		const outwardFrames = this._normalizeKeyframes(
 			methodName,
@@ -679,22 +837,36 @@ export default class MotionSection extends Section {
 			"inTarget"
 		);
 
+		const outwardDuration = outwardFrames.reduce(
+			(sum, frame) => sum + frame.segmentDuration,
+			0
+		);
+		const returnDuration = options.returnDuration ?? outwardDuration;
+
 		let returnFrames;
-		if (options.returnValues !== undefined) {
-			returnFrames = this._normalizeKeyframes(
-				methodName,
-				options.returnValues,
-				options.returnDuration,
-				options.ease,
-				axis,
-				"inOptions.returnValues"
-			);
+		let defaultReturn = false;
+		if (options.return) {
+			if (options.returnValues !== undefined) {
+				returnFrames = this._normalizeKeyframes(
+					methodName,
+					options.returnValues,
+					returnDuration,
+					options.ease,
+					axis,
+					"inOptions.returnValues"
+				);
+			} else {
+				defaultReturn = true;
+			}
 		}
 
 		return {
 			form: "keyframe",
 			frames: outwardFrames,
 			returnFrames,
+			defaultReturn,
+			returnDuration,
+			defaultReturnEase: options.ease,
 			delay: options.delay,
 			absolute: true,
 		};
@@ -720,46 +892,54 @@ export default class MotionSection extends Section {
 		axis,
 		fieldPath
 	) {
-		const isCoordPair = (candidate) =>
-			candidate
-			&& typeof candidate === "object"
-			&& lib.is_real_number(candidate.x)
-			&& lib.is_real_number(candidate.y);
+		const valueShape = axis === "tint" ? "scalar" : "coord";
+		const isLiteralValue = valueShape === "coord"
+			? (candidate) =>
+				candidate
+				&& typeof candidate === "object"
+				&& lib.is_real_number(candidate.x)
+				&& lib.is_real_number(candidate.y)
+			: (candidate) => lib.is_real_number(candidate);
 		const isKeyframeObject = (candidate) =>
 			candidate
 			&& typeof candidate === "object"
 			&& "v" in candidate
-			&& !lib.is_real_number(candidate)
-			&& !isCoordPair(candidate);
+			&& !isLiteralValue(candidate);
+		const literalShapeError = valueShape === "coord"
+			? `${fieldPath}[0] must be a {x, y} coordinate pair or a keyframe object {v: {x, y}, ...}`
+			: `${fieldPath}[0] must be a number or a keyframe object {v: number, ...}`;
+		const literalMixedError = valueShape === "coord"
+			? `${fieldPath} is mixed; either every element is a {x, y} coordinate pair or every element is a keyframe object.`
+			: `${fieldPath} is mixed; either every element is a number or every element is a keyframe object.`;
 
 		const firstElement = rawValues[0];
 		let shape;
-		if (isCoordPair(firstElement)) {
-			shape = "coord";
+		if (isLiteralValue(firstElement)) {
+			shape = "literal";
 		} else if (isKeyframeObject(firstElement)) {
 			shape = "keyframe";
 		} else {
 			throw this.sequence._customError(
 				this,
 				methodName,
-				`${fieldPath}[0] must be a {x, y} coordinate pair or a keyframe object {v: {x, y}, ...}`
+				literalShapeError
 			);
 		}
 
 		for (let keyframeIndex = 0; keyframeIndex < rawValues.length; keyframeIndex++) {
 			const keyframeInput = rawValues[keyframeIndex];
-			if (shape === "coord" && !isCoordPair(keyframeInput)) {
+			if (shape === "literal" && !isLiteralValue(keyframeInput)) {
 				throw this.sequence._customError(
 					this,
 					methodName,
-					`${fieldPath} is mixed; either every element is a {x, y} coordinate pair or every element is a keyframe object.`
+					literalMixedError
 				);
 			}
 			if (shape === "keyframe" && !isKeyframeObject(keyframeInput)) {
 				throw this.sequence._customError(
 					this,
 					methodName,
-					`${fieldPath} is mixed; either every element is a {x, y} coordinate pair or every element is a keyframe object.`
+					literalMixedError
 				);
 			}
 		}
@@ -836,19 +1016,30 @@ export default class MotionSection extends Section {
 			);
 		}
 
-		const frames = rawValues.map((keyframeInput, keyframeIndex) => {
+		return rawValues.map((keyframeInput, keyframeIndex) => {
 			let axisValue;
-			if (shape === "coord") {
-				axisValue = keyframeInput[axis];
+			if (shape === "literal") {
+				axisValue = valueShape === "coord" ? keyframeInput[axis] : keyframeInput;
 			} else {
-				if (!isCoordPair(keyframeInput.v)) {
-					throw this.sequence._customError(
-						this,
-						methodName,
-						`${fieldPath}[${keyframeIndex}].v must be a {x, y} coordinate pair for moveTo`
-					);
+				if (valueShape === "coord") {
+					if (!isLiteralValue(keyframeInput.v)) {
+						throw this.sequence._customError(
+							this,
+							methodName,
+							`${fieldPath}[${keyframeIndex}].v must be a {x, y} coordinate pair for moveTo`
+						);
+					}
+					axisValue = keyframeInput.v[axis];
+				} else {
+					if (!lib.is_real_number(keyframeInput.v)) {
+						throw this.sequence._customError(
+							this,
+							methodName,
+							`${fieldPath}[${keyframeIndex}].v must be a number for tintTo`
+						);
+					}
+					axisValue = keyframeInput.v;
 				}
-				axisValue = keyframeInput.v[axis];
 			}
 
 			let segmentEase;
@@ -887,8 +1078,6 @@ export default class MotionSection extends Section {
 				segmentEase,
 			};
 		});
-
-		return frames;
 	}
 
 	/**
@@ -929,8 +1118,46 @@ export default class MotionSection extends Section {
 
 	/**
 	 * @private
+	 *
+	 * Cross-method validation that depends on the section's final state
+	 * after all chained methods have run. Builder methods (`.moveTo()`,
+	 * `.tintTo()`, etc.) and persistence methods (`.persist()`,
+	 * `.persistUntilUpdate()`) can be called in any order, so checks
+	 * that span multiple methods belong here rather than at build time.
+	 * Called from `run()` so a thrown error surfaces as both a UI
+	 * notification and a console unhandled rejection; `_initialize()`
+	 * swallows throws via `Promise.allSettled` in the play loop and is
+	 * unsuitable for hard validation.
+	 */
+	_expressWarnings() {
+		if (this._persistUntilUpdate) {
+			for (const propertyName of ["x", "y", "rotation", "scale", "alpha", "tint"]) {
+				for (const track of this._tracks[propertyName]) {
+					if (track.form === "single" && track.return) {
+						throw this.sequence._customError(
+							this,
+							"motion",
+							"`.persistUntilUpdate()` is incompatible with `return: true` tracks; the document update is the return. Pass `return: false` on the track."
+						);
+					}
+					if (track.form === "keyframe" && (track.returnFrames || track.defaultReturn)) {
+						throw this.sequence._customError(
+							this,
+							"motion",
+							"`.persistUntilUpdate()` is incompatible with returning keyframe tracks; the document update is the return. Pass `return: false` on the track."
+						);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * @private
 	 */
 	async run() {
+		this._expressWarnings();
+
 		const placeable = this._originObject?.object ?? this._originObject;
 		const target = canvaslib.getMotionTarget(placeable);
 		if (!target) {
@@ -971,8 +1198,16 @@ export default class MotionSection extends Section {
 		};
 
 		const push = !this.sequence.local && !this.sequence.remote;
-		SequencerMotionManager.startMotion(data, push);
+		const { finished } = SequencerMotionManager.startMotion(data, push);
 
+		const persistent = this._persist || this._persistUntilUpdate;
+		if (persistent) {
+			await finished;
+			if (this._currentWaitTime > 0) {
+				await new Promise((resolve) => setTimeout(resolve, this._currentWaitTime));
+			}
+			return;
+		}
 		return new Promise((resolve) => {
 			setTimeout(resolve, overallDuration + this._currentWaitTime);
 		});
@@ -981,32 +1216,36 @@ export default class MotionSection extends Section {
 	/**
 	 * @private
 	 *
-	 * Longest `delay + outward (+ return)` across every track. Persistent
-	 * motions sum outward only so `.waitUntilFinished()` resolves when the
-	 * entry animation lands instead of hanging on the indefinite hold.
+	 * Longest `delay + outward (+ return)` across every track. Used only
+	 * by the non-persistent wait path in `run()` and broadcast in the
+	 * data payload for telemetry. Persistent motions ignore this number
+	 * and wait on the manager's `finished` promise instead.
 	 */
 	_computeOverallDuration() {
-		const persistent = this._persist || this._persistUntilUpdate;
 		let longest = 0;
-		for (const propertyName of ["x", "y", "rotation", "scale", "alpha"]) {
+		for (const propertyName of ["x", "y", "rotation", "scale", "alpha", "tint"]) {
 			for (const track of this._tracks[propertyName]) {
 				const delay = track.delay ?? 0;
 				let outwardDuration;
 				let returnDuration;
 				if (track.form === "single") {
 					outwardDuration = track.duration;
-					returnDuration = (!persistent && track.return) ? track.returnDuration : 0;
+					returnDuration = track.return ? track.returnDuration : 0;
 				} else {
 					outwardDuration = track.frames.reduce(
 						(sum, frame) => sum + frame.segmentDuration,
 						0
 					);
-					returnDuration = (!persistent && track.returnFrames)
-						? track.returnFrames.reduce(
+					if (track.returnFrames) {
+						returnDuration = track.returnFrames.reduce(
 							(sum, frame) => sum + frame.segmentDuration,
 							0
-						)
-						: 0;
+						);
+					} else if (track.defaultReturn) {
+						returnDuration = track.returnDuration;
+					} else {
+						returnDuration = 0;
+					}
 				}
 				const trackEnd = delay + outwardDuration + returnDuration;
 				if (trackEnd > longest) longest = trackEnd;
@@ -1014,16 +1253,12 @@ export default class MotionSection extends Section {
 		}
 		for (const oscillate of this._oscillate) {
 			const delay = oscillate.delay ?? 0;
-			const oscillateEnd = persistent
-				? delay + (oscillate.fadeInDuration ?? 0)
-				: delay + (oscillate.duration ?? canvaslib.MOTION_DEFAULT_DURATION);
+			const oscillateEnd = delay + (oscillate.duration ?? canvaslib.MOTION_DEFAULT_DURATION);
 			if (oscillateEnd > longest) longest = oscillateEnd;
 		}
 		for (const noise of this._noise) {
 			const delay = noise.delay ?? 0;
-			const noiseEnd = persistent
-				? delay + (noise.fadeInDuration ?? 0)
-				: delay + (noise.duration ?? canvaslib.MOTION_DEFAULT_DURATION);
+			const noiseEnd = delay + (noise.duration ?? canvaslib.MOTION_DEFAULT_DURATION);
 			if (noiseEnd > longest) longest = noiseEnd;
 		}
 		return longest;

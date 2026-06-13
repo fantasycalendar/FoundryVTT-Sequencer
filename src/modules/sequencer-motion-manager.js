@@ -1,137 +1,15 @@
 import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 import * as canvaslib from "../lib/canvas-lib.js";
+import * as lib from "../lib/lib.js";
+import {
+	PROPERTY_NAMES,
+	lerp,
+	sampleTrack,
+	motionHasReturningTracks,
+} from "../lib/motion-lib.js";
 
 const MOTION_REGISTRY = new Map();
-
-const PROPERTY_NAMES = ["x", "y", "rotation", "scale", "alpha"];
-
-function lerp(from, to, progress) {
-	return from + (to - from) * progress;
-}
-
-/**
- * Sample a normalized keyframe array at `elapsed` ms since the array's start.
- * Returns the interpolated value, or `null` if `elapsed` exceeds the array's
- * total duration. The first frame's `segmentDuration` is `0` (no segment
- * ends there).
- */
-function sampleFrames(frames, elapsed) {
-	if (elapsed < 0) return null;
-	let cumulative = 0;
-	for (let index = 1; index < frames.length; index++) {
-		const segmentDuration = frames[index].segmentDuration;
-		if (elapsed < cumulative + segmentDuration) {
-			const segmentProgress = (elapsed - cumulative) / segmentDuration;
-			const easeFunction = easeFunctions[frames[index].segmentEase] ?? easeFunctions.linear;
-			const easedProgress = easeFunction(segmentProgress);
-			return lerp(frames[index - 1].v, frames[index].v, easedProgress);
-		}
-		cumulative += segmentDuration;
-	}
-	return null;
-}
-
-/**
- * Sample a single track. Returns the raw sample (an absolute value when
- * `track.absolute`, a delta otherwise), or `null` when the track has no
- * contribution this frame. The caller's switch on property name converts to
- * the appropriate `delta*` or `*Multiplier` contribution.
- */
-function sampleTrack(track, motion, now) {
-	if (motion.done) return null;
-
-	const elapsed = now - track.startTime - (track.delay ?? 0);
-	if (elapsed < 0) return null;
-
-	// Single-track form (`track.from` defined).
-	if (track.form === "single") {
-		const returnFromValue = track.interruptedFrom ?? track.to;
-
-		if (elapsed < track.duration && motion.returnTriggeredAt === undefined) {
-			const easeFunction = easeFunctions[track.ease] ?? easeFunctions.linear;
-			const progress = easeFunction(elapsed / track.duration);
-			return lerp(track.from, track.to, progress);
-		}
-
-		if (motion.returnTriggeredAt !== undefined) {
-			if (!track.return) return null;
-			const returnElapsed = now - motion.returnTriggeredAt;
-			const returnDuration = motion.settleOverride ?? track.returnDuration;
-			if (returnElapsed < returnDuration) {
-				const easeOutFunction = easeFunctions[track.easeOut] ?? easeFunctions.linear;
-				const returnProgress = easeOutFunction(returnElapsed / returnDuration);
-				return lerp(returnFromValue, track.from, returnProgress);
-			}
-			return null;
-		}
-
-		if (motion.persistUntilUpdate || motion.persist) {
-			return track.to;
-		}
-
-		if (track.return) {
-			if (elapsed < track.duration + track.returnDuration) {
-				const easeOutFunction = easeFunctions[track.easeOut] ?? easeFunctions.linear;
-				const returnElapsed = elapsed - track.duration;
-				const returnProgress = easeOutFunction(returnElapsed / track.returnDuration);
-				return lerp(returnFromValue, track.from, returnProgress);
-			}
-			return null;
-		}
-		return null;
-	}
-
-	// Keyframe form.
-	const outwardDuration = track.frames.reduce(
-		(sum, frame) => sum + frame.segmentDuration,
-		0
-	);
-
-	if (motion.returnTriggeredAt !== undefined) {
-		if (!track.returnFrames) return null;
-		const returnElapsed = now - motion.returnTriggeredAt;
-		const effectiveReturnFrames = [
-			track.frames[track.frames.length - 1],
-			...track.returnFrames,
-		];
-		return sampleFrames(effectiveReturnFrames, returnElapsed);
-	}
-
-	if (elapsed < outwardDuration) {
-		return sampleFrames(track.frames, elapsed);
-	}
-
-	if (motion.persistUntilUpdate || motion.persist) {
-		return track.frames[track.frames.length - 1].v;
-	}
-
-	if (track.returnFrames) {
-		const returnElapsed = elapsed - outwardDuration;
-		const effectiveReturnFrames = [
-			track.frames[track.frames.length - 1],
-			...track.returnFrames,
-		];
-		return sampleFrames(effectiveReturnFrames, returnElapsed);
-	}
-	return null;
-}
-
-/**
- * @returns {boolean} true if any track on the motion has `return: true` (the
- *   default for single-track form) or `returnFrames` (keyframe form).
- */
-function motionHasReturningTracks(motion) {
-	for (const propertyName of PROPERTY_NAMES) {
-		const tracks = motion.tracks[propertyName];
-		if (!tracks) continue;
-		for (const track of tracks) {
-			if (track.form === "single" && track.return) return true;
-			if (track.form === "keyframe" && track.returnFrames) return true;
-		}
-	}
-	return false;
-}
 
 class Motion {
 	constructor(config, restState, meshOriginOffset) {
@@ -143,6 +21,9 @@ class Motion {
 		this.returnTriggeredAt = undefined;
 		this.settleOverride = undefined;
 		this.startTime = performance.now();
+		this.finished = new Promise((resolve) => {
+			this._resolveFinished = resolve;
+		});
 		this.oscillate = config.oscillate ?? [];
 		this.noise = (config.noise ?? []).map((noise) => ({
 			...noise,
@@ -155,6 +36,7 @@ class Motion {
 			rotation: [],
 			scale: [],
 			alpha: [],
+			tint: [],
 		};
 		for (const propertyName of PROPERTY_NAMES) {
 			const sourceTracks = config.tracks?.[propertyName] ?? [];
@@ -174,6 +56,9 @@ class Motion {
 	 */
 	#buildTrack(sourceTrack, propertyName, restState, meshOriginOffset) {
 		const track = { ...sourceTrack, startTime: this.startTime };
+		if (propertyName === "tint") {
+			track.lerpFn = track.colorSpace === "hsv" ? lib.lerpColorHSV : lib.lerpColor;
+		}
 		if (!track.absolute) return track;
 
 		if (propertyName === "x") {
@@ -210,6 +95,8 @@ class Motion {
 			}
 		} else if (propertyName === "rotation") {
 			track.from = restState.angle;
+		} else if (propertyName === "tint") {
+			track.from = restState.tint;
 		}
 		return track;
 	}
@@ -222,6 +109,9 @@ class Motion {
 		let deltaAngle = 0;
 		let scaleMultiplier = 1;
 		let alphaMultiplier = 1;
+		let tintR = 1;
+		let tintG = 1;
+		let tintB = 1;
 		let anyAlive = false;
 
 		for (const propertyName of PROPERTY_NAMES) {
@@ -245,6 +135,18 @@ class Motion {
 					case "alpha":
 						alphaMultiplier *= sample;
 						break;
+					case "tint": {
+						const sR = (sample >> 16) & 0xff;
+						const sG = (sample >> 8) & 0xff;
+						const sB = sample & 0xff;
+						const fR = (track.from >> 16) & 0xff;
+						const fG = (track.from >> 8) & 0xff;
+						const fB = track.from & 0xff;
+						tintR *= fR === 0 ? 1 : sR / fR;
+						tintG *= fG === 0 ? 1 : sG / fG;
+						tintB *= fB === 0 ? 1 : sB / fB;
+						break;
+					}
 				}
 			}
 		}
@@ -270,7 +172,7 @@ class Motion {
 		}
 
 		if (!anyAlive) return null;
-		return { deltaX, deltaY, deltaAngle, scaleMultiplier, alphaMultiplier };
+		return { deltaX, deltaY, deltaAngle, scaleMultiplier, alphaMultiplier, tintR, tintG, tintB };
 	}
 
 	triggerReturn(settleOverride) {
@@ -287,7 +189,8 @@ class Motion {
 				if (elapsed >= 0 && elapsed < track.duration) {
 					const easeFunction = easeFunctions[track.ease] ?? easeFunctions.linear;
 					const progress = easeFunction(elapsed / track.duration);
-					track.interruptedFrom = lerp(track.from, track.to, progress);
+					const lerpFn = track.lerpFn ?? lerp;
+					track.interruptedFrom = lerpFn(track.from, track.to, progress);
 				}
 			}
 		}
@@ -295,6 +198,16 @@ class Motion {
 
 	markDone() {
 		this.done = true;
+	}
+
+	/**
+	 * Resolve the `finished` promise the section is awaiting. Called from
+	 * every aggregator path that removes this motion from its set, so a
+	 * `.waitUntilFinished()` on a persistent motion knows when to release
+	 * the rest of the sequence.
+	 */
+	_finish() {
+		this._resolveFinished();
 	}
 }
 
@@ -314,6 +227,7 @@ class PlaceableMotionAggregator {
 			scaleX: target.scale.x,
 			scaleY: target.scale.y,
 			alpha: target.alpha,
+			tint: target.tint ?? 0xffffff,
 		};
 
 		const documentRestState = canvaslib.getDocumentRestState(placeable);
@@ -337,6 +251,9 @@ class PlaceableMotionAggregator {
 			deltaAngle: 0,
 			scaleMultiplier: 1,
 			alphaMultiplier: 1,
+			tintR: 1,
+			tintG: 1,
+			tintB: 1,
 		};
 
 		this.tick = this.tick.bind(this);
@@ -440,10 +357,14 @@ class PlaceableMotionAggregator {
 			let deltaAngle = 0;
 			let scaleMultiplier = 1;
 			let alphaMultiplier = 1;
+			let tintR = 1;
+			let tintG = 1;
+			let tintB = 1;
 			for (const motion of [...this.motions]) {
 				const sample = motion.sampleAt(now);
 				if (sample === null) {
 					this.motions.delete(motion);
+					motion._finish();
 					continue;
 				}
 				deltaX += sample.deltaX;
@@ -451,6 +372,9 @@ class PlaceableMotionAggregator {
 				deltaAngle += sample.deltaAngle;
 				scaleMultiplier *= sample.scaleMultiplier;
 				alphaMultiplier *= sample.alphaMultiplier;
+				tintR *= sample.tintR;
+				tintG *= sample.tintG;
+				tintB *= sample.tintB;
 			}
 
 			// (3) Update cache for getDisplacement consumers.
@@ -459,6 +383,9 @@ class PlaceableMotionAggregator {
 			this.cache.deltaAngle = deltaAngle;
 			this.cache.scaleMultiplier = scaleMultiplier;
 			this.cache.alphaMultiplier = alphaMultiplier;
+			this.cache.tintR = tintR;
+			this.cache.tintG = tintG;
+			this.cache.tintB = tintB;
 
 			// (4) Self-dispose if no motions remain.
 			if (this.motions.size === 0) {
@@ -482,6 +409,15 @@ class PlaceableMotionAggregator {
 			if (alphaMultiplier !== 1) {
 				target.alpha = this.restState.alpha * alphaMultiplier;
 			}
+			if (tintR !== 1 || tintG !== 1 || tintB !== 1) {
+				const restR = (this.restState.tint >> 16) & 0xff;
+				const restG = (this.restState.tint >> 8) & 0xff;
+				const restB = this.restState.tint & 0xff;
+				const finalR = Math.max(0, Math.min(0xff, Math.round(restR * tintR)));
+				const finalG = Math.max(0, Math.min(0xff, Math.round(restG * tintG)));
+				const finalB = Math.max(0, Math.min(0xff, Math.round(restB * tintB)));
+				target.tint = (finalR << 16) | (finalG << 8) | finalB;
+			}
 		} catch (error) {
 			console.error("Sequencer | motion aggregator threw; removing handler", error);
 			this.teardown(false);
@@ -493,6 +429,8 @@ class PlaceableMotionAggregator {
 		this.tornDown = true;
 		canvas.app?.ticker?.remove(this.tick);
 		MOTION_REGISTRY.delete(this.uuid);
+		for (const motion of this.motions) motion._finish();
+		this.motions.clear();
 		if (!triggerRefresh) return;
 		const placeable = this.placeable;
 		const target = this.target;
@@ -507,15 +445,15 @@ class PlaceableMotionAggregator {
 		}
 		target.scale.set(this.restState.scaleX, this.restState.scaleY);
 		target.alpha = this.restState.alpha;
+		target.tint = this.restState.tint;
 	}
 }
 
 export default class SequencerMotionManager {
 	static registerHooks() {
 		Hooks.on("canvasTearDown", () => {
-			for (const aggregator of MOTION_REGISTRY.values()) {
-				aggregator.tornDown = true;
-				canvas.app?.ticker?.remove(aggregator.tick);
+			for (const aggregator of [...MOTION_REGISTRY.values()]) {
+				aggregator.teardown(false);
 			}
 			MOTION_REGISTRY.clear();
 		});
@@ -523,8 +461,12 @@ export default class SequencerMotionManager {
 
 	/**
 	 * Start a motion. `data` is the serializable payload built by
-	 * MotionSection. Returns the same overallDuration the section uses for
-	 * its completion promise so Sequences can compose.
+	 * MotionSection. Returns `{ duration, finished }`: `duration` is the
+	 * outward (+ return) span the section uses for its non-persistent wait;
+	 * `finished` is a promise that resolves when the motion is removed
+	 * from the aggregator. The section awaits `finished` for persistent
+	 * motions so `.waitUntilFinished()` releases when the motion actually
+	 * ends (matching the effect-section convention).
 	 */
 	static startMotion(data, push = true) {
 		if (push) {
@@ -534,14 +476,15 @@ export default class SequencerMotionManager {
 	}
 
 	static _startMotion(data) {
-		if (game.user.viewedScene !== data.sceneId) return 0;
-		if (Array.isArray(data.users) && data.users.length && !data.users.includes(game.userId)) return 0;
+		const noop = { duration: 0, finished: Promise.resolve() };
+		if (game.user.viewedScene !== data.sceneId) return noop;
+		if (Array.isArray(data.users) && data.users.length && !data.users.includes(game.userId)) return noop;
 
 		const document = fromUuidSync(data.uuid);
 		const placeable = document?.object ?? null;
-		if (!placeable) return 0;
+		if (!placeable) return noop;
 		const target = canvaslib.getMotionTarget(placeable);
-		if (!target) return 0;
+		if (!target) return noop;
 
 		let aggregator = MOTION_REGISTRY.get(data.uuid);
 		if (!aggregator) {
@@ -552,7 +495,7 @@ export default class SequencerMotionManager {
 
 		const motion = new Motion(data, aggregator.restState, aggregator.meshOriginOffset);
 		aggregator.addMotion(motion);
-		return data.overallDuration ?? 0;
+		return { duration: data.overallDuration ?? 0, finished: motion.finished };
 	}
 
 	/**
@@ -610,10 +553,12 @@ export default class SequencerMotionManager {
 				} else if (motion.persistUntilUpdate) {
 					// No return leg; endMotion is "cancel the hold now."
 					aggregator.motions.delete(motion);
+					motion._finish();
 				} else if (data.settle > 0 && motionHasReturningTracks(motion)) {
 					motion.triggerReturn(data.settle);
 				} else {
 					aggregator.motions.delete(motion);
+					motion._finish();
 				}
 				count++;
 			}

@@ -525,6 +525,81 @@ export function parseColor(inColor) {
 	};
 }
 
+export function lerpColor(from, to, progress) {
+	const fromR = (from >> 16) & 0xff;
+	const fromG = (from >> 8) & 0xff;
+	const fromB = from & 0xff;
+	const toR = (to >> 16) & 0xff;
+	const toG = (to >> 8) & 0xff;
+	const toB = to & 0xff;
+	const r = Math.round(fromR + (toR - fromR) * progress);
+	const g = Math.round(fromG + (toG - fromG) * progress);
+	const b = Math.round(fromB + (toB - fromB) * progress);
+	return (r << 16) | (g << 8) | b;
+}
+
+export function rgbIntToHsv(packed) {
+	const r = ((packed >> 16) & 0xff) / 0xff;
+	const g = ((packed >> 8) & 0xff) / 0xff;
+	const b = (packed & 0xff) / 0xff;
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	const delta = max - min;
+	const value = max;
+	const saturation = max === 0 ? 0 : delta / max;
+	let hue;
+	if (delta === 0) hue = NaN;
+	else if (max === r) hue = ((g - b) / delta + (g < b ? 6 : 0)) * 60;
+	else if (max === g) hue = ((b - r) / delta + 2) * 60;
+	else hue = ((r - g) / delta + 4) * 60;
+	return { h: hue, s: saturation, v: value };
+}
+
+export function hsvToRgbInt({ h, s, v }) {
+	const safeHue = Number.isNaN(h) ? 0 : ((h % 360) + 360) % 360;
+	const chroma = v * s;
+	const huePrime = safeHue / 60;
+	const x = chroma * (1 - Math.abs((huePrime % 2) - 1));
+	let rPrime;
+	let gPrime;
+	let bPrime;
+	if (huePrime < 1) { rPrime = chroma; gPrime = x; bPrime = 0; }
+	else if (huePrime < 2) { rPrime = x; gPrime = chroma; bPrime = 0; }
+	else if (huePrime < 3) { rPrime = 0; gPrime = chroma; bPrime = x; }
+	else if (huePrime < 4) { rPrime = 0; gPrime = x; bPrime = chroma; }
+	else if (huePrime < 5) { rPrime = x; gPrime = 0; bPrime = chroma; }
+	else { rPrime = chroma; gPrime = 0; bPrime = x; }
+	const offset = v - chroma;
+	const r = Math.max(0, Math.min(0xff, Math.round((rPrime + offset) * 0xff)));
+	const g = Math.max(0, Math.min(0xff, Math.round((gPrime + offset) * 0xff)));
+	const b = Math.max(0, Math.min(0xff, Math.round((bPrime + offset) * 0xff)));
+	return (r << 16) | (g << 8) | b;
+}
+
+export function lerpColorHSV(from, to, progress) {
+	const fromHsv = rgbIntToHsv(from);
+	const toHsv = rgbIntToHsv(to);
+	const fromHueDefined = !Number.isNaN(fromHsv.h);
+	const toHueDefined = !Number.isNaN(toHsv.h);
+
+	let hue;
+	if (fromHueDefined && toHueDefined) {
+		let delta = toHsv.h - fromHsv.h;
+		if (delta > 180) delta -= 360;
+		else if (delta < -180) delta += 360;
+		hue = fromHsv.h + delta * progress;
+	} else if (fromHueDefined) {
+		hue = fromHsv.h;
+	} else if (toHueDefined) {
+		hue = toHsv.h;
+	} else {
+		hue = 0;
+	}
+	const saturation = fromHsv.s + (toHsv.s - fromHsv.s) * progress;
+	const value = fromHsv.v + (toHsv.v - fromHsv.v) * progress;
+	return hsvToRgbInt({ h: hue, s: saturation, v: value });
+}
+
 export function getCanvasMouse() {
 	return canvas?.app?.renderer?.events?.pointer ?? canvas?.app?.renderer?.plugins?.interaction?.pointer;
 }

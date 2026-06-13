@@ -198,6 +198,55 @@ Either every waypoint after the first sets `duration`, or none of them do. Mixin
 
 Calling `.moveTo()` multiple times on the same motion section adds multiple tracks, all playing concurrently. Their displacements add together. This is useful for layered movement, like a horizontal slide combined with a vertical hop.
 
+## Tint To
+
+`.tintTo(inColor, options)`
+
+```js
+.tintTo("#ff0000", { duration: 200 })
+.tintTo(0xff0000, { duration: 200, return: true, returnDuration: 400, ease: "easeOutQuad", easeOut: "easeInQuad" })
+.tintTo("#ff0000", { duration: 1500, return: false })
+.tintTo(["#ffffff", "#ff0000", "#ffff00"], { duration: 600, returnDuration: 300 })
+.tintTo([
+    { v: "#ffffff" },
+    { v: "#ff0000", duration: 100, inEase: "easeOutQuad" },
+    { v: "#ffff00", duration: 400, inEase: "linear" },
+])
+```
+
+Tints the sprite toward a target color, then (by default) tints back to the sprite's original color.
+
+Colors accept either a hex string (`"#ff0000"`, with or without the leading `#`) or a 24-bit integer (`0xff0000`).
+
+The options object accepts the same fields as [`.moveTo()`](#move-to):
+
+- `duration: number` (required) - the outward tween length in milliseconds
+- `ease: string` (default `"linear"`) - the ease function applied to the outward tween
+- `delay: number` (default `0`) - milliseconds to wait before the tween starts
+- `return: boolean` (default `true`) - whether the sprite tints back to its original color after the outward tween
+- `easeOut: string` (default mirrors `ease`) - the ease function applied to the return tween
+- `returnDuration: number` (default mirrors `duration`) - the return tween length in milliseconds
+
+### Keyframed color paths
+
+Passing an array as the first argument runs a multi-segment color sweep, the same way the keyframed [`.moveTo()`](#move-to) form works for positions. The array elements may be plain color values, or per-key objects:
+
+```js
+.tintTo([
+    { v: "#ffffff" },
+    { v: "#ff0000", duration: 100, inEase: "easeOutQuad" },
+    { v: "#ffff00", duration: 400, outEase: "easeInQuad" },
+])
+```
+
+The first waypoint's `duration` and `inEase` are ignored, since there is no incoming segment at the start of the path.
+
+By default, the return leg sweeps back through the colors in reverse over `returnDuration`. Set `returnValues` to override with an explicit return path.
+
+### Composition
+
+Calling `.tintTo()` multiple times on the same motion section adds multiple tint tracks. They compose by RGB component-wise multiplication, the same rule PIXI uses internally when combining a parent's and a material's tint. A half-strength red layered with a half-strength green produces a darker yellow.
+
 ## Persist
 
 `.persist()`

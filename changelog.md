@@ -2,10 +2,11 @@
 
 # Version 4.3.0
 - *Effects* - Effects that resolve a placeable's location (`.atLocation()`, `.attachTo()`, `.stretchTo()`, and similar) now use any motion displacement (see below) automatically, so an effect targeting a token mid-motion lands on the visible sprite
-- *Motion* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, and alpha can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
+- *Motion* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
 - *Motion* - Added `.moveTo()` for moving the sprite to a destination
 - *Motion* - Added `.noise()` for random shake / jitter onto a motion additively
 - *Motion* - Added `.oscillate()` for layering a periodic wave onto a motion additively
+- *Motion* - Added `.tintTo()` for tinting the sprite to a different color temporarily
 - *Motion* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotion()` plays the return animation
 - *Motion* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion a token before updating its position with no visible snap!
 - *Motion* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
