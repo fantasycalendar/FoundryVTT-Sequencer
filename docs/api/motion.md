@@ -251,6 +251,7 @@ Mutually exclusive with [`.persist()`](#persist).
 ```js
 .noise({ strength: 6, frequency: 30, duration: 400 })
 .noise({ strength: { x: 10, y: 4 }, frequency: 50, duration: 1000, rotationStrength: 3 })
+.noise({ strength: { x: 20 }, frequency: 40, duration: 600 })
 .noise({ strengthScaledToObject: 0.2, frequency: 40, duration: 800 })
 .noise({ strength: 8, frequency: 40, duration: 600, directionMin: 60, directionMax: 120 })
 ```
@@ -259,10 +260,10 @@ Layers random shake / jitter onto the motion. Each sample is pulled from a rando
 
 The options object accepts:
 
-- `strength: number | { x, y }` - displacement amplitude in pixels. Either a single number for uniform strength or `{ x, y }` for axis-specific amplitudes
-- `strengthScaledToObject: number | { x, y }` - alternative to `strength`. The value is a multiplier of the placeable's width and height, so `0.1` shakes the sprite by 10% of its size. Useful for shakes that should scale with the token size
+- `strength: number | { x, y }` - displacement amplitude in pixels. Either a single number for uniform strength, or `{ x, y }` for axis-specific amplitudes. The `{ x, y }` form may omit either axis to lock that axis at `0` (so `{ x: 20 }` shakes only horizontally)
+- `strengthScaledToObject: number | { x, y }` - alternative to `strength`. The value is a multiplier of the placeable's width and height, so `0.1` shakes the sprite by 10% of its size. Same `{ x, y }` shape as `strength`, with the same omit-an-axis-to-lock-it-at-zero behavior. Useful for shakes that should scale with the token size
 - `frequency: number` (required) - milliseconds between samples. Lower numbers produce faster, twitchier shakes
-- `duration: number` (required) - how long the shake lasts, in milliseconds
+- `duration: number` (default `1000`) - how long the shake lasts, in milliseconds. Under [`.persist()`](#persist) this is the loop length of one cycle
 - `rotationStrength: number` (default `0`) - rotation amplitude in degrees
 - `directionMin: number` (default `0`) - lower bound of the direction cone, in degrees, in `[0, 720]`
 - `directionMax: number` (default `360`) - upper bound of the direction cone, in degrees, in `[0, 720]`
@@ -304,6 +305,12 @@ Multiple `.noise()` calls on the same motion compose additively, useful for stac
     waveform: "sine",
     scale: { baseline: 1.0, amplitude: 0.05 }
 })
+.oscillate({
+    period: 1200,
+    waveform: "sine",
+    x: { strengthScaledToObject: 0.1 },
+    y: { strengthScaledToObject: 0.1, phase: Math.PI / 2 },
+})
 ```
 
 Layers a periodic oscillation onto the motion. Position and rotation axes oscillate by `amplitude` units around their starting value; scale and alpha oscillate around `baseline` (default `1.0`).
@@ -312,8 +319,8 @@ The options object accepts:
 
 - `period: number` (required) - milliseconds per full cycle of the wave
 - `waveform: string` (required) - one of `"sine"`, `"triangle"`, `"square"`
-- `x`, `y`, `rotation`, `scale`, `alpha` - per-axis configuration. At least one axis must be configured. Each takes `{ amplitude, phase }`, plus `baseline` for `scale` and `alpha`
-- `duration: number` - total duration of the oscillation in milliseconds. If omitted, the oscillation runs as long as the motion section does
+- `x`, `y`, `rotation`, `scale`, `alpha` - per-axis configuration. At least one axis must be configured. Each takes `{ amplitude, phase }`, plus `baseline` for `scale` and `alpha`. The `x` and `y` axes also accept `strengthScaledToObject` as a stand-in for `amplitude`
+- `duration: number` (default `1000`) - total duration of the oscillation in milliseconds. Ignored under [`.persist()`](#persist), where the oscillation loops until the motion ends
 - `delay: number` (default `0`) - milliseconds to wait before the oscillation starts
 - `fadeInDuration: number` (default `0`) - milliseconds to ramp the oscillation amplitude in at the start
 - `fadeOutDuration: number` (default `0`) - milliseconds to ramp the oscillation amplitude out at the end
@@ -322,7 +329,8 @@ The options object accepts:
 
 Each configured axis takes its own object:
 
-- `amplitude: number` (required) - peak displacement in pixels (`x`, `y`), degrees (`rotation`), or a multiplier offset (`scale`, `alpha`)
+- `amplitude: number` - peak displacement in pixels (`x`, `y`), degrees (`rotation`), or a multiplier offset (`scale`, `alpha`). Required unless `strengthScaledToObject` is used in its place on the `x` or `y` axis
+- `strengthScaledToObject: number` - **x and y axes only.** Stands in for `amplitude` to express the peak displacement as a multiplier of the placeable's width (for `x`) or height (for `y`). For example, `x: { strengthScaledToObject: 0.1 }` sways the sprite by 10% of its width. Mutually exclusive with `amplitude` on the same axis
 - `phase: number` (default `0`) - phase offset in radians. Positive phase shifts the peak earlier in time. Use this to correlate multiple axes: two axes with the same phase peak together, while two axes with a quarter-cycle phase difference trace a circle or oval
 - `baseline: number` (default `1.0`) - **scale and alpha only.** The centre value the oscillation orbits. A heartbeat is `scale: { baseline: 1.0, amplitude: 0.05 }` producing a `0.95 → 1.05` pulse
 
