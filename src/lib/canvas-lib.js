@@ -292,9 +292,13 @@ export function get_object_position(
       y: obj.document.y,
     };
 
-    if (!exact) {
-      pos.x += Math.abs(obj.document.width / 2);
-      pos.y += Math.abs(obj.document.height / 2);
+    // Foundry v14 only behaves correctly without this logic
+    // Foundry v13 only behaves correctly with this logic
+    if (!foundry.utils.isNewerVersion(game.version, '14')) {
+        if (!exact) {
+            pos.x += Math.abs(obj.document.width / 2);
+            pos.y += Math.abs(obj.document.height / 2);
+        }
     }
   } else if (obj instanceof foundry.canvas.placeables.Token) {
     const halfSize = get_object_dimensions(obj, true);
