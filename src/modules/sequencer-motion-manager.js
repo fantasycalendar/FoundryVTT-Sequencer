@@ -8,11 +8,14 @@ import {
 	sampleTrack,
 	motionHasReturningTracks,
 } from "../lib/motion-lib.js";
+import flagManager from "../utils/flag-manager.js";
+import SequenceManager from "./sequence-manager.js";
 
 const MOTION_REGISTRY = new Map();
 
 class Motion {
 	constructor(config, restState, meshOriginOffset) {
+		this._id = config._id;
 		this.sequenceId = config.sequenceId ?? null;
 		this.name = config.name ?? null;
 		this.persist = !!config.persist;
@@ -20,6 +23,8 @@ class Motion {
 		this.done = false;
 		this.returnTriggeredAt = undefined;
 		this.settleOverride = undefined;
+		this.actualCreationTime = Date.now();
+		this.creationTimeDelta = this.actualCreationTime - config.creationTimestamp;
 		this.startTime = performance.now();
 		this.finished = new Promise((resolve) => {
 			this._resolveFinished = resolve;
@@ -55,7 +60,7 @@ class Motion {
 	 * via `meshOriginOffset`.
 	 */
 	#buildTrack(sourceTrack, propertyName, restState, meshOriginOffset) {
-		const track = { ...sourceTrack, startTime: this.startTime };
+		const track = { ...sourceTrack, startTime: this.startTime - this.creationTimeDelta };
 		if (propertyName === "tint") {
 			track.lerpFn = track.colorSpace === "hsv" ? lib.lerpColorHSV : lib.lerpColor;
 		}
@@ -208,6 +213,19 @@ class Motion {
 	 */
 	_finish() {
 		this._resolveFinished();
+		SequenceManager.RunningMotions.delete(this._id);
+	}
+
+	/**
+	 * Removes this motion's persisted flag, if it was persisted. Called
+	 * from every Motion end path in PlaceableMotionAggregator so the flag
+	 * does not survive natural completion, explicit endMotion, or scene
+	 * teardown. Non-persistent motions skip this safely because their
+	 * flag was never written.
+	 */
+	_removeFlag(uuid) {
+		if (!this.persist && !this.persistUntilUpdate) return;
+		flagManager.removeFlags(uuid, { motions: [this._id] });
 	}
 }
 
@@ -365,6 +383,7 @@ class PlaceableMotionAggregator {
 				if (sample === null) {
 					this.motions.delete(motion);
 					motion._finish();
+					motion._removeFlag(this.uuid);
 					continue;
 				}
 				deltaX += sample.deltaX;
@@ -429,7 +448,9 @@ class PlaceableMotionAggregator {
 		this.tornDown = true;
 		canvas.app?.ticker?.remove(this.tick);
 		MOTION_REGISTRY.delete(this.uuid);
-		for (const motion of this.motions) motion._finish();
+		for (const motion of this.motions){
+			motion._finish();
+		}
 		this.motions.clear();
 		if (!triggerRefresh) return;
 		const placeable = this.placeable;
@@ -460,6 +481,50 @@ export default class SequencerMotionManager {
 	}
 
 	/**
+	 * Reads persisted motion flags from the journal and replays each
+	 * motion locally via _startMotion. Called on canvasReady after the
+	 * scene's documents have finished loading. Stale flags (the target
+	 * placeable no longer exists) are removed.
+	 */
+	static async initializePersistentMotions() {
+		SequencerMotionManager.tearDownPersistentMotions();
+		const allMotionFlags = flagManager.getDatabaseFlags().motions;
+		const motionsToRemove = {};
+		for (const [uuid, motions] of Object.entries(allMotionFlags)) {
+			const doc = fromUuidSync(uuid);
+			if (!doc) {
+				motionsToRemove[uuid] = motions;
+				continue;
+			}
+			if (doc.parent?.id && doc.parent.id !== canvas.scene?.id) continue;
+			// Read through getMotionFlags so any registered motion
+			// migrations run before resurrection, matching how
+			// getEffectFlags / getSoundFlags migrate on read.
+			for (const [, motionData] of flagManager.getMotionFlags(doc)) {
+				SequencerMotionManager._startMotion(motionData);
+			}
+		}
+		for (const [uuid, motions] of Object.entries(motionsToRemove)) {
+			flagManager.removeFlags(uuid, {
+				motions: motions.map(([id]) => id),
+				removeAllMotions: true,
+			});
+		}
+	}
+
+	/**
+	 * Tears down all in-memory motion aggregators without touching flags.
+	 * Called from the canvasTearDown hook. Mirrors
+	 * SequencerEffectManager.tearDownPersistentEffects.
+	 */
+	static tearDownPersistentMotions() {
+		for (const aggregator of [...MOTION_REGISTRY.values()]) {
+			aggregator.teardown(false);
+		}
+		MOTION_REGISTRY.clear();
+	}
+
+	/**
 	 * Start a motion. `data` is the serializable payload built by
 	 * MotionSection. Returns `{ duration, finished }`: `duration` is the
 	 * outward (+ return) span the section uses for its non-persistent wait;
@@ -471,6 +536,9 @@ export default class SequencerMotionManager {
 	static startMotion(data, push = true) {
 		if (push) {
 			sequencerSocket.executeForOthers(SOCKET_HANDLERS.START_MOTION, data);
+			if (data.persist || data.persistUntilUpdate) {
+				flagManager.addFlags(data.uuid, { motions: data });
+			}
 		}
 		return SequencerMotionManager._startMotion(data);
 	}
@@ -495,6 +563,7 @@ export default class SequencerMotionManager {
 
 		const motion = new Motion(data, aggregator.restState, aggregator.meshOriginOffset);
 		aggregator.addMotion(motion);
+		SequenceManager.RunningMotions.add(motion._id, { id: motion._id, data });
 		return { duration: data.overallDuration ?? 0, finished: motion.finished };
 	}
 
@@ -549,16 +618,25 @@ export default class SequencerMotionManager {
 				if (data.name && motion.name !== data.name) continue;
 
 				if (motion.persist) {
+					// Remove the flag now, not when the settle animation
+					// finishes. `endMotion` is the "this has ended" signal;
+					// a reload mid-settle must not resurrect it. The
+					// in-memory return leg still plays for the visual, and
+					// the tick removes the motion from the set when
+					// `sampleAt` returns null.
+					motion._removeFlag(aggregator.uuid);
 					motion.triggerReturn(data.settle);
 				} else if (motion.persistUntilUpdate) {
 					// No return leg; endMotion is "cancel the hold now."
 					aggregator.motions.delete(motion);
 					motion._finish();
+					motion._removeFlag(aggregator.uuid);
 				} else if (data.settle > 0 && motionHasReturningTracks(motion)) {
 					motion.triggerReturn(data.settle);
 				} else {
 					aggregator.motions.delete(motion);
 					motion._finish();
+					motion._removeFlag(aggregator.uuid);
 				}
 				count++;
 			}

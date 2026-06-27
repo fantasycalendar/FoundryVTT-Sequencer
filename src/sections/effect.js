@@ -2434,7 +2434,7 @@ export default class EffectSection extends Section {
 			 * Core properties
 			 */
 			_id: foundry.utils.randomID(),
-			flagVersion: flagManager.latestFlagVersion,
+			flagVersion: flagManager.latestEffectFlagVersion,
 			sequenceId: this.sequence.id,
 			creationTimestamp: Date.now(),
 			sceneId,

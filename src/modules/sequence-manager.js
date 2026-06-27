@@ -4,6 +4,7 @@ import CONSTANTS from "../constants.js";
 const SequenceManager = {
   VisibleEffects: writable({}),
   RunningSounds: writable({}),
+	RunningMotions: writable({}),
   RunningSequences: writable({}),
 };
 
@@ -55,6 +56,33 @@ SequenceManager.RunningSounds.values = () => {
 
 SequenceManager.RunningSounds.keys = () => {
   return Object.keys(get(SequenceManager.RunningSounds));
+};
+
+/* ------------------ Motions ------------------ */
+SequenceManager.RunningMotions.get = (id) => {
+	return get(SequenceManager.RunningMotions)[id];
+};
+
+SequenceManager.RunningMotions.add = (id, data) => {
+	SequenceManager.RunningMotions.update((motions) => {
+		motions[id] = data;
+		return motions;
+	});
+};
+
+SequenceManager.RunningMotions.delete = (id) => {
+	SequenceManager.RunningMotions.update((motions) => {
+		delete motions[id];
+		return motions;
+	});
+};
+
+SequenceManager.RunningMotions.values = () => {
+	return Object.values(get(SequenceManager.RunningMotions));
+};
+
+SequenceManager.RunningMotions.keys = () => {
+	return Object.keys(get(SequenceManager.RunningMotions));
 };
 
 /* ----------------- Sequences ------------------ */

@@ -1344,7 +1344,7 @@ export const MOTION_DEFAULT_DURATION = 1000;
  *          duration on a non-persistent motion).
  */
 export function sampleOscillation(config, motion, now) {
-	const elapsed = now - motion.startTime - (config.delay ?? 0);
+	const elapsed = now - motion.startTime - (config.delay ?? 0) + motion.creationTimeDelta;
 	if (elapsed < 0) return null;
 
 	const persistent = motion.persist || motion.persistUntilUpdate;
@@ -1476,7 +1476,7 @@ export function buildNoiseWaveform(config) {
  *            scaleMultiplier: number, alphaMultiplier: number}|null}
  */
 export function sampleNoise(noise, motion, now) {
-	const elapsed = now - motion.startTime - (noise.delay ?? 0);
+	const elapsed = now - motion.startTime - (noise.delay ?? 0) + motion.creationTimeDelta;
 	if (elapsed < 0) return null;
 
 	const persistent = motion.persist || motion.persistUntilUpdate;

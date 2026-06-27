@@ -4,6 +4,7 @@ import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 import SequencerMotionManager from "../modules/sequencer-motion-manager.js";
+import flagManager from "../utils/flag-manager.js";
 
 
 export default class MotionSection extends Section {
@@ -1177,11 +1178,16 @@ export default class MotionSection extends Section {
 			);
 		}
 
+		const motionId = foundry.utils.randomID();
+		const creationTimestamp = Date.now();
+
 		const overallDuration = this._computeOverallDuration();
 		const resolvedNoise = this._resolveNoiseForRun(placeable);
 		const resolvedOscillate = this._resolveOscillateForRun(placeable);
 
 		const data = {
+			_id: motionId,
+			flagVersion: flagManager.latestMotionFlagVersion,
 			sceneId: game.user.viewedScene,
 			uuid,
 			sequenceId: this.sequence.id,
@@ -1195,6 +1201,7 @@ export default class MotionSection extends Section {
 			noise: resolvedNoise,
 			oscillate: resolvedOscillate,
 			overallDuration,
+			creationTimestamp,
 		};
 
 		const push = !this.sequence.local && !this.sequence.remote;

@@ -726,7 +726,7 @@ class SoundSection extends Section {
 
 		let data = {
 			_id: foundry.utils.randomID(),
-			flagVersion: flagManager.latestFlagVersion,
+			flagVersion: flagManager.latestSoundFlagVersion,
 			play: true,
 			file: file.dbPath ?? file,
 			forcedIndex,

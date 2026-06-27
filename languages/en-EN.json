@@ -80,10 +80,13 @@
       "TemporaryEffects": "Temporary effects:",
       "PersistentSounds": "Persistent sounds:",
       "TemporarySounds": "Temporary sounds:",
+      "PersistentMotions": "Persistent motions:",
+      "TemporaryMotions": "Temporary motions:",
       "PlayersEffect": "{user_name}'s effect",
       "UnknownEffect": "Unknown user's effect",
       "EndAllEffects": "End All Effects",
-      "EndAllSounds": "End All Sounds"
+      "EndAllSounds": "End All Sounds",
+      "EndAllMotions": "End All Motions"
     },
     "Sequences": {
       "Title": "Sequences",

@@ -88,6 +88,7 @@ Hooks.on("canvasTearDown", () => {
   canvasReady = false;
   SequencerEffectManager.tearDownPersistentEffects();
 	SequencerSoundManager.tearDownPersistentSounds();
+	SequencerMotionManager.tearDownPersistentMotions();
 });
 
 const setupModule = foundry.utils.debounce(() => {
@@ -102,6 +103,7 @@ const setupModule = foundry.utils.debounce(() => {
     canvasReady = true;
     SequencerEffectManager.initializePersistentEffects();
 	  SequencerSoundManager.initializePersistentSounds();
+	  SequencerMotionManager.initializePersistentMotions();
   }
 }, 25);
 
