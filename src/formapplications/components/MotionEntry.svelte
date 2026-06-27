@@ -31,7 +31,7 @@
   }
 
   function endMotion() {
-    SequencerMotionManager.endMotion(motion.data.uuid, {
+    SequencerMotionManager.endMotions(motion.data.uuid, {
       name: motion.data.name,
       sequenceId: motion.data.sequenceId,
     });

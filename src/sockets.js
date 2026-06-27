@@ -109,7 +109,7 @@ const SOCKET_CALLBACKS = {
 		return SequencerMotionManager._startMotion(...data.payload);
 	},
 	[SOCKET_HANDLERS.END_MOTION]: (data) => {
-		return SequencerMotionManager._endMotion(...data.payload);
+		return SequencerMotionManager._endMotions(...data.payload);
 	}
 }
 

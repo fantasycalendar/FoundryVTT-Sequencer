@@ -10,9 +10,9 @@ The Motion Manager controls motions started by [`.motion()`](api/motion.md) sect
 
 Motions are runtime-only (see [`.persist()`](api/motion.md#persist) on the Motion section). The Motion Manager has no UI and no way to list active motions, so if you want to end a motion later, give it a [`.name()`](api/motion.md#name) when you create it.
 
-## End Motion
+## End Motions
 
-`Sequencer.MotionManager.endMotion(target, options)`
+`Sequencer.MotionManager.endMotions(target, options)`
 
 ```js
 target = PlaceableObject | Document | String // Token, Tile, Drawing, their documents, or a UUID
@@ -24,21 +24,30 @@ options = {
 }
 ```
 
+You can also pass a single options object, putting the target under an `object` key:
+
+```js
+Sequencer.MotionManager.endMotions({ object: token, name: "fly", settle: 600 });
+```
+
 <details>
   <summary><strong>------ Click for examples ------</strong></summary><br />
 
 ```js
 // Land a flying token, playing the configured return animation instantly
-Sequencer.MotionManager.endMotion(token, { name: "fly" });
+Sequencer.MotionManager.endMotions(token, { name: "fly" });
+
+// The same, written as a single options object
+Sequencer.MotionManager.endMotions({ object: token, name: "fly" });
 
 // Land it smoothly over 600ms
-Sequencer.MotionManager.endMotion(token, { name: "fly", settle: 600 });
+Sequencer.MotionManager.endMotions(token, { name: "fly", settle: 600 });
 
 // End every motion on a token, regardless of name
-Sequencer.MotionManager.endMotion(token);
+Sequencer.MotionManager.endMotions(token);
 
 // End only motions from a specific sequence
-Sequencer.MotionManager.endMotion(token, { sequenceId: mySequence.id });
+Sequencer.MotionManager.endMotions(token, { sequenceId: mySequence.id });
 ```
 <strong>--------------------------------</strong>
 
@@ -82,7 +91,7 @@ Sequencer.MotionManager.endAllMotions({ sceneId: "ULohafjBlsTRST8F" });
 
 </details>
 
-Functionally the same as `endMotion`, except it matches every placeable on the scene instead of one specific target.
+Functionally the same as `endMotions`, except it matches every placeable on the scene instead of one specific target.
 
 This is a GM-only method.
 

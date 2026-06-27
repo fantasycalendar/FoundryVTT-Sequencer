@@ -38,7 +38,7 @@ new Sequence()
     .play()
 
 // later, to land it:
-Sequencer.MotionManager.endMotion(token, { name: "fly" });
+Sequencer.MotionManager.endMotions(token, { name: "fly" });
 ```
 
 <hr/>
@@ -122,7 +122,7 @@ Anything else (templates, regions, lights, etc.) will be rejected when the motio
 
 `.name(inString)`
 
-Names the motion so it can be referenced later by [`Sequencer.MotionManager.endMotion()`](#ending-and-querying-motions) or [`Sequencer.MotionManager.endAllMotions()`](#ending-and-querying-motions).
+Names the motion so it can be referenced later by [`Sequencer.MotionManager.endMotions()`](#ending-and-querying-motions) or [`Sequencer.MotionManager.endAllMotions()`](#ending-and-querying-motions).
 
 Useful for persistent motions (see [`.persist()`](#persist) below), where the name is the handle you use to wind the motion down.
 
@@ -251,18 +251,18 @@ Calling `.tintTo()` multiple times on the same motion section adds multiple tint
 
 `.persist()`
 
-Plays the motion forward, then holds the displaced position indefinitely. Call `Sequencer.MotionManager.endMotion(target, options)` to play the return animation and end the motion.
+Plays the motion forward, then holds the displaced position indefinitely. Call `Sequencer.MotionManager.endMotions(target, options)` to play the return animation and end the motion.
 
 **Persistence is runtime-only.** Unlike `.effect().persist()`, which writes a flag on the canvas so the effect can be recreated after a world reload, a persistent `.motion()` writes nothing. It holds in memory on every viewing client and ends when either:
 
-- `Sequencer.MotionManager.endMotion(...)` is called, or
+- `Sequencer.MotionManager.endMotions(...)` is called, or
 - the scene is changed, the world is reloaded, or the page is refreshed (the sprite snaps back to its document position with no further input)
 
 Use this for "active until I dismiss it" visual states like a flying token holding altitude during combat, a poisoned token shuddering while the condition is on, or a charged spell crackling around its caster. For state that needs to outlive a reload, use a persistent effect attached to the placeable instead.
 
 Mutually exclusive with [`.persistUntilUpdate()`](#persist-until-update).
 
-A persistent motion that doesn't have an explicit return animation (every track uses `return: false`) will snap back to the document position when ended. To wind it down smoothly, use `return: true` on the tracks, or pass `settle: <ms>` to `endMotion` for a smooth wind-down.
+A persistent motion that doesn't have an explicit return animation (every track uses `return: false`) will snap back to the document position when ended. To wind it down smoothly, use `return: true` on the tracks, or pass `settle: <ms>` to `endMotions` for a smooth wind-down.
 
 ## Persist Until Update
 

@@ -54,7 +54,7 @@ export default class MotionSection extends Section {
 
 	/**
 	 * Plays the motion forward, then holds the displaced position
-	 * indefinitely. Call `Sequencer.MotionManager.endMotion(target, options)`
+	 * indefinitely. Call `Sequencer.MotionManager.endMotions(target, options)`
 	 * to play the return animation and end the motion.
 	 *
 	 * Mutually exclusive with `.persistUntilUpdate()`.

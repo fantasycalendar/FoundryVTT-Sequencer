@@ -219,7 +219,7 @@ class Motion {
 	/**
 	 * Removes this motion's persisted flag, if it was persisted. Called
 	 * from every Motion end path in PlaceableMotionAggregator so the flag
-	 * does not survive natural completion, explicit endMotion, or scene
+	 * does not survive natural completion, explicit endMotions, or scene
 	 * teardown. Non-persistent motions skip this safely because their
 	 * flag was never written.
 	 */
@@ -572,40 +572,97 @@ export default class SequencerMotionManager {
 	 * `SequencerEffectManager.endEffects` in shape: user-facing arguments in,
 	 * normalized internal data out, then dispatch through the socket.
 	 *
+	 * Two calling forms are accepted:
+	 *   - Positional: `endMotions(target, options)` where `target` is a
+	 *     placeable, document, or uuid string.
+	 *   - Single options object: `endMotions({ object, name, sequenceId,
+	 *     settle, sceneId })`, where `object` (or `target`) is the
+	 *     placeable / document / uuid string.
+	 *
+	 * The unscoped "end every motion on the scene" path has exactly one
+	 * entry point: a `null`/omitted first argument (used by `endAllMotions`).
+	 * A non-null first argument that resolves to neither a target nor a
+	 * recognized options object throws, rather than silently ending every
+	 * motion.
+	 *
 	 * @param {object|string|null} target  A placeable, document, uuid string,
-	 *   or `null` to match every aggregator (the `endAllMotions` case).
-	 * @param {object} [options]           Optional filter:
+	 *   an options object, or `null` to match every aggregator.
+	 * @param {object} [options]           Optional filter (ignored when the
+	 *   first argument is itself an options object):
 	 *   - `sequenceId`: only end motions from this sequence.
 	 *   - `name`: only end motions whose `.name()` matches.
 	 *   - `settle`: override the configured returnDuration for the wind-down.
 	 *   - `sceneId`: defaults to the viewer's current scene.
 	 * @param {boolean} [push=true]        Whether to broadcast to other clients.
 	 */
-	static endMotion(target, options = {}, push = true) {
+	static endMotions(target, options = {}, push = true) {
+		const extractUuid = (candidate) => {
+			if (typeof candidate === "string") return candidate;
+			return candidate?.uuid ?? candidate?.document?.uuid ?? null;
+		};
+
 		let uuid = null;
-		if (target) {
-			if (typeof target === "string") uuid = target;
-			else uuid = target?.uuid ?? target?.document?.uuid ?? null;
+		let resolvedOptions = options;
+
+		if (target === null || target === undefined) {
+			// The sole unscoped match-all path (endAllMotions).
+		} else if (typeof target === "string") {
+			uuid = target;
+		} else if (target?.uuid !== undefined || target?.document !== undefined) {
+			// A document (`.uuid`) or placeable (`.document.uuid`).
+			uuid = extractUuid(target);
+			if (uuid === null) {
+				throw lib.custom_error(
+					"Sequencer",
+					"MotionManager | endMotions | could not resolve a uuid from the given target"
+				);
+			}
+		} else if (
+			typeof target === "object"
+			&& ("object" in target || "target" in target || "name" in target || "sequenceId" in target)
+		) {
+			// Single options-object form. The first argument carries the
+			// filter; the second positional argument is ignored.
+			resolvedOptions = target;
+			const bagTarget = target.object ?? target.target ?? null;
+			if (bagTarget !== null && bagTarget !== undefined) {
+				uuid = extractUuid(bagTarget);
+				if (uuid === null) {
+					throw lib.custom_error(
+						"Sequencer",
+						"MotionManager | endMotions | the options object's `object`/`target` did not resolve to a uuid"
+					);
+				}
+			}
+			// No `object`/`target` in the bag leaves `uuid` null: this is a
+			// name/sequence-scoped end across all placeables, the same shape
+			// as `endAllMotions({ name })`.
+		} else {
+			throw lib.custom_error(
+				"Sequencer",
+				"MotionManager | endMotions | no target specified; pass a placeable, document, uuid string, an options object, or null to end all motions"
+			);
 		}
+
 		const data = {
-			sceneId: options.sceneId ?? game.user.viewedScene,
+			sceneId: resolvedOptions.sceneId ?? game.user.viewedScene,
 			uuid,
-			sequenceId: options.sequenceId ?? null,
-			name: options.name ?? null,
-			settle: options.settle ?? 0,
+			sequenceId: resolvedOptions.sequenceId ?? null,
+			name: resolvedOptions.name ?? null,
+			settle: resolvedOptions.settle ?? 0,
 		};
 		if (push) {
 			sequencerSocket.executeForOthers(SOCKET_HANDLERS.END_MOTION, data);
 		}
-		return SequencerMotionManager._endMotion(data);
+		return SequencerMotionManager._endMotions(data);
 	}
 
-	/** Shorthand for `endMotion(null, options, push)`. Matches every uuid. */
+	/** Shorthand for `endMotions(null, options, push)`. Matches every uuid. */
 	static endAllMotions(options = {}, push = true) {
-		return SequencerMotionManager.endMotion(null, options, push);
+		return SequencerMotionManager.endMotions(null, options, push);
 	}
 
-	static _endMotion(data) {
+	static _endMotions(data) {
 		if (game.user.viewedScene !== data.sceneId) return 0;
 		const aggregators = data.uuid
 			? [MOTION_REGISTRY.get(data.uuid)].filter(Boolean)
@@ -619,7 +676,7 @@ export default class SequencerMotionManager {
 
 				if (motion.persist) {
 					// Remove the flag now, not when the settle animation
-					// finishes. `endMotion` is the "this has ended" signal;
+					// finishes. `endMotions` is the "this has ended" signal;
 					// a reload mid-settle must not resurrect it. The
 					// in-memory return leg still plays for the visual, and
 					// the tick removes the motion from the set when
@@ -627,7 +684,7 @@ export default class SequencerMotionManager {
 					motion._removeFlag(aggregator.uuid);
 					motion.triggerReturn(data.settle);
 				} else if (motion.persistUntilUpdate) {
-					// No return leg; endMotion is "cancel the hold now."
+					// No return leg; endMotions is "cancel the hold now."
 					aggregator.motions.delete(motion);
 					motion._finish();
 					motion._removeFlag(aggregator.uuid);
