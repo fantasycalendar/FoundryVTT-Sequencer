@@ -11,6 +11,8 @@
 - *Motion* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotion()` plays the return animation
 - *Motion* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion a token before updating its position with no visible snap!
 - *Motion* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
+- *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible (motion-displaced) position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead
+- *Crosshairs* - `Sequencer.Crosshair.collect()` now takes its arguments as a single options object: `collect(crosshair, { types, filterMethod, ignoreMotion })`. The old positional form still works but is deprecated and will be removed in a future version
 
 
 # Version 4.2.2
