@@ -887,10 +887,10 @@ export function is_object_canvas_data(inObj) {
   );
 }
 
-export function get_object_canvas_data(inObject, { measure = false, uuid = true }={}) {
+export function get_object_canvas_data(inObject, { measure = false, uuid = true, ignoreMotion = false }={}) {
   inObject = inObject?.object ?? inObject;
   const data = {
-    ...get_object_position(inObject, { measure }),
+    ...get_object_position(inObject, { measure, ignoreMotion }),
     ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject),
     elevation: get_object_elevation(inObject),
     cachedLocation: true,
@@ -973,8 +973,12 @@ export function getPositionFromData(data, type="source", twister = false) {
     ? data.nameOffsetMap[data[type]][type]
     : validateObject(data[type], data.sceneId);
 
+  const ignoreMotion = type === "target"
+    ? data.ignoreTargetMotion
+    : data.ignoreSourceMotion;
+
   const position = source instanceof foundry.canvas.placeables.PlaceableObject
-      ? get_object_position(source)
+      ? get_object_position(source, { ignoreMotion })
       : source?.worldPosition || source?.center || source;
 
 	let offset = getOffsetFromData(data, { source, type, twister });

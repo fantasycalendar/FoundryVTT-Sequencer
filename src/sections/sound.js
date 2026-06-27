@@ -16,6 +16,7 @@ class SoundSection extends Section {
 		this._overrides = [];
 		this._locationOptions = {};
 		this._toLocation = false;
+		this._ignoreTargetMotion = false;
 		this._moveTowards = false;
 		this._global = false;
 		this._persist = false;
@@ -314,6 +315,7 @@ class SoundSection extends Section {
 				randomOffset: false,
 				gridUnits: false,
 				local: false,
+				ignoreMotion: false,
 			},
 			inOptions
 		);
@@ -329,6 +331,12 @@ class SoundSection extends Section {
 				this,
 				"toLocation",
 				"inOptions.cacheLocation must be of type boolean"
+			);
+		if (typeof inOptions.ignoreMotion !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"toLocation",
+				"inOptions.ignoreMotion must be of type boolean"
 			);
 		if (
 			!(
@@ -359,9 +367,14 @@ class SoundSection extends Section {
 			target: inOptions.randomOffset,
 		};
 
+		this._ignoreTargetMotion = inOptions.ignoreMotion;
+
 		this._toLocation =
 			inOptions.cacheLocation && typeof inLocation !== "string"
-				? canvaslib.get_object_canvas_data(inLocation, { uuid: false })
+				? canvaslib.get_object_canvas_data(inLocation, {
+						uuid: false,
+						ignoreMotion: inOptions.ignoreMotion,
+					})
 				: inLocation;
 
 		return this;
@@ -521,6 +534,7 @@ class SoundSection extends Section {
 			{
 				bindVisibility: true,
 				bindElevation: true,
+				ignoreMotion: false,
 			},
 			inOptions
 		);
@@ -545,8 +559,15 @@ class SoundSection extends Section {
 				"attachTo",
 				"inOptions.bindElevation must be of type boolean"
 			);
+		if (typeof inOptions.ignoreMotion !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				"inOptions.ignoreMotion must be of type boolean"
+			);
 
 		this._source = validatedObject;
+		this._ignoreSourceMotion = inOptions.ignoreMotion;
 
 		this._attachTo = {
 			active: !!validatedObject,
@@ -669,11 +690,11 @@ class SoundSection extends Section {
 			return doc.getOrientation().source;
 		}
 		if (this._source?.cachedLocation || !this._attachTo) {
-			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
+			return canvaslib.get_object_canvas_data(this._source, { uuid: true, ignoreMotion: this._ignoreSourceMotion });
 		}
 		return (
 			lib.get_object_identifier(this._source) ??
-			canvaslib.get_object_canvas_data(this._source, { uuid: true })
+			canvaslib.get_object_canvas_data(this._source, { uuid: true, ignoreMotion: this._ignoreSourceMotion })
 		);
 	}
 
@@ -690,11 +711,11 @@ class SoundSection extends Section {
 			return doc.getOrientation().source;
 		}
 		if (target?.cachedLocation) {
-			return canvaslib.get_object_canvas_data(target, { uuid: true });
+			return canvaslib.get_object_canvas_data(target, { uuid: true, ignoreMotion: this._ignoreTargetMotion });
 		}
 		return (
 			lib.get_object_identifier(target) ??
-			canvaslib.get_object_canvas_data(target, { uuid: true })
+			canvaslib.get_object_canvas_data(target, { uuid: true, ignoreMotion: this._ignoreTargetMotion })
 		);
 	}
 
@@ -735,6 +756,8 @@ class SoundSection extends Section {
 			creatorUserId: game.user.id,
 			source: this._getSourceObject(),
 			target: this._getTargetObject(),
+			ignoreSourceMotion: this._ignoreSourceMotion,
+			ignoreTargetMotion: this._ignoreTargetMotion,
 			attachTo: this._attachTo,
 			moveTowards: this._moveTowards
 				? {

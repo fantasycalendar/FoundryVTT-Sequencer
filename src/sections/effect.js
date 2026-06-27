@@ -19,6 +19,7 @@ export default class EffectSection extends Section {
 		this._source = null;
 		this._stretchTo = null;
 		this._attachTo = null;
+		this._ignoreTargetMotion = false;
 		this._copySprite = null;
 		this._anchor = null;
 		this._spriteAnchor = null;
@@ -246,6 +247,7 @@ export default class EffectSection extends Section {
 				randomOffset: false,
 				gridUnits: false,
 				local: false,
+				ignoreMotion: false,
 			},
 			inOptions
 		);
@@ -324,8 +326,15 @@ export default class EffectSection extends Section {
 				"attachTo",
 				"inOptions.randomOffset must be of type boolean or number"
 			);
+		if (typeof inOptions.ignoreMotion !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"attachTo",
+				"inOptions.ignoreMotion must be of type boolean"
+			);
 
 		this._source = validatedObject;
+		this._ignoreSourceMotion = inOptions.ignoreMotion;
 
 		if (inOptions.offset) {
 			const offsetData = this._validateOffset(
@@ -391,6 +400,7 @@ export default class EffectSection extends Section {
 				local: false,
 				requiresLineOfSight: false,
 				hideLineOfSight: false,
+				ignoreMotion: false,
 			},
 			inOptions
 		);
@@ -406,6 +416,12 @@ export default class EffectSection extends Section {
 				this,
 				"stretchTo",
 				"inOptions.cacheLocation must be of type boolean"
+			);
+		if (typeof inOptions.ignoreMotion !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"stretchTo",
+				"inOptions.ignoreMotion must be of type boolean"
 			);
 		if (typeof inOptions.attachTo !== "boolean")
 			throw this.sequence._customError(
@@ -496,9 +512,11 @@ export default class EffectSection extends Section {
 			target: inOptions.randomOffset,
 		};
 
+		this._ignoreTargetMotion = inOptions.ignoreMotion;
+
 		this._stretchTo = {
 			target: inOptions.cacheLocation
-				? canvaslib.get_object_canvas_data(validatedObject, { measure: true, uuid: false })
+				? canvaslib.get_object_canvas_data(validatedObject, { measure: true, uuid: false, ignoreMotion: inOptions.ignoreMotion })
 				: validatedObject,
 			attachTo: inOptions.attachTo,
 			onlyX: inOptions.onlyX,
@@ -534,6 +552,7 @@ export default class EffectSection extends Section {
 				local: false,
 				gridUnits: false,
 				template: false,
+				ignoreMotion: false,
 			},
 			inOptions
 		);
@@ -542,6 +561,12 @@ export default class EffectSection extends Section {
 				this,
 				"rotateTowards",
 				"inOptions.rotationOffset must be of type number"
+			);
+		if (typeof inOptions.ignoreMotion !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"rotateTowards",
+				"inOptions.ignoreMotion must be of type boolean"
 			);
 		if (typeof inOptions.attachTo !== "boolean")
 			throw this.sequence._customError(
@@ -585,9 +610,11 @@ export default class EffectSection extends Section {
 			target: inOptions.randomOffset ?? this._randomOffset?.target ?? false,
 		};
 
+		this._ignoreTargetMotion = inOptions.ignoreMotion;
+
 		this._rotateTowards = {
 			target: inOptions.cacheLocation
-				? canvaslib.get_object_canvas_data(validatedObject, { measure: true, uuid: false })
+				? canvaslib.get_object_canvas_data(validatedObject, { measure: true, uuid: false, ignoreMotion: inOptions.ignoreMotion })
 				: validatedObject,
 			rotationOffset: inOptions.rotationOffset,
 			cacheLocation: inOptions.cacheLocation,
@@ -2309,11 +2336,11 @@ export default class EffectSection extends Section {
 			return doc.getOrientation().source;
 		}
 		if (this._source?.cachedLocation || !this._attachTo) {
-			return canvaslib.get_object_canvas_data(this._source, { uuid: true });
+			return canvaslib.get_object_canvas_data(this._source, { uuid: true, ignoreMotion: this._ignoreSourceMotion });
 		}
 		return (
 			lib.get_object_identifier(this._source) ??
-			canvaslib.get_object_canvas_data(this._source, { uuid: true })
+			canvaslib.get_object_canvas_data(this._source, { uuid: true, ignoreMotion: this._ignoreSourceMotion })
 		);
 	}
 
@@ -2337,11 +2364,11 @@ export default class EffectSection extends Section {
 			this._target?.target?.cachedLocation ||
 			!(this._stretchTo?.attachTo || this._rotateTowards?.attachTo)
 		) {
-			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true });
+			return canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true, ignoreMotion: this._ignoreTargetMotion });
 		}
 		return (
 			lib.get_object_identifier(this._target.target) ??
-			canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true })
+			canvaslib.get_object_canvas_data(this._target.target, { measure: true, uuid: true, ignoreMotion: this._ignoreTargetMotion })
 		);
 	}
 
@@ -2456,6 +2483,8 @@ export default class EffectSection extends Section {
 			 */
 			source: source,
 			target: target,
+			ignoreSourceMotion: this._ignoreSourceMotion,
+			ignoreTargetMotion: this._ignoreTargetMotion,
 			rotateTowards: this._rotateTowards,
 			stretchTo: this._stretchTo
 				? {

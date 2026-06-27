@@ -498,7 +498,7 @@ class SequencerSound {
 	get sourcePosition() {
 		if (this.data.attachTo?.active) {
 			if (!this.isSourceDestroyed) {
-				let position = canvaslib.get_object_position(this.source);
+				let position = canvaslib.get_object_position(this.source, { ignoreMotion: this.data.ignoreSourceMotion });
 				let offset = canvaslib.getOffsetFromData(this.data, { type: "source", twister: this.twister });
 				let elevation = this.data.attachTo.bindElevation ? (position.elevation ?? 0) : 0;
 				this._sourcePosition = {

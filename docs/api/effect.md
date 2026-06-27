@@ -317,6 +317,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the location is a placeable with an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), use its document position instead of its motion-displaced visible position (for example, to keep a shadow on the ground beneath a flying token)
 
 ## Attach To
 
@@ -352,6 +353,7 @@ In addition, a secondary options parameter can be given to this method, which ha
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the object has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), attach to its document position instead of its motion-displaced visible position (for example, to keep a shadow on the ground beneath a flying token)
 - `template: boolean` - Make the effect use the defined template in the sequencer database. See [Why templates are useful](https://fantasycomputer.works/FoundryVTT-Sequencer/#/database-basics?id=why-templates-are-useful).
 
 ## Rotate Towards
@@ -377,6 +379,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the target has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), rotate towards its document position instead of its motion-displaced visible position
 
 ## Stretch To
 
@@ -402,6 +405,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the target has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), stretch towards its document position instead of its motion-displaced visible position
 - `requiresLineOfSight: boolean` - (requires `attachTo` to be true) causes the effect to end prematurely if the line of sight from the source and target is broken
 - `hideLineOfSight: boolean` - (requires `requiresLineOfSight` to be true) changes the behavior of `requiresLineOfSight` and causes the effect to be hidden while the line of sight is broken
 

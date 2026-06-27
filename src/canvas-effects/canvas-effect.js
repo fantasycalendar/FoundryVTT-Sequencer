@@ -841,7 +841,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let position =
 			crosshairPos
-			|| (positionSource ? canvaslib.get_object_position(positionSource) : null)
+			|| (positionSource ? canvaslib.get_object_position(positionSource, { ignoreMotion: this.data.ignoreSourceMotion }) : null)
 			|| this.source?.worldPosition
 			|| this.source?.center
 			|| this.source;
@@ -929,7 +929,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let position =
 			crosshairPos
-			|| (positionTarget ? canvaslib.get_object_position(positionTarget, { measure: true }) : null)
+			|| (positionTarget ? canvaslib.get_object_position(positionTarget, { measure: true, ignoreMotion: this.data.ignoreTargetMotion }) : null)
 			|| this.target?.worldPosition
 			|| this.target?.center
 			|| this.target;

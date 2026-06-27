@@ -8,6 +8,7 @@ export default {
   _source: null,
 	_offset: null,
 	_randomOffset: null,
+	_ignoreSourceMotion: false,
 
   /**
    *  A smart method that can take a reference to an object, or a direct on the canvas to play the effect at,
@@ -38,6 +39,7 @@ export default {
         randomOffset: false,
         gridUnits: false,
         local: false,
+        ignoreMotion: false,
       },
       inOptions
     );
@@ -53,6 +55,12 @@ export default {
         this,
         "atLocation",
         "inOptions.cacheLocation must be of type boolean"
+      );
+    if (typeof inOptions.ignoreMotion !== "boolean")
+      throw this.sequence._customError(
+        this,
+        "atLocation",
+        "inOptions.ignoreMotion must be of type boolean"
       );
     if (
       !(
@@ -83,9 +91,14 @@ export default {
       target: this._randomOffset?.target ?? false,
     };
 
+    this._ignoreSourceMotion = inOptions.ignoreMotion;
+
     this._source =
       inOptions.cacheLocation && typeof inLocation !== "string"
-        ? canvaslib.get_object_canvas_data(inLocation, { uuid: false })
+        ? canvaslib.get_object_canvas_data(inLocation, {
+            uuid: false,
+            ignoreMotion: inOptions.ignoreMotion,
+          })
         : inLocation;
     return this;
   },

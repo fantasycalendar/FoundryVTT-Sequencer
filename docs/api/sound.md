@@ -272,6 +272,7 @@ Also supports a second options object that accepts:
 - `randomOffset: number|boolean` - causes the location to be offset by a random amount - if given a number, this acts as a multiplier for the randomness, using the size of the object (or a single grid square/hex) as the multiplier.
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the sound's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the location is a placeable with an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), use its document position instead of its motion-displaced visible position
 
 ## Attach To
 
@@ -295,6 +296,7 @@ In addition, a secondary options parameter can be given to this method, which ha
 
 - `bindVisibility: boolean` - (default `true`) - causes the sound to become hidden when the attached object is hidden
 - `bindElevation: boolean` - (default `true`) - causes the sound to match the elevation of the attached object
+- `ignoreMotion: boolean` (default `false`) - when the object has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), attach to its document position instead of its motion-displaced visible position
 
 
 ## To Location
@@ -323,6 +325,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the sound's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number in `x` and `y` represent the sound's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the location is a placeable with an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), use its document position instead of its motion-displaced visible position
 
 
 ## Move Towards
