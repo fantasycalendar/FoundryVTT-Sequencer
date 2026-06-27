@@ -154,11 +154,13 @@ Examples:
 Moves the sprite toward the given target. The first argument can be:
 
 - An `{ x, y }` coordinate object
-- A placeable or its document (a Token, Tile, Drawing, etc.), in which case the target's `document.x` / `document.y` are read when the section is built
+- A placeable or its document (a Token, Tile, Drawing, etc.), whose position is read when the section is built
 - A string reference (see [`.name()`](#name) on other sections) that resolves to a previously placed object
 - An array of waypoints, for a keyframed multi-segment path
 
 Coordinates are in **document space**, the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
+
+When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. The position is captured once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. A literal `{ x, y }` is used exactly as given.
 
 ### Single-target form options
 

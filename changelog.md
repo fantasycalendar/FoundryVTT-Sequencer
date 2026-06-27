@@ -3,7 +3,7 @@
 # Version 4.3.0
 - *Effects* - Effects that resolve a placeable's location (`.atLocation()`, `.attachTo()`, `.stretchTo()`, and similar) now use any motion displacement (see below) automatically, so an effect targeting a token mid-motion lands on the visible sprite
 - *Motion* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
-- *Motion* - Added `.moveTo()` for moving the sprite to a destination
+- *Motion* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable, its visible position is used, so moving toward a token that is itself flying via a `.motion()` lands on where it appears rather than its document position
 - *Motion* - Added `.noise()` for random shake / jitter onto a motion additively
 - *Motion* - Added `.oscillate()` for layering a periodic wave onto a motion additively
 - *Motion* - Added `.tintTo()` for tinting the sprite to a different color temporarily
