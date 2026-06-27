@@ -464,12 +464,14 @@ export default class MotionSection extends Section {
 	 * position is read at the moment this method is called, and includes
 	 * any motion currently displacing it: moving toward a token that is
 	 * itself flying via a `.motion()` lands on where it visually appears,
-	 * not on its document position. A literal `{x, y}` is used as given.
+	 * not on its document position. Pass `ignoreMotion: true` to target the
+	 * document position instead (e.g. the ground beneath a flying token). A
+	 * literal `{x, y}` is used as given.
 	 *
 	 * Required: `duration` (ms).
 	 * Optional: `ease`, `delay`, `return` (default true), `easeOut`,
-	 * `returnDuration`. The return-leg defaults to mirroring the forward
-	 * leg unless overridden.
+	 * `returnDuration`, `ignoreMotion` (default false). The return-leg
+	 * defaults to mirroring the forward leg unless overridden.
 	 *
 	 * Keyframe form accepts: `duration`, `ease`, `delay`, `returnValues`,
 	 * `returnDuration`. Each waypoint is `{x, y}`, or a per-key object
@@ -504,6 +506,13 @@ export default class MotionSection extends Section {
 					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
 				);
 			}
+			if ("ignoreMotion" in inOptions) {
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"`ignoreMotion` is not compatible with keyframe tracks; keyframe waypoints are literal coordinates, not placeables."
+				);
+			}
 
 			options = foundry.utils.mergeObject(
 				{
@@ -525,9 +534,17 @@ export default class MotionSection extends Section {
 					return: true,
 					easeOut: undefined,
 					returnDuration: undefined,
+					ignoreMotion: false,
 				},
 				inOptions
 			);
+
+			if (typeof options.ignoreMotion !== "boolean")
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"options.ignoreMotion must be of type boolean"
+				);
 
 			// Default the return-leg fields off the outward-leg ones.
 			if (options.easeOut === undefined) options.easeOut = options.ease;
@@ -545,23 +562,13 @@ export default class MotionSection extends Section {
 					"could not resolve a position from inTarget"
 				);
 
-			// When the target is a placeable or document (rather than a
-			// literal {x, y}), resolve it to its document-space top-left
-			// through get_object_position. Default-on motion awareness:
-			// the returned position includes any active motion displacement
-			// on the target, so moving to a token that is itself flying via
-			// a persisted .motion() lands on the visible sprite, not the
-			// document base. `exact: true` keeps the coordinate in the
-			// document top-left convention that #buildTrack expects (it
-			// adds meshOriginOffset to reach the mesh); without it the
-			// helper would return the centre and the offset would be
-			// double-counted. A literal {x, y} is passed straight through.
 			if (
 				validatedTarget instanceof foundry.canvas.placeables.PlaceableObject
 				|| validatedTarget instanceof foundry.abstract.Document
 			) {
 				const resolved = canvaslib.get_object_position(validatedTarget, {
 					exact: true,
+					ignoreMotion: options.ignoreMotion,
 				});
 				if (!lib.is_real_number(resolved?.x) || !lib.is_real_number(resolved?.y))
 					throw this.sequence._customError(
@@ -574,10 +581,6 @@ export default class MotionSection extends Section {
 				!lib.is_real_number(validatedTarget?.x)
 				|| !lib.is_real_number(validatedTarget?.y)
 			) {
-				// Not a placeable/document and not a literal {x, y}: an
-				// unresolved name reference, or some other non-position
-				// value. Fail loudly rather than building a track with an
-				// undefined target.
 				throw this.sequence._customError(
 					this,
 					"moveTo",

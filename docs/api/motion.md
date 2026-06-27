@@ -160,7 +160,7 @@ Moves the sprite toward the given target. The first argument can be:
 
 Coordinates are in **document space**, the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
 
-When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. The position is captured once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. A literal `{ x, y }` is used exactly as given.
+When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is captured once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. A literal `{ x, y }` is used exactly as given.
 
 ### Single-target form options
 
@@ -172,6 +172,7 @@ When the first argument is a single position or placeable:
 - `return: boolean` (default `true`) - whether the sprite should animate back to its starting position after the outward animation. With `false`, the sprite ends at the target and the motion finishes there
 - `easeOut: string` (default mirrors `ease`) - ease curve for the return animation
 - `returnDuration: number` (default mirrors `duration`) - how long the return animation takes
+- `ignoreMotion: boolean` (default `false`) - when the target is a placeable or document, target its document position instead of its motion-displaced visible position. Has no effect on a literal `{ x, y }` target
 
 The default `return: true` reflects the fact that motion is visual indication: the sprite goes somewhere, then comes back, because the document never moved. If you want the sprite to stay at the displaced position until something else ends it, combine `return: false` with [`.persist()`](#persist).
 
