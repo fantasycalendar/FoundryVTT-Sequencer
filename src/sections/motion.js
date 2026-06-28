@@ -513,6 +513,13 @@ export default class MotionSection extends Section {
 					"`ignoreMotion` is not compatible with keyframe tracks; keyframe waypoints are literal coordinates, not placeables."
 				);
 			}
+			if (inOptions.attachTo) {
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"`attachTo` is not compatible with keyframe tracks; it tracks a single live target, while keyframe waypoints are fixed coordinates."
+				);
+			}
 
 			options = foundry.utils.mergeObject(
 				{
@@ -535,6 +542,7 @@ export default class MotionSection extends Section {
 					easeOut: undefined,
 					returnDuration: undefined,
 					ignoreMotion: false,
+					attachTo: false,
 				},
 				inOptions
 			);
@@ -545,6 +553,12 @@ export default class MotionSection extends Section {
 					"moveTo",
 					"options.ignoreMotion must be of type boolean"
 				);
+			if (typeof options.attachTo !== "boolean")
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"options.attachTo must be of type boolean"
+				);
 
 			// Default the return-leg fields off the outward-leg ones.
 			if (options.easeOut === undefined) options.easeOut = options.ease;
@@ -553,6 +567,7 @@ export default class MotionSection extends Section {
 		}
 
 		let validatedTarget = null;
+		let attachToUuid = null;
 		if (!isKeyframe) {
 			validatedTarget = this._validateLocation(inTarget);
 			if (!validatedTarget)
@@ -562,10 +577,27 @@ export default class MotionSection extends Section {
 					"could not resolve a position from inTarget"
 				);
 
-			if (
+			const isPlaceableOrDocument =
 				validatedTarget instanceof foundry.canvas.placeables.PlaceableObject
-				|| validatedTarget instanceof foundry.abstract.Document
-			) {
+				|| validatedTarget instanceof foundry.abstract.Document;
+
+			if (options.attachTo && !isPlaceableOrDocument)
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"`attachTo: true` requires a placeable, document, or named-object target to follow; a literal {x, y} has nothing to attach to."
+				);
+
+			if (isPlaceableOrDocument) {
+				attachToUuid =
+					validatedTarget.document?.uuid ?? validatedTarget.uuid ?? null;
+				if (options.attachTo && !attachToUuid)
+					throw this.sequence._customError(
+						this,
+						"moveTo",
+						"`attachTo: true` could not resolve a uuid from the given target"
+					);
+
 				const resolved = canvaslib.get_object_position(validatedTarget, {
 					exact: true,
 					ignoreMotion: options.ignoreMotion,
@@ -595,6 +627,17 @@ export default class MotionSection extends Section {
 		const yConfig = isKeyframe
 			? this._buildKeyframeTrack("moveTo", inTarget, options, "y")
 			: this._buildSingleTrack("moveTo", validatedTarget, options, "y");
+
+		if (!isKeyframe && options.attachTo) {
+			xConfig.attached = true;
+			xConfig.attachToUuid = attachToUuid;
+			xConfig.attachIgnoreMotion = options.ignoreMotion;
+			xConfig.attachAxis = "x";
+			yConfig.attached = true;
+			yConfig.attachToUuid = attachToUuid;
+			yConfig.attachIgnoreMotion = options.ignoreMotion;
+			yConfig.attachAxis = "y";
+		}
 
 		this._tracks.x.push(xConfig);
 		this._tracks.y.push(yConfig);

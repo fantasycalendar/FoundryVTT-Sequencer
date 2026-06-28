@@ -7,6 +7,7 @@ import {
 	lerp,
 	sampleTrack,
 	motionHasReturningTracks,
+	resolveAttachedTo,
 } from "../lib/motion-lib.js";
 import flagManager from "../utils/flag-manager.js";
 import SequenceManager from "./sequence-manager.js";
@@ -26,6 +27,7 @@ class Motion {
 		this.actualCreationTime = Date.now();
 		this.creationTimeDelta = this.actualCreationTime - config.creationTimestamp;
 		this.startTime = performance.now();
+		this.meshOriginOffset = meshOriginOffset;
 		this.finished = new Promise((resolve) => {
 			this._resolveFinished = resolve;
 		});
@@ -69,7 +71,7 @@ class Motion {
 		if (propertyName === "x") {
 			track.from = restState.x;
 			if (track.form === "single") {
-				track.to = track.to + meshOriginOffset.x;
+				if (!track.attached) track.to = track.to + meshOriginOffset.x;
 			} else {
 				track.frames = track.frames.map((frame) => ({
 					...frame,
@@ -85,7 +87,7 @@ class Motion {
 		} else if (propertyName === "y") {
 			track.from = restState.y;
 			if (track.form === "single") {
-				track.to = track.to + meshOriginOffset.y;
+				if (!track.attached) track.to = track.to + meshOriginOffset.y;
 			} else {
 				track.frames = track.frames.map((frame) => ({
 					...frame,
@@ -195,7 +197,19 @@ class Motion {
 					const easeFunction = easeFunctions[track.ease] ?? easeFunctions.linear;
 					const progress = easeFunction(elapsed / track.duration);
 					const lerpFn = track.lerpFn ?? lerp;
-					track.interruptedFrom = lerpFn(track.from, track.to, progress);
+					let snapshotTo = track.to;
+					if (track.attached) {
+						const liveTo = resolveAttachedTo(track, this);
+						if (liveTo !== null) {
+							snapshotTo = liveTo;
+						} else {
+							const offset = track.attachAxis === "y"
+								? this.meshOriginOffset.y
+								: this.meshOriginOffset.x;
+							snapshotTo = track.to + offset;
+						}
+					}
+					track.interruptedFrom = lerpFn(track.from, snapshotTo, progress);
 				}
 			}
 		}
@@ -353,9 +367,12 @@ class PlaceableMotionAggregator {
 							if (axisDelta === 0) continue;
 							track.from += axisDelta;
 							if (track.form === "single") {
-								track.to += axisDelta;
+								if (!track.attached) track.to += axisDelta;
 								if (track.interruptedFrom !== undefined) {
 									track.interruptedFrom += axisDelta;
+								}
+								if (track.attachedOutwardValue !== undefined) {
+									track.attachedOutwardValue += axisDelta;
 								}
 							} else {
 								for (const frame of track.frames) frame.v += axisDelta;

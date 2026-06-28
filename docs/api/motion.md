@@ -134,6 +134,7 @@ Examples:
 ```js
 .moveTo({ x: 500, y: 300 }, { duration: 600 })
 .moveTo(otherToken, { duration: 400, ease: "easeOutQuad" })
+.moveTo(otherToken, { duration: 1500, ease: "easeInOutQuad", attachTo: true })
 .moveTo(
     { x: 500, y: 0 },
     { duration: 400, return: false }
@@ -160,7 +161,7 @@ Moves the sprite toward the given target. The first argument can be:
 
 Coordinates are in **document space**, the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
 
-When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is captured once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. A literal `{ x, y }` is used exactly as given.
+When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is captured once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. Pass `attachTo: true` (below) to keep tracking a moving target frame by frame instead. A literal `{ x, y }` is used exactly as given.
 
 ### Single-target form options
 
@@ -173,6 +174,7 @@ When the first argument is a single position or placeable:
 - `easeOut: string` (default mirrors `ease`) - ease curve for the return animation
 - `returnDuration: number` (default mirrors `duration`) - how long the return animation takes
 - `ignoreMotion: boolean` (default `false`) - when the target is a placeable or document, target its document position instead of its motion-displaced visible position. Has no effect on a literal `{ x, y }` target
+- `attachTo: boolean` (default `false`) - when the target is a placeable, document, or name reference, follow its **live** position each frame instead of the position it had when `.moveTo()` was called. Use this to intercept a moving target: moving toward a token that is itself flying via a `.motion()` curves toward where it is *now*, frame by frame, rather than a frozen point. Has no effect on a literal `{ x, y }` target (and throws if combined with one). The return leg still brings the sprite back to its own starting position. Combine with [`.persist()`](#persist) for an indefinite chase. Honors `ignoreMotion`: with `attachTo: true, ignoreMotion: true` the chase follows the target's document position rather than its motion-displaced visible position
 
 The default `return: true` reflects the fact that motion is visual indication: the sprite goes somewhere, then comes back, because the document never moved. If you want the sprite to stay at the displaced position until something else ends it, combine `return: false` with [`.persist()`](#persist).
 

@@ -1,4 +1,5 @@
 import { easeFunctions } from "../canvas-effects/ease.js";
+import * as canvaslib from "./canvas-lib.js";
 
 /**
  * The set of axes a motion can drive on a placeable. Position (`x`, `y`)
@@ -9,6 +10,25 @@ export const PROPERTY_NAMES = ["x", "y", "rotation", "scale", "alpha", "tint"];
 
 export function lerp(from, to, progress) {
 	return from + (to - from) * progress;
+}
+
+/**
+ * Resolve an attached track's live `to` in mesh-space: read the target fresh
+ * each frame, take its document position on this axis, and add the motioned
+ * token's `meshOriginOffset`. Returns `null` when the target is gone, so the
+ * caller falls back to the baked `track.to`.
+ */
+export function resolveAttachedTo(track, motion) {
+	const placeable = fromUuidSync(track.attachToUuid)?.object ?? null;
+	if (!placeable) return null;
+	const pos = canvaslib.get_object_position(placeable, {
+		exact: true,
+		ignoreMotion: track.attachIgnoreMotion,
+	});
+	const documentValue = track.attachAxis === "y" ? pos?.y : pos?.x;
+	if (typeof documentValue !== "number") return null;
+	const offset = track.attachAxis === "y" ? motion.meshOriginOffset.y : motion.meshOriginOffset.x;
+	return documentValue + offset;
 }
 
 /**
@@ -48,12 +68,30 @@ export function sampleTrack(track, motion, now) {
 
 	// Single-track form (`track.from` defined).
 	if (track.form === "single") {
-		const returnFromValue = track.interruptedFrom ?? track.to;
+		let effectiveTo = track.to;
+		if (track.attached) {
+			const liveTo = resolveAttachedTo(track, motion);
+			if (liveTo !== null) {
+				effectiveTo = liveTo;
+			} else {
+				// Target gone: fall back to the baked document-space `to`.
+				const offset = track.attachAxis === "y"
+					? motion.meshOriginOffset.y
+					: motion.meshOriginOffset.x;
+				effectiveTo = track.to + offset;
+			}
+		}
+		// The return anchors on where the sprite was, not the live target, so it
+		// does not slide while the target keeps moving: `interruptedFrom` from
+		// `triggerReturn`, else the outward value frozen while the outward leg ran.
+		const returnFromValue =
+			track.interruptedFrom ?? track.attachedOutwardValue ?? effectiveTo;
 
 		if (elapsed < track.duration && motion.returnTriggeredAt === undefined) {
 			const easeFunction = easeFunctions[track.ease] ?? easeFunctions.linear;
 			const progress = easeFunction(elapsed / track.duration);
-			return lerpFn(track.from, track.to, progress);
+			if (track.attached) track.attachedOutwardValue = effectiveTo;
+			return lerpFn(track.from, effectiveTo, progress);
 		}
 
 		if (motion.returnTriggeredAt !== undefined) {
@@ -69,7 +107,8 @@ export function sampleTrack(track, motion, now) {
 		}
 
 		if (motion.persistUntilUpdate || motion.persist) {
-			return track.to;
+			if (track.attached) track.attachedOutwardValue = effectiveTo;
+			return effectiveTo;
 		}
 
 		if (track.return) {
