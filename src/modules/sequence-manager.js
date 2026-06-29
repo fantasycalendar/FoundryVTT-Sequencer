@@ -131,4 +131,23 @@ SequenceManager.RunningSequences.values = () => {
   return Object.values(get(SequenceManager.RunningSequences));
 };
 
+let viewerOpenCount = 0;
+let pruneTimer = null;
+
+SequenceManager.RunningSequences.openViewer = () => {
+  viewerOpenCount++;
+};
+
+SequenceManager.RunningSequences.closeViewer = () => {
+  viewerOpenCount = Math.max(0, viewerOpenCount - 1);
+};
+
+SequenceManager.RunningSequences.startPruneTimer = () => {
+  if (pruneTimer !== null) return;
+  pruneTimer = setInterval(() => {
+    if (viewerOpenCount > 0) return;
+    SequenceManager.RunningSequences.clearFinishedSequences();
+  }, 10000);
+};
+
 export default SequenceManager;

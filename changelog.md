@@ -1,17 +1,20 @@
 ## Changelog
 
 # Version 4.3.0
-- *Effects* - Effects that resolve a placeable's location (`.atLocation()`, `.attachTo()`, `.stretchTo()`, `.rotateTowards()`) now use any motion displacement (see below) automatically, so an effect targeting a token mid-motion lands on the visible sprite. Pass `ignoreMotion: true` to those methods to target the document position instead, for example to keep a shadow on the ground beneath a flying token
-- *Sounds* - Positional sounds resolving a placeable's location (`.atLocation()`, `.attachTo()`, `.toLocation()`) now follow any motion displacement automatically, with the same `ignoreMotion: true` opt-out
+- *Sequencer* - Fixed finished sequences never being cleared out when the Sequencer Manager was never opened
+- *Effects* - Effects placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.stretchTo()`, `.rotateTowards()`) now follow its visible position when it is moving via a `.motion()`. Pass `ignoreMotion: true` to use the document position instead, for example to keep a shadow on the ground beneath a flying token
+- *Effects* - Fixed `.copySprite()` leaking video memory on tokens with a token ring enabled
+- *Sounds* - Sounds placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.toLocation()`) now follow its visible position when it is moving via a `.motion()`, with the same `ignoreMotion: true` opt-out
+- *Animations* - Fixed `.animation()` getting stuck waiting forever on a token that never finished drawing
 - *Motion* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
-- *Motion* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable, its visible position is used, so moving toward a token that is itself flying via a `.motion()` lands on where it appears rather than its document position; pass `ignoreMotion: true` to target the document position instead, or `attachTo: true` to follow the target's live position each frame instead of a fixed point. A keyframe waypoint can carry a `hold` to keep a value for that many milliseconds before continuing, which works on `.tintTo()` waypoints too
+- *Motion* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable its visible position is used, so moving toward a token flying via a `.motion()` lands where it appears; pass `ignoreMotion: true` to target the document position, or `attachTo: true` to follow the target every frame
 - *Motion* - Added `.noise()` for random shake / jitter onto a motion additively
 - *Motion* - Added `.oscillate()` for layering a periodic wave onto a motion additively
 - *Motion* - Added `.tintTo()` for tinting the sprite to a different color temporarily
 - *Motion* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotion()` plays the return animation
-- *Motion* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion a token before updating its position with no visible snap!
+- *Motion* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion to a token before updating its position with no visible snap!
 - *Motion* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
-- *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible (motion-displaced) position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead
+- *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now takes its arguments as a single options object: `collect(crosshair, { types, filterMethod, ignoreMotion })`. The old positional form still works but is deprecated and will be removed in a future version
 
 

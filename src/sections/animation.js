@@ -269,14 +269,20 @@ class AnimationSection extends Section {
 		}
 
 		let refreshTokenID;
+		let safetyTimeout;
 
 		return await new Promise((resolve) => {
-			refreshTokenID = Hooks.on("refreshToken", async (tokenDoc) => {
+			const finish = () => {
+				Hooks.off("refreshToken", refreshTokenID);
+				clearTimeout(safetyTimeout);
+				resolve();
+			};
+			refreshTokenID = Hooks.on("refreshToken", (tokenDoc) => {
 				if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh)
 					return;
-				Hooks.off("refreshToken", refreshTokenID);
-				resolve();
+				finish();
 			});
+			safetyTimeout = setTimeout(finish, 5000);
 		});
 	}
 

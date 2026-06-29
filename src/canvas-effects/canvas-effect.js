@@ -1526,6 +1526,11 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite?.destroy();
 		this.sprite = null;
 
+		if (this._renderTexture) {
+			this._renderTexture.destroy(true);
+			this._renderTexture = null;
+		}
+
 		if (this.data.screenSpaceAboveUI) {
 			SequencerAboveUILayer.removeContainerByEffect(this);
 		}

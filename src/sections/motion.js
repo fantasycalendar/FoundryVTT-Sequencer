@@ -1258,11 +1258,17 @@ export default class MotionSection extends Section {
 		else if (target instanceof TokenDocument) token = target.object;
 		if (token === null || token.mesh != null) return;
 		return new Promise((resolve) => {
+			let safetyTimeout;
+			const finish = () => {
+				Hooks.off("refreshToken", hookId);
+				clearTimeout(safetyTimeout);
+				resolve();
+			};
 			const hookId = Hooks.on("refreshToken", (tokenDoc) => {
 				if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh) return;
-				Hooks.off("refreshToken", hookId);
-				resolve();
+				finish();
 			});
+			safetyTimeout = setTimeout(finish, 5000);
 		});
 	}
 

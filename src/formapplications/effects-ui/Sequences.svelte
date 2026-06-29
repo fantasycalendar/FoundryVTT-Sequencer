@@ -10,10 +10,12 @@
   $: runningSequences = Object.entries($RunningSequences);
 
   onMount(() => {
+    SequenceManager.RunningSequences.openViewer();
     SequenceManager.RunningSequences.clearFinishedSequences();
   });
 
   onDestroy(() => {
+    SequenceManager.RunningSequences.closeViewer();
     SequenceManager.RunningSequences.clearFinishedSequences();
   });
 

@@ -28,6 +28,7 @@ import { PlayerSettings } from "./formapplications/effects-ui/effect-player-stor
 import runMigrations from "./migrations.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 import SequencerMotionManager from "./modules/sequencer-motion-manager.js";
+import SequenceManager from "./modules/sequence-manager.js";
 
 import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import PasteManager from "./modules/sequencer-paste-manager.js";
@@ -164,6 +165,8 @@ function initializeModule() {
   SequencerEffectManager.setup();
   SequencerSoundManager.setup();
 	PasteManager.setup();
+
+	SequenceManager.RunningSequences.startPruneTimer();
 
 	PluginsManager.initialize();
 
