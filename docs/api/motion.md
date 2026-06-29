@@ -156,6 +156,7 @@ Moves the sprite toward the given target. The first argument can be:
 
 - An `{ x, y }` coordinate object
 - A placeable or its document (a Token, Tile, Drawing, etc.), whose position is read when the section is built
+- A crosshair from [`Sequencer.Crosshair.show()`](crosshair.md), which lands the moving object centered on the crosshair, the same way an effect targeting a crosshair is centered on it
 - A string reference (see [`.name()`](#name) on other sections) that resolves to a previously placed object
 - An array of waypoints, for a keyframed multi-segment path
 

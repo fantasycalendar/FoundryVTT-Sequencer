@@ -4,6 +4,8 @@ import * as lib from "../lib/lib.js";
 import * as canvaslib from "../lib/canvas-lib.js";
 import { easeFunctions } from "../canvas-effects/ease.js";
 import SequencerMotionManager from "../modules/sequencer-motion-manager.js";
+import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
+import CrosshairsDocument from "../modules/sequencer-crosshair/CrosshairsDocument.js";
 import flagManager from "../utils/flag-manager.js";
 
 
@@ -578,9 +580,37 @@ export default class MotionSection extends Section {
 					"could not resolve a position from inTarget"
 				);
 
+			const isCrosshair =
+				validatedTarget instanceof CrosshairsPlaceable
+				|| validatedTarget instanceof CrosshairsDocument;
+
+			if (isCrosshair) {
+				if (options.attachTo)
+					throw this.sequence._customError(
+						this,
+						"moveTo",
+						"`attachTo: true` cannot follow a crosshair; a crosshair is a one-time placement, not a placeable that keeps moving."
+					);
+
+				const crosshairDoc = validatedTarget.document ?? validatedTarget;
+				const orientation = crosshairDoc.getOrientation().source;
+				if (!lib.is_real_number(orientation?.x) || !lib.is_real_number(orientation?.y))
+					throw this.sequence._customError(
+						this,
+						"moveTo",
+						"could not resolve a position from the given crosshair"
+					);
+				const halfSize = canvaslib.get_object_dimensions(this._originObject, true);
+				validatedTarget = {
+					x: orientation.x - halfSize.width,
+					y: orientation.y - halfSize.height,
+				};
+			}
+
 			const isPlaceableOrDocument =
-				validatedTarget instanceof foundry.canvas.placeables.PlaceableObject
-				|| validatedTarget instanceof foundry.abstract.Document;
+				!isCrosshair
+				&& (validatedTarget instanceof foundry.canvas.placeables.PlaceableObject
+					|| validatedTarget instanceof foundry.abstract.Document);
 
 			if (options.attachTo && !isPlaceableOrDocument)
 				throw this.sequence._customError(
