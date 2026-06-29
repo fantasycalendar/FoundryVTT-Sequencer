@@ -146,7 +146,7 @@ Examples:
 .moveTo(
     [
         { v: { x: 0, y: 0 } },
-        { v: { x: 500, y: 0 }, duration: 300, inEase: "easeOutBack" },
+        { v: { x: 500, y: 0 }, duration: 300, inEase: "easeOutBack", hold: 500 },
         { v: { x: 0, y: 0 }, duration: 600, inEase: "easeInOutQuad" }
     ]
 )
@@ -180,7 +180,7 @@ The default `return: true` reflects the fact that motion is visual indication: t
 
 ### Keyframe form options
 
-When the first argument is an array, the motion plays a multi-segment path through every waypoint in order. The array entries are homogeneous: either every element is an `{ x, y }` coordinate pair, or every element is a per-key object of the form `{ v: { x, y }, duration?, inEase?, outEase? }`.
+When the first argument is an array, the motion plays a multi-segment path through every waypoint in order. The array entries are homogeneous: either every element is an `{ x, y }` coordinate pair, or every element is a per-key object of the form `{ v: { x, y }, duration?, hold?, inEase?, outEase? }`.
 
 - `duration: number` - total time for the whole path. When set, segment durations are divided evenly across the waypoints
 - `ease: string` (default `"linear"`) - default ease curve for every segment
@@ -192,10 +192,11 @@ Per-key fields (when entries are objects):
 
 - `v: { x, y }` (required) - the waypoint's coordinates
 - `duration: number` - milliseconds for the segment ending at this waypoint, overriding the track-level `duration` for this segment
+- `hold: number` (default `0`) - milliseconds to dwell at this waypoint after arriving, before the next segment begins. Allowed on any waypoint, including the first (a pause at the start) and the last (a pause at the end before the return). Lengthens the path by that amount
 - `inEase: string` - ease curve for the segment ending at this waypoint
 - `outEase: string` - ease curve for the segment leaving this waypoint toward the next one
 
-The first waypoint's `duration`, `inEase`, and `outEase` are ignored, since there is no incoming segment at the start of the path.
+The first waypoint's `duration`, `inEase`, and `outEase` are ignored, since there is no incoming segment at the start of the path. Its `hold` is honored, dwelling at the start before the path begins.
 
 Either every waypoint after the first sets `duration`, or none of them do. Mixing track-level `duration` with per-key `duration` is rejected.
 
@@ -234,17 +235,17 @@ The options object accepts the same fields as [`.moveTo()`](#move-to):
 
 ### Keyframed color paths
 
-Passing an array as the first argument runs a multi-segment color sweep, the same way the keyframed [`.moveTo()`](#move-to) form works for positions. The array elements may be plain color values, or per-key objects:
+Passing an array as the first argument runs a multi-segment color sweep, the same way the keyframed [`.moveTo()`](#move-to) form works for positions. The array elements may be plain color values, or per-key objects carrying the same `duration`, `hold`, `inEase`, and `outEase` fields:
 
 ```js
 .tintTo([
     { v: "#ffffff" },
-    { v: "#ff0000", duration: 100, inEase: "easeOutQuad" },
+    { v: "#ff0000", duration: 100, inEase: "easeOutQuad", hold: 250 },
     { v: "#ffff00", duration: 400, outEase: "easeInQuad" },
 ])
 ```
 
-The first waypoint's `duration` and `inEase` are ignored, since there is no incoming segment at the start of the path.
+The first waypoint's `duration` and `inEase` are ignored, since there is no incoming segment at the start of the path; its `hold` is honored, holding the starting color before the sweep begins. A per-key `hold` holds the color at that waypoint for that many milliseconds before sweeping to the next.
 
 By default, the return leg sweeps back through the colors in reverse over `returnDuration`. Set `returnValues` to override with an explicit return path.
 

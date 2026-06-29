@@ -475,7 +475,8 @@ export default class MotionSection extends Section {
 	 *
 	 * Keyframe form accepts: `duration`, `ease`, `delay`, `returnValues`,
 	 * `returnDuration`. Each waypoint is `{x, y}`, or a per-key object
-	 * `{v: {x, y}, duration?, inEase?, outEase?}` for fine-grained control.
+	 * `{v: {x, y}, duration?, hold?, inEase?, outEase?}` for fine-grained
+	 * control. A per-key `hold` (ms) dwells at that waypoint before continuing.
 	 *
 	 * @param {object|string|array} inTarget
 	 * @param {object} [inOptions={}]
@@ -659,9 +660,10 @@ export default class MotionSection extends Section {
 	 *
 	 * Keyframe form accepts: `duration`, `ease`, `delay`, `returnValues`,
 	 * `returnDuration`. Each waypoint is a color value, or a per-key object
-	 * `{v: color, duration?, inEase?, outEase?}` for fine-grained control.
-	 * The return leg sweeps back through the keyframes in reverse over
-	 * `returnDuration`.
+	 * `{v: color, duration?, hold?, inEase?, outEase?}` for fine-grained
+	 * control. A per-key `hold` (ms) dwells at that waypoint before
+	 * continuing. The return leg sweeps back through the keyframes in reverse
+	 * over `returnDuration`.
 	 *
 	 * Multiple `.tintTo()` calls on the same motion compose by RGB
 	 * component-wise multiplication, the same rule PIXI itself uses when
@@ -1053,6 +1055,18 @@ export default class MotionSection extends Section {
 			}
 		}
 
+		const perKeyHolds = rawValues.map((keyframeInput) => {
+			if (shape !== "keyframe" || keyframeInput.hold === undefined) return 0;
+			if (!lib.is_real_number(keyframeInput.hold) || keyframeInput.hold < 0) {
+				throw this.sequence._customError(
+					this,
+					methodName,
+					`${fieldPath} keyframe \`hold\` must be a non-negative real number`
+				);
+			}
+			return keyframeInput.hold;
+		});
+
 		const hasAnyPerKeyDuration = perKeyDurationKeys.length > 0;
 		if (hasAnyPerKeyDuration) {
 			const expectedDurationKeyCount = rawValues.length - 1;
@@ -1109,7 +1123,7 @@ export default class MotionSection extends Section {
 			);
 		}
 
-		return rawValues.map((keyframeInput, keyframeIndex) => {
+		return rawValues.flatMap((keyframeInput, keyframeIndex) => {
 			let axisValue;
 			if (shape === "literal") {
 				axisValue = valueShape === "coord" ? keyframeInput[axis] : keyframeInput;
@@ -1165,11 +1179,24 @@ export default class MotionSection extends Section {
 				segmentEase = easeCandidate;
 			}
 
-			return {
+			const frame = {
 				v: axisValue,
 				segmentDuration: segmentDurations[keyframeIndex],
 				segmentEase,
 			};
+
+			// A per-key `hold` dwells at the waypoint after arriving, so we add a synthetic key to replicate the hold
+			if (perKeyHolds[keyframeIndex] > 0) {
+				return [
+					frame,
+					{
+						v: axisValue,
+						segmentDuration: perKeyHolds[keyframeIndex],
+						segmentEase: "linear",
+					},
+				];
+			}
+			return frame;
 		});
 	}
 
