@@ -6,14 +6,17 @@
 - *Effects* - Fixed `.copySprite()` leaking video memory on tokens with a token ring enabled
 - *Sounds* - Sounds placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.toLocation()`) now follow its visible position when it is moving via a `.motion()`, with the same `ignoreMotion: true` opt-out
 - *Animations* - Fixed `.animation()` getting stuck waiting forever on a token that never finished drawing
-- *Motion* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
-- *Motion* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable its visible position is used, so moving toward a token flying via a `.motion()` lands where it appears; pass `ignoreMotion: true` to target the document position, or `attachTo: true` to follow the target every frame
-- *Motion* - Added `.noise()` for random shake / jitter onto a motion additively
-- *Motion* - Added `.oscillate()` for layering a periodic wave onto a motion additively
-- *Motion* - Added `.tintTo()` for tinting the sprite to a different color temporarily
-- *Motion* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotion()` plays the return animation
-- *Motion* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion to a token before updating its position with no visible snap!
-- *Motion* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
+- *Motions* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
+- *Motions* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable its visible position is used, so moving toward a token flying via a `.motion()` lands where it appears; pass `ignoreMotion: true` to target the document position, or `attachTo: true` to follow the target every frame
+- *Motions* - Added `.noise()` for random shake / jitter onto a motion additively
+- *Motions* - Added `.oscillate()` for layering a periodic wave onto a motion additively
+- *Motions* - Added `.tintTo()` for tinting the sprite to a different color temporarily
+- *Motions* - Added `.scaleTo()` for scaling the sprite relative to its normal size, uniformly or per axis
+- *Motions* - Added `.rotateTo()` for rotating the sprite to an angle
+- *Motions* - Added `.fadeTo()` for fading the sprite to an opacity
+- *Motions* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotion()` plays the return animation
+- *Motions* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion to a token before updating its position with no visible snap!
+- *Motions* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now takes its arguments as a single options object: `collect(crosshair, { types, filterMethod, ignoreMotion })`. The old positional form still works but is deprecated and will be removed in a future version
 

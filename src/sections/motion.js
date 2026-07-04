@@ -781,7 +781,8 @@ export default class MotionSection extends Section {
 					return this._normalizeColor("tintTo", entry);
 				}),
 				options,
-				"tint"
+				"tint",
+				"inColor"
 			);
 		} else {
 			const decimal = this._normalizeColor("tintTo", inColor);
@@ -830,6 +831,360 @@ export default class MotionSection extends Section {
 			this,
 			methodName,
 			"color must be a hex string or a 24-bit integer"
+		);
+	}
+
+	/**
+	 * Rotates the sprite to the given angle in degrees, then (by default)
+	 * rotates back to its resting angle.
+	 *
+	 * The angle is a document-space rotation, the same value you'd pass to
+	 * `token.document.update({ rotation })`. The path is literal: rotating
+	 * to 350 from a resting angle of 10 sweeps +340 degrees.
+	 *
+	 * Accepts a single angle, or an array of waypoint angles for a
+	 * multi-segment path. Waypoints are numbers, or per-key objects
+	 * `{v: number, duration?, hold?, inEase?, outEase?}` matching the
+	 * `.moveTo()` keyframe form.
+	 *
+	 * Single-angle form options:
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults mirror the forward leg.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `return`,
+	 * `returnValues`, `returnDuration`.
+	 *
+	 * Tokens with locked rotation rest at a visible angle of 0, so the
+	 * motion rotates them from 0 regardless of their document rotation.
+	 *
+	 * @param {number|array} inRotation
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	rotateTo(inRotation, inOptions = {}) {
+		if (inRotation === undefined || inRotation === null)
+			throw this.sequence._customError(
+				this,
+				"rotateTo",
+				"inRotation is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"rotateTo",
+				"inOptions must be of type object"
+			);
+
+		const isKeyframe = Array.isArray(inRotation);
+		const options = this._mergeScalarTrackOptions("rotateTo", isKeyframe, inOptions);
+
+		let trackConfig;
+		if (isKeyframe) {
+			trackConfig = this._buildKeyframeTrack(
+				"rotateTo",
+				inRotation,
+				options,
+				"rotation",
+				"inRotation"
+			);
+		} else {
+			if (!lib.is_real_number(inRotation))
+				throw this.sequence._customError(
+					this,
+					"rotateTo",
+					"inRotation must be a real number (degrees)"
+				);
+			trackConfig = this._buildSingleTrack(
+				"rotateTo",
+				{ rotation: inRotation },
+				options,
+				"rotation"
+			);
+		}
+
+		this._tracks.rotation.push(trackConfig);
+		return this;
+	}
+
+	/**
+	 * Fades the sprite to the given opacity, then (by default) fades back
+	 * to its resting opacity.
+	 *
+	 * The target is an absolute alpha between `0` (invisible) and `1`
+	 * (fully visible): fading to `0.5` ends at half visibility regardless
+	 * of the sprite's resting opacity, including fading an invisible
+	 * sprite up (a reveal from resting opacity 0).
+	 *
+	 * Accepts a single alpha, or an array of waypoint alphas for a
+	 * multi-segment path. Waypoints are numbers in `[0, 1]`, or per-key
+	 * objects `{v: number, duration?, hold?, inEase?, outEase?}` matching
+	 * the `.moveTo()` keyframe form.
+	 *
+	 * Single-alpha form options:
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults mirror the forward leg.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `return`,
+	 * `returnValues`, `returnDuration`.
+	 *
+	 * @param {number|array} inAlpha
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	fadeTo(inAlpha, inOptions = {}) {
+		if (inAlpha === undefined || inAlpha === null)
+			throw this.sequence._customError(
+				this,
+				"fadeTo",
+				"inAlpha is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"fadeTo",
+				"inOptions must be of type object"
+			);
+
+		const validateAlpha = (value) => {
+			if (!lib.is_real_number(value) || value < 0 || value > 1)
+				throw this.sequence._customError(
+					this,
+					"fadeTo",
+					"alpha must be a real number in [0, 1]"
+				);
+			return value;
+		};
+
+		const isKeyframe = Array.isArray(inAlpha);
+		const options = this._mergeScalarTrackOptions("fadeTo", isKeyframe, inOptions);
+
+		let trackConfig;
+		if (isKeyframe) {
+			if (options.returnValues !== undefined) {
+				for (const entry of options.returnValues) {
+					validateAlpha(entry && typeof entry === "object" && "v" in entry ? entry.v : entry);
+				}
+			}
+			trackConfig = this._buildKeyframeTrack(
+				"fadeTo",
+				inAlpha.map((entry) => {
+					if (entry && typeof entry === "object" && "v" in entry) {
+						return { ...entry, v: validateAlpha(entry.v) };
+					}
+					return validateAlpha(entry);
+				}),
+				options,
+				"alpha",
+				"inAlpha"
+			);
+		} else {
+			validateAlpha(inAlpha);
+			trackConfig = this._buildSingleTrack(
+				"fadeTo",
+				{ alpha: inAlpha },
+				options,
+				"alpha"
+			);
+		}
+
+		this._tracks.alpha.push(trackConfig);
+		return this;
+	}
+
+	/**
+	 * Scales the sprite relative to its resting size, then (by default)
+	 * scales back. Scaling to `1.5` ends at 1.5 times how the sprite looks
+	 * at rest; mirrored sprites stay mirrored.
+	 *
+	 * Accepts:
+	 * - A single positive number, scaling both axes uniformly
+	 * - A `{x, y}` object of positive numbers; a missing axis is left
+	 *   unscaled, so `{x: 2}` stretches only horizontally
+	 * - An array of waypoints for a multi-segment path, where each
+	 *   waypoint is a positive number, a full `{x, y}` pair, or a per-key
+	 *   object `{v: number|{x, y}, duration?, hold?, inEase?, outEase?}`
+	 *   matching the `.moveTo()` keyframe form. The keyframe form always
+	 *   drives both axes (numbers apply to both).
+	 *
+	 * Single-target form options:
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults mirror the forward leg.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `return`,
+	 * `returnValues`, `returnDuration`.
+	 *
+	 * Multiple `.scaleTo()` calls compose by multiplication, and compose
+	 * the same way with `.oscillate()`'s scale axis.
+	 *
+	 * @param {number|object|array} inScale
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	scaleTo(inScale, inOptions = {}) {
+		if (inScale === undefined || inScale === null)
+			throw this.sequence._customError(
+				this,
+				"scaleTo",
+				"inScale is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"scaleTo",
+				"inOptions must be of type object"
+			);
+
+		const isKeyframe = Array.isArray(inScale);
+		const options = this._mergeScalarTrackOptions("scaleTo", isKeyframe, inOptions);
+
+		if (isKeyframe) {
+			const normalizedEntries = inScale.map((entry) => {
+				if (entry && typeof entry === "object" && "v" in entry) {
+					return { ...entry, v: this._normalizeScaleValue("scaleTo", entry.v, true) };
+				}
+				return this._normalizeScaleValue("scaleTo", entry, true);
+			});
+			const normalizedReturnValues = options.returnValues?.map((entry) => {
+				if (entry && typeof entry === "object" && "v" in entry) {
+					return { ...entry, v: this._normalizeScaleValue("scaleTo", entry.v, true) };
+				}
+				return this._normalizeScaleValue("scaleTo", entry, true);
+			});
+			const axisOptions = normalizedReturnValues
+				? { ...options, returnValues: normalizedReturnValues }
+				: options;
+			for (const axis of ["x", "y"]) {
+				const config = this._buildKeyframeTrack(
+					"scaleTo",
+					normalizedEntries,
+					axisOptions,
+					axis,
+					"inScale"
+				);
+				config.absolute = false;
+				config.scaleAxis = axis;
+				this._tracks.scale.push(config);
+			}
+		} else {
+			const normalized = this._normalizeScaleValue("scaleTo", inScale, false);
+			for (const axis of ["x", "y"]) {
+				if (normalized[axis] === undefined) continue;
+				const config = this._buildSingleTrack(
+					"scaleTo",
+					{ scale: normalized[axis] },
+					options,
+					"scale"
+				);
+				config.absolute = false;
+				config.from = 1;
+				config.scaleAxis = axis;
+				this._tracks.scale.push(config);
+			}
+		}
+
+		return this;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Shared options-merging for the scalar-track builders (`rotateTo`,
+	 * `fadeTo`, `scaleTo`). Mirrors the keyframe/single split `moveTo` and
+	 * `tintTo` use: the keyframe form rejects `easeOut` and accepts
+	 * `returnValues`; the single form defaults `easeOut`/`returnDuration`
+	 * off the forward leg.
+	 */
+	_mergeScalarTrackOptions(methodName, isKeyframe, inOptions) {
+		if (isKeyframe) {
+			if ("easeOut" in inOptions) {
+				throw this.sequence._customError(
+					this,
+					methodName,
+					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			}
+			return foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		}
+		const options = foundry.utils.mergeObject(
+			{
+				duration: undefined,
+				ease: "linear",
+				delay: 0,
+				return: true,
+				easeOut: undefined,
+				returnDuration: undefined,
+			},
+			inOptions
+		);
+		if (options.easeOut === undefined) options.easeOut = options.ease;
+		if (options.returnDuration === undefined)
+			options.returnDuration = options.duration;
+		return options;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Normalizes a `.scaleTo()` value to a `{x, y}` pair. A positive number
+	 * becomes `{x: v, y: v}`. An object keeps its provided axes, each a
+	 * positive real number. When `requireBothAxes` is true (keyframe form),
+	 * an object must provide both axes so every waypoint drives both tracks;
+	 * when false (single-target form), a missing axis stays undefined and no
+	 * track is built for it.
+	 */
+	_normalizeScaleValue(methodName, value, requireBothAxes) {
+		if (lib.is_real_number(value)) {
+			if (value <= 0)
+				throw this.sequence._customError(
+					this,
+					methodName,
+					"scale must be a positive number"
+				);
+			return { x: value, y: value };
+		}
+		if (value && typeof value === "object" && !Array.isArray(value)) {
+			const hasX = value.x !== undefined;
+			const hasY = value.y !== undefined;
+			if (!hasX && !hasY)
+				throw this.sequence._customError(
+					this,
+					methodName,
+					"a {x, y} scale must provide at least one axis"
+				);
+			if (requireBothAxes && (!hasX || !hasY))
+				throw this.sequence._customError(
+					this,
+					methodName,
+					"keyframe scale waypoints must provide both axes; use a number to scale both uniformly"
+				);
+			for (const axis of ["x", "y"]) {
+				if (value[axis] === undefined) continue;
+				if (!lib.is_real_number(value[axis]) || value[axis] <= 0)
+					throw this.sequence._customError(
+						this,
+						methodName,
+						`scale ${axis} must be a positive number`
+					);
+			}
+			return { x: value.x, y: value.y };
+		}
+		throw this.sequence._customError(
+			this,
+			methodName,
+			"scale must be a positive number or a {x, y} object of positive numbers"
 		);
 	}
 
@@ -900,18 +1255,20 @@ export default class MotionSection extends Section {
 	}
 
 	/**
-	 * Validates a keyframe track for `moveTo` and builds the per-axis
-	 * TrackConfig. `outwardValues` is the array passed as `inTarget`;
+	 * Validates a keyframe track and builds the per-axis TrackConfig.
+	 * `outwardValues` is the waypoint array the builder received;
 	 * `options` are the (already-defaults-merged) tween options.
+	 * `parameterName` is the builder's first-parameter name, used in
+	 * error messages so they reference the argument the user passed.
 	 *
 	 * @private
 	 */
-	_buildKeyframeTrack(methodName, outwardValues, options, axis) {
+	_buildKeyframeTrack(methodName, outwardValues, options, axis, parameterName = "inTarget") {
 		if (outwardValues.length < 2)
 			throw this.sequence._customError(
 				this,
 				methodName,
-				"inTarget must have at least 2 elements (one segment)"
+				`${parameterName} must have at least 2 elements (one segment)`
 			);
 		if (typeof options.ease !== "string" || !(options.ease in easeFunctions))
 			throw this.sequence._customError(
@@ -959,7 +1316,7 @@ export default class MotionSection extends Section {
 			options.duration,
 			options.ease,
 			axis,
-			"inTarget"
+			parameterName
 		);
 
 		const outwardDuration = outwardFrames.reduce(
@@ -972,13 +1329,34 @@ export default class MotionSection extends Section {
 		let defaultReturn = false;
 		if (options.return) {
 			if (options.returnValues !== undefined) {
+				if (!Array.isArray(options.returnValues) || options.returnValues.length < 1) {
+					throw this.sequence._customError(
+						this,
+						methodName,
+						"inOptions.returnValues must be an array with at least 1 element"
+					);
+				}
+				const returnValuesHavePerKeyDurations = options.returnValues.some(
+					(entry) =>
+						entry &&
+						typeof entry === "object" &&
+						"v" in entry &&
+						entry.duration !== undefined
+				);
+				const returnTrackLevelDuration =
+					options.returnDuration !== undefined
+						? options.returnDuration
+						: returnValuesHavePerKeyDurations
+							? undefined
+							: outwardDuration;
 				returnFrames = this._normalizeKeyframes(
 					methodName,
 					options.returnValues,
-					returnDuration,
+					returnTrackLevelDuration,
 					options.ease,
 					axis,
-					"inOptions.returnValues"
+					"inOptions.returnValues",
+					true
 				);
 			} else {
 				defaultReturn = true;
@@ -1007,6 +1385,15 @@ export default class MotionSection extends Section {
 	 * `fieldPath` is the user-facing path (e.g. "inTarget" or
 	 * "inOptions.returnValues") used in error messages.
 	 *
+	 * `hasIncomingSegment` distinguishes the two array roles. An outward
+	 * array's first element is the starting value: no segment ends there,
+	 * so it gets `segmentDuration: 0` and per-key `duration` on it is
+	 * rejected. A `returnValues` array is played as
+	 * `[lastOutwardFrame, ...returnFrames]`, so EVERY element is a
+	 * destination with an incoming segment: the first element takes a
+	 * duration (per-key or an even share of the track-level total) and
+	 * resolves its own ease.
+	 *
 	 * @private
 	 */
 	_normalizeKeyframes(
@@ -1015,9 +1402,13 @@ export default class MotionSection extends Section {
 		trackLevelDuration,
 		trackLevelEase,
 		axis,
-		fieldPath
+		fieldPath,
+		hasIncomingSegment = false
 	) {
-		const valueShape = axis === "tint" ? "scalar" : "coord";
+		const valueShape =
+			axis === "tint" || axis === "rotation" || axis === "alpha"
+				? "scalar"
+				: "coord";
 		const isLiteralValue = valueShape === "coord"
 			? (candidate) =>
 				candidate
@@ -1076,7 +1467,7 @@ export default class MotionSection extends Section {
 					perKeyDurationKeys.push(keyframeIndex);
 				}
 			}
-			if (perKeyDurationKeys.includes(0)) {
+			if (!hasIncomingSegment && perKeyDurationKeys.includes(0)) {
 				throw this.sequence._customError(
 					this,
 					methodName,
@@ -1097,14 +1488,19 @@ export default class MotionSection extends Section {
 			return keyframeInput.hold;
 		});
 
+		const segmentCount = hasIncomingSegment
+			? rawValues.length
+			: rawValues.length - 1;
+
 		const hasAnyPerKeyDuration = perKeyDurationKeys.length > 0;
 		if (hasAnyPerKeyDuration) {
-			const expectedDurationKeyCount = rawValues.length - 1;
-			if (perKeyDurationKeys.length !== expectedDurationKeyCount) {
+			if (perKeyDurationKeys.length !== segmentCount) {
 				throw this.sequence._customError(
 					this,
 					methodName,
-					"keyframe per-key `duration` must be set on every key after the first, or on none."
+					hasIncomingSegment
+						? "keyframe per-key `duration` must be set on every key, or on none."
+						: "keyframe per-key `duration` must be set on every key after the first, or on none."
 				);
 			}
 			if (trackLevelDuration !== undefined) {
@@ -1119,7 +1515,7 @@ export default class MotionSection extends Section {
 		let segmentDurations;
 		if (hasAnyPerKeyDuration) {
 			segmentDurations = rawValues.map((keyframeInput, keyframeIndex) => {
-				if (keyframeIndex === 0) return 0;
+				if (keyframeIndex === 0 && !hasIncomingSegment) return 0;
 				if (!lib.is_real_number(keyframeInput.duration) || keyframeInput.duration <= 0) {
 					throw this.sequence._customError(
 						this,
@@ -1147,9 +1543,9 @@ export default class MotionSection extends Section {
 					"track-level `duration` must be > 0"
 				);
 			}
-			const perSegmentDuration = trackLevelDuration / (rawValues.length - 1);
+			const perSegmentDuration = trackLevelDuration / segmentCount;
 			segmentDurations = rawValues.map((_, keyframeIndex) =>
-				keyframeIndex === 0 ? 0 : perSegmentDuration
+				keyframeIndex === 0 && !hasIncomingSegment ? 0 : perSegmentDuration
 			);
 		}
 
@@ -1163,7 +1559,7 @@ export default class MotionSection extends Section {
 						throw this.sequence._customError(
 							this,
 							methodName,
-							`${fieldPath}[${keyframeIndex}].v must be a {x, y} coordinate pair for moveTo`
+							`${fieldPath}[${keyframeIndex}].v must be a {x, y} coordinate pair for ${methodName}`
 						);
 					}
 					axisValue = keyframeInput.v[axis];
@@ -1172,7 +1568,7 @@ export default class MotionSection extends Section {
 						throw this.sequence._customError(
 							this,
 							methodName,
-							`${fieldPath}[${keyframeIndex}].v must be a number for tintTo`
+							`${fieldPath}[${keyframeIndex}].v must be a number for ${methodName}`
 						);
 					}
 					axisValue = keyframeInput.v;
@@ -1180,8 +1576,8 @@ export default class MotionSection extends Section {
 			}
 
 			let segmentEase;
-			if (keyframeIndex === 0) {
-				// The first frame has no incoming segment.
+			if (keyframeIndex === 0 && !hasIncomingSegment) {
+				// An outward array's first frame has no incoming segment.
 				segmentEase = trackLevelEase;
 			} else {
 				const thisFrame = shape === "keyframe" ? keyframeInput : null;

@@ -102,6 +102,8 @@ class Motion {
 			}
 		} else if (propertyName === "rotation") {
 			track.from = restState.angle;
+		} else if (propertyName === "alpha") {
+			track.from = restState.alpha;
 		} else if (propertyName === "tint") {
 			track.from = restState.tint;
 		}
@@ -114,15 +116,25 @@ class Motion {
 		let deltaX = 0;
 		let deltaY = 0;
 		let deltaAngle = 0;
-		let scaleMultiplier = 1;
+		let deltaAlpha = 0;
+		let scaleMultiplierX = 1;
+		let scaleMultiplierY = 1;
 		let alphaMultiplier = 1;
 		let tintR = 1;
 		let tintG = 1;
 		let tintB = 1;
 		let anyAlive = false;
 
+		// A layer still inside its delay window samples null, the same
+		// value it returns when finished.
+		const pendingIsAlive = this.returnTriggeredAt === undefined;
+
 		for (const propertyName of PROPERTY_NAMES) {
 			for (const track of this.tracks[propertyName]) {
+				if (now - track.startTime - (track.delay ?? 0) < 0) {
+					if (pendingIsAlive) anyAlive = true;
+					continue;
+				}
 				const sample = sampleTrack(track, this, now);
 				if (sample === null) continue;
 				anyAlive = true;
@@ -137,10 +149,11 @@ class Motion {
 						deltaAngle += track.absolute ? sample - track.from : sample;
 						break;
 					case "scale":
-						scaleMultiplier *= sample;
+						if (track.scaleAxis === "y") scaleMultiplierY *= sample;
+						else scaleMultiplierX *= sample;
 						break;
 					case "alpha":
-						alphaMultiplier *= sample;
+						deltaAlpha += track.absolute ? sample - track.from : sample;
 						break;
 					case "tint": {
 						const sR = (sample >> 16) & 0xff;
@@ -159,17 +172,26 @@ class Motion {
 		}
 
 		for (const oscillate of this.oscillate) {
+			if (now - this.startTime - (oscillate.delay ?? 0) + this.creationTimeDelta < 0) {
+				if (pendingIsAlive) anyAlive = true;
+				continue;
+			}
 			const oscillateSample = canvaslib.sampleOscillation(oscillate, this, now);
 			if (oscillateSample === null) continue;
 			anyAlive = true;
 			deltaX += oscillateSample.deltaX;
 			deltaY += oscillateSample.deltaY;
 			deltaAngle += oscillateSample.deltaAngle;
-			scaleMultiplier *= oscillateSample.scaleMultiplier;
+			scaleMultiplierX *= oscillateSample.scaleMultiplier;
+			scaleMultiplierY *= oscillateSample.scaleMultiplier;
 			alphaMultiplier *= oscillateSample.alphaMultiplier;
 		}
 
 		for (const noise of this.noise) {
+			if (now - this.startTime - (noise.delay ?? 0) + this.creationTimeDelta < 0) {
+				if (pendingIsAlive) anyAlive = true;
+				continue;
+			}
 			const noiseSample = canvaslib.sampleNoise(noise, this, now);
 			if (noiseSample === null) continue;
 			anyAlive = true;
@@ -179,7 +201,18 @@ class Motion {
 		}
 
 		if (!anyAlive) return null;
-		return { deltaX, deltaY, deltaAngle, scaleMultiplier, alphaMultiplier, tintR, tintG, tintB };
+		return {
+			deltaX,
+			deltaY,
+			deltaAngle,
+			deltaAlpha,
+			scaleMultiplierX,
+			scaleMultiplierY,
+			alphaMultiplier,
+			tintR,
+			tintG,
+			tintB
+		};
 	}
 
 	triggerReturn(settleOverride) {
@@ -281,7 +314,9 @@ class PlaceableMotionAggregator {
 			deltaX: 0,
 			deltaY: 0,
 			deltaAngle: 0,
-			scaleMultiplier: 1,
+			deltaAlpha: 0,
+			scaleMultiplierX: 1,
+			scaleMultiplierY: 1,
 			alphaMultiplier: 1,
 			tintR: 1,
 			tintG: 1,
@@ -309,7 +344,7 @@ class PlaceableMotionAggregator {
 			this.placeable = placeable;
 			this.target = target;
 
-			// (1) Detect document position/rotation change since last frame.
+			// Detect document position/rotation change since last frame.
 			// Per-axis, because Foundry's renderFlags pipeline only refreshes
 			// `target.position.x` / `target.position.y` / `target.angle` on
 			// axes whose document fields actually changed. Reading PIXI-space
@@ -321,11 +356,11 @@ class PlaceableMotionAggregator {
 			const documentChangedRotation = documentRestState.rotation !== this.lastDocumentState.rotation;
 
 			if (documentChangedX || documentChangedY || documentChangedRotation) {
-				// (1a) persistUntilUpdate motions: drain on the document update.
+				// persistUntilUpdate motions: drain on the document update.
 				for (const motion of this.motions) {
 					if (motion.persistUntilUpdate) motion.markDone();
 				}
-				// (1b) Per-axis re-snapshot. Foundry's `_refreshPosition` /
+				// Per-axis re-snapshot. Foundry's `_refreshPosition` /
 				// `_refreshRotation` only fired on axes whose document field
 				// changed (see Token#_onAnimationUpdate at token.mjs:2424,
 				// Tile#_onUpdate at tile.mjs:436-439, Drawing#_onUpdate at
@@ -385,12 +420,14 @@ class PlaceableMotionAggregator {
 				}
 			}
 
-			// (2) Compute current displacement from all active motions.
+			// Compute current displacement from all active motions.
 			const now = performance.now();
 			let deltaX = 0;
 			let deltaY = 0;
 			let deltaAngle = 0;
-			let scaleMultiplier = 1;
+			let deltaAlpha = 0;
+			let scaleMultiplierX = 1;
+			let scaleMultiplierY = 1;
 			let alphaMultiplier = 1;
 			let tintR = 1;
 			let tintG = 1;
@@ -406,44 +443,54 @@ class PlaceableMotionAggregator {
 				deltaX += sample.deltaX;
 				deltaY += sample.deltaY;
 				deltaAngle += sample.deltaAngle;
-				scaleMultiplier *= sample.scaleMultiplier;
+				deltaAlpha += sample.deltaAlpha;
+				scaleMultiplierX *= sample.scaleMultiplierX;
+				scaleMultiplierY *= sample.scaleMultiplierY;
 				alphaMultiplier *= sample.alphaMultiplier;
 				tintR *= sample.tintR;
 				tintG *= sample.tintG;
 				tintB *= sample.tintB;
 			}
 
-			// (3) Update cache for getDisplacement consumers.
+			// Update cache for getDisplacement consumers.
 			this.cache.deltaX = deltaX;
 			this.cache.deltaY = deltaY;
 			this.cache.deltaAngle = deltaAngle;
-			this.cache.scaleMultiplier = scaleMultiplier;
+			this.cache.deltaAlpha = deltaAlpha;
+			this.cache.scaleMultiplierX = scaleMultiplierX;
+			this.cache.scaleMultiplierY = scaleMultiplierY;
 			this.cache.alphaMultiplier = alphaMultiplier;
 			this.cache.tintR = tintR;
 			this.cache.tintG = tintG;
 			this.cache.tintB = tintB;
 
-			// (4) Self-dispose if no motions remain.
+			// Self-dispose if no motions remain.
 			if (this.motions.size === 0) {
 				this.teardown(true);
 				return;
 			}
 
-			// (5) Overwrite last frame's displaced write. No reset to rest
-			// state needed; `restState` is kept current by step (1b).
+			// Overwrite last frame's displaced write. No reset to rest
+			// state needed; `restState` is kept current by the re-snapshot
+			// above.
 			target.position.set(
 				this.restState.x + deltaX,
 				this.restState.y + deltaY
 			);
 			target.angle = this.restState.angle + deltaAngle;
-			if (scaleMultiplier !== 1) {
+			if (scaleMultiplierX !== 1 || scaleMultiplierY !== 1) {
 				target.scale.set(
-					this.restState.scaleX * scaleMultiplier,
-					this.restState.scaleY * scaleMultiplier
+					this.restState.scaleX * scaleMultiplierX,
+					this.restState.scaleY * scaleMultiplierY
 				);
 			}
-			if (alphaMultiplier !== 1) {
-				target.alpha = this.restState.alpha * alphaMultiplier;
+			if (deltaAlpha !== 0 || alphaMultiplier !== 1) {
+				// Fade deltas add onto the rest alpha; oscillation alpha
+				// multiplies the result. Additive deltas can leave [0, 1]
+				// when several tracks stack, so clamp the final write.
+				const composedAlpha =
+					(this.restState.alpha + deltaAlpha) * alphaMultiplier;
+				target.alpha = Math.max(0, Math.min(1, composedAlpha));
 			}
 			if (tintR !== 1 || tintG !== 1 || tintB !== 1) {
 				const restR = (this.restState.tint >> 16) & 0xff;

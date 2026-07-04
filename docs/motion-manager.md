@@ -8,7 +8,7 @@ Sequencer.MotionManager
 
 The Motion Manager controls motions started by [`.motion()`](api/motion.md) sections after they're playing. Use it to end persistent motions, terminate motions across a scene, or read the current visual displacement a motion is applying to a placeable.
 
-Motions are runtime-only (see [`.persist()`](api/motion.md#persist) on the Motion section). The Motion Manager has no UI and no way to list active motions, so if you want to end a motion later, give it a [`.name()`](api/motion.md#name) when you create it.
+Running motions are listed in the Effect Manager UI, where they can be ended individually. To end a motion from a macro later, give it a [`.name()`](api/motion.md#name) when you create it.
 
 ## End Motions
 
@@ -120,11 +120,16 @@ Returns the current per-frame displacement applied to the target's sprite by all
 
 ```js
 {
-    deltaX: Number,           // Horizontal offset from document position, in pixels
-    deltaY: Number,           // Vertical offset from document position, in pixels
-    deltaAngle: Number,       // Rotation offset, in degrees
-    scaleMultiplier: Number,  // Scale multiplier (1.0 = no change)
-    alphaMultiplier: Number   // Alpha multiplier (1.0 = no change)
+    deltaX: Number,            // Horizontal offset from document position, in pixels
+    deltaY: Number,            // Vertical offset from document position, in pixels
+    deltaAngle: Number,        // Rotation offset, in degrees
+    deltaAlpha: Number,        // Opacity offset from the resting opacity (0 = no change)
+    scaleMultiplierX: Number,  // Horizontal scale multiplier (1.0 = no change)
+    scaleMultiplierY: Number,  // Vertical scale multiplier (1.0 = no change)
+    alphaMultiplier: Number,   // Opacity multiplier from oscillations (1.0 = no change)
+    tintR: Number,             // Red tint multiplier (1.0 = no change)
+    tintG: Number,             // Green tint multiplier (1.0 = no change)
+    tintB: Number              // Blue tint multiplier (1.0 = no change)
 }
 ```
 

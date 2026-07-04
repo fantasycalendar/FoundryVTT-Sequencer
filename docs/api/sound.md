@@ -421,9 +421,9 @@ See the matching [On Levels](./effect.md#on-levels) section in the effect API fo
 Overrides or offsets the sound's Z, which Foundry's positional sound source uses to compute distance attenuation across scene levels.
 
 Options:
-- `absolute: boolean` — when `true`, the value is used as-is. When `false` (the default), it's added to the attached source's or location's elevation.
+- `absolute: boolean` - when `true`, the value is used as-is. When `false` (the default), it's added to the attached source's or location's elevation.
 
-Without this call, the sound's Z comes from the attached placeable (via `bindElevation`) or the location's elevation. Set explicitly when you need the sound to live at a different Z than its visual source — e.g. a sound attached to a token but logically belonging to a different floor.
+Without this call, the sound's Z comes from the attached placeable (via `bindElevation`) or the location's elevation. Set explicitly when you need the sound to live at a different Z than its visual source, e.g. a sound attached to a token but logically belonging to a different floor.
 
 
 ## Constrained By Walls

@@ -205,6 +205,8 @@ Either every waypoint after the first sets `duration`, or none of them do. Mixin
 
 Calling `.moveTo()` multiple times on the same motion section adds multiple tracks, all playing concurrently. Their displacements add together. This is useful for layered movement, like a horizontal slide combined with a vertical hop.
 
+Layering means the calls do **not** retarget each other: two overlapping `.moveTo()` calls aimed at the same point add their displacements and overshoot past it. When you want the sprite to land exactly on a destination, drive the property with a single call; a keyframe array expresses a sequence of destinations in one call.
+
 ## Tint To
 
 `.tintTo(inColor, options)`
@@ -252,20 +254,92 @@ By default, the return leg sweeps back through the colors in reverse over `retur
 
 ### Composition
 
-Calling `.tintTo()` multiple times on the same motion section adds multiple tint tracks. They compose by RGB component-wise multiplication, the same rule PIXI uses internally when combining a parent's and a material's tint. A half-strength red layered with a half-strength green produces a darker yellow.
+Calling `.tintTo()` multiple times on the same motion section adds multiple tint tracks. They compose by RGB component-wise multiplication, the same rule PIXI uses internally when combining a parent's and a material's tint. A half-strength red layered with a half-strength green produces a darker yellow. The calls layer rather than retarget, so drive the tint with one call (or a keyframe array) when a specific end color matters.
+
+## Scale To
+
+`.scaleTo(scale, options)` or `.scaleTo(waypoints, options)`
+
+Examples:
+```js
+.scaleTo(1.5, { duration: 400, ease: "easeOutBack" })
+.scaleTo({ x: 1.6, y: 0.7 }, { duration: 400 })
+.scaleTo({ y: 1.5 }, { duration: 400 })
+.scaleTo([1, 1.5, 1.2, 1], { duration: 800 })
+.scaleTo([
+    { v: 1 },
+    { v: 1.5, duration: 200, inEase: "easeOutBack", hold: 300 },
+    { v: { x: 1.2, y: 0.8 }, duration: 400 },
+])
+```
+
+Scales the sprite relative to its resting size, then (by default) scales back. `1.5` means 1.5 times how the sprite looks at rest, the same convention as [`.oscillate()`](#oscillate)'s scale axis. Mirrored sprites stay mirrored.
+
+The first argument can be:
+
+- A single positive number, scaling both axes uniformly
+- A `{ x, y }` object of positive numbers; a missing axis is left unscaled, so `{ x: 2 }` stretches only horizontally
+- An array of waypoints, for a keyframed multi-segment path. Waypoints are positive numbers, full `{ x, y }` pairs, or per-key objects of the form `{ v, duration?, hold?, inEase?, outEase? }` with the same per-key fields as [`.moveTo()`](#move-to). The keyframe form always drives both axes; numbers apply to both
+
+The single-target form takes the same options as [`.moveTo()`](#move-to)'s single-target form (`duration`, `ease`, `delay`, `return`, `easeOut`, `returnDuration`); the keyframe form takes the same options as its keyframe form (`duration`, `ease`, `delay`, `return`, `returnValues`, `returnDuration`).
+
+Multiple `.scaleTo()` calls compose by multiplication, per axis, and compose the same way with [`.oscillate()`](#oscillate)'s scale axis. They layer rather than retarget: two overlapping `.scaleTo(1.5)` calls end at 2.25×, so drive the scale with one call (or a keyframe array) when a specific end size matters.
+
+## Rotate To
+
+`.rotateTo(degrees, options)` or `.rotateTo(waypoints, options)`
+
+Examples:
+```js
+.rotateTo(90, { duration: 500, ease: "easeInOutQuad" })
+.rotateTo(350, { duration: 800 })
+.rotateTo([0, 45, -45, 0], { duration: 600, ease: "easeInOutQuad" })
+.rotateTo([
+    { v: 0 },
+    { v: 45, duration: 100, inEase: "easeOutBack" },
+    { v: 0, duration: 400, inEase: "easeInOutQuad" },
+])
+```
+
+Rotates the sprite to the given angle in degrees, then (by default) rotates back to its resting angle. The angle is a document-space rotation, the same value you'd pass to `token.document.update({ rotation })`.
+
+The path is **literal**: rotating to `350` from a resting angle of `10` sweeps +340 degrees the long way around, so the number you pass is the number you get. Waypoint arrays step through each angle in order, which makes back-and-forth patterns like `[0, 45, -45, 0]` read exactly as written.
+
+The single-angle form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`, with the same meanings and defaults as [`.moveTo()`](#move-to)'s single-target form; the keyframe form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`, with the same per-key fields (`duration`, `hold`, `inEase`, `outEase`).
+
+Tokens with locked rotation rest at a visible angle of 0, so a motion rotates them from 0 regardless of their document rotation, and they snap back to 0 when it ends.
+
+Multiple `.rotateTo()` calls compose by adding their rotation offsets. They layer rather than retarget: two overlapping calls to 90° end at 180°, so drive the angle with one call (or a keyframe array) when a specific end angle matters.
+
+## Fade To
+
+`.fadeTo(alpha, options)` or `.fadeTo(waypoints, options)`
+
+Examples:
+```js
+.fadeTo(0.4, { duration: 500 })
+.fadeTo(0, { duration: 300, return: false })
+.fadeTo([1, 0.2, 1], { duration: 900 })
+.fadeTo([
+    { v: 1 },
+    { v: 0.2, duration: 300, hold: 500 },
+    { v: 1, duration: 300 },
+])
+```
+
+Fades the sprite to the given opacity, then (by default) fades back to its resting opacity. The target is an absolute opacity between `0` (invisible) and `1` (fully visible): fading to `0.5` ends at half visibility regardless of the sprite's resting opacity. That includes fading an invisible sprite up: `.fadeTo(1)` on a token resting at opacity 0 is a reveal, and it fades back to invisible afterward unless `return: false` holds it.
+
+The single-alpha form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`, with the same meanings and defaults as [`.moveTo()`](#move-to)'s single-target form; the keyframe form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`, with the same per-key fields (`duration`, `hold`, `inEase`, `outEase`).
+
+Multiple `.fadeTo()` calls compose by adding their opacity changes together (the result stays within fully-invisible and fully-visible); [`.oscillate()`](#oscillate)'s alpha axis then multiplies on top, so a blink pulses whatever opacity the fades produce. They layer rather than retarget: two overlapping `.fadeTo(0.5)` calls on a fully visible token stack their changes down to invisible rather than meeting at 0.5, so drive the opacity with one call (or a keyframe array) when a specific end opacity matters.
 
 ## Persist
 
 `.persist()`
 
-Plays the motion forward, then holds the displaced position indefinitely. Call `Sequencer.MotionManager.endMotions(target, options)` to play the return animation and end the motion.
+Plays the motion forward, then holds the displaced position indefinitely, surviving reloads and scene changes. Call `Sequencer.MotionManager.endMotions(target, options)` to play the return animation and end the motion.
 
-**Persistence is runtime-only.** Unlike `.effect().persist()`, which writes a flag on the canvas so the effect can be recreated after a world reload, a persistent `.motion()` writes nothing. It holds in memory on every viewing client and ends when either:
-
-- `Sequencer.MotionManager.endMotions(...)` is called, or
-- the scene is changed, the world is reloaded, or the page is refreshed (the sprite snaps back to its document position with no further input)
-
-Use this for "active until I dismiss it" visual states like a flying token holding altitude during combat, a poisoned token shuddering while the condition is on, or a charged spell crackling around its caster. For state that needs to outlive a reload, use a persistent effect attached to the placeable instead.
+Use this for "active until I dismiss it" visual states like a flying token holding altitude during combat, a poisoned token shuddering while the condition is on, or a charged spell crackling around its caster.
 
 Mutually exclusive with [`.persistUntilUpdate()`](#persist-until-update).
 
@@ -297,6 +371,10 @@ new Sequence()
 ```
 
 The motion delivers the visual transition. The document update lands at the displaced position. No snap.
+
+The update that ends the motion is a change to the placeable's **position or rotation**. Other document changes (image, name, elevation, and so on) do not end it.
+
+The hold works with any combination of motions, so it also serves as a general "until this thing moves" trigger: a token tinted red until it takes its turn and moves, or one enlarged until it's repositioned. The no-snap handoff only covers position and rotation, the things a document update can land on. Held scale, opacity, or tint changes return to normal instantly when the update arrives, since the document has nothing to catch them.
 
 Mutually exclusive with [`.persist()`](#persist).
 

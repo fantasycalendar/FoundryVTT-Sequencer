@@ -830,7 +830,7 @@ Causes the effect to be played below tiles - you can pass a boolean whether it s
 
 Causes the effect to be rendered above the lighting, darkness, and fog-of-war layers. The effect also renders above region highlights and the grid, but below overlay controls (HUD, health bars, crosshairs).
 
-Use this when an effect must be visible regardless of scene darkness or obscurement — for example, a bright spell visual that should cut through fog.
+Use this when an effect must be visible regardless of scene darkness or obscurement, such as a bright spell visual that should cut through fog.
 
 Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden.
 
@@ -856,11 +856,11 @@ Sets the effect's elevation. Pass a single number for a point, or a `[bottom, to
 
 The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels appears on each of them, drawing above each level's floor that its top reaches. The effect stays in the same visual layer whether the player is currently viewing the basement or the rooftop.
 
-A range whose top exactly meets the next level's floor — like `[0, 30]` against a level that starts at `30` — stays under that floor by default. Pass `topInclusive: true` to make the effect reach into the level above instead. This matches the Top Inclusive checkbox on Foundry's Region elevation settings.
+A range whose top exactly meets the next level's floor (like `[0, 30]` against a level that starts at `30`) stays under that floor by default. Pass `topInclusive: true` to make the effect reach into the level above instead. This matches the Top Inclusive checkbox on Foundry's Region elevation settings.
 
 Options:
-- `absolute: boolean` — when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
-- `topInclusive: boolean` — range form only. When `true`, the top value is part of the range, matching the Top Inclusive checkbox on a Foundry Region. By default an effect whose top equals the next level's floor stays just below that level.
+- `absolute: boolean` - when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
+- `topInclusive: boolean` - range form only. When `true`, the top value is part of the range, matching the Top Inclusive checkbox on a Foundry Region. By default an effect whose top equals the next level's floor stays just below that level.
 
 Examples:
 ```js
@@ -878,9 +878,9 @@ Examples:
 Sets the sort layer of the effect. This value determines where the effect sits among the primary canvas group's children when siblings share an elevation. Foundry's primary group sorts children first by elevation, then by `sortLayer`, then by `sort`, then by `zIndex`.
 
 Default is `800`, which is above tokens (`700`) and below weather (`1000`). Sequencer reserves:
-- `300` — below tiles (used by `.belowTiles()`)
-- `600` — below tokens (used by `.belowTokens()`)
-- `800` — default effects layer (above tokens)
+- `300` - below tiles (used by `.belowTiles()`)
+- `600` - below tokens (used by `.belowTokens()`)
+- `800` - default effects layer (above tokens)
 
 For reference, Foundry's built-in sort layers are:
 - `0` scene background / level textures
