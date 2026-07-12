@@ -32,6 +32,54 @@ export function resolveAttachedTo(track, motion) {
 }
 
 /**
+ * Resolve the direction component for a towards-driven track: the cosine
+ * (x axis) or sine (y axis) of the angle from the mover's rest center to
+ * the target's position, both resolved fresh each frame. The mover anchor
+ * uses `get_object_position(mover, { ignoreMotion: true })`, the same call
+ * the section's play-time snapshot resolve uses, so live and snapshot
+ * directions agree for every placeable type.
+ *
+ * The direction is applied AFTER sampling (in `sampleAt`), multiplying the
+ * eased magnitude that `sampleTrack` returns. The magnitude carries all
+ * lifecycle semantics (easing, return, persist, settle, interrupt) through
+ * the sampler untouched; an in-sampler multiply would have to touch every
+ * one of its return points. `resolveAttachedTo` lives inside the sampler
+ * because it substitutes the lerp endpoint, which is a different job.
+ *
+ * Returns the last successfully resolved component when either anchor is
+ * gone (a mid-flight deletion freezes the direction), and `0` when no
+ * resolve has ever succeeded (a never-found target contributes no offset).
+ *
+ * @private
+ */
+export function resolveTowardsComponent(track, motion) {
+	const target = fromUuidSync(track.towardsUuid)?.object ?? null;
+	const mover = fromUuidSync(motion.uuid)?.object ?? null;
+	if (!target || !mover) return track.lastTowardsComponent ?? 0;
+	const targetPosition = canvaslib.get_object_position(target, {
+		ignoreMotion: track.towardsIgnoreMotion,
+	});
+	const moverPosition = canvaslib.get_object_position(mover, {
+		ignoreMotion: true,
+	});
+	if (
+		typeof targetPosition?.x !== "number" ||
+		typeof targetPosition?.y !== "number" ||
+		typeof moverPosition?.x !== "number" ||
+		typeof moverPosition?.y !== "number"
+	) {
+		return track.lastTowardsComponent ?? 0;
+	}
+	const angle = Math.atan2(
+		targetPosition.y - moverPosition.y,
+		targetPosition.x - moverPosition.x
+	);
+	const component = track.towardsAxis === "y" ? Math.sin(angle) : Math.cos(angle);
+	track.lastTowardsComponent = component;
+	return component;
+}
+
+/**
  * Sample a normalized keyframe array at `elapsed` ms since the array's start.
  * Returns the interpolated value, or `null` if `elapsed` exceeds the array's
  * total duration. The first frame's `segmentDuration` is `0` (no segment

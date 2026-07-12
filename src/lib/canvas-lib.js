@@ -1417,31 +1417,36 @@ export function sampleOscillation(config, motion, now) {
  * `{samples, frequency, duration}` where `samples` is an array of
  * `{x, y, rot}` entries each in `[-1, +1]`.
  *
+ * All randomness draws from the given twister, so every client seeding it
+ * from the motion's shared creation timestamp generates the identical
+ * waveform, and a resurrected motion replays the same jitter.
+ *
  * @param {object} config  Noise options.
+ * @param {MersenneTwister} twister  Seeded random source.
  * @returns {{samples: Array<{x: number, y: number, rot: number}>,
  *            frequency: number, duration: number}}
  */
-export function buildNoiseWaveform(config) {
+export function buildNoiseWaveform(config, twister) {
 	const frequency = config.frequency;
 	const duration = config.duration;
 	const sampleCount = Math.max(2, Math.floor(duration / frequency) + 1);
 	const hasRotation = (config.rotationStrength ?? 0) > 0;
 
-	const magnitudes = [lib.random_float_between(-1, 1)];
-	const rotations = [hasRotation ? lib.random_float_between(-1, 1) : 0];
+	const magnitudes = [lib.random_float_between(-1, 1, twister)];
+	const rotations = [hasRotation ? lib.random_float_between(-1, 1, twister) : 0];
 	for (let index = 1; index < sampleCount; index++) {
-		magnitudes.push(lib.flip_negate(magnitudes[index - 1], Math.random()));
+		magnitudes.push(lib.flip_negate(magnitudes[index - 1], twister.random()));
 		rotations.push(
 			hasRotation
-				? lib.flip_negate(rotations[index - 1], Math.random())
+				? lib.flip_negate(rotations[index - 1], twister.random())
 				: 0
 		);
 	}
 
 	// Wrap the last value for consistency
-	magnitudes[0] = lib.flip_negate(magnitudes[sampleCount - 1], Math.random());
+	magnitudes[0] = lib.flip_negate(magnitudes[sampleCount - 1], twister.random());
 	if (hasRotation) {
-		rotations[0] = lib.flip_negate(rotations[sampleCount - 1], Math.random());
+		rotations[0] = lib.flip_negate(rotations[sampleCount - 1], twister.random());
 	}
 
 	const directionMinRadians = (config.directionMin ?? 0) * (Math.PI / 180);
@@ -1449,7 +1454,7 @@ export function buildNoiseWaveform(config) {
 
 	const samples = [];
 	for (let index = 0; index < sampleCount; index++) {
-		const angle = lib.random_float_between(directionMinRadians, directionMaxRadians);
+		const angle = lib.random_float_between(directionMinRadians, directionMaxRadians, twister);
 		samples.push({
 			x: magnitudes[index] * Math.cos(angle),
 			y: magnitudes[index] * Math.sin(angle),

@@ -2,7 +2,7 @@
 
 ### What is this?
 
-This part of the Sequencer allows you to animate a token, tile, or drawing's sprite without changing the underlying document. Position, rotation, scale, and alpha can all be tweened, jittered, or oscillated visually, and the placeable returns to its document position when the motion ends.
+This part of the Sequencer allows you to animate a token, tile, or drawing's sprite without changing the underlying document. Position, rotation, scale, and opacity can all be animated, jittered, or oscillated visually, and the placeable returns to its document position when the motion ends.
 
 ### How do I use this?
 
@@ -73,7 +73,7 @@ As an option, you can give it `inRepeatDelayMin` for a static delay between repe
 
 ## Play if
 
-`.playIf(truthy|falsey)` or `.playIf(inBool)` or `.playIf(inFunction)`
+`.playIf(boolean)` or `.playIf(inFunction)`
 
 Causes the section not play, and skip all delays, repetitions, waits, etc. If you pass a function, the function should return something false-y if you do not want the motion to play.
 
@@ -157,12 +157,12 @@ Moves the sprite toward the given target. The first argument can be:
 - An `{ x, y }` coordinate object
 - A placeable or its document (a Token, Tile, Drawing, etc.), whose position is read when the section is built
 - A crosshair from [`Sequencer.Crosshair.show()`](crosshair.md), which lands the moving object centered on the crosshair, the same way an effect targeting a crosshair is centered on it
-- A string reference (see [`.name()`](#name) on other sections) that resolves to a previously placed object
-- An array of waypoints, for a keyframed multi-segment path
+- A string reference (see [`.name()`](#name) on other sections) that refers to a previously placed object
+- An array of waypoints - the sprite travels through each point in order
 
-Coordinates are in **document space**, the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
+Coordinates are the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
 
-When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is captured once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. Pass `attachTo: true` (below) to keep tracking a moving target frame by frame instead. A literal `{ x, y }` is used exactly as given.
+When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is read once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. Pass `attachTo: true` (below) to keep tracking a moving target frame by frame instead. A plain `{ x, y }` coordinate is used exactly as given.
 
 ### Single-target form options
 
@@ -174,14 +174,14 @@ When the first argument is a single position or placeable:
 - `return: boolean` (default `true`) - whether the sprite should animate back to its starting position after the outward animation. With `false`, the sprite ends at the target and the motion finishes there
 - `easeOut: string` (default mirrors `ease`) - ease curve for the return animation
 - `returnDuration: number` (default mirrors `duration`) - how long the return animation takes
-- `ignoreMotion: boolean` (default `false`) - when the target is a placeable or document, target its document position instead of its motion-displaced visible position. Has no effect on a literal `{ x, y }` target
-- `attachTo: boolean` (default `false`) - when the target is a placeable, document, or name reference, follow its **live** position each frame instead of the position it had when `.moveTo()` was called. Use this to intercept a moving target: moving toward a token that is itself flying via a `.motion()` curves toward where it is *now*, frame by frame, rather than a frozen point. Has no effect on a literal `{ x, y }` target (and throws if combined with one). The return leg still brings the sprite back to its own starting position. Combine with [`.persist()`](#persist) for an indefinite chase. Honors `ignoreMotion`: with `attachTo: true, ignoreMotion: true` the chase follows the target's document position rather than its motion-displaced visible position
+- `ignoreMotion: boolean` (default `false`) - when the target is a placeable or document, target its document position instead of its motion-displaced visible position. Has no effect on a plain `{ x, y }` target
+- `attachTo: boolean` (default `false`) - when the target is a placeable, document, or name reference, follow its **live** position each frame instead of the position it had when `.moveTo()` was called. Use this to intercept a moving target: moving toward a token that is itself flying via a `.motion()` curves toward where it is *now*, frame by frame, rather than a frozen point. Has no effect on a plain `{ x, y }` target (and throws if combined with one). The return leg still brings the sprite back to its own starting position. Combine with [`.persist()`](#persist) for an indefinite chase. Honors `ignoreMotion`: with `attachTo: true, ignoreMotion: true` the chase follows the target's document position rather than its motion-displaced visible position
 
 The default `return: true` reflects the fact that motion is visual indication: the sprite goes somewhere, then comes back, because the document never moved. If you want the sprite to stay at the displaced position until something else ends it, combine `return: false` with [`.persist()`](#persist).
 
-### Keyframe form options
+### Waypoint form options
 
-When the first argument is an array, the motion plays a multi-segment path through every waypoint in order. The array entries are homogeneous: either every element is an `{ x, y }` coordinate pair, or every element is a per-key object of the form `{ v: { x, y }, duration?, hold?, inEase?, outEase? }`.
+When the first argument is an array, the motion plays a path through every waypoint in order. The array entries must all be the same kind: either every element is an `{ x, y }` coordinate pair, or every element is a per-waypoint object of the form `{ v: { x, y }, duration?, hold?, inEase?, outEase? }`.
 
 - `duration: number` - total time for the whole path. When set, segment durations are divided evenly across the waypoints
 - `ease: string` (default `"linear"`) - default ease curve for every segment
@@ -189,23 +189,59 @@ When the first argument is an array, the motion plays a multi-segment path throu
 - `returnValues: array` - optional second waypoint array to play after the outward path completes
 - `returnDuration: number` - total time for the return path
 
-Per-key fields (when entries are objects):
+Per-waypoint fields (when entries are objects):
 
 - `v: { x, y }` (required) - the waypoint's coordinates
-- `duration: number` - milliseconds for the segment ending at this waypoint, overriding the track-level `duration` for this segment
+- `duration: number` - milliseconds for the segment ending at this waypoint, overriding the whole-path `duration` from the options for this segment
 - `hold: number` (default `0`) - milliseconds to dwell at this waypoint after arriving, before the next segment begins. Allowed on any waypoint, including the first (a pause at the start) and the last (a pause at the end before the return). Lengthens the path by that amount
 - `inEase: string` - ease curve for the segment ending at this waypoint
 - `outEase: string` - ease curve for the segment leaving this waypoint toward the next one
 
 The first waypoint's `duration`, `inEase`, and `outEase` are ignored, since there is no incoming segment at the start of the path. Its `hold` is honored, dwelling at the start before the path begins.
 
-Either every waypoint after the first sets `duration`, or none of them do. Mixing track-level `duration` with per-key `duration` is rejected.
+Either give the whole path a `duration` in the options, or give every waypoint after the first its own; mixing the two is rejected.
 
-### Composition
+## Move By
 
-Calling `.moveTo()` multiple times on the same motion section adds multiple tracks, all playing concurrently. Their displacements add together. This is useful for layered movement, like a horizontal slide combined with a vertical hop.
+`.moveBy(offset, options)` or `.moveBy(distance, options)` or `.moveBy(waypoints, options)`
 
-Layering means the calls do **not** retarget each other: two overlapping `.moveTo()` calls aimed at the same point add their displacements and overshoot past it. When you want the sprite to land exactly on a destination, drive the property with a single call; a keyframe array expresses a sequence of destinations in one call.
+Examples:
+```js
+.moveBy({ x: 100, y: -50 }, { duration: 500 })
+.moveBy({ x: 100 }, { duration: 500 })
+.moveBy(80, { awayFrom: attacker, duration: 300, easeOut: "easeInQuad" })
+.moveBy(60, { towards: grappler, attachTo: true, duration: 400 })
+.moveBy(
+    [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 0 }],
+    { duration: 900 }
+)
+```
+
+Offsets the sprite from its normal position, in pixels, then (by default) moves it back. The first argument can be:
+
+- A `{ x, y }` offset; a missing axis is left alone, so `{ x: 100 }` slides only horizontally
+- A positive number together with `towards` or `awayFrom` in the options: a distance toward or away from another placeable
+- An array of waypoint offsets, played through in order, with the same per-waypoint fields as [`.moveTo()`](#move-to) (`duration`, `hold`, `inEase`, `outEase`). End the array at `{ x: 0, y: 0 }` to land back at the start; a non-zero final waypoint snaps home when the motion ends
+
+The single forms take the same base options as [`.moveTo()`](#move-to)'s single-target form (`duration`, `ease`, `delay`, `return`, `easeOut`, `returnDuration`); the waypoint form takes its waypoint options (`duration`, `ease`, `delay`, `return`, `returnValues`, `returnDuration`).
+
+### Directional offsets
+
+The distance form takes a direction from another object:
+
+- `towards: placeable` - the offset points at the target
+- `awayFrom: placeable` - the offset points away from the target (a knockback). `towards` and `awayFrom` cannot both be given, and the distance is always a positive number; the direction lives in the option name
+- `attachTo: boolean` (default `false`) - by default the direction is captured **once** when the motion plays, using the target's position at that moment (a knockback uses the attacker's position at the moment of impact). With `attachTo: true`, the direction is recalculated from the target's live position every frame, the same opt-in [`.moveTo()`](#move-to) uses
+- `ignoreMotion: boolean` (default `false`) - measure the direction from the target's document position instead of its motion-displaced visible position
+
+The live form holds a **fixed-length** offset that pivots around the sprite's own normal position: a grappler walking away does not drag the held token along; only the direction of its offset updates. Combine with [`.persist()`](#persist) to hold a grapple until `Sequencer.MotionManager.endMotions()` releases it:
+
+```js
+.moveBy(60, { towards: grappler, attachTo: true, duration: 400, return: false })
+.persist()
+```
+
+A target standing exactly on the mover's position has no meaningful direction; the offset points to the right in that case. The direction cannot target the object being moved.
 
 ## Tint To
 
@@ -225,20 +261,20 @@ Layering means the calls do **not** retarget each other: two overlapping `.moveT
 
 Tints the sprite toward a target color, then (by default) tints back to the sprite's original color.
 
-Colors accept either a hex string (`"#ff0000"`, with or without the leading `#`) or a 24-bit integer (`0xff0000`).
+Colors accept either a hex string (`"#ff0000"`, with or without the leading `#`) or a number (`0xff0000`).
 
 The options object accepts the same fields as [`.moveTo()`](#move-to):
 
-- `duration: number` (required) - the outward tween length in milliseconds
-- `ease: string` (default `"linear"`) - the ease function applied to the outward tween
-- `delay: number` (default `0`) - milliseconds to wait before the tween starts
-- `return: boolean` (default `true`) - whether the sprite tints back to its original color after the outward tween
-- `easeOut: string` (default mirrors `ease`) - the ease function applied to the return tween
-- `returnDuration: number` (default mirrors `duration`) - the return tween length in milliseconds
+- `duration: number` (required) - the outward animation length in milliseconds
+- `ease: string` (default `"linear"`) - the ease function applied to the outward animation
+- `delay: number` (default `0`) - milliseconds to wait before the animation starts
+- `return: boolean` (default `true`) - whether the sprite tints back to its original color after the outward animation
+- `easeOut: string` (default mirrors `ease`) - the ease function applied to the return animation
+- `returnDuration: number` (default mirrors `duration`) - the return animation length in milliseconds
 
-### Keyframed color paths
+### Waypoint color paths
 
-Passing an array as the first argument runs a multi-segment color sweep, the same way the keyframed [`.moveTo()`](#move-to) form works for positions. The array elements may be plain color values, or per-key objects carrying the same `duration`, `hold`, `inEase`, and `outEase` fields:
+Passing an array as the first argument sweeps through the colors in order, the same way the waypoint [`.moveTo()`](#move-to) form works for positions. The array elements may be plain color values, or per-waypoint objects carrying the same `duration`, `hold`, `inEase`, and `outEase` fields:
 
 ```js
 .tintTo([
@@ -248,13 +284,9 @@ Passing an array as the first argument runs a multi-segment color sweep, the sam
 ])
 ```
 
-The first waypoint's `duration` and `inEase` are ignored, since there is no incoming segment at the start of the path; its `hold` is honored, holding the starting color before the sweep begins. A per-key `hold` holds the color at that waypoint for that many milliseconds before sweeping to the next.
+The first waypoint's `duration` and `inEase` are ignored, since there is no incoming segment at the start of the path; its `hold` is honored, holding the starting color before the sweep begins. A waypoint's `hold` holds the color there for that many milliseconds before sweeping to the next.
 
 By default, the return leg sweeps back through the colors in reverse over `returnDuration`. Set `returnValues` to override with an explicit return path.
-
-### Composition
-
-Calling `.tintTo()` multiple times on the same motion section adds multiple tint tracks. They compose by RGB component-wise multiplication, the same rule PIXI uses internally when combining a parent's and a material's tint. A half-strength red layered with a half-strength green produces a darker yellow. The calls layer rather than retarget, so drive the tint with one call (or a keyframe array) when a specific end color matters.
 
 ## Scale To
 
@@ -273,17 +305,36 @@ Examples:
 ])
 ```
 
-Scales the sprite relative to its resting size, then (by default) scales back. `1.5` means 1.5 times how the sprite looks at rest, the same convention as [`.oscillate()`](#oscillate)'s scale axis. Mirrored sprites stay mirrored.
+Scales the sprite relative to its normal size, then (by default) scales back. `1.5` means 1.5 times how the sprite normally looks, the same convention as [`.oscillate()`](#oscillate)'s scale axis.
 
 The first argument can be:
 
 - A single positive number, scaling both axes uniformly
 - A `{ x, y }` object of positive numbers; a missing axis is left unscaled, so `{ x: 2 }` stretches only horizontally
-- An array of waypoints, for a keyframed multi-segment path. Waypoints are positive numbers, full `{ x, y }` pairs, or per-key objects of the form `{ v, duration?, hold?, inEase?, outEase? }` with the same per-key fields as [`.moveTo()`](#move-to). The keyframe form always drives both axes; numbers apply to both
+- An array of waypoints, played through in order. Waypoints are positive numbers, full `{ x, y }` pairs, or per-waypoint objects of the form `{ v, duration?, hold?, inEase?, outEase? }` with the same per-waypoint fields as [`.moveTo()`](#move-to). The waypoint form always drives both axes; numbers apply to both
 
-The single-target form takes the same options as [`.moveTo()`](#move-to)'s single-target form (`duration`, `ease`, `delay`, `return`, `easeOut`, `returnDuration`); the keyframe form takes the same options as its keyframe form (`duration`, `ease`, `delay`, `return`, `returnValues`, `returnDuration`).
+The single-target form takes the same options as [`.moveTo()`](#move-to)'s single-target form (`duration`, `ease`, `delay`, `return`, `easeOut`, `returnDuration`); the waypoint form takes the same options as its waypoint form (`duration`, `ease`, `delay`, `return`, `returnValues`, `returnDuration`).
 
-Multiple `.scaleTo()` calls compose by multiplication, per axis, and compose the same way with [`.oscillate()`](#oscillate)'s scale axis. They layer rather than retarget: two overlapping `.scaleTo(1.5)` calls end at 2.25×, so drive the scale with one call (or a keyframe array) when a specific end size matters.
+Multiple `.scaleTo()` calls multiply together, per axis, and combine the same way with [`.oscillate()`](#oscillate)'s scale axis. They stack on top of each other instead of replacing one another: two overlapping `.scaleTo(1.5)` calls end at 2.25×, so drive the scale with one call (or a waypoint array) when a specific end size matters.
+
+## Scale By
+
+`.scaleBy(change, options)` or `.scaleBy(waypoints, options)`
+
+Examples:
+```js
+.scaleBy(0.1, { duration: 800 })
+.scaleBy({ x: -0.2 }, { duration: 800 })
+.scaleBy([0, 0.5, 0], { duration: 900 })
+```
+
+Grows or shrinks the sprite by adding the given amount to the document's scale - a positive value grows it, a negative value shrinks it - then (by default) returns. `.scaleBy(0.1)` grows a token at scale 1 to 1.1 (one at scale 0.8 to 0.9), and `.scaleBy(-0.2)` shrinks it, never below zero size. Drawings have no scale field, so for them the change is a fraction of the normal size: `0.1` grows a drawing by 10%.
+
+This differs from [`.scaleTo()`](#scale-to), which scales to a multiple of the normal size: on a token at scale 0.8, `.scaleTo(1.1)` ends at 1.1 times its normal size, while `.scaleBy(0.1)` ends at scale 0.9.
+
+The input forms mirror [`.scaleTo()`](#scale-to)'s, but the values can be positive or negative: a single number changes both axes uniformly, a `{ x, y }` object leaves a missing axis unchanged, and a waypoint array steps through changes with the same per-waypoint fields as [`.moveTo()`](#move-to) (`duration`, `hold`, `inEase`, `outEase`). `0` means the normal size, so end the array at `0` to land back home. The options are the same as [`.scaleTo()`](#scale-to)'s in both forms.
+
+Overlapping scale motions multiply together, per axis, once each call's change is applied: two overlapping `.scaleBy(0.5)` calls on a token at scale 1 each apply 1.5× and end at 2.25×, and they combine the same way with [`.scaleTo()`](#scale-to) calls and [`.oscillate()`](#oscillate)'s scale axis.
 
 ## Rotate To
 
@@ -301,15 +352,35 @@ Examples:
 ])
 ```
 
-Rotates the sprite to the given angle in degrees, then (by default) rotates back to its resting angle. The angle is a document-space rotation, the same value you'd pass to `token.document.update({ rotation })`.
+Rotates the sprite to the given angle in degrees, then (by default) rotates back to its normal angle. The angle is the same rotation value you'd pass to `token.document.update({ rotation })`.
 
-The path is **literal**: rotating to `350` from a resting angle of `10` sweeps +340 degrees the long way around, so the number you pass is the number you get. Waypoint arrays step through each angle in order, which makes back-and-forth patterns like `[0, 45, -45, 0]` read exactly as written.
+The rotation goes exactly where you tell it: rotating to `350` from an angle of `10` sweeps +340 degrees the long way around, so the number you pass is the number you get. Waypoint arrays step through each angle in order, which makes back-and-forth patterns like `[0, 45, -45, 0]` read exactly as written.
 
-The single-angle form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`, with the same meanings and defaults as [`.moveTo()`](#move-to)'s single-target form; the keyframe form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`, with the same per-key fields (`duration`, `hold`, `inEase`, `outEase`).
+The single-angle form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`, with the same meanings and defaults as [`.moveTo()`](#move-to)'s single-target form; the waypoint form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`, with the same per-waypoint fields (`duration`, `hold`, `inEase`, `outEase`).
 
-Tokens with locked rotation rest at a visible angle of 0, so a motion rotates them from 0 regardless of their document rotation, and they snap back to 0 when it ends.
+Tokens with locked rotation always display at an angle of 0, so a motion rotates them from 0 regardless of their document rotation, and they snap back to 0 when it ends.
 
-Multiple `.rotateTo()` calls compose by adding their rotation offsets. They layer rather than retarget: two overlapping calls to 90° end at 180°, so drive the angle with one call (or a keyframe array) when a specific end angle matters.
+Multiple `.rotateTo()` calls add their rotations together. They stack on top of each other instead of replacing one another: two overlapping calls to 90° end at 180°, so drive the angle with one call (or a waypoint array) when a specific end angle matters. For deliberate layered rotation, use [`.rotateBy()`](#rotate-by), whose values are relative by nature.
+
+## Rotate By
+
+`.rotateBy(degrees, options)` or `.rotateBy(waypoints, options)`
+
+Examples:
+```js
+.rotateBy(45, { duration: 400, ease: "easeOutBack" })
+.rotateBy(-90, { duration: 500 })
+.rotateBy(720, { duration: 800, return: false })
+.rotateBy([0, 45, -45, 0], { duration: 600, ease: "easeInOutQuad" })
+```
+
+Rotates the sprite by the given number of degrees relative to its normal angle, then (by default) rotates back. The value is a relative change, so the sweep is exactly what you pass: `.rotateBy(720, { return: false })` spins the sprite twice and ends clean at the same visible angle it started at, the somersault case. Negative values rotate the other way.
+
+Waypoint arrays step through the changes in order, with the same per-waypoint fields as [`.moveTo()`](#move-to) (`duration`, `hold`, `inEase`, `outEase`). End the array at `0` to land back at the normal angle; a non-zero final waypoint snaps home when the motion ends.
+
+The single-value form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`; the waypoint form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`.
+
+Multiple `.rotateBy()` calls add their changes together, and combine the same way with [`.rotateTo()`](#rotate-to) calls and [`.oscillate()`](#oscillate)'s rotation axis.
 
 ## Fade To
 
@@ -327,11 +398,30 @@ Examples:
 ])
 ```
 
-Fades the sprite to the given opacity, then (by default) fades back to its resting opacity. The target is an absolute opacity between `0` (invisible) and `1` (fully visible): fading to `0.5` ends at half visibility regardless of the sprite's resting opacity. That includes fading an invisible sprite up: `.fadeTo(1)` on a token resting at opacity 0 is a reveal, and it fades back to invisible afterward unless `return: false` holds it.
+Fades the sprite to the given opacity, then (by default) fades back to its normal opacity. The target is an absolute opacity between `0` (invisible) and `1` (fully visible): fading to `0.5` ends at half visibility regardless of the sprite's normal opacity. That includes fading an invisible sprite up: `.fadeTo(1)` on a token whose normal opacity is 0 is a reveal, and it fades back to invisible afterward unless `return: false` holds it.
 
-The single-alpha form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`, with the same meanings and defaults as [`.moveTo()`](#move-to)'s single-target form; the keyframe form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`, with the same per-key fields (`duration`, `hold`, `inEase`, `outEase`).
+The single-alpha form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`, with the same meanings and defaults as [`.moveTo()`](#move-to)'s single-target form; the waypoint form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`, with the same per-waypoint fields (`duration`, `hold`, `inEase`, `outEase`).
 
-Multiple `.fadeTo()` calls compose by adding their opacity changes together (the result stays within fully-invisible and fully-visible); [`.oscillate()`](#oscillate)'s alpha axis then multiplies on top, so a blink pulses whatever opacity the fades produce. They layer rather than retarget: two overlapping `.fadeTo(0.5)` calls on a fully visible token stack their changes down to invisible rather than meeting at 0.5, so drive the opacity with one call (or a keyframe array) when a specific end opacity matters.
+Multiple `.fadeTo()` calls add their opacity changes together (the result stays within fully-invisible and fully-visible); [`.oscillate()`](#oscillate)'s alpha axis then multiplies on top, so a blink pulses whatever opacity the fades produce. They stack on top of each other instead of replacing one another: two overlapping `.fadeTo(0.5)` calls on a fully visible token stack their changes down to invisible rather than meeting at 0.5, so drive the opacity with one call (or a waypoint array) when a specific end opacity matters. For deliberate layered fading, use [`.fadeBy()`](#fade-by).
+
+## Fade By
+
+`.fadeBy(change, options)` or `.fadeBy(waypoints, options)`
+
+Examples:
+```js
+.fadeBy(-0.3, { duration: 400 })
+.fadeBy(0.2, { duration: 400 })
+.fadeBy([0, -0.6, 0], { duration: 900 })
+```
+
+Shifts the sprite's opacity by the given amount, then (by default) fades back. A positive value brightens the sprite, a negative value dims it, relative to its normal opacity: `.fadeBy(0.2)` brightens by 0.2 (a token at opacity 0.2 ends at 0.4, one at 0 ends at 0.2), `.fadeBy(-0.3)` dims by 0.3. The result stays between fully invisible and fully visible.
+
+This differs from [`.fadeTo()`](#fade-to), which takes an absolute target: `.fadeTo(0.5)` always ends at exactly 0.5, while `.fadeBy(-0.5)` ends 0.5 lower than wherever the sprite normally sits.
+
+Waypoint arrays step through changes in order, with the same per-waypoint fields as [`.moveTo()`](#move-to) (`duration`, `hold`, `inEase`, `outEase`). End the array at `0` to land back at the normal opacity. The single-value form takes `duration`, `ease`, `delay`, `return`, `easeOut`, and `returnDuration`; the waypoint form takes `duration`, `ease`, `delay`, `return`, `returnValues`, and `returnDuration`.
+
+Multiple `.fadeBy()` calls add their opacity changes together, the same way [`.fadeTo()`](#fade-to) calls do.
 
 ## Persist
 
@@ -341,9 +431,9 @@ Plays the motion forward, then holds the displaced position indefinitely, surviv
 
 Use this for "active until I dismiss it" visual states like a flying token holding altitude during combat, a poisoned token shuddering while the condition is on, or a charged spell crackling around its caster.
 
-Mutually exclusive with [`.persistUntilUpdate()`](#persist-until-update).
+Cannot be combined with [`.persistUntilUpdate()`](#persist-until-update) - use one or the other.
 
-A persistent motion that doesn't have an explicit return animation (every track uses `return: false`) will snap back to the document position when ended. To wind it down smoothly, use `return: true` on the tracks, or pass `settle: <ms>` to `endMotions` for a smooth wind-down.
+A persistent motion that doesn't have an explicit return animation (every call uses `return: false`) will snap back to the document position when ended. To wind it down smoothly, use `return: true` on the calls, or pass a `settle` duration in milliseconds to `endMotions` for a smooth wind-down.
 
 ## Persist Until Update
 
@@ -376,7 +466,7 @@ The update that ends the motion is a change to the placeable's **position or rot
 
 The hold works with any combination of motions, so it also serves as a general "until this thing moves" trigger: a token tinted red until it takes its turn and moves, or one enlarged until it's repositioned. The no-snap handoff only covers position and rotation, the things a document update can land on. Held scale, opacity, or tint changes return to normal instantly when the update arrives, since the document has nothing to catch them.
 
-Mutually exclusive with [`.persist()`](#persist).
+Cannot be combined with [`.persist()`](#persist) - use one or the other.
 
 ## Noise
 
@@ -390,28 +480,28 @@ Mutually exclusive with [`.persist()`](#persist).
 .noise({ strength: 8, frequency: 40, duration: 600, directionMin: 60, directionMax: 120 })
 ```
 
-Layers random shake / jitter onto the motion. Each sample is pulled from a random direction inside the cone `[directionMin, directionMax]` (degrees, full circle by default), and the sprite is displaced by `strength` pixels along that direction. Rotation jitter runs on an independent random stream.
+Layers random shake / jitter onto the motion. Every few milliseconds the shake picks a random direction inside the cone between `directionMin` and `directionMax` (degrees, full circle by default) and pushes the sprite `strength` pixels that way. Rotation jitter is randomized separately from the position shake.
 
 The options object accepts:
 
-- `strength: number | { x, y }` - displacement amplitude in pixels. Either a single number for uniform strength, or `{ x, y }` for axis-specific amplitudes. The `{ x, y }` form may omit either axis to lock that axis at `0` (so `{ x: 20 }` shakes only horizontally)
+- `strength: number | { x, y }` - how far the sprite gets pushed, in pixels. Either a single number for the same strength in every direction, or `{ x, y }` for a different strength per axis. The `{ x, y }` form may omit either axis to lock that axis at `0` (so `{ x: 20 }` shakes only horizontally)
 - `strengthScaledToObject: number | { x, y }` - alternative to `strength`. The value is a multiplier of the placeable's width and height, so `0.1` shakes the sprite by 10% of its size. Same `{ x, y }` shape as `strength`, with the same omit-an-axis-to-lock-it-at-zero behavior. Useful for shakes that should scale with the token size
-- `frequency: number` (required) - milliseconds between samples. Lower numbers produce faster, twitchier shakes
+- `frequency: number` (required) - milliseconds between each new shake position. Lower numbers produce faster, twitchier shakes
 - `duration: number` (default `1000`) - how long the shake lasts, in milliseconds. Under [`.persist()`](#persist) this is the loop length of one cycle
-- `rotationStrength: number` (default `0`) - rotation amplitude in degrees
-- `directionMin: number` (default `0`) - lower bound of the direction cone, in degrees, in `[0, 720]`
-- `directionMax: number` (default `360`) - upper bound of the direction cone, in degrees, in `[0, 720]`
+- `rotationStrength: number` (default `0`) - how far the sprite twists back and forth, in degrees
+- `directionMin: number` (default `0`) - the lowest direction of the cone, in degrees, between `0` and `720`
+- `directionMax: number` (default `360`) - the highest direction of the cone, in degrees, between `0` and `720`
 - `delay: number` (default `0`) - milliseconds to wait before the shake starts
 - `fadeInDuration: number` (default `0`) - milliseconds to ramp the shake amplitude in at the start
 - `fadeOutDuration: number` (default `0`) - milliseconds to ramp the shake amplitude out at the end
 
 Exactly one of `strength` or `strengthScaledToObject` is required.
 
-`directionMin` and `directionMax` define a cone the displacement direction is randomly picked from. The full circle (`0` to `360`) gives an omnidirectional jitter; a narrow cone like `(85, 95)` gives a near-vertical jitter; `directionMin === directionMax` gives a fixed-direction shake.
+`directionMin` and `directionMax` define a cone the shake direction is randomly picked from. The full circle (`0` to `360`) shakes in every direction; a narrow cone like `(85, 95)` gives a near-vertical jitter; setting both to the same number gives a fixed-direction shake.
 
 Under [`.persist()`](#persist), the shake loops until the motion ends, then fades over `fadeOutDuration`.
 
-Multiple `.noise()` calls on the same motion compose additively, useful for stacking layers like a fast jitter on top of a slow tremor, each with its own timing and strength.
+Multiple `.noise()` calls on the same motion add together, useful for stacking layers like a fast jitter on top of a slow tremor, each with its own timing and strength.
 
 ## Oscillate
 
@@ -463,10 +553,10 @@ The options object accepts:
 
 Each configured axis takes its own object:
 
-- `amplitude: number` - peak displacement in pixels (`x`, `y`), degrees (`rotation`), or a multiplier offset (`scale`, `alpha`). Required unless `strengthScaledToObject` is used in its place on the `x` or `y` axis
-- `strengthScaledToObject: number` - **x and y axes only.** Stands in for `amplitude` to express the peak displacement as a multiplier of the placeable's width (for `x`) or height (for `y`). For example, `x: { strengthScaledToObject: 0.1 }` sways the sprite by 10% of its width. Mutually exclusive with `amplitude` on the same axis
-- `phase: number` (default `0`) - phase offset in radians. Positive phase shifts the peak earlier in time. Use this to correlate multiple axes: two axes with the same phase peak together, while two axes with a quarter-cycle phase difference trace a circle or oval
-- `baseline: number` (default `1.0`) - **scale and alpha only.** The centre value the oscillation orbits. A heartbeat is `scale: { baseline: 1.0, amplitude: 0.05 }` producing a `0.95 → 1.05` pulse
+- `amplitude: number` - how far the axis swings at its peak, in pixels (`x`, `y`), degrees (`rotation`), or an amount added to and subtracted from `baseline` (`scale`, `alpha`) - an amplitude of `0.05` around a baseline of `1.0` swings between `0.95` and `1.05`. Required unless `strengthScaledToObject` is used in its place on the `x` or `y` axis
+- `strengthScaledToObject: number` - **x and y axes only.** Stands in for `amplitude` to express the peak displacement as a multiplier of the placeable's width (for `x`) or height (for `y`). For example, `x: { strengthScaledToObject: 0.1 }` sways the sprite by 10% of its width. Cannot be combined with `amplitude` on the same axis
+- `phase: number` (default `0`) - shifts where in the wave this axis starts, in radians (a full cycle is `Math.PI * 2`). Positive values shift the peak earlier. Give two axes the same `phase` to make them peak together; put one a quarter cycle ahead (`phase: Math.PI / 2`, as in the example above) to trace a circle or oval
+- `baseline: number` (default `1.0`) - **scale and alpha only.** The center value the oscillation swings around. A heartbeat is `scale: { baseline: 1.0, amplitude: 0.05 }` producing a `0.95 → 1.05` pulse
 
 ### Waveforms
 
@@ -476,4 +566,4 @@ Each configured axis takes its own object:
 
 Under [`.persist()`](#persist), the oscillation loops until the motion ends, then fades over `fadeOutDuration`.
 
-Multiple `.oscillate()` calls on the same motion compose additively, useful for stacking layers like a slow sway with a fast bob, each with its own period, waveform, and per-axis amplitudes.
+Multiple `.oscillate()` calls on the same motion add together, useful for stacking layers like a slow sway with a fast bob, each with its own period, waveform, and per-axis strengths.

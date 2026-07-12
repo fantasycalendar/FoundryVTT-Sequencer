@@ -27,6 +27,7 @@ export default class MotionSection extends Section {
 		};
 		this._noise = [];
 		this._oscillate = [];
+		this._resolvedTracks = null;
 		if (inTarget) this.on(inTarget);
 	}
 
@@ -676,6 +677,225 @@ export default class MotionSection extends Section {
 	}
 
 	/**
+	 * Offsets the sprite from its resting position, then (by default) moves
+	 * it back. Offsets are in pixels, document space.
+	 *
+	 * Accepts:
+	 * - A `{x, y}` object of pixel offsets; a missing axis is left alone,
+	 *   so `{x: 50}` slides only horizontally
+	 * - An array of waypoint offsets for a multi-segment path, where each
+	 *   waypoint is a full `{x, y}` pair or a per-key object
+	 *   `{v: {x, y}, duration?, hold?, inEase?, outEase?}` matching the
+	 *   `.moveTo()` keyframe form. End the array at `{x: 0, y: 0}` to land
+	 *   back at rest; a non-zero final waypoint snaps home when the motion
+	 *   ends
+	 * - A positive number together with `towards` or `awayFrom`: a distance
+	 *   in pixels toward or away from another placeable. The direction is
+	 *   captured once when the motion plays (a knockback uses the
+	 *   attacker's position at the moment of impact); pass `attachTo: true`
+	 *   to re-resolve the direction against the target's live position
+	 *   every frame instead, the same opt-in `.moveTo()` uses
+	 *
+	 * The live (`attachTo: true`) form holds a *fixed-length* offset that
+	 * pivots around the sprite's own resting position: a grappler walking
+	 * away does not drag the held token along; only the direction of its
+	 * offset updates. Combine with `.persist()` to hold the grapple until
+	 * `Sequencer.MotionManager.endMotions()` releases it.
+	 *
+	 * Options: `duration` (required, ms), `ease`, `delay`, `return`
+	 * (default `true`), `easeOut`, `returnDuration`, and for the
+	 * directional form `towards` / `awayFrom` (mutually exclusive),
+	 * `attachTo` (default `false`), `ignoreMotion` (default `false`,
+	 * resolves the direction against the target's document position
+	 * instead of its motion-displaced visible position). The keyframe form
+	 * accepts `duration`, `ease`, `delay`, `return`, `returnValues`,
+	 * `returnDuration`.
+	 *
+	 * @param {object|number|array} inOffset
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	moveBy(inOffset, inOptions = {}) {
+		if (inOffset === undefined || inOffset === null)
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"inOffset is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"inOptions must be of type object"
+			);
+		if ("towards" in inOptions && "awayFrom" in inOptions)
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"`towards` and `awayFrom` are mutually exclusive; pick the direction you mean."
+			);
+
+		const directionTarget = inOptions.towards ?? inOptions.awayFrom;
+		const directionSign = "awayFrom" in inOptions ? -1 : 1;
+		const isKeyframe = Array.isArray(inOffset);
+
+		if (isKeyframe && directionTarget !== undefined)
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"`towards` / `awayFrom` are not compatible with keyframe tracks; they drive a single direction."
+			);
+		if (!isKeyframe && inOptions.attachTo && directionTarget === undefined)
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"`attachTo` only affects a `towards` / `awayFrom` direction; pass one of them."
+			);
+		if (!isKeyframe && inOptions.ignoreMotion && directionTarget === undefined)
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"`ignoreMotion` only affects a `towards` / `awayFrom` direction; pass one of them."
+			);
+
+		const options = this._mergeScalarTrackOptions("moveBy", isKeyframe, inOptions);
+
+		if (isKeyframe) {
+			const xConfig = this._buildKeyframeTrack(
+				"moveBy",
+				inOffset,
+				options,
+				"x",
+				"inOffset"
+			);
+			const yConfig = this._buildKeyframeTrack(
+				"moveBy",
+				inOffset,
+				options,
+				"y",
+				"inOffset"
+			);
+			xConfig.absolute = false;
+			yConfig.absolute = false;
+			this._tracks.x.push(xConfig);
+			this._tracks.y.push(yConfig);
+			return this;
+		}
+
+		if (lib.is_real_number(inOffset)) {
+			if (directionTarget === undefined)
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"a bare number is a distance and needs a `towards` or `awayFrom` target; pass `{x, y}` for a fixed offset."
+				);
+			if (inOffset <= 0)
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"distance must be a positive number; use `awayFrom` to push away."
+				);
+			if (typeof options.attachTo !== "boolean")
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"options.attachTo must be of type boolean"
+				);
+			if (typeof options.ignoreMotion !== "boolean")
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"options.ignoreMotion must be of type boolean"
+				);
+
+			const validatedTarget = this._validateLocation(directionTarget);
+			if (
+				validatedTarget instanceof CrosshairsPlaceable ||
+				validatedTarget instanceof CrosshairsDocument
+			)
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"`towards` / `awayFrom` cannot use a crosshair; a crosshair is a point, so pass the `{x, y}` vector yourself."
+				);
+			const isPlaceableOrDocument =
+				validatedTarget instanceof foundry.canvas.placeables.PlaceableObject ||
+				validatedTarget instanceof foundry.abstract.Document;
+			if (!isPlaceableOrDocument)
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"`towards` / `awayFrom` must be a placeable, document, or the name of a placed object"
+				);
+			const towardsUuid =
+				validatedTarget.document?.uuid ?? validatedTarget.uuid ?? null;
+			if (!towardsUuid)
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"`towards` / `awayFrom` could not resolve a uuid from the given target"
+				);
+
+			const signedMagnitude = directionSign * inOffset;
+			for (const axis of ["x", "y"]) {
+				const config = this._buildSingleTrack(
+					"moveBy",
+					{ offset: signedMagnitude },
+					options,
+					"offset"
+				);
+				config.absolute = false;
+				config.from = 0;
+				config.towardsUuid = towardsUuid;
+				config.towardsAxis = axis;
+				config.towardsIgnoreMotion = options.ignoreMotion;
+				if (!options.attachTo) config.towardsSnapshot = true;
+				this._tracks[axis].push(config);
+			}
+			return this;
+		}
+
+		if (inOffset && typeof inOffset === "object") {
+			const hasX = inOffset.x !== undefined;
+			const hasY = inOffset.y !== undefined;
+			if (!hasX && !hasY)
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"a {x, y} offset must provide at least one axis"
+				);
+			for (const axis of ["x", "y"]) {
+				if (inOffset[axis] === undefined) continue;
+				if (!lib.is_real_number(inOffset[axis]))
+					throw this.sequence._customError(
+						this,
+						"moveBy",
+						`offset ${axis} must be a real number`
+					);
+			}
+			for (const axis of ["x", "y"]) {
+				if (inOffset[axis] === undefined) continue;
+				const config = this._buildSingleTrack(
+					"moveBy",
+					{ offset: inOffset[axis] },
+					options,
+					"offset"
+				);
+				config.absolute = false;
+				config.from = 0;
+				this._tracks[axis].push(config);
+			}
+			return this;
+		}
+
+		throw this.sequence._customError(
+			this,
+			"moveBy",
+			"inOffset must be a {x, y} offset, a distance with `towards` / `awayFrom`, or an array of waypoint offsets"
+		);
+	}
+
+	/**
 	 * Tints the sprite toward a target color, then (by default) tints back
 	 * to the sprite's original color. Pass a single color for a single-tween
 	 * animation, or an array of colors for a keyframed color path.
@@ -908,6 +1128,82 @@ export default class MotionSection extends Section {
 	}
 
 	/**
+	 * Rotates the sprite by the given number of degrees relative to its
+	 * resting angle, then (by default) rotates back.
+	 *
+	 * The value is a delta, so the sweep is exactly what you pass:
+	 * `.rotateBy(720, { return: false })` spins the sprite twice and ends
+	 * clean at the same visible angle it started at. Negative values
+	 * rotate the other way.
+	 *
+	 * Accepts a single delta, or an array of waypoint deltas for a
+	 * multi-segment path. Waypoints are numbers, or per-key objects
+	 * `{v: number, duration?, hold?, inEase?, outEase?}` matching the
+	 * `.moveTo()` keyframe form. End the array at `0` to land back at the
+	 * resting angle; a non-zero final waypoint snaps home when the motion
+	 * ends.
+	 *
+	 * Single-delta form options:
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults mirror the forward leg.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `return`,
+	 * `returnValues`, `returnDuration`.
+	 *
+	 * @param {number|array} inRotation
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	rotateBy(inRotation, inOptions = {}) {
+		if (inRotation === undefined || inRotation === null)
+			throw this.sequence._customError(
+				this,
+				"rotateBy",
+				"inRotation is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"rotateBy",
+				"inOptions must be of type object"
+			);
+
+		const isKeyframe = Array.isArray(inRotation);
+		const options = this._mergeScalarTrackOptions("rotateBy", isKeyframe, inOptions);
+
+		let trackConfig;
+		if (isKeyframe) {
+			trackConfig = this._buildKeyframeTrack(
+				"rotateBy",
+				inRotation,
+				options,
+				"rotation",
+				"inRotation"
+			);
+			trackConfig.absolute = false;
+		} else {
+			if (!lib.is_real_number(inRotation))
+				throw this.sequence._customError(
+					this,
+					"rotateBy",
+					"inRotation must be a real number (degrees)"
+				);
+			trackConfig = this._buildSingleTrack(
+				"rotateBy",
+				{ rotation: inRotation },
+				options,
+				"rotation"
+			);
+			trackConfig.absolute = false;
+			trackConfig.from = 0;
+		}
+
+		this._tracks.rotation.push(trackConfig);
+		return this;
+	}
+
+	/**
 	 * Fades the sprite to the given opacity, then (by default) fades back
 	 * to its resting opacity.
 	 *
@@ -994,9 +1290,104 @@ export default class MotionSection extends Section {
 	}
 
 	/**
+	 * Shifts the sprite's opacity by the given amount, then (by default)
+	 * fades back. The value is a signed change to the resting opacity:
+	 * `.fadeBy(0.2)` brightens by 0.2 (a sprite resting at 0.2 ends at
+	 * 0.4), `.fadeBy(-0.3)` dims by 0.3. The result stays between fully
+	 * invisible and fully visible.
+	 *
+	 * This differs from `.fadeTo()`, which takes an absolute opacity
+	 * target: `.fadeTo(0.5)` always ends at exactly 0.5, while
+	 * `.fadeBy(-0.5)` ends half an opacity step below wherever the sprite
+	 * rests.
+	 *
+	 * Accepts a single change, or an array of waypoint changes for a
+	 * multi-segment path. Waypoints are numbers in `[-1, 1]`, or per-key
+	 * objects `{v: number, duration?, hold?, inEase?, outEase?}` matching
+	 * the `.moveTo()` keyframe form. End the array at `0` to land back at
+	 * the resting opacity; a non-zero final waypoint snaps home when the
+	 * motion ends.
+	 *
+	 * Single-value form options:
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults mirror the forward leg.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `return`,
+	 * `returnValues`, `returnDuration`.
+	 *
+	 * @param {number|array} inDelta
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	fadeBy(inDelta, inOptions = {}) {
+		if (inDelta === undefined || inDelta === null)
+			throw this.sequence._customError(
+				this,
+				"fadeBy",
+				"inDelta is required"
+			);
+		if (typeof inOptions !== "object" || inOptions === null)
+			throw this.sequence._customError(
+				this,
+				"fadeBy",
+				"inOptions must be of type object"
+			);
+
+		const validateDelta = (value) => {
+			if (!lib.is_real_number(value) || value < -1 || value > 1)
+				throw this.sequence._customError(
+					this,
+					"fadeBy",
+					"the opacity change must be a real number in [-1, 1]"
+				);
+			return value;
+		};
+
+		const isKeyframe = Array.isArray(inDelta);
+		const options = this._mergeScalarTrackOptions("fadeBy", isKeyframe, inOptions);
+
+		let trackConfig;
+		if (isKeyframe) {
+			if (options.returnValues !== undefined && Array.isArray(options.returnValues)) {
+				for (const entry of options.returnValues) {
+					validateDelta(entry && typeof entry === "object" && "v" in entry ? entry.v : entry);
+				}
+			}
+			trackConfig = this._buildKeyframeTrack(
+				"fadeBy",
+				inDelta.map((entry) => {
+					if (entry && typeof entry === "object" && "v" in entry) {
+						return { ...entry, v: validateDelta(entry.v) };
+					}
+					return validateDelta(entry);
+				}),
+				options,
+				"alpha",
+				"inDelta"
+			);
+			trackConfig.absolute = false;
+		} else {
+			validateDelta(inDelta);
+			trackConfig = this._buildSingleTrack(
+				"fadeBy",
+				{ alpha: inDelta },
+				options,
+				"alpha"
+			);
+			trackConfig.absolute = false;
+			trackConfig.from = 0;
+		}
+
+		this._tracks.alpha.push(trackConfig);
+		return this;
+	}
+
+	/**
 	 * Scales the sprite relative to its resting size, then (by default)
 	 * scales back. Scaling to `1.5` ends at 1.5 times how the sprite looks
-	 * at rest; mirrored sprites stay mirrored.
+	 * at rest; mirrored sprites stay mirrored. Compare `.scaleBy()`, which
+	 * grows or shrinks by a signed change to the document's scale.
 	 *
 	 * Accepts:
 	 * - A single positive number, scaling both axes uniformly
@@ -1024,41 +1415,91 @@ export default class MotionSection extends Section {
 	 * @returns {MotionSection}
 	 */
 	scaleTo(inScale, inOptions = {}) {
+		return this._buildScaleTracks("scaleTo", inScale, inOptions);
+	}
+
+	/**
+	 * Grows or shrinks the sprite by a signed change to the document's
+	 * scale, then (by default) returns. `.scaleBy(0.1)` grows a token
+	 * resting at scale 1 to 1.1 (one resting at 0.8 to 0.9), and
+	 * `.scaleBy(-0.2)` shrinks it, never below zero size. Mirrored sprites
+	 * stay mirrored. Drawings have no scale field, so for them the change
+	 * is a fraction of the resting size: `0.1` grows a drawing by 10%.
+	 * Compare `.scaleTo()`, which scales to a multiple of the resting
+	 * size.
+	 *
+	 * Accepts:
+	 * - A single number, changing both axes uniformly
+	 * - A `{x, y}` object; a missing axis is left unchanged, so `{x: 0.5}`
+	 *   stretches only horizontally
+	 * - An array of waypoints for a multi-segment path, where each
+	 *   waypoint is a number, a full `{x, y}` pair, or a per-key object
+	 *   `{v: number|{x, y}, duration?, hold?, inEase?, outEase?}` matching
+	 *   the `.moveTo()` keyframe form. `0` means the resting size; the
+	 *   keyframe form always drives both axes (numbers apply to both).
+	 *
+	 * Single-value form options:
+	 * Required: `duration` (ms).
+	 * Optional: `ease`, `delay`, `return` (default `true`), `easeOut`,
+	 * `returnDuration`. The return-leg defaults mirror the forward leg.
+	 *
+	 * Keyframe form accepts: `duration`, `ease`, `delay`, `return`,
+	 * `returnValues`, `returnDuration`.
+	 *
+	 * @param {number|object|array} inScale
+	 * @param {object} [inOptions={}]
+	 * @returns {MotionSection}
+	 */
+	scaleBy(inScale, inOptions = {}) {
+		return this._buildScaleTracks("scaleBy", inScale, inOptions);
+	}
+
+	/**
+	 * @private
+	 *
+	 * Shared implementation for `scaleTo` / `scaleBy`. `methodName` threads
+	 * into every validator and error message so the user sees the method
+	 * they called, and selects the value semantics: `scaleTo` values are
+	 * multipliers of the rest size, `scaleBy` values are signed additive
+	 * scale changes (tagged `scaleAdditive` for conversion at motion start).
+	 */
+	_buildScaleTracks(methodName, inScale, inOptions) {
 		if (inScale === undefined || inScale === null)
 			throw this.sequence._customError(
 				this,
-				"scaleTo",
+				methodName,
 				"inScale is required"
 			);
 		if (typeof inOptions !== "object" || inOptions === null)
 			throw this.sequence._customError(
 				this,
-				"scaleTo",
+				methodName,
 				"inOptions must be of type object"
 			);
 
+		const additive = methodName === "scaleBy";
 		const isKeyframe = Array.isArray(inScale);
-		const options = this._mergeScalarTrackOptions("scaleTo", isKeyframe, inOptions);
+		const options = this._mergeScalarTrackOptions(methodName, isKeyframe, inOptions);
 
 		if (isKeyframe) {
 			const normalizedEntries = inScale.map((entry) => {
 				if (entry && typeof entry === "object" && "v" in entry) {
-					return { ...entry, v: this._normalizeScaleValue("scaleTo", entry.v, true) };
+					return { ...entry, v: this._normalizeScaleValue(methodName, entry.v, true, additive) };
 				}
-				return this._normalizeScaleValue("scaleTo", entry, true);
+				return this._normalizeScaleValue(methodName, entry, true, additive);
 			});
 			const normalizedReturnValues = options.returnValues?.map((entry) => {
 				if (entry && typeof entry === "object" && "v" in entry) {
-					return { ...entry, v: this._normalizeScaleValue("scaleTo", entry.v, true) };
+					return { ...entry, v: this._normalizeScaleValue(methodName, entry.v, true, additive) };
 				}
-				return this._normalizeScaleValue("scaleTo", entry, true);
+				return this._normalizeScaleValue(methodName, entry, true, additive);
 			});
 			const axisOptions = normalizedReturnValues
 				? { ...options, returnValues: normalizedReturnValues }
 				: options;
 			for (const axis of ["x", "y"]) {
 				const config = this._buildKeyframeTrack(
-					"scaleTo",
+					methodName,
 					normalizedEntries,
 					axisOptions,
 					axis,
@@ -1066,14 +1507,15 @@ export default class MotionSection extends Section {
 				);
 				config.absolute = false;
 				config.scaleAxis = axis;
+				if (additive) config.scaleAdditive = true;
 				this._tracks.scale.push(config);
 			}
 		} else {
-			const normalized = this._normalizeScaleValue("scaleTo", inScale, false);
+			const normalized = this._normalizeScaleValue(methodName, inScale, false, additive);
 			for (const axis of ["x", "y"]) {
 				if (normalized[axis] === undefined) continue;
 				const config = this._buildSingleTrack(
-					"scaleTo",
+					methodName,
 					{ scale: normalized[axis] },
 					options,
 					"scale"
@@ -1081,6 +1523,7 @@ export default class MotionSection extends Section {
 				config.absolute = false;
 				config.from = 1;
 				config.scaleAxis = axis;
+				if (additive) config.scaleAdditive = true;
 				this._tracks.scale.push(config);
 			}
 		}
@@ -1138,20 +1581,27 @@ export default class MotionSection extends Section {
 	/**
 	 * @private
 	 *
-	 * Normalizes a `.scaleTo()` value to a `{x, y}` pair. A positive number
-	 * becomes `{x: v, y: v}`. An object keeps its provided axes, each a
-	 * positive real number. When `requireBothAxes` is true (keyframe form),
-	 * an object must provide both axes so every waypoint drives both tracks;
-	 * when false (single-target form), a missing axis stays undefined and no
-	 * track is built for it.
+	 * Normalizes a `.scaleTo()` / `.scaleBy()` value to a `{x, y}` pair. A
+	 * number becomes `{x: v, y: v}`. An object keeps its provided axes.
+	 * Multiplier values must be positive real numbers; in `additive` mode
+	 * the values are signed scale changes, so any real number is accepted.
+	 * When `requireBothAxes` is true (keyframe form), an object must
+	 * provide both axes so every waypoint drives both tracks; when false
+	 * (single-target form), a missing axis stays undefined and no track is
+	 * built for it.
 	 */
-	_normalizeScaleValue(methodName, value, requireBothAxes) {
+	_normalizeScaleValue(methodName, value, requireBothAxes, additive = false) {
+		const validAxisValue = (axisValue) =>
+			lib.is_real_number(axisValue) && (additive || axisValue > 0);
+		const valueDescription = additive
+			? "a real number"
+			: "a positive number";
 		if (lib.is_real_number(value)) {
-			if (value <= 0)
+			if (!validAxisValue(value))
 				throw this.sequence._customError(
 					this,
 					methodName,
-					"scale must be a positive number"
+					`scale must be ${valueDescription}`
 				);
 			return { x: value, y: value };
 		}
@@ -1172,11 +1622,11 @@ export default class MotionSection extends Section {
 				);
 			for (const axis of ["x", "y"]) {
 				if (value[axis] === undefined) continue;
-				if (!lib.is_real_number(value[axis]) || value[axis] <= 0)
+				if (!validAxisValue(value[axis]))
 					throw this.sequence._customError(
 						this,
 						methodName,
-						`scale ${axis} must be a positive number`
+						`scale ${axis} must be ${valueDescription}`
 					);
 			}
 			return { x: value.x, y: value.y };
@@ -1184,7 +1634,7 @@ export default class MotionSection extends Section {
 		throw this.sequence._customError(
 			this,
 			methodName,
-			"scale must be a positive number or a {x, y} object of positive numbers"
+			`scale must be ${valueDescription} or a {x, y} object of such numbers`
 		);
 	}
 
@@ -1629,11 +2079,23 @@ export default class MotionSection extends Section {
 	/**
 	 * @private
 	 *
-	 * Waits for the target token's mesh to draw, then registers any
-	 * `.name()` entry on the sequence's nameOffsetMap.
+	 * Waits for the target token's mesh to draw, resolves any snapshot-mode
+	 * `towards` / `awayFrom` tracks against play-time positions, then
+	 * registers any `.name()` entry on the sequence's nameOffsetMap.
+	 * Runs once per repetition, so each repetition re-snapshots its
+	 * direction.
 	 */
 	async preRun() {
 		await this._waitForTokenMesh(this._originObject);
+
+		const placeable = this._originObject?.object ?? this._originObject;
+		const moverUuid = placeable?.document?.uuid ?? placeable?.uuid ?? null;
+		if (placeable && moverUuid) {
+			this._resolvedTracks = this._resolveTowardsForRun(placeable, moverUuid);
+		} else {
+			this._resolvedTracks = this._tracks;
+		}
+
 		if (this._name) {
 			this.sequence.nameOffsetMap ||= {};
 			this.sequence.nameOffsetMap[this._name] = {
@@ -1735,6 +2197,8 @@ export default class MotionSection extends Section {
 		const overallDuration = this._computeOverallDuration();
 		const resolvedNoise = this._resolveNoiseForRun(placeable);
 		const resolvedOscillate = this._resolveOscillateForRun(placeable);
+		const resolvedTracks = this._resolvedTracks;
+		this._resolvedTracks = null;
 
 		const data = {
 			_id: motionId,
@@ -1748,7 +2212,7 @@ export default class MotionSection extends Section {
 			name: this._name || null,
 			persist: this._persist,
 			persistUntilUpdate: this._persistUntilUpdate,
-			tracks: this._tracks,
+			tracks: resolvedTracks,
 			noise: resolvedNoise,
 			oscillate: resolvedOscillate,
 			overallDuration,
@@ -1820,6 +2284,84 @@ export default class MotionSection extends Section {
 			if (noiseEnd > longest) longest = noiseEnd;
 		}
 		return longest;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Resolves snapshot-mode `towards` / `awayFrom` tracks into plain
+	 * vector tracks at play time: the direction from the mover's rest
+	 * center to the target is captured once, and the track's signed
+	 * magnitude becomes a fixed per-axis offset. Returns a new tracks
+	 * payload; `this._tracks` keeps the tagged originals so every
+	 * repetition and re-play re-snapshots the direction at its own play
+	 * time. Live (`attachTo: true`) tracks pass through untouched; the
+	 * runtime resolves their direction per frame.
+	 *
+	 * Also rejects self-targeting for every directional track (the
+	 * direction from an object to itself is undefined), which is only
+	 * checkable here, where the mover has resolved.
+	 */
+	_resolveTowardsForRun(placeable, moverUuid) {
+		let hasDirectionalTracks = false;
+		for (const axis of ["x", "y"]) {
+			for (const track of this._tracks[axis]) {
+				if (!track.towardsUuid) continue;
+				hasDirectionalTracks = true;
+				if (track.towardsUuid === moverUuid) {
+					throw this.sequence._customError(
+						this,
+						"moveBy",
+						"`towards` / `awayFrom` cannot target the object being moved"
+					);
+				}
+			}
+		}
+		if (!hasDirectionalTracks) return this._tracks;
+
+		const moverPosition = canvaslib.get_object_position(placeable, {
+			ignoreMotion: true,
+		});
+
+		const resolveSnapshotTrack = (track) => {
+			if (!track.towardsSnapshot) return track;
+			const targetPlaceable = fromUuidSync(track.towardsUuid)?.object ?? null;
+			const targetPosition = targetPlaceable
+				? canvaslib.get_object_position(targetPlaceable, {
+					ignoreMotion: track.towardsIgnoreMotion,
+				})
+				: null;
+			if (
+				typeof targetPosition?.x !== "number" ||
+				typeof targetPosition?.y !== "number" ||
+				typeof moverPosition?.x !== "number" ||
+				typeof moverPosition?.y !== "number"
+			) {
+				throw this.sequence._customError(
+					this,
+					"moveBy",
+					"could not resolve the `towards` / `awayFrom` target's position at play time"
+				);
+			}
+			const angle = Math.atan2(
+				targetPosition.y - moverPosition.y,
+				targetPosition.x - moverPosition.x
+			);
+			const component =
+				track.towardsAxis === "y" ? Math.sin(angle) : Math.cos(angle);
+			const resolved = { ...track, to: track.to * component };
+			delete resolved.towardsSnapshot;
+			delete resolved.towardsUuid;
+			delete resolved.towardsAxis;
+			delete resolved.towardsIgnoreMotion;
+			return resolved;
+		};
+
+		return {
+			...this._tracks,
+			x: this._tracks.x.map(resolveSnapshotTrack),
+			y: this._tracks.y.map(resolveSnapshotTrack),
+		};
 	}
 
 	/**

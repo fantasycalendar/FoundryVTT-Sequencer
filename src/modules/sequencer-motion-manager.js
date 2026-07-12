@@ -8,6 +8,7 @@ import {
 	sampleTrack,
 	motionHasReturningTracks,
 	resolveAttachedTo,
+	resolveTowardsComponent,
 } from "../lib/motion-lib.js";
 import flagManager from "../utils/flag-manager.js";
 import SequenceManager from "./sequence-manager.js";
@@ -28,13 +29,17 @@ class Motion {
 		this.creationTimeDelta = this.actualCreationTime - config.creationTimestamp;
 		this.startTime = performance.now();
 		this.meshOriginOffset = meshOriginOffset;
+		this.uuid = config.uuid;
 		this.finished = new Promise((resolve) => {
 			this._resolveFinished = resolve;
 		});
 		this.oscillate = config.oscillate ?? [];
-		this.noise = (config.noise ?? []).map((noise) => ({
+		this.noise = (config.noise ?? []).map((noise, noiseIndex) => ({
 			...noise,
-			waveform: canvaslib.buildNoiseWaveform(noise),
+			waveform: canvaslib.buildNoiseWaveform(
+				noise,
+				lib.createMersenneTwister(config.creationTimestamp + noiseIndex)
+			),
 		}));
 
 		this.tracks = {
@@ -57,14 +62,42 @@ class Motion {
 
 	/**
 	 * Build a runtime track from the section's TrackConfig: clone, fill in
-	 * `startTime`, and for absolute position/rotation tracks resolve `from`
-	 * to the rest state and convert document-space targets to mesh-space
-	 * via `meshOriginOffset`.
+	 * `startTime`, for additive scale tracks convert the signed scale
+	 * changes into multipliers of the rest scale, and for absolute
+	 * position/rotation tracks resolve `from` to the rest state and convert
+	 * document-space targets to mesh-space via `meshOriginOffset`.
 	 */
 	#buildTrack(sourceTrack, propertyName, restState, meshOriginOffset) {
 		const track = { ...sourceTrack, startTime: this.startTime - this.creationTimeDelta };
 		if (propertyName === "tint") {
 			track.lerpFn = track.colorSpace === "hsv" ? lib.lerpColorHSV : lib.lerpColor;
+		}
+		if (propertyName === "scale" && track.scaleAdditive) {
+			// The change is in document scale units, so the ratio is formed
+			// against the document's texture scale; the resulting multiplier
+			// is unit-free and applies cleanly to the mesh-space rest scale.
+			// Magnitude, so a mirrored (negative) scale keeps its sign.
+			const restScale =
+				Math.abs(
+					track.scaleAxis === "y"
+						? restState.documentScaleY
+						: restState.documentScaleX
+				) || 1;
+			const toMultiplier = (delta) => Math.max(0, (restScale + delta) / restScale);
+			if (track.form === "single") {
+				track.to = toMultiplier(track.to);
+			} else {
+				track.frames = track.frames.map((frame) => ({
+					...frame,
+					v: toMultiplier(frame.v),
+				}));
+				if (track.returnFrames) {
+					track.returnFrames = track.returnFrames.map((frame) => ({
+						...frame,
+						v: toMultiplier(frame.v),
+					}));
+				}
+			}
 		}
 		if (!track.absolute) return track;
 
@@ -139,12 +172,20 @@ class Motion {
 				if (sample === null) continue;
 				anyAlive = true;
 				switch (propertyName) {
-					case "x":
-						deltaX += track.absolute ? sample - track.from : sample;
+					case "x": {
+						const contributionX = track.towardsUuid
+							? sample * resolveTowardsComponent(track, this)
+							: sample;
+						deltaX += track.absolute ? contributionX - track.from : contributionX;
 						break;
-					case "y":
-						deltaY += track.absolute ? sample - track.from : sample;
+					}
+					case "y": {
+						const contributionY = track.towardsUuid
+							? sample * resolveTowardsComponent(track, this)
+							: sample;
+						deltaY += track.absolute ? contributionY - track.from : contributionY;
 						break;
+					}
 					case "rotation":
 						deltaAngle += track.absolute ? sample - track.from : sample;
 						break;
@@ -294,6 +335,15 @@ class PlaceableMotionAggregator {
 			alpha: target.alpha,
 			tint: target.tint ?? 0xffffff,
 		};
+
+		// Document-space texture scale, for converting `.scaleBy()` changes
+		// (document scale units) into mesh-space multipliers; the mesh's
+		// `target.scale` above also folds in the texture-to-grid pixel fit.
+		// Drawings have no texture scale, so 1 makes the change a fraction
+		// of the rest size.
+		const documentTexture = placeable.document.texture;
+		this.restState.documentScaleX = documentTexture?.scaleX ?? 1;
+		this.restState.documentScaleY = documentTexture?.scaleY ?? 1;
 
 		const documentRestState = canvaslib.getDocumentRestState(placeable);
 		this.lastDocumentState = {
