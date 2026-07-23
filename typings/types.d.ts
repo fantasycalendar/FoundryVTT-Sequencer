@@ -60,6 +60,11 @@ interface CoreMethods {
   ): CanvasPanSection;
 
   /**
+   * Creates a motion section. Until you call any other sections you'll be working on the Motion section.
+   */
+  motion(inTarget?: VisibleFoundryTypes | string): MotionSection;
+
+  /**
    * Creates a crosshair section. Until you call other Sequence methods, you will be working on the Crosshair section.
    */
   crosshair(inName?: string): CrosshairSection;
@@ -1114,6 +1119,257 @@ declare global {
     xray(inBool?: boolean): this;
   }
 
+  /**
+   * A per-waypoint object accepted by the waypoint (array) form of the
+   * motion value builders. `v` is the waypoint value; the remaining fields
+   * are optional per-segment overrides.
+   */
+  type MotionWaypoint<V> = {
+    v: V;
+    duration?: number;
+    hold?: number;
+    inEase?: string;
+    outEase?: string;
+    ease?: string;
+  };
+
+  /**
+   * Options for the single-value form of the motion value builders
+   * (`.moveTo()` single target, `.rotateTo()`, `.rotateBy()`, `.fadeTo()`,
+   * `.fadeBy()`, `.scaleTo()`, `.scaleBy()`, `.tintTo()`).
+   */
+  type MotionSingleOptions = {
+    duration: number;
+    ease?: string;
+    delay?: number;
+    return?: boolean;
+    easeOut?: string;
+    returnDuration?: number;
+  };
+
+  /**
+   * Options for the waypoint (array) form of the motion value builders.
+   * `easeOut` is rejected in this form; use per-waypoint `inEase` / `outEase`.
+   */
+  type MotionWaypointOptions<V> = {
+    duration?: number;
+    ease?: string;
+    delay?: number;
+    return?: boolean;
+    returnValues?: Array<V | MotionWaypoint<V>>;
+    returnDuration?: number;
+  };
+
+  type MotionMoveToOptions = MotionSingleOptions & {
+    ignoreMotion?: boolean;
+    attachTo?: boolean;
+  };
+
+  type MotionMoveByOptions = MotionSingleOptions & {
+    towards?: VisibleFoundryTypes | string;
+    awayFrom?: VisibleFoundryTypes | string;
+    attachTo?: boolean;
+    ignoreMotion?: boolean;
+  };
+
+  type MotionNoiseOptions = {
+    strength?: number | Vector2;
+    strengthScaledToObject?: number | Vector2;
+    frequency: number;
+    duration?: number;
+    rotationStrength?: number;
+    directionMin?: number;
+    directionMax?: number;
+    delay?: number;
+    fadeInDuration?: number;
+    fadeOutDuration?: number;
+  };
+
+  type MotionOscillateAxis = {
+    amplitude?: number;
+    strengthScaledToObject?: number;
+    phase?: number;
+    baseline?: number;
+  };
+
+  type MotionOscillateOptions = {
+    period: number;
+    waveform: "sine" | "triangle" | "square";
+    x?: MotionOscillateAxis;
+    y?: MotionOscillateAxis;
+    rotation?: MotionOscillateAxis;
+    scale?: MotionOscillateAxis;
+    alpha?: MotionOscillateAxis;
+    duration?: number;
+    delay?: number;
+    fadeInDuration?: number;
+    fadeOutDuration?: number;
+  };
+
+  /**
+   * The per-frame displacement of a target, returned by
+   * `Sequencer.MotionManager.getDisplacement()`. Position and rotation are
+   * absolute deltas; scale and alpha carry both an additive delta and a
+   * multiplier; tint is a per-channel multiplier.
+   */
+  type MotionDisplacement = {
+    deltaX: number;
+    deltaY: number;
+    deltaAngle: number;
+    deltaAlpha: number;
+    scaleMultiplierX: number;
+    scaleMultiplierY: number;
+    alphaMultiplier: number;
+    tintR: number;
+    tintG: number;
+    tintB: number;
+  };
+
+  type EndMotionsOptions = {
+    object?: VisibleFoundryTypes | string;
+    target?: VisibleFoundryTypes | string;
+    name?: string;
+    sequenceId?: string;
+    settle?: number;
+    sceneId?: string;
+  };
+
+  interface MotionSection
+    extends CoreMethods,
+      Section<MotionSection>,
+      HasUsers<MotionSection>,
+      HasName<MotionSection> {}
+
+  abstract class MotionSection {
+    /**
+     * Sets the Token, Tile, or Drawing this motion will animate. Accepts the placeable itself or its document.
+     */
+    on(inTarget: VisibleFoundryTypes | string): this;
+
+    /**
+     * Plays the motion forward, then holds the displaced position indefinitely, surviving reloads and scene changes.
+     * End it with Sequencer.MotionManager.endMotions(). Cannot be combined with .persistUntilUpdate().
+     */
+    persist(): this;
+
+    /**
+     * Plays the motion forward, then holds the displaced position until the placeable's document position or rotation
+     * is updated. Cannot be combined with .persist().
+     */
+    persistUntilUpdate(): this;
+
+    /**
+     * Moves the sprite toward the given target, then (by default) moves it back. Accepts an {x, y} coordinate, a
+     * placeable/document/name reference, a crosshair, or an array of waypoints for a multi-segment path.
+     */
+    moveTo(
+      inTarget: VisibleFoundryTypes | Vector2 | string,
+      inOptions?: MotionMoveToOptions
+    ): this;
+    moveTo(
+      inWaypoints: Array<Vector2 | MotionWaypoint<Vector2>>,
+      inOptions?: MotionWaypointOptions<Vector2>
+    ): this;
+
+    /**
+     * Offsets the sprite from its normal position, then (by default) moves it back. Accepts an {x, y} offset, a
+     * positive distance together with a towards/awayFrom target, or an array of waypoint offsets.
+     */
+    moveBy(inOffset: Vector2, inOptions?: MotionMoveByOptions): this;
+    moveBy(inDistance: number, inOptions: MotionMoveByOptions): this;
+    moveBy(
+      inWaypoints: Array<Vector2 | MotionWaypoint<Vector2>>,
+      inOptions?: MotionWaypointOptions<Vector2>
+    ): this;
+
+    /**
+     * Tints the sprite toward a target color, then (by default) tints back. Accepts a hex string or number, or an
+     * array of colors for a multi-segment sweep.
+     */
+    tintTo(inColor: number | HEX, inOptions?: MotionSingleOptions): this;
+    tintTo(
+      inColors: Array<number | HEX | MotionWaypoint<number | HEX>>,
+      inOptions?: MotionWaypointOptions<number | HEX>
+    ): this;
+
+    /**
+     * Rotates the sprite to the given angle in degrees, then (by default) rotates back. Accepts a single angle or an
+     * array of angles for a multi-segment path.
+     */
+    rotateTo(inRotation: number, inOptions?: MotionSingleOptions): this;
+    rotateTo(
+      inWaypoints: Array<number | MotionWaypoint<number>>,
+      inOptions?: MotionWaypointOptions<number>
+    ): this;
+
+    /**
+     * Rotates the sprite by the given number of degrees relative to its normal angle, then (by default) rotates back.
+     * Accepts a single delta or an array of deltas.
+     */
+    rotateBy(inRotation: number, inOptions?: MotionSingleOptions): this;
+    rotateBy(
+      inWaypoints: Array<number | MotionWaypoint<number>>,
+      inOptions?: MotionWaypointOptions<number>
+    ): this;
+
+    /**
+     * Fades the sprite to the given absolute opacity between 0 and 1, then (by default) fades back. Accepts a single
+     * opacity or an array of opacities.
+     */
+    fadeTo(inAlpha: number, inOptions?: MotionSingleOptions): this;
+    fadeTo(
+      inWaypoints: Array<number | MotionWaypoint<number>>,
+      inOptions?: MotionWaypointOptions<number>
+    ): this;
+
+    /**
+     * Shifts the sprite's opacity by the given amount between -1 and 1 (positive brightens, negative dims), then (by
+     * default) fades back. Accepts a single change or an array of changes.
+     */
+    fadeBy(inDelta: number, inOptions?: MotionSingleOptions): this;
+    fadeBy(
+      inWaypoints: Array<number | MotionWaypoint<number>>,
+      inOptions?: MotionWaypointOptions<number>
+    ): this;
+
+    /**
+     * Scales the sprite to a multiple of its normal size, then (by default) scales back. Accepts a positive number,
+     * an {x, y} object, or an array of waypoints.
+     */
+    scaleTo(
+      inScale: number | Vector2,
+      inOptions?: MotionSingleOptions
+    ): this;
+    scaleTo(
+      inWaypoints: Array<number | Vector2 | MotionWaypoint<number | Vector2>>,
+      inOptions?: MotionWaypointOptions<number | Vector2>
+    ): this;
+
+    /**
+     * Grows or shrinks the sprite by adding the given amount to its scale (positive grows, negative shrinks), then (by
+     * default) returns. Accepts a number, an {x, y} object, or an array of waypoints.
+     */
+    scaleBy(
+      inScale: number | Vector2,
+      inOptions?: MotionSingleOptions
+    ): this;
+    scaleBy(
+      inWaypoints: Array<number | Vector2 | MotionWaypoint<number | Vector2>>,
+      inOptions?: MotionWaypointOptions<number | Vector2>
+    ): this;
+
+    /**
+     * Layers random shake / jitter onto the motion. Requires exactly one of strength or strengthScaledToObject, and a
+     * frequency in milliseconds between shake positions.
+     */
+    noise(inOptions: MotionNoiseOptions): this;
+
+    /**
+     * Layers a periodic oscillation onto the motion. Requires a period and waveform, and at least one configured axis.
+     */
+    oscillate(inOptions: MotionOscillateOptions): this;
+  }
+
   type LocationEffect = {
     type: keyof typeof CONFIG.soundEffects | (string & {});
     intensity: number;
@@ -1830,6 +2086,30 @@ declare global {
     endAllSounds(inSceneId?: string, push?: boolean): Promise<void>;
   }
 
+  abstract class SequencerMotionManager {
+    /**
+     * Ends motions on the canvas. The first argument may be a placeable, document, uuid string, an options object
+     * carrying the filter, or null to end every motion. Returns the number of motions ended.
+     */
+    endMotions(
+      target: VisibleFoundryTypes | string | EndMotionsOptions | null,
+      options?: EndMotionsOptions,
+      push?: boolean
+    ): number;
+
+    /**
+     * Ends every motion matching the given filter. Shorthand for endMotions(null, options).
+     */
+    endAllMotions(options?: EndMotionsOptions, push?: boolean): number;
+
+    /**
+     * Reads the current per-frame displacement of the given target, or null if no motion is active on it.
+     */
+    getDisplacement(
+      target: VisibleFoundryTypes | string
+    ): MotionDisplacement | null;
+  }
+
   abstract class SequencerCrosshair {
     CALLBACKS: CrosshairCallbacks;
     PLACEMENT_RESTRICTIONS: CrosshairPlacementRestrictions;
@@ -1893,6 +2173,7 @@ declare global {
     const SectionManager: SequencerSectionManager;
     const EffectManager: SequencerEffectManager;
     const SoundManager: SequencerSoundManager;
+    const MotionManager: SequencerMotionManager;
     const Crosshair: SequencerCrosshair;
 
     function registerEase(
