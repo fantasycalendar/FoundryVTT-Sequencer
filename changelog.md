@@ -24,6 +24,11 @@
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now takes its arguments as a single options object: `collect(crosshair, { types, filterMethod, ignoreMotion })`. The old positional form still works but is deprecated and will be removed in a future version
 
+# Version 4.2.3
+- *Sequencer* - Adjusted module typing (thank you MrVauxs on github!)
+- *Effects* - Fixed position calculation on effects and sounds with tiles on v14 (thank you aljames-arctic on github!)
+- *Effects* - Fixed custom PF2e template shapes not working with `.scaleToObject()` (thank you MrVauxs on github!)
+- *Effects* - Fixed `.loopOptions()` with `loops` set not limiting the number of loops when combined with a `.duration()` longer than the effect file's own duration
 
 # Version 4.2.2
 - *Effects* - Fixed `.copySprite()` not copying the sprites of tokens with scale on them

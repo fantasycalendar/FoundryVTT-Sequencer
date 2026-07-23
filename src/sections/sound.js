@@ -180,6 +180,15 @@ class SoundSection extends Section {
 				`inOptions must be of type object`
 			);
 
+		if (inOptions.maxLoops !== undefined) {
+			lib.custom_warning(
+				"Sequencer",
+				"Sound | loopOptions' maxLoops option is deprecated, please use loops instead"
+			);
+			inOptions = { ...inOptions, loops: inOptions.loops ?? inOptions.maxLoops };
+			delete inOptions.maxLoops;
+		}
+
 		inOptions = foundry.utils.mergeObject(
 			{
 				loopDelay: 0,

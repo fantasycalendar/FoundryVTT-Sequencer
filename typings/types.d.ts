@@ -82,17 +82,17 @@ interface CoreMethods {
   /**
    * Plays all of this sequence's sections, resolves to the sequence instance
    */
-  play(inOptions?: PlayOptions): Promise<Sequence>;
+  play(inOptions?: PlayOptions): Promise<void>;
 
   /**
    * Turns the sequence into an array of objects to be reconstructed later
    */
-  toJSON(): Array<object>;
+  toJSON(): object;
 
   /**
    * Takes the serialized sequence array and returns a sequence ready to be played
    */
-  fromJSON(inJSON: Array<object>): Sequence;
+  fromJSON(inJSON: object): Sequence;
 }
 
 interface HasAudio<T> {

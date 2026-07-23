@@ -1948,7 +1948,7 @@ export default class CanvasEffect extends PIXI.Container {
 				!this.loopDelay
 			);
 		} else {
-			this.mediaLooping = this._startTime === 0 && this._endTime > this.mediaDuration && !(this.loops && this.loopDelay);
+			this.mediaLooping = this._startTime === 0 && this._endTime > this.mediaDuration && !this.loops;
 		}
 
 		// Resolve duration promise so that owner of effect may know when it is finished
@@ -4013,7 +4013,11 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this._ended || this._isEnding) {
 			return;
 		}
-		const endTime = this.data.persist ? (this._animationTimes.loopEnd ?? this._endTime) : this._endTime;
+		const endTime = this.data.persist
+			? (this._animationTimes.loopEnd ?? this._endTime)
+			: this.loops
+				? Math.min(this._endTime, this.mediaDuration)
+				: this._endTime;
 		if (this.mediaCurrentTime < endTime) {
 			return;
 		}
@@ -4031,7 +4035,10 @@ export default class CanvasEffect extends PIXI.Container {
 
 		// if we reached maximum loops, stay paused or even end the effect
 		if ((this.loops || !this.data.persist) && this._currentLoops >= this.loops) {
-			if (!this.data.persist || (this.data.persist && this.data.loopOptions?.endOnLastLoop)) {
+			// when the video is shorter than the effect's duration, hold the last
+			// frame and let the end timeout at _totalDuration remove the effect
+			const holdsLastFrame = !this.data.persist && this._endTime > this.mediaDuration;
+			if (!holdsLastFrame && (!this.data.persist || this.data.loopOptions?.endOnLastLoop)) {
 				this.endEffect();
 			}
 			this._ticker?.remove(this.loopHandler, this);
