@@ -99,7 +99,10 @@ class Motion {
 				}
 			}
 		}
-		if (!track.absolute) return track;
+		if (!track.absolute) {
+			this.#finalizeKeyframeTrack(track);
+			return track;
+		}
 
 		if (propertyName === "x") {
 			track.from = restState.x;
@@ -140,7 +143,28 @@ class Motion {
 		} else if (propertyName === "tint") {
 			track.from = restState.tint;
 		}
+		this.#finalizeKeyframeTrack(track);
 		return track;
+	}
+
+	/**
+	 * Precompute the per-frame invariants of a keyframe-form track once its
+	 * frames are in their final values: the summed outward duration and the
+	 * return-frame list prefixed with the last outward frame. `sampleTrack`
+	 * reads these instead of recomputing them every frame.
+	 */
+	#finalizeKeyframeTrack(track) {
+		if (track.form !== "keyframe") return;
+		track.outwardDuration = track.frames.reduce(
+			(sum, frame) => sum + frame.segmentDuration,
+			0
+		);
+		if (track.returnFrames) {
+			track.effectiveReturnFrames = [
+				track.frames[track.frames.length - 1],
+				...track.returnFrames,
+			];
+		}
 	}
 
 	sampleAt(now) {

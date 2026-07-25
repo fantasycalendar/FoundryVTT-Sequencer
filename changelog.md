@@ -18,7 +18,7 @@
 - *Motions* - Added `.rotateBy()` for rotating the sprite by an amount, like a full spin that ends where it started
 - *Motions* - Added `.scaleBy()` for growing or shrinking the sprite's scale by an amount, where `.scaleTo()` scales it to a multiple of its normal size
 - *Motions* - Added `.fadeBy()` for shifting the sprite's opacity up or down by an amount
-- *Motions* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotion()` plays the return animation
+- *Motions* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotions()` plays the return animation
 - *Motions* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion to a token before updating its position with no visible snap!
 - *Motions* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead

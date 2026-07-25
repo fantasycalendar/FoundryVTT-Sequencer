@@ -795,6 +795,8 @@ export default class MotionSection extends Section {
 					"moveBy",
 					"distance must be a positive number; use `awayFrom` to push away."
 				);
+			options.attachTo = inOptions.attachTo ?? false;
+			options.ignoreMotion = inOptions.ignoreMotion ?? false;
 			if (typeof options.attachTo !== "boolean")
 				throw this.sequence._customError(
 					this,
@@ -992,15 +994,20 @@ export default class MotionSection extends Section {
 
 		let trackConfig;
 		if (isKeyframe) {
+			const normalizeColorEntry = (entry) => {
+				if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
+					return { ...entry, v: this._normalizeColor("tintTo", entry.v) };
+				}
+				return this._normalizeColor("tintTo", entry);
+			};
+			const normalizedReturnValues = options.returnValues?.map(normalizeColorEntry);
+			const keyframeOptions = normalizedReturnValues
+				? { ...options, returnValues: normalizedReturnValues }
+				: options;
 			trackConfig = this._buildKeyframeTrack(
 				"tintTo",
-				inColor.map((entry) => {
-					if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
-						return { ...entry, v: this._normalizeColor("tintTo", entry.v) };
-					}
-					return this._normalizeColor("tintTo", entry);
-				}),
-				options,
+				inColor.map(normalizeColorEntry),
+				keyframeOptions,
 				"tint",
 				"inColor"
 			);
@@ -1258,7 +1265,7 @@ export default class MotionSection extends Section {
 
 		let trackConfig;
 		if (isKeyframe) {
-			if (options.returnValues !== undefined) {
+			if (options.returnValues !== undefined && Array.isArray(options.returnValues)) {
 				for (const entry of options.returnValues) {
 					validateAlpha(entry && typeof entry === "object" && "v" in entry ? entry.v : entry);
 				}

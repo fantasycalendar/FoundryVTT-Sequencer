@@ -122,7 +122,7 @@ Anything else (templates, regions, lights, etc.) will be rejected when the motio
 
 `.name(inString)`
 
-Names the motion so it can be referenced later by [`Sequencer.MotionManager.endMotions()`](#ending-and-querying-motions) or [`Sequencer.MotionManager.endAllMotions()`](#ending-and-querying-motions).
+Names the motion so it can be referenced later by [`Sequencer.MotionManager.endMotions()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/motion-manager?id=end-motions) or [`Sequencer.MotionManager.endAllMotions()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/motion-manager?id=end-all-motions).
 
 Useful for persistent motions (see [`.persist()`](#persist) below), where the name is the handle you use to wind the motion down.
 

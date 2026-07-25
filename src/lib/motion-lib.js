@@ -171,11 +171,9 @@ export function sampleTrack(track, motion, now) {
 		return null;
 	}
 
-	// Keyframe form.
-	const outwardDuration = track.frames.reduce(
-		(sum, frame) => sum + frame.segmentDuration,
-		0
-	);
+	// Keyframe form. `outwardDuration` and `effectiveReturnFrames` are
+	// precomputed once in the motion manager's track finalization.
+	const outwardDuration = track.outwardDuration;
 	const lastFrame = track.frames[track.frames.length - 1];
 	const firstFrame = track.frames[0];
 
@@ -183,8 +181,7 @@ export function sampleTrack(track, motion, now) {
 		const returnElapsed = now - motion.returnTriggeredAt;
 		const returnDuration = motion.settleOverride ?? track.returnDuration;
 		if (track.returnFrames) {
-			const effectiveReturnFrames = [lastFrame, ...track.returnFrames];
-			return sampleFrames(effectiveReturnFrames, returnElapsed, lerpFn);
+			return sampleFrames(track.effectiveReturnFrames, returnElapsed, lerpFn);
 		}
 		if (track.defaultReturn) {
 			if (returnElapsed >= returnDuration) return null;
@@ -205,8 +202,7 @@ export function sampleTrack(track, motion, now) {
 
 	if (track.returnFrames) {
 		const returnElapsed = elapsed - outwardDuration;
-		const effectiveReturnFrames = [lastFrame, ...track.returnFrames];
-		return sampleFrames(effectiveReturnFrames, returnElapsed, lerpFn);
+		return sampleFrames(track.effectiveReturnFrames, returnElapsed, lerpFn);
 	}
 
 	if (track.defaultReturn) {
