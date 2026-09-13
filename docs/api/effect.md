@@ -1022,11 +1022,14 @@ Default parameters:
     ease: "linear",
     delay: 0,
     pingPong: false,
-    gridUnits: false
+    gridUnits: false,
+    absolute: false
 }
 ```
 
 Grid units will work if you are animating the `width`, `height`, `position.x`, or `position.y`.
+
+The `absolute` property ensures that the values that this animation is playing will not be additive, eg; if you loop the alpha of an effect between 1 and 0.5, not enabling `absolute` will cause the loop to add on top of the effect's existing alpha. With `absolute` enabled, it will force it to loop between 1 and 0.5, regardless of its starting alpha.
 
 Check out what easings are available here: https://easings.net/
 

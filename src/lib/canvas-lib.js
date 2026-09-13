@@ -1249,6 +1249,12 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
       return `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`;
     }
   }
+	if (
+		inOptions?.absolute !== undefined &&
+		typeof inOptions.absolute !== "boolean"
+	) {
+		return `inOptions.absolute must be of type boolean`;
+	}
 
   return {
     target: inTarget,
@@ -1263,6 +1269,7 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
       inOptions?.loops === undefined || !lib.is_real_number(inOptions?.loops),
     pingPong: inOptions?.pingPong ?? false,
     gridUnits: inOptions?.gridUnits ?? false,
+    absolute: inOptions?.absolute ?? false,
 	  screenSpace: inOptions?.screenSpace ?? false,
   };
 }
