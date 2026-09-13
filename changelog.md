@@ -4,6 +4,7 @@
 - *Sequencer* - Fixed finished sequences never being cleared out when the Sequencer Manager was never opened
 - *Effects* - Effects placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.stretchTo()`, `.rotateTowards()`) now follow its visible position when it is moving via a `.motion()`. Pass `ignoreMotion: true` to use the document position instead, for example to keep a shadow on the ground beneath a flying token
 - *Effects* - Fixed `.copySprite()` leaking video memory on tokens with a token ring enabled
+- *Effects* - Fixed `.mask()` no longer applying to a token or tile after its image was changed
 - *Sounds* - Sounds placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.toLocation()`) now follow its visible position when it is moving via a `.motion()`, with the same `ignoreMotion: true` opt-out
 - *Animations* - Fixed `.animation()` getting stuck waiting forever on a token that never finished drawing
 - *Motions* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available

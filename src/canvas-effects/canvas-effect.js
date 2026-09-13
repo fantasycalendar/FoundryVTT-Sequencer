@@ -2562,7 +2562,17 @@ export default class CanvasEffect extends PIXI.Container {
 
 			} else if (docName === "Token" || docName === "Tile") {
 				if (!obj?.mesh) continue;
-				maskFilter.masks.push(obj.mesh);
+				let currentMesh = obj.mesh;
+				maskFilter.masks.push(currentMesh);
+				hooksManager.addHook(this.uuid, "draw" + docName, (placeable) => {
+					if (placeable.document !== documentObj) return;
+					const newMesh = placeable.mesh;
+					if (!newMesh || newMesh === currentMesh) return;
+					const staleIndex = maskFilter.masks.indexOf(currentMesh);
+					if (staleIndex === -1) return;
+					maskFilter.masks[staleIndex] = newMesh;
+					currentMesh = newMesh;
+				});
 				continue;
 			} else if (docName === "MeasuredTemplate" || docName === "Drawing") {
 				// MeasuredTemplates are always instantiated; off-level

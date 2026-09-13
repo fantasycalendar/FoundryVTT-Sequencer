@@ -36,7 +36,7 @@ export default class MaskFilter extends foundry.canvas.rendering.filters.Abstrac
     const renderer = filterManager.renderer;
 
     for (const mask of this.masks) {
-      if (mask?.obj?.destroyed) continue;
+      if (!mask || mask.destroyed || mask.obj?.destroyed) continue;
       const renderable = mask.renderable;
       mask.renderable = true;
       mask.render(renderer);
