@@ -21,6 +21,7 @@ export default {
 		let top;
 		if (typeof inElevation === "number") {
 			bottom = inElevation;
+			top = inElevation;
 		} else if (Array.isArray(inElevation)
 			&& inElevation.length === 2
 			&& inElevation.every(n => typeof n === "number")) {

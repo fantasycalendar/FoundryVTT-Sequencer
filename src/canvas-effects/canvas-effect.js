@@ -12,6 +12,7 @@ import { SequencerAboveUILayer } from "./effects-layer.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import PluginsManager from "../utils/plugins-manager.js";
+import { is_real_number } from "../lib/lib.js";
 
 const hooksManager = {
 	_byHook: new Map(),
@@ -2383,12 +2384,17 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateElevation() {
-		let targetElevation = Math.max(
-			canvaslib.get_object_elevation(this.source ?? {}),
-			canvaslib.get_object_elevation(this.target ?? {})
+		// Pick the lowest real elevation; regions may have -Infinity in their bottom elevation, which means the effect
+		// would end up below everything, including the scene background image
+		let sourceElevation = canvaslib.get_object_elevation(this.source ?? {});
+		let targetElevation = canvaslib.get_object_elevation(this.target ?? {});
+
+		let maxElevation = Math.max(
+			lib.is_real_number(sourceElevation) ? sourceElevation : 0,
+			lib.is_real_number(targetElevation) ? targetElevation : 0
 		);
 
-		const offset = this.data.elevation?.absolute ? 0 : targetElevation;
+		const offset = this.data.elevation?.absolute ? 0 : maxElevation;
 		const bottom = (this.data.elevation?.elevation ?? 0) + offset;
 		const top = (typeof this.data.elevation?.top === "number")
 			? this.data.elevation.top + offset
