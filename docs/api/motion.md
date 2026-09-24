@@ -126,6 +126,21 @@ Names the motion so it can be referenced later by [`Sequencer.MotionManager.endM
 
 Useful for persistent motions (see [`.persist()`](#persist) below), where the name is the handle you use to wind the motion down.
 
+## Z-Index
+
+`.zIndex(number)`
+
+Examples:
+```js
+.zIndex(1000)
+```
+
+Draws the sprite at the given ordering value while the motion runs, then restores its normal order when the motion ends. A higher value draws in front.
+
+Use this when a motion lifts a token "up" and you want it drawn in front of its neighbors: the sprite's visual height on its own does not change which token draws on top, since Foundry orders tokens at the same elevation by a separate value. `.zIndex()` sets that value for the duration of the motion.
+
+The ordering only applies against other objects at the same elevation; it does not lift the sprite above things on a higher elevation. Pair it with [`.persist()`](#persist) to hold the ordering until the motion is ended.
+
 ## Move To
 
 `.moveTo(target, options)` or `.moveTo(waypoints, options)`
@@ -176,6 +191,7 @@ When the first argument is a single position or placeable:
 - `returnDuration: number` (default mirrors `duration`) - how long the return animation takes
 - `ignoreMotion: boolean` (default `false`) - when the target is a placeable or document, target its document position instead of its motion-displaced visible position. Has no effect on a plain `{ x, y }` target
 - `attachTo: boolean` (default `false`) - when the target is a placeable, document, or name reference, follow its **live** position each frame instead of the position it had when `.moveTo()` was called. Use this to intercept a moving target: moving toward a token that is itself flying via a `.motion()` curves toward where it is *now*, frame by frame, rather than a frozen point. Has no effect on a plain `{ x, y }` target (and throws if combined with one). The return leg still brings the sprite back to its own starting position. Combine with [`.persist()`](#persist) for an indefinite chase. Honors `ignoreMotion`: with `attachTo: true, ignoreMotion: true` the chase follows the target's document position rather than its motion-displaced visible position
+- `gridUnits: boolean` (default `false`) - read the `{ x, y }` target in grid squares instead of pixels, so `{ x: 2, y: 3 }` means the cell two squares right and three down from the scene's top-left. Only applies to a plain `{ x, y }` target; passing it with a placeable, document, named object, or crosshair throws, since those already resolve to an exact position
 
 The default `return: true` reflects the fact that motion is visual indication: the sprite goes somewhere, then comes back, because the document never moved. If you want the sprite to stay at the displaced position until something else ends it, combine `return: false` with [`.persist()`](#persist).
 
@@ -188,6 +204,7 @@ When the first argument is an array, the motion plays a path through every waypo
 - `delay: number` (default `0`) - milliseconds to wait before the motion starts
 - `returnValues: array` - optional second waypoint array to play after the outward path completes
 - `returnDuration: number` - total time for the return path
+- `gridUnits: boolean` (default `false`) - read every waypoint's coordinates in grid squares instead of pixels
 
 Per-waypoint fields (when entries are objects):
 
@@ -209,7 +226,9 @@ Examples:
 ```js
 .moveBy({ x: 100, y: -50 }, { duration: 500 })
 .moveBy({ x: 100 }, { duration: 500 })
+.moveBy({ x: 2 }, { duration: 500, gridUnits: true })
 .moveBy(80, { awayFrom: attacker, duration: 300, easeOut: "easeInQuad" })
+.moveBy(3, { awayFrom: attacker, duration: 300, gridUnits: true })
 .moveBy(60, { towards: grappler, attachTo: true, duration: 400 })
 .moveBy(
     [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 0 }],
@@ -224,6 +243,8 @@ Offsets the sprite from its normal position, in pixels, then (by default) moves 
 - An array of waypoint offsets, played through in order, with the same per-waypoint fields as [`.moveTo()`](#move-to) (`duration`, `hold`, `inEase`, `outEase`). End the array at `{ x: 0, y: 0 }` to land back at the start; a non-zero final waypoint snaps home when the motion ends
 
 The single forms take the same base options as [`.moveTo()`](#move-to)'s single-target form (`duration`, `ease`, `delay`, `return`, `easeOut`, `returnDuration`); the waypoint form takes its waypoint options (`duration`, `ease`, `delay`, `return`, `returnValues`, `returnDuration`).
+
+Pass `gridUnits: true` to read every distance in grid squares instead of pixels, in all three forms: `{ x: 2 }` slides two squares right, `.moveBy(3, { awayFrom: attacker, gridUnits: true })` knocks back three squares.
 
 ### Directional offsets
 

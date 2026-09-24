@@ -9,19 +9,20 @@
 - *Sounds* - Sounds placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.toLocation()`) now follow its visible position when it is moving via a `.motion()`, with the same `ignoreMotion: true` opt-out
 - *Animations* - Fixed `.animation()` getting stuck waiting forever on a token that never finished drawing
 - *Motions* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
-- *Motions* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable its visible position is used, so moving toward a token flying via a `.motion()` lands where it appears; pass `ignoreMotion: true` to target the document position, or `attachTo: true` to follow the target every frame
+- *Motions* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable its visible position is used, so moving toward a token flying via a `.motion()` lands where it appears
 - *Motions* - Added `.noise()` for random shake / jitter onto a motion additively
 - *Motions* - Added `.oscillate()` for layering a periodic wave onto a motion additively
 - *Motions* - Added `.tintTo()` for tinting the sprite to a different color temporarily
 - *Motions* - Added `.scaleTo()` for scaling the sprite relative to its normal size, uniformly or per axis
 - *Motions* - Added `.rotateTo()` for rotating the sprite to an angle
 - *Motions* - Added `.fadeTo()` for fading the sprite to an opacity
-- *Motions* - Added `.moveBy()` for offsetting the sprite by a fixed amount, or toward or away from another object for knockback and grapple effects; pass `attachTo: true` to keep the direction following the target as it moves
+- *Motions* - Added `.moveBy()` for offsetting the sprite by a fixed amount, or toward or away from another object for knockback and grapple effects
 - *Motions* - Added `.rotateBy()` for rotating the sprite by an amount, like a full spin that ends where it started
 - *Motions* - Added `.scaleBy()` for growing or shrinking the sprite's scale by an amount, where `.scaleTo()` scales it to a multiple of its normal size
 - *Motions* - Added `.fadeBy()` for shifting the sprite's opacity up or down by an amount
 - *Motions* - Added `.persist()`, which holds the displaced position indefinitely until `Sequencer.MotionManager.endMotions()` plays the return animation
 - *Motions* - Added `.persistUntilUpdate()`, which holds the motion until the placeable's document is updated and then ends the motion without its return animation. Useful for adding motion to a token before updating its position with no visible snap!
+- *Motions* - Added `.zIndex()` for drawing the sprite in front of its same-elevation neighbors while the motion runs, so a token a motion lifts up is drawn on top instead of ordering by its normal position
 - *Motions* - Added `Sequencer.MotionManager` for ending or inspecting motions' actual world position
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now collects placeables at their visible position, so a crosshair over a token flying via a `.motion()` catches what you see under it. Pass `{ ignoreMotion: true }` to collect at the document position instead
 - *Crosshairs* - `Sequencer.Crosshair.collect()` now takes its arguments as a single options object: `collect(crosshair, { types, filterMethod, ignoreMotion })`. The old positional form still works but is deprecated and will be removed in a future version

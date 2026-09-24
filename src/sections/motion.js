@@ -17,6 +17,7 @@ export default class MotionSection extends Section {
 		this._originObject = null;
 		this._persist = false;
 		this._persistUntilUpdate = false;
+		this._zIndex = null;
 		this._tracks = {
 			x: [],
 			y: [],
@@ -94,6 +95,31 @@ export default class MotionSection extends Section {
 				"`.persistUntilUpdate()` and `.persist()` are mutually exclusive; pick one persistence mode."
 			);
 		this._persistUntilUpdate = true;
+		return this;
+	}
+
+	/**
+	 * Draws the sprite at the given ordering value while the motion runs,
+	 * then restores its normal order when the motion ends. Use this to keep
+	 * a token that a motion lifts "up" drawn in front of its neighbors at
+	 * the same elevation, since the sprite's visual height alone does not
+	 * change which token draws on top.
+	 *
+	 * A higher value draws in front. The value controls ordering only
+	 * against other objects at the same elevation; it does not lift the
+	 * sprite above things on a higher elevation.
+	 *
+	 * @param {number} inZIndex
+	 * @returns {MotionSection}
+	 */
+	zIndex(inZIndex) {
+		if (!lib.is_real_number(inZIndex))
+			throw this.sequence._customError(
+				this,
+				"zIndex",
+				"inZIndex must be a real number"
+			);
+		this._zIndex = inZIndex;
 		return this;
 	}
 
@@ -473,13 +499,20 @@ export default class MotionSection extends Section {
 	 *
 	 * Required: `duration` (ms).
 	 * Optional: `ease`, `delay`, `return` (default true), `easeOut`,
-	 * `returnDuration`, `ignoreMotion` (default false). The return-leg
-	 * defaults to mirroring the forward leg unless overridden.
+	 * `returnDuration`, `ignoreMotion` (default false), `gridUnits`
+	 * (default false). The return-leg defaults to mirroring the forward
+	 * leg unless overridden.
+	 *
+	 * With `gridUnits: true` a literal `{x, y}` target is read in grid
+	 * squares instead of pixels. Only valid for a literal `{x, y}`;
+	 * passing it with a placeable, document, named object, or crosshair
+	 * throws.
 	 *
 	 * Keyframe form accepts: `duration`, `ease`, `delay`, `returnValues`,
-	 * `returnDuration`. Each waypoint is `{x, y}`, or a per-key object
-	 * `{v: {x, y}, duration?, hold?, inEase?, outEase?}` for fine-grained
-	 * control. A per-key `hold` (ms) dwells at that waypoint before continuing.
+	 * `returnDuration`, `gridUnits`. Each waypoint is `{x, y}`, or a per-key
+	 * object `{v: {x, y}, duration?, hold?, inEase?, outEase?}` for
+	 * fine-grained control. A per-key `hold` (ms) dwells at that waypoint
+	 * before continuing.
 	 *
 	 * @param {object|string|array} inTarget
 	 * @param {object} [inOptions={}]
@@ -504,10 +537,10 @@ export default class MotionSection extends Section {
 		let options;
 		if (isKeyframe) {
 			if ("easeOut" in inOptions) {
-				throw this.sequence._customError(
+				this.sequence._showWarning(
 					this,
 					"moveTo",
-					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
 				);
 			}
 			if ("ignoreMotion" in inOptions) {
@@ -533,9 +566,17 @@ export default class MotionSection extends Section {
 					ease: "linear",
 					delay: 0,
 					return: true,
+					gridUnits: false,
 				},
 				inOptions
 			);
+
+			if (typeof options.gridUnits !== "boolean")
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"options.gridUnits must be of type boolean"
+				);
 		} else {
 			options = foundry.utils.mergeObject(
 				{
@@ -547,6 +588,7 @@ export default class MotionSection extends Section {
 					returnDuration: undefined,
 					ignoreMotion: false,
 					attachTo: false,
+					gridUnits: false,
 				},
 				inOptions
 			);
@@ -562,6 +604,12 @@ export default class MotionSection extends Section {
 					this,
 					"moveTo",
 					"options.attachTo must be of type boolean"
+				);
+			if (typeof options.gridUnits !== "boolean")
+				throw this.sequence._customError(
+					this,
+					"moveTo",
+					"options.gridUnits must be of type boolean"
 				);
 
 			// Default the return-leg fields off the outward-leg ones.
@@ -592,6 +640,12 @@ export default class MotionSection extends Section {
 						"moveTo",
 						"`attachTo: true` cannot follow a crosshair; a crosshair is a one-time placement, not a placeable that keeps moving."
 					);
+				if (options.gridUnits)
+					throw this.sequence._customError(
+						this,
+						"moveTo",
+						"`gridUnits` only applies to a literal {x, y} target; a crosshair already resolves to an absolute position."
+					);
 
 				const crosshairDoc = validatedTarget.document ?? validatedTarget;
 				const orientation = crosshairDoc.getOrientation().source;
@@ -621,6 +675,12 @@ export default class MotionSection extends Section {
 				);
 
 			if (isPlaceableOrDocument) {
+				if (options.gridUnits)
+					throw this.sequence._customError(
+						this,
+						"moveTo",
+						"`gridUnits` only applies to a literal {x, y} target; a placeable, document, or named object already resolves to an absolute position."
+					);
 				attachToUuid =
 					validatedTarget.document?.uuid ?? validatedTarget.uuid ?? null;
 				if (options.attachTo && !attachToUuid)
@@ -671,6 +731,11 @@ export default class MotionSection extends Section {
 			yConfig.attachAxis = "y";
 		}
 
+		if (options.gridUnits) {
+			xConfig.gridUnits = true;
+			yConfig.gridUnits = true;
+		}
+
 		this._tracks.x.push(xConfig);
 		this._tracks.y.push(yConfig);
 		return this;
@@ -703,13 +768,16 @@ export default class MotionSection extends Section {
 	 * `Sequencer.MotionManager.endMotions()` releases it.
 	 *
 	 * Options: `duration` (required, ms), `ease`, `delay`, `return`
-	 * (default `true`), `easeOut`, `returnDuration`, and for the
-	 * directional form `towards` / `awayFrom` (mutually exclusive),
-	 * `attachTo` (default `false`), `ignoreMotion` (default `false`,
-	 * resolves the direction against the target's document position
-	 * instead of its motion-displaced visible position). The keyframe form
-	 * accepts `duration`, `ease`, `delay`, `return`, `returnValues`,
-	 * `returnDuration`.
+	 * (default `true`), `easeOut`, `returnDuration`, `gridUnits`
+	 * (default `false`), and for the directional form `towards` /
+	 * `awayFrom` (mutually exclusive), `attachTo` (default `false`),
+	 * `ignoreMotion` (default `false`, resolves the direction against the
+	 * target's document position instead of its motion-displaced visible
+	 * position). The keyframe form accepts `duration`, `ease`, `delay`,
+	 * `return`, `returnValues`, `returnDuration`, `gridUnits`.
+	 *
+	 * With `gridUnits: true` every distance is read in grid squares instead
+	 * of pixels, in all three forms.
 	 *
 	 * @param {object|number|array} inOffset
 	 * @param {object} [inOptions={}]
@@ -739,6 +807,14 @@ export default class MotionSection extends Section {
 		const directionSign = "awayFrom" in inOptions ? -1 : 1;
 		const isKeyframe = Array.isArray(inOffset);
 
+		const gridUnits = inOptions.gridUnits ?? false;
+		if (typeof gridUnits !== "boolean")
+			throw this.sequence._customError(
+				this,
+				"moveBy",
+				"options.gridUnits must be of type boolean"
+			);
+
 		if (isKeyframe && directionTarget !== undefined)
 			throw this.sequence._customError(
 				this,
@@ -758,7 +834,40 @@ export default class MotionSection extends Section {
 				"`ignoreMotion` only affects a `towards` / `awayFrom` direction; pass one of them."
 			);
 
-		const options = this._mergeScalarTrackOptions("moveBy", isKeyframe, inOptions);
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions)
+				this.sequence._showWarning(
+					this,
+					"moveBy",
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+				},
+				inOptions
+			);
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined) options.returnDuration = options.duration;
+		}
 
 		if (isKeyframe) {
 			const xConfig = this._buildKeyframeTrack(
@@ -777,6 +886,10 @@ export default class MotionSection extends Section {
 			);
 			xConfig.absolute = false;
 			yConfig.absolute = false;
+			if (gridUnits) {
+				xConfig.gridUnits = true;
+				yConfig.gridUnits = true;
+			}
 			this._tracks.x.push(xConfig);
 			this._tracks.y.push(yConfig);
 			return this;
@@ -852,6 +965,7 @@ export default class MotionSection extends Section {
 				config.towardsAxis = axis;
 				config.towardsIgnoreMotion = options.ignoreMotion;
 				if (!options.attachTo) config.towardsSnapshot = true;
+				if (gridUnits) config.gridUnits = true;
 				this._tracks[axis].push(config);
 			}
 			return this;
@@ -885,6 +999,7 @@ export default class MotionSection extends Section {
 				);
 				config.absolute = false;
 				config.from = 0;
+				if (gridUnits) config.gridUnits = true;
 				this._tracks[axis].push(config);
 			}
 			return this;
@@ -946,10 +1061,10 @@ export default class MotionSection extends Section {
 		let options;
 		if (isKeyframe) {
 			if ("easeOut" in inOptions) {
-				throw this.sequence._customError(
+				this.sequence._showWarning(
 					this,
 					"tintTo",
-					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
 				);
 			}
 
@@ -1104,7 +1219,40 @@ export default class MotionSection extends Section {
 			);
 
 		const isKeyframe = Array.isArray(inRotation);
-		const options = this._mergeScalarTrackOptions("rotateTo", isKeyframe, inOptions);
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions)
+				this.sequence._showWarning(
+					this,
+					"rotateTo",
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+				},
+				inOptions
+			);
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined) options.returnDuration = options.duration;
+		}
 
 		let trackConfig;
 		if (isKeyframe) {
@@ -1177,7 +1325,40 @@ export default class MotionSection extends Section {
 			);
 
 		const isKeyframe = Array.isArray(inRotation);
-		const options = this._mergeScalarTrackOptions("rotateBy", isKeyframe, inOptions);
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions)
+				this.sequence._showWarning(
+					this,
+					"rotateBy",
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+				},
+				inOptions
+			);
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined) options.returnDuration = options.duration;
+		}
 
 		let trackConfig;
 		if (isKeyframe) {
@@ -1261,7 +1442,40 @@ export default class MotionSection extends Section {
 		};
 
 		const isKeyframe = Array.isArray(inAlpha);
-		const options = this._mergeScalarTrackOptions("fadeTo", isKeyframe, inOptions);
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions)
+				this.sequence._showWarning(
+					this,
+					"fadeTo",
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+				},
+				inOptions
+			);
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined) options.returnDuration = options.duration;
+		}
 
 		let trackConfig;
 		if (isKeyframe) {
@@ -1352,7 +1566,40 @@ export default class MotionSection extends Section {
 		};
 
 		const isKeyframe = Array.isArray(inDelta);
-		const options = this._mergeScalarTrackOptions("fadeBy", isKeyframe, inOptions);
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions)
+				this.sequence._showWarning(
+					this,
+					"fadeBy",
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+				},
+				inOptions
+			);
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined) options.returnDuration = options.duration;
+		}
 
 		let trackConfig;
 		if (isKeyframe) {
@@ -1486,7 +1733,40 @@ export default class MotionSection extends Section {
 
 		const additive = methodName === "scaleBy";
 		const isKeyframe = Array.isArray(inScale);
-		const options = this._mergeScalarTrackOptions(methodName, isKeyframe, inOptions);
+		let options;
+		if (isKeyframe) {
+			if ("easeOut" in inOptions)
+				this.sequence._showWarning(
+					this,
+					methodName,
+					"`easeOut` has no effect on keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
+				);
+			options = foundry.utils.mergeObject(
+				{
+					returnValues: undefined,
+					duration: undefined,
+					returnDuration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+				},
+				inOptions
+			);
+		} else {
+			options = foundry.utils.mergeObject(
+				{
+					duration: undefined,
+					ease: "linear",
+					delay: 0,
+					return: true,
+					easeOut: undefined,
+					returnDuration: undefined,
+				},
+				inOptions
+			);
+			if (options.easeOut === undefined) options.easeOut = options.ease;
+			if (options.returnDuration === undefined) options.returnDuration = options.duration;
+		}
 
 		if (isKeyframe) {
 			const normalizedEntries = inScale.map((entry) => {
@@ -1536,53 +1816,6 @@ export default class MotionSection extends Section {
 		}
 
 		return this;
-	}
-
-	/**
-	 * @private
-	 *
-	 * Shared options-merging for the scalar-track builders (`rotateTo`,
-	 * `fadeTo`, `scaleTo`). Mirrors the keyframe/single split `moveTo` and
-	 * `tintTo` use: the keyframe form rejects `easeOut` and accepts
-	 * `returnValues`; the single form defaults `easeOut`/`returnDuration`
-	 * off the forward leg.
-	 */
-	_mergeScalarTrackOptions(methodName, isKeyframe, inOptions) {
-		if (isKeyframe) {
-			if ("easeOut" in inOptions) {
-				throw this.sequence._customError(
-					this,
-					methodName,
-					"`easeOut` is not compatible with keyframe tracks; use per-key `inEase` / `outEase` on the keyframes themselves."
-				);
-			}
-			return foundry.utils.mergeObject(
-				{
-					returnValues: undefined,
-					duration: undefined,
-					returnDuration: undefined,
-					ease: "linear",
-					delay: 0,
-					return: true,
-				},
-				inOptions
-			);
-		}
-		const options = foundry.utils.mergeObject(
-			{
-				duration: undefined,
-				ease: "linear",
-				delay: 0,
-				return: true,
-				easeOut: undefined,
-				returnDuration: undefined,
-			},
-			inOptions
-		);
-		if (options.easeOut === undefined) options.easeOut = options.ease;
-		if (options.returnDuration === undefined)
-			options.returnDuration = options.duration;
-		return options;
 	}
 
 	/**
@@ -2219,6 +2452,7 @@ export default class MotionSection extends Section {
 			name: this._name || null,
 			persist: this._persist,
 			persistUntilUpdate: this._persistUntilUpdate,
+			zIndex: this._zIndex,
 			tracks: resolvedTracks,
 			noise: resolvedNoise,
 			oscillate: resolvedOscillate,

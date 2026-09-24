@@ -1163,6 +1163,7 @@ declare global {
   type MotionMoveToOptions = MotionSingleOptions & {
     ignoreMotion?: boolean;
     attachTo?: boolean;
+    gridUnits?: boolean;
   };
 
   type MotionMoveByOptions = MotionSingleOptions & {
@@ -1170,6 +1171,15 @@ declare global {
     awayFrom?: VisibleFoundryTypes | string;
     attachTo?: boolean;
     ignoreMotion?: boolean;
+    gridUnits?: boolean;
+  };
+
+  /**
+   * Waypoint-form options for `.moveTo()` / `.moveBy()`, which additionally
+   * accept `gridUnits` to read every waypoint's coordinates in grid squares.
+   */
+  type MotionMoveWaypointOptions = MotionWaypointOptions<Vector2> & {
+    gridUnits?: boolean;
   };
 
   type MotionNoiseOptions = {
@@ -1259,6 +1269,12 @@ declare global {
     persistUntilUpdate(): this;
 
     /**
+     * Draws the sprite at the given ordering value while the motion runs, then restores its normal order when it ends.
+     * A higher value draws in front. Orders the sprite only against other objects at the same elevation.
+     */
+    zIndex(inZIndex: number): this;
+
+    /**
      * Moves the sprite toward the given target, then (by default) moves it back. Accepts an {x, y} coordinate, a
      * placeable/document/name reference, a crosshair, or an array of waypoints for a multi-segment path.
      */
@@ -1268,18 +1284,21 @@ declare global {
     ): this;
     moveTo(
       inWaypoints: Array<Vector2 | MotionWaypoint<Vector2>>,
-      inOptions?: MotionWaypointOptions<Vector2>
+      inOptions?: MotionMoveWaypointOptions
     ): this;
 
     /**
      * Offsets the sprite from its normal position, then (by default) moves it back. Accepts an {x, y} offset, a
      * positive distance together with a towards/awayFrom target, or an array of waypoint offsets.
      */
-    moveBy(inOffset: Vector2, inOptions?: MotionMoveByOptions): this;
+    moveBy(
+      inOffset: Partial<Vector2>,
+      inOptions?: MotionMoveByOptions
+    ): this;
     moveBy(inDistance: number, inOptions: MotionMoveByOptions): this;
     moveBy(
       inWaypoints: Array<Vector2 | MotionWaypoint<Vector2>>,
-      inOptions?: MotionWaypointOptions<Vector2>
+      inOptions?: MotionMoveWaypointOptions
     ): this;
 
     /**

@@ -22,6 +22,7 @@ class Motion {
 		this.name = config.name ?? null;
 		this.persist = !!config.persist;
 		this.persistUntilUpdate = !!config.persistUntilUpdate;
+		this.zIndex = config.zIndex ?? null;
 		this.done = false;
 		this.returnTriggeredAt = undefined;
 		this.settleOverride = undefined;
@@ -99,6 +100,29 @@ class Motion {
 				}
 			}
 		}
+		if ((propertyName === "x" || propertyName === "y") && track.gridUnits) {
+			// The authored value is in grid squares. Convert it to pixels
+			// against the scene grid at instantiation, so a resurrected
+			// motion re-reads the current grid rather than replaying a pixel
+			// count baked against an old one. The pixel `meshOriginOffset`
+			// added below for absolute tracks is applied after this scaling.
+			const gridSize = canvas?.grid?.size ?? 1;
+			if (track.form === "single") {
+				track.to = track.to * gridSize;
+			} else {
+				track.frames = track.frames.map((frame) => ({
+					...frame,
+					v: frame.v * gridSize,
+				}));
+				if (track.returnFrames) {
+					track.returnFrames = track.returnFrames.map((frame) => ({
+						...frame,
+						v: frame.v * gridSize,
+					}));
+				}
+			}
+		}
+
 		if (!track.absolute) {
 			this.#finalizeKeyframeTrack(track);
 			return track;
@@ -265,6 +289,16 @@ class Motion {
 			deltaAngle += noiseSample.deltaAngle;
 		}
 
+		// A persistent zIndex-only motion has no contributing layer but must
+		// stay alive to hold its sort override until it is ended.
+		if (
+			this.zIndex !== null &&
+			(this.persist || this.persistUntilUpdate) &&
+			this.returnTriggeredAt === undefined
+		) {
+			anyAlive = true;
+		}
+
 		if (!anyAlive) return null;
 		return {
 			deltaX,
@@ -358,6 +392,7 @@ class PlaceableMotionAggregator {
 			scaleY: target.scale.y,
 			alpha: target.alpha,
 			tint: target.tint ?? 0xffffff,
+			sort: target.sort ?? 0,
 		};
 
 		// Document-space texture scale, for converting `.scaleBy()` changes
@@ -506,6 +541,9 @@ class PlaceableMotionAggregator {
 			let tintR = 1;
 			let tintG = 1;
 			let tintB = 1;
+			// Last active motion that set a `.zIndex()` wins the sort
+			// override; null leaves the mesh at its document sort.
+			let sortOverride = null;
 			for (const motion of [...this.motions]) {
 				const sample = motion.sampleAt(now);
 				if (sample === null) {
@@ -514,6 +552,7 @@ class PlaceableMotionAggregator {
 					motion._removeFlag(this.uuid);
 					continue;
 				}
+				if (motion.zIndex !== null) sortOverride = motion.zIndex;
 				deltaX += sample.deltaX;
 				deltaY += sample.deltaY;
 				deltaAngle += sample.deltaAngle;
@@ -575,6 +614,14 @@ class PlaceableMotionAggregator {
 				const finalB = Math.max(0, Math.min(0xff, Math.round(restB * tintB)));
 				target.tint = (finalR << 16) | (finalG << 8) | finalB;
 			}
+			// Foundry's `_refreshState` resets `mesh.sort` to the document
+			// sort; rewrite the override every frame so the mesh wins its
+			// same-elevation ordering while the motion runs. Set `sortDirty`
+			// so the primary group re-sorts on the changed value.
+			if (sortOverride !== null && target.sort !== sortOverride) {
+				target.sort = sortOverride;
+				if (target.parent) target.parent.sortDirty = true;
+			}
 		} catch (error) {
 			console.error("Sequencer | motion aggregator threw; removing handler", error);
 			this.teardown(false);
@@ -605,6 +652,10 @@ class PlaceableMotionAggregator {
 		target.scale.set(this.restState.scaleX, this.restState.scaleY);
 		target.alpha = this.restState.alpha;
 		target.tint = this.restState.tint;
+		if (target.sort !== this.restState.sort) {
+			target.sort = this.restState.sort;
+			if (target.parent) target.parent.sortDirty = true;
+		}
 	}
 }
 
