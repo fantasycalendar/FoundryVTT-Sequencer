@@ -560,7 +560,7 @@ declare global {
     local?: boolean;
   };
 
-  type SequenceOptions = { inModuleName?: string; softFail?: boolean };
+  type SequenceOptions = { inModuleName?: string; softFail?: boolean; quietError?: boolean };
 
   interface Sequence extends CoreMethods {}
 
@@ -569,7 +569,7 @@ declare global {
      * Declaring the module name when using new Sequence() will make every error or warning caught during the runtime also
      * include the module name, which lets you and other users know which module caused the error.
      */
-    constructor(inOptions?: SequenceOptions, softFail?: boolean);
+    constructor(inOptions?: SequenceOptions, softFail?: boolean, quietError?: boolean);
 
     _customError(self: Section<unknown>, func: string, error: string): Error;
   }

@@ -22,8 +22,10 @@ export default class Sequence {
 		options = {
 			moduleName: "Sequencer",
 			softFail: false,
+			quietError: false,
 		},
-		softFail = false
+		softFail = false,
+		quietError = false
 	) {
 		this.id = foundry.utils.randomID();
 		this.moduleName =
@@ -31,6 +33,7 @@ export default class Sequence {
 				? options
 				: options?.moduleName ?? "Sequencer";
 		this.softFail = options?.softFail ?? softFail;
+		this.quietError = options?.quietError ?? quietError;
 		this.sections = [];
 		this.nameOffsetMap = false;
 		this.crosshairs = {}
@@ -392,7 +395,7 @@ export default class Sequence {
 
 	async toJSON() {
 		const data = {
-			options: { moduleName: this.moduleName, softFail: this.softFail },
+			options: { moduleName: this.moduleName, softFail: this.softFail, quietError: this.quietError },
 			sections: [],
 		};
 		for (const section of this.sections) {
@@ -410,6 +413,7 @@ export default class Sequence {
 	fromJSON(data) {
 		this.moduleName = data.options.moduleName;
 		this.softFail = data.options.softFail;
+		this.quietError = data.options.quietError;
 		this.local = true;
 		for (const section of data.sections) {
 			this[section.type]()._deserialize(section);
@@ -437,7 +441,8 @@ export default class Sequence {
 	_customError(self, func, error) {
 		return lib.custom_error(
 			this.moduleName,
-			`${self.constructor.name.replace("Section", "")} | ${func} - ${error}`
+			`${self.constructor.name.replace("Section", "")} | ${func} - ${error}`,
+			this.quietError
 		);
 	}
 

@@ -427,13 +427,13 @@ export function throttled_custom_warning(
 	}, delay);
 }
 
-export function custom_error(inClassName, error) {
+export function custom_error(inClassName, error, quietError = false) {
 	inClassName =
 		inClassName !== "Sequencer"
 			? "Sequencer | Module: " + inClassName
 			: inClassName;
 	error = `${inClassName} | ${error}`;
-	ui.notifications.error(error, { console: false });
+	if (!quietError) ui.notifications.error(error, { console: false });
 	return new Error(error.replace("<br>", "\n"));
 }
 
