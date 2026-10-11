@@ -4,6 +4,7 @@ import CONSTANTS from "../constants.js";
 const SequenceManager = {
   VisibleEffects: writable({}),
   RunningSounds: writable({}),
+	RunningMotions: writable({}),
   RunningSequences: writable({}),
 };
 
@@ -57,6 +58,33 @@ SequenceManager.RunningSounds.keys = () => {
   return Object.keys(get(SequenceManager.RunningSounds));
 };
 
+/* ------------------ Motions ------------------ */
+SequenceManager.RunningMotions.get = (id) => {
+	return get(SequenceManager.RunningMotions)[id];
+};
+
+SequenceManager.RunningMotions.add = (id, data) => {
+	SequenceManager.RunningMotions.update((motions) => {
+		motions[id] = data;
+		return motions;
+	});
+};
+
+SequenceManager.RunningMotions.delete = (id) => {
+	SequenceManager.RunningMotions.update((motions) => {
+		delete motions[id];
+		return motions;
+	});
+};
+
+SequenceManager.RunningMotions.values = () => {
+	return Object.values(get(SequenceManager.RunningMotions));
+};
+
+SequenceManager.RunningMotions.keys = () => {
+	return Object.keys(get(SequenceManager.RunningMotions));
+};
+
 /* ----------------- Sequences ------------------ */
 SequenceManager.RunningSequences.get = (id) => {
   return get(SequenceManager.RunningSequences)[id];
@@ -101,6 +129,25 @@ SequenceManager.RunningSequences.stopAll = () => {
 
 SequenceManager.RunningSequences.values = () => {
   return Object.values(get(SequenceManager.RunningSequences));
+};
+
+let viewerOpenCount = 0;
+let pruneTimer = null;
+
+SequenceManager.RunningSequences.openViewer = () => {
+  viewerOpenCount++;
+};
+
+SequenceManager.RunningSequences.closeViewer = () => {
+  viewerOpenCount = Math.max(0, viewerOpenCount - 1);
+};
+
+SequenceManager.RunningSequences.startPruneTimer = () => {
+  if (pruneTimer !== null) return;
+  pruneTimer = setInterval(() => {
+    if (viewerOpenCount > 0) return;
+    SequenceManager.RunningSequences.clearFinishedSequences();
+  }, 10000);
 };
 
 export default SequenceManager;

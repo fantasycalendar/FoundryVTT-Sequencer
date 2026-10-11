@@ -1,7 +1,7 @@
 import * as lib from "./lib.js";
 import CanvasEffect from "../canvas-effects/canvas-effect.js";
 import CONSTANTS from "../constants.js";
-import { sequencerSocket, SOCKET_HANDLERS } from "../sockets.js";
+import SequencerMotionManager from "../modules/sequencer-motion-manager.js";
 
 export function createShape(shape) {
   const graphic = new PIXI.LegacyGraphics();
@@ -239,7 +239,7 @@ export function calculate_missed_position(source, target, twister) {
 
 export function get_object_position(
   obj,
-  { measure = false, exact = false } = {}
+  { measure = false, exact = false, ignoreMotion = false } = {}
 ) {
   if (obj instanceof CanvasEffect) {
     return obj.worldPosition;
@@ -371,6 +371,16 @@ export function get_object_position(
   if (pos.x === null) delete pos["x"];
   if (pos.y === null) delete pos["y"];
   if (pos.elevation === null) delete pos["elevation"];
+
+  // Add any active motion movement so that callers get the visible
+	// sprite position, so use ignoreMotion to ignore the motion
+  if (!ignoreMotion && pos.x !== undefined && pos.y !== undefined) {
+    const displacement = SequencerMotionManager.getDisplacement(obj);
+    if (displacement) {
+      pos.x += displacement.deltaX;
+      pos.y += displacement.deltaY;
+    }
+  }
 
   return pos;
 }
@@ -884,10 +894,10 @@ export function is_object_canvas_data(inObj) {
   );
 }
 
-export function get_object_canvas_data(inObject, { measure = false, uuid = true }={}) {
+export function get_object_canvas_data(inObject, { measure = false, uuid = true, ignoreMotion = false }={}) {
   inObject = inObject?.object ?? inObject;
   const data = {
-    ...get_object_position(inObject, { measure }),
+    ...get_object_position(inObject, { measure, ignoreMotion }),
     ...get_object_dimensions(inObject?.mesh ?? inObject?.tile ?? inObject),
     elevation: get_object_elevation(inObject),
     cachedLocation: true,
@@ -970,8 +980,12 @@ export function getPositionFromData(data, type="source", twister = false) {
     ? data.nameOffsetMap[data[type]][type]
     : validateObject(data[type], data.sceneId);
 
+  const ignoreMotion = type === "target"
+    ? data.ignoreTargetMotion
+    : data.ignoreSourceMotion;
+
   const position = source instanceof foundry.canvas.placeables.PlaceableObject
-      ? get_object_position(source)
+      ? get_object_position(source, { ignoreMotion })
       : source?.worldPosition || source?.center || source;
 
 	let offset = getOffsetFromData(data, { source, type, twister });
@@ -1235,6 +1249,12 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
       return `if inOptions.gridUnits is true, inPropertyName must be position.x, position.y, scale.x, scale.y, width, or height`;
     }
   }
+	if (
+		inOptions?.absolute !== undefined &&
+		typeof inOptions.absolute !== "boolean"
+	) {
+		return `inOptions.absolute must be of type boolean`;
+	}
 
   return {
     target: inTarget,
@@ -1249,6 +1269,290 @@ export function validateLoopingAnimation(inTarget, inPropertyName, inOptions) {
       inOptions?.loops === undefined || !lib.is_real_number(inOptions?.loops),
     pingPong: inOptions?.pingPong ?? false,
     gridUnits: inOptions?.gridUnits ?? false,
+    absolute: inOptions?.absolute ?? false,
 	  screenSpace: inOptions?.screenSpace ?? false,
   };
+}
+
+/**
+ * Gets the actual sprite from placeables, as each has a separate implementation
+ * Returns `null` for unsupported types
+ *
+ * @param {object} placeable
+ * @returns {object|null}
+ */
+export function getMotionTarget(placeable) {
+	if (!placeable) return null;
+	if (placeable instanceof foundry.canvas.placeables.Token) return placeable.mesh ?? null;
+	if (placeable instanceof foundry.canvas.placeables.Tile) return placeable.mesh ?? placeable.bg ?? null;
+	if (placeable instanceof foundry.canvas.placeables.Drawing) return placeable.shape ?? null;
+	return null;
+}
+
+/**
+ * Gets a placeable's position and rotation at a given time, for caching purposes
+ * and comparing against any updated values as a part of the document's update
+ * cycle
+ *
+ * @param {object} placeable
+ * @returns {{x: number, y: number, rotation: number}|null}
+ */
+export function getDocumentRestState(placeable) {
+	if (!placeable?.document) return null;
+	if (placeable instanceof foundry.canvas.placeables.Token || placeable instanceof foundry.canvas.placeables.Drawing) {
+		return {
+			x: placeable.document.x,
+			y: placeable.document.y,
+			rotation: placeable.document.rotation ?? 0,
+		};
+	}
+	if (placeable instanceof foundry.canvas.placeables.Tile) {
+		const shape = placeable.document.shape;
+		return {
+			x: shape.x,
+			y: shape.y,
+			rotation: shape.rotation ?? 0,
+		};
+	}
+	return null;
+}
+
+/**
+ * Built-in waveform functions for `.motion().oscillate()`. Each maps a cycle
+ * position in `[0, 1)` to a value in `[-1, 1]`.
+ *
+ *   sine     - smooth, continuous; peaks at 0.25, zero at 0/0.5, trough at 0.75
+ *   triangle - piecewise linear with the same peak/zero/trough timing
+ *   square   - binary +1 (first half) / -1 (second half)
+ */
+const OSCILLATE_WAVEFORMS = {
+	sine: (cyclePosition) => Math.sin(2 * Math.PI * cyclePosition),
+	triangle: (cyclePosition) => {
+		if (cyclePosition < 0.25) return 4 * cyclePosition;
+		if (cyclePosition < 0.75) return 2 - 4 * cyclePosition;
+		return 4 * (cyclePosition - 1);
+	},
+	square: (cyclePosition) => (cyclePosition < 0.5 ? 1 : -1),
+};
+
+export const OSCILLATE_WAVEFORM_NAMES = Object.keys(OSCILLATE_WAVEFORMS);
+
+/**
+ * Fallback duration in milliseconds for non-persistent `.noise()` and
+ * `.oscillate()` blocks when the user did not specify one. Persistent
+ * motions use the explicit per-block `duration` as the loop length and
+ * have no comparable fallback.
+ */
+export const MOTION_DEFAULT_DURATION = 1000;
+
+/**
+ * Per-frame oscillate calculation math for a single motion - pass the config,
+ * motion object, and the time, and it will calculate exactly where the occiliation
+ * should be
+ *
+ * @param {object} config     The oscillate config stored on the motion.
+ * @param {object} motion     The Motion that owns this config (reads `startTime`,
+*                             `persist`, `persistUntilUpdate`, `returnTriggeredAt`).
+ * @param {number} now        time snapshot (`performance.now()`) from caller to
+ *                            calculate timing for motion
+ *
+ * @returns {{deltaX: number, deltaY: number, deltaAngle: number,
+ *            scaleMultiplier: number, alphaMultiplier: number}|null}
+ *          `null` once the layer is done (fade-out complete, or past
+ *          duration on a non-persistent motion).
+ */
+export function sampleOscillation(config, motion, now) {
+	const elapsed = now - motion.startTime - (config.delay ?? 0) + motion.creationTimeDelta;
+	if (elapsed < 0) return null;
+
+	const persistent = motion.persist || motion.persistUntilUpdate;
+	const fadeInDuration = config.fadeInDuration ?? 0;
+	const fadeOutDuration = config.fadeOutDuration ?? 0;
+
+	let fade;
+	if (motion.returnTriggeredAt !== undefined) {
+		const returnElapsed = now - motion.returnTriggeredAt;
+		if (returnElapsed >= fadeOutDuration) return null;
+		fade = fadeOutDuration > 0 ? 1 - returnElapsed / fadeOutDuration : 0;
+	} else if (persistent) {
+		fade = fadeInDuration > 0 ? Math.min(1, elapsed / fadeInDuration) : 1;
+	} else {
+		const duration = config.duration ?? MOTION_DEFAULT_DURATION;
+		if (elapsed >= duration) return null;
+		let fadeIn = 1;
+		if (fadeInDuration > 0 && elapsed < fadeInDuration) {
+			fadeIn = elapsed / fadeInDuration;
+		}
+		let fadeOut = 1;
+		if (fadeOutDuration > 0 && elapsed > duration - fadeOutDuration) {
+			fadeOut = (duration - elapsed) / fadeOutDuration;
+		}
+		fade = fadeIn * fadeOut;
+	}
+
+	const waveformFn = OSCILLATE_WAVEFORMS[config.waveform];
+	const period = config.period;
+
+	let deltaX = 0;
+	let deltaY = 0;
+	let deltaAngle = 0;
+	let scaleMultiplier = 1;
+	let alphaMultiplier = 1;
+
+	const sampleAxis = (axisConfig) => {
+		const phase = axisConfig.phase ?? 0;
+		const cyclePosition = ((elapsed / period) + phase / (2 * Math.PI)) % 1;
+		return waveformFn(cyclePosition);
+	};
+
+	if (config.x) {
+		deltaX = config.x.amplitude * sampleAxis(config.x) * fade;
+	}
+	if (config.y) {
+		deltaY = config.y.amplitude * sampleAxis(config.y) * fade;
+	}
+	if (config.rotation) {
+		deltaAngle = config.rotation.amplitude * sampleAxis(config.rotation) * fade;
+	}
+	if (config.scale) {
+		const baseline = config.scale.baseline ?? 1.0;
+		scaleMultiplier = baseline + config.scale.amplitude * sampleAxis(config.scale) * fade;
+	}
+	if (config.alpha) {
+		const baseline = config.alpha.baseline ?? 1.0;
+		alphaMultiplier = baseline + config.alpha.amplitude * sampleAxis(config.alpha) * fade;
+	}
+
+	return { deltaX, deltaY, deltaAngle, scaleMultiplier, alphaMultiplier };
+}
+
+/**
+ * Calculates the noise waveform for a motion section's `.noise()`. Returns
+ * `{samples, frequency, duration}` where `samples` is an array of
+ * `{x, y, rot}` entries each in `[-1, +1]`.
+ *
+ * All randomness draws from the given twister, so every client seeding it
+ * from the motion's shared creation timestamp generates the identical
+ * waveform, and a resurrected motion replays the same jitter.
+ *
+ * @param {object} config  Noise options.
+ * @param {MersenneTwister} twister  Seeded random source.
+ * @returns {{samples: Array<{x: number, y: number, rot: number}>,
+ *            frequency: number, duration: number}}
+ */
+export function buildNoiseWaveform(config, twister) {
+	const frequency = config.frequency;
+	const duration = config.duration;
+	const sampleCount = Math.max(2, Math.floor(duration / frequency) + 1);
+	const hasRotation = (config.rotationStrength ?? 0) > 0;
+
+	const magnitudes = [lib.random_float_between(-1, 1, twister)];
+	const rotations = [hasRotation ? lib.random_float_between(-1, 1, twister) : 0];
+	for (let index = 1; index < sampleCount; index++) {
+		magnitudes.push(lib.flip_negate(magnitudes[index - 1], twister.random()));
+		rotations.push(
+			hasRotation
+				? lib.flip_negate(rotations[index - 1], twister.random())
+				: 0
+		);
+	}
+
+	// Wrap the last value for consistency
+	magnitudes[0] = lib.flip_negate(magnitudes[sampleCount - 1], twister.random());
+	if (hasRotation) {
+		rotations[0] = lib.flip_negate(rotations[sampleCount - 1], twister.random());
+	}
+
+	const directionMinRadians = (config.directionMin ?? 0) * (Math.PI / 180);
+	const directionMaxRadians = (config.directionMax ?? 360) * (Math.PI / 180);
+
+	const samples = [];
+	for (let index = 0; index < sampleCount; index++) {
+		const angle = lib.random_float_between(directionMinRadians, directionMaxRadians, twister);
+		samples.push({
+			x: magnitudes[index] * Math.cos(angle),
+			y: magnitudes[index] * Math.sin(angle),
+			rot: rotations[index],
+		});
+	}
+
+	return { samples, frequency, duration };
+}
+
+/**
+ * Noise calculation for each frame of a single motion. Linearly interpolates
+ * between samples, multiplies by strength and the current fade duration,
+ * and returns the total for the final displacement.
+ *
+ * Returns `null` when the noise is done:
+ *  - non-persistent motion past `noise.delay + noise.duration` (plus the
+ *    fade-out end bit);
+ *  - persistent motion whose return phase has been triggered and the
+ *    `fadeOutDuration` has elapsed since `returnTriggeredAt`.
+ *
+ * @param {object} noise   The noise state stored on the motion (includes
+ *                         the precomputed waveform and the motion's config).
+ * @param {object} motion  Owning Motion for some property reads
+ * @param {number} now     `performance.now()` - start time for this random
+ *                         noise.
+ * @returns {{deltaX: number, deltaY: number, deltaAngle: number,
+ *            scaleMultiplier: number, alphaMultiplier: number}|null}
+ */
+export function sampleNoise(noise, motion, now) {
+	const elapsed = now - motion.startTime - (noise.delay ?? 0) + motion.creationTimeDelta;
+	if (elapsed < 0) return null;
+
+	const persistent = motion.persist || motion.persistUntilUpdate;
+	const fadeInDuration = noise.fadeInDuration ?? 0;
+	const fadeOutDuration = noise.fadeOutDuration ?? 0;
+	const duration = noise.duration ?? MOTION_DEFAULT_DURATION;
+
+	let fade;
+	if (motion.returnTriggeredAt !== undefined) {
+		const returnElapsed = now - motion.returnTriggeredAt;
+		if (returnElapsed >= fadeOutDuration) return null;
+		fade = fadeOutDuration > 0 ? 1 - returnElapsed / fadeOutDuration : 0;
+	} else if (persistent) {
+		fade = fadeInDuration > 0 ? Math.min(1, elapsed / fadeInDuration) : 1;
+	} else {
+		if (elapsed >= duration) return null;
+		let fadeIn = 1;
+		if (fadeInDuration > 0 && elapsed < fadeInDuration) {
+			fadeIn = elapsed / fadeInDuration;
+		}
+		let fadeOut = 1;
+		if (fadeOutDuration > 0 && elapsed > duration - fadeOutDuration) {
+			fadeOut = (duration - elapsed) / fadeOutDuration;
+		}
+		fade = fadeIn * fadeOut;
+	}
+
+	const { samples, frequency } = noise.waveform;
+	const sampleCount = samples.length;
+
+	const cyclePosition = persistent
+		? (elapsed % duration) / frequency
+		: elapsed / frequency;
+	const lowerIndex = Math.floor(cyclePosition) % sampleCount;
+	const upperIndex = (lowerIndex + 1) % sampleCount;
+	const blend = cyclePosition - Math.floor(cyclePosition);
+
+	const lower = samples[lowerIndex];
+	const upper = samples[upperIndex];
+	const rawX = lower.x + (upper.x - lower.x) * blend;
+	const rawY = lower.y + (upper.y - lower.y) * blend;
+	const rawRotation = lower.rot + (upper.rot - lower.rot) * blend;
+
+	const strength = noise.strength;
+	const strengthX = typeof strength === "object" ? strength.x : strength;
+	const strengthY = typeof strength === "object" ? strength.y : strength;
+	const rotationStrength = noise.rotationStrength ?? 0;
+
+	return {
+		deltaX: rawX * strengthX * fade,
+		deltaY: rawY * strengthY * fade,
+		deltaAngle: rawRotation * rotationStrength * fade,
+		scaleMultiplier: 1,
+		alphaMultiplier: 1,
+	};
 }

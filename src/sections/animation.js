@@ -133,7 +133,7 @@ class AnimationSection extends Section {
 				"could not find position of given object"
 			);
 		options.target = options.cacheLocation
-			? canvaslib.get_object_position(options.target, { measure: true })
+			? canvaslib.get_object_position(options.target, { measure: true, ignoreMotion: true })
 			: options.target;
 		this._rotateTowards = options;
 		return this;
@@ -269,14 +269,20 @@ class AnimationSection extends Section {
 		}
 
 		let refreshTokenID;
+		let safetyTimeout;
 
 		return await new Promise((resolve) => {
-			refreshTokenID = Hooks.on("refreshToken", async (tokenDoc) => {
+			const finish = () => {
+				Hooks.off("refreshToken", refreshTokenID);
+				clearTimeout(safetyTimeout);
+				resolve();
+			};
+			refreshTokenID = Hooks.on("refreshToken", (tokenDoc) => {
 				if (tokenDoc.document.actorId !== token.document.actorId || !token.mesh)
 					return;
-				Hooks.off("refreshToken", refreshTokenID);
-				resolve();
+				finish();
 			});
+			safetyTimeout = setTimeout(finish, 5000);
 		});
 	}
 
@@ -291,8 +297,8 @@ class AnimationSection extends Section {
 	 * @private
 	 */
 	_getClosestSquare(origin, target) {
-		let originLoc = canvaslib.get_object_position(origin, { exact: true });
-		let targetLoc = canvaslib.get_object_position(target, { exact: true });
+		let originLoc = canvaslib.get_object_position(origin, { exact: true, ignoreMotion: true });
+		let targetLoc = canvaslib.get_object_position(target, { exact: true, ignoreMotion: true });
 
 		let originDimensions = canvaslib.get_object_dimensions(origin);
 		let targetDimensions = canvaslib.get_object_dimensions(target);

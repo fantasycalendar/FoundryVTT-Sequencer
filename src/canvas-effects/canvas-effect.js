@@ -12,6 +12,7 @@ import { SequencerAboveUILayer } from "./effects-layer.js";
 import { SequencerSpriteManager } from "./sequencer-sprite-manager.js";
 import CrosshairsPlaceable from "../modules/sequencer-crosshair/CrosshairsPlaceable.js";
 import PluginsManager from "../utils/plugins-manager.js";
+import { is_real_number } from "../lib/lib.js";
 
 const hooksManager = {
 	_byHook: new Map(),
@@ -845,7 +846,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let position =
 			crosshairPos
-			|| (positionSource ? canvaslib.get_object_position(positionSource) : null)
+			|| (positionSource ? canvaslib.get_object_position(positionSource, { ignoreMotion: this.data.ignoreSourceMotion }) : null)
 			|| this.source?.worldPosition
 			|| this.source?.center
 			|| this.source;
@@ -933,7 +934,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		let position =
 			crosshairPos
-			|| (positionTarget ? canvaslib.get_object_position(positionTarget, { measure: true }) : null)
+			|| (positionTarget ? canvaslib.get_object_position(positionTarget, { measure: true, ignoreMotion: this.data.ignoreTargetMotion }) : null)
 			|| this.target?.worldPosition
 			|| this.target?.center
 			|| this.target;
@@ -1549,6 +1550,11 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this.sprite?.destroy();
 		this.sprite = null;
+
+		if (this._renderTexture) {
+			this._renderTexture.destroy(true);
+			this._renderTexture = null;
+		}
 
 		if (this.data.screenSpaceAboveUI) {
 			SequencerAboveUILayer.removeContainerByEffect(this);
@@ -2411,12 +2417,17 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	updateElevation() {
-		let targetElevation = Math.max(
-			canvaslib.get_object_elevation(this.source ?? {}),
-			canvaslib.get_object_elevation(this.target ?? {})
+		// Pick the lowest real elevation; regions may have -Infinity in their bottom elevation, which means the effect
+		// would end up below everything, including the scene background image
+		let sourceElevation = canvaslib.get_object_elevation(this.source ?? {});
+		let targetElevation = canvaslib.get_object_elevation(this.target ?? {});
+
+		let maxElevation = Math.max(
+			lib.is_real_number(sourceElevation) ? sourceElevation : 0,
+			lib.is_real_number(targetElevation) ? targetElevation : 0
 		);
 
-		const offset = this.data.elevation?.absolute ? 0 : targetElevation;
+		const offset = this.data.elevation?.absolute ? 0 : maxElevation;
 		const bottom = (this.data.elevation?.elevation ?? 0) + offset;
 		const top = (typeof this.data.elevation?.top === "number")
 			? this.data.elevation.top + offset
@@ -2589,8 +2600,20 @@ export default class CanvasEffect extends PIXI.Container {
 				this._stageMasks.push(shapeToAdd);
 
 			} else if (docName === "Token" || docName === "Tile") {
-				if (!obj?.mesh) continue;
-				maskFilter.masks.push(obj.mesh);
+				let currentMesh = obj?.mesh ?? null;
+				if (currentMesh) maskFilter.masks.push(currentMesh);
+				hooksManager.addHook(this.uuid, "draw" + docName, (placeable) => {
+					if (placeable.document !== documentObj) return;
+					const newMesh = placeable.mesh;
+					if (!newMesh || newMesh === currentMesh) return;
+					const staleIndex = currentMesh ? maskFilter.masks.indexOf(currentMesh) : -1;
+					if (staleIndex === -1) {
+						maskFilter.masks.push(newMesh);
+					} else {
+						maskFilter.masks[staleIndex] = newMesh;
+					}
+					currentMesh = newMesh;
+				});
 				continue;
 			} else if (docName === "MeasuredTemplate" || docName === "Drawing") {
 				// MeasuredTemplates are always instantiated; off-level

@@ -317,6 +317,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the location is a placeable with an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), use its document position instead of its motion-displaced visible position (for example, to keep a shadow on the ground beneath a flying token)
 
 ## Attach To
 
@@ -352,6 +353,7 @@ In addition, a secondary options parameter can be given to this method, which ha
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the object has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), attach to its document position instead of its motion-displaced visible position (for example, to keep a shadow on the ground beneath a flying token)
 - `template: boolean` - Make the effect use the defined template in the sequencer database. See [Why templates are useful](https://fantasycomputer.works/FoundryVTT-Sequencer/#/database-basics?id=why-templates-are-useful).
 
 ## Rotate Towards
@@ -377,6 +379,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the target has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), rotate towards its document position instead of its motion-displaced visible position
 
 ## Stretch To
 
@@ -402,6 +405,7 @@ Also supports a second options object that accepts:
 - `offset: object` (default `{ x: 0, y: 0 }`) - causes the location to be offset by a set amount
 - `local: boolean` - Used with `offset` to cause the location to be offset locally to the effect's rotation
 - `gridUnits: boolean` - Used with `offset` to make each whole number represent in `x` and `y` to represent the effect's scene's grid size
+- `ignoreMotion: boolean` (default `false`) - when the target has an active [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion), stretch towards its document position instead of its motion-displaced visible position
 - `requiresLineOfSight: boolean` - (requires `attachTo` to be true) causes the effect to end prematurely if the line of sight from the source and target is broken
 - `hideLineOfSight: boolean` - (requires `requiresLineOfSight` to be true) changes the behavior of `requiresLineOfSight` and causes the effect to be hidden while the line of sight is broken
 
@@ -826,7 +830,7 @@ Causes the effect to be played below tiles - you can pass a boolean whether it s
 
 Causes the effect to be rendered above the lighting, darkness, and fog-of-war layers. The effect also renders above region highlights and the grid, but below overlay controls (HUD, health bars, crosshairs).
 
-Use this when an effect must be visible regardless of scene darkness or obscurement — for example, a bright spell visual that should cut through fog.
+Use this when an effect must be visible regardless of scene darkness or obscurement, such as a bright spell visual that should cut through fog.
 
 Note that if an effect is attached to an object via `.attachTo()`, you may need to disable `bindVisibilty` if the object is hidden.
 
@@ -852,11 +856,11 @@ Sets the effect's elevation. Pass a single number for a point, or a `[bottom, to
 
 The range form is most useful on Foundry v14+: an effect whose range spans multiple scene levels appears on each of them, drawing above each level's floor that its top reaches. The effect stays in the same visual layer whether the player is currently viewing the basement or the rooftop.
 
-A range whose top exactly meets the next level's floor — like `[0, 30]` against a level that starts at `30` — stays under that floor by default. Pass `topInclusive: true` to make the effect reach into the level above instead. This matches the Top Inclusive checkbox on Foundry's Region elevation settings.
+A range whose top exactly meets the next level's floor (like `[0, 30]` against a level that starts at `30`) stays under that floor by default. Pass `topInclusive: true` to make the effect reach into the level above instead. This matches the Top Inclusive checkbox on Foundry's Region elevation settings.
 
 Options:
-- `absolute: boolean` — when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
-- `topInclusive: boolean` — range form only. When `true`, the top value is part of the range, matching the Top Inclusive checkbox on a Foundry Region. By default an effect whose top equals the next level's floor stays just below that level.
+- `absolute: boolean` - when `true`, the elevation values are used as-is. When `false` (the default), they are added to the source/target's elevation.
+- `topInclusive: boolean` - range form only. When `true`, the top value is part of the range, matching the Top Inclusive checkbox on a Foundry Region. By default an effect whose top equals the next level's floor stays just below that level.
 
 Examples:
 ```js
@@ -874,9 +878,9 @@ Examples:
 Sets the sort layer of the effect. This value determines where the effect sits among the primary canvas group's children when siblings share an elevation. Foundry's primary group sorts children first by elevation, then by `sortLayer`, then by `sort`, then by `zIndex`.
 
 Default is `800`, which is above tokens (`700`) and below weather (`1000`). Sequencer reserves:
-- `300` — below tiles (used by `.belowTiles()`)
-- `600` — below tokens (used by `.belowTokens()`)
-- `800` — default effects layer (above tokens)
+- `300` - below tiles (used by `.belowTiles()`)
+- `600` - below tokens (used by `.belowTokens()`)
+- `800` - default effects layer (above tokens)
 
 For reference, Foundry's built-in sort layers are:
 - `0` scene background / level textures
@@ -1018,11 +1022,14 @@ Default parameters:
     ease: "linear",
     delay: 0,
     pingPong: false,
-    gridUnits: false
+    gridUnits: false,
+    absolute: false
 }
 ```
 
 Grid units will work if you are animating the `width`, `height`, `position.x`, or `position.y`.
+
+The `absolute` property ensures that the values that this animation is playing will not be additive, eg; if you loop the alpha of an effect between 1 and 0.5, not enabling `absolute` will cause the loop to add on top of the effect's existing alpha. With `absolute` enabled, it will force it to loop between 1 and 0.5, regardless of its starting alpha.
 
 Check out what easings are available here: https://easings.net/
 

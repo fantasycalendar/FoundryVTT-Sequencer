@@ -112,6 +112,33 @@ const location = await Sequencer.Crosshair.show({
 
 </details>
 
+## Collect
+
+`Sequencer.Crosshair.collect(crosshair, options={})`
+
+Collects the placeables of the given embedded type(s) that fall within a placed crosshair's shape. Returns an array (for a single type) or an object keyed by type (for an array of types).
+
+```js
+const location = await Sequencer.Crosshair.show({ t: "circle", distance: 2 });
+
+// Every token under the crosshair
+const tokens = Sequencer.Crosshair.collect(location);
+
+// Tokens and tiles under the crosshair
+const { Token, Tile } = Sequencer.Crosshair.collect(location, { types: ["Token", "Tile"] });
+
+// Collect at the document position, ignoring any active .motion()
+const grounded = Sequencer.Crosshair.collect(location, { ignoreMotion: true });
+```
+
+- `crosshair` - the placed crosshair (the value resolved from `Sequencer.Crosshair.show()`)
+- `options: object`
+  - `types: string|string[]` (default `"Token"`) - the embedded document type(s) to collect, e.g. `"Token"`, `"Tile"`, `"Drawing"`
+  - `filterMethod: (placeable, crosshair, shape, options) => boolean` - the test used to decide whether a placeable is inside. Defaults to a center-containment test
+  - `ignoreMotion: boolean` (default `false`) - when false, a placeable currently displaced by a [`.motion()`](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) is collected at its visible (motion-displaced) position, so the crosshair catches what you see under it. Pass `true` to collect at the placeable's document position instead. Only affects the default `filterMethod`; a custom `filterMethod` receives the flag as its fourth argument and may honor or ignore it
+
+The collection is captured synchronously when `collect()` is called, so motion-displaced positions reflect the moment of the call.
+
 ## Sequencer.Crosshair.PLACEMENT_RESTRICTIONS
 
 For wall behavior restrictions, see `Sequencer.Crosshair.PLACEMENT_RESTRICTIONS`:

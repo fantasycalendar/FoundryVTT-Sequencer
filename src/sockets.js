@@ -5,6 +5,7 @@ import SequencerSoundManager from "./modules/sequencer-sound-manager.js";
 import SequencerEffectManager from "./modules/sequencer-effect-manager.js";
 import SequencerFoundryReplicator from "./modules/sequencer-foundry-replicator.js";
 import SequencerPreloader from './modules/sequencer-preloader.js'
+import SequencerMotionManager from "./modules/sequencer-motion-manager.js";
 
 
 const RECIPIENT_TYPES = {
@@ -36,6 +37,8 @@ export const SOCKET_HANDLERS = {
   CREATE_LIGHT_SOURCE: "createLightSource",
   PAN_CANVAS: "panCanvas",
   RUN_SEQUENCE_LOCALLY: "runSequenceLocally",
+	START_MOTION: "startMotion",
+	END_MOTION: "endMotion",
 };
 
 const SOCKET_CALLBACKS = {
@@ -102,6 +105,12 @@ const SOCKET_CALLBACKS = {
 		lib.debug("Playing remote Sequence");
 		new Sequence().fromJSON(data.payload).play();
 	},
+	[SOCKET_HANDLERS.START_MOTION]: (data) => {
+		return SequencerMotionManager._startMotion(...data.payload);
+	},
+	[SOCKET_HANDLERS.END_MOTION]: (data) => {
+		return SequencerMotionManager._endMotions(...data.payload);
+	}
 }
 
 export class SequencerSocket {

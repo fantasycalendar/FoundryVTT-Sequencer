@@ -6,7 +6,9 @@ import CONSTANTS from "../constants.js";
 const flagManager = {
 	flagAddBuffer: new Map(),
 	flagRemoveBuffer: new Map(),
-	_latestFlagVersion: false,
+	_latestEffectFlagVersion: false,
+	_latestSoundFlagVersion: false,
+	_latestMotionFlagVersion: false,
 	_databaseId: null,
 
 	get database(){
@@ -56,75 +58,36 @@ const flagManager = {
 	getDatabaseFlags() {
 		return {
 			effects: this._getDatabaseData(CONSTANTS.EFFECTS_FLAG),
+			motions: this._getDatabaseData(CONSTANTS.MOTIONS_FLAG),
 			sounds: this._getDatabaseData(CONSTANTS.SOUNDS_FLAG)
 		};
 	},
 
-	get latestFlagVersion() {
-		if (!this._latestFlagVersion) {
-			const versions = Object.keys(this.effectMigrations);
+	_latestFlagVersion(key, migrations) {
+		if (!this[key]) {
+			const versions = Object.keys(migrations);
 			versions.sort((a, b) => {
 				return foundry.utils.isNewerVersion(a, b) ? -1 : 1;
 			});
-			this._latestFlagVersion = versions[0];
+			if (versions.length) {
+				this[key] = versions[0];
+			} else {
+				this[key] = "1.0.0";
+			}
 		}
-		return this._latestFlagVersion;
+		return this[key];
 	},
 
-	/**
-	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
-	 *
-	 * @param inDocument
-	 * @returns {array}
-	 */
-	getEffectFlags(inDocument) {
+	get latestEffectFlagVersion() {
+		return this._latestFlagVersion("_latestEffectFlagVersion", this.effectMigrations);
+	},
 
-		if(!inDocument?.uuid) return [];
+	get latestSoundFlagVersion() {
+		return this._latestFlagVersion("_latestSoundFlagVersion", this.soundMigrations);
+	},
 
-		let effects = this.getDatabaseFlags().effects[inDocument.uuid] ?? []
-
-		if (!effects?.length) return [];
-
-		effects = foundry.utils.deepClone(effects);
-
-		const changes = [];
-		for (let [effectId, effectData] of effects) {
-			let effectVersion = effectData?.flagVersion ?? "1.0.0";
-
-			let changesAdded = false;
-
-			if (effectData._id !== effectId) {
-				changesAdded = true;
-				effectData._id = effectId;
-				changes.push(effectData);
-
-				lib.debug(
-					`Fixed effect with broken ID ${effectId}`,
-				);
-			}
-
-			if (effectData.flagVersion === this.latestFlagVersion) continue;
-
-			for (let [version, migration] of Object.entries(this.effectMigrations)) {
-				if (!foundry.utils.isNewerVersion(version, effectVersion)) continue;
-
-				effectData = migration(inDocument, effectData);
-			}
-
-			lib.debug(
-				`Migrated effect with ID ${effectId} from version ${effectVersion} to version ${this.latestFlagVersion}`,
-			);
-
-			effectData.flagVersion = this.latestFlagVersion;
-
-			if (!changesAdded) changes.push(effectData);
-		}
-
-		if (changes.length) {
-			flagManager.addFlags(inDocument.uuid, { effects: changes });
-		}
-
-		return effects;
+	get latestMotionFlagVersion() {
+		return this._latestFlagVersion("_latestMotionFlagVersion", this.motionMigrations);
 	},
 
 	effectMigrations: {
@@ -288,21 +251,84 @@ const flagManager = {
 		}
 	},
 
+	soundMigrations: {},
+
+	motionMigrations: {},
+
+	/**
+	 * Sanitizes the effect data, accounting for changes to the structure in previous versions
+	 *
+	 * @param inDocument
+	 * @returns {array}
+	 */
+	getEffectFlags(inDocument) {
+
+		if(!inDocument?.uuid) return [];
+
+		let effects = this.getDatabaseFlags().effects[inDocument.uuid] ?? []
+
+		if (!effects?.length) return [];
+
+		effects = foundry.utils.deepClone(effects);
+
+		const changes = [];
+		for (let [effectId, effectData] of effects) {
+			let effectVersion = effectData?.flagVersion ?? "1.0.0";
+
+			let changesAdded = false;
+
+			if (effectData._id !== effectId) {
+				changesAdded = true;
+				effectData._id = effectId;
+				changes.push(effectData);
+
+				lib.debug(
+					`Fixed effect with broken ID ${effectId}`,
+				);
+			}
+
+			if (effectData.flagVersion === this.latestEffectFlagVersion) continue;
+
+			for (let [version, migration] of Object.entries(this.effectMigrations)) {
+				if (!foundry.utils.isNewerVersion(version, effectVersion)) continue;
+
+				effectData = migration(inDocument, effectData);
+			}
+
+			lib.debug(
+				`Migrated effect with ID ${effectId} from version ${effectVersion} to version ${this.latestEffectFlagVersion}`,
+			);
+
+			effectData.flagVersion = this.latestEffectFlagVersion;
+
+			if (!changesAdded) changes.push(effectData);
+		}
+
+		if (changes.length) {
+			flagManager.addFlags(inDocument.uuid, { effects: changes });
+		}
+
+		return effects;
+	},
+
 	/**
 	 * Adds effects and/or sounds to a given document
 	 *
 	 * @param inObjectUUID
 	 * @param effects
+	 * @param motions
 	 * @param sounds
 	 */
-	addFlags: (inObjectUUID, { effects = [], sounds = [] }={}) => {
+	addFlags: (inObjectUUID, { effects = [], motions = [], sounds = [] }={}) => {
 		if (!Array.isArray(effects)) effects = [effects];
 		if (!Array.isArray(sounds)) sounds = [sounds];
+		if (!Array.isArray(motions)) motions = [motions];
 		sequencerSocket.executeAsMainUser(
 			SOCKET_HANDLERS.ADD_FLAGS,
 			inObjectUUID,
 			effects,
-			sounds
+			motions,
+			sounds,
 		);
 	},
 
@@ -312,29 +338,49 @@ const flagManager = {
 	 * @param inObjectUUID
 	 * @param effects
 	 * @param removeAllEffects
+	 * @param motions
+	 * @param removeAllMotions
 	 * @param sounds
 	 * @param removeAllSounds
 	 */
-	removeFlags: (inObjectUUID, { effects=[], removeAllEffects = false, sounds=[], removeAllSounds = false}=[]) => {
+	removeFlags: (inObjectUUID, {
+		effects=[],
+		removeAllEffects = false,
+		motions=[],
+		removeAllMotions=false,
+		sounds=[],
+		removeAllSounds = false
+	}={}) => {
 		if (!Array.isArray(effects)) effects = [effects];
+		if (!Array.isArray(motions)) motions = [motions];
 		if (!Array.isArray(sounds)) sounds = [sounds];
 		sequencerSocket.executeAsMainUser(
 			SOCKET_HANDLERS.REMOVE_FLAGS,
 			inObjectUUID,
-			{ effects, removeAllEffects, sounds, removeAllSounds }
+			{
+				effects,
+				removeAllEffects,
+				motions,
+				removeAllMotions,
+				sounds,
+				removeAllSounds
+			}
 		);
 	},
 
-	_addFlags: (inObjectUUID, effects, sounds) => {
+	_addFlags: (inObjectUUID, effects, motions, sounds) => {
 		if (!Array.isArray(effects)) effects = [effects];
+		if (!Array.isArray(motions)) motions = [motions];
 		if (!Array.isArray(sounds)) sounds = [sounds];
 
 		let flagsToSet = flagManager.flagAddBuffer.get(inObjectUUID) ?? {
 			effects: [],
+			motions: [],
 			sounds: [],
 		};
 
 		flagsToSet.effects.push(...effects);
+		flagsToSet.motions.push(...motions);
 		flagsToSet.sounds.push(...sounds);
 
 		flagManager.flagAddBuffer.set(inObjectUUID, flagsToSet);
@@ -342,18 +388,29 @@ const flagManager = {
 		flagManager.updateFlags();
 	},
 
-	_removeFlags: (inObjectUUID, { effects=[], removeAllEffects = false, sounds=[], removeAllSounds=false}) => {
+	_removeFlags: (inObjectUUID, {
+		effects=[],
+		removeAllEffects = false,
+		motions=[],
+		removeAllMotions=false,
+		sounds=[],
+		removeAllSounds=false
+	}={}) => {
 		if (effects && !Array.isArray(effects)) effects = [effects];
+		if (motions && !Array.isArray(motions)) motions = [motions];
 		if (sounds && !Array.isArray(sounds)) sounds = [sounds];
 
 		let flagsToSet = flagManager.flagRemoveBuffer.get(inObjectUUID) ?? {
 			effects: [],
+			motions: [],
 			sounds: [],
 			removeAllEffects: removeAllEffects,
+			removeAllMotions: removeAllMotions,
 			removeAllSounds: removeAllSounds,
 		};
 
 		if (effects) flagsToSet.effects.push(...effects);
+		if (motions) flagsToSet.motions.push(...motions);
 		if (sounds) flagsToSet.sounds.push(...sounds);
 
 		flagManager.flagRemoveBuffer.set(inObjectUUID, flagsToSet);
@@ -385,27 +442,36 @@ const flagManager = {
 		flagsToRemove = new Map(flagsToRemove);
 
 		const effectUpdate = {};
+		const motionUpdate = {};
 		const soundUpdate = {};
 
 		const allEffectFlags = flagManager.getDatabaseFlags().effects;
+		const allMotionFlags = flagManager.getDatabaseFlags().motions;
 		const allSoundFlags = flagManager.getDatabaseFlags().sounds;
 
 		for (let objectUUID of objects) {
 			let object = fromUuidSync(objectUUID);
 
 			if (!object) {
-				lib.forceDeletionKeyWrapper(effectUpdate, "-=" + objectUUID.replaceAll(".", "-"))
-				lib.forceDeletionKeyWrapper(soundUpdate, "-=" + objectUUID.replaceAll(".", "-"))
+				lib.forceDeletionKeyWrapper(effectUpdate, "-=" + objectUUID.replaceAll(".", "-"));
+				lib.forceDeletionKeyWrapper(motionUpdate, "-=" + objectUUID.replaceAll(".", "-"));
+				lib.forceDeletionKeyWrapper(soundUpdate, "-=" + objectUUID.replaceAll(".", "-"));
 				continue;
 			}
 
 			const isLinkedToken = object instanceof TokenDocument && object.actorLink;
 			const isLinkedActor = object instanceof Actor && object.prototypeToken.actorLink;
 
-			let toAdd = flagsToAdd.get(objectUUID) ?? { effects: [], sounds: [] };
+			let toAdd = flagsToAdd.get(objectUUID) ?? {
+				effects: [],
+				motions: [],
+				sounds: []
+			};
 			let toRemove = flagsToRemove.get(objectUUID) ?? {
 				effects: [],
 				removeAllEffects: false,
+				motions: [],
+				removeAllMotions: false,
 				sounds: [],
 				removeAllSounds: false,
 			};
@@ -422,8 +488,15 @@ const flagManager = {
 			}
 			const existingSoundFlags = new Map(origExistingSoundFlags);
 
+			const origExistingMotionFlags = allMotionFlags[object.uuid] ?? [];
+			const existingMotionFlags = new Map(origExistingMotionFlags);
+
 			if (toRemove?.removeAllEffects) {
 				toRemove.effects = Array.from(existingEffectFlags).map((entry) => entry[0]);
+			}
+
+			if (toRemove?.removeAllMotions) {
+				toRemove.motions = Array.from(existingMotionFlags).map((entry) => entry[0]);
 			}
 
 			if (toRemove?.removeAllSounds) {
@@ -436,6 +509,14 @@ const flagManager = {
 					if (!effect) continue;
 				}
 				existingEffectFlags.set(effect._id, effect);
+			}
+
+			for (let motion of toAdd.motions) {
+				if (typeof motion === "string") {
+					motion = existingMotionFlags.get(motion);
+					if (!motion) continue;
+				}
+				existingMotionFlags.set(motion._id, motion);
 			}
 
 			for (let sound of toAdd.sounds) {
@@ -462,8 +543,17 @@ const flagManager = {
 				existingSoundFlags.delete(sound._id);
 			}
 
+			for (let motion of toRemove.motions) {
+				if (typeof motion === "string") {
+					motion = existingMotionFlags.get(motion);
+					if (!motion) continue;
+				}
+				existingMotionFlags.delete(motion._id);
+			}
+
 			let effectFlagsToSet = Array.from(existingEffectFlags);
 			let soundFlagsToSet = Array.from(existingSoundFlags);
+			let motionFlagsToSet = Array.from(existingMotionFlags);
 
 			let actorEffectFlags = [];
 			let actorSoundFlags = [];
@@ -479,7 +569,7 @@ const flagManager = {
 				effectFlagsToSet = effectFlagsToSet.filter(
 					(effect) => !effect[1]?.persistOptions?.persistTokenPrototype || !lib.is_UUID(effect[1]?.source) || !effect[1]?.attachTo?.active,
 				);
-				
+
 				actorSoundFlags = soundFlagsToSet.filter(
 					(sound) => lib.is_UUID(sound[1]?.source) && sound[1]?.attachTo?.active && sound[1]?.persistOptions?.persistTokenPrototype,
 				);
@@ -494,11 +584,17 @@ const flagManager = {
 			}else{
 				lib.forceDeletionKeyWrapper(effectUpdate, "-=" + objectSanitizedUuid)
 			}
-			
+
 			if(soundFlagsToSet.length) {
 				soundUpdate[objectSanitizedUuid] = soundFlagsToSet;
 			}else{
 				lib.forceDeletionKeyWrapper(soundUpdate, "-=" + objectSanitizedUuid)
+			}
+
+			if (motionFlagsToSet.length) {
+				motionUpdate[objectSanitizedUuid] = motionFlagsToSet;
+			} else {
+				lib.forceDeletionKeyWrapper(motionUpdate, "-=" + objectSanitizedUuid);
 			}
 
 			if(actor instanceof foundry.documents.Actor) {
@@ -518,11 +614,54 @@ const flagManager = {
 
 		await database.update({
 			[CONSTANTS.EFFECTS_FLAG]: effectUpdate,
+			[CONSTANTS.MOTIONS_FLAG]: motionUpdate,
 			[CONSTANTS.SOUNDS_FLAG]: soundUpdate
 		});
 	}, 250),
 
-	soundMigrations: {},
+	/**
+	 * Returns the persistent-motion flags stored on the given document,
+	 * running them through any registered motion migrations.
+	 *
+	 * @param inDocument
+	 * @returns {array}
+	 */
+	getMotionFlags(inDocument) {
+		if(!inDocument?.uuid) return [];
+
+		let motions = this.getDatabaseFlags().motions[inDocument.uuid] ?? [];
+
+		if (!motions?.length) return [];
+
+		motions = foundry.utils.deepClone(motions);
+
+		const changes = [];
+		for (let [motionId, motionData] of motions) {
+			let motionVersion = motionData?.flagVersion ?? "1.0.0";
+
+			if (motionData.flagVersion === this.latestMotionFlagVersion) continue;
+
+			for (let [version, migration] of Object.entries(this.motionMigrations)) {
+				if (!foundry.utils.isNewerVersion(version, motionVersion)) continue;
+
+				motionData = migration(inDocument, motionData);
+			}
+
+			lib.debug(
+				`Migrated motion with ID ${motionId} from version ${motionVersion} to version ${this.latestMotionFlagVersion}`,
+			);
+
+			motionData.flagVersion = this.latestMotionFlagVersion;
+
+			changes.push(motionData);
+		}
+
+		if (changes.length) {
+			flagManager.addFlags(inDocument.uuid, { motions: changes });
+		}
+
+		return motions;
+	},
 
 	/**
 	 * Sanitizes the sound data, accounting for changes to the structure in previous versions
@@ -544,7 +683,7 @@ const flagManager = {
 		for (let [soundId, soundData] of sounds) {
 			let soundVersion = soundData?.flagVersion ?? "1.0.0";
 
-			if (soundData.flagVersion === this.latestFlagVersion) continue;
+			if (soundData.flagVersion === this.latestSoundFlagVersion) continue;
 
 			for (let [version, migration] of Object.entries(this.soundMigrations)) {
 				if (!foundry.utils.isNewerVersion(version, soundVersion)) continue;
@@ -553,10 +692,10 @@ const flagManager = {
 			}
 
 			lib.debug(
-				`Migrated sound with ID ${soundId} from version ${soundVersion} to version ${this.latestFlagVersion}`,
+				`Migrated sound with ID ${soundId} from version ${soundVersion} to version ${this.latestSoundFlagVersion}`,
 			);
 
-			soundData.flagVersion = this.latestFlagVersion;
+			soundData.flagVersion = this.latestSoundFlagVersion;
 
 			changes.push(soundData);
 		}

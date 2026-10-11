@@ -2,6 +2,8 @@ import CrosshairsDocument from "./CrosshairsDocument.js";
 import TokenCrosshairsDocument from "./TokenCrosshairsDocument.js";
 import CONSTANTS from "../../constants.js";
 import CrosshairsPlaceable from "./CrosshairsPlaceable.js";
+import SequencerMotionManager from "../sequencer-motion-manager.js";
+import * as lib from "../../lib/lib.js";
 
 export default class Crosshair {
 
@@ -60,12 +62,55 @@ export default class Crosshair {
 	}
 
 	/**
+	 * Collects the placeables of the given embedded type(s) that fall within
+	 * a placed crosshair's shape.
+	 *
+	 * `collect(crosshair, options)` where `options` is
+	 * `{ types, filterMethod, ignoreMotion }`:
+	 *   - `types`: the embedded document type(s) to collect (string or array,
+	 *     default `"Token"`).
+	 *   - `filterMethod`: `(placeable, crosshair, shape, options) => boolean`,
+	 *     the containment test. Defaults to a centre-containment test.
+	 *   - `ignoreMotion`: when false (default), a placeable displaced by a
+	 *     `.motion()` is collected at its visible (motion-displaced) position;
+	 *     pass true to collect at its document position. Only affects the
+	 *     default `filterMethod`; a custom `filterMethod` receives the flag in
+	 *     its fourth argument and may honor or ignore it.
+	 *
+	 * (A legacy positional argument form is still accepted but deprecated and
+	 * emits a warning; use the options object above.)
+	 *
 	 * @param {CrosshairsDocument} crosshair
-	 * @param {String/Array<string>} types
-	 * @param {(object: PlaceableObject, crosshair: CrosshairsDocument, shape: PIXI.Graphics) => boolean} filterMethod
+	 * @param {object} [options] `{ types, filterMethod, ignoreMotion }`.
 	 * @returns {Array<Document>/Record<String, Array<Document>>}
 	 */
-	static collect(crosshair, types = "Token", filterMethod = this.containsCenter) {
+	static collect(crosshair, typesOrOptions = "Token", filterMethod, options = {}) {
+
+		let types;
+		let ignoreMotion;
+
+		const isOptionsObject =
+			typeof typesOrOptions === "object"
+			&& typesOrOptions !== null
+			&& !Array.isArray(typesOrOptions);
+
+		if (isOptionsObject) {
+			types = typesOrOptions.types ?? "Token";
+			filterMethod = typesOrOptions.filterMethod ?? this.containsCenter;
+			ignoreMotion = typesOrOptions.ignoreMotion ?? false;
+		} else {
+			if (arguments.length > 1) {
+				lib.throttled_custom_warning(
+					"Sequencer",
+					"Crosshair.collect | The positional arguments form `collect(crosshair, types, filterMethod, options)` is deprecated and will be removed in a future version. Pass a single options object instead: `collect(crosshair, { types, filterMethod, ignoreMotion })`.",
+					10000,
+					true
+				);
+			}
+			types = typesOrOptions;
+			filterMethod = filterMethod ?? this.containsCenter;
+			ignoreMotion = options.ignoreMotion ?? false;
+		}
 
 		const typesArray = Array.isArray(types) ? types : [types];
 		const crosshairDoc = crosshair instanceof CrosshairsPlaceable ? crosshair.document : crosshair;
@@ -77,7 +122,7 @@ export default class Crosshair {
 			const collection = crosshairDoc.parent.getEmbeddedCollection(embeddedName);
 
 			acc[embeddedName] = collection.filter((document) => {
-				return filterMethod(document.object, crosshairDoc, shape);
+				return filterMethod(document.object, crosshairDoc, shape, { ignoreMotion });
 			});
 			return acc;
 		}, {});
@@ -87,8 +132,16 @@ export default class Crosshair {
 
 	}
 
-	static containsCenter(placeable, crosshair, shape) {
-		return shape.contains(placeable.center.x, placeable.center.y);
+	static containsCenter(placeable, crosshair, shape, { ignoreMotion = false } = {}) {
+		let { x, y } = placeable.center;
+		if (!ignoreMotion) {
+			const displacement = SequencerMotionManager.getDisplacement(placeable);
+			if (displacement) {
+				x += displacement.deltaX;
+				y += displacement.deltaY;
+			}
+		}
+		return shape.contains(x, y);
 	}
 
 }

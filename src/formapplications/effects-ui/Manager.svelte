@@ -2,10 +2,13 @@
   import SequenceManager from "../../modules/sequence-manager.js";
   import EffectEntry from "../components/EffectEntry.svelte";
   import SoundEntry from "../components/SoundEntry.svelte";
+  import MotionEntry from "../components/MotionEntry.svelte";
   import SequencerSoundManager from "../../modules/sequencer-sound-manager.js";
+  import SequencerMotionManager from "../../modules/sequencer-motion-manager.js";
 
   const VisibleEffects = SequenceManager.VisibleEffects;
   const RunningSounds = SequenceManager.RunningSounds;
+  const RunningMotions = SequenceManager.RunningMotions;
 
   let localize = game.i18n.localize.bind(game.i18n);
 	let sounds = [];
@@ -18,6 +21,10 @@
 
   $: persistentSounds = sounds.filter(effect => effect.data.persist);
   $: temporarySounds = sounds.filter(effect => !effect.data.persist);
+
+  $: motions = Object.values($RunningMotions);
+  $: persistentMotions = motions.filter(motion => motion.data.persist || motion.data.persistUntilUpdate);
+  $: temporaryMotions = motions.filter(motion => !motion.data.persist && !motion.data.persistUntilUpdate);
 
   function endAllEffects() {
     Sequencer.EffectManager.endEffects({
@@ -32,11 +39,15 @@
 		});
   }
 
+  function endAllMotions() {
+    SequencerMotionManager.endAllMotions();
+  }
+
 </script>
 
 <div class="effects-container">
 
-  {#if !effects.length && !sounds.length}
+  {#if !effects.length && !sounds.length && !motions.length}
 
     <div class="no-effects">
       <h2>{localize("SEQUENCER.Manager.NothingPlaying")}</h2>
@@ -104,6 +115,37 @@
 			    {/each}
 		    </div>
 	    {/if}
+    </div>
+
+  {/if}
+
+  {#if motions.length}
+    <button class="w-100 end-all-effects mb-2" on:click={endAllMotions} type="button">
+      {localize("SEQUENCER.Manager.EndAllMotions")}
+    </button>
+
+    <div>
+      {#if persistentMotions.length}
+        <h2>{localize("SEQUENCER.Manager.PersistentMotions")}</h2>
+        <div>
+          {#each persistentMotions as motion (motion.id)}
+            <MotionEntry {motion} />
+          {/each}
+        </div>
+      {/if}
+
+      {#if temporaryMotions.length && persistentMotions.length}
+        <hr />
+      {/if}
+
+      {#if temporaryMotions.length}
+        <h2>{localize("SEQUENCER.Manager.TemporaryMotions")}</h2>
+        <div>
+          {#each temporaryMotions as motion (motion.id)}
+            <MotionEntry {motion} />
+          {/each}
+        </div>
+      {/if}
     </div>
 
   {/if}
