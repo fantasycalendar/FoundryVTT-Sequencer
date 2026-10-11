@@ -494,15 +494,14 @@ export default class SequencerEffectManager {
 				for (let token of doc.getActiveTokens()) {
 					let tokenEffects = foundry.utils.deepClone(effects);
 					docEffectsMap[token.document.uuid] = tokenEffects.map(([id, effect]) => {
-						if (lib.is_UUID(effect.source)) {
-							effect.source = token.document.uuid;
-						}
-						effect.sceneId = canvas.scene.id;
+						this._repointEffectDataToDocument(effect, token.document.uuid);
 						return [id, effect];
 					})
 				}
 			} else if (doc) {
-				docEffectsMap[uuid] = effects;
+				if (doc.parent?.id === canvas.scene.id) {
+					docEffectsMap[uuid] = effects;
+				}
 			} else {
 				effectsToRemove[uuid] = effects;
 			}
@@ -542,19 +541,23 @@ export default class SequencerEffectManager {
 		Hooks.on("createRegion", this._documentCreated.bind(this));
 	}
 
+	static _repointEffectDataToDocument(effectData, inDocumentUuid) {
+		if (lib.is_UUID(effectData.source)) {
+			const maskIndex = effectData.masks?.indexOf(effectData.source) ?? -1;
+			if (maskIndex !== -1) {
+				effectData.masks[maskIndex] = inDocumentUuid;
+			}
+			effectData.source = inDocumentUuid;
+		}
+		effectData.sceneId = inDocumentUuid.split(".")[1];
+	}
+
 	static _patchEffectDataForDocument(inDocumentUuid, effects) {
 		return effects.map((effect) => {
 			effect[0] = foundry.utils.randomID();
 			const effectData = effect[1];
 			effectData._id = effect[0];
-			if (lib.is_UUID(effectData.source)) {
-				if (effectData.masks.includes(effectData.source)) {
-					const index = effectData.masks.indexOf(effectData.source);
-					effectData.masks[index] = inDocumentUuid;
-				}
-				effectData.source = inDocumentUuid;
-			}
-			effectData.sceneId = inDocumentUuid.split(".")[1];
+			this._repointEffectDataToDocument(effectData, inDocumentUuid);
 			return effect;
 		});
 	}

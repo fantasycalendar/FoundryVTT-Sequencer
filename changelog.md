@@ -6,7 +6,11 @@
 - *Effects* - Fixed `.copySprite()` leaking video memory on tokens with a token ring enabled
 - *Effects* - Fixed `.mask()` no longer applying to a token or tile after its image was changed
 - *Effects* - Fixed `.loopProperty()` ignoring the `absolute` option, which made looping `alpha` or `effectAlpha` between specific values impossible
+- *Effects* - Fixed persistent effects from other scenes showing up in the Sequencer Manager
+- *Effects* - Fixed persistent effects using `persistTokenPrototype` with `.mask()` on a token not appearing on other scenes
+- *Effects* - Fixed `.mask()` on a token or tile not applying to persistent effects after reloading Foundry
 - *Sounds* - Sounds placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.toLocation()`) now follow its visible position when it is moving via a `.motion()`, with the same `ignoreMotion: true` opt-out
+- *Sounds* - Fixed persistent sounds from other scenes being loaded when switching scenes
 - *Animations* - Fixed `.animation()` getting stuck waiting forever on a token that never finished drawing
 - *Motions* - Added `.motion()`! A new section that visually animates a Token, Tile, or Drawing's sprite without touching the underlying document, so position, rotation, scale, alpha, and tint can be animated without the placeable's actual coordinates ever changing. See the [documentation](https://fantasycomputer.works/FoundryVTT-Sequencer/#/api/motion) for all the methods available
 - *Motions* - Added `.moveTo()` for moving the sprite to a destination. When the destination is a placeable its visible position is used, so moving toward a token flying via a `.motion()` lands where it appears
