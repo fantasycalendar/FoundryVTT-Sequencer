@@ -1,6 +1,11 @@
 // @ts-check
 import potpack from "potpack";
 export const SPRITE_PADDING = 1;
+// compressed textures encode 4x4 pixel blocks
+const BLOCK_SIZE = 4;
+const alignToBlock = (value) => Math.ceil(value / BLOCK_SIZE) * BLOCK_SIZE;
+const YUV_FORMATS = ["I420", "I420A", "I422", "I422A", "I444", "I444A", "NV12"];
+const RGB_FORMATS = ["RGBA", "RGBX", "BGRA", "BGRX"];
 
 export class FramePacker {
 	/** @type {OffscreenCanvasRenderingContext2D | null} */
@@ -31,7 +36,8 @@ export class FramePacker {
 		const chromaCopyOptions = { format: "RGBX" };
 		let imageBuffer = new Uint8ClampedArray(frame.allocationSize(chromaCopyOptions));
 		const planes = await frame.copyTo(imageBuffer, chromaCopyOptions);
-		if (planes.length === 1) {
+		const { width, height } = frame.visibleRect;
+		if (planes.length === 1 && planes[0].offset === 0 && planes[0].stride === width * 4) {
 			return imageBuffer;
 		}
 
@@ -39,12 +45,10 @@ export class FramePacker {
 		if (!context2d) {
 			throw new Error("Sequencer | Spritesheets | could not create offscreen canvas context, abort");
 		}
-		context2d.canvas.width = frame.displayWidth;
-		context2d.canvas.height = frame.displayHeight;
-		context2d.drawImage(frame, 0, 0);
-		imageBuffer = new Uint8ClampedArray(
-			context2d.getImageData(0, 0, frame.displayWidth, frame.displayHeight).data.buffer
-		);
+		context2d.canvas.width = width;
+		context2d.canvas.height = height;
+		context2d.drawImage(frame, 0, 0, width, height);
+		imageBuffer = new Uint8ClampedArray(context2d.getImageData(0, 0, width, height).data.buffer);
 		return imageBuffer;
 	}
 
@@ -99,8 +103,8 @@ export class FramePacker {
 				frame: {
 					x: x + SPRITE_PADDING,
 					y: y + SPRITE_PADDING,
-					w: SPRITE_PADDING + trimmedRect.w,
-					h: SPRITE_PADDING + trimmedRect.h,
+					w: trimmedRect.w,
+					h: trimmedRect.h,
 				},
 				spriteSourceSize: trimmedRect,
 			};
@@ -141,7 +145,14 @@ export class FramePacker {
 			context2d.canvas.width = scaledWidth;
 			context2d.canvas.height = scaledHeight;
 			const imageData = new ImageData(new Uint8ClampedArray(buffer.buffer), sourceSize.w, sourceSize.h);
-			const imageBitmap = await createImageBitmap(imageData, 0, 0, sourceSize.w, sourceSize.h, {
+			// Resizing ImageData interpolates unpremultiplied colors in some browsers (Chromium), leading to artifacts
+			// around alpha-transparent edges
+			const sourceContext = new OffscreenCanvas(sourceSize.w, sourceSize.h).getContext("2d");
+			if (!sourceContext) {
+				return { buffer, size: sourceSize };
+			}
+			sourceContext.putImageData(imageData, 0, 0);
+			const imageBitmap = await createImageBitmap(sourceContext.canvas, 0, 0, sourceSize.w, sourceSize.h, {
 				resizeWidth: scaledWidth,
 				resizeHeight: scaledHeight,
 				resizeQuality: "high",
@@ -163,8 +174,8 @@ export class FramePacker {
 				const { buffer, size } = await getScaledImageBuffer(data.imageBuffer, data.sourceSize, scale);
 				const trimmedRect = this.#getAlphaTrimInfo(buffer, size);
 				packedData.push({
-					w: trimmedRect.w + 2 * SPRITE_PADDING,
-					h: trimmedRect.h + 2 * SPRITE_PADDING,
+					w: alignToBlock(trimmedRect.w + 2 * SPRITE_PADDING),
+					h: alignToBlock(trimmedRect.h + 2 * SPRITE_PADDING),
 					// @ts-expect-error temprorary null
 					x: undefined,
 					// @ts-expect-error temprorary null
@@ -178,9 +189,8 @@ export class FramePacker {
 				});
 			}
 			const { w, h } = potpack(packedData);
-			// round up to nearest multiple of 4 to support uastc compression later on
-			spriteWidth = Math.ceil(w / 4) * 4;
-			spriteHeight = Math.ceil(h / 4) * 4;
+			spriteWidth = alignToBlock(w);
+			spriteHeight = alignToBlock(h);
 			if (Math.max(spriteHeight, spriteWidth) > 8192) {
 				scale -= 0.1;
 				continue;
@@ -205,23 +215,35 @@ export class FramePacker {
 	 * @returns {Promise<CombinedFrameData>}
 	 */
 	async #combineFrames(frame, alphaFrame, idx) {
-		const sourceSize = { w: frame.displayWidth, h: frame.displayHeight };
+		// copyTo and the canvas fallback both copy the visible rect, which can differ from the display size
+		const sourceSize = { w: frame.visibleRect.width, h: frame.visibleRect.height };
 		const imageBuffer = await this.#getVideoFrameRgbxBuffer(frame);
 		frame.close();
 
 		if (alphaFrame) {
 			const alphaBuffer = new Uint8ClampedArray(alphaFrame.allocationSize());
-			const [chromaPlane] = await alphaFrame.copyTo(alphaBuffer);
-			const alphaPackSize = Math.floor(chromaPlane.stride / sourceSize.w);
+			const [{ offset, stride }] = await alphaFrame.copyTo(alphaBuffer);
+			const format = alphaFrame.format;
+			const isYuv = YUV_FORMATS.includes(format);
+			const isRgb = RGB_FORMATS.includes(format);
+			const isExpandedRange = isRgb && !alphaFrame.colorSpace?.fullRange;
+			const sizeMatches =
+				alphaFrame.visibleRect.width === sourceSize.w && alphaFrame.visibleRect.height === sourceSize.h;
 			alphaFrame.close();
 
-			// copy alpha info to image buffer
-			for (let tex = 0; tex < imageBuffer.length; tex += 4) {
-				const alphaIdx = (tex >> 2) * alphaPackSize;
-				imageBuffer[tex] = imageBuffer[tex];
-				imageBuffer[tex + 1] = imageBuffer[tex + 1];
-				imageBuffer[tex + 2] = imageBuffer[tex + 2];
-				imageBuffer[tex + 3] = alphaBuffer[alphaIdx];
+			// safeguard against wild browser configs and colour formats
+			if (!(isYuv || isRgb) || !sizeMatches) {
+				throw new Error(`Sequencer | Spritesheets | unsupported alpha frame ${format}`);
+			}
+
+			// copy alpha info to image buffer, using the correct plane for yuv or rgb formats
+			const pixelSize = isYuv ? 1 : 4;
+			const channel = isYuv ? 0 : 1;
+			for (let y = 0; y < sourceSize.h; y++) {
+				for (let x = 0; x < sourceSize.w; x++) {
+					const alpha = alphaBuffer[offset + y * stride + x * pixelSize + channel];
+					imageBuffer[(y * sourceSize.w + x) * 4 + 3] = isExpandedRange ? limitedRangeAlpha(alpha) : alpha;
+				}
 			}
 		}
 
@@ -259,7 +281,8 @@ export class FramePacker {
 			if (top !== null) break;
 		}
 		if (top == null) {
-			return { x: 0, y: 0, w: 0, h: 0 };
+			// fully transparent, keep one (transparent) pixel so the frame texture stays valid
+			return { x: 0, y: 0, w: 1, h: 1 };
 		}
 		const topStart = Math.max(top - 1, 0);
 		// find right most opaque pixel
@@ -306,8 +329,20 @@ export class FramePacker {
 			if (left !== null) break;
 		}
 		left ??= 0;
-		return { x: left, y: top, w: right - left, h: bottom - top };
+		return { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
 	}
+}
+
+/**
+ * Recovers an alpha value from that was expanded from limited range.
+ * @param {number} value
+ * @returns {number}
+ */
+function limitedRangeAlpha(value) {
+	if (value === 0 || value === 255) {
+		return value;
+	}
+	return (value * 219) / 255 + 16;
 }
 
 /** @typedef {Size & Point} Rect */

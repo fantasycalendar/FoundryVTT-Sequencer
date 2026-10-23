@@ -1,21 +1,14 @@
 export declare class BasisEncoder {
-	setCreateKTX2File(value: boolean): void
-	setKTX2UASTCSupercompression(value: boolean): void
-	setKTX2SRGBTransferFunc(value: boolean): void
-	setSliceSourceImage(slice: number, imageBuffer: Uint8Array, width: number, height: number): void
-	setUASTC(value: boolean): void
-	setPackUASTCFlags(qualityFlags: number): void
-	setPerceptual(value: boolean): void
-	setCheckForAlpha(value: boolean): void
-	setMipGen(value: boolean): void
-	setMipSRGB(value: boolean): void
-	setMipSmallestDimension(value: number): void
-	setDebug(value: boolean): void
 	/**
-	 * @param fileBuffer Input Buffer. Must be able to hold the complete file data
-	 * @returns the number of bytes actually needed for the encoding
+	 * Only slice 0 is supported
+	 */
+	setSliceSourceImage(slice: number, imageBuffer: Uint8Array, width: number, height: number): void
+	/**
+	 * Encodes to KTX2 (UASTC LDR, Zstd, sRGB, no mips). Writes into
+	 * fileBuffer and returns the number of bytes, or 0 if it does not fit.
 	 */
 	encode(fileBuffer: Uint8Array): number
+	delete(): void
 }
 
 export declare class KTX2File {
@@ -51,14 +44,13 @@ export declare class KTX2File {
 		width: number
 		height: number
 		alphaFlag: number
-	}
+	} | null
 }
 
-declare function BASIS(): Promise<BASISModule>
 export interface BASISModule {
-	initializeBasis(): void
 	BasisEncoder: typeof BasisEncoder
 	KTX2File: typeof KTX2File
 }
 
-export default BASIS
+declare function BASIS(options?: { locateFile?: (path: string) => string }): Promise<BASISModule>
+export { BASIS }
