@@ -117,6 +117,8 @@ const migrations = {
     });
 
     const tokensOnScenes = getSequencerEffectTokens(version, (t) => {
+      // Unlinked tokens are excluded; reading their Actor would materialize it.
+      if (!t.actorLink) return false;
       let actor;
       try {
         actor = t.actor;
