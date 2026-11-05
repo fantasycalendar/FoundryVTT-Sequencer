@@ -1,5 +1,4 @@
 // @ts-check
-/** @import { WebMTrack } from '../inspector-js/inspectorjs-js' */
 /** @import { SpriteData } from './FramePacker.js' */
 /** @import { BASIS_FORMAT, MipLevelData } from './TextureCompressor' */
 import { createWebMDemuxer } from "../inspector-js/inspectorjs-js";
@@ -13,8 +12,14 @@ let ktx2FileCache = new Ktx2FileCache();
 let compressorPromise = SpritesheetCompressor.create(ktx2FileCache);
 onmessage = async function (e) {
 	if (e.data?.type === "CreateSpritesheet") {
-		const result = await decodeWebm(e.data.payload.buffer, e.data.payload.minimumScale, e.data.id);
 		const id = e.data.id;
+		let result;
+		try {
+			result = await decodeWebm(e.data.payload.buffer, e.data.payload.minimumScale, id);
+		} catch (error) {
+			// always answer, the generator only frees this worker after a response
+			result = errorResponse(error instanceof Error ? error.message : String(error));
+		}
 		if (result.type === "Cancel") {
 			postMessage({ id, ...result });
 		} else if (result.type === "SpritesheetCreated") {
