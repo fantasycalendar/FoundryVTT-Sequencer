@@ -103,7 +103,7 @@ const SOCKET_CALLBACKS = {
 	},
 	[SOCKET_HANDLERS.RUN_SEQUENCE_LOCALLY]: (data) => {
 		lib.debug("Playing remote Sequence");
-		new Sequence().fromJSON(data.payload).play();
+		new Sequence().fromJSON(...data.payload).play({ local: true });
 	},
 	[SOCKET_HANDLERS.START_MOTION]: (data) => {
 		return SequencerMotionManager._startMotion(...data.payload);
