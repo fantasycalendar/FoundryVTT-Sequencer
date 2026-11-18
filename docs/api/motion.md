@@ -172,7 +172,6 @@ Moves the sprite toward the given target. The first argument can be:
 - An `{ x, y }` coordinate object
 - A placeable or its document (a Token, Tile, Drawing, etc.), whose position is read when the section is built
 - A crosshair from [`Sequencer.Crosshair.show()`](crosshair.md), which lands the moving object centered on the crosshair, the same way an effect targeting a crosshair is centered on it
-- A string reference (see [`.name()`](#name) on other sections) that refers to a previously placed object
 - An array of waypoints - the sprite travels through each point in order
 
 Coordinates are the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
