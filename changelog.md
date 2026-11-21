@@ -8,6 +8,7 @@
 - *Effects* - Fixed `.name()` not passing the effect's `offset` to the subsequent effects
 - *Effects* - Fixed just-in-time spritesheet generation producing spritesheets with incorrect transparency, cropping, scaling, and colors (thank you Codas on github!)
 - *Effects* - Fixed effects using `.stretchTo()` or `.rotateTowards()` with `attachTo: true` not ending when their target was deleted, and not updating their elevation when the target's elevation changed
+- *Effects* - Fixed effects using `.stretchTo()` with `attachTo: true` trailing slightly behind moving tokens, and sometimes staying the wrong length after the distance changed
 - *Effects* - Fixed persistent effects placed at a location not coming back after reloading Foundry or switching scenes
 - *Sounds* - Fixed persistent sounds placed at a location not coming back after reloading Foundry or switching scenes
 - *Animations* - Fixed `.waitUntilFinished()` not waiting for token animations to finish, which could leave a token invisible after fading it out and back in around `.teleportTo()`

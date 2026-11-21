@@ -3004,8 +3004,12 @@ export default class CanvasEffect extends PIXI.Container {
 	 * @returns {Object}
 	 * @private
 	 */
-	async _getDistanceScaling(distance, textureWidth) {
-		if (!this._distanceCache || this._distanceCache?.distance !== distance) {
+	_getDistanceScaling(distance, textureWidth) {
+		if (
+			!this._distanceCache ||
+			this._distanceCache.distance !== distance ||
+			this._distanceCache.textureWidth !== textureWidth
+		) {
 			let scaleX = 1.0;
 			let scaleY = 1.0;
 
@@ -3025,6 +3029,7 @@ export default class CanvasEffect extends PIXI.Container {
 				scaleX,
 				scaleY,
 				distance,
+				textureWidth,
 			};
 		}
 
@@ -3032,33 +3037,70 @@ export default class CanvasEffect extends PIXI.Container {
 	}
 
 	/**
-	 * Applies the distance scaling to the sprite based on the previous method
+	 * Stretches the sprite synchronously so it lands in the current frame.
+	 * Returns a promise only when switching to another distance variant.
+	 * The switch starts first because a preloaded variant swaps in synchronously.
 	 *
-	 * @returns {Promise<void>}
+	 * @returns {Promise<boolean>|undefined}
 	 * @private
 	 */
-	async _applyDistanceScaling() {
+	_applyDistanceScaling() {
+		const { ray, distance } = this._measureStretch();
+		this._updateCurrentFilePath(distance);
+		let pendingVariant;
+		if (this._currentFilePath && this.sprite.activePath !== this._currentFilePath) {
+			pendingVariant = this._activateDistanceVariant();
+		}
+		this._stretchSprite(ray, distance);
+		return pendingVariant;
+	}
+
+	/**
+	 * Activates the current distance variant, then re-stretches at the latest positions.
+	 * Resolves to `false` if the effect ended or this call did not switch the variant.
+	 *
+	 * @returns {Promise<boolean>}
+	 * @private
+	 */
+	async _activateDistanceVariant() {
 		const initialization = this._initialization;
 		const sprite = this.sprite;
+		const requestedPath = this._currentFilePath;
+		await sprite.activate(requestedPath);
+		if (this._initialization !== initialization || this._ended || this.destroyed ||
+			this.sprite !== sprite || sprite.destroyed) return false;
+		if (sprite.activePath !== requestedPath) return false;
+		const { ray, distance } = this._measureStretch();
+		this._stretchSprite(ray, distance);
+		this._setAnchors();
+		return true;
+	}
+
+	/**
+	 * @returns {{ ray: foundry.canvas.geometry.Ray, distance: number }}
+	 * @private
+	 */
+	_measureStretch() {
 		const ray = new foundry.canvas.geometry.Ray(this.sourcePosition, this.targetPosition);
+		const distance = ray.distance / (this.data.scale.x ?? 1.0);
+		return { ray, distance };
+	}
+
+	/**
+	 * @param {foundry.canvas.geometry.Ray} ray
+	 * @param {number} distance
+	 * @private
+	 */
+	_stretchSprite(ray, distance) {
+		const sprite = this.sprite;
+		const texture = sprite.texture;
 
 		this._rotateTowards(ray);
 
-		const distance = ray.distance / (this.data.scale.x ?? 1.0);
-
-		this._updateCurrentFilePath(distance)
-		await sprite.activate(this._currentFilePath)
-		if (this._initialization !== initialization || this._ended || this.destroyed ||
-			this.sprite !== sprite || sprite.destroyed) return;
-		const texture = sprite.texture
-
-		let { scaleX, scaleY } = await this._getDistanceScaling(distance, texture.width);
-		if (this._initialization !== initialization || this._ended || this.destroyed ||
-			this.sprite !== sprite || sprite.destroyed) return;
+		const { scaleX, scaleY } = this._getDistanceScaling(distance, texture.width);
 
 		if (this.data.attachTo?.active) {
-			const { x, y } = this.sourcePosition;
-			this.position.set(x, y);
+			this.position.set(ray.A.x, ray.A.y);
 		}
 
 		if (this.data.tilingTexture) {
@@ -3186,13 +3228,12 @@ export default class CanvasEffect extends PIXI.Container {
 		this.sprite.updateDefaultScaling()
 	}
 
-	async _transformStretchToAttachedSprite() {
-		try {
-			await this._applyDistanceScaling();
-			this._setAnchors()
-		} catch (err) {
-			//lib.debug_error(err);
-		}
+	_transformStretchToAttachedSprite() {
+		const pendingVariant = this._applyDistanceScaling();
+		this._setAnchors();
+		pendingVariant?.catch((err) => {
+			lib.debug_error("stretchTo file variant activation threw", err);
+		});
 	}
 
 	_transformNoStretchSprite() {
