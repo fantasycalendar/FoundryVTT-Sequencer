@@ -150,6 +150,7 @@ Examples:
 .moveTo({ x: 500, y: 300 }, { duration: 600 })
 .moveTo(otherToken, { duration: 400, ease: "easeOutQuad" })
 .moveTo(otherToken, { duration: 1500, ease: "easeInOutQuad", attachTo: true })
+.moveTo("impact", { duration: 400 })
 .moveTo(
     { x: 500, y: 0 },
     { duration: 400, return: false }
@@ -172,12 +173,12 @@ Moves the sprite toward the given target. The first argument can be:
 - An `{ x, y }` coordinate object
 - A placeable or its document (a Token, Tile, Drawing, etc.), whose position is read when the section is built
 - A crosshair from [`Sequencer.Crosshair.show()`](crosshair.md), which lands the moving object centered on the crosshair, the same way an effect targeting a crosshair is centered on it
-- A string reference (see [`.name()`](#name) on other sections) that refers to a previously placed object
+- A string: the name, ID, or UUID of an object on the scene, or a name from [`.name()`](#name) or `.addNamedLocation()` earlier in the sequence. A name keeps the offsets it was given (`offset`, `randomOffset`, `.missed()`), so the moving object lands where an effect played at that name would
 - An array of waypoints - the sprite travels through each point in order
 
 Coordinates are the same coordinates you'd pass to `token.document.update({ x, y })`. The motion handles the conversion to the sprite's internal position automatically.
 
-When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is read once, at the moment `.moveTo()` is called; it does not keep tracking the target if the target moves afterward. Pass `attachTo: true` (below) to keep tracking a moving target frame by frame instead. A plain `{ x, y }` coordinate is used exactly as given.
+When the target is a placeable, document, or name reference, its position **includes any motion currently displacing it**. If you move a token toward another token that is itself flying via a `.motion()`, it lands on where that token visually appears, not on its document position. Pass `ignoreMotion: true` in the options to target the document position instead, for example when moving a token to the ground directly beneath a flying token. The position is read once, when `.moveTo()` is called (or, for a name from earlier in the sequence, when the motion plays), and is not tracked afterward. Pass `attachTo: true` (below) to keep tracking a moving target frame by frame instead. A plain `{ x, y }` coordinate is used exactly as given.
 
 ### Single-target form options
 

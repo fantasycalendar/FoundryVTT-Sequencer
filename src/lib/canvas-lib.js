@@ -1073,13 +1073,12 @@ export function resolve_named_location(entry, { repetition = 0, sceneId } = {}) 
 /**
  * Sums the missed, random, and fixed offsets a named location carries, to be
  * added to the position the name resolves to. `namedLocation` is a name
- * entry merged with the result of `resolve_named_location`. Missed and random
- * offsets are drawn from `namedLocation.twister` in that order, and stored on
- * `cache` so repeated calls with the same cache reuse the first draw.
+ * entry merged with the result of `resolve_named_location`. Repeated calls
+ * with the same `cache` reuse the first missed and random draws.
  *
  * @param {object} namedLocation
  * @param {object} options
- * @param {boolean} options.prefersSourceSide - the name resolves to its source object before its target object
+ * @param {boolean} options.prefersSourceSide - use the source side's fixed offset when the name has a source object
  * @param {object} options.cache
  * @returns {{x: number, y: number}}
  */

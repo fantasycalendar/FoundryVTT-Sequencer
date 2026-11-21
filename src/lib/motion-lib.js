@@ -15,8 +15,9 @@ export function lerp(from, to, progress) {
 /**
  * Resolve an attached track's live `to` in mesh-space: read the target fresh
  * each frame, take its document position on this axis, and add the motioned
- * token's `meshOriginOffset`. Returns `null` when the target is gone, so the
- * caller falls back to the baked `track.to`.
+ * token's `meshOriginOffset` plus any `attachOffset` a named target has.
+ * Returns `null` when the target is gone, so the caller falls back to the
+ * baked `track.to`.
  */
 export function resolveAttachedTo(track, motion) {
 	const placeable = fromUuidSync(track.attachToUuid)?.object ?? null;
@@ -28,7 +29,7 @@ export function resolveAttachedTo(track, motion) {
 	const documentValue = track.attachAxis === "y" ? pos?.y : pos?.x;
 	if (typeof documentValue !== "number") return null;
 	const offset = track.attachAxis === "y" ? motion.meshOriginOffset.y : motion.meshOriginOffset.x;
-	return documentValue + offset;
+	return documentValue + offset + (track.attachOffset ?? 0);
 }
 
 /**

@@ -6,6 +6,7 @@
 - *Sequencer* - Fixed Foundry loading slowly for GMs in worlds with many tokens (thank you ChrisRosser on github!)
 - *Effects* - Fixed `.name()` not passing the effect's `offset` to the subsequent effects
 - *Effects* - Fixed just-in-time spritesheet generation producing spritesheets with incorrect transparency, cropping, scaling, and colors (thank you Codas on github!)
+- *Motions* - Fixed `.moveTo()` not accepting names from `.name()` or `.addNamedLocation()`
 - *Motions* - Fixed `.noise()` not working when no `duration` was given (thank you MrVauxs on github!)
 
 # Version 4.3.0
