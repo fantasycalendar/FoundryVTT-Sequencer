@@ -6,6 +6,7 @@ import CONSTANTS from "../constants.js";
 
 class Database {
   #entriesStore = writable({});
+  #sortedEntries = null;
 
   privateModules = [];
   flattenedEntries = [];
@@ -163,7 +164,17 @@ class Database {
     if (inString === "")
       return this._throwError("entryExists", "inString cannot be empty");
     inString = inString.replace(/\[[0-9]+]$/, "");
-    const match = this.flattenedEntries.find((entry) => entry.startsWith(inString));
+		
+    // Use binary search to find place of first db entry at or after inString
+    const sorted = (this.#sortedEntries ??= this.flattenedEntries.toSorted());
+    let low = 0;
+    let high = sorted.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (sorted[mid] < inString) low = mid + 1;
+      else high = mid;
+    }
+    const match = sorted[low]?.startsWith(inString) ? sorted[low] : undefined;
     if (match && match !== inString && !match.startsWith(inString + ".")) {
       lib.custom_warning(
         "Sequencer",
@@ -431,6 +442,7 @@ class Database {
       },
       this.inverseFlattenedEntries
     );
+    this.#sortedEntries = null;
   }
 
   /**
@@ -463,14 +475,15 @@ class Database {
       .concat(Object.keys(CONST.FILE_CATEGORIES.AUDIO))
       .concat(['json']);
 
+    const rootMetadata = this._getCleanData(entries);
+
     for (let wholeDBPath of allPaths) {
-      let metadata = this._getCleanData(entries);
+      let metadata = foundry.utils.deepClone(rootMetadata);
       let dbPath = wholeDBPath.split(".");
       dbPath.shift();
-      let combinedPath = "";
+      let entry = entries;
       for (let part of dbPath) {
-        combinedPath = combinedPath ? combinedPath + "." + part : part;
-        const entry = foundry.utils.getProperty(entries, combinedPath);
+        entry = entry?.[part];
         if (Array.isArray(entry) || typeof entry === "string" || entry?.file) {
           metadata = this._getCleanData(entry, { existingData: metadata });
           break;
@@ -507,6 +520,7 @@ class Database {
             this.flattenedEntries.indexOf(wholeDBPath),
             1
           );
+          this.#sortedEntries = null;
           continue;
         } else if (existingEntry) {
           const sequencerFile = this.getEntry(data);
@@ -528,13 +542,12 @@ class Database {
   }
 
   _getCleanData(data, { existingData = {}, metadata = true } = {}) {
-    data = Object.entries(data).filter((entry) => {
-      return metadata === entry[0].startsWith("_");
-    });
-    if (metadata) {
-      data = data.map((entry) => [entry[0].slice(1), entry[1]]);
+    const cleanData = {};
+    for (const key of Object.keys(data)) {
+      if (metadata !== key.startsWith("_")) continue;
+      cleanData[metadata ? key.slice(1) : key] = data[key];
     }
-    return foundry.utils.mergeObject(existingData, Object.fromEntries(data));
+    return foundry.utils.mergeObject(existingData, cleanData);
   }
 }
 
