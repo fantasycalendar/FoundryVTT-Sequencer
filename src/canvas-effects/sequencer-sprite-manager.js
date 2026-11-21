@@ -279,6 +279,12 @@ export class SequencerSpriteManager extends PIXI.Container {
 	/** @type {Map<string | undefined, VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset>} */
 	#relatedAssets = new Map();
 
+	/** @type {Map<string, Promise<VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset | undefined>>} */
+	#pendingLoads = new Map();
+
+	/** @type {string | undefined} */
+	#requestedPath;
+
 	/** @type {VideoPlaybackControls | SpritePlaybackControls | null} */
 	#playbackControls;
 
@@ -363,23 +369,18 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 * @param {string | undefined} filePath
 	 */
 	async activate(filePath) {
-		if (!filePath || this.#activeAssetPath === filePath) {
+		if (!filePath) {
+			return;
+		}
+		this.#requestedPath = filePath;
+		if (this.#activeAssetPath === filePath) {
 			return;
 		}
 
-		let nextAsset = this.#relatedAssets.get(filePath);
-		// new file is already being loaded, nothing more to do
-		if (this.#relatedAssets.has(filePath) && nextAsset == null) {
+		const nextAsset = await this.#getOrLoadAsset(filePath);
+		// Only the most recent request switches, regardless of which load finishes last.
+		if (this.destroyed || !nextAsset || this.#requestedPath !== filePath || this.#activeAssetPath === filePath) {
 			return;
-		}
-
-		if (!nextAsset) {
-			this.#relatedAssets.set(filePath, null);
-			nextAsset = await this.#loadAsset(filePath);
-			if (this.destroyed) {
-				return;
-			}
-			this.#relatedAssets.set(filePath, nextAsset);
 		}
 
 		if (this.#activateAsset(nextAsset)) {
@@ -599,12 +600,39 @@ export class SequencerSpriteManager extends PIXI.Container {
 		const allFiles = this.#file.getAllFiles();
 
 		for (const filePath of allFiles) {
-			if (this.#relatedAssets.has(filePath)) {
-				continue;
+			if (this.destroyed) {
+				return;
 			}
-			const asset = await this.#loadAsset(filePath);
-			this.#relatedAssets.set(filePath, asset);
+			await this.#getOrLoadAsset(filePath);
 		}
+	}
+
+	/**
+	 * Returns the loaded asset for the path, sharing one load between concurrent callers.
+	 * Resolves to undefined if the manager was destroyed while loading.
+	 *
+	 * @param {string} filePath
+	 */
+	#getOrLoadAsset(filePath) {
+		const loadedAsset = this.#relatedAssets.get(filePath);
+		if (loadedAsset) {
+			return Promise.resolve(loadedAsset);
+		}
+		let pendingLoad = this.#pendingLoads.get(filePath);
+		if (!pendingLoad) {
+			pendingLoad = this.#loadAsset(filePath)
+				.then((asset) => {
+					if (this.destroyed) {
+						asset?.destroy();
+						return undefined;
+					}
+					this.#relatedAssets.set(filePath, asset);
+					return asset;
+				})
+				.finally(() => this.#pendingLoads.delete(filePath));
+			this.#pendingLoads.set(filePath, pendingLoad);
+		}
+		return pendingLoad;
 	}
 
 	/**
