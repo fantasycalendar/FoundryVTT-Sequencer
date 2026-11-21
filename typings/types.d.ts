@@ -1593,6 +1593,11 @@ declare global {
 	   * This method only modifies .persist()-ed sounds and causes them to not immediately end, but stick around for the given duration passed to this method.
 	   */
 	  extraEndDuration(inExtraDuration: number): this;
+
+    /**
+     * Ties the sound to any number of documents in Foundry - if those get deleted, the sound is ended.
+     */
+    tieToDocuments(inOrigin: TieToOrigin): this;
   }
 
 	type PanSoundOptions = {

@@ -26,6 +26,7 @@ class SoundSection extends Section {
 		this._extraEndDuration = false;
 		this._levels = null;
 		this._elevation = null;
+		this._tiedDocuments = [];
 	}
 
 	get _target() {
@@ -518,6 +519,51 @@ class SoundSection extends Section {
 	}
 
 	/**
+	 * Ties the sound to any number of documents in Foundry. When any of them is deleted, the sound ends, the same way
+	 * as ending it through the Sound Manager. Works on both regular and `.persist()`ed sounds.
+	 *
+	 * @param {String|PlaceableObject|foundry.abstract.Document|Array<String|PlaceableObject|foundry.abstract.Document>} inDocuments
+	 *   - a document UUID string, a placeable (such as a Token), a document (such as an ActiveEffect or Item), or an array of these
+	 * @returns {SoundSection}
+	 */
+	tieToDocuments(inDocuments) {
+		if (!Array.isArray(inDocuments)) {
+			inDocuments = [inDocuments];
+		}
+		for (let doc of inDocuments) {
+			if (
+				typeof doc !== "string" &&
+				!(doc instanceof foundry.canvas.placeables.PlaceableObject) &&
+				!(doc instanceof foundry.abstract.Document)
+			) {
+				throw this.sequence._customError(
+					this,
+					"tieToDocuments",
+					"inDocuments must be of type string, PlaceableObject, or Document, or an array thereof"
+				);
+			}
+			if (typeof doc === "string") {
+				if (!fromUuidSync(doc))
+					throw this.sequence._customError(
+						this,
+						"tieToDocuments",
+						`could not find document with UUID "${doc}"`
+					);
+			} else {
+				doc = lib.validate_document(doc)?.uuid;
+				if (!doc)
+					throw this.sequence._customError(
+						this,
+						"tieToDocuments",
+						"could not find the UUID for the given object"
+					);
+			}
+			this._tiedDocuments.push(doc);
+		}
+		return this;
+	}
+
+	/**
 	 *  A smart method that can take a reference to an object, or a direct on the canvas to attach an sound to,
 	 *  or a string reference (see .name())
 	 *
@@ -814,6 +860,7 @@ class SoundSection extends Section {
 			extraEndDuration: this._extraEndDuration,
 			levels: this._levels,
 			elevation: this._elevation,
+			tiedDocuments: Array.from(new Set(this._tiedDocuments)),
 		};
 
 		for (let override of this._overrides) {

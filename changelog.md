@@ -10,6 +10,8 @@
 - *Effects* - Fixed effects using `.stretchTo()` or `.rotateTowards()` with `attachTo: true` not ending when their target was deleted, and not updating their elevation when the target's elevation changed
 - *Effects* - Fixed effects using `.stretchTo()` with `attachTo: true` trailing slightly behind moving tokens, and sometimes staying the wrong length after the distance changed
 - *Effects* - Fixed persistent effects placed at a location not coming back after reloading Foundry or switching scenes
+- *Effects* - Fixed effects using `.scaleToObject()` with `attachTo` shrinking down to one grid square while playing their ending after the object they were attached to was deleted
+- *Sounds* - Added `.tieToDocuments()`, which ends the sound when any of the given documents are deleted
 - *Sounds* - Fixed persistent sounds placed at a location not coming back after reloading Foundry or switching scenes
 - *Sounds* - Fixed `.volume()` being ignored on sounds placed at a location when using `.alwaysForGMs()`, or when a player controls the token the sound is on
 - *Sounds* - Fixed sounds using `.atLocation()` on a region or template not being heard

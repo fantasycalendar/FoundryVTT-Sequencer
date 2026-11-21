@@ -387,6 +387,13 @@ Also supports a second options object that accepts:
 Only modifies [`.persist()`](#persist)ed sounds. Adds extra time (in milliseconds) before a persisted sound is considered ended after the Sound Manager ends it, so the sound's tail can finish playing instead of being cut off.
 
 
+## Tie To Documents
+
+`.tieToDocuments(token)` or `.tieToDocuments([ActiveEffect, Token])`
+
+Ties the sound to any number of documents in Foundry - if those get deleted, the sound is ended, the same way as ending it through the [Sound Manager](https://fantasycomputer.works/FoundryVTT-Sequencer/#/sound-manager). Accepts UUID strings, placeables, and documents, or an array of them.
+
+
 ## Radius
 
 `.radius(inNumber)`

@@ -224,6 +224,8 @@ export default class CanvasEffect extends PIXI.Container {
 
 		this._cachedSourceData = {};
 		this._cachedTargetData = {};
+		this._sourceDeleted = false;
+		this._targetDeleted = false;
 
 		this.uuid = false;
 
@@ -829,7 +831,7 @@ export default class CanvasEffect extends PIXI.Container {
 			return SequencerEffectManager.getPositionForUUID(this.data.source);
 		}
 
-		if (this.source instanceof foundry.canvas.placeables.PlaceableObject && this.isSourceDestroyed) {
+		if (this._sourceDeleted || (this.source instanceof foundry.canvas.placeables.PlaceableObject && this.isSourceDestroyed)) {
 			return {
 				...this._cachedSourceData,
 			};
@@ -917,7 +919,7 @@ export default class CanvasEffect extends PIXI.Container {
 			);
 		}
 
-		if (this.target instanceof foundry.canvas.placeables.PlaceableObject && this.isTargetDestroyed) {
+		if (this._targetDeleted || (this.target instanceof foundry.canvas.placeables.PlaceableObject && this.isTargetDestroyed)) {
 			return {
 				...this._cachedTargetData,
 			};
@@ -2027,6 +2029,7 @@ export default class CanvasEffect extends PIXI.Container {
 		if (this.isSourceDestroyed) {
 			this._source = this.sourcePosition;
 			this._source.uuid = this.uuid;
+			this._sourceDeleted = true;
 			SequencerEffectManager.endEffects({ effects: this });
 		}
 	}
@@ -2034,6 +2037,7 @@ export default class CanvasEffect extends PIXI.Container {
 	_checkTargetDestroyed() {
 		if (this.isTargetDestroyed) {
 			this._target = this.targetPosition;
+			this._targetDeleted = true;
 			SequencerEffectManager.endEffects({ effects: this });
 		}
 	}
@@ -2868,6 +2872,7 @@ export default class CanvasEffect extends PIXI.Container {
 				if (doc !== this.sourceDocument) return;
 				this._source = this._cachedSourceData.position;
 				this._source.uuid = uuid;
+				this._sourceDeleted = true;
 				SequencerEffectManager.objectDeleted(uuid);
 			});
 
@@ -2932,6 +2937,7 @@ export default class CanvasEffect extends PIXI.Container {
 			hooksManager.addHook(this.uuid, this.getTargetHook("delete"), (doc) => {
 				if (doc !== this.targetDocument) return;
 				this._target = this._cachedTargetData.position;
+				this._targetDeleted = true;
 				const uuid = doc.uuid;
 				SequencerEffectManager.objectDeleted(uuid);
 			});
