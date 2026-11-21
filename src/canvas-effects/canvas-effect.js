@@ -2930,7 +2930,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		if (attachedToTarget) {
 			hooksManager.addHook(this.uuid, this.getTargetHook("delete"), (doc) => {
-				if (doc !== this.target) return;
+				if (doc !== this.targetDocument) return;
 				this._target = this._cachedTargetData.position;
 				const uuid = doc.uuid;
 				SequencerEffectManager.objectDeleted(uuid);
@@ -2939,7 +2939,7 @@ export default class CanvasEffect extends PIXI.Container {
 				SequencerEffectManager.objectDeleted(this.targetDocument.uuid);
 			}
 			hooksManager.addHook(this.uuid, this.getTargetHook("update"), (doc) => {
-				if (doc !== this.target) return;
+				if (doc !== this.targetDocument) return;
 				this.updateElevation();
 			});
 
