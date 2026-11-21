@@ -5,7 +5,9 @@
 // 2: zstandard compressed ktx2 files and response metadata
 // 3: Remove cache size limit and increase scaled spritesheet resolutions
 // 4: Fix alpha banding issues for scaled spritesheets.
-const cacheVersion = 4;
+// 5: Fix alpha frames, trimming off by one, color bleeding when scaling,
+//    frames aligned to 4x4 blocks, smaller UASTC encoder / transcoder
+const cacheVersion = 5;
 const cacheName = `SequencerKTX2Cache-${cacheVersion}`;
 /** @type {Promise<Cache | null>} */
 let ktx2FileCache;
@@ -165,7 +167,7 @@ export class Ktx2FileCache {
 			return;
 		}
 		const jsonData = await cacheResponse.json()
-		if (!this.#verifyResponseData(jsonData)) {
+		if (!(await this.#verifyResponseData(jsonData))) {
 			await this.#deleteEntry(id, hash)
 			return;
 		}

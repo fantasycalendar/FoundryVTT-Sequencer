@@ -1,6 +1,6 @@
 // @ts-check
 /** @import { BASISModule, BasisEncoder } from '../basis-encoder/basis_encoder' */
-import BASIS from "../basis-encoder/basis_encoder.mjs";
+import { BASIS } from "../basis-encoder/basis_encoder.mjs";
 
 // this is just a typescript-styel enum / bidrectional mapping of values
 export var BASIS_FORMAT;
@@ -23,7 +23,6 @@ export class SpritesheetCompressor {
 	 */
 	static async create(ktx2FileCache) {
 		const basis = await BASIS();
-		basis.initializeBasis();
 		return new SpritesheetCompressor(basis, ktx2FileCache);
 	}
 	/**
@@ -46,18 +45,7 @@ export class SpritesheetCompressor {
 	 * @returns {BasisEncoder}
 	 */
 	#getConfiguredEncoder() {
-		const encoder = new this.#basis.BasisEncoder();
-		encoder.setCreateKTX2File(true);
-		encoder.setKTX2UASTCSupercompression(true);
-		encoder.setKTX2SRGBTransferFunc(true);
-		encoder.setPackUASTCFlags(0);
-		encoder.setPerceptual(true);
-		encoder.setUASTC(true);
-		encoder.setCheckForAlpha(true);
-		encoder.setMipGen(false);
-		encoder.setMipSRGB(true);
-		encoder.setDebug(false);
-		return encoder;
+		return new this.#basis.BasisEncoder();
 	}
 	/**
 	 * @returns {number | undefined}
@@ -90,9 +78,11 @@ export class SpritesheetCompressor {
 
 		const encoder = this.#getConfiguredEncoder();
 		encoder.setSliceSourceImage(0, new Uint8Array(imageBuffer), width, height);
-		// todo only initialize if needed!
-		let ktx2Buffer = new Uint8Array(width * height * 4);
+		// allocate 4 bytes per pixel + some overhead (UASTC should only be about 1 byte per pixel but better to be safe)
+		let ktx2Buffer = new Uint8Array(width * height * 4 + 4096);
 		const encodedBytes = encoder.encode(ktx2Buffer);
+		// Release the wrapper again, WASM has no automatic memory management...
+		encoder.delete();
 		if (!encodedBytes) {
 			return;
 		}
@@ -146,6 +136,12 @@ export class SpritesheetCompressor {
 				return;
 			}
 			const levelInfo = ktx2File.getImageLevelInfo(lvl, 0, 0);
+			if (!levelInfo) {
+				console.warn("Encoded KTX2 file has no level info", lvl);
+				ktx2File.close();
+				ktx2File.delete();
+				return;
+			}
 			compressedLevels.push({
 				level: lvl,
 				width: levelInfo.origWidth,

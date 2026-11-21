@@ -164,7 +164,7 @@ export default class VisionSamplerShader extends foundry.canvas.rendering.shader
 
 	  vec4 color;
 	  %forloop%
-
+        color.rgb = min(color.rgb, vec3(color.a));
 		if (isColorMatrixEnabled && vColorMatrixAlpha > 0.0) {
 			if (color.a > 0.0) {
 	      color.rgb /= color.a;
