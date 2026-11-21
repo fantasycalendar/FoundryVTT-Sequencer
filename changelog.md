@@ -14,6 +14,7 @@
 - *Effects* - Fixed effects using `.persist(true, { persistTokenPrototype: true })` being lost when the token was deleted, such as when teleporting it to another scene
 - *Effects* - Fixed effects using `.stretchTo()` with `attachTo: true` sometimes showing the animation for the wrong distance after the distance changed quickly, and leaking video memory
 - *Effects* - Fixed effects using `.stretchTo()` with `attachTo: true` briefly disappearing when the distance changed enough to switch to a shorter or longer animation
+- *Effects* - Fixed persistent effects leaking memory when they ended, or changed distance with `.stretchTo()`, while their animation was still being prepared in the background
 - *Sounds* - Added `.tieToDocuments()`, which ends the sound when any of the given documents are deleted
 - *Sounds* - Fixed persistent sounds placed at a location not coming back after reloading Foundry or switching scenes
 - *Sounds* - Fixed `.volume()` being ignored on sounds placed at a location when using `.alwaysForGMs()`, or when a player controls the token the sound is on

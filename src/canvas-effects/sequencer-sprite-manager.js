@@ -436,6 +436,10 @@ export class SequencerSpriteManager extends PIXI.Container {
 			if (isStale()) {
 				return;
 			}
+			// A compiled spritesheet may have replaced and destroyed the video during the seek.
+			if (this.#relatedAssets.get(filePath) !== nextAsset) {
+				return this.#activateWhenReady(filePath);
+			}
 		}
 
 		if (this.#activateAsset(nextAsset, { syncTime: !seekBeforeSwap })) {
@@ -443,6 +447,9 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 		if (this.#sharedSpriteConfig.isPersisted && !this.#sharedSpriteConfig.tiling) {
 			requestAnimationFrame(async () => {
+				if (this.destroyed) {
+					return;
+				}
 				const minimumScale = this.#calculateMinimumSpritesheetScale();
 				const spritesheet = await SequencerFileCache.requestCompiledSpritesheet(filePath, {
 					minimumScale: minimumScale,
@@ -450,14 +457,18 @@ export class SequencerSpriteManager extends PIXI.Container {
 				if (!spritesheet) {
 					return;
 				}
-				const previousAsset = this.activeAsset;
 				const asset = new VideoSpritesheetAsset({ filepath: filePath, spritesheet });
-				this.#relatedAssets.set(filePath, asset);
-				if (this.destroyed || this.#activeAssetPath !== filePath) {
+				// Constructing the asset takes a spritesheet reference; destroying it gives the reference back.
+				if (this.destroyed) {
+					asset.destroy();
 					return;
 				}
-				this.#activateAsset(asset);
-				previousAsset?.destroy();
+				const replacedAsset = this.#relatedAssets.get(filePath);
+				this.#relatedAssets.set(filePath, asset);
+				if (this.#activeAssetPath === filePath) {
+					this.#activateAsset(asset);
+				}
+				replacedAsset?.destroy();
 			});
 		}
 	}
