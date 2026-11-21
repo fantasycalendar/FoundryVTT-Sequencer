@@ -863,32 +863,34 @@ export default class SequencerMotionManager {
 			for (const motion of [...aggregator.motions]) {
 				if (data.sequenceId && motion.sequenceId !== data.sequenceId) continue;
 				if (data.name && motion.name !== data.name) continue;
-
-				if (motion.persist) {
-					// Remove the flag now, not when the settle animation
-					// finishes. `endMotions` is the "this has ended" signal;
-					// a reload mid-settle must not resurrect it. The
-					// in-memory return leg still plays for the visual, and
-					// the tick removes the motion from the set when
-					// `sampleAt` returns null.
-					motion._removeFlag(aggregator.uuid);
-					motion.triggerReturn(data.settle);
-				} else if (motion.persistUntilUpdate) {
-					// No return leg; endMotions is "cancel the hold now."
-					aggregator.motions.delete(motion);
-					motion._finish();
-					motion._removeFlag(aggregator.uuid);
-				} else if (data.settle > 0 && motionHasReturningTracks(motion)) {
-					motion.triggerReturn(data.settle);
-				} else {
-					aggregator.motions.delete(motion);
-					motion._finish();
-					motion._removeFlag(aggregator.uuid);
-				}
+				SequencerMotionManager._endMotion(aggregator, motion, data.settle);
 				count++;
 			}
 		}
 		return count;
+	}
+
+	/**
+	 * Ends one motion locally.
+	 */
+	static _endMotion(aggregator, motion, settle) {
+		if (motion.persist) {
+			// Flag goes before the return leg so a reload mid-return
+			// cannot resurrect the motion.
+			motion._removeFlag(aggregator.uuid);
+			motion.triggerReturn(settle);
+		} else if (motion.persistUntilUpdate) {
+			// Ends without a return leg.
+			aggregator.motions.delete(motion);
+			motion._finish();
+			motion._removeFlag(aggregator.uuid);
+		} else if (settle > 0 && motionHasReturningTracks(motion)) {
+			motion.triggerReturn(settle);
+		} else {
+			aggregator.motions.delete(motion);
+			motion._finish();
+			motion._removeFlag(aggregator.uuid);
+		}
 	}
 
 	/**
