@@ -910,11 +910,12 @@ export function get_object_canvas_data(inObject, { measure = false, uuid = true,
 
 export function get_object_elevation(inObject) {
   const e = inObject?.document?.elevation ?? inObject?.elevation ?? 0;
-  // RegionDocument.elevation is { top, bottom } (either may be null for
-  // unbounded); every other placeable's elevation is a scalar number.
-  // Collapse the object to its floor so downstream Math.max / arithmetic
-  // and PIXI sort comparisons receive a real number.
-  return typeof e === "object" ? (e?.bottom ?? e?.top ?? 0) : e;
+  // RegionDocument.elevation is { top, bottom }, and Foundry prepares an
+  // unbounded bottom as -Infinity; every other placeable's elevation is a
+  // scalar number. Collapse the object to its floor, or 0 when the floor is
+  // unbounded, so sound sources, arithmetic, and PIXI sort comparisons
+  // receive a real number.
+  return typeof e === "object" ? (lib.is_real_number(e?.bottom) ? e.bottom : 0) : e;
 }
 
 /**

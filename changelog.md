@@ -12,6 +12,7 @@
 - *Effects* - Fixed persistent effects placed at a location not coming back after reloading Foundry or switching scenes
 - *Sounds* - Fixed persistent sounds placed at a location not coming back after reloading Foundry or switching scenes
 - *Sounds* - Fixed `.volume()` being ignored on sounds placed at a location when using `.alwaysForGMs()`, or when a player controls the token the sound is on
+- *Sounds* - Fixed sounds using `.atLocation()` on a region or template not being heard
 - *Animations* - Fixed `.waitUntilFinished()` not waiting for token animations to finish, which could leave a token invisible after fading it out and back in around `.teleportTo()`
 - *Motions* - Fixed `.moveTo()` not accepting names from `.name()` or `.addNamedLocation()`
 - *Motions* - Fixed `.noise()` not working when no `duration` was given (thank you MrVauxs on github!)
