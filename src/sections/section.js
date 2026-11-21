@@ -117,6 +117,8 @@ export default class Section {
 
   _deserialize(data) {
     this._async = data.async;
+    this._delayMin = data.delay[0];
+    this._delayMax = data.delay[1];
     this._waitUntilFinished = data.waitUntilFinished;
     this._waitUntilFinishedDelay = data.waitUntilFinishedDelay;
     this._repetitions = data.repetitions;

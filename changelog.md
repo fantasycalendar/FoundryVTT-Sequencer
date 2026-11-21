@@ -2,6 +2,7 @@
 
 # Version 4.3.1
 - *Sequencer* - Fixed `.play({ remote: true })` not playing the sequence for other players (thank you MrVauxs on github!)
+- *Sequencer* - Fixed `.delay()` being ignored when using `.play({ remote: true })`
 - *Sequencer* - Fixed Foundry loading slowly when modules register large numbers of entries in the Sequencer Database (thank you Codas on github!)
 - *Sequencer* - Fixed Foundry loading slowly for GMs in worlds with many tokens (thank you ChrisRosser on github!)
 - *Effects* - Fixed `.name()` not passing the effect's `offset` to the subsequent effects
