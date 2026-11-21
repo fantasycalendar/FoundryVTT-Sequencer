@@ -1269,6 +1269,12 @@ declare global {
     persistUntilUpdate(): this;
 
     /**
+     * Ties the motion to any number of documents in Foundry - if those get deleted, the motion is ended the same way
+     * as Sequencer.MotionManager.endMotions().
+     */
+    tieToDocuments(inOrigin: TieToOrigin): this;
+
+    /**
      * Draws the sprite at the given ordering value while the motion runs, then restores its normal order when it ends.
      * A higher value draws in front. Orders the sprite only against other objects at the same elevation.
      */

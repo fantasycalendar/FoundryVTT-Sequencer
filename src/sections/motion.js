@@ -17,6 +17,7 @@ export default class MotionSection extends Section {
 		this._originObject = null;
 		this._persist = false;
 		this._persistUntilUpdate = false;
+		this._tiedDocuments = [];
 		this._zIndex = null;
 		this._tracks = {
 			x: [],
@@ -96,6 +97,50 @@ export default class MotionSection extends Section {
 				"`.persistUntilUpdate()` and `.persist()` are mutually exclusive; pick one persistence mode."
 			);
 		this._persistUntilUpdate = true;
+		return this;
+	}
+
+	/**
+	 * Ties the motion to any number of documents in Foundry. When any of them is deleted, the motion ends.
+	 *
+	 * @param {String|PlaceableObject|foundry.abstract.Document|Array<String|PlaceableObject|foundry.abstract.Document>} inDocuments
+	 *   - a document UUID string, a placeable (such as a Token), a document (such as an ActiveEffect or Item), or an array of these
+	 * @returns {MotionSection}
+	 */
+	tieToDocuments(inDocuments) {
+		if (!Array.isArray(inDocuments)) {
+			inDocuments = [inDocuments];
+		}
+		for (let doc of inDocuments) {
+			if (
+				typeof doc !== "string" &&
+				!(doc instanceof foundry.canvas.placeables.PlaceableObject) &&
+				!(doc instanceof foundry.abstract.Document)
+			) {
+				throw this.sequence._customError(
+					this,
+					"tieToDocuments",
+					"inDocuments must be of type string, PlaceableObject, or Document, or an array thereof"
+				);
+			}
+			if (typeof doc === "string") {
+				if (!fromUuidSync(doc))
+					throw this.sequence._customError(
+						this,
+						"tieToDocuments",
+						`could not find document with UUID "${doc}"`
+					);
+			} else {
+				doc = lib.validate_document(doc)?.uuid;
+				if (!doc)
+					throw this.sequence._customError(
+						this,
+						"tieToDocuments",
+						"could not find the UUID for the given object"
+					);
+			}
+			this._tiedDocuments.push(doc);
+		}
 		return this;
 	}
 
@@ -2538,6 +2583,7 @@ export default class MotionSection extends Section {
 			name: this._name || null,
 			persist: this._persist,
 			persistUntilUpdate: this._persistUntilUpdate,
+			tiedDocuments: Array.from(new Set(this._tiedDocuments)),
 			zIndex: this._zIndex,
 			tracks: resolvedTracks,
 			noise: resolvedNoise,

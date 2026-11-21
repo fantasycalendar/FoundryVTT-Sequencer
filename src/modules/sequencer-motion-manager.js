@@ -22,6 +22,8 @@ class Motion {
 		this.name = config.name ?? null;
 		this.persist = !!config.persist;
 		this.persistUntilUpdate = !!config.persistUntilUpdate;
+		this.tiedDocuments = config.tiedDocuments ?? [];
+		this.tiedDocumentHooks = [];
 		this.zIndex = config.zIndex ?? null;
 		this.done = false;
 		this.returnTriggeredAt = undefined;
@@ -361,6 +363,29 @@ class Motion {
 	_finish() {
 		this._resolveFinished();
 		SequenceManager.RunningMotions.delete(this._id);
+		this._removeTiedDocumentHooks();
+	}
+
+	_addTiedDocumentHooks() {
+		for (const tiedDocumentUuid of this.tiedDocuments) {
+			const tiedDocument = fromUuidSync(tiedDocumentUuid);
+			if (!tiedDocument) continue;
+			const hookName = "delete" + tiedDocument.documentName;
+			const hookId = Hooks.on(hookName, (doc) => {
+				if (doc.uuid !== tiedDocumentUuid) return;
+				const aggregator = MOTION_REGISTRY.get(this.uuid);
+				if (!aggregator?.motions.has(this)) return;
+				SequencerMotionManager._endMotion(aggregator, this, 0);
+			});
+			this.tiedDocumentHooks.push([hookName, hookId]);
+		}
+	}
+
+	_removeTiedDocumentHooks() {
+		for (const [hookName, hookId] of this.tiedDocumentHooks) {
+			Hooks.off(hookName, hookId);
+		}
+		this.tiedDocumentHooks = [];
 	}
 
 	/**
@@ -686,6 +711,12 @@ export default class SequencerMotionManager {
 				motionsToRemove[uuid] = motions;
 				continue;
 			}
+			const staleMotionIds = motions
+				.filter(([, motionData]) => SequencerMotionManager._hasDeletedTiedDocument(motionData))
+				.map(([motionId]) => motionId);
+			if (staleMotionIds.length) {
+				flagManager.removeFlags(uuid, { motions: staleMotionIds });
+			}
 			if (doc.parent?.id && doc.parent.id !== canvas.scene?.id) continue;
 			// Read through getMotionFlags so any registered motion
 			// migrations run before resurrection, matching how
@@ -733,10 +764,16 @@ export default class SequencerMotionManager {
 		return SequencerMotionManager._startMotion(data);
 	}
 
+	static _hasDeletedTiedDocument(data) {
+		return (data.tiedDocuments ?? []).some((tiedDocumentUuid) => !fromUuidSync(tiedDocumentUuid));
+	}
+
 	static _startMotion(data) {
 		const noop = { duration: 0, finished: Promise.resolve() };
 		if (game.user.viewedScene !== data.sceneId) return noop;
 		if (Array.isArray(data.users) && data.users.length && !data.users.includes(game.userId)) return noop;
+
+		if (SequencerMotionManager._hasDeletedTiedDocument(data)) return noop;
 
 		const document = fromUuidSync(data.uuid);
 		const placeable = document?.object ?? null;
@@ -753,6 +790,7 @@ export default class SequencerMotionManager {
 
 		const motion = new Motion(data, aggregator.restState, aggregator.meshOriginOffset);
 		aggregator.addMotion(motion);
+		motion._addTiedDocumentHooks();
 		SequenceManager.RunningMotions.add(motion._id, { id: motion._id, data });
 		return { duration: data.overallDuration ?? 0, finished: motion.finished };
 	}

@@ -490,6 +490,25 @@ The hold works with any combination of motions, so it also serves as a general "
 
 Cannot be combined with [`.persist()`](#persist) - use one or the other.
 
+## Tie To Documents
+
+`.tieToDocuments(token)` or `.tieToDocuments([ActiveEffect, Token])`
+
+Ties the motion to any number of documents in Foundry - if those get deleted, the motion is ended the same way as calling `Sequencer.MotionManager.endMotions()` on it. Accepts UUID strings, placeables, and documents, or an array of them.
+
+Most useful with [`.persist()`](#persist), for example a token floating for as long as a spell's Active Effect is on it:
+
+```js
+new Sequence()
+    .motion()
+        .on(token)
+        .moveBy({ y: -50 }, { duration: 800, return: false })
+        .oscillate({ period: 2000, waveform: "sine", y: { amplitude: 6 } })
+        .persist()
+        .tieToDocuments(activeEffect)
+    .play()
+```
+
 ## Noise
 
 `.noise(options)`
