@@ -1049,6 +1049,108 @@ export function getOffsetFromData(data, { source = false, type = "source", twist
 }
 
 /**
+ * Resolves a sequence name entry's source and target objects, and seeds the
+ * random generator its missed and random offsets are drawn from. The seed
+ * depends only on the entry and the repetition, so every section that
+ * resolves the same name on the same repetition draws the same offsets.
+ *
+ * @param {object} entry
+ * @param {object} options
+ * @param {number} options.repetition
+ * @param {string} options.sceneId
+ * @returns {{sourceObj: *, targetObj: *, twister: object}}
+ */
+export function resolve_named_location(entry, { repetition = 0, sceneId } = {}) {
+	let seededRepetition = entry.repetitions ? repetition % entry.repetitions : repetition;
+	let seed = lib.get_hash(`${entry.seed}-${seededRepetition}`);
+	return {
+		sourceObj: entry.source ? validateObject(entry.source, sceneId) : false,
+		targetObj: entry.target ? validateObject(entry.target, sceneId) : false,
+		twister: lib.createMersenneTwister(seed),
+	};
+}
+
+/**
+ * Sums the missed, random, and fixed offsets a named location carries, to be
+ * added to the position the name resolves to. `namedLocation` is a name
+ * entry merged with the result of `resolve_named_location`. Missed and random
+ * offsets are drawn from `namedLocation.twister` in that order, and stored on
+ * `cache` so repeated calls with the same cache reuse the first draw.
+ *
+ * @param {object} namedLocation
+ * @param {object} options
+ * @param {boolean} options.prefersSourceSide - the name resolves to its source object before its target object
+ * @param {object} options.cache
+ * @returns {{x: number, y: number}}
+ */
+export function get_named_location_offset(namedLocation, { prefersSourceSide = false, cache = {} } = {}) {
+	let { sourceObj, targetObj, twister } = namedLocation;
+	let offset = { x: 0, y: 0 };
+
+	if (namedLocation.missed) {
+		let missedOffset =
+			cache.missedOffset ||
+			calculate_missed_position(sourceObj, targetObj, twister);
+		cache.missedOffset = missedOffset;
+		offset.x += missedOffset.x;
+		offset.y += missedOffset.y;
+	}
+
+	let randomOffsetObject = targetObj || sourceObj;
+	let multiplier =
+		namedLocation.randomOffset?.source || namedLocation.randomOffset?.target;
+	if (randomOffsetObject && multiplier) {
+		let randomOffset =
+			cache.randomOffset ||
+			get_random_offset(randomOffsetObject, multiplier, twister);
+		cache.randomOffset = randomOffset;
+		offset.x += randomOffset.x;
+		offset.y += randomOffset.y;
+	}
+
+	let side = prefersSourceSide
+		? (sourceObj ? "source" : "target")
+		: (targetObj ? "target" : "source");
+	let sideOffset = namedLocation.offset?.[side];
+	if (sideOffset) {
+		let fixedOffset = {
+			x: sideOffset.x,
+			y: sideOffset.y,
+		};
+		if (sideOffset.gridUnits) {
+			fixedOffset.x *= canvas.grid.size;
+			fixedOffset.y *= canvas.grid.size;
+		}
+		if (sideOffset.local && sourceObj) {
+			let angle;
+			if (targetObj) {
+				angle = new foundry.canvas.geometry.Ray(
+					get_object_position(sourceObj),
+					get_object_position(targetObj, { measure: true })
+				).angle;
+			} else {
+				let sourceDocument = sourceObj.document ?? sourceObj;
+				let rotationDegrees = sourceObj instanceof foundry.canvas.placeables.MeasuredTemplate
+					? (sourceDocument.t !== "rect" ? sourceDocument.direction : 0)
+					: (sourceDocument.rotation ?? 0);
+				angle = Math.normalizeRadians(Math.toRadians(rotationDegrees ?? 0));
+			}
+			fixedOffset = rotateAroundPoint(
+				0,
+				0,
+				fixedOffset.x,
+				fixedOffset.y,
+				-angle
+			);
+		}
+		offset.x += fixedOffset.x;
+		offset.y += fixedOffset.y;
+	}
+
+	return offset;
+}
+
+/**
  * Determines whether a position is within the bounds of this effect
  *
  * @param inPosition

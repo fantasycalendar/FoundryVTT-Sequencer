@@ -1083,95 +1083,15 @@ export default class CanvasEffect extends PIXI.Container {
 		}
 
 		if (offsetMap) {
-			if (offsetMap.missed) {
-				const missedOffset =
-					this._offsetCache[key]["nameCache"][offsetMapName]?.missedOffset ||
-					canvaslib.calculate_missed_position(
-						offsetMap.sourceObj,
-						offsetMap.targetObj,
-						offsetMap.twister
-					);
-				this._offsetCache[key]["nameCache"][offsetMapName].missedOffset =
-					missedOffset;
-				offset.x -= missedOffset.x;
-				offset.y -= missedOffset.y;
-			}
-
-			const obj = offsetMap.targetObj || offsetMap.sourceObj;
-			const multiplier =
-				offsetMap.randomOffset?.source || offsetMap.randomOffset?.target;
-
-			if (obj && multiplier) {
-				let randomOffset =
-					this._offsetCache[key]["nameCache"][offsetMapName]?.randomOffset ||
-					canvaslib.get_random_offset(obj, multiplier, offsetMap.twister);
-				this._offsetCache[key]["nameCache"][offsetMapName].randomOffset =
-					randomOffset;
-				offset.x -= randomOffset.x;
-				offset.y -= randomOffset.y;
-			}
-
-			const namedOffset = this._getNamedLocationOffset(offsetMap, source);
-			if (namedOffset) {
-				offset.x -= namedOffset.x;
-				offset.y -= namedOffset.y;
-			}
+			let namedOffset = canvaslib.get_named_location_offset(offsetMap, {
+				prefersSourceSide: source && this.data.source === this.data.target,
+				cache: this._offsetCache[key]["nameCache"][offsetMapName],
+			});
+			offset.x -= namedOffset.x;
+			offset.y -= namedOffset.y;
 		}
 
 		return offset;
-	}
-
-	/**
-	 * Resolves the offset a named effect was placed with, taken from the side
-	 * (source or target) that `_getObjectByID` resolves the name to, so the
-	 * referencing effect lands where the named effect did.
-	 *
-	 * @param {object} offsetMap
-	 * @param {boolean} source
-	 * @returns {{x: number, y: number}|false}
-	 * @private
-	 */
-	_getNamedLocationOffset(offsetMap, source) {
-		if (!offsetMap.offset) return false;
-
-		const prefersSourceSide = source && this.data.source === this.data.target;
-		const side = prefersSourceSide
-			? (offsetMap.sourceObj ? "source" : "target")
-			: (offsetMap.targetObj ? "target" : "source");
-		const sideOffset = offsetMap.offset[side];
-		if (!sideOffset) return false;
-
-		let namedOffset = {
-			x: sideOffset.x,
-			y: sideOffset.y,
-		};
-		if (sideOffset.gridUnits) {
-			namedOffset.x *= canvas.grid.size;
-			namedOffset.y *= canvas.grid.size;
-		}
-		if (sideOffset.local && offsetMap.sourceObj) {
-			let angle;
-			if (offsetMap.targetObj) {
-				angle = new foundry.canvas.geometry.Ray(
-					canvaslib.get_object_position(offsetMap.sourceObj),
-					canvaslib.get_object_position(offsetMap.targetObj, { measure: true })
-				).angle;
-			} else {
-				const sourceDocument = offsetMap.sourceObj.document ?? offsetMap.sourceObj;
-				const rotationDegrees = offsetMap.sourceObj instanceof foundry.canvas.placeables.MeasuredTemplate
-					? (sourceDocument.t !== "rect" ? sourceDocument.direction : 0)
-					: (sourceDocument.rotation ?? 0);
-				angle = Math.normalizeRadians(Math.toRadians(rotationDegrees ?? 0));
-			}
-			namedOffset = canvaslib.rotateAroundPoint(
-				0,
-				0,
-				namedOffset.x,
-				namedOffset.y,
-				-angle
-			);
-		}
-		return namedOffset;
 	}
 
 	/**
@@ -1184,15 +1104,13 @@ export default class CanvasEffect extends PIXI.Container {
 	_setupOffsetMap(inOffsetMap) {
 		if (!inOffsetMap.setup) {
 			inOffsetMap.setup = true;
-			inOffsetMap.sourceObj = inOffsetMap.source
-				? this._validateObject(inOffsetMap.source)
-				: false;
-			inOffsetMap.targetObj = inOffsetMap.target
-				? this._validateObject(inOffsetMap.target)
-				: false;
-			const repetition = this.data.repetition % inOffsetMap.repetitions;
-			const seed = lib.get_hash(`${inOffsetMap.seed}-${repetition}`);
-			inOffsetMap.twister = lib.createMersenneTwister(seed);
+			Object.assign(
+				inOffsetMap,
+				canvaslib.resolve_named_location(inOffsetMap, {
+					repetition: this.data.repetition,
+					sceneId: this.data.sceneId,
+				})
+			);
 		}
 
 		return inOffsetMap;
