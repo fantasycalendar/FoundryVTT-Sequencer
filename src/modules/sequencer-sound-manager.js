@@ -130,7 +130,11 @@ const placed_sound_mixin = (base_class) =>
 				}
 			}
 
+			const configuredVolume = config.volume;
 			canvas.sounds._configurePlayback(config);
+			if (config.listener) {
+				config.volume = configuredVolume;
+			}
 
 			let applyEffect = false;
 			let hasMuffledEffect = this.sound.effects.findIndex(e => e.type === muffledEffect.type);
