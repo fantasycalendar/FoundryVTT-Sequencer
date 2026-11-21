@@ -1,5 +1,8 @@
 ## Changelog
 
+# Version 4.3.1
+- *Effects* - Fixed `.name()` not passing the effect's `offset` to the subsequent effects
+
 # Version 4.3.0
 - *Sequencer* - Fixed finished sequences never being cleared out when the Sequencer Manager was never opened
 - *Effects* - Effects placed on or aimed at a placeable (`.atLocation()`, `.attachTo()`, `.stretchTo()`, `.rotateTowards()`) now follow its visible position when it is moving via a `.motion()`. Pass `ignoreMotion: true` to use the document position instead, for example to keep a shadow on the ground beneath a flying token

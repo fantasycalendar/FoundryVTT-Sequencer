@@ -1111,13 +1111,67 @@ export default class CanvasEffect extends PIXI.Container {
 				offset.y -= randomOffset.y;
 			}
 
-			if (offsetMap.offset) {
-				offset.x += offsetMap.offset.x;
-				offset.y += offsetMap.offset.y;
+			const namedOffset = this._getNamedLocationOffset(offsetMap, source);
+			if (namedOffset) {
+				offset.x -= namedOffset.x;
+				offset.y -= namedOffset.y;
 			}
 		}
 
 		return offset;
+	}
+
+	/**
+	 * Resolves the offset a named effect was placed with, taken from the side
+	 * (source or target) that `_getObjectByID` resolves the name to, so the
+	 * referencing effect lands where the named effect did.
+	 *
+	 * @param {object} offsetMap
+	 * @param {boolean} source
+	 * @returns {{x: number, y: number}|false}
+	 * @private
+	 */
+	_getNamedLocationOffset(offsetMap, source) {
+		if (!offsetMap.offset) return false;
+
+		const prefersSourceSide = source && this.data.source === this.data.target;
+		const side = prefersSourceSide
+			? (offsetMap.sourceObj ? "source" : "target")
+			: (offsetMap.targetObj ? "target" : "source");
+		const sideOffset = offsetMap.offset[side];
+		if (!sideOffset) return false;
+
+		let namedOffset = {
+			x: sideOffset.x,
+			y: sideOffset.y,
+		};
+		if (sideOffset.gridUnits) {
+			namedOffset.x *= canvas.grid.size;
+			namedOffset.y *= canvas.grid.size;
+		}
+		if (sideOffset.local && offsetMap.sourceObj) {
+			let angle;
+			if (offsetMap.targetObj) {
+				angle = new foundry.canvas.geometry.Ray(
+					canvaslib.get_object_position(offsetMap.sourceObj),
+					canvaslib.get_object_position(offsetMap.targetObj, { measure: true })
+				).angle;
+			} else {
+				const sourceDocument = offsetMap.sourceObj.document ?? offsetMap.sourceObj;
+				const rotationDegrees = offsetMap.sourceObj instanceof foundry.canvas.placeables.MeasuredTemplate
+					? (sourceDocument.t !== "rect" ? sourceDocument.direction : 0)
+					: (sourceDocument.rotation ?? 0);
+				angle = Math.normalizeRadians(Math.toRadians(rotationDegrees ?? 0));
+			}
+			namedOffset = canvaslib.rotateAroundPoint(
+				0,
+				0,
+				namedOffset.x,
+				namedOffset.y,
+				-angle
+			);
+		}
+		return namedOffset;
 	}
 
 	/**
