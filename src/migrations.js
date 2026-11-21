@@ -117,12 +117,12 @@ const migrations = {
     });
 
     const tokensOnScenes = getSequencerEffectTokens(version, (t) => {
-      let actor;
-      try {
-        actor = t.actor;
-      } catch (err) {
-        return false;
-      }
+      // Only linked tokens are migrated here. Bail out before touching
+      // TokenDocument#actor, which builds a synthetic actor for every
+      // unlinked token in the world and makes this check very slow.
+      if (!t.actorLink) return false;
+      const actor = game.actors.get(t.actorId);
+      if (!actor) return false;
       const effects = foundry.utils.getProperty(t, CONSTANTS.EFFECTS_FLAG) ?? [];
       const prototypeTokenEffects =
         foundry.utils.getProperty(actor, "prototypeToken." + CONSTANTS.EFFECTS_FLAG) ?? [];
@@ -132,10 +132,7 @@ const migrations = {
       const prototypeEffectsOutOfDate = prototypeTokenEffects.filter((e) =>
         foundry.utils.isNewerVersion(version, e[1].flagVersion)
       );
-      return (
-        t.actorLink &&
-        (effectsOutOfDate.length || prototypeEffectsOutOfDate.length)
-      );
+      return effectsOutOfDate.length || prototypeEffectsOutOfDate.length;
     });
 
     for (const [scene, tokens] of tokensOnScenes) {
