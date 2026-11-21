@@ -1,7 +1,12 @@
 ## Changelog
 
 # Version 4.3.1
+- *Sequencer* - Fixed `.play({ remote: true })` not playing the sequence for other players (thank you MrVauxs on github!)
+- *Sequencer* - Fixed Foundry loading slowly when modules register large numbers of entries in the Sequencer Database (thank you Codas on github!)
+- *Sequencer* - Fixed Foundry loading slowly for GMs in worlds with many tokens (thank you ChrisRosser on github!)
 - *Effects* - Fixed `.name()` not passing the effect's `offset` to the subsequent effects
+- *Effects* - Fixed just-in-time spritesheet generation producing spritesheets with incorrect transparency, cropping, scaling, and colors (thank you Codas on github!)
+- *Motions* - Fixed `.noise()` not working when no `duration` was given (thank you MrVauxs on github!)
 
 # Version 4.3.0
 - *Sequencer* - Fixed finished sequences never being cleared out when the Sequencer Manager was never opened
