@@ -728,9 +728,9 @@ export default class SequencerEffectManager {
 		);
 	}
 
-	static _effectContextFilter(inUUID, effectData) {
+	static _effectContextFilter(inUUID, effectData, { ignoreSource = false } = {}) {
 		return (
-			effectData?.source === inUUID ||
+			(!ignoreSource && effectData?.source === inUUID) ||
 			effectData?.target === inUUID ||
 			(effectData?.tiedDocuments ?? []).indexOf(inUUID) > -1
 		);
@@ -746,8 +746,9 @@ export default class SequencerEffectManager {
 		const databaseEffects = flagManager.getDatabaseFlags().effects;
 		const flagRemovals = [];
 		for (const [ownerUuid, effects] of Object.entries(databaseEffects)) {
+			const ownerIsActor = fromUuidSync(ownerUuid) instanceof foundry.documents.Actor;
 			const idsToEnd = effects
-				.filter(([, effectData]) => this._effectContextFilter(inUUID, effectData))
+				.filter(([, effectData]) => this._effectContextFilter(inUUID, effectData, { ignoreSource: ownerIsActor }))
 				.map(([effectId]) => effectId);
 			if (idsToEnd.length) {
 				flagRemovals.push(flagManager.removeFlags(ownerUuid, { effects: idsToEnd }));
