@@ -2468,6 +2468,8 @@ export default class MotionSection extends Section {
 				...this._deserializedData,
 				_id: foundry.utils.randomID(),
 				creationTimestamp: Date.now(),
+				seed: this._deserializedData.creationTimestamp
+					+ this._currentRepetition * this._deserializedData.noise.length,
 			}
 			: this._buildMotionData();
 

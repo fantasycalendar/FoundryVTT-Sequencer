@@ -35,11 +35,12 @@ class Motion {
 			this._resolveFinished = resolve;
 		});
 		this.oscillate = config.oscillate ?? [];
+		const seed = config.seed ?? config.creationTimestamp;
 		this.noise = (config.noise ?? []).map((noise, noiseIndex) => ({
 			...noise,
 			waveform: canvaslib.buildNoiseWaveform(
 				noise,
-				lib.createMersenneTwister(config.creationTimestamp + noiseIndex)
+				lib.createMersenneTwister(seed + noiseIndex)
 			),
 		}));
 
