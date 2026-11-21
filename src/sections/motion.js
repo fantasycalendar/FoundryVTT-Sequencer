@@ -29,6 +29,7 @@ export default class MotionSection extends Section {
 		this._noise = [];
 		this._oscillate = [];
 		this._resolvedTracks = null;
+		this._deserializedData = null;
 		if (inTarget) this.on(inTarget);
 	}
 
@@ -2375,6 +2376,7 @@ export default class MotionSection extends Section {
 	 * direction.
 	 */
 	async preRun() {
+		if (this._deserializedData) return;
 		await this._waitForTokenMesh(this._originObject);
 
 		const placeable = this._originObject?.object ?? this._originObject;
@@ -2461,6 +2463,37 @@ export default class MotionSection extends Section {
 	 * @private
 	 */
 	async run() {
+		const data = this._deserializedData
+			? {
+				...this._deserializedData,
+				_id: foundry.utils.randomID(),
+				creationTimestamp: Date.now(),
+			}
+			: this._buildMotionData();
+
+		const push = !this.sequence.local && !this.sequence.remote;
+		const { finished } = SequencerMotionManager.startMotion(data, push);
+
+		const persistent = data.persist || data.persistUntilUpdate;
+		if (persistent) {
+			await finished;
+			if (this._currentWaitTime > 0) {
+				await new Promise((resolve) => setTimeout(resolve, this._currentWaitTime));
+			}
+			return;
+		}
+		return new Promise((resolve) => {
+			setTimeout(resolve, data.overallDuration + this._currentWaitTime);
+		});
+	}
+
+	/**
+	 * @private
+	 *
+	 * Validates the section and builds the motion payload for one
+	 * repetition. Expects `preRun()` to have resolved the tracks first.
+	 */
+	_buildMotionData() {
 		this._expressWarnings();
 
 		const placeable = this._originObject?.object ?? this._originObject;
@@ -2491,7 +2524,7 @@ export default class MotionSection extends Section {
 		const resolvedTracks = this._resolvedTracks;
 		this._resolvedTracks = null;
 
-		const data = {
+		return {
 			_id: motionId,
 			flagVersion: flagManager.latestMotionFlagVersion,
 			sceneId: game.user.viewedScene,
@@ -2510,21 +2543,22 @@ export default class MotionSection extends Section {
 			overallDuration,
 			creationTimestamp,
 		};
+	}
 
-		const push = !this.sequence.local && !this.sequence.remote;
-		const { finished } = SequencerMotionManager.startMotion(data, push);
+	async _serialize() {
+		const data = await super._serialize();
+		await this.preRun();
+		const sectionData = this._buildMotionData();
+		return {
+			...data,
+			type: "motion",
+			sectionData,
+		};
+	}
 
-		const persistent = this._persist || this._persistUntilUpdate;
-		if (persistent) {
-			await finished;
-			if (this._currentWaitTime > 0) {
-				await new Promise((resolve) => setTimeout(resolve, this._currentWaitTime));
-			}
-			return;
-		}
-		return new Promise((resolve) => {
-			setTimeout(resolve, overallDuration + this._currentWaitTime);
-		});
+	async _deserialize(data) {
+		this._deserializedData = data.sectionData;
+		return super._deserialize(data);
 	}
 
 	/**

@@ -8,6 +8,7 @@
 - *Effects* - Fixed just-in-time spritesheet generation producing spritesheets with incorrect transparency, cropping, scaling, and colors (thank you Codas on github!)
 - *Motions* - Fixed `.moveTo()` not accepting names from `.name()` or `.addNamedLocation()`
 - *Motions* - Fixed `.noise()` not working when no `duration` was given (thank you MrVauxs on github!)
+- *Motions* - Fixed `.motion()` not working with `.play({ remote: true })`
 
 # Version 4.3.0
 - *Sequencer* - Fixed finished sequences never being cleared out when the Sequencer Manager was never opened
