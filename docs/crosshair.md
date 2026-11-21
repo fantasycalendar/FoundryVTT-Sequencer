@@ -112,6 +112,21 @@ const location = await Sequencer.Crosshair.show({
 
 </details>
 
+## Cancel
+
+The promise returned by `Sequencer.Crosshair.show()` and `Sequencer.Crosshair.showToken()` has a `cancel()` method. Calling it cancels the crosshair as if the user had right-clicked: the `CANCEL` callback runs, the crosshair is removed from the cursor, and the promise resolves with `false`.
+
+Creates a crosshair that cancels itself if it hasn't been placed within 10 seconds:
+
+```js
+const crosshair = Sequencer.Crosshair.show();
+setTimeout(() => crosshair.cancel(), 10000);
+const location = await crosshair;
+if (!location) return;
+```
+
+The crosshair placeable passed to callbacks also has a `cancel()` method, so a callback can cancel the crosshair it belongs to.
+
 ## Collect
 
 `Sequencer.Crosshair.collect(crosshair, options={})`

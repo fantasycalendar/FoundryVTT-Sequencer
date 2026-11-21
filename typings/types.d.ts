@@ -2140,6 +2140,13 @@ declare global {
     ): MotionDisplacement | null;
   }
 
+  type CancellableCrosshairPromise = Promise<TemplateData> & {
+    /**
+     * Cancels the crosshair as if the user had right-clicked. Runs the CANCEL callback and resolves the promise with false.
+     */
+    cancel(): void;
+  };
+
   abstract class SequencerCrosshair {
     CALLBACKS: CrosshairCallbacks;
     PLACEMENT_RESTRICTIONS: CrosshairPlacementRestrictions;
@@ -2150,7 +2157,7 @@ declare global {
     show(
       crosshair?: Partial<CrosshairData>,
       callbacks?: CrosshairCallbackData
-    ): Promise<TemplateData>;
+    ): CancellableCrosshairPromise;
 
     /**
      * Show a configurable crosshair based a foundry PlaceableObject
@@ -2159,7 +2166,7 @@ declare global {
       obj: VisibleFoundryTypes,
       crosshair?: CrosshairData,
       callbacks?: CrosshairCallbackData
-    ): Promise<TemplateData>;
+    ): CancellableCrosshairPromise;
 
     /**
      * Collect overlapping placeable objects of a crosshair of a given placeable type

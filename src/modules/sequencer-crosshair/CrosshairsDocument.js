@@ -149,7 +149,10 @@ export default class CrosshairsDocument extends MeasuredTemplateDocument {
 	show() {
 		this._destroyed = false;
 		this.#layer = null;
-		return this.object.show();
+		const placeable = this.object;
+		const promise = placeable.show();
+		promise.cancel = () => placeable.cancel();
+		return promise;
 	}
 
 }

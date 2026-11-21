@@ -15,7 +15,7 @@ export default class Crosshair {
 	 *
 	 * @param {CrosshairData/Object} config
 	 * @param {CrosshairCallbackData/Object} callbacks
-	 * @returns {Promise}
+	 * @returns {Promise} Resolves with the placed crosshair, or false if cancelled. Has a cancel() method that cancels the crosshair as if the user had right-clicked.
 	 */
 	static show(config = {}, callbacks = {}) {
 
@@ -42,7 +42,7 @@ export default class Crosshair {
 	 * @param {PlaceableObject} obj
 	 * @param {CrosshairData/Object} config
 	 * @param {CrosshairCallbackData/Object} callbacks
-	 * @returns {Promise}
+	 * @returns {Promise} Resolves with the placed crosshair, or false if cancelled. Has a cancel() method that cancels the crosshair as if the user had right-clicked.
 	 */
 	static showToken(obj, config = {}, callbacks = {}) {
 
@@ -55,9 +55,12 @@ export default class Crosshair {
 			parent: canvas.scene
 		}, config, callbacks);
 
-		return reticle.show().finally(() => {
+		const shown = reticle.show();
+		const promise = shown.finally(() => {
 			if (controlled) placeable.control()
 		});
+		promise.cancel = shown.cancel;
+		return promise;
 
 	}
 

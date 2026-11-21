@@ -21,6 +21,7 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 
 	#isDrag = false;
 	#isPanning = false;
+	#cancelRequested = false;
 	#customText = false;
 	#distanceText = false;
 	#rangeHighlight = false;
@@ -235,7 +236,20 @@ export default class CrosshairsPlaceable extends foundry.canvas.placeables.Measu
 			canvas.stage.on("mousemove", this.#handlers.move);
 			canvas.stage.on("pointerup", this.#handlers.mouseup);
 			canvas.app.view.addEventListener("wheel", this.#handlers.wheel, { passive: true });
+			if (this.#cancelRequested) this.#onCancel();
 		});
+	}
+
+	/**
+	 * Cancels the crosshair as if the user had right-clicked: runs the `CANCEL` callback, removes the crosshair, and
+	 * resolves the promise from `Sequencer.Crosshair.show()` with `false`. Does nothing once the crosshair has been
+	 * placed or cancelled.
+	 */
+	cancel() {
+		if (this.destroyed) return;
+		this.#cancelRequested = true;
+		// Before the listeners are up, the cancel runs at the end of #activateShowListeners.
+		if (this.#promise.resolve) this.#onCancel();
 	}
 
 	#getSnappedPoint(point, mode = this.crosshair.snap.position, resolution = this.crosshair.snap.resolution) {
