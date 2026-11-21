@@ -370,6 +370,7 @@ class AnimationSection extends Section {
 		}
 
 		let overallDuration = this._duration ? this._duration : 0;
+		const scheduledUpdates = [];
 		const originLocation = canvaslib.get_object_position(this._originObject, {
 			exact: true,
 		});
@@ -395,7 +396,7 @@ class AnimationSection extends Section {
 			}
 
 			if (this._originObject instanceof TokenDocument) {
-				setTimeout(async () => {
+				scheduledUpdates.push(this._scheduleUpdate(async () => {
 					let startLocation = this._originObject.object?.center ?? targetLoc;
 					let targetLocation =
 						this._rotateTowards.target?.object ?? this._rotateTowards.target;
@@ -413,7 +414,7 @@ class AnimationSection extends Section {
 							duration: this._rotateTowards.duration
 						}
 					);
-				}, this._rotateTowards.delay ?? 0);
+				}, this._rotateTowards.delay ?? 0));
 			} else {
 				animData.attributes.push({
 					name: "rotationTowards",
@@ -445,12 +446,12 @@ class AnimationSection extends Section {
 			let to = lib.is_real_number(this._opacity) ? this._opacity : 1.0;
 
 			if (this._originObject instanceof TokenDocument) {
-				setTimeout(async () => {
+				scheduledUpdates.push(this._scheduleUpdate(async () => {
 					await this._updateObject(this._originObject, { alpha: to }, true, {
 						duration: this._fadeIn.duration,
 						easing: this._fadeIn.ease,
 					});
-				}, this._fadeIn.delay ?? 0);
+				}, this._fadeIn.delay ?? 0));
 			} else {
 				animData.attributes.push({
 					name: "alpha",
@@ -505,7 +506,7 @@ class AnimationSection extends Section {
 			}
 
 			if (this._originObject instanceof TokenDocument) {
-				setTimeout(async () => {
+				scheduledUpdates.push(this._scheduleUpdate(async () => {
 					if (this._originObject.rotation !== from) {
 						await this._updateObject(
 							this._originObject,
@@ -516,7 +517,7 @@ class AnimationSection extends Section {
 					await this._updateObject(this._originObject, { rotation: to }, true, {
 						duration: this._rotateIn.duration,
 					});
-				}, this._rotateIn.delay ?? 0);
+				}, this._rotateIn.delay ?? 0));
 			} else {
 				animData.attributes.push({
 					name: "rotation",
@@ -585,12 +586,12 @@ class AnimationSection extends Section {
 				overallDuration > moveDuration ? overallDuration : moveDuration;
 
 			if (this._originObject instanceof TokenDocument) {
-				setTimeout(async () => {
+				scheduledUpdates.push(this._scheduleUpdate(async () => {
 					await this._updateObject(this._originObject, targetLocation, true, {
 						movementSpeed: this._moveSpeed,
 						duration
 					});
-				}, this._moveTowards.delay ?? 0);
+				}, this._moveTowards.delay ?? 0));
 			} else {
 				if (!(duration === 0 || originalDistance === 0)) {
 					animData.attributes.push({
@@ -616,11 +617,11 @@ class AnimationSection extends Section {
 				: this._originObject.alpha ?? 1.0;
 
 			if (this._originObject instanceof TokenDocument) {
-				setTimeout(async () => {
+				scheduledUpdates.push(this._scheduleUpdate(async () => {
 					await this._updateObject(this._originObject, { alpha: 0 }, true, {
 						duration: this._fadeOut.duration
 					});
-				}, this._fadeOut.delay ?? 0);
+				}, this._fadeOut.delay ?? 0));
 			} else {
 				animData.attributes.push({
 					name: "alpha",
@@ -682,7 +683,7 @@ class AnimationSection extends Section {
 			}
 
 			if (this._originObject instanceof TokenDocument) {
-				setTimeout(async () => {
+				scheduledUpdates.push(this._scheduleUpdate(async () => {
 					if (this._originObject.rotation !== from) {
 						await this._updateObject(
 							this._originObject,
@@ -693,7 +694,7 @@ class AnimationSection extends Section {
 					await this._updateObject(this._originObject, { rotation: to }, true, {
 						duration: this._rotateOut.duration
 					});
-				}, this._rotateOut.delay ?? 0);
+				}, this._rotateOut.delay ?? 0));
 			} else {
 				animData.attributes.push({
 					name: "rotation",
@@ -717,7 +718,7 @@ class AnimationSection extends Section {
 		}
 
 		if (this._teleportTo) {
-			setTimeout(async () => {
+			scheduledUpdates.push(this._scheduleUpdate(async () => {
 				let targetLocation = this._closestSquare
 					? this._getClosestSquare(this._originObject, this._teleportTo.target)
 					: canvaslib.get_object_position(this._teleportTo.target, {
@@ -749,7 +750,7 @@ class AnimationSection extends Section {
 					})
 				}
 				await this._updateObject(this._originObject, targetLocation, false);
-			}, this._teleportTo.delay);
+			}, this._teleportTo.delay));
 			if (overallDuration <= this._teleportTo.delay) {
 				this._waitUntilFinished = true;
 			}
@@ -795,25 +796,36 @@ class AnimationSection extends Section {
 			await lib.wait(1);
 		}
 
-	return new Promise((resolve) => {
-		let resolved = false;
-		const safeResolve = () => {
-			if (resolved) return;
-			resolved = true;
-			resolve();
-		};
-		this._animate(animData, safeResolve);
-		setTimeout(
-			safeResolve,
-			Math.max(0, overallDuration + this._currentWaitTime + animData.maxFPS)
-		);
-	});
+		const animationLoop = new Promise((resolve, reject) => {
+			this._animate(animData, resolve, undefined, reject);
+		});
+		const waitTime = this._currentWaitTime;
+		const pendingWork = [lib.wait(Math.max(0, overallDuration + waitTime))];
+		// A negative wait asks for the next section to start before this one ends.
+		if (waitTime >= 0) pendingWork.push(animationLoop, ...scheduledUpdates);
+		const results = await Promise.allSettled(pendingWork);
+		for (const result of results) {
+			if (result.status === "rejected") console.error(result.reason);
+		}
+	}
+
+	/**
+	 * @private
+	 *
+	 * Runs `callback` after `delay` milliseconds. The returned promise
+	 * settles once the callback's document updates have been applied, so
+	 * the section can wait for them before the next section starts.
+	 */
+	_scheduleUpdate(callback, delay = 0) {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => callback().then(resolve, reject), delay);
+		});
 	}
 
 	/**
 	 * @private
 	 */
-	async _animate(animData, resolve, timespan) {
+	async _animate(animData, resolve, timespan, reject) {
 		// If it's not the first tick
 		if (timespan) {
 			let animatedAttributes = {};
@@ -920,7 +932,7 @@ class AnimationSection extends Section {
 
 		let self = this;
 		requestAnimationFrame(function (timespan) {
-			self._animate(animData, resolve, timespan);
+			self._animate(animData, resolve, timespan, reject).catch(reject);
 		});
 	}
 }
