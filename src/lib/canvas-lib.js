@@ -1442,7 +1442,7 @@ export function sampleOscillation(config, motion, now) {
  */
 export function buildNoiseWaveform(config, twister) {
 	const frequency = config.frequency;
-	const duration = config.duration;
+	const duration = config.duration ?? MOTION_DEFAULT_DURATION;
 	const sampleCount = Math.max(2, Math.floor(duration / frequency) + 1);
 	const hasRotation = (config.rotationStrength ?? 0) > 0;
 
