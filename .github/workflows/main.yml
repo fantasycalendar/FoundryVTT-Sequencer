@@ -50,6 +50,12 @@ jobs:
             '.version=$version | .url=$url | .manifest=$manifest | .download=$download' \
             module.json > module.tmp.json && mv module.tmp.json module.json
 
+      # Install packages.
+      - run: npm install
+
+      # Build distribution.
+      - run: npm run build
+
       # Keep only the top-level keys from Foundry's module manifest schema (v13 and v14),
       # leaving out flags so development-only settings like hotReload don't ship
       - name: Strip Manifest To Foundry Schema Keys
@@ -65,12 +71,6 @@ jobs:
             ] as $allowed
             | with_entries(select(.key as $key | $allowed | index($key)))
           ' module.json > module.tmp.json && mv module.tmp.json module.json
-
-      # Install packages.
-      - run: npm install
-
-      # Build distribution.
-      - run: npm run build
 
       # Create a zip file with all files required by the module to add to the release
       - run: zip -r ./module.zip module.json LICENSE dist/ samples/ languages/ images/sequencer.png typings/
