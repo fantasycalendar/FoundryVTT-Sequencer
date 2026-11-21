@@ -1030,7 +1030,7 @@ export default class SequencerSoundManager {
 					})
 				}
 			} else if (doc) {
-				if (doc.parent?.id === canvas.scene.id) {
+				if (doc === canvas.scene || doc.parent?.id === canvas.scene.id) {
 					docSoundsMap[uuid] = sounds;
 				}
 			} else {

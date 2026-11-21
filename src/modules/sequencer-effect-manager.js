@@ -499,7 +499,7 @@ export default class SequencerEffectManager {
 					})
 				}
 			} else if (doc) {
-				if (doc.parent?.id === canvas.scene.id) {
+				if (doc === canvas.scene || doc.parent?.id === canvas.scene.id) {
 					docEffectsMap[uuid] = effects;
 				}
 			} else {
