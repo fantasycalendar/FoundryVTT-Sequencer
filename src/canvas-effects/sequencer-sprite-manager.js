@@ -118,6 +118,27 @@ class FlipbookAsset extends Asset {
 		// TODO maybe add spritesheet-like ref counting for flipbooks too?
 	}
 }
+/**
+ * Seeks the video and resolves once its frame at that time is available. Also resolves if the video
+ * is unloaded or errors mid-seek, so callers never wait forever.
+ *
+ * @param {HTMLVideoElement} video
+ * @param {number} time
+ * @returns {Promise<void>}
+ */
+function seekVideo(video, time) {
+	return new Promise((resolve) => {
+		const listeners = new AbortController();
+		const finish = () => {
+			listeners.abort();
+			resolve();
+		};
+		video.addEventListener("seeked", finish, { signal: listeners.signal });
+		video.addEventListener("emptied", finish, { signal: listeners.signal });
+		video.addEventListener("error", finish, { signal: listeners.signal });
+		video.currentTime = time;
+	});
+}
 //#endregion
 //#region Playback controls
 class PlaybackControls {
@@ -285,6 +306,9 @@ export class SequencerSpriteManager extends PIXI.Container {
 	/** @type {string | undefined} */
 	#requestedPath;
 
+	/** @type {{ filePath: string, promise: Promise<void> } | null} */
+	#pendingActivation = null;
+
 	/** @type {VideoPlaybackControls | SpritePlaybackControls | null} */
 	#playbackControls;
 
@@ -376,14 +400,45 @@ export class SequencerSpriteManager extends PIXI.Container {
 		if (this.#activeAssetPath === filePath) {
 			return;
 		}
+		// Per-frame callers repeat the request while it is pending; restarting would re-seek every frame.
+		if (this.#pendingActivation?.filePath === filePath) {
+			return this.#pendingActivation.promise;
+		}
+		const promise = this.#activateWhenReady(filePath);
+		this.#pendingActivation = { filePath, promise };
+		try {
+			await promise;
+		} finally {
+			if (this.#pendingActivation?.promise === promise) {
+				this.#pendingActivation = null;
+			}
+		}
+	}
+
+	/**
+	 * @param {string} filePath
+	 */
+	async #activateWhenReady(filePath) {
+		// Only the most recent request switches, regardless of which load finishes last.
+		const isStale = () =>
+			this.destroyed || this.#requestedPath !== filePath || this.#activeAssetPath === filePath;
 
 		const nextAsset = await this.#getOrLoadAsset(filePath);
-		// Only the most recent request switches, regardless of which load finishes last.
-		if (this.destroyed || !nextAsset || this.#requestedPath !== filePath || this.#activeAssetPath === filePath) {
+		if (!nextAsset || isStale()) {
 			return;
 		}
 
-		if (this.#activateAsset(nextAsset)) {
+		// A seeking video uploads no frame, so a never-shown one would render blank. The old asset stays
+		// on screen until the new video has its frame, and the swap skips the time sync to avoid a second seek.
+		const seekBeforeSwap = nextAsset instanceof VideoAsset && !!this.#playbackControls;
+		if (seekBeforeSwap) {
+			await seekVideo(nextAsset.video, this.#playbackControls.currentTime);
+			if (isStale()) {
+				return;
+			}
+		}
+
+		if (this.#activateAsset(nextAsset, { syncTime: !seekBeforeSwap })) {
 			this.#activeAssetPath = filePath;
 		}
 		if (this.#sharedSpriteConfig.isPersisted && !this.#sharedSpriteConfig.tiling) {
@@ -679,9 +734,10 @@ export class SequencerSpriteManager extends PIXI.Container {
 
 	/**
 	 * @param {VideoAsset | VideoSpritesheetAsset | TextureAsset | FlipbookAsset} nextAsset
+	 * @param {{ syncTime?: boolean }} [options] - `syncTime: false` keeps the next asset's own playback time
 	 * @returns
 	 */
-	#activateAsset(nextAsset) {
+	#activateAsset(nextAsset, { syncTime = true } = {}) {
 		let view;
 		let controls;
 		const tiling = this.#sharedSpriteConfig.tiling;
@@ -704,7 +760,7 @@ export class SequencerSpriteManager extends PIXI.Container {
 		}
 
 		// apply current values
-		this.#applyPreviousValues(view, controls);
+		this.#applyPreviousValues(view, controls, syncTime);
 
 		if (this.#playbackControls) {
 			this.#playbackControls.destroy();
@@ -727,8 +783,9 @@ export class SequencerSpriteManager extends PIXI.Container {
 	 *
 	 * @param {TilingSpriteMesh} view
 	 * @param {VideoPlaybackControls | SpritePlaybackControls | null} controls
+	 * @param {boolean} syncTime
 	 */
-	#applyPreviousValues(view, controls) {
+	#applyPreviousValues(view, controls, syncTime) {
 		if (this.managedSprite) {
 			const prev = this.managedSprite;
 			view.tint = prev.tint;
@@ -756,7 +813,9 @@ export class SequencerSpriteManager extends PIXI.Container {
 			controls.volume = prev.volume;
 			controls.loop = prev.loop;
 			controls.playbackRate = prev.playbackRate;
-			controls.currentTime = prev.currentTime;
+			if (syncTime) {
+				controls.currentTime = prev.currentTime;
+			}
 			if (prev.isPlaying) {
 				controls.play();
 			} else {
