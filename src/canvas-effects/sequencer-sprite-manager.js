@@ -312,9 +312,6 @@ export class SequencerSpriteManager extends PIXI.Container {
 	/** @type {VideoPlaybackControls | SpritePlaybackControls | null} */
 	#playbackControls;
 
-	/** @type {Promise<void> | undefined} */
-	#preloadingPromise;
-
 	/** @type {TilingSpriteMesh | null} */
 	#managedSprite;
 
@@ -328,13 +325,6 @@ export class SequencerSpriteManager extends PIXI.Container {
 		scaleX: 1,
 		scaleY: 1,
 	};
-
-	get preloadingPromise() {
-		if (this.#preloadingPromise) {
-			return this.#preloadingPromise;
-		}
-		return Promise.resolve();
-	}
 
 	/**
 	 * @param {import("../modules/sequencer-file.js").SequencerFile} file
@@ -499,11 +489,16 @@ export class SequencerSpriteManager extends PIXI.Container {
 		this.#relatedAssets.get(filepath)?.destroy();
 		this.#relatedAssets.delete(filepath);
 	}
-	async preloadVariants() {
-		if (!this.#preloadingPromise) {
-			return (this.#preloadingPromise = this.#preloadVariants());
+	/**
+	 * Loads the given files into the cache so activating them later skips the load.
+	 *
+	 * @param {string[]} filePaths
+	 */
+	preloadFiles(filePaths) {
+		if (this.#activeAssetPath === "TEXT" || !this.#file || this.#file.isFlipbook) {
+			return Promise.resolve();
 		}
-		return this.#preloadingPromise;
+		return Promise.allSettled(filePaths.map((filePath) => this.#getOrLoadAsset(filePath)));
 	}
 	destroy() {
 		this.#playbackControls?.destroy();
@@ -652,24 +647,6 @@ export class SequencerSpriteManager extends PIXI.Container {
 					(filter) => !(filter instanceof PIXI.ColorMatrixFilter)
 				);
 			}
-		}
-	}
-
-	async #preloadVariants() {
-		if (this.#activeAssetPath === "TEXT") {
-			return;
-		}
-		if (!this.#file || this.#file.isFlipbook) {
-			return;
-		}
-		/** @type {string[]} */
-		const allFiles = this.#file.getAllFiles();
-
-		for (const filePath of allFiles) {
-			if (this.destroyed) {
-				return;
-			}
-			await this.#getOrLoadAsset(filePath);
 		}
 	}
 

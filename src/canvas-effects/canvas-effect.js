@@ -2160,9 +2160,7 @@ export default class CanvasEffect extends PIXI.Container {
 
 		sprite.volume = (this.data.volume ?? 0) * game.settings.get("core", "globalInterfaceVolume");
 
-		if (this._isRangeFind && this.data.stretchTo && (this.data.attachTo?.active || this.data.stretchTo?.attachTo?.active)) {
-			sprite.preloadVariants()
-		}
+		this._preloadAdjacentDistanceFiles();
 
 		if (this.data.text) {
 			const text = this.data.text.text;
@@ -3079,7 +3077,21 @@ export default class CanvasEffect extends PIXI.Container {
 		const { ray, distance } = this._measureStretch();
 		this._stretchSprite(ray, distance);
 		this._setAnchors();
+		this._preloadAdjacentDistanceFiles();
 		return true;
+	}
+
+	/**
+	 * Preloads the distance files on either side of the current one, for stretched effects whose length
+	 * changes while they play.
+	 *
+	 * @private
+	 */
+	_preloadAdjacentDistanceFiles() {
+		if (!this._isRangeFind || !this.data.stretchTo) return;
+		if (!this.data.attachTo?.active && !this.data.stretchTo.attachTo) return;
+		const { distance } = this._measureStretch();
+		this.sprite.preloadFiles(this._file.getAdjacentFilesForDistance(distance));
 	}
 
 	/**

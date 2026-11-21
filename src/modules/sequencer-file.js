@@ -221,7 +221,7 @@ export class SequencerFileRangeFind extends SequencerFile {
     return SequencerFileRangeFind.ftToDistanceMap[inEntry] / this._gridSizeDiff;
   }
 
-  getFileForDistance(inDistance) {
+  _getFileDistanceMap() {
     if (!this._fileDistanceMap) {
       let distances = Object.keys(this.file)
         .filter(
@@ -255,20 +255,45 @@ export class SequencerFileRangeFind extends SequencerFile {
         return entry;
       });
     }
+    return this._fileDistanceMap;
+  }
 
-    const possibleFiles = this._fileDistanceMap
-      .filter((entry) => {
-        const relativeDistance = inDistance / this._gridSizeDiff;
-        return (
-          relativeDistance >= entry.distances.min &&
-          relativeDistance < entry.distances.max
-        );
-      })
+  _distanceEntryContains(entry, inDistance) {
+    const relativeDistance = inDistance / this._gridSizeDiff;
+    return (
+      relativeDistance >= entry.distances.min &&
+      relativeDistance < entry.distances.max
+    );
+  }
+
+  getFileForDistance(inDistance) {
+    const possibleFiles = this._getFileDistanceMap()
+      .filter((entry) => this._distanceEntryContains(entry, inDistance))
       .map((entry) => entry.file)
       .flat();
 
     return possibleFiles.length > 1
       ? lib.random_array_element(possibleFiles, { twister: this.twister })
       : possibleFiles[0];
+  }
+
+  /**
+   * Returns the files for the distances just below and just above the one that covers the given distance
+   *
+   * @param {number} inDistance
+   * @returns {string[]}
+   */
+  getAdjacentFilesForDistance(inDistance) {
+    const sortedEntries = [...this._getFileDistanceMap()].sort(
+      (firstEntry, secondEntry) => firstEntry.distances.min - secondEntry.distances.min
+    );
+    const currentIndex = sortedEntries.findIndex((entry) =>
+      this._distanceEntryContains(entry, inDistance)
+    );
+    if (currentIndex === -1) return [];
+    return [sortedEntries[currentIndex - 1], sortedEntries[currentIndex + 1]]
+      .filter(Boolean)
+      .map((entry) => entry.file)
+      .flat();
   }
 }
