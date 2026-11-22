@@ -76,14 +76,17 @@
     "Manager": {
       "Title": "Gerenciador",
       "NothingPlaying": "Nada está sendo reproduzido",
-      "PersistentEffects": "Efeitos persistentes:",
-      "TemporaryEffects": "Efeitos temporários:",
-      "PersistentSounds": "Sons persistentes:",
-      "TemporarySounds": "Sons temporários:",
+      "PersistentEffects": "Efeitos Persistentes:",
+      "TemporaryEffects": "Efeitos Temporários:",
+      "PersistentSounds": "Sons Persistentes:",
+      "TemporarySounds": "Sons Temporários:",
+      "PersistentMotions": "Movimentos Persistentes:",
+      "TemporaryMotions": "Movimentos Temporários:",
       "PlayersEffect": "Efeito de {user_name}",
       "UnknownEffect": "Efeito de usuário desconhecido",
       "EndAllEffects": "Encerrar Todos os Efeitos",
-      "EndAllSounds": "Encerrar Todos os Sons"
+      "EndAllSounds": "Encerrar Todos os Sons",
+      "EndAllMotions": "Encerrar Todos os Movimentos"
     },
     "Sequences": {
       "Title": "Sequências",
